@@ -2,7 +2,11 @@ apply plugin: 'java-library'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
+    implementation "com.frostwire:jlibtorrent:1.1.1.39"
+    implementation "com.frostwire:jlibtorrent-android-arm:1.1.1.39"
+    implementation "com.frostwire:jlibtorrent-android-arm64:1.1.1.39"
+    implementation "com.frostwire:jlibtorrent-android-x86:1.1.1.39"
+    implementation "com.frostwire:jlibtorrent-android-x86_64:1.1.1.39"
 }
 
 sourceCompatibility = "7"
