@@ -14,8 +14,16 @@ SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
-package io.taucoin.genesis;
-import io.taucoin.config.ChainConfig;
+package io.taucoin.param;
 
-public class Genesis {
+import com.frostwire.jlibtorrent.Ed25519;
+
+public class ChainParam {
+    public static final String TauGenesisMinerPubkey="";
+    public static final String TauGenerationSignature="";
+    public static final String TauGenesisSignature="";
+    public static final long TauGenesisTimeStamp=15000000;
+    public static final int DefaultBlockTimeInterval=300;
+    public static final int DefaultGenesisVersion = 0x01;
+    public static final String TauCommunityName="TAUcoin";
 }
