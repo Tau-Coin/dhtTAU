@@ -1,5 +1,10 @@
 apply plugin: 'java-library'
 
+ext {
+    slf4jVersion = '1.7.7'
+    scastleVersion = '1.51.0.0'
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "com.frostwire:jlibtorrent:1.1.1.39"
@@ -7,6 +12,12 @@ dependencies {
     implementation "com.frostwire:jlibtorrent-android-arm64:1.1.1.39"
     implementation "com.frostwire:jlibtorrent-android-x86:1.1.1.39"
     implementation "com.frostwire:jlibtorrent-android-x86_64:1.1.1.39"
+
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "com.madgag.spongycastle:core:${scastleVersion}" // for SHA3 and SECP256K1
+    implementation "com.madgag.spongycastle:prov:${scastleVersion}" // for SHA3 and SECP256K1
+    implementation group: 'com.google.guava', name: 'guava', version: '11.0.2'
+    implementation "com.cedarsoftware:java-util:1.8.0" // for deep equals
 }
 
 sourceCompatibility = "7"
