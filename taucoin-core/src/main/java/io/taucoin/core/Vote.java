@@ -66,7 +66,7 @@ public class Vote implements Comparable<Vote> {
     @Override
     public String toString() {
         return "Vote{" +
-                "blockHash=" + Arrays.toString(blockHash) +
+                "blockHash=" + new String(blockHash) +
                 ", blockNumber=" + blockNumber +
                 ", count=" + count +
                 '}';
