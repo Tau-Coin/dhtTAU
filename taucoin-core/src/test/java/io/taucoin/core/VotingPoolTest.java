@@ -1,10 +1,14 @@
 package io.taucoin.core;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class VotingPoolTest {
+    private static final Logger logger = LoggerFactory.getLogger("test");
+
     public VotingPool makeVotingPool() {
         VotingPool votingPool = new VotingPool();
         for (int i = 4; i > 0; i--) {
@@ -46,7 +50,7 @@ public class VotingPoolTest {
         VotingPool votingPool = makeVotingPool();
         List<Vote> list = votingPool.getSortedVotes("chainID1");
         for (Vote vote : list) {
-            System.out.println(vote.toString());
+            logger.info(vote.toString());
         }
     }
 }

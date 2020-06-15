@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class VoteTest {
-//    private static final Logger logger = LoggerFactory.getLogger("test");
+    private static final Logger logger = LoggerFactory.getLogger("test");
 
     @Test
     public void testVote() {
@@ -22,8 +22,7 @@ public class VoteTest {
         List<Vote> list = new ArrayList<>(Arrays.asList(vote1, vote2, vote3, vote4, vote5));
         Collections.sort(list);
         for (Vote vote : list) {
-//            logger.info(vote.toString());
-            System.out.println(vote.toString());
+            logger.info(vote.toString());
         }
     }
 }
