@@ -194,6 +194,9 @@ public class ByteUtil {
         return data == null ? "" : Hex.toHexString(data);
     }
 
+    public static byte[] toByte(String str){
+        return Hex.decode(str);
+    }
     /**
      * Calculate packet length
      *

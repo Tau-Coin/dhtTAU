@@ -18,6 +18,12 @@ package io.taucoin.config;
 
 import java.math.BigInteger;
 import io.taucoin.param.ChainParam;
+import io.taucoin.genesis.GenesisMsg;
+import io.taucoin.util.ByteUtil;
+
+import com.frostwire.jlibtorrent.swig.byte_vector;
+import com.frostwire.jlibtorrent.swig.sha1_hash;
+
 
 public class ChainConfig {
     private int version;
@@ -26,30 +32,43 @@ public class ChainConfig {
     private String GenesisMinerPubkey="";
     private long GenesisTimeStamp;
     private int BlockNum=0;
-    private BigInteger BaseTarget= new BigInteger("0x21D0369D036978");
+    private BigInteger BaseTarget= new BigInteger("21D0369D036978",16);
     private BigInteger CummulativeDifficulty = BigInteger.ZERO;
     private String GenerationSignature;
+    private GenesisMsg Msg;
     private String Signature;
 
     private  ChainConfig(int version, String communityName,int blockTimeInterval,String genesisMinerPubkey,
-                         String generationSignature,String signature){
+                         String generationSignature,GenesisMsg msg,String signature){
         this.version = version;
         this.CommunityName = communityName;
         this.BlockTimeInterval = blockTimeInterval;
         this.GenesisMinerPubkey = genesisMinerPubkey;
         this.GenesisTimeStamp = System.currentTimeMillis()/1000;
         this.GenerationSignature = generationSignature;
+        this.Msg = msg;
         this.Signature = signature;
     }
 
+    private String fingerPrintOfPubkeyAndTime(){
+        byte_vector bv = new byte_vector();
+        String str = this.GenesisMinerPubkey + this.GenesisTimeStamp;
+        for (byte ch:str.getBytes()) {
+           bv.push_back(ch);
+        }
+        sha1_hash hash= new sha1_hash(bv);
+        return hash.to_hex();
+    }
+
     public static ChainConfig NewTauChainConfig(){
-        ChainConfig cf = new ChainConfig(ChainParam.DefaultGenesisVersion,ChainParam.TauCommunityName,ChainParam.DefaultBlockTimeInterval,ChainParam.TauGenesisMinerPubkey,ChainParam.TauGenerationSignature,ChainParam.TauGenesisSignature);
+        GenesisMsg msg = new GenesisMsg(ByteUtil.toByte(ChainParam.TauGenesisMsg));
+        ChainConfig cf = new ChainConfig(ChainParam.DefaultGenesisVersion,ChainParam.TauCommunityName,ChainParam.DefaultBlockTimeInterval,ChainParam.TauGenesisMinerPubkey,ChainParam.TauGenerationSignature,msg,ChainParam.TauGenesisSignature);
         cf.GenesisTimeStamp = ChainParam.TauGenesisTimeStamp;
         return cf;
     }
     public static ChainConfig NewChainConfig(int version, String communityName,int blockTimeInterval,String genesisMinerPubkey,
-                                             String generationSignature,String signature){
-        return new ChainConfig(version,communityName,blockTimeInterval,genesisMinerPubkey,generationSignature,signature);
+                                             String generationSignature,GenesisMsg msg,String signature){
+        return new ChainConfig(version,communityName,blockTimeInterval,genesisMinerPubkey,generationSignature,msg,signature);
     }
     public int getVersion() {
         return version;
@@ -89,5 +108,14 @@ public class ChainConfig {
 
     public String getSignature() {
         return Signature;
+    }
+
+    public String getChainid(){
+        return this.CommunityName + ChainParam.ChainidDelimeter + this.BlockTimeInterval + ChainParam.ChainidDelimeter
+                + fingerPrintOfPubkeyAndTime();
+    }
+
+    public GenesisMsg getMsg() {
+        return Msg;
     }
 }
