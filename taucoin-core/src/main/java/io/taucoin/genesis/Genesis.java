@@ -32,7 +32,7 @@ public class Genesis {
     private BigInteger CummulativeDifficulty;
     private String GenerationSignature;
     private GenesisMsg Msg;
-    private String Chainid;
+    private String ChainID;
     private String Signature;
 
     private byte[] rlpEncoded;
@@ -46,7 +46,7 @@ public class Genesis {
             this.CummulativeDifficulty = cf.getCummulativeDifficulty();
             this.GenerationSignature = cf.getGenerationSignature();
             this.Msg = cf.getMsg();
-            this.Chainid = cf.getChainid();
+            this.ChainID = cf.getChainid();
             this.Signature = cf.getSignature();
     }
 
@@ -64,7 +64,7 @@ public class Genesis {
             byte[] cummulativediffculty = RLP.encodeBigInteger(this.CummulativeDifficulty);
             byte[] generationsignature = RLP.encodeString(this.GenerationSignature);
             byte[] msgList = this.Msg.getEncoded();
-            byte[] chainid = RLP.encodeString(this.Chainid);
+            byte[] chainid = RLP.encodeString(this.ChainID);
             byte[] signature = RLP.encodeString(this.Signature);
             this.rlpEncoded = RLP.encodeList(version,timestamp,blocknum,basetarget,cummulativediffculty,generationsignature,msgList,chainid,signature);
         }
@@ -84,7 +84,7 @@ public class Genesis {
             this.CummulativeDifficulty = new BigInteger(block.get(4).getRLPData()==null ? BigInteger.ZERO.toByteArray():block.get(4).getRLPData());
             this.GenerationSignature = ByteUtil.toHexString(block.get(5).getRLPData());
             this.Msg = new GenesisMsg(block.get(6).getRLPData());
-            this.Chainid = new String(block.get(7).getRLPData());
+            this.ChainID = new String(block.get(7).getRLPData());
             this.Signature = ByteUtil.toHexString(block.get(8).getRLPData());
             isParse = true;
         }
@@ -92,6 +92,6 @@ public class Genesis {
 
     public String getChainid(){
         if(!isParse) parseRLP();
-        return this.Chainid;
+        return this.ChainID;
     }
 }
