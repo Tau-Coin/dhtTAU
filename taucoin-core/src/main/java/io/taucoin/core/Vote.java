@@ -1,6 +1,7 @@
 package io.taucoin.core;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class Vote implements Comparable<Vote> {
     private byte[] blockHash;
@@ -43,9 +44,30 @@ public class Vote implements Comparable<Vote> {
         this.count = count;
     }
 
+    /**
+     * 投一票
+     * @return
+     */
     public int voteUp() {
         this.count++;
         return this.count;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Vote vote = (Vote) o;
+        return blockNumber == vote.blockNumber &&
+                count == vote.count &&
+                Arrays.equals(blockHash, vote.blockHash);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(blockNumber, count);
+        result = 31 * result + Arrays.hashCode(blockHash);
+        return result;
     }
 
     @Override
@@ -72,3 +94,4 @@ public class Vote implements Comparable<Vote> {
                 '}';
     }
 }
+
