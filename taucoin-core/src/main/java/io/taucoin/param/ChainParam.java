@@ -30,4 +30,10 @@ public class ChainParam {
     public static final int DefaultGenesisVersion = 0x01;
     public static final String TauCommunityName="TAUcoin";
     public static final String ChainidDelimeter="#";
+    public static final int AnnounceLength = 256;
+    public static final int AttachLength = 256;
+    public static final int HashLength = 64;
+    public static final int ChainIDlength = 64;
+    public static final int SenderLength = 64;
+    public static final int SignatureLength = 130;
 }

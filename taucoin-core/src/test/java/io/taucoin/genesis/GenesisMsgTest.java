@@ -15,8 +15,10 @@ public class GenesisMsgTest {
     private static final Logger log = LoggerFactory.getLogger("genesisTest");
     private static final BigInteger defaultValue = new BigInteger("500000000000000");
     private static final BigInteger genesisPower = BigInteger.ZERO;
-    private static final String pubkeyA= "d0dc15e1f6e3f2109d089f11e08790472cd9a39aceef6df45753c3b5bee9c147649c82deab7921492b5d510124318e943462eed47cac0a99825d856aeb4349b3";
-    private static final String pubkeyB= "58b8f979a511dc3eb1a42a23881988880016ff46338fccc8b46379695377ed69ba398380c3d3d6e0a3e3e92b23a50c2a6c04f3f872492cb216be840a8f70f100";
+    private static final String pubkeyA= "18dc4ee9316770f261ca17cd3bbf319301a9f0930be3abcffbb73e73a50d9fb1";
+    private static final String pubkeyB= "c798fc91a403bcfc6db20ffb3c1d9f5952efcb8e09b4097338cb7974993a210c";
+    private static final String pubkeyC= "ca72fa9c10053142c1302425412d6f6ac1b03ebdc2cbc5fc7676d1c31fddb6e1";
+    private static final String pubkeyD= "090139b40cdfbc4e803f0a5293f3005aab5132e088321baf44c276ad3cf4abda";
    @Test
    public void derivKey() {
        byte[] seed = Ed25519.createSeed();
@@ -35,10 +37,12 @@ public class GenesisMsgTest {
    @Test
     public void createGenesisMsg(){
        GenesisMsg msg = new GenesisMsg();
-       msg.setDescription("taucoin chain...");
+       msg.setDescription("community chain...");
        GenesisItem item = new GenesisItem(defaultValue,genesisPower);
        msg.appendAccount(pubkeyA,item);
        msg.appendAccount(pubkeyB,item);
+       msg.appendAccount(pubkeyC,item);
+       msg.appendAccount(pubkeyD,item);
        String encodeStr= ByteUtil.toHexString(msg.getEncoded());
        log.debug(encodeStr);
    }

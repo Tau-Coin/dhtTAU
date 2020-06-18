@@ -212,6 +212,12 @@ public class ByteUtil {
                 (byte) ((msgLen) & 0xFF)};
     }
 
+    public static short byteArrayToShort(byte[] b) {
+        if (b == null || b.length == 0)
+            return 0;
+        return new BigInteger(1, b).shortValue();
+    }
+
     /**
      * Cast hex encoded value from byte[] to int
      *
