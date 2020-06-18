@@ -1,12 +1,37 @@
 <resources>
-    <string name="app_name">dhtTAU</string>
+    <string name="app_name">TAUcoin</string>
     <string name="action_settings">Settings</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
 
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="open_navigation_drawer">Open navigation drawer</string>
+    <string name="close_navigation_drawer">Close navigation drawer</string>
+
+    <string name="main_title">Torrent Publishing</string>
+    <string name="main_publish_video">Publish Video</string>
+    <string name="main_create_community">Create Publishing Community</string>
+    <string name="main_other_transaction">Other Transaction</string>
+
+    <!-- Strings used for main drawer content -->
+    <string name="drawer_publishing">Publishing</string>
+    <string name="drawer_stats">Stats</string>
+    <string name="drawer_dashboard">Dashboard</string>
+    <string name="drawer_video">Videos</string>
+    <string name="drawer_block_chains">Blockchains</string>
+    <string name="drawer_messages">Messages</string>
+    <string name="drawer_stats_dht_nodes">DHT nodes/%1$d</string>
+    <string name="drawer_stats_download_upload">%1$s | %2$s/s</string>
+    <string name="drawer_stats_block_numbers">Local Block Numbers/%1$d</string>
+    <string name="drawer_stats_dht_puts">DHT Put/%1$d%%</string>
+
+    <!-- Strings used for menu -->
+    <string name="menu_search">Search</string>
+    <string name="menu_mining_pool">Mining Pool</string>
+    <string name="menu_keys">Keys</string>
+    <string name="menu_filter">Filter</string>
+    <string name="menu_resume_all">Resume All</string>
+    <string name="menu_pause_all">Pause All</string>
+    <string name="menu_journal">Journal</string>
+    <string name="menu_rename">Rename</string>
+    <string name="menu_mining_group">Mining Group</string>
+    <string name="menu_about">About</string>
+
 </resources>

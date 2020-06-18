@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="main_publish_video" type="id" />
+    <item name="main_create_community" type="id" />
+    <item name="main_other_transaction" type="id" />
+</resources>
