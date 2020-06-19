@@ -11,4 +11,6 @@ public interface KeyValueDataSource extends DataSource {
     void delete(byte[] key);
 
     void updateBatch(Map<byte[], byte[]> rows);
+
+    void removeWithPrefix(byte[] prefix);
 }
