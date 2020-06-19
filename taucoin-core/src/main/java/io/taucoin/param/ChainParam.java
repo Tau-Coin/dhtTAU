@@ -32,8 +32,9 @@ public class ChainParam {
     public static final String ChainidDelimeter="#";
     public static final int AnnounceLength = 256;
     public static final int AttachLength = 256;
-    public static final int HashLength = 64;
+    public static final int HashLength = 32;
     public static final int ChainIDlength = 64;
-    public static final int SenderLength = 64;
-    public static final int SignatureLength = 130;
+    public static final int SenderLength = 32;
+    public static final int SignatureLength = 64;
+    public static final int PubkeyLength = 32;
 }

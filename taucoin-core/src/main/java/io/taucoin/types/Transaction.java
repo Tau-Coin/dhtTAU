@@ -1,4 +1,25 @@
+/**
+Copyright 2020 taucoin developer
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 package io.taucoin.types;
+
+import com.frostwire.jlibtorrent.Ed25519;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
@@ -7,61 +28,117 @@ import io.taucoin.util.RLPList;
 
 public class Transaction {
     private byte version;
-    private String chainID;
+    private byte[] chainID;
     private long timeStamp;
-    private short expiredTime;
     private int TxFee;
-    private String sender;
+    private byte[] senderPubkey;
     private long nonce;
     private TxData txData;
-    private String signature;
+    private byte[] signature;
 
     private boolean isParse;
     private byte[] rlpEncoded;
-    public Transaction(byte version,String chainID,long timeStamp,short expiredTime,int txFee,String sender
-           ,long nonce,TxData txData,String signature){
-            if(chainID.getBytes().length > ChainParam.ChainIDlength) {
+    private byte[] rlpSigEncoded;
+
+    public Transaction(byte version,byte[] chainID,long timeStamp,int txFee,byte[] sender
+           ,long nonce,TxData txData,byte[] signature){
+            if(chainID.length > ChainParam.ChainIDlength) {
                 throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
             }
-            if(sender.getBytes().length != ChainParam.SenderLength) {
+            if(sender.length != ChainParam.SenderLength) {
                 throw new IllegalArgumentException("sender address length should =: "+ChainParam.SenderLength);
             }
-            if(signature.getBytes().length != ChainParam.SignatureLength) {
+            if(signature.length != ChainParam.SignatureLength) {
                 throw new IllegalArgumentException("signature length should =: " + ChainParam.SignatureLength);
             }
             this.version = version;
             this.chainID = chainID;
             this.timeStamp = timeStamp;
-            this.expiredTime = expiredTime;
             this.TxFee = txFee;
-            this.sender = sender;
+            this.senderPubkey = sender;
             this.nonce = nonce;
             this.txData = txData;
             this.signature = signature;
             isParse = true;
     }
 
+    /**
+     * construct temporary transaction without signature.
+     * @param version: transaction version in current chain.
+     * @param chainID: chain id this transaction referenced to.
+     * @param timeStamp: transaction unix timestamp.
+     * @param txFee: transaction fee allowed to negative.
+     * @param sender:transaction sender.
+     * @param nonce: sender transaction counter.
+     * @param txData:transaction message.
+     */
+    public Transaction(byte version,byte[] chainID,long timeStamp,int txFee,byte[] sender
+            ,long nonce,TxData txData){
+        if(chainID.length > ChainParam.ChainIDlength) {
+            throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
+        }
+        if(sender.length != ChainParam.SenderLength) {
+            throw new IllegalArgumentException("sender address length should =: "+ChainParam.SenderLength);
+        }
+        this.version = version;
+        this.chainID = chainID;
+        this.timeStamp = timeStamp;
+        this.TxFee = txFee;
+        this.senderPubkey = sender;
+        this.nonce = nonce;
+        this.txData = txData;
+        isParse = true;
+    }
+
+    /**
+     * construct transaction from complete byte encoding.
+     * @param rlpEncoded:complete byte encoding.
+     */
     public Transaction(byte[] rlpEncoded) {
         this.rlpEncoded = rlpEncoded;
         this.isParse = false;
     }
 
+    /**
+     * encoding transaction to bytes.
+     * @return
+     */
     public byte[] getEncoded() {
         if(rlpEncoded == null) {
             byte[] version = RLP.encodeByte(this.version);
-            byte[] chainid = RLP.encodeString(this.chainID);
+            byte[] chainid = RLP.encodeElement(this.chainID);
             byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timeStamp));
-            byte[] expiretime = RLP.encodeShort(this.expiredTime);
             byte[] txfee = RLP.encodeInt(this.TxFee);
-            byte[] sender = RLP.encodeString(this.sender);
+            byte[] sender = RLP.encodeElement(this.senderPubkey);
             byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
             byte[] txdata = this.txData.getEncoded();
-            byte[] signature = RLP.encodeString(this.signature);
-            this.rlpEncoded = RLP.encodeList(version,chainid,timestamp,expiretime,txfee,sender,nonce,txdata,signature);
+            byte[] signature = RLP.encodeElement(this.signature);
+            this.rlpEncoded = RLP.encodeList(version,chainid,timestamp,txfee,sender,nonce,txdata,signature);
         }
         return rlpEncoded;
     }
 
+    /**
+     * encoding transaction signature parts which is under protection of cryptographic signature.
+     * @return
+     */
+    public byte[] getSigEncoded() {
+        if(rlpSigEncoded == null) {
+            byte[] version = RLP.encodeByte(this.version);
+            byte[] chainid = RLP.encodeElement(this.chainID);
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timeStamp));
+            byte[] txfee = RLP.encodeInt(this.TxFee);
+            byte[] sender = RLP.encodeElement(this.senderPubkey);
+            byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
+            byte[] txdata = this.txData.getEncoded();
+            this.rlpSigEncoded = RLP.encodeList(version,chainid,timestamp,txfee,sender,nonce,txdata);
+        }
+        return rlpSigEncoded;
+    }
+
+    /**
+     * parse transaction bytes field to flat block field.
+     */
     private void parseRLP(){
         if(isParse){
             return;
@@ -69,14 +146,13 @@ public class Transaction {
             RLPList list = RLP.decode2(this.rlpEncoded);
             RLPList tx = (RLPList) list.get(0);
             this.version = tx.get(0).getRLPData()[0];
-            this.chainID = new String(tx.get(1).getRLPData());
+            this.chainID = tx.get(1).getRLPData();
             this.timeStamp = ByteUtil.byteArrayToLong(tx.get(2).getRLPData());
-            this.expiredTime = ByteUtil.byteArrayToShort(tx.get(3).getRLPData());
-            this.TxFee = ByteUtil.byteArrayToInt(tx.get(4).getRLPData());
-            this.sender = ByteUtil.toHexString(tx.get(5).getRLPData());
-            this.nonce = ByteUtil.byteArrayToLong(tx.get(6).getRLPData());
-            this.txData = new TxData(tx.get(7).getRLPData());
-            this.signature = ByteUtil.toHexString(tx.get(8).getRLPData());
+            this.TxFee = ByteUtil.byteArrayToInt(tx.get(3).getRLPData());
+            this.senderPubkey = tx.get(4).getRLPData();
+            this.nonce = ByteUtil.byteArrayToLong(tx.get(5).getRLPData());
+            this.txData = new TxData(tx.get(6).getRLPData());
+            this.signature = tx.get(7).getRLPData();
             isParse = true;
         }
     }
@@ -87,7 +163,7 @@ public class Transaction {
         return version;
     }
 
-    public String getChainID() {
+    public byte[] getChainID() {
         if(!isParse) parseRLP();
         return chainID;
     }
@@ -97,19 +173,14 @@ public class Transaction {
         return timeStamp;
     }
 
-    public short getExpiredTime() {
-        if(!isParse) parseRLP();
-        return expiredTime;
-    }
-
     public int getTxFee() {
         if(!isParse) parseRLP();
         return TxFee;
     }
 
-    public String getSender() {
+    public byte[] getSenderPubkey() {
         if(!isParse) parseRLP();
-        return sender;
+        return senderPubkey;
     }
 
     public long getNonce() {
@@ -122,8 +193,32 @@ public class Transaction {
         return txData;
     }
 
-    public String getSignature() {
+    public byte[] getSignature() {
         if(!isParse) parseRLP();
         return signature;
+    }
+
+    public void setSignature(byte[] signature){
+        this.signature = signature;
+    }
+
+    public byte[] getTransactionSigMsg(){
+        MessageDigest digest;
+        try{
+            digest = MessageDigest.getInstance("SHA-256");
+        }catch (NoSuchAlgorithmException e){
+            return null;
+        }
+        return digest.digest(this.getSigEncoded());
+    }
+
+    /**
+     * verify transaction signature.
+     * @return
+     */
+    public boolean verifyBlockSig(){
+        byte[] signature = this.getSignature();
+        byte[] sigmsg = this.getTransactionSigMsg();
+        return Ed25519.verify(signature,sigmsg,this.senderPubkey);
     }
 }
