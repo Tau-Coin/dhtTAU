@@ -18,6 +18,8 @@ package io.taucoin.param;
 
 import com.frostwire.jlibtorrent.Ed25519;
 
+import java.math.BigInteger;
+
 import io.taucoin.genesis.GenesisMsg;
 
 public class ChainParam {
@@ -36,5 +38,9 @@ public class ChainParam {
     public static final int ChainIDlength = 64;
     public static final int SenderLength = 32;
     public static final int SignatureLength = 64;
+    public static final int GenerationSigLength = 32;
     public static final int PubkeyLength = 32;
+    public static final int BlockTimeDrift = 300;
+    public static final BigInteger MaxBaseTarget = new BigInteger("ffffffffffffffff",16);
+    public static final BigInteger MaxCummulativeDiff = new BigInteger("ffffffffffffffff",16);
 }

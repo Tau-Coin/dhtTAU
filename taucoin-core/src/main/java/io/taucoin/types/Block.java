@@ -357,6 +357,32 @@ public class Block {
     }
 
     /**
+     * Validate block
+     * 1:paramter is valid?
+     * 2:about signature,your should verify it besides.
+     * @return
+     */
+    public boolean isBlockParamValidate(){
+        if(!isParsed) parseRLP();
+        if(chainID.length >ChainParam.ChainIDlength) return false;
+        if(timeStamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timeStamp < 0) return false;
+        if(blockNum < 0) return false;
+        if(previousBlockHash.length > ChainParam.HashLength) return false;
+        if(immutableBlockHash.length > ChainParam.HashLength) return false;
+        if(1 == baseTarget.compareTo(ChainParam.MaxBaseTarget)) return false;
+        if(1 == cumulativeDifficulty.compareTo(ChainParam.MaxCummulativeDiff)) return false;
+        if(generationSignature.length != ChainParam.GenerationSigLength) return false;
+        if(!txMsg.isTxParamValidate()) return false;
+        if(minerBalance < 0) return false;
+        if(senderBalance < 0) return false;
+        if(receiverBalance < 0) return false;
+        if(senderNonce < 0 ) return false;
+        if(signature != null && signature.length != ChainParam.SignatureLength) return false;
+        if(minerPubkey.length != ChainParam.PubkeyLength) return false;
+        return true;
+    }
+
+    /**
      * verify block signature.
      * @return
      */

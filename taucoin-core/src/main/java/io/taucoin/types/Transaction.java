@@ -213,6 +213,22 @@ public class Transaction {
     }
 
     /**
+     * Validate transaction
+     * 1:paramter is valid?
+     * 2:about signature,your should verify it besides.
+     * @return
+     */
+    public boolean isTxParamValidate(){
+        if(!isParse) parseRLP();
+        if(chainID.length > ChainParam.ChainIDlength) return false;
+        if(timeStamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timeStamp < 0) return false;
+        if(senderPubkey.length != ChainParam.PubkeyLength) return false;
+        if(nonce < 0) return false;
+        if(signature != null && signature.length != ChainParam.SignatureLength) return false;
+        return true;
+    }
+
+    /**
      * verify transaction signature.
      * @return
      */
