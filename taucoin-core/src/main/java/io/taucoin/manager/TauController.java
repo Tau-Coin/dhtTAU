@@ -7,6 +7,8 @@ import io.taucoin.db.BlockDB;
 import io.taucoin.db.StateDB;
 import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.TauListener;
+import io.taucoin.rpc.RpcServer;
+import io.taucoin.torrent.TorrentEngine;
 import io.taucoin.util.Repo;
 
 import com.frostwire.jlibtorrent.Pair;
@@ -29,6 +31,9 @@ public class TauController {
     // AccountManager manages the key pair for the miner.
     private AccountManager accountManager = AccountManager.getInstance();
 
+    // Communicate with torrent dht by TorrentEngine;
+    TorrentEngine torrentEngine = TorrentEngine.getInstance();
+
     private ChainManager chainManager;
 
     // state database
@@ -36,6 +41,11 @@ public class TauController {
 
     // block database
     private BlockDB blockDB;
+
+    // Enable rpc or not.
+    private boolean enableRpc;
+    // Rpc server
+    private RpcServer rpcServer;
 
     /**
      * TauController constructor.
@@ -46,7 +56,8 @@ public class TauController {
      * @param blockDS block key-value database implementation.
      */
     public TauController(String repoPath, Pair<byte[], byte[]> key,
-            KeyValueDataSource stateDS, KeyValueDataSource blockDS) {
+            KeyValueDataSource stateDS, KeyValueDataSource blockDS,
+	    boolean enableRpc) {
 
         // set the root directory.
         Repo.setRepoPath(repoPath);
@@ -58,6 +69,25 @@ public class TauController {
 	// If not exist, create new database.
 	this.stateDB = new StateDB(stateDS);
 	this.blockDB = new BlockDB(blockDS);
+
+	//TODO: create chain manager.
+
+        this.enableRpc = enableRpc;
+        if (enableRpc) {
+            rpcServer = new RpcServer(this);
+	}
+    }
+
+    /**
+     * Start all the blockchain core components.
+     */
+    public void start() {
+    }
+
+    /**
+     * Stop all the blockchain core components.
+     */
+    public void stop() {
     }
 
     /**
