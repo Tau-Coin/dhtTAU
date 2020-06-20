@@ -1,7 +1,10 @@
 package io.taucoin.core;
 
+import io.taucoin.db.BlockStore;
+import io.taucoin.types.Block;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
@@ -48,59 +51,78 @@ public class ProofOfTransaction {
                 divide(BigInteger.valueOf(averageBlockTime));
     }
 
-//    /**
-//     * get required base target
-//     * @param previousBlock
-//     * @param blockStore
-//     * @return
-//     */
-//    public static BigInteger calculateRequiredBaseTarget(Block previousBlock, BlockStore blockStore) {
-//        long blockNumber = previousBlock.getNumber();
-//        if(blockNumber <= 3) {
-//            return (new BigInteger("369D0369D036978",16));
-//        }
-//
-//        Block ancestor1 = blockStore.getBlockByHash(previousBlock.getPreviousHeaderHash());
-//        Block ancestor2 = blockStore.getBlockByHash(ancestor1.getPreviousHeaderHash());
-//        Block ancestor3 = blockStore.getBlockByHash(ancestor2.getPreviousHeaderHash());
-//        if (ancestor3 == null) {
-//            logger.error("Can not find ancestor block, block number:" + (blockNumber - 3));
-//        }
-//
-//        BigInteger previousBlockBaseTarget = previousBlock.getBaseTarget();
-//        long pastTimeFromLatestBlock = new BigInteger(previousBlock.getTimestamp()).longValue() -
-//                new BigInteger(ancestor3.getTimestamp()).longValue();
-//
-//        if (pastTimeFromLatestBlock < 0)
-//            pastTimeFromLatestBlock = 0;
-//        long pastTimeAver = pastTimeFromLatestBlock / 3;
-//
-//        BigInteger newRequiredBaseTarget;
-//        if( pastTimeAver > AVERTIME ) {
-//            long min = 0;
-//
-//            if (pastTimeAver < maxRatio){
-//                min = pastTimeAver;
-//            }else {
-//                min = maxRatio;
-//            }
-//
-//            newRequiredBaseTarget = previousBlockBaseTarget.multiply(BigInteger.valueOf(min)).divide(BigInteger.valueOf(AVERTIME));
-//        }else{
-//            long max = 0;
-//
-//            if (pastTimeAver > minRatio){
-//                max = pastTimeAver;
-//            }else{
-//                max = minRatio;
-//            }
-//
-//            newRequiredBaseTarget = previousBlockBaseTarget.
-//                    subtract(previousBlockBaseTarget.divide(BigInteger.valueOf(1875)).
-//                            multiply(BigInteger.valueOf(AVERTIME-max)).multiply(BigInteger.valueOf(4)));
-//        }
-//        return newRequiredBaseTarget;
-//    }
+    /**
+     * get required base target
+     * @param previousBlock
+     * @param blockStore
+     * @return
+     */
+    public BigInteger calculateRequiredBaseTarget(Block previousBlock, BlockStore blockStore) {
+        long blockNumber = previousBlock.getBlockNum();
+        if (blockNumber <= 3) {
+            return this.genesisBaseTarget;
+        }
+
+        Block ancestor1 = blockStore.getBlockByHash(previousBlock.getChainID(), previousBlock.getPreviousBlockHash());
+        if (null == ancestor1) {
+            logger.error("Cannot find parent, hash:{}", Hex.toHexString(previousBlock.getPreviousBlockHash()));
+            return null;
+        }
+        Block ancestor2 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor1.getPreviousBlockHash());
+        if (null == ancestor2) {
+            logger.error("Cannot find parent, hash:{}", Hex.toHexString(ancestor1.getPreviousBlockHash()));
+            return null;
+        }
+        Block ancestor3 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor2.getPreviousBlockHash());
+        if (null == ancestor3) {
+            logger.error("Cannot find parent, hash:{}", Hex.toHexString(ancestor2.getPreviousBlockHash()));
+            return null;
+        }
+
+        long totalTimeInterval = 0;
+        if (previousBlock.getTimeStamp() > ancestor3.getTimeStamp()) {
+            totalTimeInterval = previousBlock.getTimeStamp() -ancestor3.getTimeStamp();
+        }
+
+        long timeAver = totalTimeInterval / 3;
+
+        BigInteger previousBlockBaseTarget = previousBlock.getBaseTarget();
+        BigInteger requiredBaseTarget;
+
+        if (timeAver > this.averageBlockTime ) {
+            long min = 0;
+
+            if (timeAver < this.maxRatio) {
+                min = timeAver;
+            } else {
+                min = this.maxRatio;
+            }
+
+            requiredBaseTarget = previousBlockBaseTarget.multiply(BigInteger.valueOf(min)).
+                    divide(BigInteger.valueOf(this.averageBlockTime));
+        } else {
+            long max = 0;
+
+            if (timeAver > this.minRatio) {
+                max = timeAver;
+            } else {
+                max = this.minRatio;
+            }
+
+            // 注意计算顺序：在计算机中整数的乘除法的计算顺序，对最终结果是有影响的，比如：
+            // 3 / 2 * 2 = 2, 而3 * 2 / 2 = 3, 因此下面1、2、3的计算结果是不一样的
+            // 这里采用和公式中的顺序一样，即：
+            // If 𝐼𝑛 > AverageBlockTime, 𝑇(𝑏,𝑛) = 𝑇(𝑏,𝑛−1) * (min(𝐼𝑛,𝑅𝑚𝑎𝑥) / AverageBlockTime).
+            // If 𝐼𝑛 < AverageBlockTime, 𝑇(𝑏,𝑛) = 𝑇(𝑏,𝑛−1) * (1− 𝛾 * (AverageBlockTime−max(𝐼𝑛,𝑅𝑚𝑖𝑛)) / AverageBlockTime)
+            BigInteger delta = previousBlockBaseTarget.multiply(BigInteger.valueOf(64)).
+                    divide(BigInteger.valueOf(100)).
+                    multiply(BigInteger.valueOf(this.averageBlockTime - max)).
+                    divide(BigInteger.valueOf(this.averageBlockTime));
+            requiredBaseTarget = previousBlockBaseTarget.subtract(delta);
+        }
+
+        return requiredBaseTarget;
+    }
 
 
     /**
