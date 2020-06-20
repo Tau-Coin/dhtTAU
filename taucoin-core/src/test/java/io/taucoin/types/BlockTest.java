@@ -44,12 +44,16 @@ public class BlockTest {
     @Test
     public void createBlock(){
         Transaction tx = new Transaction(ByteUtil.toByte(transaction));
-        Block block = new Block(version,chainid,150000000,1,pblockhash,imblockhash,
-                basetarget,cummulativediff,generationSig,tx,100000,100000,
-                80000,2,signature,pubkey);
-        String str = ByteUtil.toHexString(block.getEncoded());
-        log.debug(str);
-        log.debug("block size is: "+ ByteUtil.toByte(str).length + " bytes");
+        try {
+            Block block = new Block(version, chainid, 150000000, 1, pblockhash, imblockhash,
+                    basetarget, cummulativediff, generationSig, tx, 100000, 100000,
+                    80000, 2, signature, pubkey);
+            String str = ByteUtil.toHexString(block.getEncoded());
+            log.debug(str);
+            log.debug("block size is: " + ByteUtil.toByte(str).length + " bytes");
+        }catch (InternalParamterException e){
+
+        }
     }
 
     @Test
@@ -69,19 +73,23 @@ public class BlockTest {
     @Test
     public void unSigBlock(){
         Transaction tx = new Transaction(ByteUtil.toByte(transaction));
-        Block block = new Block(version,chainid,150000000,1,pblockhash,imblockhash,
-                basetarget,cummulativediff,generationSig,tx,100000,100000,
-                80000,2,pubkey);
-        String str = ByteUtil.toHexString(block.getSigEncoded());
-        log.debug(str);
-        log.debug("block size is: "+ ByteUtil.toByte(str).length + " bytes");
-        log.debug("block sig msg: "+ByteUtil.toHexString(block.getBlockSigMsg()));
-        byte[] blocksig = Ed25519.sign(block.getBlockSigMsg(),pubkey,ByteUtil.toByte(prikey));
-        block.setSignature(blocksig);
-        log.debug("signature is: "+ByteUtil.toHexString(blocksig));
-        log.debug("signature size is: "+blocksig.length);
-        String str1 = ByteUtil.toHexString(block.getEncoded());
-        log.debug("block with sig is: "+str1);
+        try {
+            Block block = new Block(version, chainid, 150000000, 1, pblockhash, imblockhash,
+                    basetarget, cummulativediff, generationSig, tx, 100000, 100000,
+                    80000, 2, pubkey);
+            String str = ByteUtil.toHexString(block.getSigEncoded());
+            log.debug(str);
+            log.debug("block size is: " + ByteUtil.toByte(str).length + " bytes");
+            log.debug("block sig msg: " + ByteUtil.toHexString(block.getBlockSigMsg()));
+            byte[] blocksig = Ed25519.sign(block.getBlockSigMsg(), pubkey, ByteUtil.toByte(prikey));
+            block.setSignature(blocksig);
+            log.debug("signature is: " + ByteUtil.toHexString(blocksig));
+            log.debug("signature size is: " + blocksig.length);
+            String str1 = ByteUtil.toHexString(block.getEncoded());
+            log.debug("block with sig is: " + str1);
+        }catch (InternalParamterException e){
+
+        }
     }
 
     @Test

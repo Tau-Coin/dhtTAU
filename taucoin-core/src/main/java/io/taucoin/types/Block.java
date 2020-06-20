@@ -56,7 +56,7 @@ public class Block {
     public Block(byte version, byte[] chainID, long timeStamp, long blockNum, byte[] previousBlockHash,
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, Transaction txMsg, long minerBalance, long senderBalance,
-                 long receiverBalance, long senderNonce, byte[] signature,byte[] minerPubkey) {
+                 long receiverBalance, long senderNonce, byte[] signature,byte[] minerPubkey) throws InternalParamterException {
         if (chainID.length > ChainParam.ChainIDlength) {
             throw new IllegalArgumentException("chainid need less than: " + ChainParam.ChainIDlength);
         }
@@ -71,6 +71,9 @@ public class Block {
         }
         if (minerPubkey.length != ChainParam.PubkeyLength) {
             throw new IllegalArgumentException("miner pubkey length should =: " + ChainParam.PubkeyLength);
+        }
+        if(txMsg == null) {
+            throw new InternalParamterException("null tx to be used construct block");
         }
         this.version = version;
         this.chainID = chainID;
@@ -111,7 +114,7 @@ public class Block {
     public Block(byte version, byte[] chainID, long timeStamp, long blockNum, byte[] previousBlockHash,
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, Transaction txMsg, long minerBalance, long senderBalance,
-                 long receiverBalance, long senderNonce,byte[] minerPubkey) {
+                 long receiverBalance, long senderNonce,byte[] minerPubkey) throws InternalParamterException{
         if(chainID.length > ChainParam.ChainIDlength){
             throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
         }
@@ -124,7 +127,9 @@ public class Block {
         if(minerPubkey.length != ChainParam.PubkeyLength){
             throw new IllegalArgumentException("miner pubkey length should =: " + ChainParam.PubkeyLength);
         }
-
+        if(txMsg == null) {
+            throw new InternalParamterException("null tx to be used construct block");
+        }
         this.version = version;
         this.chainID = chainID;
         this.timeStamp = timeStamp;
