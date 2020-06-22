@@ -56,7 +56,7 @@ public class Block {
     public Block(byte version, byte[] chainID, long timeStamp, long blockNum, byte[] previousBlockHash,
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, Transaction txMsg, long minerBalance, long senderBalance,
-                 long receiverBalance, long senderNonce, byte[] signature,byte[] minerPubkey) throws InternalParamterException {
+                 long receiverBalance, long senderNonce, byte[] signature,byte[] minerPubkey){
         if (chainID.length > ChainParam.ChainIDlength) {
             throw new IllegalArgumentException("chainid need less than: " + ChainParam.ChainIDlength);
         }
@@ -71,9 +71,6 @@ public class Block {
         }
         if (minerPubkey.length != ChainParam.PubkeyLength) {
             throw new IllegalArgumentException("miner pubkey length should =: " + ChainParam.PubkeyLength);
-        }
-        if(txMsg == null) {
-            throw new InternalParamterException("null tx to be used construct block");
         }
         this.version = version;
         this.chainID = chainID;
@@ -114,7 +111,7 @@ public class Block {
     public Block(byte version, byte[] chainID, long timeStamp, long blockNum, byte[] previousBlockHash,
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, Transaction txMsg, long minerBalance, long senderBalance,
-                 long receiverBalance, long senderNonce,byte[] minerPubkey) throws InternalParamterException{
+                 long receiverBalance, long senderNonce,byte[] minerPubkey){
         if(chainID.length > ChainParam.ChainIDlength){
             throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
         }
@@ -126,9 +123,6 @@ public class Block {
         }
         if(minerPubkey.length != ChainParam.PubkeyLength){
             throw new IllegalArgumentException("miner pubkey length should =: " + ChainParam.PubkeyLength);
-        }
-        if(txMsg == null) {
-            throw new InternalParamterException("null tx to be used construct block");
         }
         this.version = version;
         this.chainID = chainID;
@@ -172,7 +166,10 @@ public class Block {
            byte[] basetarget = RLP.encodeBigInteger(this.baseTarget);
            byte[] cummulativediff = RLP.encodeBigInteger(this.cumulativeDifficulty);
            byte[] generationSig = RLP.encodeElement(this.generationSignature);
-           byte[] txmsg = txMsg.getEncoded();
+           byte[] txmsg = new byte[]{};
+           if(txMsg != null){
+               txmsg = txMsg.getEncoded();
+           }
            byte[] minerbalance = RLP.encodeElement(ByteUtil.longToBytes(this.minerBalance));
            byte[] senderbalance = RLP.encodeElement(ByteUtil.longToBytes(this.senderBalance));
            byte[] receiverbalance = RLP.encodeElement(ByteUtil.longToBytes(this.receiverBalance));
@@ -201,7 +198,10 @@ public class Block {
             byte[] basetarget = RLP.encodeBigInteger(this.baseTarget);
             byte[] cummulativediff = RLP.encodeBigInteger(this.cumulativeDifficulty);
             byte[] generationSig = RLP.encodeElement(this.generationSignature);
-            byte[] txmsg = txMsg.getEncoded();
+            byte[] txmsg = new byte[]{};
+            if(txMsg != null){
+                txmsg = txMsg.getEncoded();
+            }
             byte[] minerbalance = RLP.encodeElement(ByteUtil.longToBytes(this.minerBalance));
             byte[] senderbalance = RLP.encodeElement(ByteUtil.longToBytes(this.senderBalance));
             byte[] receiverbalance = RLP.encodeElement(ByteUtil.longToBytes(this.receiverBalance));
@@ -232,13 +232,22 @@ public class Block {
             this.baseTarget = new BigInteger(block.get(6).getRLPData());
             this.cumulativeDifficulty = new BigInteger(block.get(7).getRLPData() == null?BigInteger.ZERO.toByteArray():block.get(7).getRLPData());
             this.generationSignature = block.get(8).getRLPData();
-            this.txMsg = new Transaction(block.get(9).getRLPData());
-            this.minerBalance = ByteUtil.byteArrayToLong(block.get(10).getRLPData());
-            this.senderBalance = ByteUtil.byteArrayToLong(block.get(11).getRLPData());
-            this.receiverBalance = ByteUtil.byteArrayToLong(block.get(12).getRLPData());
-            this.senderNonce = ByteUtil.byteArrayToLong(block.get(13).getRLPData());
-            this.signature = block.get(14).getRLPData();
-            this.minerPubkey = block.get(15).getRLPData();
+            if(block.size() == 16){
+                this.txMsg = new Transaction(block.get(9).getRLPData());
+                this.minerBalance = ByteUtil.byteArrayToLong(block.get(10).getRLPData());
+                this.senderBalance = ByteUtil.byteArrayToLong(block.get(11).getRLPData());
+                this.receiverBalance = ByteUtil.byteArrayToLong(block.get(12).getRLPData());
+                this.senderNonce = ByteUtil.byteArrayToLong(block.get(13).getRLPData());
+                this.signature = block.get(14).getRLPData();
+                this.minerPubkey = block.get(15).getRLPData();
+            }else {
+                this.minerBalance = ByteUtil.byteArrayToLong(block.get(9).getRLPData());
+                this.senderBalance = ByteUtil.byteArrayToLong(block.get(10).getRLPData());
+                this.receiverBalance = ByteUtil.byteArrayToLong(block.get(11).getRLPData());
+                this.senderNonce = ByteUtil.byteArrayToLong(block.get(12).getRLPData());
+                this.signature = block.get(13).getRLPData();
+                this.minerPubkey = block.get(14).getRLPData();
+            }
             isParsed = true;
         }
     }
@@ -372,7 +381,7 @@ public class Block {
         if(1 == baseTarget.compareTo(ChainParam.MaxBaseTarget)) return false;
         if(1 == cumulativeDifficulty.compareTo(ChainParam.MaxCummulativeDiff)) return false;
         if(generationSignature.length != ChainParam.GenerationSigLength) return false;
-        if(!txMsg.isTxParamValidate()) return false;
+        if(txMsg != null && !txMsg.isTxParamValidate()) return false;
         if(minerBalance < 0) return false;
         if(senderBalance < 0) return false;
         if(receiverBalance < 0) return false;
