@@ -1,6 +1,7 @@
 package io.taucoin.datasource;
 
 import java.util.Map;
+import java.util.Set;
 
 public interface KeyValueDataSource extends DataSource {
 
@@ -11,6 +12,8 @@ public interface KeyValueDataSource extends DataSource {
     void delete(byte[] key);
 
     void updateBatch(Map<byte[], byte[]> rows);
+
+    Set<byte[]> seekKeysWithPrefix(byte[] prefix);
 
     void removeWithPrefix(byte[] prefix);
 }
