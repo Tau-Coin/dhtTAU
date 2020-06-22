@@ -5,7 +5,7 @@ import io.taucoin.util.RLPList;
 
 import java.math.BigInteger;
 
-public class AccountState {
+public class AccountState implements Cloneable {
     private BigInteger balance;
     private BigInteger nonce;
 
@@ -15,7 +15,7 @@ public class AccountState {
         byte[] balanceBytes = accountState.get(0).getRLPData();
         this.balance = balanceBytes == null ? BigInteger.ZERO :
                 new BigInteger(1, balanceBytes);
-        byte[] nonceBytes = accountState.get(0).getRLPData();
+        byte[] nonceBytes = accountState.get(1).getRLPData();
         this.nonce = nonceBytes == null ? BigInteger.ZERO :
                 new BigInteger(1, nonceBytes);
     }
@@ -45,6 +45,11 @@ public class AccountState {
         byte[] balance = RLP.encodeBigInteger(this.balance);
         byte[] nonce = RLP.encodeBigInteger(this.nonce);
         return RLP.encodeList(balance, nonce);
+    }
+
+    @Override
+    protected AccountState clone() throws CloneNotSupportedException {
+        return (AccountState)super.clone();
     }
 
     @Override
