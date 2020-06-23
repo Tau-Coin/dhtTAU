@@ -2,9 +2,7 @@ package io.taucoin.manager;
 
 import io.taucoin.account.AccountManager;
 import io.taucoin.chain.ChainManager;
-import io.taucoin.db.BlockDB;
 import io.taucoin.db.KeyValueDataBase;
-import io.taucoin.db.StateDB;
 import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.TauListener;
 import io.taucoin.rpc.RpcServer;
@@ -36,12 +34,6 @@ public class TauController {
 
     private ChainManager chainManager;
 
-    // state database
-    private StateDB stateDB;
-
-    // block database
-    private BlockDB blockDB;
-
     // Enable rpc or not.
     private boolean enableRpc;
     // Rpc server
@@ -56,7 +48,7 @@ public class TauController {
      * @param blockDS block key-value database implementation.
      */
     public TauController(String repoPath, Pair<byte[], byte[]> key,
-            KeyValueDataBase stateDS, KeyValueDataBase blockDS,
+            KeyValueDataBase stateDb, KeyValueDataBase blockDb,
 	    boolean enableRpc) {
 
         // set the root directory.
@@ -64,13 +56,8 @@ public class TauController {
 	// store public key and private key.
 	this.accountManager.updateKey(key);
 
-	// create state and block database.
-	// If database does not exist, directly load.
-	// If not exist, create new database.
-	this.stateDB = new StateDB(stateDS);
-	this.blockDB = new BlockDB(blockDS);
-
-	//TODO: create chain manager.
+	// create chain manager.
+        this.chainManager = new ChainManager(compositeTauListener, stateDb, blockDb);
 
         this.enableRpc = enableRpc;
         if (enableRpc) {
