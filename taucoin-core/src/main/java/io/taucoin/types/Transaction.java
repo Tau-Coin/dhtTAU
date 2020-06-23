@@ -30,13 +30,13 @@ public class Transaction {
     private byte version;
     private byte[] chainID;
     private long timeStamp;
-    private int TxFee;
+    private int txFee;
     private byte[] senderPubkey;
     private long nonce;
     private TxData txData;
     private byte[] signature;
 
-    private boolean isParse;
+    private boolean isParsed;
     private byte[] rlpEncoded;
     private byte[] rlpSigEncoded;
 
@@ -54,12 +54,12 @@ public class Transaction {
             this.version = version;
             this.chainID = chainID;
             this.timeStamp = timeStamp;
-            this.TxFee = txFee;
+            this.txFee = txFee;
             this.senderPubkey = sender;
             this.nonce = nonce;
             this.txData = txData;
             this.signature = signature;
-            isParse = true;
+            isParsed = true;
     }
 
     /**
@@ -83,11 +83,11 @@ public class Transaction {
         this.version = version;
         this.chainID = chainID;
         this.timeStamp = timeStamp;
-        this.TxFee = txFee;
+        this.txFee = txFee;
         this.senderPubkey = sender;
         this.nonce = nonce;
         this.txData = txData;
-        isParse = true;
+        isParsed = true;
     }
 
     /**
@@ -96,7 +96,7 @@ public class Transaction {
      */
     public Transaction(byte[] rlpEncoded) {
         this.rlpEncoded = rlpEncoded;
-        this.isParse = false;
+        this.isParsed = false;
     }
 
     /**
@@ -108,7 +108,7 @@ public class Transaction {
             byte[] version = RLP.encodeByte(this.version);
             byte[] chainid = RLP.encodeElement(this.chainID);
             byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timeStamp));
-            byte[] txfee = RLP.encodeInt(this.TxFee);
+            byte[] txfee = RLP.encodeInt(this.txFee);
             byte[] sender = RLP.encodeElement(this.senderPubkey);
             byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
             byte[] txdata = this.txData.getEncoded();
@@ -127,7 +127,7 @@ public class Transaction {
             byte[] version = RLP.encodeByte(this.version);
             byte[] chainid = RLP.encodeElement(this.chainID);
             byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timeStamp));
-            byte[] txfee = RLP.encodeInt(this.TxFee);
+            byte[] txfee = RLP.encodeInt(this.txFee);
             byte[] sender = RLP.encodeElement(this.senderPubkey);
             byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
             byte[] txdata = this.txData.getEncoded();
@@ -140,7 +140,7 @@ public class Transaction {
      * parse transaction bytes field to flat block field.
      */
     private void parseRLP(){
-        if(isParse){
+        if(isParsed){
             return;
         }else{
             RLPList list = RLP.decode2(this.rlpEncoded);
@@ -148,53 +148,53 @@ public class Transaction {
             this.version = tx.get(0).getRLPData()[0];
             this.chainID = tx.get(1).getRLPData();
             this.timeStamp = ByteUtil.byteArrayToLong(tx.get(2).getRLPData());
-            this.TxFee = ByteUtil.byteArrayToInt(tx.get(3).getRLPData());
+            this.txFee = ByteUtil.byteArrayToInt(tx.get(3).getRLPData());
             this.senderPubkey = tx.get(4).getRLPData();
             this.nonce = ByteUtil.byteArrayToLong(tx.get(5).getRLPData());
             this.txData = new TxData(tx.get(6).getRLPData());
             this.signature = tx.get(7).getRLPData();
-            isParse = true;
+            isParsed = true;
         }
     }
 
 
     public byte getVersion() {
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return version;
     }
 
     public byte[] getChainID() {
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return chainID;
     }
 
     public long getTimeStamp() {
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return timeStamp;
     }
 
     public int getTxFee() {
-        if(!isParse) parseRLP();
-        return TxFee;
+        if(!isParsed) parseRLP();
+        return txFee;
     }
 
     public byte[] getSenderPubkey() {
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return senderPubkey;
     }
 
     public long getNonce() {
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return nonce;
     }
 
     public TxData getTxData() {
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return txData;
     }
 
     public byte[] getSignature() {
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return signature;
     }
 
@@ -219,7 +219,7 @@ public class Transaction {
      * @return
      */
     public boolean isTxParamValidate(){
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         if(chainID.length > ChainParam.ChainIDlength) return false;
         if(timeStamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timeStamp < 0) return false;
         if(senderPubkey.length != ChainParam.PubkeyLength) return false;
