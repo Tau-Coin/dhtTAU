@@ -1,12 +1,10 @@
 package io.taucoin.db;
 
-import io.taucoin.datasource.KeyValueDataSource;
-
 public class StateDB {
 
-    private KeyValueDataSource db;
+    private KeyValueDataBase db;
 
-    public StateDB(KeyValueDataSource db) {
+    public StateDB(KeyValueDataBase db) {
         this.db = db;
     }
 }

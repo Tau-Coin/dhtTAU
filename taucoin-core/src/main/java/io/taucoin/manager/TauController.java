@@ -2,8 +2,8 @@ package io.taucoin.manager;
 
 import io.taucoin.account.AccountManager;
 import io.taucoin.chain.ChainManager;
-import io.taucoin.datasource.KeyValueDataSource;
 import io.taucoin.db.BlockDB;
+import io.taucoin.db.KeyValueDataBase;
 import io.taucoin.db.StateDB;
 import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.TauListener;
@@ -56,7 +56,7 @@ public class TauController {
      * @param blockDS block key-value database implementation.
      */
     public TauController(String repoPath, Pair<byte[], byte[]> key,
-            KeyValueDataSource stateDS, KeyValueDataSource blockDS,
+            KeyValueDataBase stateDS, KeyValueDataBase blockDS,
 	    boolean enableRpc) {
 
         // set the root directory.

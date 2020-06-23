@@ -1,12 +1,10 @@
 package io.taucoin.db;
 
-import io.taucoin.datasource.KeyValueDataSource;
-
 public class BlockDB {
 
-    private KeyValueDataSource db;
+    private KeyValueDataBase db;
 
-    public BlockDB(KeyValueDataSource db) {
+    public BlockDB(KeyValueDataBase db) {
         this.db = db;
     }
 }
