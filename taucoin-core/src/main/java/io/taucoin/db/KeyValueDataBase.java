@@ -53,6 +53,14 @@ public interface KeyValueDataBase {
     void updateBatch(Map<byte[], byte[]> rows) throws Exception;
 
     /**
+     * Write batch(write and delete) into the database.
+     * @param writes
+     * @param delKeys
+     * @throws Exception
+     */
+    void updateBatch(Map<byte[], byte[]> writes, Set<byte[]> delKeys) throws Exception;
+
+    /**
      * Retrieves keys with prefix.
      *
      * @param prefix
