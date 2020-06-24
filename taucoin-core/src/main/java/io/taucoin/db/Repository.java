@@ -2,69 +2,221 @@ package io.taucoin.db;
 
 import io.taucoin.core.AccountState;
 import io.taucoin.types.Transaction;
+import io.taucoin.util.ByteArrayWrapper;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface Repository {
+    /**
+     * Open database.
+     *
+     * @param path database path which can be accessed
+     * @throws Exception
+     */
+    void open(String path) throws Exception;
+
+    /**
+     * Close database.
+     */
+    void close();
+
     /*************************state interface*************************/
-    // Chains
-    void followChain(byte[] chainID);
+    /**
+     * follow a chain
+     * @param chainID
+     * @throws Exception
+     */
+    void followChain(byte[] chainID) throws Exception;
 
-    Set<byte[]> getChains();
+    /**
+     * get all followed chains
+     * @return
+     * @throws Exception
+     */
+    Set<byte[]> getAllFollowedChains() throws Exception;
 
-    void deleteChain(byte[] chainID);
+    /**
+     * unfollow a chain
+     * @param chainID
+     * @throws Exception
+     */
+    void unfollowChain(byte[] chainID) throws Exception;
 
     // Current Block Hash
-    void setBestBlockHash(byte[] chainID, byte[] hash);
 
-    byte[] getBestBlockHash(byte[] chainID);
+    /**
+     * set best block hash
+     * @param chainID
+     * @param hash
+     * @throws Exception
+     */
+    void setBestBlockHash(byte[] chainID, byte[] hash) throws Exception;
 
-    void deleteBestBlockHash(byte[] chainID);
+    /**
+     * get best block hash
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    byte[] getBestBlockHash(byte[] chainID) throws Exception;
 
-    // Mutable Range
-    void setMutableRange(byte[] chainID, int number);
+    /**
+     * delete best block hash
+     * @param chainID
+     * @throws Exception
+     */
+    void deleteBestBlockHash(byte[] chainID) throws Exception;
 
-    int getMutableRange(byte[] chainID);
+    /**
+     * set mutable range
+     * @param chainID
+     * @param number
+     * @throws Exception
+     */
+    void setMutableRange(byte[] chainID, int number) throws Exception;
 
-    void deleteMutableRange(byte[] chainID);
+    /**
+     * get mutable range
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    int getMutableRange(byte[] chainID) throws Exception;
 
-    // peers
-    void addPeer(byte[] chainID, byte[] pubkey);
+    /**
+     * delete mutable range
+     * @param chainID
+     * @throws Exception
+     */
+    void deleteMutableRange(byte[] chainID) throws Exception;
 
-    Set<byte[]> getPeers(byte[] chainID);
+    /**
+     * add a new peer
+     * @param chainID
+     * @param pubkey
+     * @throws Exception
+     */
+    void addPeer(byte[] chainID, byte[] pubkey) throws Exception;
 
-    void deletePeer(byte[] chainID, byte[] pubkey);
+    /**
+     * get all peers of a chain
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    Set<byte[]> getPeers(byte[] chainID) throws Exception;
 
-    void deleteAllPeers(byte[] chainID);
+    /**
+     * delete a peer
+     * @param chainID
+     * @param pubkey
+     * @throws Exception
+     */
+    void deletePeer(byte[] chainID, byte[] pubkey) throws Exception;
 
-    // TAU self Txs Pool
-    Set<Transaction> getTAUSelfTxPool(byte[] chainID);
+    /**
+     * delete all peers of a chain
+     * @param chainID
+     * @throws Exception
+     */
+    void deleteAllPeers(byte[] chainID) throws Exception;
 
-    void updateTAUSelfTxPool(byte[] chainID, Set<Transaction> txs);
+    /**
+     * get self transaction pool
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    Set<Transaction> getSelfTxPool(byte[] chainID) throws Exception;
 
-    void deleteTAUSelfTxPool(byte[] chainID);
+    /**
+     * put transactions into pool
+     * @param chainID
+     * @param txs
+     * @throws Exception
+     */
+    void putIntoSelfTxPool(byte[] chainID, Set<Transaction> txs) throws Exception;
 
-    // Total Used Data
+    /**
+     * delete self transaction pool
+     * @param chainID
+     * @throws Exception
+     */
+    void deleteSelfTxPool(byte[] chainID) throws Exception;
 
-    // ImmutablePointBlockHash
-    void setImmutablePointBlockHash(byte[] chainID, byte[] hash);
+    /**
+     * set immutable point block hash
+     * @param chainID
+     * @param hash
+     * @throws Exception
+     */
+    void setImmutablePointBlockHash(byte[] chainID, byte[] hash) throws Exception;
 
-    byte[] getImmutablePointBlockHash(byte[] chainID);
+    /**
+     * get immutable point block hash
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    byte[] getImmutablePointBlockHash(byte[] chainID) throws Exception;
 
-    byte[] deleteImmutablePointBlockHash(byte[] chainID);
+    /**
+     * delete immutable point block hash
+     * @param chainID
+     * @throws Exception
+     */
+    void deleteImmutablePointBlockHash(byte[] chainID) throws Exception;
 
-    // VotesCountingPointBlockHash
-    void setVotesCountingPointBlockHash(byte[] chainID, byte[] hash);
+    /**
+     * set votes counting point block hash
+     * @param chainID
+     * @param hash
+     * @throws Exception
+     */
+    void setVotesCountingPointBlockHash(byte[] chainID, byte[] hash) throws Exception;
 
-    byte[] getVotesCountingPointBlockHash(byte[] chainID);
+    /**
+     * get votes counting point block hash
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    byte[] getVotesCountingPointBlockHash(byte[] chainID) throws Exception;
 
-    byte[] deleteVotesCountingPointBlockHash(byte[] chainID);
+    /**
+     * delete votes counting point block hash
+     * @param chainID
+     * @throws Exception
+     */
+    void deleteVotesCountingPointBlockHash(byte[] chainID) throws Exception;
 
 
     /*************************state interface*************************/
-    void updateAccounts(Set<AccountState> accountStateSet);
 
-    AccountState getAccount(byte[] chainID, byte[] pubkey);
+    /**
+     * update accounts state
+     * @param chainID
+     * @param accountStateMap
+     * @throws Exception
+     */
+    void updateAccounts(byte[] chainID, Map<ByteArrayWrapper, AccountState> accountStateMap) throws Exception;
 
-    void deleteAccount(byte[] chainID, byte[] pubkey);
+    /**
+     * get a account state
+     * @param chainID
+     * @param pubkey
+     * @return
+     * @throws Exception
+     */
+    AccountState getAccount(byte[] chainID, byte[] pubkey) throws Exception;
+
+    /**
+     * delete a account
+     * @param chainID
+     * @param pubkey
+     * @throws Exception
+     */
+    void deleteAccount(byte[] chainID, byte[] pubkey) throws Exception;
 }
+

@@ -1,7 +1,7 @@
 package io.taucoin.db;
 
 public class PrefixKey {
-    private static final byte[] chain = "Chain".getBytes();
+    public static final byte[] chain = "Chain".getBytes();
     private static final byte[] bestBlock = "BestBlock".getBytes();
     private static final byte[] mutableRange = "MutableRange".getBytes();
     private static final byte[] immutablePointBlockHash = "ImmutablePointBlockHash".getBytes();
