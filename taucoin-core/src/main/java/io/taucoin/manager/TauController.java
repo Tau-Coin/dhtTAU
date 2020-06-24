@@ -6,6 +6,7 @@ import io.taucoin.db.KeyValueDataBase;
 import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.TauListener;
 import io.taucoin.rpc.RpcServer;
+import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.TorrentEngine;
 import io.taucoin.util.Repo;
 
@@ -44,8 +45,9 @@ public class TauController {
      *
      * @param repoPath the directory where data is stored.
      * @param key the pair of public key and private key.
-     * @param stateDS state key-value database implementation.
-     * @param blockDS block key-value database implementation.
+     * @param stateDb state key-value database implementation.
+     * @param blockDb block key-value database implementation.
+     * @param enableRpc enable rpc server or not.
      */
     public TauController(String repoPath, Pair<byte[], byte[]> key,
             KeyValueDataBase stateDb, KeyValueDataBase blockDb,
@@ -57,6 +59,8 @@ public class TauController {
 	this.accountManager.updateKey(key);
 
 	// create chain manager.
+	// ChainManager is responsibling for opening database and
+	// loading the prebuilt blockchain data.
         this.chainManager = new ChainManager(compositeTauListener, stateDb, blockDb);
 
         this.enableRpc = enableRpc;
@@ -67,8 +71,10 @@ public class TauController {
 
     /**
      * Start all the blockchain core components.
+     *
+     * @param settings SessionSettings
      */
-    public void start() {
+    public void start(SessionSettings settings) {
     }
 
     /**
