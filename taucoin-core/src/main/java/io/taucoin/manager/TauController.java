@@ -58,6 +58,9 @@ public class TauController {
 	// store public key and private key.
 	this.accountManager.updateKey(key);
 
+	// Add TauListener into TorrentEngine.
+	this.torrentEngine.setTauListener(compositeTauListener);
+
 	// create chain manager.
 	// ChainManager is responsibling for opening database and
 	// loading the prebuilt blockchain data.
@@ -75,12 +78,17 @@ public class TauController {
      * @param settings SessionSettings
      */
     public void start(SessionSettings settings) {
+        // First of all, start torrent engine.
+	torrentEngine.start(settings);
     }
 
     /**
      * Stop all the blockchain core components.
      */
     public void stop() {
+
+        // Lastly, stop torrent engine
+	torrentEngine.stop();
     }
 
     /**
