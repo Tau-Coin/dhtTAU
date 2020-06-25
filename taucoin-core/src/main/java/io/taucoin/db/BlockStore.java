@@ -4,9 +4,39 @@ import io.taucoin.types.Block;
 
 public interface BlockStore {
 
-    Block getBlockByHash(byte[] chainID, byte[] hash);
+    /**
+     * Open database.
+     *
+     * @param path database path which can be accessed
+     * @throws Exception
+     */
+    void open(String path) throws Exception;
 
-    void saveBlock(Block block);
+    /**
+     * Close database.
+     */
+    void close();
 
-    void removeChainAllBlocks(byte[] chainID);
+    /**
+     * get block by hash
+     * @param chainID
+     * @param hash
+     * @return
+     * @throws Exception
+     */
+    Block getBlockByHash(byte[] chainID, byte[] hash) throws Exception;
+
+    /**
+     * save block
+     * @param block
+     * @throws Exception
+     */
+    void saveBlock(Block block) throws Exception;
+
+    /**
+     * remove all blocks of a chain
+     * @param chainID
+     * @throws Exception
+     */
+    void removeChainAllBlocks(byte[] chainID) throws Exception;
 }
