@@ -115,6 +115,17 @@ public class TorrentEngine {
     }
 
     /**
+     * Get SessionManager from torrect session context.
+     *
+     * @return SessionManager
+     */
+    public SessionManager getSessionManager() {
+        synchronized (this.lock) {
+	    return sessionManager;
+	}
+    }
+
+    /**
      * Start torrent engine.
      *
      * @param settings SessionSettings

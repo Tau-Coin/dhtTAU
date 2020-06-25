@@ -11,6 +11,7 @@ import io.taucoin.torrent.TorrentEngine;
 import io.taucoin.util.Repo;
 
 import com.frostwire.jlibtorrent.Pair;
+import com.frostwire.jlibtorrent.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,5 +126,34 @@ public class TauController {
      */
     public ChainManager getChainManager() {
         return this.chainManager;
+    }
+
+    /**
+     * Follow some chain specified by chain id.
+     *
+     * @param chainID
+     * @return boolean successful or not.
+     */
+    public boolean followChain(byte[] chainID) {
+        return chainManager.followChain(chainID);
+    }
+
+    /**
+     * Unfollow some chain specified by chain id.
+     *
+     * @param chainID
+     * @return boolean successful or not.
+     */
+    public boolean unfollowChain(byte[] chainID) {
+        return chainManager.unfollowChain(chainID);
+    }
+
+    /**
+     * Get SessionManager from torrect session context.
+     *
+     * @return SessionManager
+     */
+    public SessionManager getSessionManager() {
+        return torrentEngine.getSessionManager();
     }
 }

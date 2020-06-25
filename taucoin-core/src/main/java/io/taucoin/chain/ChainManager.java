@@ -17,9 +17,9 @@ import java.util.Map;
  */
 public class ChainManager {
 
-    // Chain maps.
-    private Map<String, Chain> chains
-            = Collections.synchronizedMap(new HashMap<String, Chain>());
+    // Chain maps: chainID -> Chain.
+    private Map<byte[], Chain> chains
+            = Collections.synchronizedMap(new HashMap<byte[], Chain>());
 
     private TauListener listener;
 
@@ -43,5 +43,25 @@ public class ChainManager {
         // If not exist, create new database.
         this.stateDB = new StateDB(stateDb);
 	this.blockDB = new BlockDB(blockDb);
+    }
+
+    /**
+     * Follow some chain specified by chain id.
+     *
+     * @param chainID
+     * @return boolean successful or not.
+     */
+    public boolean followChain(byte[] chainID) {
+        return false;
+    }
+
+    /**
+     * Unfollow some chain specified by chain id.
+     *
+     * @param chainID
+     * @return boolean successful or not.
+     */
+    public boolean unfollowChain(byte[] chainID) {
+        return false;
     }
 }
