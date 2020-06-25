@@ -39,7 +39,19 @@ public class Transaction {
     private boolean isParsed;
     private byte[] rlpEncoded;
     private byte[] rlpSigEncoded;
+    private byte[] txID;
 
+    /**
+     * construct complete tx with signature.
+     * @param version
+     * @param chainID
+     * @param timeStamp
+     * @param txFee
+     * @param sender
+     * @param nonce
+     * @param txData
+     * @param signature
+     */
     public Transaction(byte version,byte[] chainID,long timeStamp,int txFee,byte[] sender
            ,long nonce,TxData txData,byte[] signature){
             if(chainID.length > ChainParam.ChainIDlength) {
@@ -157,51 +169,90 @@ public class Transaction {
         }
     }
 
-
+    /**
+     * get tx version.
+     * @return
+     */
     public byte getVersion() {
         if(!isParsed) parseRLP();
         return version;
     }
 
+    /**
+     * get chainid tx belongs to.
+     * @return
+     */
     public byte[] getChainID() {
         if(!isParsed) parseRLP();
         return chainID;
     }
 
+    /**
+     * get time stamp.
+     * @return
+     */
     public long getTimeStamp() {
         if(!isParsed) parseRLP();
         return timeStamp;
     }
 
+    /**
+     * get tx fee maybe negative.
+     * @return
+     */
     public int getTxFee() {
         if(!isParsed) parseRLP();
         return txFee;
     }
 
+    /**
+     * get tx sender pubkey.
+     * @return
+     */
     public byte[] getSenderPubkey() {
         if(!isParsed) parseRLP();
         return senderPubkey;
     }
 
+    /**
+     * get tx nonce.
+     * @return
+     */
     public long getNonce() {
         if(!isParsed) parseRLP();
         return nonce;
     }
 
+    /**
+     * get tx data msg.
+     * @return
+     */
     public TxData getTxData() {
         if(!isParsed) parseRLP();
         return txData;
     }
 
+    /**
+     * get transaction signature.
+     * @return
+     */
     public byte[] getSignature() {
         if(!isParsed) parseRLP();
         return signature;
     }
 
+    /**
+     * set tx signature signed with prikey.
+     * @param signature
+     */
     public void setSignature(byte[] signature){
         this.signature = signature;
     }
 
+    /**
+     * get tx sign parts bytes.
+     * @return
+     */
     public byte[] getTransactionSigMsg(){
         MessageDigest digest;
         try{
@@ -236,5 +287,22 @@ public class Transaction {
         byte[] signature = this.getSignature();
         byte[] sigmsg = this.getTransactionSigMsg();
         return Ed25519.verify(signature,sigmsg,this.senderPubkey);
+    }
+
+    /**
+     * get tx id(hash of transaction)
+     * @return
+     */
+    public byte[] getTxID(){
+        if(txID == null){
+            MessageDigest digest;
+            try{
+                digest = MessageDigest.getInstance("SHA-256");
+            }catch (NoSuchAlgorithmException e){
+                return null;
+            }
+            txID = digest.digest(this.getEncoded());
+        }
+        return txID;
     }
 }

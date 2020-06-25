@@ -1,4 +1,4 @@
-/*
+/**
 Copyright 2020 taucoin developer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
@@ -16,7 +16,9 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
-//transaction type used to create transaction.
+/**
+ * transaction type used to create transaction.
+ */
 public enum MsgType {
     TorrentPublish(0),
     Wiring(1),

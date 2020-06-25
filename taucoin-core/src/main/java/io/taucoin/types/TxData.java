@@ -1,4 +1,4 @@
-/*
+/**
 Copyright 2020 taucoin developer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
@@ -29,6 +29,13 @@ public class TxData {
 
     private byte[] rlpEncoded;
     private boolean isParse;
+
+    /**
+     * construct txdata.
+     * @param type tx message type.
+     * @param announcement Description of the magnet link, Receiver, BootStrapNode, Community Announcement.
+     * @param attachment Magnet link, Amount, Nil of boostrapnoode and community announcement.
+     */
     public TxData (MsgType type,String announcement,String attachment){
         if (type != MsgType.TorrentPublish && type != MsgType.BootStrapNodeAnnouncement
             && type != MsgType.Wiring && type != MsgType.CommunityAnnouncement ) {
@@ -52,6 +59,10 @@ public class TxData {
         isParse = false;
     }
 
+    /**
+     * encode txdata.
+     * @return
+     */
     public byte[] getEncoded(){
         if(rlpEncoded == null) {
             byte[] msgtype = RLP.encodeByte(this.msgType.getVaLue());
@@ -62,6 +73,9 @@ public class TxData {
         return this.rlpEncoded;
     }
 
+    /**
+     * parse txdata.
+     */
     private void parseRLP(){
         if(isParse){
              return;
@@ -75,16 +89,28 @@ public class TxData {
         }
     }
 
+    /**
+     * msgtype: TorrentPublish(0),Wiring(1),BootStrapNodeAnnouncement(2),CommunityAnnouncement(3);
+     * @return
+     */
     public MsgType getMsgType(){
         if(!isParse) parseRLP();
         return this.msgType;
     }
 
+    /**
+     * get announcement.
+     * @return
+     */
     public String getAnnoucement(){
         if(!isParse) parseRLP();
         return this.annoucement;
     }
 
+    /**
+     * get receiver about wire tx.
+     * @return
+     */
     public byte[] getReceiver(){
         if(!isParse) parseRLP();
         if(this.msgType == MsgType.Wiring){
@@ -93,6 +119,10 @@ public class TxData {
         return null;
     }
 
+    /**
+     * get attachment.
+     * @return
+     */
     public String getAttachment(){
         if(!isParse) parseRLP();
         return this.attachment;

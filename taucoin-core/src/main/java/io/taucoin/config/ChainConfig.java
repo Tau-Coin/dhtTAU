@@ -1,4 +1,4 @@
-/*
+/**
 Copyright 2020 taucoin developer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
@@ -24,7 +24,9 @@ import io.taucoin.util.ByteUtil;
 import com.frostwire.jlibtorrent.swig.byte_vector;
 import com.frostwire.jlibtorrent.swig.sha1_hash;
 
-
+/**
+ * configure every new chain parameter.
+ */
 public class ChainConfig {
     private int version;
     private String CommunityName;
@@ -50,6 +52,11 @@ public class ChainConfig {
         this.Signature = signature;
     }
 
+    /**
+     * fingerprint of a chain miner pubkey and timestamp.
+     * to composite chainID.
+     * @return
+     */
     private String fingerPrintOfPubkeyAndTime(){
         byte_vector bv = new byte_vector();
         String str = this.GenesisMinerPubkey + this.GenesisTimeStamp;
@@ -60,61 +67,126 @@ public class ChainConfig {
         return hash.to_hex();
     }
 
+    /**
+     * TAU chain basic config on every node.
+     * @return
+     */
     public static ChainConfig NewTauChainConfig(){
         GenesisMsg msg = new GenesisMsg(ByteUtil.toByte(ChainParam.TauGenesisMsg));
         ChainConfig cf = new ChainConfig(ChainParam.DefaultGenesisVersion,ChainParam.TauCommunityName,ChainParam.DefaultBlockTimeInterval,ChainParam.TauGenesisMinerPubkey,ChainParam.TauGenerationSignature,msg,ChainParam.TauGenesisSignature);
         cf.GenesisTimeStamp = ChainParam.TauGenesisTimeStamp;
         return cf;
     }
+
+    /**
+     * when create a new chain this variable is needed.
+     * @param version block chain version of new chain.
+     * @param communityName community name of new chain community.
+     * @param blockTimeInterval block mined time interval on new chain.
+     * @param genesisMinerPubkey genesis miner pubkey.
+     * @param generationSignature initial generation signature to bring up block chain.
+     * @param msg genesis initial K-V state.
+     * @param signature genesis block signature.
+     * @return
+     */
     public static ChainConfig NewChainConfig(int version, String communityName,int blockTimeInterval,String genesisMinerPubkey,
                                              String generationSignature,GenesisMsg msg,String signature){
         return new ChainConfig(version,communityName,blockTimeInterval,genesisMinerPubkey,generationSignature,msg,signature);
     }
+
+    /**
+     * get genesis config version.
+     * @return
+     */
     public int getVersion() {
         return version;
     }
 
+    /**
+     * get community name.
+     * @return
+     */
     public String getCommunityName() {
         return CommunityName;
     }
 
+    /**
+     * get block time interval.
+     * @return
+     */
     public int getBlockTimeInterval() {
         return BlockTimeInterval;
     }
 
+    /**
+     * get genesis miner pubkey.
+     * @return
+     */
     public String getGenesisMinerPubkey() {
         return GenesisMinerPubkey;
     }
 
+    /**
+     * get genesis timestamp.
+     * @return
+     */
     public long getGenesisTimeStamp() {
         return GenesisTimeStamp;
     }
 
+    /**
+     * get block num.
+     * @return
+     */
     public int getBlockNum() {
         return BlockNum;
     }
 
+    /**
+     * get genesis basetarget.
+     * @return
+     */
     public BigInteger getBaseTarget() {
         return BaseTarget;
     }
 
+    /**
+     * get cummulative difficulty.
+     * @return
+     */
     public BigInteger getCummulativeDifficulty() {
         return CummulativeDifficulty;
     }
 
+    /**
+     * get generation signature.
+     * @return
+     */
     public String getGenerationSignature() {
         return GenerationSignature;
     }
 
+    /**
+     * get signature.
+     * @return
+     */
     public String getSignature() {
         return Signature;
     }
 
+    /**
+     * get Chainid.
+     * @return
+     */
     public String getChainid(){
         return this.CommunityName + ChainParam.ChainidDelimeter + this.BlockTimeInterval + ChainParam.ChainidDelimeter
                 + fingerPrintOfPubkeyAndTime();
     }
 
+    /**
+     * get genesis message.
+     * @return
+     */
     public GenesisMsg getMsg() {
         return Msg;
     }
