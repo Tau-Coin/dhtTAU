@@ -198,12 +198,11 @@ public class StateDB implements Repository{
      */
     @Override
     public void putIntoSelfTxPool(byte[] chainID, Set<Transaction> txs) throws Exception {
-        // TODO:: wait for txid
-//        if (null != txs) {
-//            for (Transaction tx: txs) {
-//                db.put(PrefixKey.txPoolKey(chainID, tx.getChainID()), tx.getEncoded());
-//            }
-//        }
+        if (null != txs) {
+            for (Transaction tx: txs) {
+                db.put(PrefixKey.txPoolKey(chainID, tx.getTxID()), tx.getEncoded());
+            }
+        }
     }
 
     /**
