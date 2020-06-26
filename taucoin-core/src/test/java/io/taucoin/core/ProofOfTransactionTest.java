@@ -40,6 +40,16 @@ public class ProofOfTransactionTest {
         private Map<String, byte[]> mapDB = new HashMap<>();
 
         @Override
+        public void open(String path) {
+
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        @Override
         public Block getBlockByHash(byte[] chainID, byte[] hash) {
             byte[] rlp = mapDB.get(Hex.toHexString(hash));
             if (null == rlp) {

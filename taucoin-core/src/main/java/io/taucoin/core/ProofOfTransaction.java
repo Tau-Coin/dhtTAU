@@ -63,19 +63,25 @@ public class ProofOfTransaction {
             return this.genesisBaseTarget;
         }
 
-        Block ancestor1 = blockStore.getBlockByHash(previousBlock.getChainID(), previousBlock.getPreviousBlockHash());
-        if (null == ancestor1) {
-            logger.error("Cannot find parent, hash:{}", Hex.toHexString(previousBlock.getPreviousBlockHash()));
-            return null;
-        }
-        Block ancestor2 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor1.getPreviousBlockHash());
-        if (null == ancestor2) {
-            logger.error("Cannot find parent, hash:{}", Hex.toHexString(ancestor1.getPreviousBlockHash()));
-            return null;
-        }
-        Block ancestor3 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor2.getPreviousBlockHash());
-        if (null == ancestor3) {
-            logger.error("Cannot find parent, hash:{}", Hex.toHexString(ancestor2.getPreviousBlockHash()));
+        Block ancestor1, ancestor2, ancestor3;
+        try {
+            ancestor1 = blockStore.getBlockByHash(previousBlock.getChainID(), previousBlock.getPreviousBlockHash());
+            if (null == ancestor1) {
+                logger.error("Cannot find parent, hash:{}", Hex.toHexString(previousBlock.getPreviousBlockHash()));
+                return null;
+            }
+            ancestor2 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor1.getPreviousBlockHash());
+            if (null == ancestor2) {
+                logger.error("Cannot find parent, hash:{}", Hex.toHexString(ancestor1.getPreviousBlockHash()));
+                return null;
+            }
+            ancestor3 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor2.getPreviousBlockHash());
+            if (null == ancestor3) {
+                logger.error("Cannot find parent, hash:{}", Hex.toHexString(ancestor2.getPreviousBlockHash()));
+                return null;
+            }
+        } catch (Exception e) {
+            logger.info(e.getMessage(), e);
             return null;
         }
 
