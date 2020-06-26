@@ -5,10 +5,12 @@ import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+// 公钥发布的mutable message也会放在stateDB
 public class StateDB implements Repository{
 
     private KeyValueDataBase db;
@@ -288,9 +290,11 @@ public class StateDB implements Repository{
     @Override
     public void updateAccounts(byte[] chainID, Map<ByteArrayWrapper, AccountState> accountStateMap) throws Exception {
         if (null != accountStateMap) {
+            Map<byte[], byte[]> map = new HashMap<>(accountStateMap.size());
             for (Map.Entry<ByteArrayWrapper, AccountState> entry: accountStateMap.entrySet()) {
-                db.put(PrefixKey.accountKey(chainID, entry.getKey().getData()), entry.getValue().getEncoded());
+                map.put(PrefixKey.accountKey(chainID, entry.getKey().getData()), entry.getValue().getEncoded());
             }
+            db.updateBatch(map);
         }
     }
 

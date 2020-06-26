@@ -1,13 +1,14 @@
 package io.taucoin.db;
 
 public class PrefixKey {
-    public static final byte[] chain = "Chain".getBytes();
-    private static final byte[] bestBlock = "BestBlock".getBytes();
-    private static final byte[] mutableRange = "MutableRange".getBytes();
-    private static final byte[] immutablePointBlockHash = "ImmutablePointBlockHash".getBytes();
-    private static final byte[] votesCountingPointBlockHash = "VotesCountingPointBlockHash".getBytes();
-    private static final byte[] peer = "Peer".getBytes();
-    private static final byte[] txPool = "TxPool".getBytes();
+    // prefix
+    public static final byte[] chain = "C".getBytes();
+    private static final byte[] bestBlock = "B".getBytes();
+    private static final byte[] mutableRange = "M".getBytes();
+    private static final byte[] immutablePointBlockHash = "I".getBytes();
+    private static final byte[] votesCountingPointBlockHash = "V".getBytes();
+    private static final byte[] peer = "P".getBytes();
+    private static final byte[] txPool = "T".getBytes();
 
     /**
      * chain key: "Chain" + chainID
@@ -70,7 +71,7 @@ public class PrefixKey {
     }
 
     /**
-     * peer key: chainID + "Peer"
+     * peer prefix: chainID + "Peer"
      * @param chainID
      * @return
      */
