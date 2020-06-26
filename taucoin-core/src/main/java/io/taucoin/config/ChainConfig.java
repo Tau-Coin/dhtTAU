@@ -17,9 +17,13 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 package io.taucoin.config;
 
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import io.taucoin.param.ChainParam;
 import io.taucoin.genesis.GenesisMsg;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.RLP;
 
 import com.frostwire.jlibtorrent.swig.byte_vector;
 import com.frostwire.jlibtorrent.swig.sha1_hash;
@@ -28,7 +32,7 @@ import com.frostwire.jlibtorrent.swig.sha1_hash;
  * configure every new chain parameter.
  */
 public class ChainConfig {
-    private int version;
+    private byte version;
     private String CommunityName;
     private int BlockTimeInterval=600;
     private String GenesisMinerPubkey="";
@@ -38,10 +42,19 @@ public class ChainConfig {
     private BigInteger CummulativeDifficulty = BigInteger.ZERO;
     private String GenerationSignature;
     private GenesisMsg Msg;
-    private String Signature;
+    private String Signature="";
 
-    private  ChainConfig(int version, String communityName,int blockTimeInterval,String genesisMinerPubkey,
-                         String generationSignature,GenesisMsg msg,String signature){
+    /**
+     * construct chain config without signature.
+     * @param version
+     * @param communityName
+     * @param blockTimeInterval
+     * @param genesisMinerPubkey
+     * @param generationSignature
+     * @param msg
+     */
+    private  ChainConfig(byte version, String communityName,int blockTimeInterval,String genesisMinerPubkey,
+                         String generationSignature,GenesisMsg msg){
         this.version = version;
         this.CommunityName = communityName;
         this.BlockTimeInterval = blockTimeInterval;
@@ -49,7 +62,6 @@ public class ChainConfig {
         this.GenesisTimeStamp = System.currentTimeMillis()/1000;
         this.GenerationSignature = generationSignature;
         this.Msg = msg;
-        this.Signature = signature;
     }
 
     /**
@@ -73,8 +85,9 @@ public class ChainConfig {
      */
     public static ChainConfig NewTauChainConfig(){
         GenesisMsg msg = new GenesisMsg(ByteUtil.toByte(ChainParam.TauGenesisMsg));
-        ChainConfig cf = new ChainConfig(ChainParam.DefaultGenesisVersion,ChainParam.TauCommunityName,ChainParam.DefaultBlockTimeInterval,ChainParam.TauGenesisMinerPubkey,ChainParam.TauGenerationSignature,msg,ChainParam.TauGenesisSignature);
+        ChainConfig cf = new ChainConfig(ChainParam.DefaultGenesisVersion,ChainParam.TauCommunityName,ChainParam.DefaultBlockTimeInterval,ChainParam.TauGenesisMinerPubkey,ChainParam.TauGenerationSignature,msg);
         cf.GenesisTimeStamp = ChainParam.TauGenesisTimeStamp;
+        cf.Signature = ChainParam.TauGenesisSignature;
         return cf;
     }
 
@@ -89,16 +102,16 @@ public class ChainConfig {
      * @param signature genesis block signature.
      * @return
      */
-    public static ChainConfig NewChainConfig(int version, String communityName,int blockTimeInterval,String genesisMinerPubkey,
-                                             String generationSignature,GenesisMsg msg,String signature){
-        return new ChainConfig(version,communityName,blockTimeInterval,genesisMinerPubkey,generationSignature,msg,signature);
+    public static ChainConfig NewChainConfig(byte version, String communityName,int blockTimeInterval,String genesisMinerPubkey,
+                                             String generationSignature,GenesisMsg msg){
+        return new ChainConfig(version,communityName,blockTimeInterval,genesisMinerPubkey,generationSignature,msg);
     }
 
     /**
      * get genesis config version.
      * @return
      */
-    public int getVersion() {
+    public byte getVersion() {
         return version;
     }
 
@@ -122,8 +135,8 @@ public class ChainConfig {
      * get genesis miner pubkey.
      * @return
      */
-    public String getGenesisMinerPubkey() {
-        return GenesisMinerPubkey;
+    public byte[] getGenesisMinerPubkey() {
+        return ByteUtil.toByte(GenesisMinerPubkey);
     }
 
     /**
@@ -162,25 +175,26 @@ public class ChainConfig {
      * get generation signature.
      * @return
      */
-    public String getGenerationSignature() {
-        return GenerationSignature;
+    public byte[] getGenerationSignature() {
+        return ByteUtil.toByte(GenerationSignature);
     }
 
     /**
      * get signature.
      * @return
      */
-    public String getSignature() {
-        return Signature;
+    public byte[] getSignature() {
+        return ByteUtil.toByte(Signature);
     }
 
     /**
      * get Chainid.
      * @return
      */
-    public String getChainid(){
-        return this.CommunityName + ChainParam.ChainidDelimeter + this.BlockTimeInterval + ChainParam.ChainidDelimeter
+    public byte[] getChainid(){
+        String id = this.CommunityName + ChainParam.ChainidDelimeter + this.BlockTimeInterval + ChainParam.ChainidDelimeter
                 + fingerPrintOfPubkeyAndTime();
+        return id.getBytes();
     }
 
     /**

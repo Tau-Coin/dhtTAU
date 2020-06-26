@@ -37,6 +37,7 @@ public class TransactionTest {
         Transaction tx = new Transaction(version,chainid,150000000,-60,sender,0,txData,signature);
         log.debug(ByteUtil.toHexString(tx.getEncoded()));
         log.debug("size of tx: "+transaction.length()/2);
+        log.debug("hash is: "+ ByteUtil.toHexString(tx.getTxID()));
     }
 
     @Test
