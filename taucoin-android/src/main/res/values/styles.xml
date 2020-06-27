@@ -296,4 +296,8 @@
         <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Subtitle1</item>
     </style>
 
+<!--    <style name="Toolbar" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">-->
+<!--        <item name="colorControlNormal">@color/colorPrimaryDark</item>-->
+<!--    </style>-->
+
 </resources>

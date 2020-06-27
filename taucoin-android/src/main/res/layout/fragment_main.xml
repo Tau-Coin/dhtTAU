@@ -2,8 +2,8 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/main_coordinator_layout"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -15,7 +15,7 @@
             android:clipToPadding="false"
             android:scrollbars="vertical"
             android:focusable="true"
-            android:scrollbarStyle="outsideOverlay" /> <!-- Need for padding -->
+            android:scrollbarStyle="outsideOverlay" />
 
         <TextView
             android:id="@+id/empty_view_torrent_list"
@@ -28,20 +28,5 @@
             android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-
-        <com.leinardi.android.speeddial.SpeedDialOverlayLayout
-            android:id="@+id/fab_overlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?attr/speedDialOverlayColor" />
-
-        <io.taucoin.torrent.publishing.ui.customviews.ThemedSpeedDialView
-            android:id="@+id/fab_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|right"
-            app:sdMainFabClosedSrc="@drawable/ic_add_36dp"
-            app:sdMainFabAnimationRotateAngle="135"
-            app:sdOverlayLayout="@id/fab_overlay" />
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </layout>

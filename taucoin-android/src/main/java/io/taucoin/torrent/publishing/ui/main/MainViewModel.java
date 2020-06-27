@@ -11,11 +11,16 @@ public class MainViewModel extends AndroidViewModel {
         super(application);
     }
 
-    public void pauseAll() {
+    void pauseAll() {
 
     }
 
-    public void resumeAll() {
+    void resumeAll() {
 
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
     }
 }

@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.ui.message;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,7 +37,8 @@ public class MessageFragment extends BaseFragment implements MessageListAdapter.
     private FragmentMainBinding binding;
     private MainViewModel viewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
-//
+    private Handler handler = new Handler();
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -52,6 +54,10 @@ public class MessageFragment extends BaseFragment implements MessageListAdapter.
         }
         ViewModelProvider provider = new ViewModelProvider(activity);
         viewModel = provider.get(MainViewModel.class);
+        initView();
+    }
+
+    private void initView() {
         adapter = new MessageListAdapter(this);
 //        /*
 //         * A RecyclerView by default creates another copy of the ViewHolder in order to
@@ -72,7 +78,10 @@ public class MessageFragment extends BaseFragment implements MessageListAdapter.
         binding.videoList.addItemDecoration(new RecyclerViewDividerDecoration(a.getDrawable(0)));
         a.recycle();
         binding.videoList.setAdapter(adapter);
-        initFabSpeedDial();
+
+        binding.refreshLayout.setOnRefreshListener(this);
+        binding.refreshLayout.setColorSchemeResources(R.color.color_yellow);
+//        binding.refreshLayout.post(() -> binding.refreshLayout.setRefreshing(true));
     }
 
     @Override
@@ -80,44 +89,6 @@ public class MessageFragment extends BaseFragment implements MessageListAdapter.
         super.onAttach(context);
         if (context instanceof BaseActivity)
             activity = (BaseActivity)context;
-    }
-
-    /**
-     * 初始化右下角悬浮按钮组件
-     */
-    private void initFabSpeedDial() {
-        binding.fabButton.setOnActionSelectedListener((item) -> {
-            switch (item.getId()) {
-                case R.id.main_publish_video:
-                    break;
-                case R.id.main_create_community:
-                    break;
-                case R.id.main_other_transaction:
-                    break;
-                default:
-                    return false;
-            }
-            binding.fabButton.close();
-            return true;
-        });
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_other_transaction,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_other_transaction)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_create_community,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_create_community)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_publish_video,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_publish_video)
-                .create());
     }
 
     /**
@@ -133,6 +104,17 @@ public class MessageFragment extends BaseFragment implements MessageListAdapter.
      */
     @Override
     public void onItemPauseClicked(@NonNull MessageListItem item) {
+
+    }
+
+    @Override
+    public void onRefresh() {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                binding.refreshLayout.setRefreshing(false);
+            }
+        }, 1000);
 
     }
 }

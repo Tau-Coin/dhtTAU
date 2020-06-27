@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.databinding.ItemTxListBinding;
+import io.taucoin.torrent.publishing.databinding.ItemMessageListBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;
 
 public class MessageListAdapter extends ListAdapter<MessageListItem, MessageListAdapter.ViewHolder>
@@ -25,8 +25,8 @@ public class MessageListAdapter extends ListAdapter<MessageListItem, MessageList
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        ItemTxListBinding binding = DataBindingUtil.inflate(inflater,
-                R.layout.item_tx_list,
+        ItemMessageListBinding binding = DataBindingUtil.inflate(inflater,
+                R.layout.item_message_list,
                 parent,
                 false);
 
@@ -57,12 +57,12 @@ public class MessageListAdapter extends ListAdapter<MessageListItem, MessageList
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        private ItemTxListBinding binding;
+        private ItemMessageListBinding binding;
         /* For selection support */
         private MessageListItem selectionKey;
         private boolean isSelected;
 
-        ViewHolder(ItemTxListBinding binding) {
+        ViewHolder(ItemMessageListBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }

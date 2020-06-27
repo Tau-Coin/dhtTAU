@@ -1,39 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:context=".ui.main.MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.drawerlayout.widget.DrawerLayout
-        android:id="@+id/drawer_layout"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        tools:context=".ui.main.MainActivity">
 
-        <RelativeLayout
+        <androidx.drawerlayout.widget.DrawerLayout
+            android:id="@+id/drawer_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center">
+            android:layout_height="match_parent">
 
-            <include layout="@layout/toolbar" />
-
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/main_fragmentContainer"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_below="@id/toolbar" />
-        </RelativeLayout>
+                android:gravity="center">
 
-        <com.google.android.material.navigation.NavigationView
-            android:id="@+id/navigation_view"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:background="?attr/backgroundDialog"
-            android:focusable="true">
+                <include
+                    android:id="@+id/toolbar_include"
+                    layout="@layout/toolbar" />
 
-            <include layout="@layout/main_drawer_content" />
-        </com.google.android.material.navigation.NavigationView>
-    </androidx.drawerlayout.widget.DrawerLayout>
-</FrameLayout>
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/main_fragmentContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@+id/toolbar" />
+
+                <com.leinardi.android.speeddial.SpeedDialOverlayLayout
+                    android:id="@+id/fab_overlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="?attr/speedDialOverlayColor" />
+
+                <io.taucoin.torrent.publishing.ui.customviews.ThemedSpeedDialView
+                    android:id="@+id/fab_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentBottom="true"
+                    app:sdMainFabClosedSrc="@drawable/ic_add_36dp"
+                    app:sdMainFabAnimationRotateAngle="135"
+                    app:sdOverlayLayout="@id/fab_overlay" />
+            </RelativeLayout>
+
+            <com.google.android.material.navigation.NavigationView
+                android:id="@+id/navigation_view"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:background="?attr/backgroundDialog"
+                android:focusable="true">
+
+                <include
+                    android:id="@+id/drawer"
+                    layout="@layout/main_drawer_content" />
+            </com.google.android.material.navigation.NavigationView>
+        </androidx.drawerlayout.widget.DrawerLayout>
+    </FrameLayout>
+</layout>

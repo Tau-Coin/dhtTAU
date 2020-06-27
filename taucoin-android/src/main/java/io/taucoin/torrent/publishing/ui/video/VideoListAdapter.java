@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.video;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -10,28 +11,43 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.Utils;
+import io.taucoin.torrent.publishing.databinding.ItemListFootBinding;
 import io.taucoin.torrent.publishing.databinding.ItemVideoListBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;
 
 public class VideoListAdapter extends ListAdapter<VideoListItem, VideoListAdapter.ViewHolder>
-    implements Selectable<VideoListItem> {
+        implements Selectable<VideoListItem> {
     private ClickListener listener;
+    private int itemCount = 10;
+    private static final int TYPE_ITEM = 0;
+    private static final int TYPE_FOOTER = 1;
+
+    void setDataCount(int itemCount){
+        this.itemCount = itemCount;
+    }
 
     VideoListAdapter(ClickListener listener) {
         super(diffCallback);
         this.listener = listener;
     }
 
-    @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        ItemVideoListBinding binding = DataBindingUtil.inflate(inflater,
-                R.layout.item_video_list,
-                parent,
-                false);
-
-        return new ViewHolder(binding);
+        if (viewType == TYPE_ITEM) {
+            ItemVideoListBinding binding = DataBindingUtil.inflate(inflater,
+                    R.layout.item_video_list,
+                    parent,
+                    false);
+            return new ViewHolder(binding);
+        } else if (viewType == TYPE_FOOTER) {
+            ItemListFootBinding binding = DataBindingUtil.inflate(inflater,
+                    R.layout.item_list_foot,
+                    parent,
+                    false);
+            return new ViewHolder(binding);
+        }
+        return null;
     }
 
     @Override
@@ -40,8 +56,17 @@ public class VideoListAdapter extends ListAdapter<VideoListItem, VideoListAdapte
     }
 
     @Override
+    public int getItemViewType(int position) {
+        if (position + 1 == getItemCount()) {
+            return TYPE_FOOTER;
+        } else {
+            return TYPE_ITEM;
+        }
+    }
+
+    @Override
     public int getItemCount() {
-        return 10;
+        return itemCount;
     }
 
     @Override
@@ -70,9 +95,15 @@ public class VideoListAdapter extends ListAdapter<VideoListItem, VideoListAdapte
             Utils.colorizeProgressBar(itemView.getContext(), binding.progress);
         }
 
+        ViewHolder(ItemListFootBinding binding) {
+            super(binding.getRoot());
+        }
+
         void bind(ViewHolder holder, int position) {
-            holder.binding.tvType.setText("Action/test");
-            holder.binding.tvName.setText("Star War");
+            if(holder != null && holder.binding != null){
+                holder.binding.tvType.setText("Action/test");
+                holder.binding.tvName.setText("Star War");
+            }
         }
     }
 
@@ -93,4 +124,5 @@ public class VideoListAdapter extends ListAdapter<VideoListItem, VideoListAdapte
             return oldItem.equals(newItem);
         }
     };
+
 }

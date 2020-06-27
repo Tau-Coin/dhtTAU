@@ -1,57 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <LinearLayout
+    <data>
+
+    </data>
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?attr/defaultRectRipple">
+        android:layout_height="55dp"
+        android:background="@drawable/white_rect_round_bg_no_border">
 
-        <LinearLayout
-            android:id="@+id/info"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tv_amount"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            android:orientation="vertical">
+            android:layout_centerVertical="true"
+            android:layout_marginStart="15dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
 
-            <RelativeLayout
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="15dp"
+            android:layout_alignParentEnd="true"
+            android:lineSpacingExtra="3.5dp"
+            android:layout_toEndOf="@+id/tv_amount"
+            android:gravity="end"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+        <FrameLayout
+            android:id="@+id/fl_read_status"
+            android:background="@drawable/yellow_rect_small_round_bg"
+            android:layout_width="10dp"
+            android:layout_height="match_parent">
+
+            <View
+                android:background="@color/background"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_marginStart="5dp"
+                android:layout_height="match_parent" />
 
-                <TextView
-                    android:id="@+id/tv_hash"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="middle"
-                    android:singleLine="true"
-                    android:textColor="@color/gray_dark"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-
-                <TextView
-                    android:layout_below="@+id/tv_hash"
-                    android:id="@+id/tv_name"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="middle"
-                    android:singleLine="true"
-                    android:text=""
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
-
-                <TextView
-                    android:layout_below="@+id/tv_name"
-                    android:id="@+id/tv_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="middle"
-                    android:singleLine="true"
-                    android:textColor="@color/gray_dark"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-
-            </RelativeLayout>
-        </LinearLayout>
-    </LinearLayout>
+        </FrameLayout>
+    </RelativeLayout>
 </layout>

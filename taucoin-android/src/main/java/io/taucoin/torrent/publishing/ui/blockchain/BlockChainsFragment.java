@@ -1,14 +1,13 @@
 package io.taucoin.torrent.publishing.ui.blockchain;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.os.Bundle;
-import android.util.TypedValue;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.leinardi.android.speeddial.SpeedDialActionItem;
+import java.util.HashMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,16 +18,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.utils.DrawablesUtil;
 import io.taucoin.torrent.publishing.databinding.FragmentBlockChainsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
-import io.taucoin.torrent.publishing.ui.customviews.RecyclerViewDividerDecoration;
+import io.taucoin.torrent.publishing.ui.customviews.RecyclerViewSpacesItemDecoration;
 import io.taucoin.torrent.publishing.ui.main.MainViewModel;
 
 /**
  * Messages主页面相关内容
  */
-public class BlockChainFragment extends BaseFragment implements TxListAdapter.ClickListener{
+public class BlockChainsFragment extends BaseFragment implements TxListAdapter.ClickListener, View.OnClickListener{
 
     private BaseActivity activity;
     private TxListAdapter adapter;
@@ -36,7 +36,8 @@ public class BlockChainFragment extends BaseFragment implements TxListAdapter.Cl
     private FragmentBlockChainsBinding binding;
     private MainViewModel viewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
-//
+    private Handler handler = new Handler();
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -52,7 +53,13 @@ public class BlockChainFragment extends BaseFragment implements TxListAdapter.Cl
         }
         ViewModelProvider provider = new ViewModelProvider(activity);
         viewModel = provider.get(MainViewModel.class);
-//        adapter = new TxListAdapter(this);
+        binding.setEvent(this);
+        initView();
+        initUserInfo();
+    }
+
+    private void initView() {
+        adapter = new TxListAdapter(this);
 //        /*
 //         * A RecyclerView by default creates another copy of the ViewHolder in order to
 //         * fade the views into each other. This causes the problem because the old ViewHolder gets
@@ -68,11 +75,27 @@ public class BlockChainFragment extends BaseFragment implements TxListAdapter.Cl
         binding.videoList.setLayoutManager(layoutManager);
         binding.videoList.setItemAnimator(animator);
         binding.videoList.setEmptyView(binding.emptyViewTorrentList);
-        TypedArray a = activity.obtainStyledAttributes(new TypedValue().data, new int[]{R.attr.divider});
-        binding.videoList.addItemDecoration(new RecyclerViewDividerDecoration(a.getDrawable(0)));
-        a.recycle();
-//        binding.videoList.setAdapter(adapter);
-        initFabSpeedDial();
+        HashMap<String, Integer> stringIntegerHashMap = new HashMap<>();
+        stringIntegerHashMap.put(RecyclerViewSpacesItemDecoration.TOP_DECORATION, 15);
+        binding.videoList.addItemDecoration(new RecyclerViewSpacesItemDecoration(stringIntegerHashMap));
+        binding.videoList.setAdapter(adapter);
+
+        binding.refreshLayout.setOnRefreshListener(this);
+        binding.refreshLayout.setColorSchemeResources(R.color.color_yellow);
+//        binding.refreshLayout.post(() -> binding.refreshLayout.setRefreshing(true));
+    }
+
+    /**
+     * 初始化用户信息
+     */
+    private void initUserInfo() {
+        binding.itemAddress.tvName.setText("TestUser");
+        binding.itemAddress.tvBalance.setText("100");
+        binding.itemAddress.tvAddress.setText("TxasdasdhjashdjhsajdhjashdjshjhhjhQMN");
+        DrawablesUtil.setEndDrawable(binding.itemAddress.tvAddress, R.mipmap.icon_copy, 20);
+        String defaultCommunity = getString(R.string.community_name_tau);
+        binding.tvCommunityName.setText(getString(R.string.community_name_title, defaultCommunity));
+        binding.tvSyncRate.setText(getString(R.string.community_sync_rate, 0));
     }
 
     @Override
@@ -80,44 +103,6 @@ public class BlockChainFragment extends BaseFragment implements TxListAdapter.Cl
         super.onAttach(context);
         if (context instanceof BaseActivity)
             activity = (BaseActivity)context;
-    }
-
-    /**
-     * 初始化右下角悬浮按钮组件
-     */
-    private void initFabSpeedDial() {
-        binding.fabButton.setOnActionSelectedListener((item) -> {
-            switch (item.getId()) {
-                case R.id.main_publish_video:
-                    break;
-                case R.id.main_create_community:
-                    break;
-                case R.id.main_other_transaction:
-                    break;
-                default:
-                    return false;
-            }
-            binding.fabButton.close();
-            return true;
-        });
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_other_transaction,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_other_transaction)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_create_community,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_create_community)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_publish_video,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_publish_video)
-                .create());
     }
 
     /**
@@ -134,5 +119,37 @@ public class BlockChainFragment extends BaseFragment implements TxListAdapter.Cl
     @Override
     public void onItemPauseClicked(@NonNull TxListItem item) {
 
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.ll_community_selected:
+                break;
+            case R.id.iv_mining_switch:
+                float rotation = view.getRotation();
+                view.setRotation(rotation < 0 ? 90 : -90);
+                break;
+            case R.id.ll_mining_fold:
+                rotation = binding.ivMiningFold.getRotation();
+                binding.llMiningContent.setVisibility(rotation > 0 ? View.VISIBLE : View.GONE);
+                binding.ivMiningFold.setRotation(rotation > 0 ? -90 : 90);
+                break;
+            case R.id.ll_txs_fold:
+                rotation = binding.ivTxsFold.getRotation();
+                binding.rlTxsContent.setVisibility(rotation > 0 ? View.VISIBLE : View.GONE);
+                binding.ivTxsFold.setRotation(rotation > 0 ? -90 : 90);
+                break;
+        }
+    }
+
+    @Override
+    public void onRefresh() {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                binding.refreshLayout.setRefreshing(false);
+            }
+        }, 1000);
     }
 }

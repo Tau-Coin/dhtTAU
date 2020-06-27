@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.databinding.ItemTxListBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;
 
@@ -68,9 +69,9 @@ public class TxListAdapter extends ListAdapter<TxListItem, TxListAdapter.ViewHol
         }
 
         void bind(ViewHolder holder, int position) {
-            holder.binding.tvHash.setText("Transaction hash/123122222222222222222222222222222222");
-            holder.binding.tvName.setText("Star War");
-            holder.binding.tvTime.setText("17/06/2020 11:42");
+            String time = DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern10);
+            holder.binding.tvAmount.setText("-10000.00");
+            holder.binding.tvTime.setText(time);
         }
     }
 

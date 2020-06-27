@@ -3,6 +3,8 @@ package io.taucoin.torrent.publishing.ui.video;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,6 +38,7 @@ public class VideoFragment extends BaseFragment implements VideoListAdapter.Clic
     private FragmentMainBinding binding;
     private MainViewModel viewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private Handler handler = new Handler();
 
     @Nullable
     @Override
@@ -52,6 +55,10 @@ public class VideoFragment extends BaseFragment implements VideoListAdapter.Clic
         }
         ViewModelProvider provider = new ViewModelProvider(activity);
         viewModel = provider.get(MainViewModel.class);
+        initView();
+    }
+
+    private void initView() {
         adapter = new VideoListAdapter(this);
 //        /*
 //         * A RecyclerView by default creates another copy of the ViewHolder in order to
@@ -68,11 +75,39 @@ public class VideoFragment extends BaseFragment implements VideoListAdapter.Clic
         binding.videoList.setLayoutManager(layoutManager);
         binding.videoList.setItemAnimator(animator);
         binding.videoList.setEmptyView(binding.emptyViewTorrentList);
-        TypedArray a = activity.obtainStyledAttributes(new TypedValue().data, new int[]{R.attr.divider});
-        binding.videoList.addItemDecoration(new RecyclerViewDividerDecoration(a.getDrawable(0)));
-        a.recycle();
         binding.videoList.setAdapter(adapter);
-        initFabSpeedDial();
+
+        binding.refreshLayout.setOnRefreshListener(this);
+        binding.refreshLayout.setColorSchemeResources(R.color.color_yellow);
+        binding.refreshLayout.post(() -> binding.refreshLayout.setRefreshing(true));
+
+        binding.videoList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                Log.d("test", "StateChanged = " + newState);
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                Log.d("test", "onScrolled");
+
+                int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
+                if (lastVisibleItemPosition + 1 == adapter.getItemCount()) {
+                    Log.d("test", "loading executed");
+
+                    boolean isRefreshing = binding.refreshLayout.isRefreshing();
+                    if (isRefreshing) {
+                        adapter.notifyItemRemoved(adapter.getItemCount());
+                        return;
+                    }
+                    adapter.setDataCount(adapter.getItemCount() + 10);
+                    getData();
+                    Log.d("test", "load more completed");
+                }
+            }
+        });
     }
 
     @Override
@@ -80,44 +115,6 @@ public class VideoFragment extends BaseFragment implements VideoListAdapter.Clic
         super.onAttach(context);
         if (context instanceof BaseActivity)
             activity = (BaseActivity)context;
-    }
-
-    /**
-     * 初始化右下角悬浮按钮组件
-     */
-    private void initFabSpeedDial() {
-        binding.fabButton.setOnActionSelectedListener((item) -> {
-            switch (item.getId()) {
-                case R.id.main_publish_video:
-                    break;
-                case R.id.main_create_community:
-                    break;
-                case R.id.main_other_transaction:
-                    break;
-                default:
-                    return false;
-            }
-            binding.fabButton.close();
-            return true;
-        });
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_other_transaction,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_other_transaction)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_create_community,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_create_community)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_publish_video,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_publish_video)
-                .create());
     }
 
     /**
@@ -134,5 +131,22 @@ public class VideoFragment extends BaseFragment implements VideoListAdapter.Clic
     @Override
     public void onItemPauseClicked(@NonNull VideoListItem item) {
 
+    }
+
+    @Override
+    public void onRefresh() {
+        adapter.setDataCount(20);
+        getData();
+    }
+
+    private void getData() {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                adapter.notifyDataSetChanged();
+                binding.refreshLayout.setRefreshing(false);
+                adapter.notifyItemRemoved(adapter.getItemCount());
+            }
+        }, 1000);
     }
 }

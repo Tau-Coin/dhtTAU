@@ -1,5 +1,6 @@
 package io.taucoin.torrent.publishing.ui.main;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.format.Formatter;
 import android.view.Menu;
@@ -7,34 +8,34 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.leinardi.android.speeddial.SpeedDialActionItem;
+
 import java.util.List;
 import java.util.Objects;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.databinding.ActivityMainDrawerBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
-import io.taucoin.torrent.publishing.ui.blockchain.BlockChainFragment;
+import io.taucoin.torrent.publishing.ui.blockchain.BlockChainsFragment;
 import io.taucoin.torrent.publishing.ui.message.MessageFragment;
+import io.taucoin.torrent.publishing.ui.mining.MiningPoolActivity;
+import io.taucoin.torrent.publishing.ui.search.SearchActivity;
 import io.taucoin.torrent.publishing.ui.video.VideoFragment;
 
 /**
  * APP主页面：包含左侧抽屉页面，顶部工具栏
  */
 public class MainActivity extends BaseActivity {
-    /* Android data binding doesn't work with layout aliases */
-    private Toolbar toolbar;
-    private DrawerLayout drawerLayout;
+    private ActivityMainDrawerBinding binding;
     private ActionBarDrawerToggle toggle;
-    private TextView tvDhtNodesStat, tvDownloadStat, tvUploadStat,
-        tvBlockNumbersStat, tvDhtPutsStat;
 
     private MainViewModel viewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
@@ -45,7 +46,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         viewModel = provider.get(MainViewModel.class);
-        setContentView(R.layout.activity_main);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main_drawer);
         initLayout();
     }
 
@@ -53,38 +54,65 @@ public class MainActivity extends BaseActivity {
      * 初始化布局
      */
     private void initLayout() {
-        toolbar = findViewById(R.id.toolbar);
-        tvDhtNodesStat = findViewById(R.id.tv_dht_nodes_stat);
-        tvDownloadStat = findViewById(R.id.tv_download_stat);
-        tvUploadStat = findViewById(R.id.tv_upload_stat);
-        tvBlockNumbersStat = findViewById(R.id.tv_block_numbers_stats);
-        tvDhtPutsStat = findViewById(R.id.tv_dht_puts_stats);
-        tvUploadStat = findViewById(R.id.tv_upload_stat);
-        drawerLayout = findViewById(R.id.drawer_layout);
-        drawerLayout = findViewById(R.id.drawer_layout);
-        drawerLayout = findViewById(R.id.drawer_layout);
 
-        toolbar.setTitle(R.string.main_title);
-        setSupportActionBar(toolbar);
+        binding.toolbarInclude.toolbar.setTitle(R.string.main_title);
+        setSupportActionBar(binding.toolbarInclude.toolbar);
 
-        if (drawerLayout != null) {
-            toggle = new ActionBarDrawerToggle(this,
-                    drawerLayout,
-                    toolbar,
-                    R.string.open_navigation_drawer,
-                    R.string.close_navigation_drawer);
-            drawerLayout.addDrawerListener(toggle);
-        }
+        toggle = new ActionBarDrawerToggle(this,
+                binding.drawerLayout,
+                binding.toolbarInclude.toolbar,
+                R.string.open_navigation_drawer,
+                R.string.close_navigation_drawer);
+        binding.drawerLayout.addDrawerListener(toggle);
         initDrawer();
+        initFabSpeedDial();
         switchFragment(getString(R.string.drawer_video));
     }
 
     private void initDrawer() {
-        tvDhtNodesStat.setText(getString(R.string.drawer_stats_dht_nodes, 0));
-        tvBlockNumbersStat.setText(getString(R.string.drawer_stats_block_numbers, 0));
-        tvDhtPutsStat.setText(getString(R.string.drawer_stats_dht_puts, 0));
-        setNetStats(tvDownloadStat, 0, 0);
-        setNetStats(tvUploadStat, 0, 0);
+        binding.drawer.tvDhtNodesStat.setText(getString(R.string.drawer_stats_dht_nodes, 0));
+        binding.drawer.tvBlockNumbersStats.setText(getString(R.string.drawer_stats_block_numbers, 0));
+        binding.drawer.tvDhtPutsStats.setText(getString(R.string.drawer_stats_dht_puts, 0));
+        setNetStats(binding.drawer.tvDownloadStat, 0, 0);
+        setNetStats(binding.drawer.tvUploadStat, 0, 0);
+    }
+
+    /**
+     * 初始化右下角悬浮按钮组件
+     */
+    private void initFabSpeedDial() {
+        binding.fabButton.setOnActionSelectedListener((item) -> {
+            switch (item.getId()) {
+                case R.id.main_publish_video:
+                    break;
+                case R.id.main_create_community:
+                    break;
+                case R.id.main_other_transaction:
+                    break;
+                default:
+                    return false;
+            }
+            binding.fabButton.close();
+            return true;
+        });
+
+        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
+                R.id.main_other_transaction,
+                R.drawable.ic_add_36dp)
+                .setLabel(R.string.main_other_transaction)
+                .create());
+
+        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
+                R.id.main_create_community,
+                R.drawable.ic_add_36dp)
+                .setLabel(R.string.main_create_community)
+                .create());
+
+        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
+                R.id.main_publish_video,
+                R.drawable.ic_add_36dp)
+                .setLabel(R.string.main_publish_video)
+                .create());
     }
 
     @Override
@@ -119,31 +147,19 @@ public class MainActivity extends BaseActivity {
     /**
      *  根据显示Fragment动态修改Menu选项
      */
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        if(Objects.equals(curFragmentTag, getString(R.string.drawer_video))){
-            showOrHideMenu(menu, false);
-            menu.findItem(R.id.menu_search).setVisible(true);
-            menu.findItem(R.id.menu_mining_pool).setVisible(true);
-            menu.findItem(R.id.menu_filter).setVisible(true);
-        }else if(Objects.equals(curFragmentTag, getString(R.string.drawer_messages))){
-            showOrHideMenu(menu, true);
-            menu.findItem(R.id.menu_filter).setVisible(false);
-        }else if(Objects.equals(curFragmentTag, getString(R.string.drawer_block_chains))){
-            showOrHideMenu(menu, true);
-            menu.findItem(R.id.menu_filter).setVisible(false);
-        }
-        return super.onPrepareOptionsMenu(menu);
-    }
-
-    /**
-     * 显示或者隐藏所有Menu
-     */
-    private void showOrHideMenu(Menu menu, boolean visible) {
-        for (int i = 0; i < menu.size(); i++) {
-            menu.getItem(i).setVisible(visible);
-        }
-    }
+//    @Override
+//    public boolean onPrepareOptionsMenu(Menu menu) {
+//        for (int i = 0; i < menu.size(); i++) {
+//            menu.getItem(i).setVisible(true);
+//        }
+//        if(Objects.equals(curFragmentTag, getString(R.string.drawer_messages))){
+//            menu.findItem(R.id.menu_pause_all).setVisible(false);
+//            menu.findItem(R.id.menu_resume_all).setVisible(false);
+//        }else if(Objects.equals(curFragmentTag, getString(R.string.drawer_block_chains))){
+//            menu.findItem(R.id.menu_filter).setVisible(false);
+//        }
+//        return super.onPrepareOptionsMenu(menu);
+//    }
 
     /**
      * 右上角选项选择事件
@@ -151,29 +167,20 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_filter:
+            case R.id.menu_search:
+                startActivity(new Intent(this, SearchActivity.class));
                 break;
-            case R.id.menu_mining_pool:
-//                startActivity(new Intent(this, FeedActivity.class));
-                break;
-            case R.id.menu_keys:
-//                startActivity(new Intent(this, KeysActivity.class));
-                break;
-            case R.id.menu_resume_all:
-                viewModel.resumeAll();
-                break;
-            case R.id.menu_pause_all:
-                viewModel.pauseAll();
-                break;
-            case R.id.menu_journal:
-//                startActivity(new Intent(this, JournalActivity.class));
-                break;
-            case R.id.menu_rename:
-//                startActivity(new Intent(this, RenameActivity.class));
-                break;
-            case R.id.menu_mining_group:
-                break;
-            case R.id.menu_about:
+//            case R.id.menu_mining_pool:
+//                startActivity(new Intent(this, MiningPoolActivity.class));
+//                break;
+//            case R.id.menu_filter:
+//                break;
+//            case R.id.menu_resume_all:
+//                viewModel.resumeAll();
+//                break;
+//            case R.id.menu_pause_all:
+//                viewModel.pauseAll();
+//                break;
         }
         return true;
     }
@@ -192,10 +199,10 @@ public class MainActivity extends BaseActivity {
                 break;
             case R.id.tv_dashboard:
                 break;
+            case R.id.tv_setting:
+                break;
         }
-        if (drawerLayout != null){
-            drawerLayout.closeDrawer(GravityCompat.START);
-        }
+        binding.drawerLayout.closeDrawer(GravityCompat.START);
     }
 
     /**
@@ -212,7 +219,7 @@ public class MainActivity extends BaseActivity {
             if(Objects.equals(tag, getString(R.string.drawer_messages))){
                 fragment = new MessageFragment();
             }else if(Objects.equals(tag, getString(R.string.drawer_block_chains))){
-                fragment = new BlockChainFragment();
+                fragment = new BlockChainsFragment();
             }else{
                 fragment = new VideoFragment();
             }
@@ -248,9 +255,9 @@ public class MainActivity extends BaseActivity {
 //            uploadSpeed = stats.uploadSpeed;
 //        }
 
-        tvDhtNodesStat.setText(getString(R.string.drawer_stats_dht_nodes, dhtNodes));
-        setNetStats(tvDownloadStat, totalDownload, downloadSpeed);
-        setNetStats(tvUploadStat, totalUpload, uploadSpeed);
+        binding.drawer.tvDhtNodesStat.setText(getString(R.string.drawer_stats_dht_nodes, dhtNodes));
+        setNetStats(binding.drawer.tvDownloadStat, totalDownload, downloadSpeed);
+        setNetStats(binding.drawer.tvUploadStat, totalUpload, uploadSpeed);
     }
 
     private void setNetStats(TextView tvStats, long total, long speed) {
