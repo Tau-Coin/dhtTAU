@@ -22,6 +22,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import io.taucoin.config.ChainConfig;
+import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPElement;
@@ -192,5 +193,24 @@ public class Genesis {
         }
         byte[] hash = digest.digest(this.getEncoded());
         return hash;
+    }
+
+    /**
+     * validate genesis param.
+     * @return
+     */
+    public boolean isGenesisParamValidate(){
+        if(this.getEncoded().length > ChainParam.MaxBlockSize) return false;
+        if(!isParsed) parseRLP();
+        if(TimeStamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || TimeStamp < 0) return false;
+        if(BlockNum != 0) return false;
+        if(1 == BaseTarget.compareTo(ChainParam.MaxBaseTarget)) return false;
+        if(1 == CummulativeDifficulty.compareTo(ChainParam.MaxCummulativeDiff)) return false;
+        if(GenerationSignature.length != ChainParam.GenerationSigLength) return false;
+        if(Msg.validateGenesisMsg() != CheckInfo.CheckPassed) return false;
+        if(ChainID.length > ChainParam.ChainIDlength) return false;
+        if(Signature != null && Signature.length != ChainParam.SignatureLength) return false;
+        if(minerPubkey.length != ChainParam.PubkeyLength) return false;
+        return true;
     }
 }

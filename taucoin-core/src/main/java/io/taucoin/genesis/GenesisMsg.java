@@ -1,4 +1,4 @@
-/*
+/**
 Copyright 2020 taucoin developer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
@@ -21,24 +21,35 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import io.taucoin.param.ChainParam;
 import io.taucoin.util.*;
 
 public class GenesisMsg {
     private String description;
     private HashMap<String,GenesisItem> accountKV;
     private byte[] rlpEncoded;
-    private boolean isParse;
+    private boolean isParsed;
 
+    /**
+     * construct genesis msg.
+     */
     public GenesisMsg(){
         accountKV = new HashMap<>();
+        this.isParsed = true;
     }
 
     public GenesisMsg(byte[] bytes){
         accountKV = new HashMap<>();
         this.rlpEncoded = bytes;
-        this.isParse = false;
+        this.isParsed = false;
     }
 
+    /**
+     * construct genesis msg K-V
+     * @param ed25519pub
+     * @param item
+     * @return
+     */
     public int appendAccount(String ed25519pub, GenesisItem item){
         if(!accountKV.containsKey(ed25519pub)){
             accountKV.put(ed25519pub,item);
@@ -46,10 +57,18 @@ public class GenesisMsg {
         return accountKV.size();
     }
 
+    /**
+     * set community description and vision.
+     * @param vision
+     */
     public void setDescription(String vision){
         this.description = vision;
     }
 
+    /**
+     * get genesis msg encoded.
+     * @return
+     */
     public byte[] getEncoded(){
         if(rlpEncoded == null){
             byte[][] genesisMsg = new byte[this.accountKV.size() + 1][];
@@ -68,8 +87,11 @@ public class GenesisMsg {
         return rlpEncoded;
     }
 
+    /**
+     * parse encoded genesis.
+     */
     private void parseRLP(){
-        if(isParse){
+        if(isParsed){
            return;
         }else{
             RLPList msg =RLP.decode2(this.rlpEncoded);
@@ -84,15 +106,47 @@ public class GenesisMsg {
                 spliteKV = kvItem.split(":");
                 this.accountKV.put(spliteKV[0], new GenesisItem(ByteUtil.toByte(spliteKV[1])));
             }
-            isParse = true;
+            isParsed = true;
         }
     }
+
+    /**
+     * get genesis msg description.
+     * @return
+     */
     public String getDescription(){
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return description;
     }
+
+    /**
+     * get genesis msg K-V state.
+     * @return
+     */
     public HashMap<String,GenesisItem> getAccountKV(){
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return accountKV;
+    }
+
+    /**
+     * check genesis msg KV items. when create.
+     * @return
+     */
+    public CheckInfo validateGenesisMsg(){
+        if(!isParsed) parseRLP();
+        if(this.description.getBytes().length >= ChainParam.DescriptionLength){
+            return CheckInfo.TooLongDescription;
+        }
+        if(this.accountKV.size() >= ChainParam.MaxGenesisMsgItems) {
+            return CheckInfo.TooMuchKVitem;
+        }
+        Iterator<Map.Entry<String,GenesisItem>> iterator = accountKV.entrySet().iterator();
+        long supply=0;
+        while (iterator.hasNext()){
+            Map.Entry<String,GenesisItem> entry = iterator.next();
+            supply += entry.getValue().getBalance().longValue();
+        }
+        if(supply > ChainParam.MaxTotalSupply) return CheckInfo.BigAmoutSupply;
+        return CheckInfo.CheckPassed;
     }
 }
