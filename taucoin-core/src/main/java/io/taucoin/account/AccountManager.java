@@ -1,5 +1,6 @@
 package io.taucoin.account;
 
+import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
 
 /**
@@ -13,6 +14,8 @@ public class AccountManager {
     private static volatile AccountManager INSTANCE;
 
     private Pair<byte[], byte[]> key;
+
+    private byte[] seed;
 
     /**
      * Get AccountManager instance.
@@ -38,6 +41,16 @@ public class AccountManager {
      */
     public synchronized void updateKey(Pair<byte[], byte[]> key) {
         this.key = key;
+    }
+
+    /**
+     * Update public key and private key.
+     *
+     * @param seed the seed to generate key pair
+     */
+    public synchronized void updateKey(byte[] seed) {
+        this.seed = seed;
+	this.key = Ed25519.createKeypair(seed);
     }
 
     /**
