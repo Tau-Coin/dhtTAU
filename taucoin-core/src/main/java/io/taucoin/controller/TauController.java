@@ -1,4 +1,4 @@
-package io.taucoin.manager;
+package io.taucoin.controller;
 
 import io.taucoin.account.AccountManager;
 import io.taucoin.chain.ChainManager;
