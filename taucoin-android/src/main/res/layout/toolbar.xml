@@ -13,5 +13,6 @@
         app:popupTheme="?attr/popupTheme"
         android:elevation="@dimen/toolbar_elevation"
         android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
-        android:focusable="true" />
+        android:focusable="true" >
+    </androidx.appcompat.widget.Toolbar>
 </layout>

@@ -23,4 +23,9 @@ public abstract class BaseActivity extends AppCompatActivity {
             decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        this.finish();
+    }
 }

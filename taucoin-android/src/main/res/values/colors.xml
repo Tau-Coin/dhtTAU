@@ -24,6 +24,7 @@
     <color name="foreground_dark">#2D2D2D</color>
     <color name="foreground_black">#121212</color>
     <color name="gray_dark">#727272</color>
+    <color name="gray_light">#B7B6BC</color>
     <color name="gray">#E0E0E0</color>
     <color name="divider">#E0E0E0</color>
     <color name="divider_dark">#202020</color>
@@ -52,7 +53,20 @@
     <color name="color_yellow_light">#FB9500</color>
 
     <color name="color_white">#FFFFFF</color>
+    <color name="color_bg">#F5F5F5</color>
 
     <color name="color_blue">#477df9</color>
     <color name="color_blue_light">#0E88EF</color>
+
+    <color name="color_black">#000000</color>
+    <color name="color_black_light">#454545</color>
+
+    <array name="group_color">
+        <item>#98A190</item>
+        <item>#A79587</item>
+        <item>#F3CED6</item>
+        <item>#9F4E55</item>
+        <item>#C9BDD3</item>
+        <item>#7C7386</item>
+    </array>
 </resources>

@@ -279,4 +279,10 @@
         <!-- The path used to animate the properties in the ObjectAnimator -->
         <attr name="vc_pathData"/>
     </declare-styleable>
+
+    <declare-styleable name="ItemLineView">
+        <attr name="leftImage" format="reference" />
+        <attr name="rightText" format="string" />
+        <attr name="rightTextColor" format="color" />
+    </declare-styleable>
 </resources>

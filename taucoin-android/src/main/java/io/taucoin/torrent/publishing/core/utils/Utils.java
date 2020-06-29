@@ -33,6 +33,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 
 import org.apache.commons.io.IOUtils;
@@ -50,6 +51,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -923,5 +925,24 @@ public class Utils
 //        else
 //            return TorrentFilterCollection.all();
 //    }
+
+    /**
+     * 根据groupName获取相应展示的颜色
+     * @param firstLetters 对应社区首字母
+     * @return 色值
+     */
+    public static int getGroupColor(String firstLetters) {
+        Context context = MainApplication.getInstance();
+        Resources res = context.getResources();
+        int[] colors = res.getIntArray(R.array.group_color);
+        int charCount = 0;
+        if(StringUtil.isNotEmpty(firstLetters)){
+            char[] chars = firstLetters.toCharArray();
+            for (char aChar : chars) {
+                charCount += aChar;
+            }
+        }
+        return colors[charCount % colors.length];
+    }
 }
 

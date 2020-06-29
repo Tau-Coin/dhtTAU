@@ -243,4 +243,25 @@ public class StringUtil {
         changeValue += newValue;
         return changeValue;
     }
+
+    /**
+     * 获取名字的首字母
+     * @param groupName 名字
+     * @return firstLetters
+     */
+    public static String getFirstLettersOfName(String groupName) {
+        StringBuilder firstLetters = new StringBuilder();
+        if(isNotEmpty(groupName)){
+            String[] splits = groupName.split(" ");
+            for (String split : splits) {
+                if(firstLetters.length() > 3){
+                    break;
+                }
+                if(isNotEmpty(split)){
+                    firstLetters.append(split.substring(0, 1));
+                }
+            }
+        }
+        return firstLetters.toString();
+    }
 }

@@ -2,9 +2,6 @@ package io.taucoin.torrent.publishing.ui.search;
 
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import java.util.Objects;
 
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
@@ -61,52 +58,5 @@ public class SearchActivity extends BaseActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
-    }
-
-    /**
-     *  根据显示Fragment动态修改Menu选项
-     */
-//    @Override
-//    public boolean onPrepareOptionsMenu(Menu menu) {
-//        for (int i = 0; i < menu.size(); i++) {
-//            menu.getItem(i).setVisible(true);
-//        }
-////        if(Objects.equals(curFragmentTag, getString(R.string.drawer_messages))){
-////            menu.findItem(R.id.menu_pause_all).setVisible(false);
-////            menu.findItem(R.id.menu_resume_all).setVisible(false);
-////        }else if(Objects.equals(curFragmentTag, getString(R.string.drawer_block_chains))){
-////            menu.findItem(R.id.menu_filter).setVisible(false);
-////        }
-//        return super.onPrepareOptionsMenu(menu);
-//    }
-
-    /**
-     * 右上角选项选择事件
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_search:
-//                startActivity(new Intent(this, SearchActivity.class));
-                break;
-//            case R.id.menu_mining_pool:
-////                startActivity(new Intent(this, MiningPoolActivity.class));
-//                break;
-//            case R.id.menu_filter:
-//                break;
-        }
-        return true;
-    }
-
-    /**
-     * 左侧抽屉布局点击事件
-     */
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.tv_video:
-            case R.id.tv_block_chains:
-            case R.id.tv_messages:
-                break;
-        }
     }
 }

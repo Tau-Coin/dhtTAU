@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginStart="7dp">
+
+        <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+            android:id="@+id/left_view"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="7dp"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:textSize="@dimen/font_big_size"
+            android:textColor="@color/color_white"
+            app:borderColor="@color/primary_light"
+            app:borderWidth="0dp"
+            app:radius="30dp"
+            app:isRadiusAutoHalf="true"
+            app:bgColor="@color/primary_light"
+            app:textColorForPressed="@color/color_white" />
+
+        <LinearLayout
+            android:id="@+id/middle_view"
+            android:layout_toEndOf="@+id/left_view"
+            android:layout_toStartOf="@id/right_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_group_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TAU Community"
+                android:singleLine="true"
+                android:ellipsize="middle"
+                android:textSize="@dimen/font_big_size"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+
+            <TextView
+                android:id="@+id/tv_user_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Johnson kite"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+            <TextView
+                android:id="@+id/tv_user_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Is this still working sir? Is this still working sir? Is this still working sir?"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/right_view"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:gravity="end"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="10dp"
+            android:minWidth="50dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_msg_last_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+
+            <TextView
+                android:id="@+id/tv_msg_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:singleLine="true"
+                android:includeFontPadding="false"
+                android:ellipsize="end"
+                android:textColor="@color/color_white"
+                android:background="@drawable/grey_rect_round_bg_no_border"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+
+        </LinearLayout>
+
+        <include
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_toEndOf="@+id/left_view"
+            android:layout_centerVertical="true"
+            android:layout_alignParentBottom="true"
+            layout="@layout/view_line"/>
+    </RelativeLayout>
+</layout>

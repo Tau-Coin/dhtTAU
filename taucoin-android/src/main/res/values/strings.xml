@@ -4,50 +4,47 @@
 
     <string name="common_balance_unit">TAU</string>
     <string name="common_numerical_value">0</string>
+    <string name="common_install_browser">Please install mobile browser first!</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
     <string name="close_navigation_drawer">Close navigation drawer</string>
 
     <string name="main_title">TAU</string>
+    <string name="main_empty_title">Welcome to TAU</string>
+    <string name="main_empty_content">Start messaging by tapping the pencil\nbutton in the bottom right corner.</string>
+
+
     <string name="main_publish_video">Publish Video</string>
     <string name="main_create_community">Create Publishing Community</string>
     <string name="main_other_transaction">Other Transaction</string>
 
     <!-- Strings used for main drawer content -->
-    <string name="drawer_publishing">Publishing</string>
-    <string name="drawer_stats">Stats</string>
-    <string name="drawer_dashboard">Dashboard</string>
-    <string name="drawer_video">Videos</string>
-    <string name="drawer_block_chains">Blockchains</string>
-    <string name="drawer_messages">Messages</string>
-    <string name="drawer_stats_dht_nodes">DHT nodes/%1$d</string>
-    <string name="drawer_stats_download_upload">%1$s | %2$s/s</string>
-    <string name="drawer_stats_block_numbers">Local Block Numbers/%1$d</string>
-    <string name="drawer_stats_dht_puts">DHT Put/%1$d%%</string>
+    <string name="drawer_import_key">Import New Key</string>
+    <string name="drawer_new_community">New Community</string>
+    <string name="drawer_contacts">Contacts</string>
     <string name="drawer_setting">Setting</string>
+    <string name="drawer_invited_friends">Invited Friends</string>
+    <string name="drawer_telegram_faq">Telegram FAQ</string>
 
     <!-- Strings used for menu -->
     <string name="menu_search">Search</string>
-    <string name="menu_mining_pool">Mining Pool</string>
-    <string name="menu_keys">Keys</string>
-    <string name="menu_filter">Filter</string>
-    <string name="menu_resume_all">Resume All</string>
-    <string name="menu_pause_all">Pause All</string>
-    <string name="menu_journal">Journal</string>
-    <string name="menu_rename">Rename</string>
-    <string name="menu_mining_group">Mining Group</string>
-    <string name="menu_about">About</string>
+    <string name="menu_unmute">Unmute</string>
+    <string name="menu_mute">Mute</string>
+    <string name="menu_block_group">Block Group</string>
 
     <!-- Strings used for block chains -->
-    <string name="community_name_title">C/%1$s</string>
-    <string name="community_name_tau">TAU Official Community</string>
-    <string name="community_mining">Mining</string>
-    <string name="community_transactions">Transactions</string>
-    <string name="community_sync_rate">Sync Rate %1$d%%</string>
-    <string name="community_mining_start">Start Mining</string>
-    <string name="community_mining_stop">Stop Mining</string>
-    <string name="community_total_blocks">Total Blocks</string>
-    <string name="community_mining_power">Mining Power</string>
-    <string name="community_mining_rewards">Rewards</string>
+<!--    <string name="community_name_title">C/%1$s</string>-->
+<!--    <string name="community_name_tau">TAU Official Community</string>-->
+<!--    <string name="community_mining">Mining</string>-->
+<!--    <string name="community_transactions">Transactions</string>-->
+<!--    <string name="community_sync_rate">Sync Rate %1$d%%</string>-->
+<!--    <string name="community_mining_start">Start Mining</string>-->
+<!--    <string name="community_mining_stop">Stop Mining</string>-->
+<!--    <string name="community_total_blocks">Total Blocks</string>-->
+<!--    <string name="community_mining_power">Mining Power</string>-->
+<!--    <string name="community_mining_rewards">Rewards</string>-->
+
+    <string name="group_input_hint">Message</string>
+    <string name="group_users_stats">%1$d members,%2$d online</string>
 
 </resources>

@@ -21,4 +21,8 @@
     <dimen name="toolbar_elevation">4dp</dimen>
     <dimen name="padding_zero">0dp</dimen>
     <dimen name="preference_icon_space">72dp</dimen>
+
+    <dimen name="font_big_size">18sp</dimen>
+    <dimen name="big_normal_size">16dp</dimen>
+    <dimen name="big_small_size">14dp</dimen>
 </resources>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:minHeight="?attr/actionBarSize"
+        android:background="?attr/toolbarColor"
+        app:layout_scrollFlags="enterAlways"
+        android:transitionName="actionBar"
+        app:popupTheme="?attr/popupTheme"
+        android:elevation="@dimen/toolbar_elevation"
+        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+        android:focusable="true" >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+                android:id="@+id/round_button"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="7dp"
+                android:gravity="center"
+                android:textSize="@dimen/font_big_size"
+                android:textColor="@color/color_white"
+                app:borderColor="@color/primary_light"
+                app:borderWidth="0dp"
+                app:radius="30dp"
+                app:isRadiusAutoHalf="true"
+                app:bgColor="@color/primary_light"
+                app:textColorForPressed="@color/color_white" />
+
+            <TextView
+                android:layout_toEndOf="@+id/round_button"
+                android:id="@+id/tv_group_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+
+            <TextView
+                android:layout_toEndOf="@+id/round_button"
+                android:layout_below="@+id/tv_group_name"
+                android:id="@+id/tv_users_stats"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+
+        </RelativeLayout>
+
+    </androidx.appcompat.widget.Toolbar>
+</layout>

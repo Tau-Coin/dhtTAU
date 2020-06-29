@@ -1,13 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion 28
 
     defaultConfig {
         applicationId "io.taucoin.torrent.publishing"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
 
@@ -45,6 +44,18 @@ android {
         abortOnError false
     }
 
+    packagingOptions {
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/proguard/androidx-annotations.pro'
+        exclude 'META-INF/proguard/coroutines.pro'
+    }
+
+}
+
+configurations {
+    // This package is excluded here. This package will be connected with com.google.guava
+    // Conflicts, resulting in compilation failure
+    all*.exclude group: 'com.google.guava', module: 'listenablefuture'
 }
 
 def ROOM_VERSION = "2.2.5"
@@ -53,6 +64,10 @@ def DAGGER_VERSION = "2.27"
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation(project(':taucoin-core')){
+        exclude group: "org.slf4j", module: "slf4j-log4j12"
+        exclude group: "log4j", module: "apache-log4j-extras"
+    }
 
     /* Testing */
     testImplementation "junit:junit:4.13"
@@ -98,4 +113,5 @@ dependencies {
     implementation "com.takisoft.preferencex:preferencex:1.1.0"
     implementation "com.leinardi.android:speed-dial:3.1.1"
     implementation "net.java.dev.jna:jna:5.5.0@aar"
+    implementation 'com.github.minminaya:LGMRoundButton:v1.2'
 }

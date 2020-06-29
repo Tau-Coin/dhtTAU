@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -8,142 +9,78 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="8dp"
             android:orientation="vertical">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                android:text="@string/drawer_publishing" />
-
-            <TextView
-                android:id="@+id/tv_video"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:onClick="onClick"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                android:text="@string/drawer_video" />
-
-            <TextView
-                android:id="@+id/tv_messages"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:onClick="onClick"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                android:text="@string/drawer_messages" />
-
-            <TextView
-                android:id="@+id/tv_block_chains"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:onClick="onClick"
-                android:tag="1"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                android:text="@string/drawer_block_chains" />
-
-            <TextView
-                android:id="@+id/tv_dashboard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
-                android:onClick="onClick"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                android:text="@string/drawer_dashboard" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:layout_marginBottom="8dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                android:text="@string/drawer_stats" />
-
-            <TextView
-                android:id="@+id/tv_dht_nodes_stat"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-
-            <TextView
-                android:id="@+id/tv_block_numbers_stats"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-
-            <TextView
-                android:id="@+id/tv_dht_puts_stats"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp">
-
-                <ImageView
-                    android:id="@+id/iv_download"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="8dp"
-                    android:layout_centerInParent="true"
-                    android:contentDescription="@null"
-                    android:src="@mipmap/ic_download_grey600_24dp"
-                    android:layout_alignParentStart="true" />
+                android:layout_height="100dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@color/primary">
 
                 <TextView
-                    android:id="@+id/tv_download_stat"
+                    android:id="@+id/tv_public_key"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:layout_toEndOf="@id/iv_download"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginStart="20dp"
+                    android:text="TestTestTestTestTestTestTestTestTestTestTestTestTestTest"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-            </RelativeLayout>
 
-            <RelativeLayout
+
+            </LinearLayout>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_import_key"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <ImageView
-                    android:id="@+id/iv_upload"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="8dp"
-                    android:layout_centerInParent="true"
-                    android:contentDescription="@null"
-                    android:src="@mipmap/ic_upload_grey600_24dp"
-                    android:layout_alignParentStart="true" />
-
-                <TextView
-                    android:id="@+id/tv_upload_stat"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                    android:layout_toEndOf="@id/iv_upload" />
-            </RelativeLayout>
-
-            <TextView
-                android:id="@+id/tv_setting"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_height="60dp"
                 android:onClick="onClick"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                android:text="@string/drawer_setting" />
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/drawer_import_key"/>
+
+            <include layout="@layout/view_line"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_new_community"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/drawer_new_community"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_contacts"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/drawer_contacts"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_setting"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/drawer_setting"/>
+
+            <include layout="@layout/view_line"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_invited_friends"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/drawer_invited_friends"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_telegram_faq"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/drawer_telegram_faq"/>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </layout>

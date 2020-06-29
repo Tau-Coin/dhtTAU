@@ -1,32 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/refresh_layout"
+<RelativeLayout
+    android:id="@+id/refresh_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
+        android:id="@+id/group_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
+        android:clipToPadding="false"
+        android:scrollbars="vertical"
+        android:focusable="true"
+        android:scrollbarStyle="outsideOverlay" />
 
-        <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
-            android:id="@+id/video_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
-            android:clipToPadding="false"
-            android:scrollbars="vertical"
-            android:focusable="true"
-            android:scrollbarStyle="outsideOverlay" />
-
-        <TextView
-            android:id="@+id/empty_view_torrent_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            style="@style/EmptyView" />
+    <LinearLayout
+        android:id="@+id/empty_view_group_list"
+        android:visibility="visible"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
         <TextView
-            android:id="@+id/tv_test"
-            android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/main_empty_title"
+            style="@style/TextAppearance.MaterialComponents.Headline6" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:lineSpacingExtra="5dp"
+            android:text="@string/main_empty_content"
+            style="@style/TextAppearance.MaterialComponents.Body1" />
+
+    </LinearLayout>
+
+</RelativeLayout>
 </layout>

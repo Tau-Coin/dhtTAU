@@ -24,10 +24,11 @@
                     layout="@layout/toolbar" />
 
                 <androidx.fragment.app.FragmentContainerView
+                    android:name="io.taucoin.torrent.publishing.ui.main.MainFragment"
                     android:id="@+id/main_fragmentContainer"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_below="@+id/toolbar" />
+                    android:layout_below="@+id/toolbar_include" />
 
                 <com.leinardi.android.speeddial.SpeedDialOverlayLayout
                     android:id="@+id/fab_overlay"

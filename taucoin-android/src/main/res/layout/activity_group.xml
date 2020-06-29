@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
+
+        <include
+            android:id="@+id/toolbar_include"
+            layout="@layout/toolbar_group" />
+
+        <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
+            android:background="@color/color_bg"
+            android:layout_below="@+id/toolbar_include"
+            android:layout_above="@+id/ll_bottom_input"
+            android:id="@+id/message_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
+            android:clipToPadding="false"
+            android:scrollbars="vertical"
+            android:focusable="true"
+            android:scrollbarStyle="outsideOverlay" />
+
+        <LinearLayout
+            android:id="@+id/ll_bottom_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:gravity="center_vertical"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/et_message_input"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:background="@null"
+                android:singleLine="true"
+                android:text=""
+                android:hint="@string/group_input_hint"
+                android:inputType="text"
+                android:autofillHints="@string/main_empty_content" />
+
+            <ImageView
+                android:id="@+id/iv_link"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="10dp"
+                android:src="@mipmap/icon_copy"
+                android:contentDescription="@null"/>
+        </LinearLayout>
+
+    </RelativeLayout>
+</layout>
