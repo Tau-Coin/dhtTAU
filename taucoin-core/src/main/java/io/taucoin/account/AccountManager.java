@@ -41,6 +41,15 @@ public class AccountManager {
     }
 
     /**
+     * Get key pair.
+     *
+     * @return Pair<byte[], byte[]> the pair of public key and private key.
+     */
+    public synchronized Pair<byte[], byte[]> getKeyPair() {
+        return this.key;
+    }
+
+    /**
      * Get public key.
      *
      * @return public key
