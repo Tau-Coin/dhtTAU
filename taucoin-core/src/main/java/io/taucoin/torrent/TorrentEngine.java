@@ -7,6 +7,8 @@ import com.frostwire.jlibtorrent.alerts.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.taucoin.torrent.DHT.*;
+
 /**
  * TorrentEngine is the bridge between tau blockchain and torrent SessionManager.
  * It is responsible for starting and stopping SessionManager.
@@ -161,5 +163,49 @@ public class TorrentEngine {
 	}
 	torrentDaemon = null;
 	this.settings = null;
+    }
+
+    /**
+     * Put immutable item.
+     *
+     * @param item immutable item
+     * @return Sha1Hash sha1 hash of the immutable item
+     */
+    public Sha1Hash dhtPut(ImmutableItem item) {
+        return null;
+    }
+
+    /**
+     * Put mutable item.
+     *
+     * @param item mutable item
+     */
+    public void dhtPut(MutableItem item) {
+    }
+
+    /**
+     * dht tau gets immutable item.
+     * Before getting any item, it must put an immutable item.
+     *
+     * @param spec getting immutable item specification
+     * @param item immutable item put
+     * @return ExchangeImmutableItemResult exchange result
+     */
+    public ExchangeImmutableItemResult exchange(GetImmutableItemSpec spec,
+            ImmutableItem item) {
+        return null;
+    }
+
+    /**
+     * dht tau gets mutable item.
+     * Before getting any item, it must put a mutable item.
+     *
+     * @param spec getting mutable item specification
+     * @param item mutable item put
+     * @return ExchangeMutableItemResult exchange result
+     */
+    public ExchangeMutableItemResult exchange(GetMutableItemSpec sepc,
+            MutableItem item) {
+        return null;
     }
 }
