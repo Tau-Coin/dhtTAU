@@ -36,39 +36,39 @@ public class TorrentDHTEngine {
     private AlertListener torrentListener = new AlertListener() {
 
         @Override
-    public int[] types() {
-        return null;
-    }
-
-    @Override
-    public void alert(Alert<?> alert) {
-        AlertType type = alert.type();
-
-        if (type == AlertType.LISTEN_SUCCEEDED) {
-            ListenSucceededAlert a = (ListenSucceededAlert) alert;
-            logger.info(a.message());
+        public int[] types() {
+            return null;
         }
 
-        if (type == AlertType.LISTEN_FAILED) {
-            ListenFailedAlert a = (ListenFailedAlert) alert;
-            logger.info(a.message());
-        }
+        @Override
+        public void alert(Alert<?> alert) {
+            AlertType type = alert.type();
 
-        if (type == AlertType.DHT_MUTABLE_ITEM) {
-            DhtMutableItemAlert a = (DhtMutableItemAlert) alert;
-            logger.info(a.message());
-        }
+            if (type == AlertType.LISTEN_SUCCEEDED) {
+                ListenSucceededAlert a = (ListenSucceededAlert) alert;
+                logger.info(a.message());
+            }
 
-        if (type == AlertType.DHT_IMMUTABLE_ITEM) {
-            DhtImmutableItemAlert a = (DhtImmutableItemAlert) alert;
-            logger.info(a.message());
-        }
+            if (type == AlertType.LISTEN_FAILED) {
+                ListenFailedAlert a = (ListenFailedAlert) alert;
+                logger.info(a.message());
+            }
 
-        if (type == AlertType.DHT_PUT) {
-            DhtPutAlert a = (DhtPutAlert) alert;
-            logger.info(a.message());
+            if (type == AlertType.DHT_MUTABLE_ITEM) {
+                DhtMutableItemAlert a = (DhtMutableItemAlert) alert;
+                logger.info(a.message());
+            }
+
+            if (type == AlertType.DHT_IMMUTABLE_ITEM) {
+                DhtImmutableItemAlert a = (DhtImmutableItemAlert) alert;
+                logger.info(a.message());
+            }
+
+            if (type == AlertType.DHT_PUT) {
+                DhtPutAlert a = (DhtPutAlert) alert;
+                logger.info(a.message());
+            }
         }
-    }
     };
 
     private Runnable torrentSession = new Runnable() {
