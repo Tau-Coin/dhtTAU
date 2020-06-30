@@ -252,71 +252,127 @@ public class Block {
         }
     }
 
+    /**
+     * get block version.
+     * @return
+     */
     public byte getVersion() {
         if(!isParsed) parseRLP();
         return version;
     }
 
+    /**
+     * get chainid.
+     * @return
+     */
     public byte[] getChainID() {
         if(!isParsed) parseRLP();
         return chainID;
     }
 
+    /**
+     * get timestamp.
+     * @return
+     */
     public long getTimeStamp() {
         if(!isParsed) parseRLP();
         return timeStamp;
     }
 
+    /**
+     * get block number.
+     * @return
+     */
     public long getBlockNum() {
         if(!isParsed) parseRLP();
         return blockNum;
     }
 
+    /**
+     * get previous block hash.
+     * @return
+     */
     public byte[] getPreviousBlockHash() {
         if(!isParsed) parseRLP();
         return previousBlockHash;
     }
 
+    /**
+     * get immutable block hash.
+     * @return
+     */
     public byte[] getImmutableBlockHash() {
         if(!isParsed) parseRLP();
         return immutableBlockHash;
     }
 
+    /**
+     * get current block basetarget
+     * @return
+     */
     public BigInteger getBaseTarget() {
         if(!isParsed) parseRLP();
         return baseTarget;
     }
 
+    /**
+     * get chain difficulty.
+     * @return
+     */
     public BigInteger getCumulativeDifficulty() {
         if(!isParsed) parseRLP();
         return cumulativeDifficulty;
     }
 
+    /**
+     * get current block generation signature.
+     * @return
+     */
     public byte[] getGenerationSignature() {
         if(!isParsed) parseRLP();
         return generationSignature;
     }
 
+    /**
+     * get current block transaction maybe empty block.
+     * @return
+     */
     public Transaction getTxMsg() {
         if(!isParsed) parseRLP();
         return txMsg;
     }
 
+    /**
+     * get current block miner balance.
+     * @return
+     */
     public long getMinerBalance() {
         if(!isParsed) parseRLP();
         return minerBalance;
     }
 
+    /**
+     * get transaction sender balance.
+     * @return
+     */
     public long getSenderBalance() {
         if(!isParsed) parseRLP();
         return senderBalance;
     }
 
+    /**
+     * get receiver balance.
+     * @return
+     */
     public long getReceiverBalance() {
         if(!isParsed) parseRLP();
         return receiverBalance;
     }
 
+    /**
+     * get transaction sender nonce.
+     * @return
+     */
     public long getSenderNonce() {
         if(!isParsed) parseRLP();
         return senderNonce;
@@ -331,11 +387,19 @@ public class Block {
         return signature;
     }
 
+    /**
+     * get miner pubkey.
+     * @return
+     */
     public byte[] getMinerPubkey(){
         if(!isParsed) parseRLP();
         return minerPubkey;
     }
 
+    /**
+     * set block Signature
+     * @param signature
+     */
     public void setSignature(byte[] signature){
         this.signature = signature;
     }
@@ -372,6 +436,7 @@ public class Block {
      * @return
      */
     public boolean isBlockParamValidate(){
+        if(this.getEncoded().length > ChainParam.MaxBlockSize) return false;
         if(!isParsed) parseRLP();
         if(chainID.length >ChainParam.ChainIDlength) return false;
         if(timeStamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timeStamp < 0) return false;

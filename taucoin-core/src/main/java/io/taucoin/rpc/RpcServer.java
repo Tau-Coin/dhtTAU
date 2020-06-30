@@ -1,6 +1,6 @@
 package io.taucoin.rpc;
 
-import io.taucoin.manager.TauController;
+import io.taucoin.controller.TauController;
 
 /**
  * RpcServer is the http server for rpc.

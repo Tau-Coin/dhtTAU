@@ -1,4 +1,4 @@
-package io.taucoin.manager;
+package io.taucoin.controller;
 
 import io.taucoin.account.AccountManager;
 import io.taucoin.chain.ChainManager;
@@ -7,7 +7,7 @@ import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.TauListener;
 import io.taucoin.rpc.RpcServer;
 import io.taucoin.torrent.SessionSettings;
-import io.taucoin.torrent.TorrentEngine;
+import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.util.Repo;
 
 import com.frostwire.jlibtorrent.Pair;
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 /**
  * TauController is the core controller of tau blockchain.
  * It manages all the components including ChainManager, RpcServer,
- * TorrentEngine and so on.
+ * TorrentDHTEngine and so on.
  */
 public class TauController {
 
@@ -31,8 +31,8 @@ public class TauController {
     // AccountManager manages the key pair for the miner.
     private AccountManager accountManager = AccountManager.getInstance();
 
-    // Communicate with torrent dht by TorrentEngine;
-    TorrentEngine torrentEngine = TorrentEngine.getInstance();
+    // Communicate with torrent dht by TorrentDHTEngine;
+    TorrentDHTEngine torrentDHTEngine = TorrentDHTEngine.getInstance();
 
     private ChainManager chainManager;
 
@@ -59,8 +59,8 @@ public class TauController {
 	// store public key and private key.
 	this.accountManager.updateKey(key);
 
-	// Add TauListener into TorrentEngine.
-	this.torrentEngine.setTauListener(compositeTauListener);
+	// Add TauListener into TorrentDHTEngine.
+	this.torrentDHTEngine.setTauListener(compositeTauListener);
 
 	// create chain manager.
 	// ChainManager is responsibling for opening database and
@@ -80,7 +80,7 @@ public class TauController {
      */
     public void start(SessionSettings settings) {
         // First of all, start torrent engine.
-	torrentEngine.start(settings);
+	torrentDHTEngine.start(settings);
     }
 
     /**
@@ -89,7 +89,7 @@ public class TauController {
     public void stop() {
 
         // Lastly, stop torrent engine
-	torrentEngine.stop();
+	torrentDHTEngine.stop();
     }
 
     /**
@@ -117,6 +117,15 @@ public class TauController {
      */
     public void updateKey(Pair<byte[], byte[]> key) {
         this.accountManager.updateKey(key);
+    }
+
+    /**
+     * Update key pair for the miner.
+     *
+     * @param seed the seed of key pair
+     */
+    public void updateKey(byte[] seed) {
+        this.accountManager.updateKey(seed);
     }
 
     /**
@@ -154,6 +163,6 @@ public class TauController {
      * @return SessionManager
      */
     public SessionManager getSessionManager() {
-        return torrentEngine.getSessionManager();
+        return torrentDHTEngine.getSessionManager();
     }
 }
