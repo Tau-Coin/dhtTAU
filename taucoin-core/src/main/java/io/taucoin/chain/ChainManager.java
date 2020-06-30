@@ -1,7 +1,7 @@
 package io.taucoin.chain;
 
 import io.taucoin.db.BlockDB;
-import io.taucoin.db.KeyValueDataBase;
+import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.db.StateDB;
 import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.TauListener;
@@ -34,15 +34,14 @@ public class ChainManager {
      *
      * @param listener CompositeTauListener
      */
-    public ChainManager(TauListener listener, KeyValueDataBase stateDb,
-            KeyValueDataBase blockDb) {
+    public ChainManager(TauListener listener, KeyValueDataBaseFactory dbFactory) {
         this.listener = listener;
 
         // create state and block database.
         // If database does not exist, directly load.
         // If not exist, create new database.
-        this.stateDB = new StateDB(stateDb);
-	this.blockDB = new BlockDB(blockDb);
+        this.stateDB = new StateDB(dbFactory.newDatabase());
+	this.blockDB = new BlockDB(dbFactory.newDatabase());
     }
 
     /**

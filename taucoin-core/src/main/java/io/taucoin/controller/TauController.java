@@ -2,7 +2,7 @@ package io.taucoin.controller;
 
 import io.taucoin.account.AccountManager;
 import io.taucoin.chain.ChainManager;
-import io.taucoin.db.KeyValueDataBase;
+import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.TauListener;
 import io.taucoin.rpc.RpcServer;
@@ -46,13 +46,11 @@ public class TauController {
      *
      * @param repoPath the directory where data is stored.
      * @param key the pair of public key and private key.
-     * @param stateDb state key-value database implementation.
-     * @param blockDb block key-value database implementation.
+     * @param db key-value database factory implementation.
      * @param enableRpc enable rpc server or not.
      */
     public TauController(String repoPath, Pair<byte[], byte[]> key,
-            KeyValueDataBase stateDb, KeyValueDataBase blockDb,
-	    boolean enableRpc) {
+            KeyValueDataBaseFactory dbFactory, boolean enableRpc) {
 
         // set the root directory.
         Repo.setRepoPath(repoPath);
@@ -65,7 +63,7 @@ public class TauController {
 	// create chain manager.
 	// ChainManager is responsibling for opening database and
 	// loading the prebuilt blockchain data.
-        this.chainManager = new ChainManager(compositeTauListener, stateDb, blockDb);
+        this.chainManager = new ChainManager(compositeTauListener, dbFactory);
 
         this.enableRpc = enableRpc;
         if (enableRpc) {
