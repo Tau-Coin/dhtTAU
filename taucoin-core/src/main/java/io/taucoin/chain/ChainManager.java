@@ -41,7 +41,7 @@ public class ChainManager {
         // If database does not exist, directly load.
         // If not exist, create new database.
         this.stateDB = new StateDB(dbFactory.newDatabase());
-	this.blockDB = new BlockDB(dbFactory.newDatabase());
+        this.blockDB = new BlockDB(dbFactory.newDatabase());
     }
 
     /**

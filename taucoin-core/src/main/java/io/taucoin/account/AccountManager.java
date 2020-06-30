@@ -24,14 +24,14 @@ public class AccountManager {
      */
     public static AccountManager getInstance() {
         if (INSTANCE == null) {
-	    synchronized (AccountManager.class) {
-	        if (INSTANCE == null) {
-		    INSTANCE = new AccountManager();
-		}
-	    }
-	}
+            synchronized (AccountManager.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new AccountManager();
+                }
+            }
+        }
 
-	return INSTANCE;
+        return INSTANCE;
     }
 
     /**
@@ -50,7 +50,7 @@ public class AccountManager {
      */
     public synchronized void updateKey(byte[] seed) {
         this.seed = seed;
-	this.key = Ed25519.createKeypair(seed);
+        this.key = Ed25519.createKeypair(seed);
     }
 
     /**
@@ -69,8 +69,8 @@ public class AccountManager {
      */
     public synchronized byte[] getPublickey() {
         if (this.key == null) {
-	    return null;
-	}
+            return null;
+        }
         return this.key.first;
     }
 
@@ -81,8 +81,8 @@ public class AccountManager {
      */
     public synchronized byte[] getPrivatekey() {
         if (this.key == null) {
-	    return null;
-	}
+            return null;
+        }
         return this.key.second;
     }
 }

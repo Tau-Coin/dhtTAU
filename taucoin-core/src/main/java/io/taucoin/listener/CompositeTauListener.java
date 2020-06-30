@@ -23,7 +23,7 @@ public class CompositeTauListener implements TauListener {
     @Override
     public void onNewChain(String chainId, String nickName) {
         for (TauListener listener : listeners) {
-	    listener.onNewChain(chainId, nickName);
-	}
+            listener.onNewChain(chainId, nickName);
+        }
     }
 }

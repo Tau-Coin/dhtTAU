@@ -54,21 +54,21 @@ public class TauController {
 
         // set the root directory.
         Repo.setRepoPath(repoPath);
-	// store public key and private key.
-	this.accountManager.updateKey(key);
+        // store public key and private key.
+        this.accountManager.updateKey(key);
 
-	// Add TauListener into TorrentDHTEngine.
-	this.torrentDHTEngine.setTauListener(compositeTauListener);
+        // Add TauListener into TorrentDHTEngine.
+        this.torrentDHTEngine.setTauListener(compositeTauListener);
 
-	// create chain manager.
-	// ChainManager is responsibling for opening database and
-	// loading the prebuilt blockchain data.
+        // create chain manager.
+        // ChainManager is responsibling for opening database and
+        // loading the prebuilt blockchain data.
         this.chainManager = new ChainManager(compositeTauListener, dbFactory);
 
         this.enableRpc = enableRpc;
         if (enableRpc) {
             rpcServer = new RpcServer(this);
-	}
+        }
     }
 
     /**
@@ -78,7 +78,7 @@ public class TauController {
      */
     public void start(SessionSettings settings) {
         // First of all, start torrent engine.
-	torrentDHTEngine.start(settings);
+        torrentDHTEngine.start(settings);
     }
 
     /**
@@ -87,7 +87,7 @@ public class TauController {
     public void stop() {
 
         // Lastly, stop torrent engine
-	torrentDHTEngine.stop();
+        torrentDHTEngine.stop();
     }
 
     /**

@@ -36,48 +36,48 @@ public class TorrentDHTEngine {
     private AlertListener torrentListener = new AlertListener() {
 
         @Override
-	public int[] types() {
-	    return null;
-	}
+    public int[] types() {
+        return null;
+    }
 
-	@Override
-	public void alert(Alert<?> alert) {
-	    AlertType type = alert.type();
+    @Override
+    public void alert(Alert<?> alert) {
+        AlertType type = alert.type();
 
-	    if (type == AlertType.LISTEN_SUCCEEDED) {
-	        ListenSucceededAlert a = (ListenSucceededAlert) alert;
-		logger.info(a.message());
-	    }
+        if (type == AlertType.LISTEN_SUCCEEDED) {
+            ListenSucceededAlert a = (ListenSucceededAlert) alert;
+            logger.info(a.message());
+        }
 
-	    if (type == AlertType.LISTEN_FAILED) {
-	        ListenFailedAlert a = (ListenFailedAlert) alert;
-		logger.info(a.message());
-	    }
+        if (type == AlertType.LISTEN_FAILED) {
+            ListenFailedAlert a = (ListenFailedAlert) alert;
+            logger.info(a.message());
+        }
 
-	    if (type == AlertType.DHT_MUTABLE_ITEM) {
-	        DhtMutableItemAlert a = (DhtMutableItemAlert) alert;
-		logger.info(a.message());
-	    }
+        if (type == AlertType.DHT_MUTABLE_ITEM) {
+            DhtMutableItemAlert a = (DhtMutableItemAlert) alert;
+            logger.info(a.message());
+        }
 
-	    if (type == AlertType.DHT_IMMUTABLE_ITEM) {
-	        DhtImmutableItemAlert a = (DhtImmutableItemAlert) alert;
-		logger.info(a.message());
-	    }
+        if (type == AlertType.DHT_IMMUTABLE_ITEM) {
+            DhtImmutableItemAlert a = (DhtImmutableItemAlert) alert;
+            logger.info(a.message());
+        }
 
-	    if (type == AlertType.DHT_PUT) {
-	        DhtPutAlert a = (DhtPutAlert) alert;
-		logger.info(a.message());
-	    }
-	}
+        if (type == AlertType.DHT_PUT) {
+            DhtPutAlert a = (DhtPutAlert) alert;
+            logger.info(a.message());
+        }
+    }
     };
 
     private Runnable torrentSession = new Runnable() {
         @Override
-	public void run() {
-	    synchronized (TorrentDHTEngine.this.lock) {
-	        sessionManager.start(settings.getSessionParams());
-	    }
-	}
+        public void run() {
+            synchronized (TorrentDHTEngine.this.lock) {
+                sessionManager.start(settings.getSessionParams());
+            }
+        }
     };
 
     private Thread torrentDaemon;
@@ -92,19 +92,19 @@ public class TorrentDHTEngine {
             synchronized (TorrentDHTEngine.class) {
                 if (INSTANCE == null) {
                     INSTANCE = new TorrentDHTEngine();
-		}
-	    }
-	}
+                }
+            }
+        }
 
-	return INSTANCE;
+        return INSTANCE;
     }
 
     private TorrentDHTEngine() {
 
         synchronized (this.lock) {
             sessionManager = new SessionManager(EnableTorrentLog);
-	    sessionManager.addListener(torrentListener);
-	}
+            sessionManager.addListener(torrentListener);
+        }
     }
 
     /**
@@ -123,8 +123,8 @@ public class TorrentDHTEngine {
      */
     public SessionManager getSessionManager() {
         synchronized (this.lock) {
-	    return sessionManager;
-	}
+            return sessionManager;
+        }
     }
 
     /**
@@ -134,13 +134,13 @@ public class TorrentDHTEngine {
      */
     public void start(SessionSettings settings) {
         if (torrentDaemon != null) {
-	    return;
-	}
+            return;
+        }
 
-	this.settings = settings;
+        this.settings = settings;
         torrentDaemon = new Thread(torrentSession);
-	torrentDaemon.setDaemon(true);
-	torrentDaemon.start();
+        torrentDaemon.setDaemon(true);
+        torrentDaemon.start();
     }
 
     /**
@@ -148,21 +148,21 @@ public class TorrentDHTEngine {
      */
     public void stop() {
         if (torrentDaemon == null) {
-	    return;
-	}
+            return;
+        }
 
         synchronized (this.lock) {
-	    sessionManager.stop();
-	}
+            sessionManager.stop();
+        }
 
-	torrentDaemon.interrupt();
-	try {
-	    torrentDaemon.join();
-	} catch (InterruptedException e) {
-	    e.printStackTrace();
-	}
-	torrentDaemon = null;
-	this.settings = null;
+        torrentDaemon.interrupt();
+        try {
+            torrentDaemon.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        torrentDaemon = null;
+        this.settings = null;
     }
 
     /**

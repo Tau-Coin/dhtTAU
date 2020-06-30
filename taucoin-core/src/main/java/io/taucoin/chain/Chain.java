@@ -26,7 +26,7 @@ public class Chain {
      */
     public Chain(byte[] chainID, TauListener tauListener) {
         this.chainID = chainID;
-	this.tauListener = tauListener;
+        this.tauListener = tauListener;
     }
 
     /**
