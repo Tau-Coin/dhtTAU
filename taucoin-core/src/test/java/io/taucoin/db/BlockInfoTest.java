@@ -15,9 +15,7 @@ public class BlockInfoTest {
         logger.info("encode:{}", blockInfo.getEncoded());
 
         BlockInfo blockInfo1 = new BlockInfo(blockInfo.getEncoded());
-        Assert.assertArrayEquals(blockInfo.getHash(), blockInfo1.getHash());
-        Assert.assertArrayEquals(blockInfo.getEncoded(), blockInfo1.getEncoded());
-        Assert.assertEquals(blockInfo.isMainChain(), blockInfo1.isMainChain());
+        Assert.assertEquals(blockInfo, blockInfo1);
     }
 
     @Test
@@ -27,8 +25,6 @@ public class BlockInfoTest {
         logger.info("encode:{}", blockInfo.getEncoded());
 
         BlockInfo blockInfo1 = new BlockInfo(blockInfo.getEncoded());
-        Assert.assertArrayEquals(blockInfo.getHash(), blockInfo1.getHash());
-        Assert.assertArrayEquals(blockInfo.getEncoded(), blockInfo1.getEncoded());
-        Assert.assertEquals(blockInfo.isMainChain(), blockInfo1.isMainChain());
+        Assert.assertEquals(blockInfo, blockInfo1);
     }
 }

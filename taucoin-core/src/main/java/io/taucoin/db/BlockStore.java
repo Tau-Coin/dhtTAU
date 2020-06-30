@@ -31,12 +31,12 @@ public interface BlockStore {
      * @param block
      * @throws Exception
      */
-    void saveBlock(Block block) throws Exception;
+    void saveBlock(Block block, boolean isMainChain) throws Exception;
 
     /**
-     * remove all blocks of a chain
+     * remove all blocks and info of a chain
      * @param chainID
      * @throws Exception
      */
-    void removeChainAllBlocks(byte[] chainID) throws Exception;
+    void removeChain(byte[] chainID) throws Exception;
 }

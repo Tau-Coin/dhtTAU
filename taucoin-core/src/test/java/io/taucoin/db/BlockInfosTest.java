@@ -68,9 +68,60 @@ public class BlockInfosTest {
         Assert.assertEquals(list.size(), list1.size());
         Assert.assertArrayEquals(blockInfos.getEncoded(), blockInfos1.getEncoded());
         for (int i = 0; i < list.size(); i++) {
-            Assert.assertEquals(list.get(i).isMainChain(), list1.get(i).isMainChain());
-            Assert.assertArrayEquals(list.get(i).getHash(), list1.get(i).getHash());
+            Assert.assertEquals(list.get(i), list1.get(i));
         }
+    }
+
+    @Test
+    public void PutBlockTest() {
+        BlockInfos blockInfos = new BlockInfos();
+
+        long time1 = 1;
+        long time2 = 11;
+        long time3 = 21;
+        TxData txData = new TxData(ByteUtil.toByte(txdata));
+        Transaction tx = new Transaction(version,chainid,150000000,-60,sender,0,txData,signature);
+
+        Block block1 = new Block((byte)1, "chain1".getBytes(), time1, 1, new byte[2], new byte[2],
+                BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
+                new byte[64], new byte[32]);
+        logger.info("hash:{}", Hex.toHexString(block1.getBlockHash()));
+        blockInfos.putBlock(block1, true);
+
+        Block block2 = new Block((byte)1, "chain1".getBytes(), time2, 1, block1.getBlockHash(), new byte[2],
+                BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
+                new byte[64], new byte[32]);
+        logger.info("hash:{}", Hex.toHexString(block2.getBlockHash()));
+        blockInfos.putBlock(block2, false);
+
+        Block block3 = new Block((byte)1, "chain1".getBytes(), time3, 1, block2.getBlockHash(), new byte[2],
+                BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
+                new byte[64], new byte[32]);
+        logger.info("hash:{}", Hex.toHexString(block3.getBlockHash()));
+        blockInfos.putBlock(block3, false);
+
+        List<BlockInfo> list = blockInfos.getBlockInfoList();
+        for (BlockInfo blockInfo: list) {
+            logger.info("Size:{}, Hash:{}, MainChain:{}",
+                    list.size(), Hex.toHexString(blockInfo.getHash()), blockInfo.isMainChain());
+        }
+
+        byte[] rlp = blockInfos.getEncoded();
+        BlockInfos blockInfos1 = new BlockInfos(rlp);
+        blockInfos1.putBlock(block3, true);
+        List<BlockInfo> list1 = blockInfos1.getBlockInfoList();
+        for (BlockInfo blockInfo: list1) {
+            logger.info("Size:{}, Hash:{}, MainChain:{}",
+                    list.size(), Hex.toHexString(blockInfo.getHash()), blockInfo.isMainChain());
+        }
+        Assert.assertEquals(list.size(), list1.size());
+        Assert.assertNotEquals(blockInfos.getEncoded(), blockInfos1.getEncoded());
+        int size = list.size();
+        for (int i = 0; i < size - 1; i++) {
+            Assert.assertEquals(list.get(i), list1.get(i));
+        }
+        Assert.assertArrayEquals(list.get(size - 1).getHash(), list1.get(size - 1).getHash());
+        Assert.assertNotEquals(list.get(size - 1).isMainChain(), list1.get(size - 1).isMainChain());
     }
 }
 

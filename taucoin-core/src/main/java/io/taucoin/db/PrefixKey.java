@@ -1,5 +1,7 @@
 package io.taucoin.db;
 
+import io.taucoin.util.ByteUtil;
+
 public class PrefixKey {
     // prefix
     public static final byte[] chain = "C".getBytes();
@@ -145,6 +147,20 @@ public class PrefixKey {
         byte[] key = new byte[chainID.length + hash.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
         System.arraycopy(hash, 0, key, chainID.length, hash.length);
+        return key;
+    }
+
+    /**
+     * block info key: chainID + number
+     * @param chainID
+     * @param number
+     * @return
+     */
+    public static byte[] blockInfoKey(byte[] chainID, long number) {
+        byte[] numberBytes = ByteUtil.longToBytes(number);
+        byte[] key = new byte[chainID.length + numberBytes.length];
+        System.arraycopy(chainID, 0, key, 0, chainID.length);
+        System.arraycopy(numberBytes, 0, key, chainID.length, numberBytes.length);
         return key;
     }
 

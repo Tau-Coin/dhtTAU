@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class BlockInfos {
@@ -45,8 +46,17 @@ public class BlockInfos {
         if (null == blockInfoList) {
             blockInfoList = new ArrayList<>();
         }
-        BlockInfo blockInfo = new BlockInfo(block.getBlockHash(), isMainChain);
-        blockInfoList.add(blockInfo);
+        boolean found = false;
+        for (BlockInfo blockInfo: blockInfoList) {
+            if (Arrays.equals(blockInfo.getHash(), block.getBlockHash())) {
+                blockInfo.setMainChain(isMainChain);
+                found = true;
+            }
+        }
+        if (!found) {
+            BlockInfo blockInfo = new BlockInfo(block.getBlockHash(), isMainChain);
+            blockInfoList.add(blockInfo);
+        }
     }
 
     /**

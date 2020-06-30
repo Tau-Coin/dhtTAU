@@ -60,12 +60,12 @@ public class ProofOfTransactionTest {
         }
 
         @Override
-        public void saveBlock(Block block) {
+        public void saveBlock(Block block, boolean isMainChain) {
             mapDB.put(Hex.toHexString(block.getBlockHash()), block.getEncoded());
         }
 
         @Override
-        public void removeChainAllBlocks(byte[] chainID) {
+        public void removeChain(byte[] chainID) {
 
         }
     }
@@ -82,19 +82,19 @@ public class ProofOfTransactionTest {
                 BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
                 new byte[64], new byte[32]);
         logger.info("hash:{}", Hex.toHexString(block1.getBlockHash()));
-        mockDB.saveBlock(block1);
+        mockDB.saveBlock(block1, true);
 
         Block block2 = new Block((byte)1, "chain1".getBytes(), time2, 2, block1.getBlockHash(), new byte[2],
                 BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
                 new byte[64], new byte[32]);
         logger.info("hash:{}", Hex.toHexString(block2.getBlockHash()));
-        mockDB.saveBlock(block2);
+        mockDB.saveBlock(block2, true);
 
         Block block3 = new Block((byte)1, "chain1".getBytes(), time3, 3, block2.getBlockHash(), new byte[2],
                 BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
                 new byte[64], new byte[32]);
         logger.info("hash:{}", Hex.toHexString(block3.getBlockHash()));
-        mockDB.saveBlock(block3);
+        mockDB.saveBlock(block3, true);
 
         return mockDB;
     }
