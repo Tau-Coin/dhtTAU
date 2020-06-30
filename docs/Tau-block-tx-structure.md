@@ -5,8 +5,8 @@
  2   |chainID        | 32         | Community ChainID := community name#coins volumn in millions#optional block time interval in seconds#hash(GenesisMInerPubkey + timestamp)
  3   |timestamp      | 4          | unix timestamp for winning the block package right
  4   |blockNumber    | 8          | block number
- 5   |previousBlockRoot  | 32     | root hash of previous block
- 6   |immutableBlockRoot | 32     | root hash of immutable point block
+ 5   |previousBlockHash  | 32     | hash of previous block
+ 6   |immutableBlockHash | 32     | hash of immutable point block
  7   |basetarget     | 8          |  for POT - Proof of Transaction calculation
  8   |cumulativedifficulty  | 8   | current consensus chain parameter
  9   |generationsignature  | 32  | for POT calculation, $9 x power x time
@@ -37,5 +37,5 @@
  No              |  Key           | Size-Byte        |  Notes
  ----------------|----------------|------------------|----------------------
  1 | msgType        | 1        | 0-torrent publishing, 1-wriring, 2-BootStrapNode Announcement, 3-Community Announcement
- 2 | annoucement    | 1024     | Description of the magnet link, Receiver, BootStrapNode, Community Announcement
- 3 | attachment     | 1024     | Magnet link, Amount, Nil of boostrapnoode and community announcement
+ 2 | annoucement    | 256     | Description of the magnet link, Receiver, BootStrapNode, Community Announcement
+ 3 | attachment     | 256     | Magnet link, Amount, Nil of boostrapnoode and community announcement
