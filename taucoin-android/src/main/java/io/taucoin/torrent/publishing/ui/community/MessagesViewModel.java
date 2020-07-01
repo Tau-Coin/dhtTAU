@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.ui.group;
+package io.taucoin.torrent.publishing.ui.community;
 
 import android.app.Application;
 

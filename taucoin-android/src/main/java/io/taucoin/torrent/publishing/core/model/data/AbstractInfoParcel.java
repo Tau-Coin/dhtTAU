@@ -28,29 +28,23 @@ import java.util.UUID;
  * The class provides an abstract package model, sent from the service.
  */
 
-public abstract class AbstractInfoParcel
-        implements Parcelable, Comparable
-{
+public abstract class AbstractInfoParcel implements Parcelable, Comparable {
     public String parcelId;
 
-    protected AbstractInfoParcel()
-    {
+    protected AbstractInfoParcel() {
         parcelId = UUID.randomUUID().toString();
     }
 
-    protected AbstractInfoParcel(String parcelId)
-    {
+    AbstractInfoParcel(String parcelId) {
         this.parcelId = parcelId;
     }
 
-    protected AbstractInfoParcel(Parcel source)
-    {
+    AbstractInfoParcel(Parcel source) {
         parcelId = source.readString();
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags)
-    {
+    public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(parcelId);
     }
 

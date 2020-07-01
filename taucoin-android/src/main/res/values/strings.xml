@@ -15,7 +15,7 @@
 
 
     <string name="main_publish_video">Publish Video</string>
-    <string name="main_create_community">Create Publishing Community</string>
+    <string name="main_new_community">New Community</string>
     <string name="main_other_transaction">Other Transaction</string>
 
     <!-- Strings used for main drawer content -->
@@ -31,20 +31,22 @@
     <string name="menu_unmute">Unmute</string>
     <string name="menu_mute">Mute</string>
     <string name="menu_block_group">Block Group</string>
+    <string name="menu_community_create">Create Community</string>
 
-    <!-- Strings used for block chains -->
-<!--    <string name="community_name_title">C/%1$s</string>-->
-<!--    <string name="community_name_tau">TAU Official Community</string>-->
-<!--    <string name="community_mining">Mining</string>-->
-<!--    <string name="community_transactions">Transactions</string>-->
-<!--    <string name="community_sync_rate">Sync Rate %1$d%%</string>-->
-<!--    <string name="community_mining_start">Start Mining</string>-->
-<!--    <string name="community_mining_stop">Stop Mining</string>-->
-<!--    <string name="community_total_blocks">Total Blocks</string>-->
-<!--    <string name="community_mining_power">Mining Power</string>-->
-<!--    <string name="community_mining_rewards">Rewards</string>-->
+    <string name="community_input_hint">Message</string>
+    <string name="community_users_stats">%1$d members,%2$d online</string>
 
-    <string name="group_input_hint">Message</string>
-    <string name="group_users_stats">%1$d members,%2$d online</string>
+    <string name="community_community_name">Community Name(required)</string>
+    <string name="community_coin_name">Coin Name(required)</string>
+    <string name="community_announce">Announce on TAU</string>
+    <string name="community_total_coin">Total Coin/%1$s</string>
+    <string name="community_block_avg">Block in avg/%1$d min</string>
+    <string name="community_intro">Introduction(optional)</string>
+    <string name="community_telegram_id">Telegram ID(optional)</string>
+
+    <string name="error_community_name_empty">Community name cannot be empty!</string>
+    <string name="error_coin_name_empty">Coin name cannot be empty!</string>
+    <string name="error_telegram_id_illegal">Telegram ID is illegal!</string>
+    <string name="community_added_successfully">Community added successfully!</string>
 
 </resources>

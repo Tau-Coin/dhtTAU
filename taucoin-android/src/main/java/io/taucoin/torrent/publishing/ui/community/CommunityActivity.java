@@ -1,41 +1,40 @@
-package io.taucoin.torrent.publishing.ui.group;
+package io.taucoin.torrent.publishing.ui.community;
 
 import android.os.Bundle;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import java.lang.reflect.Method;
 
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.databinding.ActivityGroupBinding;
+import io.taucoin.torrent.publishing.databinding.ActivityCommunityBinding;
+import io.taucoin.torrent.publishing.storage.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.main.CommunityItem;
 
 /**
  * 单个群组页面
  */
-public class GroupActivity extends BaseActivity {
-    private ActivityGroupBinding binding;
-    private ActionBarDrawerToggle toggle;
+public class CommunityActivity extends BaseActivity {
+    private ActivityCommunityBinding binding;
 
     private MessagesViewModel viewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private boolean isMute = false;
-    private CommunityItem item;
+    private Community item;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         viewModel = provider.get(MessagesViewModel.class);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_group);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_community);
         initParameter();
         initLayout();
     }
@@ -54,12 +53,12 @@ public class GroupActivity extends BaseActivity {
      */
     private void initLayout() {
         if(item != null){
-            String groupName = item.getCommunityName();
-            String firstLetters = StringUtil.getFirstLettersOfName(groupName);
+            String communityName = item.communityName;
+            String firstLetters = StringUtil.getFirstLettersOfName(communityName);
             binding.toolbarInclude.roundButton.setText(firstLetters);
             binding.toolbarInclude.roundButton.setBgColor(Utils.getGroupColor(firstLetters));
-            binding.toolbarInclude.tvGroupName.setText(groupName);
-            binding.toolbarInclude.tvUsersStats.setText(getString(R.string.group_users_stats, 0, 0));
+            binding.toolbarInclude.tvGroupName.setText(Html.fromHtml(communityName));
+            binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats, 0, 0));
         }
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
 
@@ -83,7 +82,7 @@ public class GroupActivity extends BaseActivity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_group, menu);
+        getMenuInflater().inflate(R.menu.menu_community, menu);
         return true;
     }
 

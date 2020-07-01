@@ -19,6 +19,7 @@
             android:layout_centerVertical="true"
             android:gravity="center"
             android:textSize="@dimen/font_big_size"
+            android:textAllCaps="true"
             android:textColor="@color/color_white"
             app:borderColor="@color/primary_light"
             app:borderWidth="0dp"

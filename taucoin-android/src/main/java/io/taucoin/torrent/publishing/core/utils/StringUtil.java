@@ -251,10 +251,16 @@ public class StringUtil {
      */
     public static String getFirstLettersOfName(String groupName) {
         StringBuilder firstLetters = new StringBuilder();
+        String blankChar = "&nbsp;";
         if(isNotEmpty(groupName)){
-            String[] splits = groupName.split(" ");
+            String[] splits;
+            if(groupName.indexOf(blankChar) > 0){
+                splits = groupName.split(blankChar);
+            }else {
+                splits = groupName.split(" ");
+            }
             for (String split : splits) {
-                if(firstLetters.length() > 3){
+                if(firstLetters.length() >= 3){
                     break;
                 }
                 if(isNotEmpty(split)){

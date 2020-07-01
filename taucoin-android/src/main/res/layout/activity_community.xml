@@ -41,9 +41,9 @@
                 android:background="@null"
                 android:singleLine="true"
                 android:text=""
-                android:hint="@string/group_input_hint"
+                android:hint="@string/community_input_hint"
                 android:inputType="text"
-                android:autofillHints="@string/main_empty_content" />
+                android:autofillHints="@string/community_input_hint" />
 
             <ImageView
                 android:id="@+id/iv_link"

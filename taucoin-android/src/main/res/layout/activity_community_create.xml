@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
+
+        <include
+            android:id="@+id/toolbar_include"
+            layout="@layout/toolbar" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp">
+
+            <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+                android:id="@+id/round_button"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="25dp"
+                android:gravity="center"
+                android:textSize="@dimen/font_big_size"
+                android:textAllCaps="true"
+                android:textColor="@color/color_white"
+                app:borderColor="@color/primary_light"
+                app:borderWidth="0dp"
+                app:radius="30dp"
+                app:isRadiusAutoHalf="true"
+                app:bgColor="@color/primary_light"
+                app:textColorForPressed="@color/color_white" />
+
+            <EditText
+                android:layout_toEndOf="@+id/round_button"
+                android:id="@+id/et_community_name"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:singleLine="true"
+                android:layout_marginTop="10dp"
+                android:hint="@string/community_community_name"
+                android:inputType="text"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:autofillHints="@string/community_community_name" />
+
+            <TextView
+                android:layout_toEndOf="@+id/round_button"
+                android:layout_below="@+id/et_community_name"
+                android:id="@+id/tv_public_key"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+
+        </RelativeLayout>
+
+        <EditText
+            android:id="@+id/et_coin_name"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:singleLine="true"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:hint="@string/community_coin_name"
+            android:inputType="text"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:autofillHints="@string/community_coin_name" />
+
+        <EditText
+            android:id="@+id/et_announce"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:singleLine="true"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:text="@string/community_announce"
+            android:hint="@string/community_coin_name"
+            android:inputType="text"
+            android:enabled="false"
+            android:textColor="@color/color_black"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:autofillHints="@string/community_announce" />
+
+        <EditText
+            android:id="@+id/et_total_coin"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:singleLine="true"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:text="@string/community_total_coin"
+            android:hint="@string/community_total_coin"
+            android:inputType="text"
+            android:enabled="false"
+            android:textColor="@color/color_black"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:autofillHints="@string/community_total_coin" />
+
+        <EditText
+            android:id="@+id/et_block_avg"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:singleLine="true"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:text="@string/community_block_avg"
+            android:hint="@string/community_block_avg"
+            android:inputType="text"
+            android:enabled="false"
+            android:textColor="@color/color_black"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:autofillHints="@string/community_block_avg" />
+
+        <EditText
+            android:id="@+id/et_intro"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:singleLine="true"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:hint="@string/community_intro"
+            android:inputType="textMultiLine"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:autofillHints="@string/community_intro" />
+
+        <EditText
+            android:id="@+id/et_telegram_id"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:singleLine="true"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:hint="@string/community_telegram_id"
+            android:inputType="text"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:autofillHints="@string/community_telegram_id" />
+
+    </LinearLayout>
+</layout>

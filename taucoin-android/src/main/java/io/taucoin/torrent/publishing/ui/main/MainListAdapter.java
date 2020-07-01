@@ -1,7 +1,11 @@
 package io.taucoin.torrent.publishing.ui.main;
 
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
@@ -13,13 +17,18 @@ import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemGroupListBinding;
+import io.taucoin.torrent.publishing.storage.entity.Community;
 import io.taucoin.torrent.publishing.ui.Selectable;
 
-public class GroupListAdapter extends ListAdapter<CommunityItem, GroupListAdapter.ViewHolder>
-    implements Selectable<CommunityItem> {
+/**
+ * 主页显示的群组列表的Adapter
+ */
+public class MainListAdapter extends ListAdapter<Community, MainListAdapter.ViewHolder>
+    implements Selectable<Community> {
     private ClickListener listener;
+    private List<Community> dataList = new ArrayList<>();
 
-    GroupListAdapter(ClickListener listener) {
+    MainListAdapter(ClickListener listener) {
         super(diffCallback);
         this.listener = listener;
     }
@@ -38,25 +47,32 @@ public class GroupListAdapter extends ListAdapter<CommunityItem, GroupListAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(holder, getItemKey(position), position);
+        holder.bind(holder, getItemKey(position));
     }
 
     @Override
     public int getItemCount() {
-        return 6;
+        return dataList.size();
     }
 
     @Override
-    public CommunityItem getItemKey(int position) {
-        if (position < 0 || position >= getCurrentList().size())
-            return null;
-
-        return null;
+    public Community getItemKey(int position) {
+        return dataList.get(position);
     }
 
     @Override
-    public int getItemPosition(CommunityItem key) {
+    public int getItemPosition(Community key) {
         return getCurrentList().indexOf(key);
+    }
+
+    /**
+     * 设置列表社区展示数据
+     * @param communities 社区数据
+     */
+    void setDataList(List<Community> communities) {
+        dataList.clear();
+        dataList.addAll(communities);
+        notifyDataSetChanged();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -69,38 +85,39 @@ public class GroupListAdapter extends ListAdapter<CommunityItem, GroupListAdapte
             this.listener = listener;
         }
 
-        void bind(ViewHolder holder, CommunityItem listItem, int position) {
+        void bind(ViewHolder holder, Community community) {
+            if(null == holder || null == community){
+                return;
+            }
             String time = DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern0);
             holder.binding.tvMsgLastTime.setText(time);
             holder.binding.tvMsgNumber.setText("100");
-            String groupName = "TAU Community " + position;
-            holder.binding.tvGroupName.setText(groupName);
-            String firstLetters = StringUtil.getFirstLettersOfName(groupName);
+
+            holder.binding.tvGroupName.setText(Html.fromHtml(community.communityName));
+            String firstLetters = StringUtil.getFirstLettersOfName(community.communityName);
             holder.binding.leftView.setText(firstLetters);
             holder.binding.leftView.setBgColor(Utils.getGroupColor(firstLetters));
 
             holder.binding.getRoot().setOnClickListener(v -> {
                 if(listener != null){
-                    CommunityItem listItemTest = new CommunityItem();
-                    listItemTest.setCommunityName(groupName);
-                    listener.onItemClicked(listItemTest);
+                    listener.onItemClicked(community);
                 }
             });
         }
     }
 
     public interface ClickListener {
-        void onItemClicked(CommunityItem item);
+        void onItemClicked(Community item);
     }
 
-    private static final DiffUtil.ItemCallback<CommunityItem> diffCallback = new DiffUtil.ItemCallback<CommunityItem>() {
+    private static final DiffUtil.ItemCallback<Community> diffCallback = new DiffUtil.ItemCallback<Community>() {
         @Override
-        public boolean areContentsTheSame(@NonNull CommunityItem oldItem, @NonNull CommunityItem newItem) {
-            return oldItem.equalsContent(newItem);
+        public boolean areContentsTheSame(@NonNull Community oldItem, @NonNull Community newItem) {
+            return oldItem.equals(newItem);
         }
 
         @Override
-        public boolean areItemsTheSame(@NonNull CommunityItem oldItem, @NonNull CommunityItem newItem) {
+        public boolean areItemsTheSame(@NonNull Community oldItem, @NonNull Community newItem) {
             return oldItem.equals(newItem);
         }
     };

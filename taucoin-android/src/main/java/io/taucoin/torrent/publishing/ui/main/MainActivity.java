@@ -5,19 +5,26 @@ import android.view.View;
 
 import com.leinardi.android.speeddial.SpeedDialActionItem;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.view.GravityCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.Constants;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityMainDrawerBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
 
 /**
  * APP主页面：包含左侧抽屉页面，顶部工具栏，群组列表
  */
 public class MainActivity extends BaseActivity {
+    private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
     private ActivityMainDrawerBinding binding;
     private ActionBarDrawerToggle toggle;
 
@@ -47,6 +54,7 @@ public class MainActivity extends BaseActivity {
                 R.string.open_navigation_drawer,
                 R.string.close_navigation_drawer);
         binding.drawerLayout.addDrawerListener(toggle);
+        binding.drawer.tvPublicKey.setText(Constants.PUBLIC_KEY);
         initFabSpeedDial();
     }
 
@@ -54,13 +62,11 @@ public class MainActivity extends BaseActivity {
      * 初始化右下角悬浮按钮组件
      */
     private void initFabSpeedDial() {
+
         binding.fabButton.setOnActionSelectedListener((item) -> {
             switch (item.getId()) {
-                case R.id.main_publish_video:
-                    break;
                 case R.id.main_create_community:
-                    break;
-                case R.id.main_other_transaction:
+                    ActivityUtil.startActivity(this, CommunityCreateActivity.class);
                     break;
                 default:
                     return false;
@@ -70,21 +76,9 @@ public class MainActivity extends BaseActivity {
         });
 
         binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_other_transaction,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_other_transaction)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
                 R.id.main_create_community,
                 R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_create_community)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.main_publish_video,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.main_publish_video)
+                .setLabel(R.string.main_new_community)
                 .create());
     }
 
@@ -115,6 +109,7 @@ public class MainActivity extends BaseActivity {
             case R.id.item_import_key:
                 break;
             case R.id.item_new_community:
+                ActivityUtil.startActivity(this, CommunityCreateActivity.class);
                 break;
             case R.id.item_contacts:
                 break;
