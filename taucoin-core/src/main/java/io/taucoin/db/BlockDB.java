@@ -1,10 +1,15 @@
 package io.taucoin.db;
 
 import io.taucoin.types.Block;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class BlockDB implements BlockStore{
+    private static final Logger logger = LoggerFactory.getLogger("BlockDB");
 
     private KeyValueDataBase db;
 
@@ -111,5 +116,55 @@ public class BlockDB implements BlockStore{
     public void removeChain(byte[] chainID) throws Exception {
         db.removeWithKeyPrefix(chainID);
     }
+
+    /**
+     * get fork point block
+     * @param block
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public Block getForkPointBlock(Block block) throws Exception {
+        Block previousBlock = block;
+
+        while (true) {
+            byte[] infoRLP = db.get(PrefixKey.blockInfoKey(previousBlock.getChainID(), previousBlock.getBlockNum()));
+            if (null == infoRLP) {
+                logger.error("Can not found block info with this block number:{}", previousBlock.getBlockNum());
+                return null;
+            }
+            BlockInfos blockInfos = new BlockInfos(infoRLP);
+            List<BlockInfo> list = blockInfos.getBlockInfoList();
+            boolean found = false;
+            for (BlockInfo blockInfo : list) {
+                if (Arrays.equals(blockInfo.getHash(), previousBlock.getBlockHash())) {
+                    // found block
+                    found = true;
+                    if (blockInfo.isMainChain()) {
+                        // if this block is on main chain, got it
+                        return previousBlock;
+                    } else {
+                        // if this block is not on main chain, look ahead
+                        byte[] rlp = db.get(PrefixKey.blockKey(previousBlock.getChainID(),
+                                previousBlock.getBlockHash()));
+                        // if previous is null, return
+                        if (null == rlp) {
+                            logger.error("Can not found previous block, hash[{}]",
+                                    Hex.toHexString(previousBlock.getPreviousBlockHash()));
+                            return null;
+                        }
+                        previousBlock = new Block(rlp);
+                        break;
+                    }
+                }
+            }
+            // if not found this block info in this height
+            if (!found) {
+                logger.error("Can not found block info, hash[{}]", Hex.toHexString(previousBlock.getBlockHash()));
+                return null;
+            }
+        }
+    }
+
 }
 

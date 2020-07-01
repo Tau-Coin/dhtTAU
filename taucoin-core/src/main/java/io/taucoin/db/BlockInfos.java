@@ -49,10 +49,12 @@ public class BlockInfos {
         boolean found = false;
         for (BlockInfo blockInfo: blockInfoList) {
             if (Arrays.equals(blockInfo.getHash(), block.getBlockHash())) {
+                // if found, overwrite it with new status
                 blockInfo.setMainChain(isMainChain);
                 found = true;
             }
         }
+        // if not found, add a new one
         if (!found) {
             BlockInfo blockInfo = new BlockInfo(block.getBlockHash(), isMainChain);
             blockInfoList.add(blockInfo);

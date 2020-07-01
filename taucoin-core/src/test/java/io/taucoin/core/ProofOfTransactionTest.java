@@ -68,6 +68,11 @@ public class ProofOfTransactionTest {
         public void removeChain(byte[] chainID) {
 
         }
+
+        @Override
+        public Block getForkPointBlock(Block block) throws Exception {
+            return null;
+        }
     }
 
     private MockDB newMockDB() {

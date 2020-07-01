@@ -39,4 +39,12 @@ public interface BlockStore {
      * @throws Exception
      */
     void removeChain(byte[] chainID) throws Exception;
+
+    /**
+     * get fork point block which on main chain
+     * @param block
+     * @return
+     * @throws Exception
+     */
+    Block getForkPointBlock(Block block) throws Exception;
 }
