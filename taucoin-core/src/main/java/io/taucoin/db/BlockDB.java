@@ -1,5 +1,6 @@
 package io.taucoin.db;
 
+import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +81,10 @@ public class BlockDB implements BlockStore{
         db.put(PrefixKey.blockKey(block.getChainID(), block.getBlockHash()), block.getEncoded());
         // save block info
         saveBlockInfo(block, isMainChain);
-        // TODO: delete blocks out of 3 * mutable range
+        // delete blocks out of 3 * mutable range
+        if (block.getBlockNum() > ChainParam.WARNING_RANGE) {
+            delNonChainBlockByNumber(block.getChainID(), block.getBlockNum() - ChainParam.WARNING_RANGE);
+        }
     }
 
     /**

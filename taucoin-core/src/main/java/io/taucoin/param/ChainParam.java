@@ -53,4 +53,8 @@ public class ChainParam {
     public static final long MaxTotalSupply = 1000000000000000L;
     public static final BigInteger MaxBaseTarget = new BigInteger("ffffffffffffffff",16);
     public static final BigInteger MaxCummulativeDiff = new BigInteger("ffffffffffffffff",16);
+
+    // range
+    public static final int MUTABLE_RANGE = 864;
+    public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
 }
