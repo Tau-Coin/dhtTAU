@@ -34,8 +34,37 @@
 ## TxData
 8 - txdata class
 
- No              |  Key           | Size-Byte        |  Notes
- ----------------|----------------|------------------|----------------------
- 1 | msgType        | 1        | 0-torrent publishing, 1-wriring, 2-BootStrapNode Announcement, 3-Community Announcement
- 2 | annoucement    | 256     | Description of the magnet link, Receiver, BootStrapNode, Community Announcement
- 3 | attachment     | 256     | Magnet link, Amount, Nil of boostrapnoode and community announcement
+ No|  Key   |type    | Size-Byte|  Notes
+ --|--------|--------|----------|----------------------
+ 1 | msgType|enum    | 1        | 0-regularforum, 1-forumcomment, 2-CommunityAnnouncement, 3-DHTbootstrapNodeAnnouncement,4-wiringTransaction,5-IdentityAnnouncement
+ 2 | txCode |byte[]  |  512     | Contract description code.
+## txCode
+8.1 -RegularForum
+No |  Key    |type   | Size-Byte |  Notes
+---|---------|-------|-----------|----------------------
+ 1 | forumMsg|string |  512      | forum msg
+8.2 -ForumComment
+No |  Key     |type   | Size-Byte |  Notes
+---|----------|-------|-----------|----------------------
+ 1 | Reference|byte[] |  32       | reference block hash
+ 2 | Comment  |String | 256       | comments msg
+8.3 -CommunityAnnouncement
+No |  Key           |type   | Size-Byte |  Notes
+---|----------------|-------|-----------|----------------------
+ 1 | ChainID        |byte[] |  64       | CommunityChainid
+ 2 | GenesisPubkey  |byte[] |  32       | GenesisMiner pubkey
+8.4 -DHTbootstrapNodeAnnouncement
+No |  Key           |type     | Size-Byte  |  Notes
+---|----------------|---------|------------|----------------------
+ 1 | ChainID        |byte[]   |  64        | CommunityChainid
+ 2 | BootNodes      |string[] |  256       | Node network address
+8.5 -WiringTransaction
+No |  Key           |type     | Size-Byte  |  Notes
+---|----------------|---------|------------|----------------------
+ 1 | ReceiverPubkey |byte[]   |  32        | receiver Pubkey
+ 2 | Amount         |long     |  8         | wire amount
+8.6 -IdentityAnnouncement
+No |  Key           |type     | Size-Byte  |  Notes
+---|----------------|---------|------------|----------------------
+ 1 | RenamePubkey   |byte[]   |  32        | associate Pubkey
+ 2 | NewName        |String   |  256       | new name
