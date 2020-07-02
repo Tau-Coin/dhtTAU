@@ -81,8 +81,8 @@ public class BlockDB implements BlockStore{
         db.put(PrefixKey.blockKey(block.getChainID(), block.getBlockHash()), block.getEncoded());
         // save block info
         saveBlockInfo(block, isMainChain);
-        // delete blocks out of 3 * mutable range
-        if (block.getBlockNum() > ChainParam.WARNING_RANGE) {
+        // delete blocks out of 3 * mutable range, when save main chain block
+        if (isMainChain && block.getBlockNum() > ChainParam.WARNING_RANGE) {
             delNonChainBlockByNumber(block.getChainID(), block.getBlockNum() - ChainParam.WARNING_RANGE);
         }
     }
@@ -129,12 +129,36 @@ public class BlockDB implements BlockStore{
      */
     @Override
     public Block getForkPointBlock(Block block) throws Exception {
-        Block previousBlock = block;
+        // if on main chain
+        byte[] infoRLP = db.get(PrefixKey.blockInfoKey(block.getChainID(), block.getBlockNum()));
+        if (null != infoRLP) {
+            BlockInfos blockInfos = new BlockInfos(infoRLP);
+            List<BlockInfo> list = blockInfos.getBlockInfoList();
+
+            for (BlockInfo blockInfo : list) {
+                if (Arrays.equals(blockInfo.getHash(), block.getBlockHash()) && blockInfo.isMainChain()) {
+                    // return itself
+                    return block;
+                }
+            }
+        } else {
+            logger.info("Can not find block info with current block.");
+        }
+
+        byte[] chainID = block.getChainID();
+        byte[] rlp = db.get(PrefixKey.blockKey(chainID, block.getPreviousBlockHash()));
+        // if previous is null, return
+        if (null == rlp) {
+            logger.error("Can not find previous block, hash[{}]",
+                    Hex.toHexString(block.getPreviousBlockHash()));
+            return null;
+        }
+        Block previousBlock = new Block(rlp);
 
         while (true) {
-            byte[] infoRLP = db.get(PrefixKey.blockInfoKey(previousBlock.getChainID(), previousBlock.getBlockNum()));
+            infoRLP = db.get(PrefixKey.blockInfoKey(chainID, previousBlock.getBlockNum()));
             if (null == infoRLP) {
-                logger.error("Can not found block info with this block number:{}", previousBlock.getBlockNum());
+                logger.error("Can not find block info with this block number:{}", previousBlock.getBlockNum());
                 return null;
             }
             BlockInfos blockInfos = new BlockInfos(infoRLP);
@@ -149,14 +173,15 @@ public class BlockDB implements BlockStore{
                         return previousBlock;
                     } else {
                         // if this block is not on main chain, look ahead
-                        byte[] rlp = db.get(PrefixKey.blockKey(previousBlock.getChainID(),
-                                previousBlock.getBlockHash()));
+                        rlp = db.get(PrefixKey.blockKey(chainID, previousBlock.getPreviousBlockHash()));
                         // if previous is null, return
                         if (null == rlp) {
-                            logger.error("Can not found previous block, hash[{}]",
+                            logger.error("Can not find previous block, hash[{}].",
                                     Hex.toHexString(previousBlock.getPreviousBlockHash()));
                             return null;
                         }
+                        logger.info("Seek previous block hash[{}].",
+                                Hex.toHexString(previousBlock.getPreviousBlockHash()));
                         previousBlock = new Block(rlp);
                         break;
                     }
@@ -164,7 +189,7 @@ public class BlockDB implements BlockStore{
             }
             // if not found this block info in this height
             if (!found) {
-                logger.error("Can not found block info, hash[{}]", Hex.toHexString(previousBlock.getBlockHash()));
+                logger.error("Can not find block info, hash[{}]", Hex.toHexString(previousBlock.getBlockHash()));
                 return null;
             }
         }

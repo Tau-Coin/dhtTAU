@@ -3,6 +3,7 @@ package io.taucoin.db;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -106,8 +107,8 @@ public class BlockInfo {
     @Override
     public String toString() {
         return "BlockInfo{" +
-                "hash=" + Arrays.toString(hash) +
-                ", mainChain=" + mainChain +
+                "hash=" + Hex.toHexString(hash) +
+                ", mainChain=" + (0 == mainChain) +
                 '}';
     }
 }
