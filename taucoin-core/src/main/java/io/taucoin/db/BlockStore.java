@@ -2,6 +2,8 @@ package io.taucoin.db;
 
 import io.taucoin.types.Block;
 
+import java.util.Set;
+
 public interface BlockStore {
 
     /**
@@ -32,6 +34,14 @@ public interface BlockStore {
      * @throws Exception
      */
     void saveBlock(Block block, boolean isMainChain) throws Exception;
+
+    /**
+     * get all blocks of a chain, whether it is a block on the main chain or not
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    Set<Block> getChainAllBlocks(byte[] chainID) throws Exception;
 
     /**
      * remove all blocks and info of a chain

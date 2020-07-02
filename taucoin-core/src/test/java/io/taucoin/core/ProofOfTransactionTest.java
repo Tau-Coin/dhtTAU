@@ -14,6 +14,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ProofOfTransactionTest {
     private static final Logger logger = LoggerFactory.getLogger("pot_test");
@@ -62,6 +63,11 @@ public class ProofOfTransactionTest {
         @Override
         public void saveBlock(Block block, boolean isMainChain) {
             mapDB.put(Hex.toHexString(block.getBlockHash()), block.getEncoded());
+        }
+
+        @Override
+        public Set<Block> getChainAllBlocks(byte[] chainID) throws Exception {
+            return null;
         }
 
         @Override

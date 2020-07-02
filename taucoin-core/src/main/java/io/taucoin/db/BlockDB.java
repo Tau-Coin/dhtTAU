@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class BlockDB implements BlockStore{
     private static final Logger logger = LoggerFactory.getLogger("BlockDB");
@@ -112,6 +114,26 @@ public class BlockDB implements BlockStore{
     }
 
     /**
+     * get all blocks of a chain, whether it is a block on the main chain or not
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public Set<Block> getChainAllBlocks(byte[] chainID) throws Exception {
+        Set<byte[]> blocks = db.retrieveKeysWithPrefix(PrefixKey.blockPrefix(chainID));
+        if (null == blocks) {
+            logger.info("Cannot find any block with this chainID:{}", chainID.toString());
+            return null;
+        }
+        Set<Block> set = new HashSet<>();
+        for (byte[] rlp: blocks) {
+            set.add(new Block(rlp));
+        }
+        return set;
+    }
+
+    /**
      * remove all blocks and info of a chain
      * @param chainID
      * @throws Exception
@@ -142,14 +164,14 @@ public class BlockDB implements BlockStore{
                 }
             }
         } else {
-            logger.info("Can not find block info with current block.");
+            logger.info("Cannot find block info with current block.");
         }
 
         byte[] chainID = block.getChainID();
         byte[] rlp = db.get(PrefixKey.blockKey(chainID, block.getPreviousBlockHash()));
         // if previous is null, return
         if (null == rlp) {
-            logger.error("Can not find previous block, hash[{}]",
+            logger.error("Cannot find previous block, hash[{}]",
                     Hex.toHexString(block.getPreviousBlockHash()));
             return null;
         }
@@ -158,7 +180,7 @@ public class BlockDB implements BlockStore{
         while (true) {
             infoRLP = db.get(PrefixKey.blockInfoKey(chainID, previousBlock.getBlockNum()));
             if (null == infoRLP) {
-                logger.error("Can not find block info with this block number:{}", previousBlock.getBlockNum());
+                logger.error("Cannot find block info with this block number:{}", previousBlock.getBlockNum());
                 return null;
             }
             BlockInfos blockInfos = new BlockInfos(infoRLP);
@@ -176,7 +198,7 @@ public class BlockDB implements BlockStore{
                         rlp = db.get(PrefixKey.blockKey(chainID, previousBlock.getPreviousBlockHash()));
                         // if previous is null, return
                         if (null == rlp) {
-                            logger.error("Can not find previous block, hash[{}].",
+                            logger.error("Cannot find previous block, hash[{}].",
                                     Hex.toHexString(previousBlock.getPreviousBlockHash()));
                             return null;
                         }
@@ -189,7 +211,7 @@ public class BlockDB implements BlockStore{
             }
             // if not found this block info in this height
             if (!found) {
-                logger.error("Can not find block info, hash[{}]", Hex.toHexString(previousBlock.getBlockHash()));
+                logger.error("Cannot find block info, hash[{}]", Hex.toHexString(previousBlock.getBlockHash()));
                 return null;
             }
         }

@@ -4,16 +4,18 @@ import io.taucoin.util.ByteUtil;
 
 public class PrefixKey {
     // prefix
+    private static final byte[] block = "B".getBytes();
+    private static final byte[] bestBlock = "b".getBytes();
     public static final byte[] chain = "C".getBytes();
-    private static final byte[] bestBlock = "B".getBytes();
+    private static final byte[] blockInfo = "I".getBytes();
+    private static final byte[] immutablePointBlockHash = "i".getBytes();
     private static final byte[] mutableRange = "M".getBytes();
-    private static final byte[] immutablePointBlockHash = "I".getBytes();
-    private static final byte[] votesCountingPointBlockHash = "V".getBytes();
     private static final byte[] peer = "P".getBytes();
     private static final byte[] txPool = "T".getBytes();
+    private static final byte[] votesCountingPointBlockHash = "V".getBytes();
 
     /**
-     * chain key: "Chain" + chainID
+     * chain key: 'Chain' + chainID
      * @param chainID
      * @return
      */
@@ -25,7 +27,7 @@ public class PrefixKey {
     }
 
     /**
-     * best block hash key: chainID + "BestBlock"
+     * best block hash key: chainID + 'BestBlock'
      * @param chainID
      * @return
      */
@@ -37,7 +39,7 @@ public class PrefixKey {
     }
 
     /**
-     * immutable point block hash key: chainID + "ImmutablePointBlockHash"
+     * immutable point block hash key: chainID + 'ImmutablePointBlockHash'
      * @param chainID
      * @return
      */
@@ -49,7 +51,7 @@ public class PrefixKey {
     }
 
     /**
-     * votes counting point block hash key: chainID + "VotesCountingPointBlockHash"
+     * votes counting point block hash key: chainID + 'VotesCountingPointBlockHash'
      * @param chainID
      * @return
      */
@@ -61,7 +63,7 @@ public class PrefixKey {
     }
 
     /**
-     * mutable range key: chainID + "MutableRange"
+     * mutable range key: chainID + 'MutableRange'
      * @param chainID
      * @return
      */
@@ -73,7 +75,7 @@ public class PrefixKey {
     }
 
     /**
-     * peer prefix: chainID + "Peer"
+     * peer prefix: chainID + 'Peer'
      * @param chainID
      * @return
      */
@@ -85,7 +87,7 @@ public class PrefixKey {
     }
 
     /**
-     * peer key: chainID + "Peer" + peer pubkey
+     * peer key: chainID + 'Peer' + peer pubkey
      * @param chainID
      * @param pubkey
      * @return
@@ -99,7 +101,7 @@ public class PrefixKey {
     }
 
     /**
-     * tx pool prefix: chainID + "TxPool"
+     * tx pool prefix: chainID + 'TxPool'
      * @param chainID
      * @return
      */
@@ -111,7 +113,7 @@ public class PrefixKey {
     }
 
     /**
-     * tx pool key: chainID + "TxPool" + txid
+     * tx pool key: chainID + 'txPool' + txid
      * @param chainID
      * @param txid
      * @return
@@ -138,15 +140,28 @@ public class PrefixKey {
     }
 
     /**
+     * block prefix: chainID + 'block'
+     * @param chainID
+     * @return
+     */
+    public static byte[] blockPrefix(byte[] chainID) {
+        byte[] prefix = new byte[chainID.length + block.length];
+        System.arraycopy(chainID, 0, prefix, 0, chainID.length);
+        System.arraycopy(block, 0, prefix, chainID.length, block.length);
+        return prefix;
+    }
+
+    /**
      * block key: chainID + hash
      * @param chainID
      * @param hash
      * @return
      */
     public static byte[] blockKey(byte[] chainID, byte[] hash) {
-        byte[] key = new byte[chainID.length + hash.length];
+        byte[] key = new byte[chainID.length + block.length + hash.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(hash, 0, key, chainID.length, hash.length);
+        System.arraycopy(block, 0, key, chainID.length, block.length);
+        System.arraycopy(hash, 0, key, chainID.length + block.length, hash.length);
         return key;
     }
 
@@ -158,9 +173,10 @@ public class PrefixKey {
      */
     public static byte[] blockInfoKey(byte[] chainID, long number) {
         byte[] numberBytes = ByteUtil.longToBytes(number);
-        byte[] key = new byte[chainID.length + numberBytes.length];
+        byte[] key = new byte[chainID.length + blockInfo.length + numberBytes.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(numberBytes, 0, key, chainID.length, numberBytes.length);
+        System.arraycopy(blockInfo, 0, key, chainID.length, blockInfo.length);
+        System.arraycopy(numberBytes, 0, key, chainID.length + blockInfo.length, numberBytes.length);
         return key;
     }
 
