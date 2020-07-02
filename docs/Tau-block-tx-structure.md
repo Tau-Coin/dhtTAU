@@ -43,26 +43,31 @@
 No |  Key    |type   | Size-Byte |  Notes
 ---|---------|-------|-----------|----------------------
  1 | forumMsg|string |  512      | forum msg
+
 8.2 -ForumComment
 No |  Key     |type   | Size-Byte |  Notes
 ---|----------|-------|-----------|----------------------
  1 | Reference|byte[] |  32       | reference block hash
  2 | Comment  |String | 256       | comments msg
+
 8.3 -CommunityAnnouncement
 No |  Key           |type   | Size-Byte |  Notes
 ---|----------------|-------|-----------|----------------------
  1 | ChainID        |byte[] |  64       | CommunityChainid
  2 | GenesisPubkey  |byte[] |  32       | GenesisMiner pubkey
+
 8.4 -DHTbootstrapNodeAnnouncement
 No |  Key           |type     | Size-Byte  |  Notes
 ---|----------------|---------|------------|----------------------
  1 | ChainID        |byte[]   |  64        | CommunityChainid
  2 | BootNodes      |string[] |  256       | Node network address
+
 8.5 -WiringTransaction
 No |  Key           |type     | Size-Byte  |  Notes
 ---|----------------|---------|------------|----------------------
  1 | ReceiverPubkey |byte[]   |  32        | receiver Pubkey
  2 | Amount         |long     |  8         | wire amount
+
 8.6 -IdentityAnnouncement
 No |  Key           |type     | Size-Byte  |  Notes
 ---|----------------|---------|------------|----------------------
