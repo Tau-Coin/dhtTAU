@@ -56,6 +56,10 @@ android {
         exclude 'META-INF/proguard/coroutines.pro'
     }
 
+    configurations.all {
+        resolutionStrategy.force 'com.google.code.findbugs:jsr305:2.0.1'
+    }
+
 }
 
 configurations {
