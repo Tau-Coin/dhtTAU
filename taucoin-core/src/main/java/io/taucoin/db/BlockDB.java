@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class BlockDB implements BlockStore{
+public class BlockDB implements BlockStore {
     private static final Logger logger = LoggerFactory.getLogger("BlockDB");
 
     private KeyValueDataBase db;
@@ -108,22 +108,22 @@ public class BlockDB implements BlockStore{
         db.put(PrefixKey.blockKey(block.getChainID(), block.getBlockHash()), block.getEncoded());
         // save block info
         saveBlockInfo(block, isMainChain);
-        // delete blocks out of 3 * mutable range, when save main chain block
+        // delete fork chain blocks out of 3 * mutable range, when save main chain block
         if (isMainChain && block.getBlockNum() > ChainParam.WARNING_RANGE) {
             long number = block.getBlockNum() - ChainParam.WARNING_RANGE;
-            logger.info("ChainID[{}]: Delete non-main chain block in height:{}",
+            logger.info("ChainID[{}]: Delete fork chain block in height:{}",
                     block.getChainID().toString(), number);
-            delNonChainBlockByNumber(block.getChainID(), number);
+            delForkChainBlockByNumber(block.getChainID(), number);
         }
     }
 
     /**
-     * delete non-main chain block and block info
+     * delete fork chain block and block info
      * @param chainID
      * @param number
      * @throws Exception
      */
-    public void delNonChainBlockByNumber(byte[] chainID, long number) throws Exception {
+    public void delForkChainBlockByNumber(byte[] chainID, long number) throws Exception {
         byte[] rlp = db.get(PrefixKey.blockInfoKey(chainID, number));
         if (null == rlp) {
             logger.info("ChainID[{}]: There is no block in this height:{}", chainID.toString(), number);

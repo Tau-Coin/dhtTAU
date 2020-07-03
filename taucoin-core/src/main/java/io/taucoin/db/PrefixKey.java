@@ -152,7 +152,7 @@ public class PrefixKey {
     }
 
     /**
-     * block key: chainID + hash
+     * block key: chainID + 'block' + hash
      * @param chainID
      * @param hash
      * @return
@@ -166,7 +166,7 @@ public class PrefixKey {
     }
 
     /**
-     * block info key: chainID + number
+     * block info key: chainID + 'blockInfo' + number
      * @param chainID
      * @param number
      * @return
