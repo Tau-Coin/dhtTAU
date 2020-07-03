@@ -60,9 +60,9 @@ public final class DHT {
     public static class ExchangeImmutableItemResult {
     
         byte[] getData;
-        byte[] putSha1hash;
+        Sha1Hash putSha1hash;
 
-        public ExchangeImmutableItemResult(byte[] getData, byte[] putSha1hash) {
+        public ExchangeImmutableItemResult(byte[] getData, Sha1Hash putSha1hash) {
             this.getData = getData;
             this.putSha1hash = putSha1hash;
         }

@@ -28,9 +28,6 @@ public class TorrentDHTEngine {
     // Torrent session settings.
     private SessionSettings settings;
 
-    // SessionManager lock.
-    private Object lock;
-
     private TauListener tauListener;
 
     private AlertListener torrentListener = new AlertListener() {
@@ -74,9 +71,7 @@ public class TorrentDHTEngine {
     private Runnable torrentSession = new Runnable() {
         @Override
         public void run() {
-            synchronized (TorrentDHTEngine.this.lock) {
-                sessionManager.start(settings.getSessionParams());
-            }
+            sessionManager.start(settings.getSessionParams());
         }
     };
 
@@ -100,11 +95,8 @@ public class TorrentDHTEngine {
     }
 
     private TorrentDHTEngine() {
-
-        synchronized (this.lock) {
-            sessionManager = new SessionManager(EnableTorrentLog);
-            sessionManager.addListener(torrentListener);
-        }
+        sessionManager = new SessionManager(EnableTorrentLog);
+        sessionManager.addListener(torrentListener);
     }
 
     /**
@@ -122,9 +114,7 @@ public class TorrentDHTEngine {
      * @return SessionManager
      */
     public SessionManager getSessionManager() {
-        synchronized (this.lock) {
-            return sessionManager;
-        }
+        return sessionManager;
     }
 
     /**
@@ -133,7 +123,7 @@ public class TorrentDHTEngine {
      * @param settings SessionSettings
      */
     public void start(SessionSettings settings) {
-        if (torrentDaemon != null) {
+        if (sessionManager.isRunning()) {
             return;
         }
 
@@ -147,13 +137,11 @@ public class TorrentDHTEngine {
      * Stop torrent dht engine.
      */
     public void stop() {
-        if (torrentDaemon == null) {
+        if (!sessionManager.isRunning()) {
             return;
         }
 
-        synchronized (this.lock) {
-            sessionManager.stop();
-        }
+        sessionManager.stop();
 
         torrentDaemon.interrupt();
         try {
@@ -172,7 +160,11 @@ public class TorrentDHTEngine {
      * @return Sha1Hash sha1 hash of the immutable item
      */
     public Sha1Hash dhtPut(ImmutableItem item) {
-        return null;
+        if (!sessionManager.isRunning()) {
+            return null;
+        }
+
+        return sessionManager.dhtPutItem(item.entry);
     }
 
     /**
@@ -181,6 +173,12 @@ public class TorrentDHTEngine {
      * @param item mutable item
      */
     public void dhtPut(MutableItem item) {
+        if (!sessionManager.isRunning()) {
+            return;
+        }
+
+        sessionManager.dhtPutItem(item.publicKey, item.privateKey,
+                item.entry, item.salt);
     }
 
     /**
@@ -193,7 +191,16 @@ public class TorrentDHTEngine {
      */
     public ExchangeImmutableItemResult dhtTauGet(GetImmutableItemSpec spec,
             ImmutableItem item) {
-        return null;
+        if (!sessionManager.isRunning()) {
+            return null;
+        }
+
+        Sha1Hash hash = this.dhtPut(item);
+
+        Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
+        byte[] data = entry == null ? null : entry.bencode();
+
+        return new ExchangeImmutableItemResult(data, hash);
     }
 
     /**
