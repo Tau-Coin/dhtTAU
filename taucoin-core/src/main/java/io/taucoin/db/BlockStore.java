@@ -29,6 +29,15 @@ public interface BlockStore {
     Block getBlockByHash(byte[] chainID, byte[] hash) throws Exception;
 
     /**
+     * get main chain block by number
+     * @param chainID
+     * @param number
+     * @return
+     * @throws Exception
+     */
+    Block getMainChainBlockByNumber(byte[] chainID, long number) throws Exception;
+
+    /**
      * save block
      * @param block
      * @throws Exception

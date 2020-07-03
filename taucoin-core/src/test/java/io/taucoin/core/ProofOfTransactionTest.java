@@ -66,6 +66,11 @@ public class ProofOfTransactionTest {
         }
 
         @Override
+        public Block getMainChainBlockByNumber(byte[] chainID, long number) throws Exception {
+            return null;
+        }
+
+        @Override
         public Set<Block> getChainAllBlocks(byte[] chainID) throws Exception {
             return null;
         }
