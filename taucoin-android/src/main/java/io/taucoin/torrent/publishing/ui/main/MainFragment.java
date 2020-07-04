@@ -85,7 +85,6 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
         if(communities != null){
             adapter.setDataList(communities);
         }
-
     }
 
     @Override

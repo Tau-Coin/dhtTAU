@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 /**
@@ -14,23 +15,21 @@ import androidx.room.PrimaryKey;
 public class Community implements Parcelable {
     @NonNull
     @PrimaryKey
-    public String chainId;
+    public String chainId;                  // 社区的chainId
     @NonNull
-    public String communityName;
+    public String communityName;            // 社区名字
     @NonNull
-    public String coinName;
+    public String coinName;                 // 社区币名
     @NonNull
-    public String publicKey;
-    @NonNull
-    public long totalCoin;
-    @NonNull
-    public int blockInAvg;
-    public String intro;
-    public String telegramId;
-    public boolean mute = false;
-    public boolean blocked = false;
+    public String publicKey;                // 社区创建者的公钥
+    public long totalCoin;                  // 社区总共的币量
+    public int blockInAvg;                  // 社区平均出块时间（单位：秒）
+    public String intro;                    // 社区的介绍
+    public String telegramId;               // 社区的联系方式
+    public boolean mute = false;            // 社区有新消息到来时，是否静音
+    public boolean blocked = false;         // 社区是否被用户拉入黑名单
 
-    public Community(@NonNull String communityName, @NonNull String coinName, String publicKey, long totalCoin, int blockInAvg, String intro, String telegramId){
+    public Community(@NonNull String communityName, @NonNull String coinName, @NonNull String publicKey, long totalCoin, int blockInAvg, String intro, String telegramId){
         this.communityName = communityName;
         this.coinName = coinName;
         this.publicKey = publicKey;
@@ -40,6 +39,7 @@ public class Community implements Parcelable {
         this.telegramId = telegramId;
     }
 
+    @Ignore
     protected Community(Parcel in) {
         chainId = in.readString();
         communityName = in.readString();

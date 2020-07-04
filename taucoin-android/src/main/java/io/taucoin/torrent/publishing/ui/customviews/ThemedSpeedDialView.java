@@ -81,4 +81,14 @@ public class ThemedSpeedDialView extends SpeedDialView
 
         return super.addActionItem(actionItem, position, animate);
     }
+
+    @Override
+    public void open() {
+        super.open();
+    }
+
+    @Override
+    public void close() {
+        super.close();
+    }
 }

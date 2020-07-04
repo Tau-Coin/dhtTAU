@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        android:background="@color/color_bg"
+        android:orientation="vertical">
+
+        <include
+            android:id="@+id/toolbar_include"
+            layout="@layout/toolbar" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/color_white"
+            android:paddingTop="20dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="0dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/setting_privacy"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textColor="@color/primary_light"
+                android:includeFontPadding="false"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_blacklist_users"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:includeFontPadding="false"
+                android:onClick="@{listener.onClick}"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:text="@string/setting_blacklist_users"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+
+
+            <include layout="@layout/view_line"/>
+
+            <TextView
+                android:id="@+id/tv_blacklist_communities"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:includeFontPadding="false"
+                android:onClick="@{listener.onClick}"
+                android:gravity="center_vertical"
+                android:text="@string/setting_blacklist_communities"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+</layout>

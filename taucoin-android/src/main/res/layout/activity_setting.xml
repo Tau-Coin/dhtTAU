@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        android:background="@color/color_bg"
+        android:orientation="vertical">
+
+        <include
+            android:id="@+id/toolbar_include"
+            layout="@layout/toolbar" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/color_white"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/primary"
+                android:text="@string/setting_account"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+
+            <TextView
+                android:id="@+id/tv_public_key"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+
+            <TextView
+                android:id="@+id/tv_import_new_key"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:textColor="@color/gray_dark"
+                android:text="@string/setting_import_seed"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+
+
+            <EditText
+                android:id="@+id/et_username"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@null"
+                android:singleLine="true"
+                android:gravity="bottom"
+                android:hint="@string/setting_username_app"
+                android:inputType="text"
+                android:autofillHints="@string/setting_username_app" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:textColor="@color/gray_dark"
+                android:text="@string/setting_username_app"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/color_white"
+            android:layout_marginTop="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp">
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_notification_sounds"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/setting_notification_sounds"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_privacy_security"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/setting_privacy_security"/>
+
+            <include layout="@layout/view_line"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_data_storage"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/setting_data_storage"/>
+
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_journal"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/setting_journal"/>
+
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_help"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/setting_help"/>
+
+        </LinearLayout>
+    </LinearLayout>
+</layout>

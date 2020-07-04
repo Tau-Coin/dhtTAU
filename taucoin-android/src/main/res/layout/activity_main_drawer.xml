@@ -30,12 +30,6 @@
                     android:layout_height="match_parent"
                     android:layout_below="@+id/toolbar_include" />
 
-                <com.leinardi.android.speeddial.SpeedDialOverlayLayout
-                    android:id="@+id/fab_overlay"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="?attr/speedDialOverlayColor" />
-
                 <io.taucoin.torrent.publishing.ui.customviews.ThemedSpeedDialView
                     android:id="@+id/fab_button"
                     android:layout_width="wrap_content"
@@ -43,8 +37,7 @@
                     android:layout_alignParentEnd="true"
                     android:layout_alignParentBottom="true"
                     app:sdMainFabClosedSrc="@drawable/ic_add_36dp"
-                    app:sdMainFabAnimationRotateAngle="135"
-                    app:sdOverlayLayout="@id/fab_overlay" />
+                    app:sdMainFabAnimationRotateAngle="0" />
             </RelativeLayout>
 
             <com.google.android.material.navigation.NavigationView

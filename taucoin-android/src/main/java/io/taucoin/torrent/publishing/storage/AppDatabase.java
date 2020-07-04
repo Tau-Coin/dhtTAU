@@ -7,15 +7,24 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import io.taucoin.torrent.publishing.storage.dao.CommunityDao;
+import io.taucoin.torrent.publishing.storage.dao.MemberDao;
+import io.taucoin.torrent.publishing.storage.dao.UserDao;
 import io.taucoin.torrent.publishing.storage.entity.Community;
+import io.taucoin.torrent.publishing.storage.entity.Member;
+import io.taucoin.torrent.publishing.storage.entity.User;
 
-@Database(entities = {Community.class}, version = 1)
+@Database(entities = {Community.class,
+        Member.class,
+        User.class
+    }, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "tau.db";
 
     private static volatile AppDatabase INSTANCE;
 
     public abstract CommunityDao communityDao();
+    public abstract MemberDao memberDao();
+    public abstract UserDao userDao();
 
     /**
      * 获取数据库实例

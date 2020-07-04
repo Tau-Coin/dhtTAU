@@ -9,7 +9,6 @@ import android.view.MenuItem;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
-import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.utils.EditTextInhibitInput;
@@ -28,7 +27,6 @@ public class CommunityCreateActivity extends BaseActivity {
     private ActivityCommunityCreateBinding binding;
 
     private CommunityViewModel viewModel;
-    private CompositeDisposable disposables = new CompositeDisposable();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +103,7 @@ public class CommunityCreateActivity extends BaseActivity {
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // 添加新社区处理事件
         if (item.getItemId() == R.id.menu_community_create) {
             Community community = viewModel.buildCommunity(binding);
             if(viewModel.validateCommunity(community)){

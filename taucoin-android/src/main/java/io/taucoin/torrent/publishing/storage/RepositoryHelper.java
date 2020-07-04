@@ -27,12 +27,45 @@ import androidx.annotation.NonNull;
  */
 public class RepositoryHelper {
     private static CommunityRepositoryImpl communityRepo;
+    private static MemberRepositoryImpl memberRepo;
+    private static UserRepositoryImpl userRepo;
 
+    /**
+     * 获取CommunityRepository单例
+     * @param appContext 上下文
+     * @return CommunityRepository
+     */
     public synchronized static CommunityRepository getCommunityRepository(@NonNull Context appContext) {
         if (communityRepo == null)
             communityRepo = new CommunityRepositoryImpl(appContext,
                     AppDatabase.getInstance(appContext));
 
         return communityRepo;
+    }
+
+    /**
+     * 获取MemberRepository单例
+     * @param appContext 上下文
+     * @return MemberRepository
+     */
+    public synchronized static MemberRepository getMemberRepository(@NonNull Context appContext) {
+        if (memberRepo == null)
+            memberRepo = new MemberRepositoryImpl(appContext,
+                    AppDatabase.getInstance(appContext));
+
+        return memberRepo;
+    }
+
+    /**
+     * 获取UserRepository单例
+     * @param appContext 上下文
+     * @return UserRepository
+     */
+    public synchronized static UserRepository getUserRepository(@NonNull Context appContext) {
+        if (userRepo == null)
+            userRepo = new UserRepositoryImpl(appContext,
+                    AppDatabase.getInstance(appContext));
+
+        return userRepo;
     }
 }

@@ -111,7 +111,6 @@ public class CommunityViewModel extends AndroidViewModel {
             ToastUtils.showLongToast(R.string.error_community_name_empty);
             return false;
         }
-        community.communityName = communityName.replaceAll(" ", "&nbsp;");
 
         if(StringUtil.isEmpty(community.coinName)){
             ToastUtils.showLongToast(R.string.error_coin_name_empty);

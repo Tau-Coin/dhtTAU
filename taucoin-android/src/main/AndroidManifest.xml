@@ -47,8 +47,34 @@
 
         <activity
             android:name=".ui.community.CommunityActivity"/>
+
         <activity
             android:name=".ui.community.CommunityCreateActivity"/>
+
+        <activity
+            android:name=".ui.contacts.ContactsActivity"/>
+
+        <activity
+            android:name=".ui.setting.SettingActivity"/>
+
+        <activity
+            android:name=".ui.setting.NotificationSoundsActivity"/>
+
+        <activity
+            android:name=".ui.setting.PrivacySecurityActivity"/>
+
+        <activity
+            android:name=".ui.setting.DataStorageActivity"/>
+
+        <activity
+            android:name=".ui.setting.BlacklistActivity"/>
+
+        <activity
+            android:name=".ui.user.SeedActivity"/>
+
+        <activity
+            android:name=".ui.user.SeedChangeActivity"/>
+
     </application>
 
 </manifest>

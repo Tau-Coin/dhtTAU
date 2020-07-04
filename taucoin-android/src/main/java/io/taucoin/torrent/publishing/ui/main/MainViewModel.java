@@ -6,17 +6,8 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
-import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.ToastUtils;
-import io.taucoin.torrent.publishing.core.utils.ViewUtils;
-import io.taucoin.torrent.publishing.databinding.ActivityCommunityCreateBinding;
 import io.taucoin.torrent.publishing.storage.CommunityRepository;
 import io.taucoin.torrent.publishing.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.storage.entity.Community;

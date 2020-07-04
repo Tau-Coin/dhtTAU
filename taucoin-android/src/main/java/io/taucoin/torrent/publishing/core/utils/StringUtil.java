@@ -28,7 +28,7 @@ public class StringUtil {
         return str;
     }
 
-    public static boolean isSame(String a, String b) {
+    public static boolean isEquals(String a, String b) {
         if (isEmpty(a)) {
             return isEmpty(b);
         } else if (isEmpty(b)) {
@@ -38,8 +38,8 @@ public class StringUtil {
         }
     }
 
-    public static boolean isNotSame(String a, String b) {
-        return !isSame(a, b);
+    public static boolean isNotEquals(String a, String b) {
+        return !isEquals(a, b);
     }
 
     public static boolean isEmpty(final CharSequence cs) {
@@ -269,5 +269,18 @@ public class StringUtil {
             }
         }
         return firstLetters.toString();
+    }
+
+    /**
+     * 截取字符串后num个字符
+     * @param str 原字符串
+     * @param num 个数
+     * @return 处理后字符串
+     */
+    public static String subStringLater(String str, int num){
+        if(isNotEmpty(str) && str.length() > num){
+            return str.substring(str.length() - num);
+        }
+        return str;
     }
 }

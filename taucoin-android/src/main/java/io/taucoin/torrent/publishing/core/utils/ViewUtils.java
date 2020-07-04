@@ -15,6 +15,7 @@
  */
 package io.taucoin.torrent.publishing.core.utils;
 
+import android.view.View;
 import android.widget.TextView;
 
 public class ViewUtils {
@@ -23,7 +24,7 @@ public class ViewUtils {
         return view.getText().toString().trim();
     }
 
-    public static String getStringTag(TextView view) {
+    public static String getStringTag(View view) {
         Object tag = view.getTag();
         if(tag != null){
             return view.getTag().toString().trim();
@@ -31,7 +32,7 @@ public class ViewUtils {
         return "";
     }
 
-    public static int getIntTag(TextView view) {
+    public static int getIntTag(View view) {
         String tag = getStringTag(view);
         try {
             return Integer.parseInt(tag);
@@ -40,7 +41,7 @@ public class ViewUtils {
         return 0;
     }
 
-    public static long getLongTag(TextView view) {
+    public static long getLongTag(View view) {
         String tag = getStringTag(view);
         try {
             return Long.parseLong(tag);

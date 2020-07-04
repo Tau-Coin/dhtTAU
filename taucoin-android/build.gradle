@@ -56,10 +56,6 @@ android {
         exclude 'META-INF/proguard/coroutines.pro'
     }
 
-    configurations.all {
-        resolutionStrategy.force 'com.google.code.findbugs:jsr305:2.0.1'
-    }
-
 }
 
 configurations {
@@ -75,7 +71,7 @@ def DAGGER_VERSION = "2.27"
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation(project(':taucoin-core')){
-        exclude group: "org.slf4j", module: "slf4j-log4j12"
+//        exclude group: "org.slf4j", module: "slf4j-log4j12"
         exclude group: "log4j", module: "apache-log4j-extras"
     }
 
@@ -124,4 +120,5 @@ dependencies {
     implementation "com.leinardi.android:speed-dial:3.1.1"
     implementation "net.java.dev.jna:jna:5.5.0@aar"
     implementation 'com.github.minminaya:LGMRoundButton:v1.2'
+    implementation 'com.github.naturs.logger:logger-android:0.3'
 }
