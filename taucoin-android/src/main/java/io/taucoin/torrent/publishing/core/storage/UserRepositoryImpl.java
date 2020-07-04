@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.storage;
+package io.taucoin.torrent.publishing.core.storage;
 
 import android.content.Context;
 
@@ -6,8 +6,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.storage.entity.Community;
-import io.taucoin.torrent.publishing.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.entity.User;
 
 /**
  * UserRepository接口实现

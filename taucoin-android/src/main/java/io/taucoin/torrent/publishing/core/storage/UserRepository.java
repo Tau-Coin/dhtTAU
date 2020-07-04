@@ -1,10 +1,10 @@
-package io.taucoin.torrent.publishing.storage;
+package io.taucoin.torrent.publishing.core.storage;
 
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.entity.User;
 
 /**
  * 提供外部操作User数据的接口

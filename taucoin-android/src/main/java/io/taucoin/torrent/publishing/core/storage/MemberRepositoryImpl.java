@@ -1,13 +1,9 @@
-package io.taucoin.torrent.publishing.storage;
+package io.taucoin.torrent.publishing.core.storage;
 
 import android.content.Context;
 
-import java.util.List;
-
 import androidx.annotation.NonNull;
-import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.storage.entity.Community;
-import io.taucoin.torrent.publishing.storage.entity.Member;
+import io.taucoin.torrent.publishing.core.storage.entity.Member;
 
 /**
  * CommunityRepository接口实现

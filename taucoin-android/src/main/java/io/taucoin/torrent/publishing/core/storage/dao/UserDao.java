@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.storage.dao;
+package io.taucoin.torrent.publishing.core.storage.dao;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.entity.User;
 
 /**
  * Room:User操作接口

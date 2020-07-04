@@ -7,7 +7,6 @@ import com.frostwire.jlibtorrent.Pair;
 import com.github.naturs.logger.Logger;
 
 import java.util.Arrays;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -22,9 +21,9 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.TauUtils;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
-import io.taucoin.torrent.publishing.storage.RepositoryHelper;
-import io.taucoin.torrent.publishing.storage.UserRepository;
-import io.taucoin.torrent.publishing.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.UserRepository;
+import io.taucoin.torrent.publishing.core.storage.entity.User;
 
 /**
  * 用户的ViewModel

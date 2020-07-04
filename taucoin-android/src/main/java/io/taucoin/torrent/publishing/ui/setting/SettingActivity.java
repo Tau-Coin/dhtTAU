@@ -13,7 +13,7 @@ import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.ActivitySettingBinding;
-import io.taucoin.torrent.publishing.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.entity.User;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 

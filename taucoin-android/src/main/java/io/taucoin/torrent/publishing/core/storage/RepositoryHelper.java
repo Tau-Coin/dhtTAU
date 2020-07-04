@@ -17,7 +17,7 @@
  * along with LibreTorrent.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.taucoin.torrent.publishing.storage;
+package io.taucoin.torrent.publishing.core.storage;
 
 import android.content.Context;
 import androidx.annotation.NonNull;

@@ -1,7 +1,7 @@
 package io.taucoin.torrent.publishing.core.utils;
 
 import androidx.annotation.NonNull;
-import io.taucoin.torrent.publishing.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.entity.User;
 
 /**
  * 用户相关逻辑处理类

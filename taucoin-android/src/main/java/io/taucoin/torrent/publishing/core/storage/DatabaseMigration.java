@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.storage;
+package io.taucoin.torrent.publishing.core.storage;
 
 import android.content.Context;
 

@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.storage;
+package io.taucoin.torrent.publishing.core.storage;
 
 import android.content.Context;
 
@@ -6,12 +6,12 @@ import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-import io.taucoin.torrent.publishing.storage.dao.CommunityDao;
-import io.taucoin.torrent.publishing.storage.dao.MemberDao;
-import io.taucoin.torrent.publishing.storage.dao.UserDao;
-import io.taucoin.torrent.publishing.storage.entity.Community;
-import io.taucoin.torrent.publishing.storage.entity.Member;
-import io.taucoin.torrent.publishing.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.dao.CommunityDao;
+import io.taucoin.torrent.publishing.core.storage.dao.MemberDao;
+import io.taucoin.torrent.publishing.core.storage.dao.UserDao;
+import io.taucoin.torrent.publishing.core.storage.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.entity.Member;
+import io.taucoin.torrent.publishing.core.storage.entity.User;
 
 @Database(entities = {Community.class,
         Member.class,

@@ -1,8 +1,8 @@
-package io.taucoin.torrent.publishing.storage;
+package io.taucoin.torrent.publishing.core.storage;
 
 
 import androidx.annotation.NonNull;
-import io.taucoin.torrent.publishing.storage.entity.Member;
+import io.taucoin.torrent.publishing.core.storage.entity.Member;
 
 /**
  * 提供操作Member数据的接口

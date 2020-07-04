@@ -1,10 +1,10 @@
-package io.taucoin.torrent.publishing.storage.dao;
+package io.taucoin.torrent.publishing.core.storage.dao;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Update;
-import io.taucoin.torrent.publishing.storage.entity.Member;
+import io.taucoin.torrent.publishing.core.storage.entity.Member;
 
 /**
  * Room:Member操作接口

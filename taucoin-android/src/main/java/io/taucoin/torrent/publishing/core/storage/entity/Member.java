@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.storage.entity;
+package io.taucoin.torrent.publishing.core.storage.entity;
 
 import android.os.Parcel;
 import android.os.Parcelable;
