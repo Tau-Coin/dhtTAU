@@ -38,4 +38,10 @@ public interface UserRepository {
      * @return 当前用户最新User实例
      */
     Flowable<User> observeCurrentUser();
+
+    /**
+     * 设置当前用户是否是当前用户
+     * @param isCurrentUser 是否是当前用户
+     */
+    void setCurrentUser(String publicKey, boolean isCurrentUser);
 }

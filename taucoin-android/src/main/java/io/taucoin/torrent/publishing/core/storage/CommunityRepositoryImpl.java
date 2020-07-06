@@ -26,23 +26,51 @@ public class CommunityRepositoryImpl implements CommunityRepository{
         this.db = db;
     }
 
+    /**
+     * 添加新的社区
+     * @param community 社区数据
+     */
     @Override
     public long addCommunity(@NonNull Community community) {
         return db.communityDao().addCommunity(community);
     }
 
+//    @Override
+//    public int updateCommunity(@NonNull Community community) {
+//        return db.communityDao().updateCommunity(community);
+//    }
+//
+//    @Override
+//    public Community getCommunityByChainId(@NonNull String chainId) {
+//        return db.communityDao().getCommunityByChainId(chainId);
+//    }
+
+    /**
+     * 观察不在黑名单的社区列表数据变化
+     * @return 被观察的社区数据列表
+     */
     @Override
-    public int updateCommunity(@NonNull Community community) {
-        return db.communityDao().updateCommunity(community);
+    public Flowable<List<Community>> observeCommunitiesNotInBlacklist() {
+        return db.communityDao().observeCommunitiesNotInBlacklist();
     }
 
+    /**
+     * 添加社区黑名单实现
+     * @param chainId 社区chainId
+     * @param blacklist 是否加入黑名单
+     */
     @Override
-    public Community getCommunityByChainId(@NonNull String chainId) {
-        return db.communityDao().getCommunityByChainId(chainId);
+    public void setCommunityBlacklist(String chainId, boolean blacklist) {
+        db.communityDao().setCommunityBlacklist(chainId, blacklist ? 1 : 0);
     }
 
+    /**
+     * 设置社区是否静音实现
+     * @param chainId 社区chainId
+     * @param isMute 是否静音
+     */
     @Override
-    public Flowable<List<Community>> observeCommunitiesNotBlocked() {
-        return db.communityDao().observeCommunitiesNotBlocked();
+    public void setCommunityMute(String chainId, boolean isMute){
+        db.communityDao().setCommunityMute(chainId, isMute ? 1 : 0);
     }
 }

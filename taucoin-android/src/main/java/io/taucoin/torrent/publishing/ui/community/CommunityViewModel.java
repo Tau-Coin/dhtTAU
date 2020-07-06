@@ -2,7 +2,8 @@ package io.taucoin.torrent.publishing.ui.community;
 
 import android.app.Application;
 
-import org.slf4j.Logger;
+import com.github.naturs.logger.Logger;
+
 import org.slf4j.LoggerFactory;
 
 import androidx.annotation.NonNull;
@@ -31,10 +32,11 @@ import io.taucoin.torrent.publishing.core.storage.entity.Community;
  */
 public class CommunityViewModel extends AndroidViewModel {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommunityViewModel.class);
     private CommunityRepository communityRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<Boolean> addCommunityState = new MutableLiveData<>();
+    private MutableLiveData<Boolean> setBlacklistState = new MutableLiveData<>();
+    private MutableLiveData<Boolean> setMuteState = new MutableLiveData<>();
     public CommunityViewModel(@NonNull Application application) {
         super(application);
         communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
@@ -49,6 +51,22 @@ public class CommunityViewModel extends AndroidViewModel {
     }
 
     /**
+     * 获取设置黑名单状态的被观察者
+     * @return 被观察者
+     */
+    LiveData<Boolean> getSetBlacklistState() {
+        return setBlacklistState;
+    }
+
+    /**
+     * 获取设置社区静音状态的被观察者
+     * @return 被观察者
+     */
+    LiveData<Boolean> getSetMuteState() {
+        return setMuteState;
+    }
+
+    /**
      * 添加新的社区到数据库
      * @param community 社区数据
      */
@@ -60,7 +78,7 @@ public class CommunityViewModel extends AndroidViewModel {
                     community.publicKey , "", null);
             community.chainId = new String(chainConfig.getChainid());
             communityRepo.addCommunity(community);
-            logger.debug("Add community to database: communityName={}, chainID={}",
+            Logger.d("Add community to database: communityName=%s, chainID=%s",
                     community.communityName, community.chainId);
 
             // TODO: 2、TauController:Announce on TAU
@@ -112,5 +130,39 @@ public class CommunityViewModel extends AndroidViewModel {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 设置社区黑名单
+     * @param chainId 社区chainId
+     * @param blacklist 是否加入黑名单
+     */
+    void setCommunityBlacklist(String chainId, boolean blacklist) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            communityRepo.setCommunityBlacklist(chainId, blacklist);
+            emitter.onNext(true);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(state -> setBlacklistState.postValue(state));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 设置社区是否静音
+     * @param chainId 社区chainId
+     * @param isMute 是否静音
+     */
+    void setCommunityMute(String chainId, boolean isMute) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            communityRepo.setCommunityMute(chainId, isMute);
+            emitter.onNext(true);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(state -> setMuteState.postValue(state));
+        disposables.add(disposable);
     }
 }

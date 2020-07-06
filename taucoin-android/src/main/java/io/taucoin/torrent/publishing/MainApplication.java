@@ -14,6 +14,7 @@ public class MainApplication extends MultiDexApplication {
     }
 
     private static MainApplication instance;
+    private String publicKey;
 
     @Override
     public void onCreate() {
@@ -28,5 +29,21 @@ public class MainApplication extends MultiDexApplication {
 
     public static MainApplication getInstance(){
         return instance;
+    }
+
+    /**
+     * 获取全局参数 当前用户的publicKey
+     * @return  publicKey 公钥
+     */
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    /**
+     * 设置全局参数 当前用户的publicKey
+     * @param publicKey 公钥
+     */
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
     }
 }

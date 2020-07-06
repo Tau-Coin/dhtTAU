@@ -5,8 +5,9 @@ import android.view.View;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
-import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivitySeedChangeBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -18,7 +19,6 @@ public class SeedChangeActivity extends BaseActivity implements View.OnClickList
 
     private ActivitySeedChangeBinding binding;
     private UserViewModel viewModel;
-    private CompositeDisposable disposables = new CompositeDisposable();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,16 +42,22 @@ public class SeedChangeActivity extends BaseActivity implements View.OnClickList
     @Override
     public void onStart() {
         super.onStart();
+        viewModel.getChangeResult().observe(this, result -> {
+            if(StringUtil.isNotEmpty(result)){
+                ToastUtils.showShortToast(result);
+            }else {
+                onBackPressed();
+            }
+        });
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        disposables.clear();
     }
 
     /**
-     * import和generate点击事件
+     * import seed和generate seed点击事件
      */
     @Override
     public void onClick(View v) {

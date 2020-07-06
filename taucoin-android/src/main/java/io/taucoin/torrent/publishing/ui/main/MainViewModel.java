@@ -28,8 +28,8 @@ public class MainViewModel extends AndroidViewModel {
      * 观察不在黑名单的社区列表数据变化
      * @return 被观察的社区数据列表
      */
-    Flowable<List<Community>> observeCommunitiesNotBlocked(){
-        return communityRepo.observeCommunitiesNotBlocked();
+    Flowable<List<Community>> observeCommunitiesNotInBlacklist(){
+        return communityRepo.observeCommunitiesNotInBlacklist();
     }
 
     @Override

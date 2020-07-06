@@ -12,7 +12,7 @@ public class TauUtils {
         }
     }
 
-    public static String bytesToHex(byte[] src) {
+    public static String bytesToHexString(byte[] src) {
         StringBuilder stringBuilder = new StringBuilder("");
 
         if (src == null || src.length <= 0) {
@@ -31,7 +31,7 @@ public class TauUtils {
         return stringBuilder.toString();
     }
 
-    public static byte[] hexToBytes(String s) {
+    public static byte[] hexStringToBytes(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
 

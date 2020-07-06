@@ -75,7 +75,7 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
     }
 
     private void subscribeMainViewModel() {
-        disposables.add(viewModel.observeCommunitiesNotBlocked()
+        disposables.add(viewModel.observeCommunitiesNotInBlacklist()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::showCommunityList));
 
