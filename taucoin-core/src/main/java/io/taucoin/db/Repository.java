@@ -4,6 +4,7 @@ import io.taucoin.core.AccountState;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.Set;
 
@@ -205,18 +206,27 @@ public interface Repository {
     /**
      * get a account state
      * @param chainID
-     * @param pubkey
+     * @param pubKey
      * @return
      * @throws Exception
      */
-    AccountState getAccount(byte[] chainID, byte[] pubkey) throws Exception;
+    AccountState getAccount(byte[] chainID, byte[] pubKey) throws Exception;
+
+    /**
+     * get nonce by pubKey
+     * @param chainID
+     * @param pubKey
+     * @return
+     * @throws Exception
+     */
+    BigInteger getNonce(byte[] chainID, byte[] pubKey) throws Exception;
 
     /**
      * delete a account
      * @param chainID
-     * @param pubkey
+     * @param pubKey
      * @throws Exception
      */
-    void deleteAccount(byte[] chainID, byte[] pubkey) throws Exception;
+    void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception;
 }
 

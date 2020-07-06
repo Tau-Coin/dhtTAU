@@ -5,6 +5,7 @@ import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -301,13 +302,13 @@ public class StateDB implements Repository{
     /**
      * get a account state
      * @param chainID
-     * @param pubkey
+     * @param pubKey
      * @return
      * @throws Exception
      */
     @Override
-    public AccountState getAccount(byte[] chainID, byte[] pubkey) throws Exception {
-        byte[] rlp = db.get(PrefixKey.accountKey(chainID, pubkey));
+    public AccountState getAccount(byte[] chainID, byte[] pubKey) throws Exception {
+        byte[] rlp = db.get(PrefixKey.accountKey(chainID, pubKey));
         if (null != rlp) {
             return new AccountState(rlp);
         }
@@ -315,14 +316,32 @@ public class StateDB implements Repository{
     }
 
     /**
-     * delete a account
+     * get nonce by pubKey
+     *
      * @param chainID
-     * @param pubkey
+     * @param pubKey
+     * @return
      * @throws Exception
      */
     @Override
-    public void deleteAccount(byte[] chainID, byte[] pubkey) throws Exception {
-        db.delete(PrefixKey.accountKey(chainID, pubkey));
+    public BigInteger getNonce(byte[] chainID, byte[] pubKey) throws Exception {
+        byte[] rlp = db.get(PrefixKey.accountKey(chainID, pubKey));
+        if (null != rlp) {
+            AccountState accountState = new AccountState(rlp);
+            return accountState.getNonce();
+        }
+        return BigInteger.ZERO;
+    }
+
+    /**
+     * delete a account
+     * @param chainID
+     * @param pubKey
+     * @throws Exception
+     */
+    @Override
+    public void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception {
+        db.delete(PrefixKey.accountKey(chainID, pubKey));
     }
 }
 
