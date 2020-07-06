@@ -38,12 +38,14 @@
  1 | msgType|enum    | 1        | 0-regularforum, 1-forumcomment, 2-CommunityAnnouncement, 3-DHTbootstrapNodeAnnouncement,4-wiringTransaction,5-IdentityAnnouncement
  2 | txCode |byte[]  |  512     | Contract description code.
 ## txCode
-8.1 -RegularForum
+8.1 -Note
+
 No |  Key    |type   | Size-Byte |  Notes
 ---|---------|-------|-----------|----------------------
  1 | forumMsg|string |  512      | forum msg
 
-8.2 -ForumComment
+8.2 -Comment
+
 No |  Key     |type   | Size-Byte |  Notes
 ---|----------|-------|-----------|----------------------
  1 | Reference|byte[] |  32       | reference block hash
@@ -54,8 +56,10 @@ No |  Key           |type   | Size-Byte |  Notes
 ---|----------------|-------|-----------|----------------------
  1 | ChainID        |byte[] |  64       | CommunityChainid
  2 | GenesisPubkey  |byte[] |  32       | GenesisMiner pubkey
+ 3 | Description |String | 256 | Community description 
 
 8.4 -DHTbootstrapNodeAnnouncement
+
 No |  Key           |type     | Size-Byte  |  Notes
 ---|----------------|---------|------------|----------------------
  1 | ChainID        |byte[]   |  64        | CommunityChainid
@@ -66,6 +70,7 @@ No |  Key           |type     | Size-Byte  |  Notes
 ---|----------------|---------|------------|----------------------
  1 | ReceiverPubkey |byte[]   |  32        | receiver Pubkey
  2 | Amount         |long     |  8         | wire amount
+ 3 | Notes |String | 256 | explanation of this transaction 
 
 8.6 -IdentityAnnouncement
 No |  Key           |type     | Size-Byte  |  Notes
