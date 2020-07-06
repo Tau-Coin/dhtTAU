@@ -27,7 +27,7 @@ public class Community implements Parcelable {
     public String intro;                    // 社区的介绍
     public String telegramId;               // 社区的联系方式
     public boolean mute = false;            // 社区有新消息到来时，是否静音
-    public boolean blocked = false;         // 社区是否被用户拉入黑名单
+    public boolean blacklist = false;       // 社区是否被用户拉入黑名单
 
     public Community(@NonNull String communityName, @NonNull String coinName, @NonNull String publicKey, long totalCoin, int blockInAvg, String intro, String telegramId){
         this.communityName = communityName;
@@ -50,7 +50,7 @@ public class Community implements Parcelable {
         intro = in.readString();
         telegramId = in.readString();
         mute = in.readByte() != 0;
-        blocked = in.readByte() != 0;
+        blacklist = in.readByte() != 0;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class Community implements Parcelable {
         dest.writeString(intro);
         dest.writeString(telegramId);
         dest.writeByte((byte) (mute ? 1 : 0));
-        dest.writeByte((byte) (blocked ? 1 : 0));
+        dest.writeByte((byte) (blacklist ? 1 : 0));
     }
 
     @Override

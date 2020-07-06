@@ -5,11 +5,14 @@ import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.github.naturs.logger.Logger;
+
 import java.lang.reflect.Method;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -24,16 +27,18 @@ import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 public class CommunityActivity extends BaseActivity {
     private ActivityCommunityBinding binding;
 
-    private MessagesViewModel viewModel;
+    private MessagesViewModel msgViewModel;
+    private CommunityViewModel communityViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private boolean isMute = false;
-    private Community item;
+    private Community community;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
-        viewModel = provider.get(MessagesViewModel.class);
+        msgViewModel = provider.get(MessagesViewModel.class);
+        communityViewModel = provider.get(CommunityViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_community);
         initParameter();
         initLayout();
@@ -44,7 +49,7 @@ public class CommunityActivity extends BaseActivity {
      */
     private void initParameter() {
         if(getIntent() != null){
-            item = getIntent().getParcelableExtra(IntentExtra.BEAN);
+            community = getIntent().getParcelableExtra(IntentExtra.BEAN);
         }
     }
 
@@ -52,8 +57,8 @@ public class CommunityActivity extends BaseActivity {
      * 初始化布局
      */
     private void initLayout() {
-        if(item != null){
-            String communityName = item.communityName;
+        if(community != null){
+            String communityName = community.communityName;
             String firstLetters = StringUtil.getFirstLettersOfName(communityName);
             binding.toolbarInclude.roundButton.setText(firstLetters);
             binding.toolbarInclude.roundButton.setBgColor(Utils.getGroupColor(firstLetters));
@@ -69,12 +74,24 @@ public class CommunityActivity extends BaseActivity {
     @Override
     public void onStart() {
         super.onStart();
+        subscribeCommunityViewModel();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         disposables.clear();
+    }
+
+    /**
+     * 订阅社区相关的被观察者
+     */
+    private void subscribeCommunityViewModel() {
+        communityViewModel.getSetBlacklistState().observe(this, state -> {
+            if(state){
+                onBackPressed();
+            }
+        });
     }
 
     /**
@@ -91,6 +108,12 @@ public class CommunityActivity extends BaseActivity {
      */
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        String publicKey = MainApplication.getInstance().getPublicKey();
+        boolean isCreator = community != null && StringUtil.equals(community.publicKey, publicKey);
+        Logger.d("publicKey=%s", community != null ? community.publicKey:"");
+        Logger.d("publicKey=%s", publicKey);
+        menu.findItem(R.id.menu_blacklist).setVisible(!isCreator);
+        menu.findItem(R.id.menu_settings).setVisible(isCreator);
         menu.findItem(R.id.menu_mute).setVisible(isMute);
         menu.findItem(R.id.menu_unmute).setVisible(!isMute);
         return super.onPrepareOptionsMenu(menu);
@@ -119,16 +142,24 @@ public class CommunityActivity extends BaseActivity {
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if( null == community){
+            return false;
+        }
         switch (item.getItemId()) {
             case R.id.menu_mute:
                 isMute = false;
+                communityViewModel.setCommunityMute(community.chainId, false);
                 invalidateOptionsMenu();
                 break;
             case R.id.menu_unmute:
                 isMute = true;
+                communityViewModel.setCommunityMute(community.chainId, true);
                 invalidateOptionsMenu();
                 break;
-            case R.id.menu_block_group:
+            case R.id.menu_settings:
+                break;
+            case R.id.menu_blacklist:
+                communityViewModel.setCommunityBlacklist(community.chainId, true);
                 break;
         }
         return true;

@@ -9,6 +9,7 @@ import android.view.MenuItem;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.utils.EditTextInhibitInput;
@@ -52,7 +53,7 @@ public class CommunityCreateActivity extends BaseActivity {
         binding.etTotalCoin.setTag(Constants.TOTAL_COIN);
         binding.etBlockAvg.setText(getString(R.string.community_block_avg, Constants.BLOCK_IN_AVG / 60));
         binding.etBlockAvg.setTag(Constants.BLOCK_IN_AVG);
-        binding.tvPublicKey.setText(Constants.PUBLIC_KEY);
+        binding.tvPublicKey.setText(MainApplication.getInstance().getPublicKey());
         // 社区名字禁止输入#特殊符号
         binding.etCommunityName.setFilters(new InputFilter[]{new EditTextInhibitInput(EditTextInhibitInput.WELL_REGEX)});
         binding.etCommunityName.addTextChangedListener(new TextWatcher() {

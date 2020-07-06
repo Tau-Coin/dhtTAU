@@ -31,7 +31,8 @@
     <string name="menu_search">Search</string>
     <string name="menu_unmute">Unmute</string>
     <string name="menu_mute">Mute</string>
-    <string name="menu_block_group">Block Group</string>
+    <string name="menu_blacklist">Blacklist</string>
+    <string name="menu_settings">Settings</string>
     <string name="menu_community_create">Create Community</string>
 
     <string name="community_input_hint">Message</string>

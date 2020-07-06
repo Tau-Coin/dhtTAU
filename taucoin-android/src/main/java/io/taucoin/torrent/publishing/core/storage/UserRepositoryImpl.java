@@ -68,4 +68,12 @@ public class UserRepositoryImpl implements UserRepository{
     public Flowable<User> observeCurrentUser() {
         return db.userDao().observeCurrentUser();
     }
+
+    /**
+     * 设置当前用户是否是当前用户
+     * @param isCurrentUser 是否是当前用户
+     */
+    public void setCurrentUser(String publicKey, boolean isCurrentUser){
+        db.userDao().setCurrentUser(publicKey, isCurrentUser);
+    }
 }

@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
@@ -102,6 +103,7 @@ public class MainActivity extends BaseActivity {
         if(null == user){
             return;
         }
+        MainApplication.getInstance().setPublicKey(user.publicKey);
         binding.drawer.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
         String noteName = UsersUtil.getShowName(user);
         binding.drawer.itemExportSeed.setTag(user.seed);

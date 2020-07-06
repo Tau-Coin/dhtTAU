@@ -19,20 +19,17 @@ public class Member implements Parcelable {
     public String chainId;              // 成员所属社区的chainId
     @NonNull
     public String publicKey;            // 成员的公钥
-    public long onlineTime;             // 成员最后一次在线时间（成员发新的message或挖新的block时更新此值）
 
-    public Member(@NonNull long id, @NonNull String chainId, @NonNull String publicKey, long onlineTime){
+    public Member(@NonNull long id, @NonNull String chainId, @NonNull String publicKey){
         this.id = id;
         this.chainId = chainId;
         this.publicKey = publicKey;
-        this.onlineTime = onlineTime;
     }
 
     protected Member(Parcel in) {
         id = in.readLong();
         chainId = in.readString();
         publicKey = in.readString();
-        onlineTime = in.readLong();
     }
 
     @Override
@@ -40,7 +37,6 @@ public class Member implements Parcelable {
         dest.writeLong(id);
         dest.writeString(chainId);
         dest.writeString(publicKey);
-        dest.writeLong(onlineTime);
     }
 
     @Override

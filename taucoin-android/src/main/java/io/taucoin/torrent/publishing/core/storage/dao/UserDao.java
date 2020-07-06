@@ -17,6 +17,7 @@ import io.taucoin.torrent.publishing.core.storage.entity.User;
 public interface UserDao {
     String QUERY_GET_CURRENT_USER = "SELECT * FROM User WHERE isCurrentUser = 1";
     String QUERY_GET_USER_LIST = "SELECT * FROM User";
+    String QUERY_SET_CURRENT_USER = "UPDATE User SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
 
     /**
      * 添加新的User/Seed
@@ -44,4 +45,11 @@ public interface UserDao {
      */
     @Query(QUERY_GET_CURRENT_USER)
     Flowable<User> observeCurrentUser();
+
+    /**
+     * 设置当前用户是否是当前用户
+     * @param isCurrentUser 是否是当前用户
+     */
+    @Query(QUERY_SET_CURRENT_USER)
+    void setCurrentUser(String publicKey, boolean isCurrentUser);
 }
