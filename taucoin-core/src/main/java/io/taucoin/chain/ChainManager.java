@@ -45,6 +45,20 @@ public class ChainManager {
     }
 
     /**
+     * Start all followed and mined blockchains.
+     * This method is called by TauController.
+     */
+    public void start() {
+    }
+
+    /**
+     * Stop all followed and mined blockchains.
+     * This method is called by TauController.
+     */
+    public void stop() {
+    }
+
+    /**
      * Follow some chain specified by chain id.
      *
      * @param chainID

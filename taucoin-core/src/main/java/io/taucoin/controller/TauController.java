@@ -79,12 +79,29 @@ public class TauController {
     public void start(SessionSettings settings) {
         // First of all, start torrent engine.
         torrentDHTEngine.start(settings);
+
+        // And then start chain manager.
+        // chain manager will start followed and mined blockchains.
+        chainManager.start();
+
+        // Lastly, start rpc server.
+        if (enableRpc) {
+            rpcServer.start();
+        }
     }
 
     /**
      * Stop all the blockchain core components.
      */
     public void stop() {
+
+        // First of all, stop rpc server.
+        if (enableRpc) {
+            rpcServer.stop();
+        }
+
+        // Stop all blockchains.
+        chainManager.stop();
 
         // Lastly, stop torrent engine
         torrentDHTEngine.stop();
