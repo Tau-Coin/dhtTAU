@@ -215,4 +215,15 @@ public class TorrentDHTEngine {
             MutableItem item) {
         return null;
     }
+
+    /**
+     * takes a host name and port pair. That endpoint will be
+     * pinged, and if a valid DHT reply is received, the node will be added to
+     * the routing table.
+     *
+     * @param node
+     */
+    public void addDhtNode(Pair<String, Integer> node) {
+        new SessionHandle(sessionManager.swig()).addDhtNode(node);
+    }
 }
