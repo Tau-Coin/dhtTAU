@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://dl.bintray.com/stojan/android'
+    }
+}
+
 android {
     compileSdkVersion 28
 
@@ -125,4 +132,6 @@ dependencies {
     implementation "net.java.dev.jna:jna:5.5.0@aar"
     implementation 'com.github.minminaya:LGMRoundButton:v1.2'
     implementation 'com.github.naturs.logger:logger-android:0.3'
+
+    implementation 'com.github.hf:leveldb:1.19.0@aar'
 }
