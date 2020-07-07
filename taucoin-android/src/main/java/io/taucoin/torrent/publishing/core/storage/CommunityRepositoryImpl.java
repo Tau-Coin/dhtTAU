@@ -55,6 +55,14 @@ public class CommunityRepositoryImpl implements CommunityRepository{
     }
 
     /**
+     * 获取在黑名单的社区列表
+     * @return List<Community>
+     */
+    public List<Community> getCommunitiesInBlacklist(){
+        return db.communityDao().getCommunitiesInBlacklist();
+    }
+
+    /**
      * 添加社区黑名单实现
      * @param chainId 社区chainId
      * @param blacklist 是否加入黑名单

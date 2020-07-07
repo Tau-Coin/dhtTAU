@@ -6,6 +6,8 @@ import com.github.naturs.logger.Logger;
 
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
@@ -37,6 +39,7 @@ public class CommunityViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> addCommunityState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setBlacklistState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setMuteState = new MutableLiveData<>();
+    private MutableLiveData<List<Community>> blackList = new MutableLiveData<>();
     public CommunityViewModel(@NonNull Application application) {
         super(application);
         communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
@@ -64,6 +67,14 @@ public class CommunityViewModel extends AndroidViewModel {
      */
     LiveData<Boolean> getSetMuteState() {
         return setMuteState;
+    }
+
+    /**
+     * 获取社区黑名单的被观察者
+     * @return 被观察者
+     */
+    public MutableLiveData<List<Community>> getBlackList() {
+        return blackList;
     }
 
     /**
@@ -137,7 +148,7 @@ public class CommunityViewModel extends AndroidViewModel {
      * @param chainId 社区chainId
      * @param blacklist 是否加入黑名单
      */
-    void setCommunityBlacklist(String chainId, boolean blacklist) {
+    public void setCommunityBlacklist(String chainId, boolean blacklist) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             communityRepo.setCommunityBlacklist(chainId, blacklist);
             emitter.onNext(true);
@@ -163,6 +174,21 @@ public class CommunityViewModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(state -> setMuteState.postValue(state));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 获取在黑名单的社区列表
+     */
+    public void getCommunitiesInBlacklist(){
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<Community>>) emitter -> {
+            List<Community> list = communityRepo.getCommunitiesInBlacklist();
+            emitter.onNext(list);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(list -> blackList.postValue(list));
         disposables.add(disposable);
     }
 }

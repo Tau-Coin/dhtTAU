@@ -5,6 +5,9 @@
     <string name="common_balance_unit">TAU</string>
     <string name="common_numerical_value">0</string>
     <string name="common_install_browser">Please install mobile browser first!</string>
+    <string name="common_parentheses">(%1$s)</string>
+    <string name="common_proceed">Proceed</string>
+    <string name="common_back">Back</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
     <string name="close_navigation_drawer">Close navigation drawer</string>
@@ -19,7 +22,8 @@
     <string name="main_other_transaction">Other Transaction</string>
 
     <!-- Strings used for main drawer content -->
-    <string name="drawer_change_seed">Change Seed</string>
+    <string name="drawer_generate_seed">Generate New Seed</string>
+    <string name="drawer_import_seed">Import Seed</string>
     <string name="drawer_export_seed">Export Seed</string>
     <string name="drawer_new_community">New Community</string>
     <string name="drawer_contacts">Contacts</string>
@@ -90,11 +94,13 @@
     <string name="setting_privacy">Privacy</string>
     <string name="setting_blacklist_users">Blacklist Users</string>
     <string name="setting_blacklist_communities">Blacklist Communities</string>
+    <string name="setting_Unblock">Unblock</string>
 
     <string name="user_seed_import_tip">Paste seed here</string>
     <string name="user_seed_import">Import</string>
     <string name="user_seed_generate">Generate New Seed</string>
     <string name="user_seed_empty">Seed cannot be empty!</string>
+    <string name="user_seed_save_tips">Please make sure your seed\nhas been saved</string>
 
     <string name="copy_seed">Seed copied</string>
 

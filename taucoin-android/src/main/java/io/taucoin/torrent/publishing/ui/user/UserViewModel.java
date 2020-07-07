@@ -1,12 +1,16 @@
 package io.taucoin.torrent.publishing.ui.user;
 
 import android.app.Application;
+import android.content.Context;
+import android.view.View;
+import android.widget.LinearLayout;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
 import com.github.naturs.logger.Logger;
 
 import java.util.Arrays;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -22,10 +26,10 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.TauUtils;
-import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
+import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 
 /**
  * 用户的ViewModel
@@ -35,6 +39,8 @@ public class UserViewModel extends AndroidViewModel {
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
+    private MutableLiveData<List<User>> blackList = new MutableLiveData<>();
+    private CommonDialog commonDialog;
     public UserViewModel(@NonNull Application application) {
         super(application);
         userRepo = RepositoryHelper.getUserRepository(getApplication());
@@ -44,16 +50,38 @@ public class UserViewModel extends AndroidViewModel {
     protected void onCleared() {
         super.onCleared();
         disposables.clear();
+        if(commonDialog != null && commonDialog.isShowing()){
+            commonDialog.dismiss();
+            commonDialog = null;
+        }
+    }
+
+    /**
+     * 显示保存Seed的对话框，也起到确认效果,确认后执行后续操作
+     * @param seed 不null：导入; null:生成新的seed
+     */
+    public void showSaveSeedDialog(Context context, String seed){
+        View view = LinearLayout.inflate(context, R.layout.view_dialog_keys, null);
+        commonDialog = new CommonDialog.Builder(context)
+                .setContentView(view)
+                .setButtonWidth(240)
+                .setExchange(seed == null)
+                .setPositiveButton(R.string.common_proceed, (dialog, which) -> {
+                    dialog.cancel();
+                    if(StringUtil.isNotEmpty(seed)){
+                        importSeed(seed);
+                    }else{
+                        generateSeed();
+                    }
+                }).setNegativeButton(R.string.common_back, (dialog, which) -> dialog.cancel())
+                .create();
+        commonDialog.show();
     }
 
     /**
      * 导入/切换Seed
      */
-    void importSeed(String seed) {
-        if(StringUtil.isEmpty(seed)){
-            ToastUtils.showShortToast(R.string.user_seed_empty);
-            return;
-        }
+    private void importSeed(String seed) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String result = "";
             try {
@@ -89,7 +117,7 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 生成新的Seed
      */
-    void generateSeed() {
+    private void generateSeed() {
         byte[] seedBytes = Ed25519.createSeed();
         String seed = TauUtils.bytesToHexString(seedBytes);
         Logger.d("generate seedBytes::%s, length::%d", Arrays.toString(seedBytes), seedBytes.length);
@@ -108,5 +136,44 @@ public class UserViewModel extends AndroidViewModel {
      */
     MutableLiveData<String> getChangeResult() {
         return changeResult;
+    }
+
+    /**
+     * 获取用户黑名单的被观察者
+     * @return 被观察者
+     */
+    public MutableLiveData<List<User>> getBlackList() {
+        return blackList;
+    }
+    /**
+     * 获取在黑名单的用户列表
+     */
+    public void getUsersInBlacklist() {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<User>>) emitter -> {
+            List<User> list = userRepo.getUsersInBlacklist();
+            emitter.onNext(list);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(list -> blackList.postValue(list));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 设置用户是否加入黑名单
+     * @param publicKey 用户publicKey
+     * @param blacklist 是否加入黑名单
+     */
+    public void setUserBlacklist(String publicKey, boolean blacklist) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            userRepo.setUserBlacklist(publicKey, blacklist);
+            emitter.onNext(true);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
+        disposables.add(disposable);
     }
 }

@@ -27,7 +27,7 @@ import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
 import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
-import io.taucoin.torrent.publishing.ui.user.SeedChangeActivity;
+import io.taucoin.torrent.publishing.ui.user.SeedActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
@@ -128,8 +128,11 @@ public class MainActivity extends BaseActivity {
      */
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.item_change_seed:
-                ActivityUtil.startActivity(this, SeedChangeActivity.class);
+            case R.id.item_import_seed:
+                ActivityUtil.startActivity(this, SeedActivity.class);
+                break;
+            case R.id.item_generate_seed:
+                viewModel.showSaveSeedDialog(this, null);
                 break;
             case R.id.item_export_seed:
                 CopyManager.copyText(ViewUtils.getStringTag(view));

@@ -63,12 +63,20 @@
             </RelativeLayout>
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_change_seed"
+                android:id="@+id/item_generate_seed"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:onClick="onClick"
                 app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/drawer_change_seed"/>
+                app:rightText="@string/drawer_generate_seed"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_import_seed"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="onClick"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/drawer_import_seed"/>
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_export_seed"

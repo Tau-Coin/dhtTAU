@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/color_white"
+        android:paddingStart="7dp"
+        android:paddingEnd="0dp">
+
+        <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+            android:id="@+id/left_view"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="7dp"
+            android:layout_marginStart="7dp"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:textAllCaps="true"
+            android:textColor="@color/color_white"
+            android:textStyle="bold"
+            app:borderColor="@color/primary_light"
+            app:borderWidth="0dp"
+            app:radius="30dp"
+            app:isRadiusAutoHalf="true"
+            app:bgColor="@color/primary_light"
+            app:textColorForPressed="@color/color_white" />
+
+        <TextView
+            android:layout_toEndOf="@+id/left_view"
+            android:id="@+id/tv_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+
+        <TextView
+            android:layout_toEndOf="@+id/tv_name"
+            android:id="@+id/tv_public_key"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="7dp"
+            android:textColor="@color/gray_dark"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+
+        <include
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_toEndOf="@+id/left_view"
+            android:layout_centerVertical="true"
+            android:layout_alignParentBottom="true"
+            layout="@layout/view_line"/>
+    </RelativeLayout>
+</layout>

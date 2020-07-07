@@ -76,4 +76,21 @@ public class UserRepositoryImpl implements UserRepository{
     public void setCurrentUser(String publicKey, boolean isCurrentUser){
         db.userDao().setCurrentUser(publicKey, isCurrentUser);
     }
+
+    /**
+     * 获取在黑名单的用户列表
+     * @return  List<User>
+     */
+    public List<User> getUsersInBlacklist(){
+        return db.userDao().getUsersInBlacklist();
+    }
+
+    /**
+     * 设置用户是否加入黑名单
+     * @param publicKey 公钥
+     * @param blacklist 是否加入黑名单
+     */
+    public void setUserBlacklist(String publicKey, boolean blacklist){
+        db.userDao().setUserBlacklist(publicKey, blacklist ? 1 : 0);
+    }
 }

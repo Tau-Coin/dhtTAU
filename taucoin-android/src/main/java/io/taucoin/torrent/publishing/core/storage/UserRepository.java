@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.core.storage;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.room.Query;
 import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
 
@@ -44,4 +45,17 @@ public interface UserRepository {
      * @param isCurrentUser 是否是当前用户
      */
     void setCurrentUser(String publicKey, boolean isCurrentUser);
+
+    /**
+     * 获取在黑名单的用户列表
+     * @return  List<User>
+     */
+    List<User> getUsersInBlacklist();
+
+    /**
+     * 设置用户是否加入黑名单
+     * @param publicKey 公钥
+     * @param blacklist 是否加入黑名单
+     */
+    void setUserBlacklist(String publicKey, boolean blacklist);
 }

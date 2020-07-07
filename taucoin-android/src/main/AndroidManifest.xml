@@ -72,9 +72,6 @@
         <activity
             android:name=".ui.user.SeedActivity"/>
 
-        <activity
-            android:name=".ui.user.SeedChangeActivity"/>
-
     </application>
 
 </manifest>

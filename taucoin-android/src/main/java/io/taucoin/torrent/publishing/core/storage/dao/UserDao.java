@@ -17,7 +17,9 @@ import io.taucoin.torrent.publishing.core.storage.entity.User;
 public interface UserDao {
     String QUERY_GET_CURRENT_USER = "SELECT * FROM User WHERE isCurrentUser = 1";
     String QUERY_GET_USER_LIST = "SELECT * FROM User";
+    String QUERY_GET_USERS_IN_BLACKLIST = "SELECT * FROM User where blacklist = 1";
     String QUERY_SET_CURRENT_USER = "UPDATE User SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
+    String QUERY_ADD_USER_BLACKLIST = "UPDATE User SET blacklist = :blacklist WHERE publicKey = :publicKey";
 
     /**
      * 添加新的User/Seed
@@ -52,4 +54,17 @@ public interface UserDao {
      */
     @Query(QUERY_SET_CURRENT_USER)
     void setCurrentUser(String publicKey, boolean isCurrentUser);
+
+    /**
+     * 获取在黑名单的用户列表
+     * @return  List<User>
+     */
+    @Query(QUERY_GET_USERS_IN_BLACKLIST)
+    List<User> getUsersInBlacklist();
+
+    /**
+     * 设置用户是否加入黑名单
+     */
+    @Query(QUERY_ADD_USER_BLACKLIST)
+    void setUserBlacklist(String publicKey, int blacklist);
 }

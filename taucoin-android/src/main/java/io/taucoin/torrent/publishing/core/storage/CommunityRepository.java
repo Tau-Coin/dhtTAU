@@ -28,6 +28,12 @@ public interface CommunityRepository {
     Flowable<List<Community>> observeCommunitiesNotInBlacklist();
 
     /**
+     * 获取在黑名单的社区列表
+     * @return List<Community>
+     */
+    List<Community> getCommunitiesInBlacklist();
+
+    /**
      * 添加社区黑名单实现
      * @param chainId 社区chainId
      * @param blacklist 是否加入黑名单

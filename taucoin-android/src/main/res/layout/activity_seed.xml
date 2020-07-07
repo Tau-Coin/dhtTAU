@@ -2,6 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -13,105 +19,48 @@
             android:id="@+id/toolbar_include"
             layout="@layout/toolbar" />
 
-        <LinearLayout
-            android:orientation="vertical"
+        <EditText
+            android:id="@+id/et_seed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/color_white"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp">
+            android:minHeight="50dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginTop="30dp"
+            android:gravity="center_horizontal|bottom"
+            android:hint="@string/user_seed_import_tip"
+            android:inputType="textMultiLine"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:autofillHints="@string/community_coin_name" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/primary"
-                android:text="@string/setting_account"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
-
-            <TextView
-                android:id="@+id/tv_public_key"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
-
-            <TextView
-                android:id="@+id/tv_import_new_key"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:textColor="@color/gray_dark"
-                android:text="@string/setting_import_seed"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="vertical"
+        <TextView
+            android:id="@+id/btn_seed_import"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/color_white"
-            android:layout_marginTop="15dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp">
+            android:layout_height="50dp"
+            android:text="@string/user_seed_import"
+            android:onClick="@{listener.onClick}"
+            android:textAllCaps="false"
+            android:textColor="@color/color_white"
+            android:gravity="center_vertical|center"
+            android:background="@drawable/primary_rect_round_bg"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:layout_marginTop="35dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"/>
 
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_new_community1"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/setting_notification_sounds"/>
-
-            <include layout="@layout/view_line"/>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/setting_privacy_security"/>
-
-            <include layout="@layout/view_line"/>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/setting_data_storage"/>
-
-            <include layout="@layout/view_line"/>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/setting_community_setting"/>
-
-            <include layout="@layout/view_line"/>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/setting_journal"/>
-
-            <include layout="@layout/view_line"/>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/setting_help"/>
-
-            <include layout="@layout/view_line"/>
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/btn_seed_generate"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="@string/user_seed_generate"
+            android:onClick="@{listener.onClick}"
+            android:textAllCaps="false"
+            android:textColor="@color/color_white"
+            android:gravity="center_vertical|center"
+            android:background="@drawable/black_light_rect_round_bg"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:layout_marginTop="45dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"/>
     </LinearLayout>
 </layout>

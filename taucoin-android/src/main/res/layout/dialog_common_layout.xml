@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/white_rect_round_bg_no_border"
+    android:gravity="center_horizontal"
+    android:clickable="true"
+    android:paddingTop="25dp"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:paddingBottom="35dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/positiveButton"
+        android:layout_width="wrap_content"
+        android:minWidth="150dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="30dp"
+        android:maxLines="1"
+        android:textColor="@color/color_white"
+        android:textSize="@dimen/font_big_size"
+        android:gravity="center_vertical|center"
+        android:textAllCaps="false"
+        android:ellipsize="end"
+        android:background="@drawable/primary_rect_round_bg" />
+
+    <TextView
+        android:id="@+id/negativeButton"
+        android:layout_width="wrap_content"
+        android:minWidth="150dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="15dp"
+        android:textColor="@color/color_white"
+        android:textSize="@dimen/font_big_size"
+        android:gravity="center_vertical|center"
+        android:textAllCaps="false"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:background="@drawable/black_light_rect_round_bg" />
+
+</LinearLayout>
