@@ -5,7 +5,6 @@ import io.taucoin.util.ByteArrayWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,14 +32,15 @@ public class TxNoncer {
         ByteArrayWrapper account = new ByteArrayWrapper(pubKey);
         Long nonce = nonces.get(account);
         if(null == nonce) {
+            long nonceInDB;
             try {
-                long nonceInDB = this.repository.getNonce(chainID, pubKey).longValue();
-                nonces.put(account, nonceInDB);
-                nonce = nonceInDB;
+                nonceInDB = this.repository.getNonce(chainID, pubKey).longValue();
             } catch (Exception e) {
                 logger.info(e.getMessage(), e);
-                nonce = (long)0;
+                nonceInDB = (long)0;
             }
+            nonces.put(account, nonceInDB);
+            nonce = nonceInDB;
         }
 
         return nonce;

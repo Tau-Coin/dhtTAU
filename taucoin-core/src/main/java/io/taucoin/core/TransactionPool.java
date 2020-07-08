@@ -8,12 +8,12 @@ import java.util.List;
 
 public interface TransactionPool {
 
-    /**
-     * init transaction pool with chainID and repository
-     * @param chainID
-     * @param repository
-     */
-    void init(byte[] chainID, Repository repository);
+//    /**
+//     * init transaction pool with chainID and repository
+//     * @param chainID
+//     * @param repository
+//     */
+//    void init(byte[] chainID, Repository repository);
 
     /**
      * add local transaction into pool
@@ -92,10 +92,10 @@ public interface TransactionPool {
     void processBest(Block block);
 
     /**
-     * get a transaction by hash
+     * get a transaction by txid
      * @return
      */
-    Transaction getTransactionByHash();
+    Transaction getTransactionByTxid(byte[] txid);
 
     /**
      * get maximum fee in pool

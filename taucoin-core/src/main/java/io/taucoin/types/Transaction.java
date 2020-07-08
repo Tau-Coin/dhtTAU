@@ -29,7 +29,7 @@ import io.taucoin.util.RLPList;
 public class Transaction {
     private byte version;
     private byte[] chainID;
-    private long timeStamp;
+    private long timestamp;
     private int txFee;
     private byte[] senderPubkey;
     private long nonce;
@@ -52,7 +52,7 @@ public class Transaction {
      * @param txData
      * @param signature
      */
-    public Transaction(byte version,byte[] chainID,long timeStamp,int txFee,byte[] sender
+    public Transaction(byte version,byte[] chainID,long timestamp,int txFee,byte[] sender
            ,long nonce,TxData txData,byte[] signature){
             if(chainID.length > ChainParam.ChainIDlength) {
                 throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
@@ -65,7 +65,7 @@ public class Transaction {
             }
             this.version = version;
             this.chainID = chainID;
-            this.timeStamp = timeStamp;
+            this.timestamp = timestamp;
             this.txFee = txFee;
             this.senderPubkey = sender;
             this.nonce = nonce;
@@ -94,7 +94,7 @@ public class Transaction {
         }
         this.version = version;
         this.chainID = chainID;
-        this.timeStamp = timeStamp;
+        this.timestamp = timeStamp;
         this.txFee = txFee;
         this.senderPubkey = sender;
         this.nonce = nonce;
@@ -119,7 +119,7 @@ public class Transaction {
         if(rlpEncoded == null) {
             byte[] version = RLP.encodeByte(this.version);
             byte[] chainid = RLP.encodeElement(this.chainID);
-            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timeStamp));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
             byte[] txfee = RLP.encodeInt(this.txFee);
             byte[] sender = RLP.encodeElement(this.senderPubkey);
             byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
@@ -138,7 +138,7 @@ public class Transaction {
         if(rlpSigEncoded == null) {
             byte[] version = RLP.encodeByte(this.version);
             byte[] chainid = RLP.encodeElement(this.chainID);
-            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timeStamp));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
             byte[] txfee = RLP.encodeInt(this.txFee);
             byte[] sender = RLP.encodeElement(this.senderPubkey);
             byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
@@ -159,7 +159,7 @@ public class Transaction {
             RLPList tx = (RLPList) list.get(0);
             this.version = tx.get(0).getRLPData()[0];
             this.chainID = tx.get(1).getRLPData();
-            this.timeStamp = ByteUtil.byteArrayToLong(tx.get(2).getRLPData());
+            this.timestamp = ByteUtil.byteArrayToLong(tx.get(2).getRLPData());
             this.txFee = ByteUtil.byteArrayToInt(tx.get(3).getRLPData());
             this.senderPubkey = tx.get(4).getRLPData();
             this.nonce = ByteUtil.byteArrayToLong(tx.get(5).getRLPData());
@@ -193,7 +193,7 @@ public class Transaction {
      */
     public long getTimeStamp() {
         if(!isParsed) parseRLP();
-        return timeStamp;
+        return timestamp;
     }
 
     /**
@@ -272,7 +272,7 @@ public class Transaction {
     public boolean isTxParamValidate(){
         if(!isParsed) parseRLP();
         if(chainID.length > ChainParam.ChainIDlength) return false;
-        if(timeStamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timeStamp < 0) return false;
+        if(timestamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
         if(senderPubkey.length != ChainParam.PubkeyLength) return false;
         if(nonce < 0) return false;
         if(signature != null && signature.length != ChainParam.SignatureLength) return false;

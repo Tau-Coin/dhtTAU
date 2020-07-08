@@ -3,23 +3,32 @@ package io.taucoin.core;
 import io.taucoin.db.Repository;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
+import io.taucoin.util.ByteArrayWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.*;
 
 public class TransactionPoolImpl implements TransactionPool {
-    byte[] chainID;
-    Repository repository;
-    int maxFee;
-    TxNoncer pendingNonce;
+    private static final Logger logger = LoggerFactory.getLogger("TxPool");
 
-    /**
-     * init transaction pool with chainID and repository
-     *
-     * @param chainID
-     * @param repository
-     */
-    @Override
-    public void init(byte[] chainID, Repository repository) {
+    private byte[] chainID;
+    private Repository repository;
+    private int maxFee;
+    private TxNoncer pendingNonce;
+    // hash <-> transaction
+    private Map<ByteArrayWrapper, Transaction> all = new HashMap<>();
+    // hash
+    private Set<ByteArrayWrapper> locals = new HashSet<>();
+    // pubKey <-> hash
+    private Map<ByteArrayWrapper, byte[]> accountTx = new HashMap<>();
+    // MemoryPoolEntry
+    private PriorityQueue<MemoryPoolEntry> priorityQueue = new PriorityQueue<MemoryPoolEntry>(1, new MemoryPoolPolicy());
+
+    private TransactionPoolImpl() {
+    }
+
+    public TransactionPoolImpl(byte[] chainID, Repository repository) {
         this.chainID = chainID;
         this.repository = repository;
         this.pendingNonce = new TxNoncer(chainID, repository);
@@ -80,7 +89,7 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     @Override
     public int localSize() {
-        return 0;
+        return locals.size();
     }
 
     /**
@@ -120,7 +129,8 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     @Override
     public int remoteSize() {
-        return 0;
+        // also accountTx.size()
+        return all.size() - locals.size();
     }
 
     /**
@@ -130,7 +140,7 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     @Override
     public int size() {
-        return 0;
+        return all.size();
     }
 
     /**
@@ -149,12 +159,13 @@ public class TransactionPoolImpl implements TransactionPool {
     }
 
     /**
-     * get a transaction by hash
+     * get a transaction by txid
      *
      * @return
      */
     @Override
-    public Transaction getTransactionByHash() {
+    public Transaction getTransactionByTxid(byte[] txid) {
+//        all.get(new ByteArrayWrapper(txid));
         return null;
     }
 
