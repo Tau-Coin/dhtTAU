@@ -26,7 +26,7 @@ public class TxNoncer {
     /**
      * get nonce by pubKey, first find in cache, then in repo
      * @param pubKey
-     * @return
+     * @return current nonce, or 0 if not found
      */
     public long getNonce(byte[] pubKey) {
         ByteArrayWrapper account = new ByteArrayWrapper(pubKey);

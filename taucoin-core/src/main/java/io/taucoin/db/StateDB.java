@@ -6,10 +6,7 @@ import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 // 公钥发布的mutable message也会放在stateDB
 public class StateDB implements Repository{
@@ -194,18 +191,14 @@ public class StateDB implements Repository{
     }
 
     /**
-     * put transactions into pool
+     * put transaction into pool
      * @param chainID
-     * @param txs
+     * @param tx
      * @throws Exception
      */
     @Override
-    public void putIntoSelfTxPool(byte[] chainID, Set<Transaction> txs) throws Exception {
-        if (null != txs) {
-            for (Transaction tx: txs) {
-                db.put(PrefixKey.txPoolKey(chainID, tx.getTxID()), tx.getEncoded());
-            }
-        }
+    public void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws Exception {
+        db.put(PrefixKey.txPoolKey(chainID, tx.getTxID()), tx.getEncoded());
     }
 
     /**

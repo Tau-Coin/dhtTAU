@@ -8,12 +8,10 @@ import java.util.List;
 
 public interface TransactionPool {
 
-//    /**
-//     * init transaction pool with chainID and repository
-//     * @param chainID
-//     * @param repository
-//     */
-//    void init(byte[] chainID, Repository repository);
+    /**
+     * init transaction pool
+     */
+    void init();
 
     /**
      * add local transaction into pool

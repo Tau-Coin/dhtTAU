@@ -5,6 +5,7 @@ import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -132,12 +133,12 @@ public interface Repository {
     Set<Transaction> getSelfTxPool(byte[] chainID) throws Exception;
 
     /**
-     * put transactions into pool
+     * put transaction into pool
      * @param chainID
-     * @param txs
+     * @param tx
      * @throws Exception
      */
-    void putIntoSelfTxPool(byte[] chainID, Set<Transaction> txs) throws Exception;
+    void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws Exception;
 
     /**
      * delete self transaction pool
