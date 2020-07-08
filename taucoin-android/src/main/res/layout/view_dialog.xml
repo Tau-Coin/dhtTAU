@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@color/color_white"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <io.taucoin.torrent.publishing.ui.customviews.MultilineTextView
+            android:id="@+id/tv_msg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:gravity="center_horizontal"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="5dp"
+            android:textColor="@color/color_blue"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:text="@string/user_seed_save_tips" />
+
+    </LinearLayout>
+</layout>

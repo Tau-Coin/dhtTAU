@@ -18,25 +18,25 @@ public class Community implements Parcelable {
     public String chainId;                  // 社区的chainId
     @NonNull
     public String communityName;            // 社区名字
-    @NonNull
     public String coinName;                 // 社区币名
     @NonNull
     public String publicKey;                // 社区创建者的公钥
     public long totalCoin;                  // 社区总共的币量
     public int blockInAvg;                  // 社区平均出块时间（单位：秒）
     public String intro;                    // 社区的介绍
-    public String telegramId;               // 社区的联系方式
+    public String contactInfo;               // 社区的联系方式
     public boolean mute = false;            // 社区有新消息到来时，是否静音
     public boolean blacklist = false;       // 社区是否被用户拉入黑名单
 
-    public Community(@NonNull String communityName, @NonNull String coinName, @NonNull String publicKey, long totalCoin, int blockInAvg, String intro, String telegramId){
+    public Community(@NonNull String communityName, String coinName, @NonNull String publicKey,
+                     long totalCoin, int blockInAvg, String intro, String contactInfo){
         this.communityName = communityName;
         this.coinName = coinName;
         this.publicKey = publicKey;
         this.totalCoin = totalCoin;
         this.blockInAvg = blockInAvg;
         this.intro = intro;
-        this.telegramId = telegramId;
+        this.contactInfo = contactInfo;
     }
 
     @Ignore
@@ -48,7 +48,7 @@ public class Community implements Parcelable {
         totalCoin = in.readLong();
         blockInAvg = in.readInt();
         intro = in.readString();
-        telegramId = in.readString();
+        contactInfo = in.readString();
         mute = in.readByte() != 0;
         blacklist = in.readByte() != 0;
     }
@@ -62,7 +62,7 @@ public class Community implements Parcelable {
         dest.writeLong(totalCoin);
         dest.writeInt(blockInAvg);
         dest.writeString(intro);
-        dest.writeString(telegramId);
+        dest.writeString(contactInfo);
         dest.writeByte((byte) (mute ? 1 : 0));
         dest.writeByte((byte) (blacklist ? 1 : 0));
     }

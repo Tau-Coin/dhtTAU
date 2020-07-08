@@ -61,7 +61,7 @@ public class UserViewModel extends AndroidViewModel {
      * @param seed 不null：导入; null:生成新的seed
      */
     public void showSaveSeedDialog(Context context, String seed){
-        View view = LinearLayout.inflate(context, R.layout.view_dialog_keys, null);
+        View view = LinearLayout.inflate(context, R.layout.view_dialog, null);
         commonDialog = new CommonDialog.Builder(context)
                 .setContentView(view)
                 .setButtonWidth(240)

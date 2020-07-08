@@ -36,7 +36,7 @@ public class CommunityViewModel extends AndroidViewModel {
 
     private CommunityRepository communityRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private MutableLiveData<Boolean> addCommunityState = new MutableLiveData<>();
+    private MutableLiveData<String> addCommunityState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setBlacklistState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setMuteState = new MutableLiveData<>();
     private MutableLiveData<List<Community>> blackList = new MutableLiveData<>();
@@ -49,7 +49,7 @@ public class CommunityViewModel extends AndroidViewModel {
      * 获取添加社区状态的被观察者
      * @return 被观察者
      */
-    LiveData<Boolean> getAddCommunityState() {
+    LiveData<String> getAddCommunityState() {
         return addCommunityState;
     }
 
@@ -81,19 +81,25 @@ public class CommunityViewModel extends AndroidViewModel {
      * 添加新的社区到数据库
      * @param community 社区数据
      */
-    void addCommunity(@NonNull Community community){
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
-            // TODO: 1、TauController:创建Community社区
+    void addCommunity(@NonNull Community community, boolean isAnnounce){
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
+            String state = "";
+            try {
+                // TODO: 1、TauController:创建Community社区
+                ChainConfig chainConfig = ChainConfig.NewChainConfig((byte)1, community.communityName, community.blockInAvg,
+                        community.publicKey , "", null);
+                community.chainId = new String(chainConfig.getChainid());
+                communityRepo.addCommunity(community);
+                Logger.d("Add community to database: communityName=%s, chainID=%s",
+                        community.communityName, community.chainId);
 
-            ChainConfig chainConfig = ChainConfig.NewChainConfig((byte)1, community.communityName, community.blockInAvg,
-                    community.publicKey , "", null);
-            community.chainId = new String(chainConfig.getChainid());
-            communityRepo.addCommunity(community);
-            Logger.d("Add community to database: communityName=%s, chainID=%s",
-                    community.communityName, community.chainId);
-
-            // TODO: 2、TauController:Announce on TAU
-            emitter.onNext(true);
+                if(isAnnounce){
+                    // TODO: 2、TauController:Announce on TAU
+                }
+            }catch (Exception e){
+                state = e.getMessage();
+            }
+            emitter.onNext(state);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
@@ -109,22 +115,6 @@ public class CommunityViewModel extends AndroidViewModel {
     }
 
     /**
-     * 根据用户输入数据构建Community实体类
-     * @param binding view绑定对象
-     * @return Community
-     */
-    Community buildCommunity(@NonNull ActivityCommunityCreateBinding binding) {
-        String communityName = ViewUtils.getText(binding.etCommunityName);
-        String coinName = ViewUtils.getText(binding.etCoinName);
-        long totalCoin = ViewUtils.getLongTag(binding.etTotalCoin);
-        int blockAvg = ViewUtils.getIntTag(binding.etBlockAvg);
-        String intro = ViewUtils.getText(binding.etIntro);
-        String telegramId = ViewUtils.getText(binding.etTelegramId);
-        String publicKey = ViewUtils.getText(binding.tvPublicKey);
-        return new Community(communityName, coinName, publicKey, totalCoin, blockAvg, intro, telegramId);
-    }
-
-    /**
      * 验证Community实体类中的数据
      * @param community view数据对象
      * @return 是否验证通过
@@ -133,11 +123,6 @@ public class CommunityViewModel extends AndroidViewModel {
         String communityName = community.communityName;
         if(StringUtil.isEmpty(communityName)){
             ToastUtils.showLongToast(R.string.error_community_name_empty);
-            return false;
-        }
-
-        if(StringUtil.isEmpty(community.coinName)){
-            ToastUtils.showLongToast(R.string.error_coin_name_empty);
             return false;
         }
         return true;

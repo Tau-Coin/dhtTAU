@@ -8,6 +8,7 @@
     <string name="common_parentheses">(%1$s)</string>
     <string name="common_proceed">Proceed</string>
     <string name="common_back">Back</string>
+    <string name="common_slant">(%1$d/%2$d)</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
     <string name="close_navigation_drawer">Close navigation drawer</string>
@@ -43,17 +44,19 @@
     <string name="community_users_stats">%1$d members,%2$d online</string>
 
     <string name="community_community_name">Community Name(required)</string>
-    <string name="community_coin_name">Coin Name(required)</string>
+    <string name="community_coin_name">Coin Name(optional)</string>
     <string name="community_announce">Announce on TAU</string>
     <string name="community_total_coin">Total Coin/%1$s</string>
     <string name="community_block_avg">Block in avg/%1$d min</string>
     <string name="community_intro">Introduction(optional)</string>
-    <string name="community_telegram_id">Telegram ID(optional)</string>
+    <string name="community_contact">ID(Telegram/Whatsapp/FB/Wechat)</string>
+    <string name="community_more_settings">More Settings</string>
 
     <string name="error_community_name_empty">Community name cannot be empty!</string>
     <string name="error_coin_name_empty">Coin name cannot be empty!</string>
     <string name="error_telegram_id_illegal">Telegram ID is illegal!</string>
-    <string name="community_added_successfully">Community added successfully!</string>
+    <string name="community_added_successfully">Create Community Successful!</string>
+    <string name="community_added_members">+ Add Members Now</string>
 
     <string name="setting_title">Setting</string>
     <string name="setting_account">PublicKey(Address)</string>

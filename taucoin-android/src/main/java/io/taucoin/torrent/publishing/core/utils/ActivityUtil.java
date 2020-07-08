@@ -44,6 +44,11 @@ public class ActivityUtil {
         context.startActivity(intent);
     }
 
+    public static void startActivityForResult(FragmentActivity context, Class<?> zClass, int requestCode){
+        Intent intent = new Intent(context, zClass);
+        context.startActivityForResult(intent, requestCode);
+    }
+
     public static void startActivity(Fragment fragment, Class<?> zClass){
         Intent intent = new Intent(fragment.getActivity(), zClass);
         fragment.startActivity(intent);

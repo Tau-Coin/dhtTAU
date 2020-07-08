@@ -4,7 +4,7 @@
 
     <item android:id="@+id/menu_community_create"
         app:showAsAction="ifRoom"
-        android:icon="@mipmap/ic_search_white_24dp"
+        android:icon="@mipmap/icon_done"
         android:title="@string/menu_community_create" />
 
 </menu>

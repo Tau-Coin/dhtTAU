@@ -59,86 +59,17 @@
 
         </RelativeLayout>
 
-        <EditText
-            android:id="@+id/et_coin_name"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tv_more_setting"
+            android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:singleLine="true"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"
-            android:hint="@string/community_coin_name"
-            android:inputType="text"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:autofillHints="@string/community_coin_name" />
+            android:layout_marginStart="110dp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="50dp"
+            android:textColor="@color/gray_dark"
+            android:text="@string/community_more_settings"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
 
-        <EditText
-            android:id="@+id/et_announce"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:singleLine="true"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"
-            android:text="@string/community_announce"
-            android:hint="@string/community_coin_name"
-            android:inputType="text"
-            android:enabled="false"
-            android:textColor="@color/color_black"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:autofillHints="@string/community_announce" />
-
-        <EditText
-            android:id="@+id/et_total_coin"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:singleLine="true"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"
-            android:text="@string/community_total_coin"
-            android:hint="@string/community_total_coin"
-            android:inputType="text"
-            android:enabled="false"
-            android:textColor="@color/color_black"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:autofillHints="@string/community_total_coin" />
-
-        <EditText
-            android:id="@+id/et_block_avg"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:singleLine="true"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"
-            android:text="@string/community_block_avg"
-            android:hint="@string/community_block_avg"
-            android:inputType="text"
-            android:enabled="false"
-            android:textColor="@color/color_black"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:autofillHints="@string/community_block_avg" />
-
-        <EditText
-            android:id="@+id/et_intro"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:singleLine="true"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"
-            android:hint="@string/community_intro"
-            android:inputType="textMultiLine"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:autofillHints="@string/community_intro" />
-
-        <EditText
-            android:id="@+id/et_telegram_id"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:singleLine="true"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"
-            android:hint="@string/community_telegram_id"
-            android:inputType="text"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:autofillHints="@string/community_telegram_id" />
 
     </LinearLayout>
 </layout>

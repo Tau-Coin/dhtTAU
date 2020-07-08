@@ -52,6 +52,9 @@
             android:name=".ui.community.CommunityCreateActivity"/>
 
         <activity
+            android:name=".ui.community.CommunitySettingActivity"/>
+
+        <activity
             android:name=".ui.contacts.ContactsActivity"/>
 
         <activity

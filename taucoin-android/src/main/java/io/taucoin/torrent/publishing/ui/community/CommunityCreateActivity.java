@@ -1,33 +1,44 @@
 package io.taucoin.torrent.publishing.ui.community;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.EditTextInhibitInput;
-import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.Utils;
+import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityCommunityCreateBinding;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
+import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 
 /**
  * 群组/社区创建页面
  */
 public class CommunityCreateActivity extends BaseActivity {
+    private static final int REQUEST_CODE = 100;
     private ActivityCommunityCreateBinding binding;
-
     private CommunityViewModel viewModel;
+    private Community community;
+    private boolean isAnnounce;
+    private CommonDialog successDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,11 +59,6 @@ public class CommunityCreateActivity extends BaseActivity {
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        String totalCoin = FmtMicrometer.fmtLong(Constants.TOTAL_COIN);
-        binding.etTotalCoin.setText(getString(R.string.community_total_coin, totalCoin));
-        binding.etTotalCoin.setTag(Constants.TOTAL_COIN);
-        binding.etBlockAvg.setText(getString(R.string.community_block_avg, Constants.BLOCK_IN_AVG / 60));
-        binding.etBlockAvg.setTag(Constants.BLOCK_IN_AVG);
         binding.tvPublicKey.setText(MainApplication.getInstance().getPublicKey());
         // 社区名字禁止输入#特殊符号
         binding.etCommunityName.setFilters(new InputFilter[]{new EditTextInhibitInput(EditTextInhibitInput.WELL_REGEX)});
@@ -76,6 +82,8 @@ public class CommunityCreateActivity extends BaseActivity {
 
             }
         });
+        binding.tvMoreSetting.setOnClickListener(view ->
+                ActivityUtil.startActivityForResult(this, CommunitySettingActivity.class, REQUEST_CODE));
     }
 
     /**
@@ -83,11 +91,35 @@ public class CommunityCreateActivity extends BaseActivity {
      */
     private void observeAddCommunityState() {
         viewModel.getAddCommunityState().observe(this, state -> {
-            if(state){
-                ToastUtils.showShortToast(R.string.community_added_successfully);
-                onBackPressed();
+            if(StringUtil.isEmpty(state)){
+                showSuccessDialog();
+            }else{
+                ToastUtils.showShortToast(state);
             }
         });
+    }
+
+    /**
+     * 显示添加新社区成功后的对话框
+     */
+    private void showSuccessDialog() {
+        ViewDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this),
+                R.layout.view_dialog, null, false);
+        binding.tvMsg.setText(R.string.community_added_successfully);
+        binding.tvMsg.setTextColor(getResources().getColor(R.color.color_black));
+        successDialog = new CommonDialog.Builder(this)
+                .setContentView(binding.getRoot())
+                .setButtonWidth(240)
+                .setPositiveButton(R.string.community_added_members, (dialog, which) -> {
+                    dialog.cancel();
+                    onBackPressed();
+                }).create();
+        successDialog.setOnCancelListener(dialog -> {
+            dialog.dismiss();
+            onBackPressed();
+        });
+        successDialog.show();
+
     }
 
     /**
@@ -106,11 +138,30 @@ public class CommunityCreateActivity extends BaseActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // 添加新社区处理事件
         if (item.getItemId() == R.id.menu_community_create) {
-            Community community = viewModel.buildCommunity(binding);
+            String communityName = ViewUtils.getText(binding.etCommunityName);
+            String publicKey = ViewUtils.getText(binding.tvPublicKey);
+            if(community == null){
+                community = new Community(communityName, null, publicKey,
+                        Constants.TOTAL_COIN, Constants.BLOCK_IN_AVG, null, null);
+            }else {
+                community.communityName = communityName;
+                community.publicKey = publicKey;
+            }
             if(viewModel.validateCommunity(community)){
-                viewModel.addCommunity(community);
+                viewModel.addCommunity(community, isAnnounce);
             }
         }
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == REQUEST_CODE && resultCode == RESULT_OK){
+            if(data != null){
+                community = data.getParcelableExtra(IntentExtra.BEAN);
+                isAnnounce = data.getBooleanExtra(IntentExtra.ANNOUNCE, false);
+            }
+        }
     }
 }

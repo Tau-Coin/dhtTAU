@@ -42,7 +42,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private void initView() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
         binding.toolbarInclude.toolbar.setTitle(R.string.setting_title);
-        binding.tvPublicKey.setText(Constants.PUBLIC_KEY);
+//        binding.tvPublicKey.setText(Constants.PUBLIC_KEY);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
 
