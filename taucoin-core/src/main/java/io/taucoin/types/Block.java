@@ -31,7 +31,7 @@ import io.taucoin.util.RLPList;
 public class Block {
     private byte version;
     private byte[] chainID;
-    private long timeStamp;
+    private long timestamp;
     private long blockNum;
     private byte[] previousBlockHash;
     private byte[] immutableBlockHash;
@@ -53,7 +53,7 @@ public class Block {
     /**
     *construct a complete block.
     */
-    public Block(byte version, byte[] chainID, long timeStamp, long blockNum, byte[] previousBlockHash,
+    public Block(byte version, byte[] chainID, long timestamp, long blockNum, byte[] previousBlockHash,
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, Transaction txMsg, long minerBalance, long senderBalance,
                  long receiverBalance, long senderNonce, byte[] signature,byte[] minerPubkey){
@@ -74,7 +74,7 @@ public class Block {
         }
         this.version = version;
         this.chainID = chainID;
-        this.timeStamp = timeStamp;
+        this.timestamp = timestamp;
         this.blockNum = blockNum;
         this.previousBlockHash = previousBlockHash;
         this.immutableBlockHash = immutableBlockHash;
@@ -95,7 +95,7 @@ public class Block {
      * construct a block without signature,this can be used to initial a block.
      * @param version: current block version.
      * @param chainID: block attached chainid.
-     * @param timeStamp: unix timestamp block was created.
+     * @param timestamp: unix timestamp block was created.
      * @param blockNum: block index number start with 0.
      * @param previousBlockHash: current block father hash reference.
      * @param immutableBlockHash: the chain immutable point block hash.
@@ -108,7 +108,7 @@ public class Block {
      * @param receiverBalance:transaction receiver balance.
      * @param senderNonce:transaction sender nonce(power).
      */
-    public Block(byte version, byte[] chainID, long timeStamp, long blockNum, byte[] previousBlockHash,
+    public Block(byte version, byte[] chainID, long timestamp, long blockNum, byte[] previousBlockHash,
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, Transaction txMsg, long minerBalance, long senderBalance,
                  long receiverBalance, long senderNonce,byte[] minerPubkey){
@@ -126,7 +126,7 @@ public class Block {
         }
         this.version = version;
         this.chainID = chainID;
-        this.timeStamp = timeStamp;
+        this.timestamp = timestamp;
         this.blockNum = blockNum;
         this.previousBlockHash = previousBlockHash;
         this.immutableBlockHash = immutableBlockHash;
@@ -159,7 +159,7 @@ public class Block {
         if(rlpEncoded == null) {
            byte[] version = RLP.encodeByte(this.version);
            byte[] chainid = RLP.encodeElement(this.chainID);
-           byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timeStamp));
+           byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
            byte[] blocknum = RLP.encodeElement(ByteUtil.longToBytes(this.blockNum));
            byte[] previousblockhash = RLP.encodeElement(this.previousBlockHash);
            byte[] immutableblockhash = RLP.encodeElement(this.immutableBlockHash);
@@ -191,7 +191,7 @@ public class Block {
         if(rlpSigEncoded == null) {
             byte[] version = RLP.encodeByte(this.version);
             byte[] chainid = RLP.encodeElement(this.chainID);
-            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timeStamp));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
             byte[] blocknum = RLP.encodeElement(ByteUtil.longToBytes(this.blockNum));
             byte[] previousblockhash = RLP.encodeElement(this.previousBlockHash);
             byte[] immutableblockhash = RLP.encodeElement(this.immutableBlockHash);
@@ -225,7 +225,7 @@ public class Block {
             RLPList block = (RLPList) list.get(0);
             this.version = block.get(0).getRLPData()[0];
             this.chainID = block.get(1).getRLPData();
-            this.timeStamp = ByteUtil.byteArrayToLong(block.get(2).getRLPData());
+            this.timestamp = ByteUtil.byteArrayToLong(block.get(2).getRLPData());
             this.blockNum = ByteUtil.byteArrayToLong(block.get(3).getRLPData());
             this.previousBlockHash = block.get(4).getRLPData();
             this.immutableBlockHash = block.get(5).getRLPData();
@@ -276,7 +276,7 @@ public class Block {
      */
     public long getTimeStamp() {
         if(!isParsed) parseRLP();
-        return timeStamp;
+        return timestamp;
     }
 
     /**
@@ -439,7 +439,7 @@ public class Block {
         if(this.getEncoded().length > ChainParam.MaxBlockSize) return false;
         if(!isParsed) parseRLP();
         if(chainID.length >ChainParam.ChainIDlength) return false;
-        if(timeStamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timeStamp < 0) return false;
+        if(timestamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
         if(blockNum < 0) return false;
         if(previousBlockHash.length > ChainParam.HashLength) return false;
         if(immutableBlockHash.length > ChainParam.HashLength) return false;

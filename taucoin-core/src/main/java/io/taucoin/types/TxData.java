@@ -16,47 +16,42 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
-import io.taucoin.config.ChainConfig;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
-//txdata stands common parts of transaction
+/**
+ * txData contains transaction/msg/contract type and contract description code.
+ */
 public class TxData {
     private MsgType msgType;
-    private String annoucement;
-    private String attachment;
+    private byte[] txCode;
 
     private byte[] rlpEncoded;
-    private boolean isParse;
+    private boolean isParsed;
 
     /**
      * construct txdata.
      * @param type tx message type.
-     * @param announcement Description of the magnet link, Receiver, BootStrapNode, Community Announcement.
-     * @param attachment Magnet link, Amount, Nil of boostrapnoode and community announcement.
+     * @param txCode Description of txdata.
      */
-    public TxData (MsgType type,String announcement,String attachment){
-        if (type != MsgType.TorrentPublish && type != MsgType.BootStrapNodeAnnouncement
-            && type != MsgType.Wiring && type != MsgType.CommunityAnnouncement ) {
+    public TxData (MsgType type,byte[] txCode){
+        if (type != MsgType.RegularForum && type != MsgType.ForumComment && type != MsgType.DHTBootStrapNodeAnnouncement
+            && type != MsgType.Wiring && type != MsgType.CommunityAnnouncement && type != MsgType.IdentityAnnouncement) {
             throw new IllegalArgumentException("illegal tx type");
         }
-        if (announcement.getBytes().length >= ChainParam.AnnounceLength){
-            throw  new IllegalArgumentException("announcement size large than: "+ ChainParam.AnnounceLength);
-        }
-        if (attachment.getBytes().length >= ChainParam.AttachLength){
-            throw new IllegalArgumentException("attachment size large than: "+ ChainParam.AttachLength);
+        if (txCode.length > ChainParam.ForumMsgLength){
+            throw  new IllegalArgumentException("announcement size large than: "+ ChainParam.ForumMsgLength);
         }
 
         this.msgType = type;
-        this.annoucement = announcement;
-        this.attachment = attachment;
-        isParse = true;
+        this.txCode = txCode;
+        isParsed = true;
     }
 
     public TxData(byte[] rlpEncoded){
         this.rlpEncoded = rlpEncoded;
-        isParse = false;
+        isParsed = false;
     }
 
     /**
@@ -66,9 +61,8 @@ public class TxData {
     public byte[] getEncoded(){
         if(rlpEncoded == null) {
             byte[] msgtype = RLP.encodeByte(this.msgType.getVaLue());
-            byte[] announcement = RLP.encodeString(this.annoucement);
-            byte[] attachment = RLP.encodeString(this.attachment);
-            this.rlpEncoded = RLP.encodeList(msgtype,announcement,attachment);
+            byte[] txcode = RLP.encodeElement(this.txCode);
+            this.rlpEncoded = RLP.encodeList(msgtype,txcode);
         }
         return this.rlpEncoded;
     }
@@ -77,15 +71,14 @@ public class TxData {
      * parse txdata.
      */
     private void parseRLP(){
-        if(isParse){
+        if(isParsed){
              return;
         }else{
             RLPList list = RLP.decode2(this.rlpEncoded);
             RLPList txdata = (RLPList) list.get(0);
             this.msgType = MsgType.setValue(txdata.get(0).getRLPData()==null?0:txdata.get(0).getRLPData()[0]);
-            this.annoucement = new String(txdata.get(1).getRLPData());
-            this.attachment = new String(txdata.get(2).getRLPData());
-            isParse = true;
+            this.txCode = txdata.get(1).getRLPData();
+            isParsed = true;
         }
     }
 
@@ -94,17 +87,17 @@ public class TxData {
      * @return
      */
     public MsgType getMsgType(){
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         return this.msgType;
     }
 
     /**
-     * get announcement.
+     * get txCode.
      * @return
      */
-    public String getAnnoucement(){
-        if(!isParse) parseRLP();
-        return this.annoucement;
+    public byte[] getTxCode(){
+        if(!isParsed) parseRLP();
+        return this.txCode;
     }
 
     /**
@@ -112,19 +105,37 @@ public class TxData {
      * @return
      */
     public byte[] getReceiver(){
-        if(!isParse) parseRLP();
+        if(!isParsed) parseRLP();
         if(this.msgType == MsgType.Wiring){
-            return this.annoucement.getBytes();
+            WireTransaction wtx = new WireTransaction(this.txCode);
+            return wtx.getReceiverPubkey();
         }
         return null;
     }
 
     /**
-     * get attachment.
+     * get wire amount.
      * @return
      */
-    public String getAttachment(){
-        if(!isParse) parseRLP();
-        return this.attachment;
+    public long getAmount(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.Wiring){
+            WireTransaction wtx = new WireTransaction(this.txCode);
+            return wtx.getAmount();
+        }
+        return 0;
+    }
+
+    /**
+     * validate txData(message type and txCode)
+     * @return
+     */
+    public boolean isTxDataValidate(){
+        if(!isParsed) parseRLP();
+        if(msgType == MsgType.RegularForum){
+            Note ref = new Note(this.txCode);
+            return ref.isValidateMsg();
+        }
+        return true;
     }
 }

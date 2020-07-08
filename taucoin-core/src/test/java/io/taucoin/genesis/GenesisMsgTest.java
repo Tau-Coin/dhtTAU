@@ -29,7 +29,7 @@ import io.taucoin.param.ChainParam;
 
 public class GenesisMsgTest {
     private static final Logger log = LoggerFactory.getLogger("genesisTest");
-    private static final BigInteger defaultValue = new BigInteger("500000000000000");
+    private static final BigInteger defaultValue = new BigInteger("250000000000000");
     private static final BigInteger genesisPower = BigInteger.ZERO;
     private static final String pubkeyA= "18dc4ee9316770f261ca17cd3bbf319301a9f0930be3abcffbb73e73a50d9fb1";
     private static final String pubkeyB= "c798fc91a403bcfc6db20ffb3c1d9f5952efcb8e09b4097338cb7974993a210c";
@@ -53,14 +53,15 @@ public class GenesisMsgTest {
    @Test
     public void createGenesisMsg(){
        GenesisMsg msg = new GenesisMsg();
-       msg.setDescription("community chain...");
+       msg.setDescription("community chain...uu");
        GenesisItem item = new GenesisItem(defaultValue,genesisPower);
        msg.appendAccount(pubkeyA,item);
        msg.appendAccount(pubkeyB,item);
        msg.appendAccount(pubkeyC,item);
        msg.appendAccount(pubkeyD,item);
        String encodeStr= ByteUtil.toHexString(msg.getEncoded());
-       log.debug(encodeStr);
+       log.debug("msg size is: "+encodeStr.length()/2);
+       log.debug("is validate: "+ msg.validateGenesisMsg());
    }
 
    @Test

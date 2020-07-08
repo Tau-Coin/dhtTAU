@@ -18,12 +18,20 @@ package io.taucoin.types;
 
 /**
  * transaction type used to create transaction.
+ * 0:Regular forum message.
+ * 1:forum message comment.
+ * 2:Community Announcement message.
+ * 3:bootstrap node Announcement.
+ * 4:wire transaction.
+ * 5:Identity Announcement.
  */
 public enum MsgType {
-    TorrentPublish(0),
-    Wiring(1),
-    BootStrapNodeAnnouncement(2),
-    CommunityAnnouncement(3);
+    RegularForum(0),
+    ForumComment(1),
+    CommunityAnnouncement(2),
+    DHTBootStrapNodeAnnouncement(3),
+    Wiring(4),
+    IdentityAnnouncement(5);
     int index;
     MsgType(int value){
         this.index = value;
@@ -33,13 +41,17 @@ public enum MsgType {
     }
     public static MsgType setValue(byte value){
         if (value == 0){
-            return TorrentPublish;
+            return RegularForum;
         }else if (value == 1){
-            return Wiring;
+            return ForumComment;
         }else if (value == 2){
-            return BootStrapNodeAnnouncement;
-        }else if (value == 3){
             return CommunityAnnouncement;
+        }else if (value == 3){
+            return DHTBootStrapNodeAnnouncement;
+        }else if (value == 4){
+            return Wiring;
+        }else if (value == 5){
+            return IdentityAnnouncement;
         }
         return null;
     }

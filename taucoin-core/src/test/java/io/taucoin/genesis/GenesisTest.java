@@ -43,6 +43,7 @@ public class GenesisTest {
     @Test
     public void createTauGenesis(){
         Genesis genesis = new Genesis(cf);
+        log.debug("is genesis block validate??: "+genesis.isGenesisParamValidate());
         log.debug(ByteUtil.toHexString(genesis.getEncoded()));
     }
 
@@ -50,9 +51,11 @@ public class GenesisTest {
     public void createCommunityGenesis(){
         Genesis genesis = new Genesis(ccf);
 
+        log.debug("is genesis block validate?: "+genesis.isGenesisParamValidate());
         log.debug("signature: "+genesis.signGenesisblock(ByteUtil.toByte(minerprikey)));
         String str = ByteUtil.toHexString(genesis.getEncoded());
         log.debug(str);
+        log.debug("is genesis block validate??: "+genesis.isGenesisParamValidate());
         log.debug("size is: "+str.length()/2 +" bytes");
         log.debug("is signed genesis: "+genesis.verifyGenesisSig());
         log.debug("genesis hash is: "+ByteUtil.toHexString(genesis.getGenesisHash()));
