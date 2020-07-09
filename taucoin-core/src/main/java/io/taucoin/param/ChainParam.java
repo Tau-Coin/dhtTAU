@@ -59,4 +59,7 @@ public class ChainParam {
     // range
     public static final int MUTABLE_RANGE = 864; // 3 days
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
+
+    // transaction pool
+    public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
 }

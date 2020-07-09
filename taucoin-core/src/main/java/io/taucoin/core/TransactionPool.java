@@ -14,6 +14,16 @@ public interface TransactionPool {
     void init();
 
     /**
+     * re-init the pool
+     */
+    void reinit();
+
+    /**
+     * clear the pool
+     */
+    void clearPool();
+
+    /**
      * add local transaction into pool
      * @param tx
      */
@@ -78,16 +88,16 @@ public interface TransactionPool {
      */
     int size();
 
-    /**
-     * It should be called on each block imported as <b>BEST</b> <br>
-     * Does several things:
-     * <ul>
-     *     <li>removes block's txs from pool</li>
-     *     <li>removes outdated txs</li>
-     * </ul>
-     * @param block block imported into blockchain as a <b>BEST</b> one
-     */
-    void processBest(Block block);
+//    /**
+//     * It should be called on each block imported as <b>BEST</b> <br>
+//     * Does several things:
+//     * <ul>
+//     *     <li>removes block's txs from pool</li>
+//     *     <li>removes outdated txs</li>
+//     * </ul>
+//     * @param block block imported into blockchain as a <b>BEST</b> one
+//     */
+//    void processBest(Block block);
 
     /**
      * get a transaction by txid
@@ -102,16 +112,35 @@ public interface TransactionPool {
     long getMaxFee();
 
     /**
-     * remove transaction by hash
-     * @param txid
+     * remove a transaction from pool
+     * @param tx transaction to be removed
      */
-    void removeTransactionByHash(byte[] txid);
+    void removeTransactionFromPool(Transaction tx);
+
+//    /**
+//     * remove transaction by hash
+//     * @param txid
+//     */
+//    void removeTransactionByHash(byte[] txid);
+//
+//    /**
+//     * remove transaction by account
+//     * @param pubKey
+//     */
+//    void removeTransactionByAccount(byte[] pubKey);
 
     /**
-     * remove transaction by account
-     * @param pubKey
+     * check if a transaction is in pool
+     * @param txid target to check
+     * @return
      */
-    void removeTransactionByAccount(byte[] pubKey);
+    boolean isInPool(byte[] txid);
+
+    /**
+     * try to slim down the pool
+     * when pool size is over 3 * mutable range, keep half of it
+     */
+    void trySlimDownPool();
 
 }
 
