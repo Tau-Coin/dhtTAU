@@ -29,6 +29,7 @@ public class RepositoryHelper {
     private static CommunityRepositoryImpl communityRepo;
     private static MemberRepositoryImpl memberRepo;
     private static UserRepositoryImpl userRepo;
+    private static TxRepositoryImpl txRepo;
 
     /**
      * 获取CommunityRepository单例
@@ -67,5 +68,18 @@ public class RepositoryHelper {
                     AppDatabase.getInstance(appContext));
 
         return userRepo;
+    }
+
+    /**
+     * 获取TxRepository单例
+     * @param appContext 上下文
+     * @return TxRepository
+     */
+    public synchronized static TxRepository getTxRepository(@NonNull Context appContext) {
+        if (txRepo == null)
+            txRepo = new TxRepositoryImpl(appContext,
+                    AppDatabase.getInstance(appContext));
+
+        return txRepo;
     }
 }

@@ -115,12 +115,12 @@
             <include layout="@layout/view_line"/>
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_invited_friends"
+                android:id="@+id/item_share"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:onClick="onClick"
                 app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/drawer_invited_friends"/>
+                app:rightText="@string/drawer_share"/>
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_faq"

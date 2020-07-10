@@ -41,7 +41,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:includeFontPadding="false"
-                android:onClick="@{listener.onClick}"
+                android:onClick="@{listener::onClick}"
                 android:layout_marginTop="10dp"
                 android:gravity="center_vertical"
                 android:text="@string/setting_blacklist_users"
@@ -55,7 +55,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:includeFontPadding="false"
-                android:onClick="@{listener.onClick}"
+                android:onClick="@{listener::onClick}"
                 android:gravity="center_vertical"
                 android:text="@string/setting_blacklist_communities"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>

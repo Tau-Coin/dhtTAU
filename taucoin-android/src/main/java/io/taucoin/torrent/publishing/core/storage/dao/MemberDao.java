@@ -12,7 +12,7 @@ import io.taucoin.torrent.publishing.core.storage.entity.Member;
 @Dao
 public interface MemberDao {
     String QUERY_GET_COMMUNITIES_NOT_BLOCKED = "SELECT * FROM Community where blocked = 0";
-    String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Community WHERE chainId = :chainId";
+    String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Community WHERE chainID = :chainID";
 
     /**
      * 添加新社区成员

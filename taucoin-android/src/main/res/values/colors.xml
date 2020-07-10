@@ -64,13 +64,4 @@
 
     <color name="color_black">#000000</color>
     <color name="color_black_light">#454545</color>
-
-    <array name="group_color">
-        <item>#98A190</item>
-        <item>#A79587</item>
-        <item>#F3CED6</item>
-        <item>#9F4E55</item>
-        <item>#C9BDD3</item>
-        <item>#7C7386</item>
-    </array>
 </resources>

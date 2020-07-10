@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey;
 public class Community implements Parcelable {
     @NonNull
     @PrimaryKey
-    public String chainId;                  // 社区的chainId
+    public String chainID;                  // 社区的chainID
     @NonNull
     public String communityName;            // 社区名字
     public String coinName;                 // 社区币名
@@ -41,7 +41,7 @@ public class Community implements Parcelable {
 
     @Ignore
     protected Community(Parcel in) {
-        chainId = in.readString();
+        chainID = in.readString();
         communityName = in.readString();
         coinName = in.readString();
         publicKey = in.readString();
@@ -55,7 +55,7 @@ public class Community implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(chainId);
+        dest.writeString(chainID);
         dest.writeString(communityName);
         dest.writeString(coinName);
         dest.writeString(publicKey);
@@ -86,11 +86,11 @@ public class Community implements Parcelable {
 
     @Override
     public int hashCode() {
-        return chainId.hashCode();
+        return chainID.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Community && (o == this || chainId.equals(((Community)o).chainId));
+        return o instanceof Community && (o == this || chainID.equals(((Community)o).chainID));
     }
 }

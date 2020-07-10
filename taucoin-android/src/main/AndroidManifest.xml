@@ -55,6 +55,9 @@
             android:name=".ui.community.CommunitySettingActivity"/>
 
         <activity
+            android:name=".ui.community.CommunityChooseActivity"/>
+
+        <activity
             android:name=".ui.contacts.ContactsActivity"/>
 
         <activity
@@ -74,6 +77,12 @@
 
         <activity
             android:name=".ui.user.SeedActivity"/>
+
+        <activity
+            android:name=".ui.transaction.NicknameActivity"/>
+
+        <activity
+            android:name=".ui.transaction.TransactionCreateActivity"/>
 
     </application>
 

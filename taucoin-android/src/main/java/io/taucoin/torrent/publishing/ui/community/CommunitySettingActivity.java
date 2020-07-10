@@ -43,7 +43,7 @@ public class CommunitySettingActivity extends BaseActivity {
      */
     private void initLayout() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.main_new_community);
+        binding.toolbarInclude.toolbar.setTitle(R.string.main_community_settings);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
@@ -79,7 +79,7 @@ public class CommunitySettingActivity extends BaseActivity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_community_create, menu);
+        getMenuInflater().inflate(R.menu.menu_done, menu);
         return true;
     }
 
@@ -89,7 +89,7 @@ public class CommunitySettingActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // 社区更多设置确认事件
-        if (item.getItemId() == R.id.menu_community_create) {
+        if (item.getItemId() == R.id.menu_done) {
             Community community = buildCommunity();
             boolean isAnnounce = binding.cbAnnounce.isChecked();
             // 返回上个页面的传递数据

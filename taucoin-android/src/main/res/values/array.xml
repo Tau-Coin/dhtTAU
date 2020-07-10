@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="group_color">
+        <item>#98A190</item>
+        <item>#A79587</item>
+        <item>#F3CED6</item>
+        <item>#9F4E55</item>
+        <item>#C9BDD3</item>
+        <item>#7C7386</item>
+    </array>
+
+    <string-array name="tx_type_name">
+        <item>RegularForum</item>
+        <item>ForumComment</item>
+        <item>CommunityAnnouncement</item>
+        <item>DHTBootStrapNodeAnnouncement</item>
+        <item>Normal</item>
+        <item>IdentityAnnouncement</item>
+    </string-array>
+</resources>

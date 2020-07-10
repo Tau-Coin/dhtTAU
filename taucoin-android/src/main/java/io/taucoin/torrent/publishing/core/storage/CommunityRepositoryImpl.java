@@ -41,8 +41,8 @@ public class CommunityRepositoryImpl implements CommunityRepository{
 //    }
 //
 //    @Override
-//    public Community getCommunityByChainId(@NonNull String chainId) {
-//        return db.communityDao().getCommunityByChainId(chainId);
+//    public Community getCommunityBychainID(@NonNull String chainID) {
+//        return db.communityDao().getCommunityBychainID(chainID);
 //    }
 
     /**
@@ -64,21 +64,29 @@ public class CommunityRepositoryImpl implements CommunityRepository{
 
     /**
      * 添加社区黑名单实现
-     * @param chainId 社区chainId
+     * @param chainID 社区chainID
      * @param blacklist 是否加入黑名单
      */
     @Override
-    public void setCommunityBlacklist(String chainId, boolean blacklist) {
-        db.communityDao().setCommunityBlacklist(chainId, blacklist ? 1 : 0);
+    public void setCommunityBlacklist(String chainID, boolean blacklist) {
+        db.communityDao().setCommunityBlacklist(chainID, blacklist ? 1 : 0);
     }
 
     /**
      * 设置社区是否静音实现
-     * @param chainId 社区chainId
+     * @param chainID 社区chainID
      * @param isMute 是否静音
      */
     @Override
-    public void setCommunityMute(String chainId, boolean isMute){
-        db.communityDao().setCommunityMute(chainId, isMute ? 1 : 0);
+    public void setCommunityMute(String chainID, boolean isMute){
+        db.communityDao().setCommunityMute(chainID, isMute ? 1 : 0);
+    }
+
+    /**
+     * 获取用户加入的社区列表
+     * @param chainID
+     */
+    public List<Community> getJoinedCommunityList(String chainID){
+        return db.communityDao().getJoinedCommunityList();
     }
 }
