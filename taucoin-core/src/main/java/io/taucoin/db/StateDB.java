@@ -173,12 +173,13 @@ public class StateDB implements Repository{
     /**
      * get self transaction pool
      * @param chainID
+     * @param pubKey
      * @return
      * @throws Exception
      */
     @Override
-    public Set<Transaction> getSelfTxPool(byte[] chainID) throws Exception {
-        Set<byte[]> keys = db.retrieveKeysWithPrefix(PrefixKey.txPoolPrefix(chainID));
+    public Set<Transaction> getSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception {
+        Set<byte[]> keys = db.retrieveKeysWithPrefix(PrefixKey.txPoolPrefix(chainID, pubKey));
         if (null != keys) {
             Set<Transaction> txs = new HashSet<>();
             for (byte[] key: keys) {
@@ -198,17 +199,18 @@ public class StateDB implements Repository{
      */
     @Override
     public void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws Exception {
-        db.put(PrefixKey.txPoolKey(chainID, tx.getTxID()), tx.getEncoded());
+        db.put(PrefixKey.txPoolKey(chainID, tx.getSenderPubkey(), tx.getTxID()), tx.getEncoded());
     }
 
     /**
      * delete self transaction pool
      * @param chainID
+     * @param pubKey
      * @throws Exception
      */
     @Override
-    public void deleteSelfTxPool(byte[] chainID) throws Exception {
-        db.delete(PrefixKey.txPoolPrefix(chainID));
+    public void deleteSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception {
+        db.delete(PrefixKey.txPoolPrefix(chainID, pubKey));
     }
 
     /**

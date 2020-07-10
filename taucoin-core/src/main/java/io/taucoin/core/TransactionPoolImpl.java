@@ -2,7 +2,6 @@ package io.taucoin.core;
 
 import io.taucoin.db.Repository;
 import io.taucoin.param.ChainParam;
-import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -23,9 +22,9 @@ public class TransactionPoolImpl implements TransactionPool {
     // all transaction: txid <-> transaction
     private Map<ByteArrayWrapper, Transaction> all = new HashMap<>();
     // local transaction queue
-    private PriorityQueue<LocalTxEntry> locals = new PriorityQueue<>(1, new LocalTxPolicy());
+    public PriorityQueue<LocalTxEntry> locals = new PriorityQueue<>(1, new LocalTxPolicy());
     // remote transaction queue
-    private PriorityQueue<MemoryPoolEntry> remotes = new PriorityQueue<>(1, new MemoryPoolPolicy());
+    public PriorityQueue<MemoryPoolEntry> remotes = new PriorityQueue<>(1, new MemoryPoolPolicy());
     // remote account transaction: pubKey <-> txid
     private Map<ByteArrayWrapper, byte[]> accountTx = new HashMap<>();
 
@@ -70,7 +69,7 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     private void getSelfTxsFromDB() {
         try {
-            Set<Transaction> transactionSet = this.repository.getSelfTxPool(chainID);
+            Set<Transaction> transactionSet = this.repository.getSelfTxPool(chainID, userPubKey);
             if (null != transactionSet) {
                 long currentNonce = getNonce(userPubKey);
                 for (Transaction transaction: transactionSet) {
@@ -120,6 +119,7 @@ public class TransactionPoolImpl implements TransactionPool {
         }
 
         long currentNonce = getNonce(this.userPubKey);
+
         if (tx.getNonce() > currentNonce) {
             // put into pool
             all.put(new ByteArrayWrapper(tx.getTxID()), tx);
@@ -469,7 +469,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * Keep half of the transaction with a relatively large fee
      */
-    private void slimDownPool() {
+    public void slimDownPool() {
         int size = remotes.size();
 
         PriorityQueue<MemoryPoolEntry> originalRemotes = remotes;

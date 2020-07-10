@@ -4,6 +4,7 @@ import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
@@ -36,5 +37,13 @@ public class MemoryPoolEntry {
     @Override
     public int hashCode() {
         return Arrays.hashCode(txid);
+    }
+
+    @Override
+    public String toString() {
+        return "MemoryPoolEntry{" +
+                "txid=" + Hex.toHexString(txid) +
+                ", fee=" + fee +
+                '}';
     }
 }

@@ -127,10 +127,11 @@ public interface Repository {
     /**
      * get self transaction pool
      * @param chainID
+     * @param pubKey public key
      * @return
      * @throws Exception
      */
-    Set<Transaction> getSelfTxPool(byte[] chainID) throws Exception;
+    Set<Transaction> getSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception;
 
     /**
      * put transaction into pool
@@ -143,9 +144,10 @@ public interface Repository {
     /**
      * delete self transaction pool
      * @param chainID
+     * @param pubKey
      * @throws Exception
      */
-    void deleteSelfTxPool(byte[] chainID) throws Exception;
+    void deleteSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception;
 
     /**
      * set immutable point block hash

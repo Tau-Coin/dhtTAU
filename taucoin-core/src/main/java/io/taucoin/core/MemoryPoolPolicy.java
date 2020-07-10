@@ -17,10 +17,10 @@ public class MemoryPoolPolicy implements Comparator<MemoryPoolEntry> {
         }
 
         if (entry1.fee > entry2.fee ) {
-            return 1;
+            return -1;
         }
 
-        return -1;
+        return 1;
     }
 
     @Override

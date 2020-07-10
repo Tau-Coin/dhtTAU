@@ -3,6 +3,7 @@ package io.taucoin.core;
 import io.taucoin.types.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
@@ -39,5 +40,14 @@ public class LocalTxEntry {
     @Override
     public int hashCode() {
         return Arrays.hashCode(txid);
+    }
+
+    @Override
+    public String toString() {
+        return "LocalTxEntry{" +
+                "txid=" + Hex.toHexString(txid) +
+                ", timestamp=" + timestamp +
+                ", nonce=" + nonce +
+                '}';
     }
 }

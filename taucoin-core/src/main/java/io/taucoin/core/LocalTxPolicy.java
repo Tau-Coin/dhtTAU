@@ -17,14 +17,14 @@ public class LocalTxPolicy implements Comparator<LocalTxEntry> {
         }
 
         if (entry1.nonce < entry2.nonce) {
-            return 1;
+            return -1;
         } else if (entry1.nonce == entry2.nonce) {
             if (entry1.timestamp > entry2.timestamp) {
-                return 1;
+                return -1;
             }
         }
 
-        return -1;
+        return 1;
     }
 
     @Override

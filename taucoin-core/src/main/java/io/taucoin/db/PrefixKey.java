@@ -4,15 +4,15 @@ import io.taucoin.util.ByteUtil;
 
 public class PrefixKey {
     // prefix
-    private static final byte[] block = "B".getBytes();
-    private static final byte[] bestBlock = "b".getBytes();
-    public static final byte[] chain = "C".getBytes();
-    private static final byte[] blockInfo = "I".getBytes();
-    private static final byte[] immutablePointBlockHash = "i".getBytes();
-    private static final byte[] mutableRange = "M".getBytes();
-    private static final byte[] peer = "P".getBytes();
-    private static final byte[] txPool = "T".getBytes();
-    private static final byte[] votesCountingPointBlockHash = "V".getBytes();
+    private static final byte[] block = "B-".getBytes();
+    private static final byte[] bestBlock = "b-".getBytes();
+    public static final byte[] chain = "C-".getBytes();
+    private static final byte[] blockInfo = "I-".getBytes();
+    private static final byte[] immutablePointBlockHash = "i-".getBytes();
+    private static final byte[] mutableRange = "M-".getBytes();
+    private static final byte[] peer = "P-".getBytes();
+    private static final byte[] txPool = "T-".getBytes();
+    private static final byte[] votesCountingPointBlockHash = "V-".getBytes();
 
     /**
      * chain key: 'Chain' + chainID
@@ -101,28 +101,31 @@ public class PrefixKey {
     }
 
     /**
-     * tx pool prefix: chainID + 'TxPool'
+     * tx pool prefix: chainID + 'txPool' + pubKey
      * @param chainID
      * @return
      */
-    public static byte[] txPoolPrefix(byte[] chainID) {
-        byte[] prefix = new byte[chainID.length + txPool.length];
+    public static byte[] txPoolPrefix(byte[] chainID, byte[] pubKey) {
+        byte[] prefix = new byte[chainID.length + txPool.length + pubKey.length];
         System.arraycopy(chainID, 0, prefix, 0, chainID.length);
         System.arraycopy(txPool, 0, prefix, chainID.length, txPool.length);
+        System.arraycopy(pubKey, 0, prefix, chainID.length + txPool.length, pubKey.length);
         return prefix;
     }
 
     /**
-     * tx pool key: chainID + 'txPool' + txid
+     * tx pool key: chainID + 'txPool' + pubKey + txid
      * @param chainID
+     * @param pubKey
      * @param txid
      * @return
      */
-    public static byte[] txPoolKey(byte[] chainID, byte[] txid) {
-        byte[] key = new byte[chainID.length + txPool.length + txid.length];
+    public static byte[] txPoolKey(byte[] chainID, byte[] pubKey, byte[] txid) {
+        byte[] key = new byte[chainID.length + txPool.length + pubKey.length + txid.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
         System.arraycopy(txPool, 0, key, chainID.length, txPool.length);
-        System.arraycopy(txid, 0, key, chainID.length + txPool.length, txid.length);
+        System.arraycopy(pubKey, 0, key, chainID.length + txPool.length, pubKey.length);
+        System.arraycopy(txid, 0, key, chainID.length + txPool.length + pubKey.length, txid.length);
         return key;
     }
 
