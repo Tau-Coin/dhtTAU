@@ -3,9 +3,6 @@ package io.taucoin.torrent.publishing.ui.main;
 import android.os.Bundle;
 import android.view.View;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.view.GravityCompat;
 import androidx.databinding.DataBindingUtil;
@@ -34,7 +31,6 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
  * APP主页面：包含左侧抽屉页面，顶部工具栏，群组列表
  */
 public class MainActivity extends BaseActivity {
-    private static final Logger logger = LoggerFactory.getLogger("MainActivity");
     private ActivityMainDrawerBinding binding;
     private ActionBarDrawerToggle toggle;
 
@@ -147,7 +143,7 @@ public class MainActivity extends BaseActivity {
             case R.id.item_setting:
                 ActivityUtil.startActivity(this, SettingActivity.class);
                 break;
-            case R.id.item_invited_friends:
+            case R.id.item_share:
                 break;
             case R.id.item_faq:
                 break;

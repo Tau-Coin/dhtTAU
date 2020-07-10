@@ -16,26 +16,26 @@ public class Member implements Parcelable {
     @PrimaryKey(autoGenerate = true)
     public long id;                     // 自增id
     @NonNull
-    public String chainId;              // 成员所属社区的chainId
+    public String chainID;              // 成员所属社区的chainID
     @NonNull
     public String publicKey;            // 成员的公钥
 
-    public Member(@NonNull long id, @NonNull String chainId, @NonNull String publicKey){
+    public Member(@NonNull long id, @NonNull String chainID, @NonNull String publicKey){
         this.id = id;
-        this.chainId = chainId;
+        this.chainID = chainID;
         this.publicKey = publicKey;
     }
 
     protected Member(Parcel in) {
         id = in.readLong();
-        chainId = in.readString();
+        chainID = in.readString();
         publicKey = in.readString();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(id);
-        dest.writeString(chainId);
+        dest.writeString(chainID);
         dest.writeString(publicKey);
     }
 

@@ -39,8 +39,8 @@ public class UsersUtil {
      * @return 显示名字
      */
     public static String getShowName(@NonNull User user) {
-        if(StringUtil.isNotEmpty(user.noteName)){
-            return user.noteName;
+        if(StringUtil.isNotEmpty(user.localName)){
+            return user.localName;
         }else{
             return getDefaultName(user.publicKey);
         }

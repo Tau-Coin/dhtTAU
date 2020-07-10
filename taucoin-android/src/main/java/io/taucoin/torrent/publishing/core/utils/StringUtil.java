@@ -28,7 +28,7 @@ public class StringUtil {
         return str;
     }
 
-    public static boolean isEquals(String a, String b) {
+    public static boolean isEquals(CharSequence a, CharSequence b) {
         if (isEmpty(a)) {
             return isEmpty(b);
         } else if (isEmpty(b)) {
@@ -38,7 +38,7 @@ public class StringUtil {
         }
     }
 
-    public static boolean isNotEquals(String a, String b) {
+    public static boolean isNotEquals(CharSequence a, CharSequence b) {
         return !isEquals(a, b);
     }
 

@@ -48,7 +48,7 @@ public class Note {
      * validate object param size.
      * @return
      */
-    public boolean isValidateMsg(){
+    public boolean isValidateParamMsg(){
         if(forumMsg != null && forumMsg.getBytes().length > ChainParam.ForumMsgLength){
             return false;
         }

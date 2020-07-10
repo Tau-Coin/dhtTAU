@@ -17,29 +17,29 @@ public class User implements Parcelable {
     @PrimaryKey
     public String publicKey;                // 用户的公钥
     public String seed;                     // 用户的seed
-    public String noteName;                 // 用户本地备注名
+    public String localName;                // 用户本地备注名
     public boolean isCurrentUser = false;   // 是否是当前用户
     public long onlineTime;                 // 成员最后一次在线时间（成员发新的message或挖新的block时更新此值）
     public boolean blacklist = false;       // 成员是否被用户拉入黑名单
 
-    public User(@NonNull String publicKey, String seed, String noteName, boolean isCurrentUser){
+    public User(@NonNull String publicKey, String seed, String localName, boolean isCurrentUser){
         this.publicKey = publicKey;
         this.seed = seed;
-        this.noteName = noteName;
+        this.localName = localName;
         this.isCurrentUser = isCurrentUser;
     }
 
     @Ignore
-    public User(@NonNull String publicKey, String noteName){
+    public User(@NonNull String publicKey, String localName){
         this.publicKey = publicKey;
-        this.noteName = noteName;
+        this.localName = localName;
     }
 
     @Ignore
     protected User(Parcel in) {
         publicKey = in.readString();
         seed = in.readString();
-        noteName = in.readString();
+        localName = in.readString();
         isCurrentUser = in.readByte() != 0;
         onlineTime = in.readLong();
         blacklist = in.readByte() != 0;
@@ -49,7 +49,7 @@ public class User implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(publicKey);
         dest.writeString(seed);
-        dest.writeString(noteName);
+        dest.writeString(localName);
         dest.writeByte((byte) (isCurrentUser ? 1 : 0));
         dest.writeLong(onlineTime);
         dest.writeByte((byte) (blacklist ? 1 : 0));

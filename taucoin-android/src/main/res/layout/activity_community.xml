@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -14,7 +20,7 @@
             android:background="@color/color_bg"
             android:layout_below="@+id/toolbar_include"
             android:layout_above="@+id/ll_bottom_input"
-            android:id="@+id/message_list"
+            android:id="@+id/tx_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
@@ -49,6 +55,7 @@
                 android:id="@+id/iv_link"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
+                android:onClick="@{listener::onClick}"
                 android:layout_marginStart="10dp"
                 android:src="@mipmap/icon_copy"
                 android:contentDescription="@null"/>

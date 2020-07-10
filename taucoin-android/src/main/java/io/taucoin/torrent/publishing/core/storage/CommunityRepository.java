@@ -19,7 +19,7 @@ public interface CommunityRepository {
 
 //    int updateCommunity(@NonNull Community community);
 //
-//    Community getCommunityByChainId(@NonNull String chainId);
+//    Community getCommunityBychainID(@NonNull String chainID);
 
     /**
      * 观察不在黑名单的社区列表数据变化
@@ -35,15 +35,21 @@ public interface CommunityRepository {
 
     /**
      * 添加社区黑名单实现
-     * @param chainId 社区chainId
+     * @param chainID 社区chainID
      * @param blacklist 是否加入黑名单
      */
-    void setCommunityBlacklist(String chainId, boolean blacklist);
+    void setCommunityBlacklist(String chainID, boolean blacklist);
 
     /**
      * 设置社区是否静音实现
-     * @param chainId 社区chainId
+     * @param chainID 社区chainID
      * @param isMute 是否静音
      */
-    void setCommunityMute(String chainId, boolean isMute);
+    void setCommunityMute(String chainID, boolean isMute);
+
+    /**
+     * 获取用户加入的社区列表
+     * @param chainID
+     */
+    List<Community> getJoinedCommunityList(String chainID);
 }

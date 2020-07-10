@@ -104,7 +104,7 @@ public class Comment {
      * validate forum param.
      * @return
      */
-    public boolean isValidateComment(){
+    public boolean isValidateParamMsg(){
         if(!isParsed) parseRLP();
         if(this.reference.length != ChainParam.HashLength || this.comment.getBytes().length > ChainParam.DescriptionLength){
             return false;

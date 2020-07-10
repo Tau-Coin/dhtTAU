@@ -32,7 +32,7 @@ import io.taucoin.torrent.publishing.core.storage.entity.User;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 
 /**
- * 用户的ViewModel
+ * 用户相关的ViewModel
  */
 public class UserViewModel extends AndroidViewModel {
 

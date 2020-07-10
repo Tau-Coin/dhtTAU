@@ -17,9 +17,10 @@ import io.taucoin.torrent.publishing.core.storage.entity.Community;
 public interface CommunityDao {
     String QUERY_GET_COMMUNITIES_NOT_IN_BLACKLIST = "SELECT * FROM Community where blacklist = 0";
     String QUERY_GET_COMMUNITIES_IN_BLACKLIST = "SELECT * FROM Community where blacklist = 1";
-    String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Community WHERE chainId = :chainId";
-    String QUERY_ADD_COMMUNITY_BLACKLIST = "Update Community set blacklist =:blacklist WHERE chainId = :chainId";
-    String QUERY_SET_COMMUNITY_MUTE = "Update Community set mute =:mute WHERE chainId = :chainId";
+    String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Community WHERE chainID = :chainID";
+    String QUERY_ADD_COMMUNITY_BLACKLIST = "Update Community set blacklist =:blacklist WHERE chainID = :chainID";
+    String QUERY_SET_COMMUNITY_MUTE = "Update Community set mute =:mute WHERE chainID = :chainID";
+    String QUERY_JOINED_COMMUNITY = "SELECT * FROM Community";
 
     /**
      * 添加新的社区
@@ -34,10 +35,10 @@ public interface CommunityDao {
     int updateCommunity(Community community);
 
     /**
-     * 根据chainIdc查询社区
+     * 根据chainIDc查询社区
      */
     @Query(QUERY_GET_COMMUNITY_BY_CHAIN_ID)
-    Community getCommunityByChainId(String chainId);
+    Community getCommunityBychainID(String chainID);
 
     /**
      * 查询不在黑名单中的社区列表
@@ -55,12 +56,17 @@ public interface CommunityDao {
      * 添加社区黑名单
      */
     @Query(QUERY_ADD_COMMUNITY_BLACKLIST)
-    void setCommunityBlacklist(String chainId, int blacklist);
+    void setCommunityBlacklist(String chainID, int blacklist);
 
     /**
      * 设置社区是否静音
      */
     @Query(QUERY_SET_COMMUNITY_MUTE)
-    void setCommunityMute(String chainId, int mute);
+    void setCommunityMute(String chainID, int mute);
 
+    /**
+     * 获取用户加入的社区列表
+     */
+    @Query(QUERY_JOINED_COMMUNITY)
+    List<Community> getJoinedCommunityList();
 }

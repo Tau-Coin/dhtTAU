@@ -114,7 +114,7 @@ public class WireTransaction {
      * validate object param.
      * @return
      */
-    public boolean isValidateWireMsg(){
+    public boolean isValidateParamMsg(){
         if(!isParsed) parseRLP();
         if(this.receiverPubkey.length != ChainParam.PubkeyLength) return false;
         if(this.amount <0) return false;

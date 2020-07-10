@@ -1,6 +1,5 @@
 package io.taucoin.torrent.publishing.ui.community;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -127,7 +126,7 @@ public class CommunityCreateActivity extends BaseActivity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_community_create, menu);
+        getMenuInflater().inflate(R.menu.menu_done, menu);
         return true;
     }
 
@@ -137,7 +136,7 @@ public class CommunityCreateActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // 添加新社区处理事件
-        if (item.getItemId() == R.id.menu_community_create) {
+        if (item.getItemId() == R.id.menu_done) {
             String communityName = ViewUtils.getText(binding.etCommunityName);
             String publicKey = ViewUtils.getText(binding.tvPublicKey);
             if(community == null){

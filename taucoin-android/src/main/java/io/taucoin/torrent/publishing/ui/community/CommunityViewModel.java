@@ -4,8 +4,6 @@ import android.app.Application;
 
 import com.github.naturs.logger.Logger;
 
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -23,8 +21,6 @@ import io.taucoin.config.ChainConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
-import io.taucoin.torrent.publishing.core.utils.ViewUtils;
-import io.taucoin.torrent.publishing.databinding.ActivityCommunityCreateBinding;
 import io.taucoin.torrent.publishing.core.storage.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
@@ -40,9 +36,14 @@ public class CommunityViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> setBlacklistState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setMuteState = new MutableLiveData<>();
     private MutableLiveData<List<Community>> blackList = new MutableLiveData<>();
+    private MutableLiveData<List<Community>> joinedList = new MutableLiveData<>();
     public CommunityViewModel(@NonNull Application application) {
         super(application);
         communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
+    }
+
+    public MutableLiveData<List<Community>> getJoinedList() {
+        return joinedList;
     }
 
     /**
@@ -88,10 +89,10 @@ public class CommunityViewModel extends AndroidViewModel {
                 // TODO: 1、TauController:创建Community社区
                 ChainConfig chainConfig = ChainConfig.NewChainConfig((byte)1, community.communityName, community.blockInAvg,
                         community.publicKey , "", null);
-                community.chainId = new String(chainConfig.getChainid());
+                community.chainID = new String(chainConfig.getChainid());
                 communityRepo.addCommunity(community);
                 Logger.d("Add community to database: communityName=%s, chainID=%s",
-                        community.communityName, community.chainId);
+                        community.communityName, community.chainID);
 
                 if(isAnnounce){
                     // TODO: 2、TauController:Announce on TAU
@@ -130,12 +131,12 @@ public class CommunityViewModel extends AndroidViewModel {
 
     /**
      * 设置社区黑名单
-     * @param chainId 社区chainId
+     * @param chainID 社区chainID
      * @param blacklist 是否加入黑名单
      */
-    public void setCommunityBlacklist(String chainId, boolean blacklist) {
+    public void setCommunityBlacklist(String chainID, boolean blacklist) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
-            communityRepo.setCommunityBlacklist(chainId, blacklist);
+            communityRepo.setCommunityBlacklist(chainID, blacklist);
             emitter.onNext(true);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -147,12 +148,12 @@ public class CommunityViewModel extends AndroidViewModel {
 
     /**
      * 设置社区是否静音
-     * @param chainId 社区chainId
+     * @param chainID 社区chainID
      * @param isMute 是否静音
      */
-    void setCommunityMute(String chainId, boolean isMute) {
+    void setCommunityMute(String chainID, boolean isMute) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
-            communityRepo.setCommunityMute(chainId, isMute);
+            communityRepo.setCommunityMute(chainID, isMute);
             emitter.onNext(true);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -174,6 +175,22 @@ public class CommunityViewModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(list -> blackList.postValue(list));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 获取用户加入的社区列表
+     * @param chainID
+     */
+    void getJoinedCommunityList(String chainID) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<Community>>) emitter -> {
+            List<Community> list = communityRepo.getJoinedCommunityList(chainID);
+            emitter.onNext(list);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(list -> joinedList.postValue(list));
         disposables.add(disposable);
     }
 }

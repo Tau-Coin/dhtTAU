@@ -2,9 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:id="@+id/menu_community_create"
+    <item android:id="@+id/menu_done"
         app:showAsAction="ifRoom"
         android:icon="@mipmap/icon_done"
-        android:title="@string/menu_community_create" />
+        android:title="@string/menu_done" />
 
 </menu>

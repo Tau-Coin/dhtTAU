@@ -12,14 +12,9 @@
         android:icon="@mipmap/ic_download_grey600_24dp"
         android:title="@string/menu_settings" />
 
-    <item android:id="@+id/menu_unmute"
+    <item android:id="@+id/menu_invite_friends"
         app:showAsAction="never|withText"
         android:icon="@mipmap/ic_download_grey600_24dp"
-        android:title="@string/menu_unmute" />
-
-    <item android:id="@+id/menu_mute"
-        app:showAsAction="never|withText"
-        android:icon="@mipmap/ic_download_grey600_24dp"
-        android:title="@string/menu_mute" />
+        android:title="@string/menu_invite_friends" />
 
 </menu>

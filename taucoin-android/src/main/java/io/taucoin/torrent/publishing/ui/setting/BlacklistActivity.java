@@ -93,7 +93,7 @@ public class BlacklistActivity extends BaseActivity {
 
             Parcelable item = adapter.getItemKey(adapterPosition);
             if(item instanceof Community){
-                communityViewModel.setCommunityBlacklist(((Community) item).chainId, false);
+                communityViewModel.setCommunityBlacklist(((Community) item).chainID, false);
             }else if(item instanceof User){
                 userViewModel.setUserBlacklist(((User) item).publicKey, false);
             }
