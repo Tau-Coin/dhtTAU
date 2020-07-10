@@ -101,6 +101,19 @@ public class TxData {
     }
 
     /**
+     * get msg about note tx.
+     * @return
+     */
+    public String getNoteMsg(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.RegularForum){
+            Note note = new Note(this.txCode);
+            return note.getForumMsg();
+        }
+        return "";
+    }
+
+    /**
      * get receiver about wire tx.
      * @return
      */
@@ -132,10 +145,35 @@ public class TxData {
      */
     public boolean isTxDataValidate(){
         if(!isParsed) parseRLP();
-        if(msgType == MsgType.RegularForum){
-            Note ref = new Note(this.txCode);
-            return ref.isValidateMsg();
+        boolean retval;
+        switch (msgType){
+            case RegularForum:
+                Note note = new Note(this.txCode);
+                retval = note.isValidateParamMsg();
+                break;
+            case ForumComment:
+                Comment comment = new Comment(this.txCode);
+                retval = comment.isValidateParamMsg();
+                break;
+            case CommunityAnnouncement:
+                CommunityAnnouncement commAnnouncement = new CommunityAnnouncement(this.txCode);
+                retval = commAnnouncement.isValidateParamMsg();
+                break;
+            case DHTBootStrapNodeAnnouncement:
+                DHTbootstrapNodeAnnouncement dhtAnnouncement = new DHTbootstrapNodeAnnouncement(this.txCode);
+                retval = dhtAnnouncement.isValidateParamMsg();
+                break;
+            case Wiring:
+                WireTransaction wtx = new WireTransaction(this.txCode);
+                retval = wtx.isValidateParamMsg();
+                break;
+            case IdentityAnnouncement:
+                IdentityAnnouncement identityAnnouncement = new IdentityAnnouncement(this.txCode);
+                retval = identityAnnouncement.isValidateParamMsg();
+                break;
+            default:
+                retval = false;
         }
-        return true;
+        return retval;
     }
 }

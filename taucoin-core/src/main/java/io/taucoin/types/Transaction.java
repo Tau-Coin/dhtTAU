@@ -45,7 +45,7 @@ public class Transaction {
      * construct complete tx with signature.
      * @param version
      * @param chainID
-     * @param timeStamp
+     * @param timestamp
      * @param txFee
      * @param sender
      * @param nonce
