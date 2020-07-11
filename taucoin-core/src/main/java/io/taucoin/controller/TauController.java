@@ -5,7 +5,6 @@ import io.taucoin.chain.ChainManager;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.TauListener;
-import io.taucoin.rpc.RpcServer;
 import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.util.Repo;
@@ -36,11 +35,6 @@ public class TauController {
 
     private ChainManager chainManager;
 
-    // Enable rpc or not.
-    private boolean enableRpc;
-    // Rpc server
-    private RpcServer rpcServer;
-
     /**
      * TauController constructor.
      *
@@ -50,7 +44,7 @@ public class TauController {
      * @param enableRpc enable rpc server or not.
      */
     public TauController(String repoPath, Pair<byte[], byte[]> key,
-            KeyValueDataBaseFactory dbFactory, boolean enableRpc) {
+            KeyValueDataBaseFactory dbFactory) {
 
         // set the root directory.
         Repo.setRepoPath(repoPath);
@@ -64,11 +58,6 @@ public class TauController {
         // ChainManager is responsibling for opening database and
         // loading the prebuilt blockchain data.
         this.chainManager = new ChainManager(compositeTauListener, dbFactory);
-
-        this.enableRpc = enableRpc;
-        if (enableRpc) {
-            rpcServer = new RpcServer(this);
-        }
     }
 
     /**
@@ -83,22 +72,12 @@ public class TauController {
         // And then start chain manager.
         // chain manager will start followed and mined blockchains.
         chainManager.start();
-
-        // Lastly, start rpc server.
-        if (enableRpc) {
-            rpcServer.start();
-        }
     }
 
     /**
      * Stop all the blockchain core components.
      */
     public void stop() {
-
-        // First of all, stop rpc server.
-        if (enableRpc) {
-            rpcServer.stop();
-        }
 
         // Stop all blockchains.
         chainManager.stop();
