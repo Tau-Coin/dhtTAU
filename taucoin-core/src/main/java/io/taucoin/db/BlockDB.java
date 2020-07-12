@@ -78,6 +78,32 @@ public class BlockDB implements BlockStore {
     }
 
     /**
+     * get main chain block hash by number
+     *
+     * @param chainID chain ID
+     * @param number  block number
+     * @return block hash
+     * @throws Exception
+     */
+    @Override
+    public byte[] getMainChainBlockHashByNumber(byte[] chainID, long number) throws Exception {
+        byte[] rlp = db.get(PrefixKey.blockInfoKey(chainID, number));
+        if (null == rlp) {
+            logger.info("ChainID[{}]:There is no block in this height:{}", chainID.toString(), number);
+            return null;
+        }
+        BlockInfos blockInfos = new BlockInfos(rlp);
+        List<BlockInfo> list = blockInfos.getBlockInfoList();
+        for (BlockInfo blockInfo: list) {
+            if (blockInfo.isMainChain()) {
+                return blockInfo.getHash();
+            }
+        }
+        logger.info("ChainID[{}]:There is no main chain block in this height:{}", chainID.toString(), number);
+        return null;
+    }
+
+    /**
      * save block info in db
      * @param block
      * @param isMainChain

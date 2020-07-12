@@ -70,6 +70,21 @@ public class ProofOfTransactionTest {
             return null;
         }
 
+        /**
+         * get main chain block hash by number
+         *
+         * @param chainID chain ID
+         * @param number  block number
+         * @return block hash
+         * @throws Exception
+         */
+        @Override
+        public byte[] getMainChainBlockHashByNumber(byte[] chainID, long number) throws Exception {
+            return new byte[0];
+        }
+
+
+
         @Override
         public Set<Block> getChainAllBlocks(byte[] chainID) throws Exception {
             return null;

@@ -24,6 +24,27 @@ public interface Repository {
     void close();
 
     /*************************state interface*************************/
+
+    /**
+     * Save a snapshot and start tracking future changes
+     *
+     * @param chainID  chainID
+     * @return the tracker repository
+     */
+    Repository startTracking(byte[] chainID);
+
+    /**
+     * Store all the temporary changes made
+     * to the repository in the actual database
+     */
+    void commit() throws Exception;
+
+    /**
+     * Undo all the changes made so far
+     * to a snapshot of the repository
+     */
+    void rollback();
+
     /**
      * follow a chain
      * @param chainID

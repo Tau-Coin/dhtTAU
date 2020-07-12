@@ -130,6 +130,35 @@ public class TransactionPoolTest {
         }
 
         /**
+         * Save a snapshot and start tracking future changes
+         *
+         * @param chainID chainID
+         * @return the tracker repository
+         */
+        @Override
+        public Repository startTracking(byte[] chainID) {
+            return null;
+        }
+
+        /**
+         * Store all the temporary changes made
+         * to the repository in the actual database
+         */
+        @Override
+        public void commit() throws Exception {
+
+        }
+
+        /**
+         * Undo all the changes made so far
+         * to a snapshot of the repository
+         */
+        @Override
+        public void rollback() {
+
+        }
+
+        /**
          * follow a chain
          *
          * @param chainID
