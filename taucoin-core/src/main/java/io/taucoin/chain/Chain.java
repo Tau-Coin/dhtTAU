@@ -35,8 +35,6 @@ public class Chain {
 
     private TauListener tauListener;
 
-    private AccountManager accountManager;
-
     private ProofOfTransaction pot;
 
     private TransactionPool txPool;
@@ -46,6 +44,8 @@ public class Chain {
     private BlockStore blockStore;
 
     private Repository repository;
+
+    private Repository track;
 
     private StateProcessor stateProcessor;
 
@@ -63,12 +63,46 @@ public class Chain {
         this.tauListener = tauListener;
     }
 
+    /**
+     * init chain
+     */
     private void init() {
+        this.track = this.repository.startTracking(this.chainID);
+
+        try {
+            byte[] bestBlockHash = this.track.getBestBlockHash(this.chainID);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            loadGenesisBlock();
+        }
 
     }
 
-    private void processBlock(Block block) {
+    /**
+     * load genesis block when chain is empty
+     */
+    private void loadGenesisBlock() {
 
+    }
+
+    /**
+     * set best block of this chain
+     * @param block best block
+     */
+    public void setBestBlock(Block block) {
+        this.bestBlock = block;
+    }
+
+    /**
+     * get best block of this chain
+     * @return
+     */
+    public Block getBestBlock() {
+        return this.bestBlock;
+    }
+
+    private boolean processBlock(Block block, Repository repository) {
+        return true;
     }
 
     private Block mineBlock() {
@@ -76,7 +110,7 @@ public class Chain {
 
         BigInteger baseTarget = pot.calculateRequiredBaseTarget(this.bestBlock, this.blockStore);
         byte[] generationSignature = pot.calculateGenerationSignature(this.bestBlock.getGenerationSignature(),
-                accountManager.getPublickey());
+                AccountManager.getInstance().getPublickey());
         BigInteger cumulativeDifficulty = pot.calculateCumulativeDifficulty(this.bestBlock.getCumulativeDifficulty(),
                 baseTarget);
 
@@ -96,6 +130,14 @@ public class Chain {
         } else {
             immutableBlockHash = genesisBlockHash;
         }
+
+        Block block = new Block((byte)1, this.chainID, 0, this.bestBlock.getBlockNum() + 1, this.bestBlock.getBlockHash(),
+                immutableBlockHash, baseTarget, cumulativeDifficulty, generationSignature, tx, 0, 0, 0, 0,
+                AccountManager.getInstance().getPublickey());
+        // get state
+        Repository miningTrack = this.repository.startTracking(this.chainID);
+        this.stateProcessor.process(block, miningTrack);
+        // TODO:: wait for setting interface
 
         return null;
     }
