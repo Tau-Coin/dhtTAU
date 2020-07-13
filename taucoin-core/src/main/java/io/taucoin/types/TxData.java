@@ -30,6 +30,10 @@ public class TxData {
     private byte[] rlpEncoded;
     private boolean isParsed;
 
+    //boost internal object operating.
+    private boolean isInstance = false;
+    private Object ob;
+
     /**
      * construct txdata.
      * @param type tx message type.
@@ -107,10 +111,150 @@ public class TxData {
     public String getNoteMsg(){
         if(!isParsed) parseRLP();
         if(this.msgType == MsgType.RegularForum){
-            Note note = new Note(this.txCode);
-            return note.getForumMsg();
+            if(!isInstance) {
+                Note note = new Note(this.txCode);
+                ob = note;
+                isInstance = true;
+                return note.getForumMsg();
+            }else {
+                Note note = (Note) ob;
+                return note.getForumMsg();
+            }
         }
         return "";
+    }
+
+    /**
+     * get reference about Comment tx;
+     */
+    public byte[] getCommentReference(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.ForumComment){
+           if(!isInstance){
+               Comment comment = new Comment(this.txCode);
+               ob = comment;
+               isInstance = true;
+               return comment.getReference();
+           }else {
+               Comment comment = (Comment)ob;
+               return comment.getReference();
+           }
+        }
+        return null;
+    }
+
+    /**
+     * get comment message about Comment tx
+     */
+    public String getCommentMsg(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.ForumComment){
+           if(!isInstance){
+               Comment comment = new Comment(this.txCode);
+               ob = comment;
+               isInstance = true;
+               return comment.getComment();
+           }else {
+               Comment comment = (Comment)ob;
+               return comment.getComment();
+           }
+        }
+        return "";
+    }
+
+    /**
+     * get chainid about CommunityAnnouncement tx.
+     */
+    public byte[] getCommunityAnnouncementChainID(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.CommunityAnnouncement){
+            if(!isInstance) {
+                CommunityAnnouncement cma = new CommunityAnnouncement(this.txCode);
+                ob = cma;
+                isInstance = true;
+                return cma.getChainID();
+            }else{
+                CommunityAnnouncement cma = (CommunityAnnouncement)ob;
+                return cma.getChainID();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * get genesispubkey about CommunityAnnouncement tx.
+     */
+    public byte[] getCommunityAnnouncementGenesisPubkey(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.CommunityAnnouncement){
+            if(!isInstance){
+                CommunityAnnouncement cma = new CommunityAnnouncement(this.txCode);
+                ob = cma;
+                isInstance = true;
+                return cma.getGenesisMinerPubkey();
+            }else{
+                CommunityAnnouncement cma = (CommunityAnnouncement)ob;
+                return cma.getGenesisMinerPubkey();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * get community description about CommunityAnnouncement tx.
+     */
+    public String getCommunityAnnouncementDescription(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.CommunityAnnouncement){
+            if(!isInstance){
+                CommunityAnnouncement cma = new CommunityAnnouncement(this.txCode);
+                ob = cma;
+                isInstance = true;
+                return cma.getDescription();
+            }else{
+                CommunityAnnouncement cma = (CommunityAnnouncement)ob;
+                return cma.getDescription();
+            }
+        }
+        return "";
+    }
+
+    /**
+     * get chainid about NodeAnnouncement tx.
+     */
+    public byte[] getNodeAnnouncementChainID(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.DHTBootStrapNodeAnnouncement){
+            if(!isInstance){
+                DHTbootstrapNodeAnnouncement dsna = new DHTbootstrapNodeAnnouncement(this.txCode);
+                ob = dsna;
+                isInstance = true;
+                return dsna.getChainID();
+            }else{
+                DHTbootstrapNodeAnnouncement dsna = (DHTbootstrapNodeAnnouncement)ob;
+                return dsna.getChainID();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * get bootnodes about NodeAnnouncement tx.
+     */
+    public String[] getNodeAnnouncementBootNodes(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.DHTBootStrapNodeAnnouncement){
+            if(!isInstance){
+                DHTbootstrapNodeAnnouncement dsna = new DHTbootstrapNodeAnnouncement(this.txCode);
+                ob = dsna;
+                isInstance = true;
+                return dsna.getBootNodes();
+            }else{
+                DHTbootstrapNodeAnnouncement dsna = (DHTbootstrapNodeAnnouncement)ob;
+                return dsna.getBootNodes();
+            }
+        }
+        return null;
     }
 
     /**
@@ -120,8 +264,15 @@ public class TxData {
     public byte[] getReceiver(){
         if(!isParsed) parseRLP();
         if(this.msgType == MsgType.Wiring){
-            WireTransaction wtx = new WireTransaction(this.txCode);
-            return wtx.getReceiverPubkey();
+            if(!isInstance) {
+                WireTransaction wtx = new WireTransaction(this.txCode);
+                ob = wtx;
+                isInstance = true;
+                return wtx.getReceiverPubkey();
+            }else {
+                WireTransaction wtx = (WireTransaction)ob;
+                return wtx.getReceiverPubkey();
+            }
         }
         return null;
     }
@@ -133,10 +284,55 @@ public class TxData {
     public long getAmount(){
         if(!isParsed) parseRLP();
         if(this.msgType == MsgType.Wiring){
-            WireTransaction wtx = new WireTransaction(this.txCode);
-            return wtx.getAmount();
+            if(!isInstance) {
+                WireTransaction wtx = new WireTransaction(this.txCode);
+                ob = wtx;
+                isInstance = true;
+                return wtx.getAmount();
+            }else{
+                WireTransaction wtx = (WireTransaction)ob;
+                return wtx.getAmount();
+            }
         }
         return 0;
+    }
+
+    /**
+     * get pubkey about IdentityAnnouncement tx.
+     */
+    public byte[] getIdentityAnnouncementPubkey(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.IdentityAnnouncement){
+            if(!isInstance){
+                IdentityAnnouncement ian = new IdentityAnnouncement(this.txCode);
+                ob = ian;
+                isInstance = true;
+                return ian.getRenamePubkey();
+            }else {
+                IdentityAnnouncement ian  = (IdentityAnnouncement) ob;
+                return ian.getRenamePubkey();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * get new name about IdentityAnnouncement.
+     */
+    public String getIdentityAnnouncementNewName(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.IdentityAnnouncement){
+            if(!isInstance){
+                IdentityAnnouncement ian = new IdentityAnnouncement(this.txCode);
+                ob = ian;
+                isInstance = true;
+                return ian.getNewName();
+            }else {
+                IdentityAnnouncement ian  = (IdentityAnnouncement) ob;
+                return ian.getNewName();
+            }
+        }
+        return "";
     }
 
     /**

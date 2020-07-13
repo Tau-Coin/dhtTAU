@@ -68,7 +68,8 @@ public class TxDataTest {
     @Test
     public void decodeTxData(){
         TxData txData = new TxData(ByteUtil.toByte(txdata));
-        log.debug("receiverPubkey: "+ByteUtil.toHexString(txData.getReceiver()));
+        log.debug("receiverPubkey 1st: "+ByteUtil.toHexString(txData.getReceiver()));
+        log.debug("receiverPubkey 2nd: "+ByteUtil.toHexString(txData.getReceiver()));
         log.debug("Amount: "+txData.getAmount());
         log.debug(txData.getMsgType().toString());
 

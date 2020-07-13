@@ -7,16 +7,16 @@
  4   |blockNumber    | 8          | block number
  5   |previousBlockHash  | 32     | hash of previous block
  6   |immutableBlockHash | 32     | hash of immutable point block
- 7   |basetarget     | 8          |  for POT - Proof of Transaction calculation
- 8   |cumulativedifficulty  | 8   | current consensus chain parameter
- 9   |generationsignature  | 32  | for POT calculation, $9 x power x time
+ 7   |baseTarget     | 8          |  for POT - Proof of Transaction calculation
+ 8   |cumulativeDifficulty  | 8   | current consensus chain parameter
+ 9   |generationSignature  | 32  | for POT calculation, $9 x power x time
  10  |txMsg          | 32         | packaged transaction in block, One block only have one transaction
  11  |minerBalance    | 4         | miner's balance
  12  |senderBalance  | 4         | sender's balance
  13  |receiverBalance| 4         | receiver's balance
  14  |senderNonce      | 8       | sender's nonce, == power
  15  |signature      | 64         | r: 32 bytes, s: 32 bytes, when at #6 same difficulty, high signature number wins.
- 16  | Pubkey        | 32         | miner public key
+ 16  |publicKey        | 32         | miner public key
 
 # Transaction
  No              |  Key           | Size-Byte        |  Notes
@@ -48,32 +48,32 @@ No |  Key    |type   | Size-Byte |  Notes
 
 No |  Key     |type   | Size-Byte |  Notes
 ---|----------|-------|-----------|----------------------
- 1 | Reference|byte[] |  32       | reference block hash
- 2 | Comment  |String | 256       | comments msg
+ 1 | reference|byte[] |  32       | reference block hash
+ 2 | comment  |String | 256       | comments msg
 
 8.3 -CommunityAnnouncement
 No |  Key           |type   | Size-Byte |  Notes
 ---|----------------|-------|-----------|----------------------
- 1 | ChainID        |byte[] |  64       | CommunityChainid
- 2 | GenesisPubkey  |byte[] |  32       | GenesisMiner pubkey
- 3 | Description |String | 256 | Community description 
+ 1 | chainID        |byte[] |  64       | communityChainID
+ 2 | genesisPubkey  |byte[] |  32       | genesisMiner pubkey
+ 3 | description |String | 256 | community description 
 
 8.4 -DHTbootstrapNodeAnnouncement
 
 No |  Key           |type     | Size-Byte  |  Notes
 ---|----------------|---------|------------|----------------------
- 1 | ChainID        |byte[]   |  64        | CommunityChainid
- 2 | BootNodes      |string[] |  256       | Node network address
+ 1 | chainID        |byte[]   |  64        | communityChainID
+ 2 | bootNodes      |string[] |  256       | node network address
 
 8.5 -WiringTransaction
 No |  Key           |type     | Size-Byte  |  Notes
 ---|----------------|---------|------------|----------------------
- 1 | ReceiverPubkey |byte[]   |  32        | receiver Pubkey
- 2 | Amount         |long     |  8         | wire amount
- 3 | Notes |String | 256 | explanation of this transaction 
+ 1 | receiverPubkey |byte[]   |  32        | receiver Pubkey
+ 2 | amount         |long     |  8         | wire amount
+ 3 | notes |String | 256 | explanation of this transaction 
 
 8.6 -IdentityAnnouncement
 No |  Key           |type     | Size-Byte  |  Notes
 ---|----------------|---------|------------|----------------------
- 1 | RenamePubkey   |byte[]   |  32        | associate Pubkey
- 2 | NewName        |String   |  256       | new name
+ 1 | renamePubkey   |byte[]   |  32        | associate Pubkey
+ 2 | newName        |String   |  256       | new name
