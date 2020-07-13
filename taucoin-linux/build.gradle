@@ -1,0 +1,16 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation(project(':taucoin-core')){
+        //exclude group: "log4j", module: "apache-log4j-extras"
+    }
+
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+mainClassName = 'io.taucoin.jtau.cmd'
