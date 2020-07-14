@@ -1,4 +1,4 @@
-/*
+/**
 Copyright 2020 taucoin developer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
@@ -17,6 +17,8 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 package io.taucoin.genesis;
 
 import java.math.BigInteger;
+
+import io.taucoin.param.ChainParam;
 import io.taucoin.util.*;
 
 public class GenesisItem {
@@ -24,16 +26,37 @@ public class GenesisItem {
     private BigInteger power;
     private byte[] rlpEncoded = null;
     private boolean isParse;
+
+    /**
+     * genesis account status that community creator can set.
+     * @param balance
+     * @param power
+     */
     public GenesisItem(BigInteger balance,BigInteger power) {
         this.balance = balance;
         this.power = power;
         isParse = true;
     }
+
+    /**
+     * genesis default account power to ensure block chain smoothly.
+     * @param balance
+     */
+    public GenesisItem(BigInteger balance){
+        this.balance = balance;
+        this.power  = ChainParam.DefaultGeneisisPower;
+        isParse = true;
+    }
+
     public GenesisItem(byte[] rlpEncoded){
         this.rlpEncoded = rlpEncoded;
         this.isParse = false;
     }
 
+    /**
+     * encode genesis item.
+     * @return
+     */
     public byte[] getEncoded(){
         if(rlpEncoded == null){
             byte[] balance = RLP.encodeBigInteger(this.balance);

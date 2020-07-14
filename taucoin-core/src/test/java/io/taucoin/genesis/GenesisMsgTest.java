@@ -54,7 +54,7 @@ public class GenesisMsgTest {
     public void createGenesisMsg(){
        GenesisMsg msg = new GenesisMsg();
        msg.setDescription("community chain...uu");
-       GenesisItem item = new GenesisItem(defaultValue,genesisPower);
+       GenesisItem item = new GenesisItem(defaultValue);
        msg.appendAccount(pubkeyA,item);
        msg.appendAccount(pubkeyB,item);
        msg.appendAccount(pubkeyC,item);
@@ -62,6 +62,7 @@ public class GenesisMsgTest {
        String encodeStr= ByteUtil.toHexString(msg.getEncoded());
        log.debug("msg size is: "+encodeStr.length()/2);
        log.debug("is validate: "+ msg.validateGenesisMsg());
+       log.debug("genesis power is: "+item.getPower());
    }
 
    @Test

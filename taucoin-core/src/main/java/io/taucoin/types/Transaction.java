@@ -283,7 +283,7 @@ public class Transaction {
      * verify transaction signature.
      * @return
      */
-    public boolean verifyBlockSig(){
+    public boolean verifyTransactionSig(){
         byte[] signature = this.getSignature();
         byte[] sigmsg = this.getTransactionSigMsg();
         return Ed25519.verify(signature,sigmsg,this.senderPubkey);
