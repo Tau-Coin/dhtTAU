@@ -184,6 +184,8 @@ public class TorrentDHTEngine {
     /**
      * dht tau gets immutable item.
      * Before getting any item, it must put an immutable item.
+     * This is the republish and reannouncement implementation
+     * to ensure the data is alive.
      *
      * @param spec getting immutable item specification
      * @param item immutable item put

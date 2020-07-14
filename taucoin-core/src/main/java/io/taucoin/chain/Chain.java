@@ -234,7 +234,7 @@ public class Chain {
 
         BigInteger baseTarget = pot.calculateRequiredBaseTarget(this.bestBlock, this.blockStore);
         byte[] generationSignature = pot.calculateGenerationSignature(this.bestBlock.getGenerationSignature(),
-                AccountManager.getInstance().getPublickey());
+                AccountManager.getInstance().getKeyPair().first);
         BigInteger cumulativeDifficulty = pot.calculateCumulativeDifficulty(this.bestBlock.getCumulativeDifficulty(),
                 baseTarget);
 
@@ -257,7 +257,7 @@ public class Chain {
 
         Block block = new Block((byte)1, this.chainID, 0, this.bestBlock.getBlockNum() + 1, this.bestBlock.getBlockHash(),
                 immutableBlockHash, baseTarget, cumulativeDifficulty, generationSignature, tx, 0, 0, 0, 0,
-                AccountManager.getInstance().getPublickey());
+                AccountManager.getInstance().getKeyPair().first);
         // get state
         Repository miningTrack = this.repository.startTracking(this.chainID);
         this.stateProcessor.process(block, miningTrack);

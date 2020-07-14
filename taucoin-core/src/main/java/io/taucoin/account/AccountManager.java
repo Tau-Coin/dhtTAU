@@ -61,28 +61,4 @@ public class AccountManager {
     public synchronized Pair<byte[], byte[]> getKeyPair() {
         return this.key;
     }
-
-    /**
-     * Get public key.
-     *
-     * @return public key
-     */
-    public synchronized byte[] getPublickey() {
-        if (this.key == null) {
-            return null;
-        }
-        return this.key.first;
-    }
-
-    /**
-     * Get private key.
-     *
-     * @return private key
-     */
-    public synchronized byte[] getPrivatekey() {
-        if (this.key == null) {
-            return null;
-        }
-        return this.key.second;
-    }
 }
