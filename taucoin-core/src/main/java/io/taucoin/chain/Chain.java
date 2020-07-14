@@ -13,8 +13,10 @@ import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * Chain represents one blockchain for tau multi-chain system.
@@ -85,6 +87,27 @@ public class Chain {
 
     }
 
+    private boolean tryToConnect(final Block block) {
+        // if main chain
+        if (Arrays.equals(bestBlock.getBlockHash(), block.getPreviousBlockHash())) {
+            // main chain
+        } else {
+            // if has parent
+            try {
+                Block parent = this.blockStore.getBlockByHash(this.chainID, block.getPreviousBlockHash());
+                if (null == parent) {
+                    logger.error("ChainID[{}]: Cannot find parent!", this.chainID.toString());
+                    return false;
+                }
+                // TODO:: simply check
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * set best block of this chain
      * @param block best block
@@ -99,6 +122,107 @@ public class Chain {
      */
     public Block getBestBlock() {
         return this.bestBlock;
+    }
+
+    /**
+     * check if a block valid
+     * @param block
+     * @return
+     */
+    private boolean isValidBlock(Block block) {
+        // 是否本链
+        if (!Arrays.equals(this.chainID, block.getChainID())) {
+            logger.error("ChainID[{}]: ChainID mismatch!", this.chainID.toString());
+        }
+
+        // 区块内部自检
+        if (!block.isBlockParamValidate()) {
+            logger.error("ChainID[{}]: Validate block param error!", this.chainID.toString());
+            return false;
+        }
+
+        // 区块签名检查
+        if (!block.verifyBlockSig()) {
+            logger.error("ChainID[{}]: Bad Signature!", this.chainID.toString());
+            return false;
+        }
+
+        // 是否孤块
+        try {
+            if (null == this.blockStore.getBlockByHash(block.getChainID(), block.getPreviousBlockHash())) {
+                logger.error("ChainID[{}]: Cannot find parent!", this.chainID.toString());
+                return false;
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
+        // POT共识验证
+        if (!verifyPOT(block)) {
+            logger.error("ChainID[{}]: Validate block param error!", this.chainID.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * check pot consensus
+     * @param block
+     * @return
+     */
+    private boolean verifyPOT(Block block) {
+        try {
+            byte[] pubKey = block.getMinerPubkey();
+
+            BigInteger power = this.track.getNonce(this.chainID, pubKey);
+            logger.info("Address: {}, mining power: {}", Hex.toHexString(pubKey), power);
+
+            Block parentBlock = this.blockStore.getBlockByHash(this.chainID, block.getPreviousBlockHash());
+            if (null == parentBlock) {
+                logger.error("ChainID[{}]: Cannot find parent!", this.chainID.toString());
+                return false;
+            }
+
+            // check base target
+            BigInteger baseTarget = this.pot.calculateRequiredBaseTarget(parentBlock, this.blockStore);
+            if (0 != baseTarget.compareTo(block.getBaseTarget())) {
+                logger.error("ChainID[{}]: Block base target error!", this.chainID.toString());
+                return false;
+            }
+
+            // check generation signature
+            byte[] genSig = this.pot.calculateGenerationSignature(parentBlock.getGenerationSignature(), pubKey);
+            if (!Arrays.equals(genSig, block.getGenerationSignature())) {
+                logger.error("ChainID[{}]: Block base target error!", this.chainID.toString());
+                return false;
+            }
+
+            // check cumulative difficulty
+            BigInteger culDifficulty = this.pot.calculateCumulativeDifficulty(
+                    parentBlock.getCumulativeDifficulty(), baseTarget);
+            if (0 != culDifficulty.compareTo(block.getCumulativeDifficulty())) {
+                logger.error("ChainID[{}]: Cumulative difficulty error!", this.chainID.toString());
+                return false;
+            }
+
+            // check if target >= hit
+            BigInteger target = this.pot.calculateMinerTargetValue(baseTarget, power,
+                    block.getTimeStamp() - parentBlock.getTimeStamp());
+            BigInteger hit = this.pot.calculateRandomHit(genSig);
+            if (target.compareTo(hit) < 0) {
+                logger.error("ChainID[{}]: Target[{}] value is smaller than hit[{}]!!",
+                        this.chainID.toString(), target, hit);
+                return false;
+            }
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
+        return true;
     }
 
     private boolean processBlock(Block block, Repository repository) {
