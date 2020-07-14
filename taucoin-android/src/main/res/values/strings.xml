@@ -56,6 +56,12 @@
     <string name="community_transactions">Transactions</string>
     <string name="community_nickname">Nickname</string>
     <string name="community_choose_community">Choose Community</string>
+    <string name="community_mining_status">Mining Status</string>
+    <string name="community_mining_online">Mining online</string>
+    <string name="community_mining_income">Mining Income</string>
+    <string name="community_today_mining_income">Today Mining Income(%1$s)</string>
+    <string name="community_chain_note">Chain Note</string>
+    <string name="community_instant_chat">Instant Chat</string>
 
     <string name="error_community_name_empty">Community name cannot be empty!</string>
     <string name="error_coin_name_empty">Coin name cannot be empty!</string>
@@ -109,6 +115,7 @@
     <string name="user_seed_generate">Generate New Seed</string>
     <string name="user_seed_empty">Seed cannot be empty!</string>
     <string name="user_seed_save_tips">Please make sure your seed\nhas been saved</string>
+    <string name="user_blacklist">Blacklist</string>
 
     <string name="copy_seed">Seed copied</string>
 
@@ -120,5 +127,11 @@
     <string name="tx_memo_hint">Memo</string>
     <string name="tx_median_fee">Transaction median fee/%1$s %2$s</string>
     <string name="tx_new_name">New Name(required)</string>
+    <string name="tx_operation_reply">Reply</string>
+    <string name="tx_operation_copy">Copy</string>
+    <string name="tx_operation_copy_link">Copy link</string>
+    <string name="tx_operation_forward">Forward</string>
+    <string name="tx_operation_blacklist">Blacklist</string>
+    <string name="tx_operation_favorite">Favorite</string>
 
 </resources>

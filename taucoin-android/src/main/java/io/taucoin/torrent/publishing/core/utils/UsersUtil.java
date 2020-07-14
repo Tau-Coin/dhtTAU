@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.core.utils;
 
 import androidx.annotation.NonNull;
+import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
 
 /**
@@ -44,5 +45,23 @@ public class UsersUtil {
         }else{
             return getDefaultName(user.publicKey);
         }
+    }
+
+    /**
+     * 获取显示coin name
+     * @param community 当前社区
+     * @return 显示名字
+     */
+    public static String getCoinName(Community community) {
+        if(null == community){
+            return null;
+        }
+        String coin;
+        if(StringUtil.isNotEmpty(community.coinName)){
+            coin = community.coinName;
+        }else {
+            coin = StringUtil.getFirstLettersOfName(community.communityName) + "Coin";
+        }
+        return coin;
     }
 }

@@ -7,6 +7,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
+import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 
 /**
@@ -29,10 +30,18 @@ public interface TransactionDao {
     int updateTransaction(Tx tx);
 
     /**
-     * 根据chainIDc查询社区
+     * 根据chainID查询社区
      * @param chainID 社区链id
      * @param chat 区分聊天和链上交易
      */
     @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    List<Tx> getTxsBychainID(String chainID, int chat);
+    List<Tx> getTxsByChainID(String chainID, int chat);
+
+    /**
+     * 根据chainID获取社区的交易的被被观察者
+     * @param chainID 社区链id
+     * @param chat 区分聊天和链上交易
+     */
+    @Query(QUERY_GET_TXS_BY_CHAIN_ID)
+    Flowable<List<Tx>> observeTxsByChainID(String chainID, int chat);
 }

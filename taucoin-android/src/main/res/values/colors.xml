@@ -64,4 +64,6 @@
 
     <color name="color_black">#000000</color>
     <color name="color_black_light">#454545</color>
+
+    <color name="color_transparent">#00000000</color>
 </resources>

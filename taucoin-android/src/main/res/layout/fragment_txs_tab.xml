@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
+            android:background="@color/color_bg"
+            android:id="@+id/tx_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
+            android:clipToPadding="false"
+            android:scrollbars="vertical"
+            android:focusable="true"
+            android:scrollbarStyle="outsideOverlay" />
+
+    </RelativeLayout>
+</layout>

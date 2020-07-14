@@ -15,6 +15,8 @@ import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityTransactionCreateBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -84,6 +86,13 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
     @Override
     public void onStart() {
         super.onStart();
+        txViewModel.getAddState().observe(this, result -> {
+            if(StringUtil.isNotEmpty(result)){
+                ToastUtils.showShortToast(result);
+            }else {
+                onBackPressed();
+            }
+        });
     }
 
     @Override
@@ -124,7 +133,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
         String receiverAddress = ViewUtils.getText(binding.etAddress);
         String amount = ViewUtils.getText(binding.etAmount);
         String fee = ViewUtils.getStringTag(binding.tvFee);
-        String memo = ViewUtils.getStringTag(binding.etMemo);
+        String memo = ViewUtils.getText(binding.etMemo);
         return new Tx(chainID, receiverAddress, 100000000, 1000, txType, memo, 0);
     }
 

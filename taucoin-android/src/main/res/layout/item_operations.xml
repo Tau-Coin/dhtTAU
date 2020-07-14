@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="0dp"
+        android:paddingEnd="30dp"
+        android:layout_marginEnd="10dp">
+
+        <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+            android:id="@+id/replay"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:onClick="@{listener::onClick}"
+            app:leftImage="@mipmap/icon_copy"
+            app:rightText="@string/tx_operation_reply"/>
+
+        <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+            android:id="@+id/copy"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:onClick="@{listener::onClick}"
+            app:leftImage="@mipmap/icon_copy"
+            app:rightText="@string/tx_operation_copy"/>
+
+        <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+            android:id="@+id/copy_link"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:onClick="@{listener::onClick}"
+            app:leftImage="@mipmap/icon_copy"
+            app:rightText="@string/tx_operation_copy_link"/>
+
+        <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+            android:id="@+id/forward"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:onClick="@{listener::onClick}"
+            app:leftImage="@mipmap/icon_copy"
+            app:rightText="@string/tx_operation_forward"/>
+
+        <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+            android:id="@+id/blacklist"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:onClick="@{listener::onClick}"
+            app:leftImage="@mipmap/icon_copy"
+            app:rightText="@string/tx_operation_blacklist"/>
+
+        <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+            android:id="@+id/favourite"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:onClick="@{listener::onClick}"
+            app:leftImage="@mipmap/icon_copy"
+            app:rightText="@string/tx_operation_favorite"/>
+
+    </LinearLayout>
+</layout>

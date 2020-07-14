@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.core.storage;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 
 /**
@@ -24,5 +25,12 @@ public interface TxRepository {
      * @param chainID 社区链id
      * @param chat 区分聊天和链上交易
      */
-    List<Tx> getTxsBychainID(String chainID, int chat);
+    List<Tx> getTxsByChainID(String chainID, int chat);
+
+    /**
+     * 根据chainID获取社区的交易的被被观察者
+     * @param chainID 社区链id
+     * @param chat 区分聊天和链上交易
+     */
+    Flowable<List<Tx>> observeTxsByChainID(String chainID, int chat);
 }

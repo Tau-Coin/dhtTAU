@@ -19,10 +19,12 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
@@ -47,6 +49,7 @@ public class CommonDialog extends Dialog {
         private String negativeButtonText;
         private boolean isCanCancel = true;
         private boolean isEnabledPositive = true;
+        private boolean enableWarpWidth = false;
         private boolean isEnabledNegative = true;
         private boolean isExchange = false;
         private int btnWidth;
@@ -139,6 +142,11 @@ public class CommonDialog extends Dialog {
             return this;
         }
 
+        public Builder enableWarpWidth(boolean enableWarpWidth) {
+            this.enableWarpWidth = enableWarpWidth;
+            return this;
+        }
+
         public CommonDialog create() {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             final CommonDialog dialog = new CommonDialog(context, R.style.CommonDialog);
@@ -152,7 +160,7 @@ public class CommonDialog extends Dialog {
             if(mContentView != null){
                 layout.addView(mContentView, 0);
             }
-            resetDialogWidth(layout, dialog);
+            resetDialogWidth(layout, dialog, enableWarpWidth);
             ViewHolder viewHolder = new ViewHolder(layout);
 
             viewHolder.positiveButton.setEnabled(isEnabledPositive);
@@ -215,11 +223,23 @@ public class CommonDialog extends Dialog {
             return dialog;
         }
 
-        private void resetDialogWidth(ViewGroup layout, CommonDialog dialog) {
+        private void resetDialogWidth(ViewGroup layout, CommonDialog dialog, boolean enableWarpWidth) {
             WindowManager windowManager = (WindowManager) context
                     .getSystemService(Context.WINDOW_SERVICE);
             Display display = windowManager.getDefaultDisplay();
-            layout.setMinimumWidth((int) (display.getWidth() * 0.85));
+
+            if(enableWarpWidth){
+                int padding = DimensionsUtil.dip2px(layout.getContext(), 10);
+                layout.setPadding(padding, padding, padding, padding);
+                Window dialogWindow = dialog.getWindow();
+                if(dialogWindow != null){
+                    WindowManager.LayoutParams lp = dialogWindow.getAttributes();
+                    lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
+                    dialogWindow.setAttributes(lp);
+                }
+            }else {
+                layout.setMinimumWidth((int) (display.getWidth() * 0.85));
+            }
         }
 
         static class ViewHolder {
@@ -230,6 +250,12 @@ public class CommonDialog extends Dialog {
                 positiveButton = view.findViewById(R.id.positiveButton);
                 negativeButton = view.findViewById(R.id.negativeButton);
             }
+        }
+    }
+
+    public void closeDialog(){
+        if(isShowing()){
+            dismiss();
         }
     }
 }

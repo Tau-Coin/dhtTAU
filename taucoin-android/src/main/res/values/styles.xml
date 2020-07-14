@@ -331,4 +331,8 @@
         <item name="android:windowExitAnimation">@anim/action_sheet_dialog_out</item>
     </style>
 
+    <style name="TabLayout" parent="@android:style/TextAppearance.Widget.TabWidget">
+        <item name="android:textSize">@dimen/font_normal_size</item>
+    </style>
+
 </resources>

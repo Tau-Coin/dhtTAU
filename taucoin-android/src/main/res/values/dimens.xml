@@ -23,6 +23,7 @@
     <dimen name="preference_icon_space">72dp</dimen>
 
     <dimen name="font_big_size">18sp</dimen>
-    <dimen name="big_normal_size">16dp</dimen>
-    <dimen name="big_small_size">14dp</dimen>
+    <dimen name="font_normal_size">16sp</dimen>
+    <dimen name="font_small_size">14sp</dimen>
+    <dimen name="font_little_small_size">12sp</dimen>
 </resources>

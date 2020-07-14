@@ -96,7 +96,7 @@ public class MainListAdapter extends ListAdapter<Community, MainListAdapter.View
             holder.binding.tvGroupName.setText(Html.fromHtml(community.communityName));
             String firstLetters = StringUtil.getFirstLettersOfName(community.communityName);
             holder.binding.leftView.setText(firstLetters);
-            holder.binding.leftView.setBgColor(Utils.getGroupColor(firstLetters));
+            holder.binding.leftView.setBgColor(Utils.getGroupColor(community.chainID));
 
             holder.binding.getRoot().setOnClickListener(v -> {
                 if(listener != null){

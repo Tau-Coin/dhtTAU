@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.ui.transaction;
 import android.app.Application;
 
 import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Pair;
 
 import java.util.List;
 
@@ -22,7 +23,6 @@ import io.taucoin.torrent.publishing.core.storage.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
-import io.taucoin.torrent.publishing.core.utils.TauUtils;
 import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TxData;
@@ -45,6 +45,14 @@ public class TxViewModel extends AndroidViewModel {
         userRepo = RepositoryHelper.getUserRepository(application);
     }
 
+    public MutableLiveData<String> getAddState() {
+        return addState;
+    }
+
+    public void setAddState(MutableLiveData<String> addState) {
+        this.addState = addState;
+    }
+
     /**
      * 获取社区链交易的被观察者
      * @return 被观察者
@@ -60,13 +68,13 @@ public class TxViewModel extends AndroidViewModel {
     }
 
     /**
-     * 根据chainID查询社区
+     * 根据chainID查询社区的交易
      * @param chainID 社区链id
      * @param chat 区分聊天和链上交易
      */
-    public void getTxsBychainID(String chainID, int chat){
+    public void getTxsByChainID(String chainID, int chat){
         Disposable disposable = Flowable.create((FlowableOnSubscribe<List<Tx>>) emitter -> {
-            List<Tx> txs = txRepo.getTxsBychainID(chainID, chat);
+            List<Tx> txs = txRepo.getTxsByChainID(chainID, chat);
             emitter.onNext(txs);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -76,19 +84,28 @@ public class TxViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
+    /**
+     * 根据chainID获取社区的交易的被被观察者
+     * @param chainID 社区链id
+     * @param chat 区分聊天和链上交易
+     */
+    public Flowable<List<Tx>> observeTxsByChainID(String chainID, int chat){
+        return txRepo.observeTxsByChainID(chainID, chat);
+    }
+
     public void addTransaction(Tx tx) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             // 获取当前用户
             User currentUser = userRepo.getCurrentUser();
-            byte[] receiverPubKey = TauUtils.hexStringToBytes(tx.receiverPubKey);
-            byte[] senderPubKey = TauUtils.hexStringToBytes(currentUser.publicKey);
-            byte[] senderSeed = TauUtils.hexStringToBytes(currentUser.seed);
+            byte[] receiverPubKey = ByteUtil.toByte(tx.receiverPubKey);
+            byte[] senderSeed = ByteUtil.toByte(currentUser.seed);
+            Pair<byte[], byte[]> keypair = Ed25519.createKeypair(senderSeed);
             WireTransaction wireTransaction = new WireTransaction(receiverPubKey, tx.amount, tx.memo);
             TxData txData = new TxData(MsgType.Wiring, wireTransaction.getEncode());
             long timestamp = DateUtil.getTime();
             long nonce = 0;
-            Transaction transaction = new Transaction((byte)1, tx.chainID.getBytes(),timestamp, (int)tx.fee, senderPubKey, nonce, txData);
-            byte[] signature = Ed25519.sign(transaction.getSigEncoded(), senderPubKey, senderSeed);
+            Transaction transaction = new Transaction((byte)1, tx.chainID.getBytes(),timestamp, (int)tx.fee, keypair.first, nonce, txData);
+            byte[] signature = Ed25519.sign(transaction.getSigEncoded(), keypair.first, keypair.second);
             transaction.setSignature(signature);
             tx.txID = ByteUtil.toHexString(transaction.getTxID());
             tx.timestamp = timestamp;

@@ -107,7 +107,7 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
     }
 
     /**
-     * VideoListItem点击事件
+     * 社区ListItem点击事件
      */
     @Override
     public void onItemClicked(@NonNull Community item) {

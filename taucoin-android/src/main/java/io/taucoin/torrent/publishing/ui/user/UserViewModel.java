@@ -25,11 +25,11 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.TauUtils;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.util.ByteUtil;
 
 /**
  * 用户相关的ViewModel
@@ -85,11 +85,11 @@ public class UserViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String result = "";
             try {
-                byte[] seedBytes = TauUtils.hexStringToBytes(seed);
+                byte[] seedBytes = ByteUtil.toByte(seed);
                 Logger.d("import seed::%s, size::%d", seed, seed.length());
                 Logger.d("import seedBytes::%s, length::%d", Arrays.toString(seedBytes), seedBytes.length);
                 Pair<byte[], byte[]> keypair = Ed25519.createKeypair(seedBytes);
-                String publicKey = TauUtils.bytesToHexString(keypair.first);
+                String publicKey = ByteUtil.toHexString(keypair.first);
                 Logger.d("import publicKey::%s, size::%d", publicKey, publicKey.length());
                 userRepo.setCurrentUser(MainApplication.getInstance().getPublicKey(), false);
                 User user = new User(publicKey, seed, null, true);
@@ -119,7 +119,7 @@ public class UserViewModel extends AndroidViewModel {
      */
     private void generateSeed() {
         byte[] seedBytes = Ed25519.createSeed();
-        String seed = TauUtils.bytesToHexString(seedBytes);
+        String seed = ByteUtil.toHexString(seedBytes);
         Logger.d("generate seedBytes::%s, length::%d", Arrays.toString(seedBytes), seedBytes.length);
         importSeed(seed);
     }
