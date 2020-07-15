@@ -1,13 +1,12 @@
-package io.taucoin.torrent.publishing.ui.transaction;
+package io.taucoin.torrent.publishing.ui.chat;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.leinardi.android.speeddial.SpeedDialActionItem;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,9 +19,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
-import io.taucoin.torrent.publishing.core.storage.entity.Tx;
-import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.databinding.FragmentTxsTabBinding;
+import io.taucoin.torrent.publishing.core.storage.entity.Message;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.utils.ViewUtils;
+import io.taucoin.torrent.publishing.databinding.FragmentChatsTabBinding;
 import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
@@ -30,15 +31,15 @@ import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 
 /**
- * 交易Tab页
+ * 聊天Tab页
  */
-public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickListener, View.OnClickListener {
+public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.ClickListener, View.OnClickListener {
 
     private BaseActivity activity;
-    private FragmentTxsTabBinding binding;
-    private TxViewModel txViewModel;
+    private FragmentChatsTabBinding binding;
+    private MsgViewModel msgViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private TxListAdapter adapter;
+    private MsgListAdapter adapter;
     private CommonDialog operationsDialog;
 
     private Community community;
@@ -46,7 +47,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_txs_tab, container, false);
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_chats_tab, container, false);
         return binding.getRoot();
     }
 
@@ -55,10 +56,10 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         super.onActivityCreated(savedInstanceState);
         activity = (BaseActivity) getActivity();
         ViewModelProvider provider = new ViewModelProvider(activity);
-        txViewModel = provider.get(TxViewModel.class);
+        msgViewModel = provider.get(MsgViewModel.class);
+        binding.setListener(this);
         initParameter();
         initView();
-        initFabSpeedDial();
     }
 
     /**
@@ -74,7 +75,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
      * 初始化视图
      */
     private void initView() {
-        adapter = new TxListAdapter(this);
+        adapter = new MsgListAdapter(this);
         DefaultItemAnimator animator = new DefaultItemAnimator() {
             @Override
             public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {
@@ -86,58 +87,24 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         binding.txList.setLayoutManager(layoutManager);
         binding.txList.setItemAnimator(animator);
         binding.txList.setAdapter(adapter);
-    }
 
-    /**
-     * 初始化右下角悬浮按钮组件
-     */
-    private void initFabSpeedDial() {
-        binding.fabButton.setOnActionSelectedListener((item) -> {
-            Intent intent = new Intent();
-            intent.putExtra(IntentExtra.BEAN, community);
-            switch (item.getId()) {
-                case R.id.community_transaction:
-                    ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
-                    break;
-                case R.id.community_nickname:
-                    ActivityUtil.startActivity(intent, this, NicknameActivity.class);
-                    break;
-                case R.id.community_message:
-                    ActivityUtil.startActivity(intent, this, NicknameActivity.class);
-                    break;
-                case R.id.community_bootstrap_node:
-                    ActivityUtil.startActivity(intent, this, NicknameActivity.class);
-                    break;
-                default:
-                    return false;
+        binding.etMessage.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
             }
-            binding.fabButton.close();
-            return true;
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                boolean isHiddenSend = StringUtil.isEmpty(s);
+                binding.tvSend.setVisibility(isHiddenSend ? View.GONE : View.VISIBLE);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
         });
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_bootstrap_node,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_bootstrap_node)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_nickname,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_nickname)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_transaction,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_transaction)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_message,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_message)
-                .create());
     }
 
     /**
@@ -147,12 +114,20 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         if(null == community){
             return;
         }
-        disposables.add(txViewModel.observeTxsByChainID(community.chainID)
+        disposables.add(msgViewModel.observeMessagesByChainID(community.chainID)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(list -> {
                 adapter.setDataList(list);
                 binding.txList.smoothScrollToPosition(adapter.getItemCount());
             }));
+
+        msgViewModel.getAddState().observe(this, result -> {
+            if(StringUtil.isNotEmpty(result)){
+                ToastUtils.showShortToast(result);
+            }else {
+                binding.etMessage.getText().clear();
+            }
+        });
     }
 
     @Override
@@ -179,21 +154,22 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
      */
 
     @Override
-    public void onItemClicked(Tx tx) {
+    public void onItemClicked(Message msg) {
 
     }
 
     @Override
-    public void onItemLongClicked(View view, Tx tx) {
-        showItemOperationDialog(view, tx);
+    public void onItemLongClicked(View view, Message msg) {
+        showItemOperationDialog(view, msg);
     }
 
     /**
      * 显示每个item长按操作选项对话框
      */
-    private void showItemOperationDialog(View view, Tx tx) {
+    private void showItemOperationDialog(View view, Message msg) {
         ItemOperationsBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.item_operations, null, false);
+        binding.replay.setVisibility(View.GONE);
         binding.setListener(this);
         operationsDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
@@ -226,6 +202,19 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 break;
             case R.id.favourite:
                 break;
+            case R.id.tv_send:
+                sendMessage();
+                break;
         }
+    }
+
+    /**
+     * 发送instant chat消息
+     */
+    private void sendMessage() {
+        String chainID = community.chainID;
+        String content = ViewUtils.getText(binding.etMessage);
+        Message msg =  new Message(chainID, content);
+        msgViewModel.sendMessage(msg);
     }
 }

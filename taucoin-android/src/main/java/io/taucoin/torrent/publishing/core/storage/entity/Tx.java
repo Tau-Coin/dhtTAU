@@ -9,7 +9,7 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 /**
- * 数据库存储Transaction实体类
+ * Room: 数据库存储Transaction实体类
  */
 @Entity
 public class Tx implements Parcelable {
@@ -17,20 +17,21 @@ public class Tx implements Parcelable {
     @PrimaryKey
     public String txID;                     // 交易ID
     @NonNull
-    public String chainID;                  // 交易所属社区
+    public String chainID;                  // 交易所属社区chainID
     @NonNull
     public String senderPk;                 // 交易发送者的公钥
-    public String receiverPk;               // 交易接收者的公钥
-    public String genesisPk;                // 创世区块者的公钥 只针对MsgType.CommunityAnnouncement类型
-    public long timestamp;                  // 交易时间戳
-    public long amount;                     // 交易金额 只针对MsgType.Wiring类型
     public long fee;                        // 交易费
-    public String memo;                     // 交易的备注、介绍、描述等
+    public long timestamp;                  // 交易时间戳
+    public long nonce;                      // 交易nonce
+    public int txType;                      // 交易类型，同MsgType中枚举类型
+    public String memo;                     // 交易的备注、描述、bootstraps、评论等
+    public int txStatus;                    // 交易的状态 0：未上链（在交易池中）；1：上链成功 (不上链)
+
+    public String genesisPk;                // 创世区块者的公钥 只针对MsgType.CommunityAnnouncement类型
+    public String receiverPk;               // 交易接收者的公钥 只针对MsgType.Wiring类型
+    public long amount;                     // 交易金额 只针对MsgType.Wiring类型
     public String name;                     // 用户的链上名字 只针对MsgType.CommunityAnnouncement类型
     public String replyID;                  // 回复的txID 只针对MsgType.ForumComment类型
-    public long nonce;                      // nonce
-    public int txType;                      // 交易类型，同MsgType中枚举类型
-    public int chat;                        // 0: 链上交易; 1: 聊天交易
 
     public Tx(@NonNull String chainID, String receiverPk, long amount, long fee, int txType, String memo){
         this.chainID = chainID;
@@ -62,7 +63,7 @@ public class Tx implements Parcelable {
         timestamp = in.readLong();
         nonce = in.readLong();
         txType = in.readInt();
-        chat = in.readInt();
+        txStatus = in.readInt();
         replyID = in.readString();
     }
 
@@ -79,7 +80,7 @@ public class Tx implements Parcelable {
         dest.writeLong(timestamp);
         dest.writeLong(nonce);
         dest.writeInt(txType);
-        dest.writeInt(chat);
+        dest.writeInt(txStatus);
         dest.writeString(replyID);
     }
 

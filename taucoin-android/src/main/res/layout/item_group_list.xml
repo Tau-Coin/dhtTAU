@@ -23,7 +23,7 @@
             android:textColor="@color/color_white"
             app:borderColor="@color/primary_light"
             app:borderWidth="0dp"
-            app:radius="30dp"
+            app:radius="10dp"
             app:isRadiusAutoHalf="true"
             app:bgColor="@color/primary_light"
             app:textColorForPressed="@color/color_white" />

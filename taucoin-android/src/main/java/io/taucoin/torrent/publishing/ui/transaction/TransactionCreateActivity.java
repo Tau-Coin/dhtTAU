@@ -61,7 +61,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      */
     private void initLayout() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.community_transactions);
+        binding.toolbarInclude.toolbar.setTitle(R.string.community_transaction);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 

@@ -8,17 +8,20 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import io.taucoin.torrent.publishing.core.storage.dao.CommunityDao;
 import io.taucoin.torrent.publishing.core.storage.dao.MemberDao;
-import io.taucoin.torrent.publishing.core.storage.dao.TransactionDao;
+import io.taucoin.torrent.publishing.core.storage.dao.MessageDao;
+import io.taucoin.torrent.publishing.core.storage.dao.TxDao;
 import io.taucoin.torrent.publishing.core.storage.dao.UserDao;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.entity.Member;
+import io.taucoin.torrent.publishing.core.storage.entity.Message;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
 
 @Database(entities = {Community.class,
         Member.class,
         User.class,
-        Tx.class
+        Tx.class,
+        Message.class
     }, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "tau.db";
@@ -28,7 +31,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract CommunityDao communityDao();
     public abstract MemberDao memberDao();
     public abstract UserDao userDao();
-    public abstract TransactionDao txDao();
+    public abstract TxDao txDao();
+    public abstract MessageDao msgDao();
 
     /**
      * 获取数据库实例

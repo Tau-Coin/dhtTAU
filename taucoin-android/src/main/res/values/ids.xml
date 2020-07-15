@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="main_publish_video" type="id" />
     <item name="main_create_community" type="id" />
     <item name="main_other_transaction" type="id" />
-    <item name="community_transactions" type="id" />
+    <item name="community_transaction" type="id" />
     <item name="community_nickname" type="id" />
+    <item name="community_message" type="id" />
+    <item name="community_bootstrap_node" type="id" />
 </resources>

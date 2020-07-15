@@ -14,8 +14,8 @@ import io.taucoin.torrent.publishing.core.storage.entity.Tx;
  * Room:Transaction操作接口
  */
 @Dao
-public interface TransactionDao {
-    String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT * FROM Tx WHERE chainID = :chainID and chat = :chat";
+public interface TxDao {
+    String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT * FROM Tx WHERE chainID = :chainID";
 
     /**
      * 添加新的交易
@@ -32,16 +32,14 @@ public interface TransactionDao {
     /**
      * 根据chainID查询社区
      * @param chainID 社区链id
-     * @param chat 区分聊天和链上交易
      */
     @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    List<Tx> getTxsByChainID(String chainID, int chat);
+    List<Tx> getTxsByChainID(String chainID);
 
     /**
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
-     * @param chat 区分聊天和链上交易
      */
     @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    Flowable<List<Tx>> observeTxsByChainID(String chainID, int chat);
+    Flowable<List<Tx>> observeTxsByChainID(String chainID);
 }

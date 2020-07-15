@@ -54,8 +54,10 @@
     <string name="community_intro">Introduction(optional)</string>
     <string name="community_contact">ID(Telegram/Whatsapp/FB/Wechat)</string>
     <string name="community_more_settings">More Settings</string>
-    <string name="community_transactions">Transactions</string>
-    <string name="community_nickname">Nickname</string>
+    <string name="community_bootstrap_node">DHT Bootstrap Nodes</string>
+    <string name="community_message">Message</string>
+    <string name="community_transaction">Transaction</string>
+    <string name="community_nickname">Community Nickname</string>
     <string name="community_choose_community">Choose Community</string>
     <string name="community_mining_status">Mining Status</string>
     <string name="community_mining_online">Mining online</string>
@@ -140,7 +142,7 @@
     <string name="tx_median_fee_tips">Transaction median fee:%1$s</string>
     <string name="tx_fee_tips">*More transaction fees more opportunities be packaged miners.</string>
     <string name="tx_error_invalid_pk">Invalid receiver\'s public key!</string>
-    <string name="tx_error_invalid_fee">Invalid Transaction Fee</string>
+    <string name="tx_error_invalid_amount">Invalid Transaction amount</string>
     <string name="tx_error_no_enough_coins">Insufficient Balance :\nAmount + Transaction Fee >= Balance</string>
     <string name="tx_error_invalid_name">Invalid Name</string>
     <string name="tx_error_invalid_bootstrap">Invalid Bootstraps</string>

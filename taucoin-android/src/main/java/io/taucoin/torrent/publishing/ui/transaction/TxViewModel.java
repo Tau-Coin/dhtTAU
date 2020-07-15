@@ -79,11 +79,10 @@ public class TxViewModel extends AndroidViewModel {
     /**
      * 根据chainID查询社区的交易
      * @param chainID 社区链id
-     * @param chat 区分聊天和链上交易
      */
-    public void getTxsByChainID(String chainID, int chat){
+    public void getTxsByChainID(String chainID){
         Disposable disposable = Flowable.create((FlowableOnSubscribe<List<Tx>>) emitter -> {
-            List<Tx> txs = txRepo.getTxsByChainID(chainID, chat);
+            List<Tx> txs = txRepo.getTxsByChainID(chainID);
             emitter.onNext(txs);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -96,10 +95,9 @@ public class TxViewModel extends AndroidViewModel {
     /**
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
-     * @param chat 区分聊天和链上交易
      */
-    public Flowable<List<Tx>> observeTxsByChainID(String chainID, int chat){
-        return txRepo.observeTxsByChainID(chainID, chat);
+    public Flowable<List<Tx>> observeTxsByChainID(String chainID){
+        return txRepo.observeTxsByChainID(chainID);
     }
 
     /**
@@ -125,7 +123,7 @@ public class TxViewModel extends AndroidViewModel {
                     byte[] signature = Ed25519.sign(transaction.getSigEncoded(), keypair.first, keypair.second);
                     transaction.setSignature(signature);
                     // TODO: 把交易数据transaction.getEncoded()提交给链端
-                    // 保存数据到本地数据库
+                    // 保存交易数据到本地数据库
                     tx.txID = ByteUtil.toHexString(transaction.getTxID());
                     tx.timestamp = timestamp;
                     tx.senderPk = currentUser.publicKey;
@@ -216,7 +214,7 @@ public class TxViewModel extends AndroidViewModel {
                 ToastUtils.showShortToast(R.string.tx_error_invalid_pk);
                 return false;
             }else if(tx.amount <= 0){
-                ToastUtils.showShortToast(R.string.tx_error_invalid_fee);
+                ToastUtils.showShortToast(R.string.tx_error_invalid_amount);
                 return false;
             }else if(tx.amount > balance || tx.amount + tx.fee > balance){
                 ToastUtils.showShortToast(R.string.tx_error_no_enough_coins);

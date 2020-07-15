@@ -24,7 +24,7 @@ public class Community implements Parcelable {
     public long totalCoin;                  // 社区总共的币量
     public int blockInAvg;                  // 社区平均出块时间（单位：秒）
     public String intro;                    // 社区的介绍
-    public String contactInfo;               // 社区的联系方式
+    public String contactInfo;              // 社区的联系方式
     public boolean mute = false;            // 社区有新消息到来时，是否静音
     public boolean blacklist = false;       // 社区是否被用户拉入黑名单
 

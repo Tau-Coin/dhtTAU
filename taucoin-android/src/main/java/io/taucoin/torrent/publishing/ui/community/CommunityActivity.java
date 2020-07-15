@@ -1,16 +1,12 @@
 package io.taucoin.torrent.publishing.ui.community;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.Html;
-import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.github.naturs.logger.Logger;
-import com.leinardi.android.speeddial.SpeedDialActionItem;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -26,23 +22,15 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
-import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityCommunityBinding;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.chat.ChatsTabFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.transaction.NicknameActivity;
-import io.taucoin.torrent.publishing.ui.transaction.TransactionCreateActivity;
-import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.torrent.publishing.ui.transaction.TxsTabFragment;
-import io.taucoin.types.MsgType;
 
 /**
  * 单个群组页面
@@ -51,23 +39,20 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private ActivityCommunityBinding binding;
 
     private CommunityViewModel communityViewModel;
-    private TxViewModel txViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Community community;
     private List<Fragment> fragmentList = new ArrayList<>();
-    private int[] titles = new int[]{R.string.community_chain_note, R.string.community_instant_chat};
+    private int[] titles = new int[]{R.string.community_instant_chat, R.string.community_chain_note};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);
-        txViewModel = provider.get(TxViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_community);
         binding.setListener(this);
         initParameter();
         initLayout();
-        initFabSpeedDial();
     }
 
     /**
@@ -85,14 +70,8 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private void initLayout() {
         if(community != null){
             String communityName = community.communityName;
-            String firstLetters = StringUtil.getFirstLettersOfName(communityName);
-            binding.toolbarInclude.roundButton.setText(firstLetters);
-            binding.toolbarInclude.roundButton.setBgColor(Utils.getGroupColor(community.chainID));
             binding.toolbarInclude.tvGroupName.setText(Html.fromHtml(communityName));
             binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats, 0, 0));
-
-            binding.tvTodayMiningIncomeTitle.setText(getString(R.string.community_today_mining_income, UsersUtil.getCoinName(community)));
-            binding.tvTodayMiningIncomeValue.setText("1223");
         }
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
 
@@ -101,17 +80,13 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
 
         // 初始化Tab页
         // 添加Chain Note页面
-        Fragment chainNoteTab = new TxsTabFragment();
+        Fragment chainNoteTab = new ChatsTabFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelable(IntentExtra.BEAN, community);
-        bundle.putInt(IntentExtra.TYPE, TxsTabFragment.TAB_CHAIN_NOTE);
         chainNoteTab.setArguments(bundle);
         fragmentList.add(chainNoteTab);
         // 添加Instant Chat页面
         Fragment instantChatTab = new TxsTabFragment();
-        bundle = new Bundle();
-        bundle.putParcelable(IntentExtra.BEAN, community);
-        bundle.putInt(IntentExtra.TYPE, TxsTabFragment.TAB_INSTANT_CHAT);
         instantChatTab.setArguments(bundle);
         fragmentList.add(instantChatTab);
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -119,71 +94,12 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         binding.viewPager.setAdapter(fragmentAdapter);
         binding.tabLayout.setupWithViewPager(binding.viewPager);
         binding.viewPager.setOffscreenPageLimit(fragmentList.size());
-
-        binding.etMessage.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                boolean isHiddenSend = StringUtil.isEmpty(s);
-                binding.tvSend.setVisibility(isHiddenSend ? View.GONE : View.VISIBLE);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-    }
-
-    /**
-     * 初始化右下角悬浮按钮组件
-     */
-    private void initFabSpeedDial() {
-        binding.fabButton.setOnActionSelectedListener((item) -> {
-            Intent intent = new Intent();
-            intent.putExtra(IntentExtra.BEAN, community);
-            switch (item.getId()) {
-                case R.id.community_transactions:
-                    ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
-                    break;
-                case R.id.community_nickname:
-                    ActivityUtil.startActivity(intent, this, NicknameActivity.class);
-                    break;
-                default:
-                    return false;
-            }
-            binding.fabButton.close();
-            return true;
-        });
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_nickname,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_nickname)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_transactions,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_transactions)
-                .create());
     }
 
     @Override
     public void onStart() {
         super.onStart();
         subscribeCommunityViewModel();
-        txViewModel.getAddState().observe(this, result -> {
-            if(StringUtil.isNotEmpty(result)){
-                ToastUtils.showShortToast(result);
-            }else {
-                binding.etMessage.getText().clear();
-            }
-        });
     }
 
     @Override
@@ -270,21 +186,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
             case R.id.iv_mining_income_close:
                 binding.llTodayIncomeTips.setVisibility(View.GONE);
                 break;
-            case R.id.tv_send:
-                sendForumNote();
-                break;
         }
-    }
-
-    /**
-     * 发送MsgType.RegularForum类型交易
-     */
-    private void sendForumNote() {
-        String chainID = community.chainID;
-        int txType = MsgType.RegularForum.getVaLue();
-        String memo = ViewUtils.getText(binding.etMessage);
-        Tx tx =  new Tx(chainID, FmtMicrometer.fmtTxLongValue("1"), txType, memo);
-        txViewModel.addTransaction(tx);
     }
 
     public class MyAdapter extends FragmentPagerAdapter {

@@ -22,15 +22,13 @@ public interface TxRepository {
 
     /**
      * 根据chainID查询社区
-     * @param chainID 社区链id
-     * @param chat 区分聊天和链上交易
+     * @param chainID 社区链ID
      */
-    List<Tx> getTxsByChainID(String chainID, int chat);
+    List<Tx> getTxsByChainID(String chainID);
 
     /**
      * 根据chainID获取社区的交易的被被观察者
-     * @param chainID 社区链id
-     * @param chat 区分聊天和链上交易
+     * @param chainID 社区链ID
      */
-    Flowable<List<Tx>> observeTxsByChainID(String chainID, int chat);
+    Flowable<List<Tx>> observeTxsByChainID(String chainID);
 }
