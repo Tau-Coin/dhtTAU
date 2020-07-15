@@ -1,6 +1,7 @@
 package io.taucoin.chain;
 
 import io.taucoin.account.AccountManager;
+import io.taucoin.config.ChainConfig;
 import io.taucoin.core.ProofOfTransaction;
 import io.taucoin.core.StateProcessor;
 import io.taucoin.core.TransactionPool;
@@ -11,12 +12,15 @@ import io.taucoin.listener.TauListener;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
+import io.taucoin.util.ByteArrayWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Chain represents one blockchain for tau multi-chain system.
@@ -31,6 +35,8 @@ public class Chain {
 
     // Chain nick name specified by the transaction of creating new blockchain.
     private String nickName;
+
+    private ChainConfig chainConfig;
 
     // Voting thread.
     private Thread votingThread;
@@ -55,6 +61,8 @@ public class Chain {
 
     private Block bestBlock;
 
+    private Map<ByteArrayWrapper, Long> peers;
+
     /**
      * Chain constructor.
      *
@@ -71,13 +79,34 @@ public class Chain {
     private void init() {
         this.track = this.repository.startTracking(this.chainID);
 
+        // get best block
         try {
             byte[] bestBlockHash = this.track.getBestBlockHash(this.chainID);
+            this.bestBlock = this.blockStore.getBlockByHash(this.chainID, bestBlockHash);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+            logger.error("ChainID[{}]: Exception, load genesis.", this.chainID.toString());
             loadGenesisBlock();
         }
 
+        if (null == this.bestBlock) {
+            logger.error("ChainID[{}]: Best block is empty, load genesis.", this.chainID.toString());
+            loadGenesisBlock();
+        }
+
+        // get peers form db
+        try {
+            Set<byte[]> pubKeys = this.track.getPeers(this.chainID);
+            if (null != pubKeys && !pubKeys.isEmpty()) {
+                for (byte[] pubKey: pubKeys) {
+                    this.peers.put(new ByteArrayWrapper(pubKey), (long) 0);
+                }
+            } else {
+                this.peers.put(new ByteArrayWrapper(this.chainConfig.getGenesisMinerPubkey()), (long) 0);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     /**
@@ -85,6 +114,28 @@ public class Chain {
      */
     private void loadGenesisBlock() {
 
+    }
+
+    private void processChain() {
+        init();
+        loop();
+    }
+
+    private void loop() {
+        while (true) {
+            if (minable()) {
+                Block block = mineBlock();
+                tryToConnect(block);
+            } else {
+
+            }
+        }
+    }
+
+    private void vote() {}
+
+    private Block GetBlockrandomlyFormDB() {
+        return null;
     }
 
     private boolean tryToConnect(final Block block) {
@@ -133,6 +184,13 @@ public class Chain {
         // 是否本链
         if (!Arrays.equals(this.chainID, block.getChainID())) {
             logger.error("ChainID[{}]: ChainID mismatch!", this.chainID.toString());
+            return false;
+        }
+
+        // 时间戳检查
+        if (block.getTimeStamp() > System.currentTimeMillis() / 1000) {
+            logger.error("ChainID[{}]: Time is in the future!", this.chainID.toString());
+            return false;
         }
 
         // 区块内部自检
@@ -226,6 +284,41 @@ public class Chain {
     }
 
     private boolean processBlock(Block block, Repository repository) {
+        return true;
+    }
+
+    /**
+     * check if be able to mine now
+     * @return
+     */
+    private boolean minable() {
+        try {
+            byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+            BigInteger power = this.track.getNonce(this.chainID, pubKey);
+            logger.info("ChainID[{}]: My mining power: {}", this.chainID.toString(), power);
+
+            // check base target
+            BigInteger baseTarget = this.pot.calculateRequiredBaseTarget(this.bestBlock, this.blockStore);
+
+            // check generation signature
+            byte[] genSig = this.pot.calculateGenerationSignature(this.bestBlock.getGenerationSignature(), pubKey);
+
+            // check if target >= hit
+            BigInteger target = this.pot.calculateMinerTargetValue(baseTarget, power,
+                    System.currentTimeMillis() / 1000 - this.bestBlock.getTimeStamp());
+
+            BigInteger hit = this.pot.calculateRandomHit(genSig);
+            if (target.compareTo(hit) < 0) {
+                logger.error("ChainID[{}]: Target[{}] value is smaller than hit[{}]!!",
+                        this.chainID.toString(), target, hit);
+                return false;
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
         return true;
     }
 
