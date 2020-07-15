@@ -22,10 +22,10 @@
             android:layout_marginTop="20dp"
             android:enabled="false"
             android:textColor="@color/color_black"
-            android:text="@string/tx_address_hint"
+            android:text="@string/tx_public_key_hint"
             android:inputType="text"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:autofillHints="@string/tx_address_hint" />
+            android:autofillHints="@string/tx_public_key_hint" />
 
         <EditText
             android:id="@+id/et_new_name"

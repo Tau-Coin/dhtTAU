@@ -2,7 +2,9 @@ package io.taucoin.torrent.publishing.ui.community;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.Html;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,17 +26,23 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
+import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityCommunityBinding;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.transaction.NicknameActivity;
 import io.taucoin.torrent.publishing.ui.transaction.TransactionCreateActivity;
+import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.torrent.publishing.ui.transaction.TxsTabFragment;
+import io.taucoin.types.MsgType;
 
 /**
  * 单个群组页面
@@ -43,6 +51,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private ActivityCommunityBinding binding;
 
     private CommunityViewModel communityViewModel;
+    private TxViewModel txViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Community community;
     private List<Fragment> fragmentList = new ArrayList<>();
@@ -53,6 +62,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);
+        txViewModel = provider.get(TxViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_community);
         binding.setListener(this);
         initParameter();
@@ -109,6 +119,24 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         binding.viewPager.setAdapter(fragmentAdapter);
         binding.tabLayout.setupWithViewPager(binding.viewPager);
         binding.viewPager.setOffscreenPageLimit(fragmentList.size());
+
+        binding.etMessage.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                boolean isHiddenSend = StringUtil.isEmpty(s);
+                binding.tvSend.setVisibility(isHiddenSend ? View.GONE : View.VISIBLE);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
     }
 
     /**
@@ -149,6 +177,13 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     public void onStart() {
         super.onStart();
         subscribeCommunityViewModel();
+        txViewModel.getAddState().observe(this, result -> {
+            if(StringUtil.isNotEmpty(result)){
+                ToastUtils.showShortToast(result);
+            }else {
+                binding.etMessage.getText().clear();
+            }
+        });
     }
 
     @Override
@@ -232,12 +267,24 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.iv_link:
-                break;
             case R.id.iv_mining_income_close:
                 binding.llTodayIncomeTips.setVisibility(View.GONE);
                 break;
+            case R.id.tv_send:
+                sendForumNote();
+                break;
         }
+    }
+
+    /**
+     * 发送MsgType.RegularForum类型交易
+     */
+    private void sendForumNote() {
+        String chainID = community.chainID;
+        int txType = MsgType.RegularForum.getVaLue();
+        String memo = ViewUtils.getText(binding.etMessage);
+        Tx tx =  new Tx(chainID, FmtMicrometer.fmtTxLongValue("1"), txType, memo);
+        txViewModel.addTransaction(tx);
     }
 
     public class MyAdapter extends FragmentPagerAdapter {

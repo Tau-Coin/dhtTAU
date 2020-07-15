@@ -86,8 +86,6 @@ public class UserViewModel extends AndroidViewModel {
             String result = "";
             try {
                 byte[] seedBytes = ByteUtil.toByte(seed);
-                Logger.d("import seed::%s, size::%d", seed, seed.length());
-                Logger.d("import seedBytes::%s, length::%d", Arrays.toString(seedBytes), seedBytes.length);
                 Pair<byte[], byte[]> keypair = Ed25519.createKeypair(seedBytes);
                 String publicKey = ByteUtil.toHexString(keypair.first);
                 Logger.d("import publicKey::%s, size::%d", publicKey, publicKey.length());
@@ -120,7 +118,6 @@ public class UserViewModel extends AndroidViewModel {
     private void generateSeed() {
         byte[] seedBytes = Ed25519.createSeed();
         String seed = ByteUtil.toHexString(seedBytes);
-        Logger.d("generate seedBytes::%s, length::%d", Arrays.toString(seedBytes), seedBytes.length);
         importSeed(seed);
     }
 

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tx_on_chain_msg"
+            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+
+        <EditText
+            android:id="@+id/et_fee"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="20dp"
+            android:singleLine="true"
+            android:gravity="center_horizontal|center"
+            android:hint="@string/tx_fee_hint"
+            android:inputType="numberDecimal|number"
+            android:autofillHints="@string/tx_fee_hint"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+
+        <TextView
+            android:id="@+id/tv_median_fee"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tx_median_fee_tips"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/tx_fee_tips"
+            android:textColor="@color/gray_light"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+
+    </LinearLayout>
+</layout>

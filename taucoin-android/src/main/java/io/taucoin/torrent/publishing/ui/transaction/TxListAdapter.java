@@ -43,22 +43,22 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
         ViewDataBinding binding;
         if(viewType == MsgType.RegularForum.getVaLue()){
             binding = DataBindingUtil.inflate(inflater,
-                    R.layout.item_group_list,
+                    R.layout.item_wiring_tx,
                     parent,
                     false);
         }else if(viewType == MsgType.ForumComment.getVaLue()){
             binding = DataBindingUtil.inflate(inflater,
-                    R.layout.item_group_list,
+                    R.layout.item_wiring_tx,
                     parent,
                     false);
         }else if(viewType == MsgType.CommunityAnnouncement.getVaLue()){
             binding = DataBindingUtil.inflate(inflater,
-                    R.layout.item_group_list,
+                    R.layout.item_wiring_tx,
                     parent,
                     false);
         }else if(viewType == MsgType.DHTBootStrapNodeAnnouncement.getVaLue()){
             binding = DataBindingUtil.inflate(inflater,
-                    R.layout.item_group_list,
+                    R.layout.item_wiring_tx,
                     parent,
                     false);
         }else if(viewType == MsgType.Wiring.getVaLue()){
@@ -68,12 +68,12 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
                     false);
         }else if(viewType == MsgType.IdentityAnnouncement.getVaLue()){
             binding = DataBindingUtil.inflate(inflater,
-                    R.layout.item_group_list,
+                    R.layout.item_wiring_tx,
                     parent,
                     false);
         }else {
             binding = DataBindingUtil.inflate(inflater,
-                    R.layout.item_group_list,
+                    R.layout.item_wiring_tx,
                     parent,
                     false);
         }
@@ -133,30 +133,33 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
             if(binding instanceof ItemWiringTxBinding){
                 ItemWiringTxBinding txBinding = (ItemWiringTxBinding) holder.binding;
                 String time = DateUtil.formatTime(tx.timestamp, DateUtil.pattern0);
-                txBinding.leftView.setBgColor(Utils.getGroupColor(tx.senderPubKey));
-                String showName = UsersUtil.getDefaultName(tx.senderPubKey);
+                txBinding.leftView.setBgColor(Utils.getGroupColor(tx.senderPk));
+                String showName = UsersUtil.getDefaultName(tx.senderPk);
+                txBinding.leftView.setText(StringUtil.getFirstLettersOfName(showName));
+                txBinding.tvName.setText(showName);
+                txBinding.tvMsg.setText(tx.memo);
+                txBinding.tvTime.setText(time);
+            }else{
+                ItemWiringTxBinding txBinding = (ItemWiringTxBinding) holder.binding;
+                String time = DateUtil.formatTime(tx.timestamp, DateUtil.pattern0);
+                txBinding.leftView.setBgColor(Utils.getGroupColor(tx.senderPk));
+                String showName = UsersUtil.getDefaultName(tx.senderPk);
                 txBinding.leftView.setText(StringUtil.getFirstLettersOfName(showName));
                 txBinding.tvName.setText(showName);
                 txBinding.tvMsg.setText(tx.memo);
                 txBinding.tvTime.setText(time);
             }
             View view = binding.getRoot();
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(listener != null){
-                        listener.onItemClicked(tx);
-                    }
+            view.setOnClickListener(v -> {
+                if(listener != null){
+                    listener.onItemClicked(tx);
                 }
             });
-            view.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-                    if(listener != null){
-                        listener.onItemLongClicked(view, tx);
-                    }
-                    return false;
+            view.setOnLongClickListener(view1 -> {
+                if(listener != null){
+                    listener.onItemLongClicked(view1, tx);
                 }
+                return false;
             });
         }
     }

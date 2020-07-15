@@ -8,13 +8,4 @@
         <item>#C9BDD3</item>
         <item>#7C7386</item>
     </array>
-
-    <string-array name="tx_type_name">
-        <item>RegularForum</item>
-        <item>ForumComment</item>
-        <item>CommunityAnnouncement</item>
-        <item>DHTBootStrapNodeAnnouncement</item>
-        <item>Normal</item>
-        <item>IdentityAnnouncement</item>
-    </string-array>
 </resources>

@@ -19,24 +19,34 @@ public class Tx implements Parcelable {
     @NonNull
     public String chainID;                  // 交易所属社区
     @NonNull
-    public String senderPubKey;             // 交易发送者的公钥
-    public String receiverPubKey;           // 交易接收者的公钥
+    public String senderPk;                 // 交易发送者的公钥
+    public String receiverPk;               // 交易接收者的公钥
+    public String genesisPk;                // 创世区块者的公钥 只针对MsgType.CommunityAnnouncement类型
     public long timestamp;                  // 交易时间戳
-    public long amount;                     // 交易金额
+    public long amount;                     // 交易金额 只针对MsgType.Wiring类型
     public long fee;                        // 交易费
-    public String memo;                     // 交易的备注、介绍等
+    public String memo;                     // 交易的备注、介绍、描述等
+    public String name;                     // 用户的链上名字 只针对MsgType.CommunityAnnouncement类型
+    public String replyID;                  // 回复的txID 只针对MsgType.ForumComment类型
     public long nonce;                      // nonce
     public int txType;                      // 交易类型，同MsgType中枚举类型
     public int chat;                        // 0: 链上交易; 1: 聊天交易
 
-    public Tx(@NonNull String chainID, String receiverPubKey, long amount, long fee, int txType, String memo, int chat){
+    public Tx(@NonNull String chainID, String receiverPk, long amount, long fee, int txType, String memo){
         this.chainID = chainID;
-        this.receiverPubKey = receiverPubKey;
+        this.receiverPk = receiverPk;
         this.amount = amount;
         this.fee = fee;
         this.txType = txType;
         this.memo = memo;
-        this.chat = chat;
+    }
+
+    @Ignore
+    public Tx(@NonNull String chainID, long fee, int txType, String memo){
+        this.chainID = chainID;
+        this.fee = fee;
+        this.txType = txType;
+        this.memo = memo;
     }
 
     @Ignore
@@ -45,13 +55,15 @@ public class Tx implements Parcelable {
         chainID = in.readString();
         amount = in.readLong();
         fee = in.readLong();
-        senderPubKey = in.readString();
-        receiverPubKey = in.readString();
+        senderPk = in.readString();
+        receiverPk = in.readString();
+        genesisPk = in.readString();
         memo = in.readString();
         timestamp = in.readLong();
         nonce = in.readLong();
         txType = in.readInt();
         chat = in.readInt();
+        replyID = in.readString();
     }
 
     @Override
@@ -60,13 +72,15 @@ public class Tx implements Parcelable {
         dest.writeString(chainID);
         dest.writeLong(amount);
         dest.writeLong(fee);
-        dest.writeString(senderPubKey);
-        dest.writeString(receiverPubKey);
+        dest.writeString(senderPk);
+        dest.writeString(receiverPk);
+        dest.writeString(genesisPk);
         dest.writeString(memo);
         dest.writeLong(timestamp);
         dest.writeLong(nonce);
         dest.writeInt(txType);
         dest.writeInt(chat);
+        dest.writeString(replyID);
     }
 
     @Override

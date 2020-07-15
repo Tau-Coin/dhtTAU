@@ -24,12 +24,12 @@ import java.util.Locale;
 
 public class FmtMicrometer {
     
-    private static String mDecimal = "100";
-    private static int mScale = 2;
+    private static String mDecimal = "100000000";
+    private static int mScale = 8;
 
     public static String fmtBalance(Long balance) {
         DecimalFormat df = getDecimalFormatInstance();
-        df.applyPattern("###,##0.00");
+        df.applyPattern("###,##0.00000000");
         df.setRoundingMode(RoundingMode.FLOOR);
         BigDecimal bigDecimal = new BigDecimal(balance);
         bigDecimal = bigDecimal.divide(new BigDecimal(mDecimal), mScale, RoundingMode.HALF_UP);
@@ -38,7 +38,7 @@ public class FmtMicrometer {
 
     static String fmtMiningIncome(Long balance) {
         DecimalFormat df = getDecimalFormatInstance();
-        df.applyPattern("###,##0.00");
+        df.applyPattern("###,##0.00000000");
         df.setRoundingMode(RoundingMode.FLOOR);
         BigDecimal bigDecimal = new BigDecimal(balance);
         bigDecimal = bigDecimal.divide(new BigDecimal(mDecimal), mScale, RoundingMode.HALF_UP);
@@ -64,7 +64,7 @@ public class FmtMicrometer {
 
     static String fmtValue(double value) {
         DecimalFormat df = getDecimalFormatInstance();
-        df.applyPattern("###,##0.##");
+        df.applyPattern("###,##0.########");
         df.setRoundingMode(RoundingMode.FLOOR);
         BigDecimal bigDecimal = new BigDecimal(value);
         return df.format(bigDecimal);
@@ -73,7 +73,7 @@ public class FmtMicrometer {
     public static String fmtDecimal(String value) {
         try {
             DecimalFormat df = getDecimalFormatInstance();
-            df.applyPattern("###,##0.00");
+            df.applyPattern("###,##0.00000000");
             df.setRoundingMode(RoundingMode.FLOOR);
             BigDecimal bigDecimal = new BigDecimal(value);
             return df.format(bigDecimal);
@@ -111,7 +111,7 @@ public class FmtMicrometer {
             BigDecimal number = new BigDecimal(num);
             number = number.divide(new BigDecimal(mDecimal), mScale, RoundingMode.HALF_UP);
             DecimalFormat df = getDecimalFormatInstance();
-            df.applyPattern("0.00");
+            df.applyPattern("0.00000000");
             return df.format(number);
         } catch (Exception e) {
             return num;
@@ -124,7 +124,7 @@ public class FmtMicrometer {
             bigDecimal = bigDecimal.divide(new BigDecimal(mDecimal), mScale, RoundingMode.HALF_UP);
 
             DecimalFormat df = getDecimalFormatInstance();
-            df.applyPattern("0.##");
+            df.applyPattern("0.##########");
             return df.format(bigDecimal);
         }catch (Exception ignore){
 
@@ -146,13 +146,18 @@ public class FmtMicrometer {
         return new BigInteger("0").toString();
     }
 
+    public static long fmtTxLongValue(String value) {
+        String txValue = fmtTxValue(value);
+        return new BigInteger(txValue).longValue();
+    }
+
     public static String fmtFormatFee(String num, String multiply) {
         try {
             BigDecimal number = new BigDecimal(num);
             number = number.multiply(new BigDecimal(multiply));
 
             DecimalFormat df = getDecimalFormatInstance();
-            df.applyPattern("0.00");
+            df.applyPattern("0.00000000");
             return df.format(number);
         } catch (Exception e) {
             return num;

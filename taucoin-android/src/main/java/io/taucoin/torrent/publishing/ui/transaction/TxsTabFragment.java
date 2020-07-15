@@ -57,7 +57,6 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         txViewModel = provider.get(TxViewModel.class);
         initParameter();
         initView();
-//        initFabSpeedDial();
     }
 
     /**
@@ -82,6 +81,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
             }
         };
         LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
+//        layoutManager.setReverseLayout(true);
         binding.txList.setLayoutManager(layoutManager);
         binding.txList.setItemAnimator(animator);
         binding.txList.setAdapter(adapter);
@@ -96,7 +96,10 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         }
         disposables.add(txViewModel.observeTxsByChainID(community.chainID, tabType)
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(list -> adapter.setDataList(list)));
+            .subscribe(list -> {
+                adapter.setDataList(list);
+                binding.txList.smoothScrollToPosition(adapter.getItemCount());
+            }));
     }
 
     @Override

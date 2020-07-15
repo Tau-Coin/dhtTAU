@@ -9,6 +9,7 @@
     <string name="common_proceed">Proceed</string>
     <string name="common_back">Back</string>
     <string name="common_slant">(%1$d/%2$d)</string>
+    <string name="common_submit">Submit</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
     <string name="close_navigation_drawer">Close navigation drawer</string>
@@ -120,9 +121,8 @@
     <string name="copy_seed">Seed copied</string>
 
     <!-- Strings used for transactions -->
-    <string name="tx_community_selected">C/%1$s></string>
-    <string name="tx_type_selected">Type/%1$s></string>
-    <string name="tx_address_hint">Address</string>
+    <string name="tx_send">Send</string>
+    <string name="tx_public_key_hint">Public Key</string>
     <string name="tx_amount_hint">Amount</string>
     <string name="tx_memo_hint">Memo</string>
     <string name="tx_median_fee">Transaction median fee/%1$s %2$s</string>
@@ -133,5 +133,16 @@
     <string name="tx_operation_forward">Forward</string>
     <string name="tx_operation_blacklist">Blacklist</string>
     <string name="tx_operation_favorite">Favorite</string>
+    <string name="tx_error_type">No such transaction type!</string>
+    <string name="tx_created_successfully">Create Transaction Successful!</string>
+    <string name="tx_on_chain_msg">On-Chain Message</string>
+    <string name="tx_fee_hint">Fee</string>
+    <string name="tx_median_fee_tips">Transaction median fee:%1$s</string>
+    <string name="tx_fee_tips">*More transaction fees more opportunities be packaged miners.</string>
+    <string name="tx_error_invalid_pk">Invalid receiver\'s public key!</string>
+    <string name="tx_error_invalid_fee">Invalid Transaction Fee</string>
+    <string name="tx_error_no_enough_coins">Insufficient Balance :\nAmount + Transaction Fee >= Balance</string>
+    <string name="tx_error_invalid_name">Invalid Name</string>
+    <string name="tx_error_invalid_bootstrap">Invalid Bootstraps</string>
 
 </resources>
