@@ -8,6 +8,11 @@ dependencies {
         //exclude group: "log4j", module: "apache-log4j-extras"
     }
 
+    implementation "io.netty:netty-all:4.1.34.Final"
+    implementation group: "com.thetransactioncompany", name: "jsonrpc2-server", version: "1.11"
+    // https://mvnrepository.com/artifact/net.minidev/json-smart
+    compile group: 'net.minidev', name: 'json-smart', version: '2.1.1'
+
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
