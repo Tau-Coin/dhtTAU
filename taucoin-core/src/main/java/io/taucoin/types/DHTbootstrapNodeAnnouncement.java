@@ -23,6 +23,7 @@ import io.taucoin.util.RLPList;
 /**
  * DHT bootstrap node Announcement message.
  */
+@Deprecated
 public class DHTbootstrapNodeAnnouncement {
     private byte[] chainID;
     private String[] bootNodes;
