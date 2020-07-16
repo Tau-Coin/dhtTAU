@@ -57,7 +57,7 @@ public class ChainParam {
     public static final BigInteger MaxCummulativeDiff = new BigInteger("ffffffffffffffff",16);
     //default genesis power equal to power/year.
     public static final BigInteger DefaultGeneisisPower = new BigInteger("105120");
-    
+
     // range
     public static final int MUTABLE_RANGE = 864; // 3 days
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
