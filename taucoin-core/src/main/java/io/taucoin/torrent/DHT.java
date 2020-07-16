@@ -66,6 +66,14 @@ public final class DHT {
             this.getData = getData;
             this.putSha1hash = putSha1hash;
         }
+
+        public byte[] getData() {
+            return this.getData;
+        }
+
+        public Sha1Hash getSha1hash() {
+            return this.putSha1hash;
+        }
     }
 
     public static class ExchangeMutableItemResult {
