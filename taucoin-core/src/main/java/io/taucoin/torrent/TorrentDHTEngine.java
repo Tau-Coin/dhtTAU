@@ -219,6 +219,29 @@ public class TorrentDHTEngine {
     }
 
     /**
+     * dht tau gets mutable item.
+     *
+     * @param spec getting mutable item specification
+     * @return mutable item
+     */
+    public byte[] dhtGet(GetMutableItemSpec spec) {
+
+        if (!sessionManager.isRunning()) {
+            return null;
+        }
+
+        com.frostwire.jlibtorrent.SessionManager.MutableItem result
+                = sessionManager.dhtGetItem(spec.publicKey,
+                        spec.salt, spec.timeout);
+
+        if (result == null || result.item == null) {
+            return null;
+        }
+
+        return result.item.bencode();
+    }
+
+    /**
      * takes a host name and port pair. That endpoint will be
      * pinged, and if a valid DHT reply is received, the node will be added to
      * the routing table.
