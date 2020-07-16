@@ -13,15 +13,16 @@
         android:background="@drawable/grey_rect_top_round_border">
 
         <TextView
+            android:visibility="gone"
             android:layout_width="60dp"
             android:layout_height="5dp"
             android:layout_marginTop="15dp"
+            android:layout_marginBottom="20dp"
             android:background="@drawable/grey_rect_round_bg"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/item_recycler_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"/>
+            android:layout_height="wrap_content"/>
     </LinearLayout>
 </layout>

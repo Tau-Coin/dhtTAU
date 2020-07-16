@@ -54,8 +54,9 @@
     <string name="community_intro">Introduction(optional)</string>
     <string name="community_contact">ID(Telegram/Whatsapp/FB/Wechat)</string>
     <string name="community_more_settings">More Settings</string>
-    <string name="community_bootstrap_node">DHT Bootstrap Nodes</string>
+    <string name="community_bootstrap_node">DHT Bootstrap Node</string>
     <string name="community_message">Message</string>
+    <string name="community_comment">Comment</string>
     <string name="community_transaction">Transaction</string>
     <string name="community_nickname">Community Nickname</string>
     <string name="community_choose_community">Choose Community</string>
@@ -128,7 +129,13 @@
     <string name="tx_amount_hint">Amount</string>
     <string name="tx_memo_hint">Memo</string>
     <string name="tx_median_fee">Transaction median fee/%1$s %2$s</string>
-    <string name="tx_new_name">New Name(required)</string>
+    <string name="tx_new_name">Nick Name(required)</string>
+    <string name="tx_personal_profile">Personal profile(Optional)</string>
+    <string name="tx_message">Message(required)</string>
+    <string name="tx_contact_id">Contact ID(Optional)</string>
+    <string name="tx_contact_platform">Contact Platform</string>
+    <string name="tx_bootstrap_node">Bootstrap node(required)</string>
+    <string name="tx_comment">Comment(required)</string>
     <string name="tx_operation_reply">Reply</string>
     <string name="tx_operation_copy">Copy</string>
     <string name="tx_operation_copy_link">Copy link</string>
@@ -136,7 +143,6 @@
     <string name="tx_operation_blacklist">Blacklist</string>
     <string name="tx_operation_favorite">Favorite</string>
     <string name="tx_error_type">No such transaction type!</string>
-    <string name="tx_created_successfully">Create Transaction Successful!</string>
     <string name="tx_on_chain_msg">On-Chain Message</string>
     <string name="tx_fee_hint">Fee</string>
     <string name="tx_median_fee_tips">Transaction median fee:%1$s</string>
@@ -145,6 +151,9 @@
     <string name="tx_error_invalid_amount">Invalid Transaction amount</string>
     <string name="tx_error_no_enough_coins">Insufficient Balance :\nAmount + Transaction Fee >= Balance</string>
     <string name="tx_error_invalid_name">Invalid Name</string>
-    <string name="tx_error_invalid_bootstrap">Invalid Bootstraps</string>
+    <string name="tx_error_invalid_bootstrap">Invalid DHT Bootstraps</string>
+    <string name="tx_error_invalid_message">Invalid Message</string>
+    <string name="tx_error_invalid_comment">Invalid Comment</string>
+    <string name="tx_error_invalid_contact">Invalid Contact ID</string>
 
 </resources>

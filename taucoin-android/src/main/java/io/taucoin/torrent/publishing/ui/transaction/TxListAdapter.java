@@ -130,6 +130,7 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
             if(null == binding || null == holder || null == tx){
                 return;
             }
+            String msg = "";
             if(binding instanceof ItemWiringTxBinding){
                 ItemWiringTxBinding txBinding = (ItemWiringTxBinding) holder.binding;
                 String time = DateUtil.formatTime(tx.timestamp, DateUtil.pattern0);
@@ -137,7 +138,8 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
                 String showName = UsersUtil.getDefaultName(tx.senderPk);
                 txBinding.leftView.setText(StringUtil.getFirstLettersOfName(showName));
                 txBinding.tvName.setText(showName);
-                txBinding.tvMsg.setText(tx.memo);
+                msg = tx.memo;
+                txBinding.tvMsg.setText(msg);
                 txBinding.tvTime.setText(time);
             }else{
                 ItemWiringTxBinding txBinding = (ItemWiringTxBinding) holder.binding;
@@ -146,18 +148,20 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
                 String showName = UsersUtil.getDefaultName(tx.senderPk);
                 txBinding.leftView.setText(StringUtil.getFirstLettersOfName(showName));
                 txBinding.tvName.setText(showName);
-                txBinding.tvMsg.setText(tx.memo);
+                msg = tx.memo;
+                txBinding.tvMsg.setText(msg);
                 txBinding.tvTime.setText(time);
             }
-            View view = binding.getRoot();
-            view.setOnClickListener(v -> {
+            View root = binding.getRoot();
+            root.setOnClickListener(v -> {
                 if(listener != null){
                     listener.onItemClicked(tx);
                 }
             });
-            view.setOnLongClickListener(view1 -> {
+            String finalMsg = msg;
+            root.setOnLongClickListener(view -> {
                 if(listener != null){
-                    listener.onItemLongClicked(view1, tx);
+                    listener.onItemLongClicked(tx, finalMsg);
                 }
                 return false;
             });
@@ -166,7 +170,7 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
 
     public interface ClickListener {
         void onItemClicked(Tx tx);
-        void onItemLongClicked(View view, Tx tx);
+        void onItemLongClicked(Tx tx, String msg);
     }
 
     private static final DiffUtil.ItemCallback<Tx> diffCallback = new DiffUtil.ItemCallback<Tx>() {

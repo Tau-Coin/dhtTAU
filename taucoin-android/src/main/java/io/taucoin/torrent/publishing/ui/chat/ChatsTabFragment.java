@@ -170,6 +170,10 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
         ItemOperationsBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.item_operations, null, false);
         binding.replay.setVisibility(View.GONE);
+        binding.copy.setTag(msg);
+        binding.copyLink.setTag(msg);
+        binding.blacklist.setTag(msg.senderPk);
+        binding.favourite.setTag(msg.id);
         binding.setListener(this);
         operationsDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())

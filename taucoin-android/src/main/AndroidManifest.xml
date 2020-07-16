@@ -84,6 +84,12 @@
         <activity
             android:name=".ui.transaction.TransactionCreateActivity"/>
 
+        <activity
+            android:name=".ui.transaction.MessageActivity"/>
+
+        <activity
+            android:name=".ui.transaction.BootStrapNodesActivity"/>
+
     </application>
 
 </manifest>

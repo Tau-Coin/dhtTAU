@@ -1,6 +1,8 @@
 package io.taucoin.torrent.publishing.ui.transaction;
 
 import android.app.Application;
+import android.view.LayoutInflater;
+import android.widget.TextView;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
@@ -9,6 +11,7 @@ import com.github.naturs.logger.Logger;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.BackpressureStrategy;
@@ -22,11 +25,17 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.UserRepository;
+import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
+import io.taucoin.torrent.publishing.databinding.EditFeeDialogBinding;
+import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.types.Comment;
 import io.taucoin.types.CommunityAnnouncement;
 import io.taucoin.types.DHTbootstrapNodeAnnouncement;
@@ -48,6 +57,7 @@ public class TxViewModel extends AndroidViewModel {
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<List<Tx>> chainTxs = new MutableLiveData<>();
     private MutableLiveData<String> addState = new MutableLiveData<>();
+    private CommonDialog editFeeDialog;
     public TxViewModel(@NonNull Application application) {
         super(application);
         txRepo = RepositoryHelper.getTxRepository(application);
@@ -74,6 +84,9 @@ public class TxViewModel extends AndroidViewModel {
     protected void onCleared() {
         super.onCleared();
         disposables.clear();
+        if(editFeeDialog != null){
+            editFeeDialog.closeDialog();
+        }
     }
 
     /**
@@ -172,7 +185,7 @@ public class TxViewModel extends AndroidViewModel {
                     break;
                 case DHTBootStrapNodeAnnouncement:
                     String[] bootNodes = tx.memo.split(",");
-                    DHTbootstrapNodeAnnouncement dhTBootstrapNodeAnn = new DHTbootstrapNodeAnnouncement(new byte[64], bootNodes);
+                    DHTbootstrapNodeAnnouncement dhTBootstrapNodeAnn = new DHTbootstrapNodeAnnouncement(new byte[32], bootNodes);
                     txData = new TxData(msgType, dhTBootstrapNodeAnn.getEncode());
                     break;
                 case Wiring:
@@ -194,17 +207,24 @@ public class TxViewModel extends AndroidViewModel {
      * @param tx 交易数据
      */
     boolean validateTx(Tx tx) {
+        if(null == tx){
+            return false;
+        }
         int msgType = tx.txType;
-        if(msgType == MsgType.DHTBootStrapNodeAnnouncement.getVaLue()){
+        if(msgType == MsgType.RegularForum.getVaLue()){
             if(StringUtil.isEmpty(tx.memo)){
+                ToastUtils.showShortToast(R.string.tx_error_invalid_message);
+                return false;
+            }
+        }else if(msgType == MsgType.ForumComment.getVaLue()){
+            if(StringUtil.isEmpty(tx.memo)){
+                ToastUtils.showShortToast(R.string.tx_error_invalid_comment);
+                return false;
+            }
+        }else if(msgType == MsgType.DHTBootStrapNodeAnnouncement.getVaLue()){
+            if(StringUtil.isEmpty(tx.memo) || !Utils.validateUrl(tx.memo)){
                 ToastUtils.showShortToast(R.string.tx_error_invalid_bootstrap);
                 return false;
-            }else{
-                String[] bootstraps = tx.memo.split(",");
-                if(bootstraps.length == 0){
-                    ToastUtils.showShortToast(R.string.tx_error_invalid_bootstrap);
-                    return false;
-                }
             }
         }else if(msgType == MsgType.Wiring.getVaLue()){
             // TODO: 获取当前用户的余额
@@ -227,5 +247,27 @@ public class TxViewModel extends AndroidViewModel {
             }
         }
         return true;
+    }
+
+    /**
+     * 显示编辑交易费的对话框
+     */
+    public void showEditFeeDialog(BaseActivity activity, TextView tvFee, Community community) {
+        EditFeeDialogBinding editFeeBinding = DataBindingUtil.inflate(LayoutInflater.from(activity),
+                R.layout.edit_fee_dialog, null, false);
+        editFeeBinding.etFee.setText("96.5");
+        editFeeBinding.tvMedianFee.setText(activity.getString(R.string.tx_median_fee_tips, "96.5"));
+        editFeeDialog = new CommonDialog.Builder(activity)
+                .setContentView(editFeeBinding.getRoot())
+                .setPositiveButton(R.string.common_submit, (dialog, which) -> {
+                    dialog.cancel();
+                    String fee = editFeeBinding.etFee.getText().toString();
+                    if(StringUtil.isNotEmpty(fee)){
+                        tvFee.setText(activity.getString(R.string.tx_median_fee, fee, UsersUtil.getCoinName(community)));
+                        tvFee.setTag(fee);
+                    }
+                })
+                .create();
+        editFeeDialog.show();
     }
 }

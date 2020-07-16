@@ -7,7 +7,6 @@ import android.view.View;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
-import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
@@ -16,20 +15,18 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
-import io.taucoin.torrent.publishing.databinding.ActivityTransactionCreateBinding;
+import io.taucoin.torrent.publishing.databinding.ActivityBootstrapNodesBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.types.MsgType;
 
 /**
- * 交易创建页面页面
+ * 添加社区bootstrap nodes页面
  */
-public class TransactionCreateActivity extends BaseActivity implements View.OnClickListener {
+public class BootStrapNodesActivity extends BaseActivity implements View.OnClickListener {
 
-    private ActivityTransactionCreateBinding binding;
-
+    private ActivityBootstrapNodesBinding binding;
     private TxViewModel txViewModel;
-    private CompositeDisposable disposables = new CompositeDisposable();
     private Community community;
 
     @Override
@@ -37,7 +34,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         txViewModel = provider.get(TxViewModel.class);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_transaction_create);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_bootstrap_nodes);
         binding.setListener(this);
         initParameter();
         initLayout();
@@ -57,7 +54,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      */
     private void initLayout() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.community_transaction);
+        binding.toolbarInclude.toolbar.setTitle(R.string.community_bootstrap_node);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
@@ -82,8 +79,8 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
     @Override
     protected void onStop() {
         super.onStop();
-        disposables.clear();
     }
+
 
     /**
      *  创建右上角Menu
@@ -99,7 +96,6 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // 交易创建事件
         if (item.getItemId() == R.id.menu_done) {
             Tx tx = buildTx();
             if(txViewModel.validateTx(tx)){
@@ -115,13 +111,10 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      */
     private Tx buildTx() {
         String chainID = community.chainID;
-        int txType = MsgType.Wiring.getVaLue();
-        String receiverPk = ViewUtils.getText(binding.etPublicKey);
-        String amount = ViewUtils.getText(binding.etAmount);
+        int txType = MsgType.DHTBootStrapNodeAnnouncement.getVaLue();
         String fee = ViewUtils.getStringTag(binding.tvFee);
-        String memo = ViewUtils.getText(binding.etMemo);
-        return new Tx(chainID, receiverPk, FmtMicrometer.fmtTxLongValue(amount),
-                FmtMicrometer.fmtTxLongValue(fee), txType, memo);
+        String memo = ViewUtils.getText(binding.etInput);
+        return new Tx(chainID, FmtMicrometer.fmtTxLongValue(fee), txType, memo);
     }
 
     @Override

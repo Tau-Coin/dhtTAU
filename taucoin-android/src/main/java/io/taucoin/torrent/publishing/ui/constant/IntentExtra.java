@@ -6,6 +6,7 @@ package io.taucoin.torrent.publishing.ui.constant;
 public class IntentExtra {
     public static final String BEAN = "bean";
     public static final String TYPE = "type";
+    public static final String REPLY_ID = "replyID";
     public static final String ANNOUNCE = "announce";
     public static final String CHAIN_ID = "chainID";
 }

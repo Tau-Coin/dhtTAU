@@ -7,7 +7,6 @@ import android.view.View;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
-import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
@@ -16,28 +15,28 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
-import io.taucoin.torrent.publishing.databinding.ActivityTransactionCreateBinding;
+import io.taucoin.torrent.publishing.databinding.ActivityMessageBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.types.MsgType;
 
 /**
- * 交易创建页面页面
+ * Chain note页面
  */
-public class TransactionCreateActivity extends BaseActivity implements View.OnClickListener {
+public class MessageActivity extends BaseActivity implements View.OnClickListener {
 
-    private ActivityTransactionCreateBinding binding;
-
+    private ActivityMessageBinding binding;
     private TxViewModel txViewModel;
-    private CompositeDisposable disposables = new CompositeDisposable();
     private Community community;
+    private String replyID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         txViewModel = provider.get(TxViewModel.class);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_transaction_create);
+        txViewModel = provider.get(TxViewModel.class);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_message);
         binding.setListener(this);
         initParameter();
         initLayout();
@@ -49,6 +48,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
     private void initParameter() {
         if(getIntent() != null){
             community = getIntent().getParcelableExtra(IntentExtra.BEAN);
+            replyID = getIntent().getStringExtra(IntentExtra.REPLY_ID);
         }
     }
 
@@ -57,10 +57,14 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      */
     private void initLayout() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.community_transaction);
+        binding.toolbarInclude.toolbar.setTitle(R.string.community_message);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
+        if(StringUtil.isNotEmpty(replyID)){
+            binding.toolbarInclude.toolbar.setTitle(R.string.community_comment);
+            binding.etInput.setHint(R.string.tx_comment);
+        }
         if(community != null){
             binding.tvFee.setText(getString(R.string.tx_median_fee, "96.5", UsersUtil.getCoinName(community)));
             binding.tvFee.setTag("96.5");
@@ -82,8 +86,8 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
     @Override
     protected void onStop() {
         super.onStop();
-        disposables.clear();
     }
+
 
     /**
      *  创建右上角Menu
@@ -99,7 +103,6 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // 交易创建事件
         if (item.getItemId() == R.id.menu_done) {
             Tx tx = buildTx();
             if(txViewModel.validateTx(tx)){
@@ -115,13 +118,12 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      */
     private Tx buildTx() {
         String chainID = community.chainID;
-        int txType = MsgType.Wiring.getVaLue();
-        String receiverPk = ViewUtils.getText(binding.etPublicKey);
-        String amount = ViewUtils.getText(binding.etAmount);
+        int txType = MsgType.RegularForum.getVaLue();
         String fee = ViewUtils.getStringTag(binding.tvFee);
-        String memo = ViewUtils.getText(binding.etMemo);
-        return new Tx(chainID, receiverPk, FmtMicrometer.fmtTxLongValue(amount),
-                FmtMicrometer.fmtTxLongValue(fee), txType, memo);
+        String memo = ViewUtils.getText(binding.etInput);
+        Tx tx = new Tx(chainID, FmtMicrometer.fmtTxLongValue(fee), txType, memo);
+        tx.replyID = replyID;
+        return tx;
     }
 
     @Override

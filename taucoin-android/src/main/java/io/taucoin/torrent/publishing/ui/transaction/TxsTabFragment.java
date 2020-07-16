@@ -22,12 +22,15 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.CopyManager;
+import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentTxsTabBinding;
 import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
  * 交易Tab页
@@ -37,6 +40,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     private BaseActivity activity;
     private FragmentTxsTabBinding binding;
     private TxViewModel txViewModel;
+    private UserViewModel userViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private TxListAdapter adapter;
     private CommonDialog operationsDialog;
@@ -56,6 +60,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         activity = (BaseActivity) getActivity();
         ViewModelProvider provider = new ViewModelProvider(activity);
         txViewModel = provider.get(TxViewModel.class);
+        userViewModel = provider.get(UserViewModel.class);
         initParameter();
         initView();
         initFabSpeedDial();
@@ -103,10 +108,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                     ActivityUtil.startActivity(intent, this, NicknameActivity.class);
                     break;
                 case R.id.community_message:
-                    ActivityUtil.startActivity(intent, this, NicknameActivity.class);
-                    break;
-                case R.id.community_bootstrap_node:
-                    ActivityUtil.startActivity(intent, this, NicknameActivity.class);
+                    ActivityUtil.startActivity(intent, this, MessageActivity.class);
                     break;
                 default:
                     return false;
@@ -114,12 +116,6 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
             binding.fabButton.close();
             return true;
         });
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_bootstrap_node,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_bootstrap_node)
-                .create());
 
         binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
                 R.id.community_nickname,
@@ -184,17 +180,22 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     }
 
     @Override
-    public void onItemLongClicked(View view, Tx tx) {
-        showItemOperationDialog(view, tx);
+    public void onItemLongClicked(Tx tx, String msg) {
+        showItemOperationDialog(tx, msg);
     }
 
     /**
      * 显示每个item长按操作选项对话框
      */
-    private void showItemOperationDialog(View view, Tx tx) {
+    private void showItemOperationDialog(Tx tx, String msg) {
         ItemOperationsBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.item_operations, null, false);
         binding.setListener(this);
+        binding.replay.setTag(tx.txID);
+        binding.copy.setTag(msg);
+        binding.copyLink.setTag(msg);
+        binding.blacklist.setTag(tx.senderPk);
+        binding.favourite.setTag(tx.txID);
         operationsDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
                 .enableWarpWidth(true)
@@ -215,14 +216,20 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         if(operationsDialog != null){
             operationsDialog.closeDialog();
         }
+        String tag = ViewUtils.getStringTag(v);
         switch (v.getId()){
             case R.id.replay:
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.BEAN, community);
+                intent.putExtra(IntentExtra.REPLY_ID, tag);
+                ActivityUtil.startActivity(intent, this, MessageActivity.class);
                 break;
             case R.id.copy:
-                break;
             case R.id.copy_link:
+                CopyManager.copyText(tag);
                 break;
             case R.id.blacklist:
+                userViewModel.setUserBlacklist(tag, true);
                 break;
             case R.id.favourite:
                 break;
