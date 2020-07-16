@@ -48,6 +48,7 @@ public class Block {
 
     private byte[] rlpEncoded;
     private byte[] rlpSigEncoded;
+    private byte[] hash;
     private boolean isParsed;
 
     /**
@@ -397,6 +398,126 @@ public class Block {
     }
 
     /**
+     * set block version
+     * @param version
+     */
+    public void setVersion(byte version) {
+        this.version = version;
+    }
+
+    /**
+     * set block chainID.
+     * @param chainID
+     */
+    public void setChainID(byte[] chainID) {
+        this.chainID = chainID;
+    }
+
+    /**
+     * set block time stamp.
+     * @param timestamp
+     */
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    /**
+     * set block number.
+     * @param blockNum
+     */
+    public void setBlockNum(long blockNum) {
+        this.blockNum = blockNum;
+    }
+
+    /**
+     * set previous block hash.
+     * @param previousBlockHash
+     */
+    public void setPreviousBlockHash(byte[] previousBlockHash) {
+        this.previousBlockHash = previousBlockHash;
+    }
+
+    /**
+     * set immutable block hash.
+     * @param immutableBlockHash
+     */
+    public void setImmutableBlockHash(byte[] immutableBlockHash) {
+        this.immutableBlockHash = immutableBlockHash;
+    }
+
+    /**
+     * set block baseTarget.
+     * @param baseTarget
+     */
+    public void setBaseTarget(BigInteger baseTarget) {
+        this.baseTarget = baseTarget;
+    }
+
+    /**
+     * set block cummulative difficulty.
+     * @param cumulativeDifficulty
+     */
+    public void setCumulativeDifficulty(BigInteger cumulativeDifficulty) {
+        this.cumulativeDifficulty = cumulativeDifficulty;
+    }
+
+    /**
+     * set block generation signature.
+     * @param generationSignature
+     */
+    public void setGenerationSignature(byte[] generationSignature) {
+        this.generationSignature = generationSignature;
+    }
+
+    /**
+     * set block tx Message.
+     * @param txMsg
+     */
+    public void setTxMsg(Transaction txMsg) {
+        this.txMsg = txMsg;
+    }
+
+    /**
+     * set miner balance.
+     * @param minerBalance
+     */
+    public void setMinerBalance(long minerBalance) {
+        this.minerBalance = minerBalance;
+    }
+
+    /**
+     * set sender balance.
+     * @param senderBalance
+     */
+    public void setSenderBalance(long senderBalance) {
+        this.senderBalance = senderBalance;
+    }
+
+    /**
+     * set receiver balance.
+     * @param receiverBalance
+     */
+    public void setReceiverBalance(long receiverBalance) {
+        this.receiverBalance = receiverBalance;
+    }
+
+    /**
+     * set sender nonce.
+     * @param senderNonce
+     */
+    public void setSenderNonce(long senderNonce) {
+        this.senderNonce = senderNonce;
+    }
+
+    /**
+     * set miner pubkey.
+     * @param minerPubkey
+     */
+    public void setMinerPubkey(byte[] minerPubkey) {
+        this.minerPubkey = minerPubkey;
+    }
+
+    /**
      * set block Signature
      * @param signature
      */
@@ -404,14 +525,14 @@ public class Block {
         this.signature = signature;
     }
 
+    /**
+     * get block hash
+     * @return
+     */
     public byte[] getBlockHash(){
-        MessageDigest digest;
-        try{
-            digest = MessageDigest.getInstance("SHA-256");
-        }catch (NoSuchAlgorithmException e){
-            return null;
+        if(hash == null){
+            hash = HashUtil.sha1hash(this.getEncoded());
         }
-        byte[] hash = digest.digest(this.getEncoded());
         return hash;
     }
 

@@ -295,13 +295,7 @@ public class Transaction {
      */
     public byte[] getTxID(){
         if(txID == null){
-            MessageDigest digest;
-            try{
-                digest = MessageDigest.getInstance("SHA-256");
-            }catch (NoSuchAlgorithmException e){
-                return null;
-            }
-            txID = digest.digest(this.getEncoded());
+            txID = HashUtil.sha1hash(this.getEncoded());
         }
         return txID;
     }
