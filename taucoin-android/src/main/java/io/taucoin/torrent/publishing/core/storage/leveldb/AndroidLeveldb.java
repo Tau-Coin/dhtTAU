@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.core.storage.leveldb;
 
 import io.taucoin.db.KeyValueDataBase;
+import io.taucoin.util.ByteUtil;
 
 import com.github.hf.leveldb.exception.LevelDBException;
 import com.github.hf.leveldb.LevelDB;
@@ -114,7 +115,7 @@ public class AndroidLeveldb implements KeyValueDataBase {
         SimpleWriteBatch batch = new SimpleWriteBatch(this.db);
 
         for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
-            batch.put(entry.getKey(), entry.getValue());
+            batch = batch.put(entry.getKey(), entry.getValue());
         }
 
         // sync write batch
@@ -160,10 +161,16 @@ public class AndroidLeveldb implements KeyValueDataBase {
 
         Set<byte[]> results = new HashSet<byte[]>();
         Iterator iterator = db.iterator();
+        byte[] key = null;
 
         iterator.seek(prefix);
         for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
-            results.add(iterator.key());
+            key = iterator.key();
+            if (key != null && ByteUtil.startsWith(key, prefix)) {
+                results.add(key);
+            } else {
+                break;
+            }
         }
         iterator.close();
 
@@ -187,8 +194,10 @@ public class AndroidLeveldb implements KeyValueDataBase {
         iterator.seek(prefix);
         for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
             key = iterator.key();
-            if (key != null) {
+            if (key != null && ByteUtil.startsWith(key, prefix)) {
                 db.del(key, true);
+            } else {
+                break;
             }
         }
         iterator.close();
