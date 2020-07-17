@@ -2,42 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:id="@+id/menu_search"
-        app:showAsAction="ifRoom"
-        android:icon="@mipmap/ic_search_white_24dp"
-        android:title="@string/menu_search" />
-
-<!--    <item android:id="@+id/menu_mining_pool"-->
-<!--        app:showAsAction="ifRoom"-->
-<!--        android:icon="@mipmap/ic_download_grey600_24dp"-->
-<!--        android:title="@string/menu_mining_pool" />-->
-
-<!--    <item android:id="@+id/menu_filter"-->
-<!--        app:showAsAction="never"-->
-<!--        android:title="@string/menu_filter" />-->
-
-<!--    <item android:id="@+id/menu_keys"-->
-<!--        app:showAsAction="never"-->
-<!--        android:title="@string/menu_keys" />-->
-
-<!--    <item android:id="@+id/menu_resume_all"-->
-<!--        app:showAsAction="never"-->
-<!--        android:title="@string/menu_resume_all" />-->
-
-<!--    <item android:id="@+id/menu_pause_all"-->
-<!--        app:showAsAction="never"-->
-<!--        android:title="@string/menu_pause_all" />-->
-
-<!--    <item android:id="@+id/menu_journal"-->
-<!--        android:title="@string/menu_journal" />-->
-
-<!--    <item android:id="@+id/menu_rename"-->
-<!--        android:title="@string/menu_rename" />-->
-
-<!--    <item android:id="@+id/menu_mining_group"-->
-<!--        android:title="@string/menu_mining_group" />-->
-
-<!--    <item android:id="@+id/menu_about"-->
-<!--        android:title="@string/menu_about" />-->
-
+    <item android:id="@+id/menu_alert"
+        app:showAsAction="always"
+        android:icon="@mipmap/menu_notifications"
+        android:title="@string/menu_alert" />
 </menu>

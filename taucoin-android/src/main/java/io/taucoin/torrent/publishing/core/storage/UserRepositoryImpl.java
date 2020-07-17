@@ -73,6 +73,7 @@ public class UserRepositoryImpl implements UserRepository{
      * 设置当前用户是否是当前用户
      * @param isCurrentUser 是否是当前用户
      */
+    @Override
     public void setCurrentUser(String publicKey, boolean isCurrentUser){
         db.userDao().setCurrentUser(publicKey, isCurrentUser);
     }
@@ -81,6 +82,7 @@ public class UserRepositoryImpl implements UserRepository{
      * 获取在黑名单的用户列表
      * @return  List<User>
      */
+    @Override
     public List<User> getUsersInBlacklist(){
         return db.userDao().getUsersInBlacklist();
     }
@@ -90,7 +92,26 @@ public class UserRepositoryImpl implements UserRepository{
      * @param publicKey 公钥
      * @param blacklist 是否加入黑名单
      */
+    @Override
     public void setUserBlacklist(String publicKey, boolean blacklist){
         db.userDao().setUserBlacklist(publicKey, blacklist ? 1 : 0);
+    }
+
+    /**
+     * 观察Sees历史列表
+     */
+    @Override
+    public Flowable<List<User>> observeSeedHistoryList(){
+        return db.userDao().observeSeedHistoryList();
+    }
+
+    /**
+     * 根据公钥获取用户
+     * @param publicKey 公钥
+     * @return 当前用户User实例
+     */
+    @Override
+    public User getUserByPublicKey(String publicKey){
+        return db.userDao().getUserByPublicKey(publicKey);
     }
 }

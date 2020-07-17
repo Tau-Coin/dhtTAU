@@ -19,48 +19,75 @@
             android:id="@+id/toolbar_include"
             layout="@layout/toolbar" />
 
-        <EditText
-            android:id="@+id/et_seed"
+        <LinearLayout
+            android:orientation="vertical"
+            android:background="@color/color_white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_import_seed"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="@{listener::onClick}"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/user_import_seed"/>
+
+            <include
+                android:layout_marginStart="65dp"
+                layout="@layout/view_line"
+                android:layout_width="match_parent"
+                android:layout_height="1dp" />
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_export_seed"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="@{listener::onClick}"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/user_export_seed"/>
+
+            <include
+                android:layout_marginStart="65dp"
+                layout="@layout/view_line"
+                android:layout_width="match_parent"
+                android:layout_height="1dp" />
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_generate_seed"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:onClick="@{listener::onClick}"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/user_generate_seed"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:background="@color/color_white"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="50dp"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"
-            android:layout_marginTop="30dp"
-            android:gravity="center_horizontal|bottom"
-            android:hint="@string/user_seed_import_tip"
-            android:inputType="textMultiLine"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:autofillHints="@string/community_coin_name" />
+            android:layout_marginTop="10dp"
+            android:paddingTop="20dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="0dp"
+            android:paddingBottom="0dp">
 
-        <TextView
-            android:id="@+id/btn_seed_import"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="@string/user_seed_import"
-            android:onClick="@{listener::onClick}"
-            android:textAllCaps="false"
-            android:textColor="@color/color_white"
-            android:gravity="center_vertical|center"
-            android:background="@drawable/primary_rect_round_bg"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:layout_marginTop="35dp"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/user_seeds_history"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textColor="@color/primary"
+                android:paddingBottom="20dp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/btn_seed_generate"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="@string/user_seed_generate"
-            android:onClick="@{listener::onClick}"
-            android:textAllCaps="false"
-            android:textColor="@color/color_white"
-            android:gravity="center_vertical|center"
-            android:background="@drawable/black_light_rect_round_bg"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:layout_marginTop="45dp"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"/>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/history_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </LinearLayout>
     </LinearLayout>
 </layout>

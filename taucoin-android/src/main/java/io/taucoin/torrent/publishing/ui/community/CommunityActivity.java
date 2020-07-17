@@ -1,14 +1,12 @@
 package io.taucoin.torrent.publishing.ui.community;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.github.naturs.logger.Logger;
-
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,11 +18,8 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
-import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityCommunityBinding;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -36,8 +31,9 @@ import io.taucoin.torrent.publishing.ui.transaction.TxsTabFragment;
  * 单个群组页面
  */
 public class CommunityActivity extends BaseActivity implements View.OnClickListener {
-    private ActivityCommunityBinding binding;
 
+    private static final int REQUEST_CODE = 100;
+    private ActivityCommunityBinding binding;
     private CommunityViewModel communityViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Community community;
@@ -51,6 +47,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         communityViewModel = provider.get(CommunityViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_community);
         binding.setListener(this);
+        binding.toolbarInclude.setListener(this);
         initParameter();
         initLayout();
     }
@@ -127,38 +124,6 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         getMenuInflater().inflate(R.menu.menu_community, menu);
         return true;
     }
-
-    /**
-     *  invalidateOptionsMenu执行后重新控制menu的显示
-     */
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        String publicKey = MainApplication.getInstance().getPublicKey();
-        boolean isCreator = community != null && StringUtil.equals(community.publicKey, publicKey);
-        Logger.d("publicKey=%s", community != null ? community.publicKey:"");
-        Logger.d("publicKey=%s", publicKey);
-        menu.findItem(R.id.menu_blacklist).setVisible(!isCreator);
-        menu.findItem(R.id.menu_settings).setVisible(isCreator);
-        return super.onPrepareOptionsMenu(menu);
-    }
-
-    /**
-     *  重构onMenuOpened方法，通过反射显示icon
-     */
-    @Override
-    public boolean onMenuOpened(int featureId, Menu menu) {
-        if (menu != null) {
-            if (menu.getClass().getSimpleName().equalsIgnoreCase("MenuBuilder")) {
-                try {
-                    Method method = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
-                    method.setAccessible(true);
-                    method.invoke(menu, true);
-                } catch (Exception ignore) {
-                }
-            }
-        }
-        return super.onMenuOpened(featureId, menu);
-    }
     /**
      * 右上角Menu选项选择事件
      */
@@ -167,25 +132,22 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         if( null == community){
             return false;
         }
-        switch (item.getItemId()) {
-            case R.id.menu_settings:
-                ActivityUtil.startActivity(this, CommunitySettingActivity.class);
-                break;
-            case R.id.menu_blacklist:
-                communityViewModel.setCommunityBlacklist(community.chainID, true);
-                break;
-            case R.id.menu_invite_friends:
-                break;
+        if (item.getItemId() == R.id.menu_community_info) {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.BEAN, community);
+            ActivityUtil.startActivityForResult(intent, this, CommunityInfoActivity.class, REQUEST_CODE);
         }
         return true;
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.iv_mining_income_close:
-                binding.llTodayIncomeTips.setVisibility(View.GONE);
-                break;
+        if (v.getId() == R.id.iv_mining_income_close) {
+            binding.llTodayIncomeTips.setVisibility(View.GONE);
+        }else if (v.getId() == R.id.toolbar_title) {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.BEAN, community);
+            ActivityUtil.startActivity(intent, this, MembersActivity.class);
         }
     }
 
@@ -209,6 +171,14 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         @Override
         public CharSequence getPageTitle(int position) {
             return getResources().getText(titles[position]);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == REQUEST_CODE && resultCode == RESULT_OK){
+            onBackPressed();
         }
     }
 }

@@ -9,7 +9,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.ActivitySettingBinding;
@@ -86,14 +85,14 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.item_notification_sounds:
-                ActivityUtil.startActivity(this, NotificationSoundsActivity.class);
+            case R.id.ll_favorites:
+                ActivityUtil.startActivity(this, DashboardActivity.class);
+                break;
+            case R.id.item_dashboard:
+                ActivityUtil.startActivity(this, DashboardActivity.class);
                 break;
             case R.id.item_privacy_security:
                 ActivityUtil.startActivity(this, PrivacySecurityActivity.class);
-                break;
-            case R.id.item_data_storage:
-                ActivityUtil.startActivity(this, DataStorageActivity.class);
                 break;
             case R.id.item_journal:
                 break;

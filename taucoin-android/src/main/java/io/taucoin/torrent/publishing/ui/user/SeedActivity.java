@@ -5,20 +5,28 @@ import android.view.View;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.storage.entity.User;
+import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
-import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivitySeedBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 
 /**
- * Seed切换页面
+ * Seeds管理页面
  */
-public class SeedActivity extends BaseActivity implements View.OnClickListener {
+public class SeedActivity extends BaseActivity implements View.OnClickListener, HistoryListAdapter.ClickListener {
 
     private ActivitySeedBinding binding;
     private UserViewModel viewModel;
+    private CompositeDisposable disposables = new CompositeDisposable();
+    private HistoryListAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +43,13 @@ public class SeedActivity extends BaseActivity implements View.OnClickListener {
      */
     private void initView() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.drawer_import_seed);
+        binding.toolbarInclude.toolbar.setTitle(R.string.setting_seeds);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
+
+        adapter = new HistoryListAdapter(this);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        binding.historyList.setLayoutManager(layoutManager);
+        binding.historyList.setAdapter(adapter);
     }
 
     @Override
@@ -45,14 +58,20 @@ public class SeedActivity extends BaseActivity implements View.OnClickListener {
         viewModel.getChangeResult().observe(this, result -> {
             if(StringUtil.isNotEmpty(result)){
                 ToastUtils.showShortToast(result);
-            }else {
-                onBackPressed();
             }
         });
+        disposables.add(viewModel.observeSeedHistoryList()
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(list ->{
+                    adapter.setUserList(list);
+                }));
+
     }
 
     @Override
     protected void onStop() {
+        disposables.clear();
         super.onStop();
     }
 
@@ -62,22 +81,22 @@ public class SeedActivity extends BaseActivity implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.btn_seed_import:
-                String seed = ViewUtils.getText(binding.etSeed);
-                if(StringUtil.isEmpty(seed)){
-                    ToastUtils.showShortToast(R.string.user_seed_empty);
-                    return;
-                }
-                viewModel.showSaveSeedDialog(this, seed);
+            case R.id.item_import_seed:
+                viewModel.showSaveSeedDialog(this, false);
                 break;
-            case R.id.btn_seed_generate:
-                viewModel.showSaveSeedDialog(this, null);
+            case R.id.item_export_seed:
+                String publicKey = MainApplication.getInstance().getPublicKey();
+                CopyManager.copyText(publicKey);
+                ToastUtils.showShortToast(R.string.copy_seed);
+                break;
+            case R.id.item_generate_seed:
+                viewModel.showSaveSeedDialog(this, true);
                 break;
         }
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    public void onItemClicked(User user) {
+        viewModel.importSeed(user.publicKey, null);
     }
 }

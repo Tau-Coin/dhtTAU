@@ -10,6 +10,9 @@
     <string name="common_back">Back</string>
     <string name="common_slant">(%1$d/%2$d)</string>
     <string name="common_submit">Submit</string>
+    <string name="common_percent">%1$d%%</string>
+    <string name="common_on">ON</string>
+    <string name="common_off">OFF</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
     <string name="close_navigation_drawer">Close navigation drawer</string>
@@ -25,23 +28,36 @@
     <string name="main_other_transaction">Other Transaction</string>
 
     <!-- Strings used for main drawer content -->
-    <string name="drawer_generate_seed">Generate New Seed</string>
-    <string name="drawer_import_seed">Import Seed</string>
-    <string name="drawer_export_seed">Export Seed</string>
     <string name="drawer_new_community">New Community</string>
     <string name="drawer_contacts">Contacts</string>
-    <string name="drawer_setting">Setting</string>
+    <string name="drawer_setting">Settings</string>
     <string name="drawer_share">Share</string>
-    <string name="drawer_faq">FAQ</string>
+    <string name="drawer_dht_nodes">DHT Nodes/%1$d</string>
+    <string name="drawer_net_speed">%1$d KB/s</string>
 
     <!-- Strings used for menu -->
+    <string name="menu_alert">Alert</string>
     <string name="menu_search">Search</string>
-    <string name="menu_unmute">Unmute</string>
-    <string name="menu_mute">Mute</string>
-    <string name="menu_blacklist">Blacklist</string>
-    <string name="menu_settings">Settings</string>
     <string name="menu_done">Done</string>
-    <string name="menu_invite_friends">Invite Friends</string>
+    <string name="menu_community_info">Community Info</string>
+
+    <string name="community_settings">Settings</string>
+    <string name="community_blacklist">Blacklist</string>
+    <string name="community_blacklist_tips">Move this community to Blacklist</string>
+    <string name="community_invite_friends">Invite Friends</string>
+    <string name="community_mining_info">Mining Info</string>
+    <string name="community_sync_rate">Sync Rate</string>
+    <string name="community_miners_online">Miners Online</string>
+    <string name="community_total_blocks">Total Blocks</string>
+    <string name="community_mining_power">Mining Power</string>
+    <string name="community_info">Info</string>
+    <string name="community_invite_link">Invite Link</string>
+    <string name="community_notifications">Notifications</string>
+    <string name="community_notifications_on">On</string>
+    <string name="community_notifications_off">Off</string>
+    <string name="community_add_member">Add Member</string>
+    <string name="community_invite_link_form">TAUchain:?%1$sdn=%2$s</string>
+    <string name="community_invite_link_bs">bs=%1$s&#038;</string>
 
     <string name="community_input_hint">Message</string>
     <string name="community_users_stats">%1$d members,%2$d online</string>
@@ -73,48 +89,41 @@
     <string name="community_added_successfully">Create Community Successful!</string>
     <string name="community_added_members">+ Add Members Now</string>
 
-    <string name="setting_title">Setting</string>
+    <string name="setting_title">Settings</string>
     <string name="setting_account">PublicKey(Address)</string>
     <string name="setting_import_seed">Tap to import seed</string>
     <string name="setting_username_app">Username in app</string>
-    <string name="setting_notification_sounds">Notification and Sounds</string>
+    <string name="setting_dashboard">Dashboard</string>
     <string name="setting_privacy_security">Privacy and Security</string>
-    <string name="setting_data_storage">Data and Storage</string>
     <string name="setting_community_setting">Community Setting</string>
     <string name="setting_journal">Journal</string>
     <string name="setting_help">Help</string>
+    <string name="setting_community">Community</string>
+    <string name="setting_favorites">Favorites</string>
 
-    <!-- Strings used for Notification and sounds -->
-    <string name="setting_events">Events</string>
-    <string name="setting_pinned">Pinned Messages</string>
-    <string name="setting_other">Other</string>
-    <string name="setting_keep_alive">Keep-Alive Service</string>
-    <string name="setting_keep_alive_tips">Relaunch app when shut down.Enable for reliable notifications.</string>
-    <string name="setting_background_connection">Background connection</string>
-    <string name="setting_background_connection_tips">Keep a low impact background connection for reliable notifications.</string>
-    <string name="setting_repeat_notifications">Repeat Notifications</string>
-    <string name="setting_reset">Reset</string>
-    <string name="setting_reset_all_notifications">Reset All Notifications</string>
-    <string name="setting_reset_all_notifications_tips">Undo all custom notification setting for all your contacts, groups and channels.</string>
-
-    <!-- Strings used for data and storage -->
-    <string name="setting_auto_download">Automatic download</string>
-    <string name="setting_mobile_data_limit">When using mobile data</string>
-    <string name="setting_mobile_data_limit_tips">Maximum time limitation</string>
-    <string name="setting_wifi_connected">When connected on Wi-Fi</string>
-    <string name="setting_wifi_connected_tips">Automatically download onchain information</string>
-    <string name="setting_coins_requests">Requests for coins</string>
-    <string name="setting_coins_requests_tips">Package trx fee zone</string>
-    <string name="setting_daily_data">Daily data</string>
-    <string name="setting_daily_data_tips">Maximum datacom data</string>
+    <!-- Strings used for Dashboard -->
+    <string name="setting_storage">Storage</string>
+    <string name="setting_network">Network</string>
+    <string name="setting_wifi_only">WIFI Only</string>
+    <string name="setting_server_mode">Server Mode</string>
+    <string name="setting_charging">Charging</string>
+    <string name="setting_internet">Internet</string>
+    <string name="setting_wake_lock">Wake Lock</string>
 
     <!-- Strings used for privacy and security -->
     <string name="setting_privacy">Privacy</string>
     <string name="setting_blacklist_users">Blacklist Users</string>
     <string name="setting_blacklist_communities">Blacklist Communities</string>
     <string name="setting_Unblock">Unblock</string>
+    <string name="setting_security">Security</string>
+    <string name="setting_seeds">Seeds</string>
 
-    <string name="user_seed_import_tip">Paste seed here</string>
+    <string name="user_generate_seed">Generate Seed</string>
+    <string name="user_import_seed">Import Seed</string>
+    <string name="user_export_seed">Export Seed</string>
+    <string name="user_seeds_history">History</string>
+    <string name="user_nickname">Nickname(optional)</string>
+    <string name="user_seed_import_hint">Paste Seed(required)</string>
     <string name="user_seed_import">Import</string>
     <string name="user_seed_generate">Generate New Seed</string>
     <string name="user_seed_empty">Seed cannot be empty!</string>
@@ -122,6 +131,8 @@
     <string name="user_blacklist">Blacklist</string>
 
     <string name="copy_seed">Seed copied</string>
+    <string name="copy_public_key">Public key copied</string>
+    <string name="copy_invite_link">Invite link copied</string>
 
     <!-- Strings used for transactions -->
     <string name="tx_send">Send</string>

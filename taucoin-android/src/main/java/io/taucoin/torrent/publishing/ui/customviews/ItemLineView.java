@@ -30,6 +30,7 @@ public class ItemLineView extends RelativeLayout {
     private String rightText;
     private int rightTextColor;
     private int leftImage;
+    private ViewItemLineBinding binding;
 
     public ItemLineView(Context context) {
         this(context, null);
@@ -55,7 +56,7 @@ public class ItemLineView extends RelativeLayout {
     }
 
     private void loadView() {
-        ViewItemLineBinding binding = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.view_item_line, this, true);
+        binding = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.view_item_line, this, true);
         if(leftImage != -1){
             binding.ivLeft.setImageResource(leftImage);
         }
@@ -63,5 +64,12 @@ public class ItemLineView extends RelativeLayout {
             binding.tvRight.setText(rightText);
         }
         binding.tvRight.setTextColor(rightTextColor);
+    }
+
+    public void setRightText(CharSequence rightText) {
+        this.rightText = rightText.toString();
+       if(binding != null){
+           binding.tvRight.setText(rightText);
+       }
     }
 }

@@ -7,16 +7,16 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.databinding.ActivityDataStorageBinding;
+import io.taucoin.torrent.publishing.databinding.ActivityDashboardBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
- * 数据存储页面
+ * 仪表板页面
  */
-public class DataStorageActivity extends BaseActivity implements View.OnClickListener {
+public class DashboardActivity extends BaseActivity implements View.OnClickListener {
 
-    private ActivityDataStorageBinding binding;
+    private ActivityDashboardBinding binding;
     private UserViewModel viewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
 
@@ -25,7 +25,7 @@ public class DataStorageActivity extends BaseActivity implements View.OnClickLis
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         viewModel = provider.get(UserViewModel.class);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_data_storage);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_dashboard);
         binding.setListener(this);
         initView();
     }
@@ -35,9 +35,10 @@ public class DataStorageActivity extends BaseActivity implements View.OnClickLis
      */
     private void initView() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.setting_data_storage);
+        binding.toolbarInclude.toolbar.setTitle(R.string.setting_dashboard);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -53,7 +54,6 @@ public class DataStorageActivity extends BaseActivity implements View.OnClickLis
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-
         }
     }
 }

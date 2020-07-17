@@ -13,7 +13,7 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="100dp"
+                android:layout_height="120dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:paddingStart="20dp"
@@ -32,17 +32,18 @@
                     app:borderWidth="0dp"
                     app:radius="35dp"
                     app:isRadiusAutoHalf="true"
-                    app:bgColor="@color/primary_light"
+                    app:bgColor="@color/primary_dark"
                     app:textColorForPressed="@color/color_white" />
 
                 <TextView
                     android:layout_toEndOf="@+id/round_button"
                     android:id="@+id/tv_note_name"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
-                    android:layout_marginTop="5dp"
+                    android:layout_marginTop="0dp"
                     android:singleLine="true"
+                    android:textStyle="bold"
                     android:ellipsize="end"
                     android:textColor="@color/color_white"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
@@ -50,43 +51,43 @@
                 <TextView
                     android:layout_toEndOf="@+id/round_button"
                     android:layout_below="@+id/tv_note_name"
-                    android:id="@+id/tv_public_key"
-                    android:layout_width="match_parent"
+                    android:id="@+id/tv_public_key_title"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
                     android:layout_marginTop="2dp"
+                    android:text="@string/tx_public_key_hint"
                     android:singleLine="true"
                     android:ellipsize="end"
                     android:textColor="@color/color_blue_white"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
 
+                <TextView
+                    android:layout_toEndOf="@+id/round_button"
+                    android:layout_below="@+id/tv_public_key_title"
+                    android:id="@+id/tv_public_key"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="2dp"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:onClick="onClick"
+                    android:textColor="@color/color_blue_white"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+                <ImageView
+                    android:id="@+id/iv_public_key_copy"
+                    android:layout_below="@+id/tv_public_key_title"
+                    android:layout_toEndOf="@+id/tv_public_key"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:onClick="onClick"
+                    android:layout_marginTop="7dp"
+                    android:contentDescription="@null"
+                    android:layout_marginStart="5dp"
+                    android:src="@mipmap/icon_copy"/>
             </RelativeLayout>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_generate_seed"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/drawer_generate_seed"/>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_import_seed"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/drawer_import_seed"/>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_export_seed"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/drawer_export_seed"/>
-
-            <include layout="@layout/view_line"/>
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_new_community"
@@ -122,13 +123,29 @@
                 app:leftImage="@mipmap/icon_copy"
                 app:rightText="@string/drawer_share"/>
 
+            <include layout="@layout/view_line"/>
+
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_faq"
+                android:id="@+id/item_dht_nodes"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:onClick="onClick"
                 app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/drawer_faq"/>
+                app:rightText="@string/drawer_dht_nodes"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_wifi_speed"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/drawer_net_speed"/>
+
+            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                android:id="@+id/item_telecom_speed"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                app:leftImage="@mipmap/icon_copy"
+                app:rightText="@string/drawer_net_speed"/>
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </layout>

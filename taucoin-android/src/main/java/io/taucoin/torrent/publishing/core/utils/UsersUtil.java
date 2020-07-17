@@ -1,6 +1,10 @@
 package io.taucoin.torrent.publishing.core.utils;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
+import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
 
@@ -63,5 +67,16 @@ public class UsersUtil {
             coin = StringUtil.getFirstLettersOfName(community.communityName) + "Coin";
         }
         return coin;
+    }
+
+    /**
+     * 获取社区邀请链接
+     * @param community 当前社区
+     * @return 显示名字
+     */
+    public static String getCommunityInviteLink(Community community) {
+        Context context = MainApplication.getInstance();
+        String bs = context.getString(R.string.community_invite_link_bs, community.publicKey);
+        return context.getString(R.string.community_invite_link_form, bs, community.chainID);
     }
 }

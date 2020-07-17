@@ -58,4 +58,16 @@ public interface UserRepository {
      * @param blacklist 是否加入黑名单
      */
     void setUserBlacklist(String publicKey, boolean blacklist);
+
+    /**
+     * 观察Sees历史列表
+     */
+    Flowable<List<User>> observeSeedHistoryList();
+
+    /**
+     * 根据公钥获取用户
+     * @param publicKey 公钥
+     * @return 当前用户User实例
+     */
+    User getUserByPublicKey(String publicKey);
 }

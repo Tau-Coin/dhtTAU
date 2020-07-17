@@ -12,6 +12,7 @@ import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityPrivacySecurityBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.user.SeedActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
@@ -65,6 +66,9 @@ public class PrivacySecurityActivity extends BaseActivity implements View.OnClic
                 intent = new Intent();
                 intent.putExtra(IntentExtra.TYPE, BlacklistActivity.TYPE_COMMUNITIES);
                 ActivityUtil.startActivity(intent, this, BlacklistActivity.class);
+                break;
+            case R.id.ll_seeds:
+                ActivityUtil.startActivity(this, SeedActivity.class);
                 break;
         }
     }
