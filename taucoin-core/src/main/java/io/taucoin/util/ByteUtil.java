@@ -609,4 +609,35 @@ public class ByteUtil {
         return data;
     }
 
+    /**
+     * Utility method to check if one byte array starts with a specified sequence
+     * of bytes.
+     *
+     * @param array
+     *          The array to check
+     * @param prefix
+     *          The prefix bytes to test for
+     * @return true if the array starts with the bytes from the prefix
+     */
+    public static boolean startsWith(byte[] array, byte[] prefix) {
+        if (array == prefix) {
+            return true;
+        }
+        if (array == null || prefix == null) {
+            return false;
+        }
+        int prefixLength = prefix.length;
+
+        if (prefix.length > array.length) {
+            return false;
+        }
+
+        for (int i = 0; i < prefixLength; i++) {
+            if (array[i] != prefix[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
