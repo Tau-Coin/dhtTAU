@@ -9,11 +9,11 @@ import java.math.BigInteger;
 import java.util.*;
 
 // 公钥发布的mutable message也会放在stateDB
-public class RepositoryImpl implements Repository{
+public class StateDBImpl implements StateDB {
 
     private KeyValueDataBase db;
 
-    public RepositoryImpl(KeyValueDataBase db) {
+    public StateDBImpl(KeyValueDataBase db) {
         this.db = db;
     }
 
@@ -40,8 +40,8 @@ public class RepositoryImpl implements Repository{
      * @return the tracker repository
      */
     @Override
-    public Repository startTracking(byte[] chainID) {
-        return new RepositoryTrack(this, chainID);
+    public StateDB startTracking(byte[] chainID) {
+        return new StateDBTrack(this, chainID);
     }
 
     /**

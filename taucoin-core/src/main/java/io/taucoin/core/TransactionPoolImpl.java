@@ -1,6 +1,6 @@
 package io.taucoin.core;
 
-import io.taucoin.db.Repository;
+import io.taucoin.db.StateDB;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
@@ -16,7 +16,7 @@ public class TransactionPoolImpl implements TransactionPool {
 
     private byte[] chainID;
     private byte[] userPubKey;
-    private Repository repository;
+    private StateDB stateDB;
 
 //    private TxNoncer pendingNonce;
     // all transaction: txid <-> transaction
@@ -32,10 +32,10 @@ public class TransactionPoolImpl implements TransactionPool {
     private TransactionPoolImpl() {
     }
 
-    public TransactionPoolImpl(byte[] chainID, byte[] pubKey, Repository repository) {
+    public TransactionPoolImpl(byte[] chainID, byte[] pubKey, StateDB stateDB) {
         this.chainID = chainID;
         this.userPubKey = pubKey;
-        this.repository = repository;
+        this.stateDB = stateDB;
 //        this.pendingNonce = new TxNoncer(chainID, repository);
     }
 
@@ -54,7 +54,7 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     private long getNonce(byte[] pubKey) {
         try {
-            BigInteger nonce = this.repository.getNonce(this.chainID, pubKey);
+            BigInteger nonce = this.stateDB.getNonce(this.chainID, pubKey);
             if (null != nonce) {
                 return nonce.longValue();
             }
@@ -69,7 +69,7 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     private void getSelfTxsFromDB() {
         try {
-            Set<Transaction> transactionSet = this.repository.getSelfTxPool(chainID, userPubKey);
+            Set<Transaction> transactionSet = this.stateDB.getSelfTxPool(chainID, userPubKey);
             if (null != transactionSet) {
                 long currentNonce = getNonce(userPubKey);
                 for (Transaction transaction: transactionSet) {
@@ -113,7 +113,7 @@ public class TransactionPoolImpl implements TransactionPool {
     public void addLocal(Transaction tx) {
         // save to db first
         try {
-            this.repository.putTxIntoSelfTxPool(chainID, tx);
+            this.stateDB.putTxIntoSelfTxPool(chainID, tx);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -177,7 +177,7 @@ public class TransactionPoolImpl implements TransactionPool {
             Transaction tx = getTransactionByTxid(iterator.next().txid);
             if (null != tx) {
                 try {
-                    this.repository.putTxIntoSelfTxPool(chainID, tx);
+                    this.stateDB.putTxIntoSelfTxPool(chainID, tx);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }

@@ -1,6 +1,6 @@
 package io.taucoin.core;
 
-import io.taucoin.db.Repository;
+import io.taucoin.db.StateDB;
 import io.taucoin.util.ByteArrayWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,14 +12,14 @@ public class TxNoncer {
     private static final Logger logger = LoggerFactory.getLogger("TxNoncer");
 
     byte[] chainID;
-    Repository repository;
+    StateDB stateDB;
     Map<ByteArrayWrapper, Long> nonces;
 
     private TxNoncer() {}
 
-    public TxNoncer(byte[] chainID, Repository repository) {
+    public TxNoncer(byte[] chainID, StateDB stateDB) {
         this.chainID = chainID;
-        this.repository = repository;
+        this.stateDB = stateDB;
         this.nonces = new HashMap<>();
     }
 
@@ -34,7 +34,7 @@ public class TxNoncer {
         if(null == nonce) {
             long nonceInDB;
             try {
-                nonceInDB = this.repository.getNonce(chainID, pubKey).longValue();
+                nonceInDB = this.stateDB.getNonce(chainID, pubKey).longValue();
             } catch (Exception e) {
                 logger.info(e.getMessage(), e);
                 nonceInDB = (long)0;

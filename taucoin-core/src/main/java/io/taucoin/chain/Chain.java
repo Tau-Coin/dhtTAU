@@ -5,7 +5,7 @@ import io.taucoin.config.ChainConfig;
 import io.taucoin.core.*;
 import io.taucoin.db.BlockInfo;
 import io.taucoin.db.BlockStore;
-import io.taucoin.db.Repository;
+import io.taucoin.db.StateDB;
 import io.taucoin.listener.TauListener;
 import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.DHT;
@@ -31,15 +31,19 @@ public class Chain {
 
     private static final int TIMEOUT = 10;
 
+    // mutable item salt suffix: block
     private static final String BLOCK_CHANNEL = "#block";
 
+    // mutable item salt suffix: tx
     private static final String TX_CHANNEL = "#tx";
 
     // Chain id specified by the transaction of creating new blockchain.
     private byte[] chainID;
 
+    // mutable item salt: block
     private byte[] blockSalt;
 
+    // mutable item salt: tx
     private byte[] txSalt;
 
     // Chain nick name specified by the transaction of creating new blockchain.
@@ -52,16 +56,22 @@ public class Chain {
 
     private TauListener tauListener;
 
+    // consensus: pot
     private ProofOfTransaction pot;
 
+    // tx pool
     private TransactionPool txPool;
 
+    // voting pool
     private VotingPool votingPool;
 
+    // block db
     private BlockStore blockStore;
 
-    private Repository repository;
+    // state db
+    private StateDB stateDB;
 
+    // state processor: process and roll back block
     private StateProcessor stateProcessor;
 
     private byte[] genesisBlockHash;
@@ -112,7 +122,7 @@ public class Chain {
     private void init() {
         // get best block
         try {
-            byte[] bestBlockHash = this.repository.getBestBlockHash(this.chainID);
+            byte[] bestBlockHash = this.stateDB.getBestBlockHash(this.chainID);
             this.bestBlock = this.blockStore.getBlockByHash(this.chainID, bestBlockHash);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -127,7 +137,7 @@ public class Chain {
 
         // get peers form db
         try {
-            Set<byte[]> pubKeys = this.repository.getPeers(this.chainID);
+            Set<byte[]> pubKeys = this.stateDB.getPeers(this.chainID);
             if (null != pubKeys && !pubKeys.isEmpty()) {
                 for (byte[] pubKey: pubKeys) {
                     this.peers.put(new ByteArrayWrapper(pubKey), (long) 0);
@@ -159,12 +169,13 @@ public class Chain {
 
             // keep looking for more difficult chain
             while (!Thread.interrupted()) {
-                byte[] pubKey = getNextPeer();
+                byte[] pubKey = getOptimalPeer();
                 Block tip = getTipBlockFromPeer(pubKey);
 
                 // give up the less difficult chain
                 if (null == tip || tip.getCumulativeDifficulty().
                         compareTo(this.bestBlock.getCumulativeDifficulty()) < 0) {
+                    txPool.addRemote(tip.getTxMsg());
                     continue;
                 }
 
@@ -175,6 +186,7 @@ public class Chain {
                         byte[] immutableBlockHash = tip.getImmutableBlockHash();
                         BlockInfo blockInfo = this.blockStore.getBlockInfoByHash(this.chainID, immutableBlockHash);
                         // cannot found in block store
+                        // TODO
                         if (null == blockInfo) {
                             votingFlag = true;
                             break;
@@ -215,7 +227,7 @@ public class Chain {
                         continue;
                     } else if (forkRange < ChainParam.MUTABLE_RANGE){
                         // change to more difficult chain
-                        reBranch(tip, repository);
+                        reBranch(tip, stateDB);
                         miningFlag = true;
                         break;
                     } else {
@@ -237,7 +249,7 @@ public class Chain {
 
             // mine
             if (miningFlag) {
-                Repository track = this.repository.startTracking(this.chainID);
+                StateDB track = this.stateDB.startTracking(this.chainID);
                 if (minable(track)) {
                     Block block = mineBlock();
                     // the best block is parent block of the tip
@@ -257,11 +269,11 @@ public class Chain {
     /**
      * re-branch chain
      * @param block
-     * @param repository
+     * @param stateDB
      */
-    private void reBranch(Block block, Repository repository) {
+    private void reBranch(Block block, StateDB stateDB) {
         //try to roll back and reconnect
-        Repository track = repository.startTracking(this.chainID);
+        StateDB track = stateDB.startTracking(this.chainID);
         List<Block> undoBlocks = new ArrayList<>();
         List<Block> newBlocks = new ArrayList<>();
         blockStore.getForkBlocksInfo(block, undoBlocks, newBlocks);
@@ -285,7 +297,7 @@ public class Chain {
 
     private void vote() {}
 
-    private byte[] getNextPeer() {
+    private byte[] getOptimalPeer() {
         return null;
     }
 
@@ -346,18 +358,18 @@ public class Chain {
     /**
      * connect a block
      * @param block
-     * @param repository
+     * @param stateDB
      * @return
      */
-    private boolean tryToConnect(final Block block, Repository repository) {
+    private boolean tryToConnect(final Block block, StateDB stateDB) {
         // if main chain
         if (Arrays.equals(bestBlock.getBlockHash(), block.getPreviousBlockHash())) {
             // main chain
-            if (!isValidBlock(block, repository)) {
+            if (!isValidBlock(block, stateDB)) {
                 return false;
             }
 
-            if (!processBlock(block, repository)) {
+            if (!processBlock(block, stateDB)) {
                 return false;
             }
             return true;
@@ -397,10 +409,10 @@ public class Chain {
     /**
      * check if a block valid
      * @param block
-     * @param repository
+     * @param stateDB
      * @return
      */
-    private boolean isValidBlock(Block block, Repository repository) {
+    private boolean isValidBlock(Block block, StateDB stateDB) {
         // 是否本链
         if (!Arrays.equals(this.chainID, block.getChainID())) {
             logger.error("ChainID[{}]: ChainID mismatch!", this.chainID.toString());
@@ -437,7 +449,7 @@ public class Chain {
         }
 
         // POT共识验证
-        if (!verifyPOT(block, repository)) {
+        if (!verifyPOT(block, stateDB)) {
             logger.error("ChainID[{}]: Validate block param error!", this.chainID.toString());
             return false;
         }
@@ -448,14 +460,14 @@ public class Chain {
     /**
      * check pot consensus
      * @param block
-     * @param repository
+     * @param stateDB
      * @return
      */
-    private boolean verifyPOT(Block block, Repository repository) {
+    private boolean verifyPOT(Block block, StateDB stateDB) {
         try {
             byte[] pubKey = block.getMinerPubkey();
 
-            BigInteger power = repository.getNonce(this.chainID, pubKey);
+            BigInteger power = stateDB.getNonce(this.chainID, pubKey);
             logger.info("Address: {}, mining power: {}", Hex.toHexString(pubKey), power);
 
             Block parentBlock = this.blockStore.getBlockByHash(this.chainID, block.getPreviousBlockHash());
@@ -504,20 +516,20 @@ public class Chain {
         return true;
     }
 
-    private boolean processBlock(Block block, Repository repository) {
+    private boolean processBlock(Block block, StateDB stateDB) {
         return true;
     }
 
     /**
      * check if be able to mine now
-     * @param repository
+     * @param stateDB
      * @return
      */
-    private boolean minable(Repository repository) {
+    private boolean minable(StateDB stateDB) {
         try {
             byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-            BigInteger power = repository.getNonce(this.chainID, pubKey);
+            BigInteger power = stateDB.getNonce(this.chainID, pubKey);
             logger.info("ChainID[{}]: My mining power: {}", this.chainID.toString(), power);
 
             // check base target
@@ -578,7 +590,7 @@ public class Chain {
                 immutableBlockHash, baseTarget, cumulativeDifficulty, generationSignature, tx, 0, 0, 0, 0,
                 AccountManager.getInstance().getKeyPair().first);
         // get state
-        Repository miningTrack = this.repository.startTracking(this.chainID);
+        StateDB miningTrack = this.stateDB.startTracking(this.chainID);
         this.stateProcessor.process(block, miningTrack);
 
         try {

@@ -5,11 +5,10 @@ import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface Repository {
+public interface StateDB {
     /**
      * Open database.
      *
@@ -31,7 +30,7 @@ public interface Repository {
      * @param chainID  chainID
      * @return the tracker repository
      */
-    Repository startTracking(byte[] chainID);
+    StateDB startTracking(byte[] chainID);
 
     /**
      * Store all the temporary changes made

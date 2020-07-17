@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class RepositoryTrack implements Repository {
+public class StateDBTrack implements StateDB {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
 
@@ -19,10 +19,10 @@ public class RepositoryTrack implements Repository {
 
     Map<ByteArrayWrapper, AccountState> cacheAccounts = new HashMap<>();
 
-    Repository repository;
+    StateDB stateDB;
 
-    public RepositoryTrack(Repository repository, byte[] chainID) {
-        this.repository = repository;
+    public StateDBTrack(StateDB stateDB, byte[] chainID) {
+        this.stateDB = stateDB;
         this.chainID = chainID;
     }
 
@@ -52,12 +52,12 @@ public class RepositoryTrack implements Repository {
      * @return the tracker repository
      */
     @Override
-    public Repository startTracking(byte[] chainID) {
+    public StateDB startTracking(byte[] chainID) {
         logger.debug("start tracking");
 
-        Repository repository = new RepositoryTrack(this, chainID);
+        StateDB stateDB = new StateDBTrack(this, chainID);
 
-        return repository;
+        return stateDB;
     }
 
     /**
@@ -66,7 +66,7 @@ public class RepositoryTrack implements Repository {
      */
     @Override
     public void commit() throws Exception {
-        repository.updateAccounts(chainID, cacheAccounts);
+        stateDB.updateAccounts(chainID, cacheAccounts);
         cacheAccounts.clear();
         logger.debug("committed changes");
     }

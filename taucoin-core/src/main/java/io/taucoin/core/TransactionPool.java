@@ -1,7 +1,5 @@
 package io.taucoin.core;
 
-import io.taucoin.db.Repository;
-import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
 
 import java.util.List;

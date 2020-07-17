@@ -1,7 +1,6 @@
 package io.taucoin.core;
 
-import io.taucoin.db.Repository;
-import io.taucoin.param.ChainParam;
+import io.taucoin.db.StateDB;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TxData;
 import io.taucoin.util.ByteArrayWrapper;
@@ -35,8 +34,8 @@ public class TransactionPoolTest {
 
     @Test
     public void AddRemoteTest() {
-        Repository repository = new MockRepository();
-        TransactionPoolImpl pool = new TransactionPoolImpl(new byte[0], new byte[0], repository);
+        StateDB stateDB = new MockStateDB();
+        TransactionPoolImpl pool = new TransactionPoolImpl(new byte[0], new byte[0], stateDB);
         TxData txData = new TxData(ByteUtil.toByte(txdata));
         Transaction tx = new Transaction(version,chainid,150000000,300, sender1,1,txData,signature);
         pool.addRemote(tx);
@@ -60,8 +59,8 @@ public class TransactionPoolTest {
 
     @Test
     public void AddLocalTest() {
-        Repository repository = new MockRepository();
-        TransactionPoolImpl pool = new TransactionPoolImpl(new byte[0], new byte[0], repository);
+        StateDB stateDB = new MockStateDB();
+        TransactionPoolImpl pool = new TransactionPoolImpl(new byte[0], new byte[0], stateDB);
         TxData txData = new TxData(ByteUtil.toByte(txdata));
         Transaction tx = new Transaction(version,chainid,150000000,300, sender1,1,txData,signature);
         pool.addLocal(tx);
@@ -85,8 +84,8 @@ public class TransactionPoolTest {
 
     @Test
     public void SlimDownPoolTest() {
-        Repository repository = new MockRepository();
-        TransactionPoolImpl pool = new TransactionPoolImpl(new byte[0], new byte[0], repository);
+        StateDB stateDB = new MockStateDB();
+        TransactionPoolImpl pool = new TransactionPoolImpl(new byte[0], new byte[0], stateDB);
         TxData txData = new TxData(ByteUtil.toByte(txdata));
         Transaction tx = new Transaction(version,chainid,150000000,300, sender1,1,txData,signature);
         pool.addRemote(tx);
@@ -109,7 +108,7 @@ public class TransactionPoolTest {
         logger.info("{}", pool.remotes);
     }
 
-    class MockRepository implements Repository {
+    class MockStateDB implements StateDB {
         /**
          * Open database.
          *
@@ -136,7 +135,7 @@ public class TransactionPoolTest {
          * @return the tracker repository
          */
         @Override
-        public Repository startTracking(byte[] chainID) {
+        public StateDB startTracking(byte[] chainID) {
             return null;
         }
 

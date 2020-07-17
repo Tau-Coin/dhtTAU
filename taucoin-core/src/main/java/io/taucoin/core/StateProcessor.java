@@ -1,22 +1,22 @@
 package io.taucoin.core;
 
-import io.taucoin.db.Repository;
+import io.taucoin.db.StateDB;
 import io.taucoin.types.Block;
 
 public interface StateProcessor {
     /**
      * process block
      * @param block to be processed
-     * @param repository: state db
+     * @param stateDB: state db
      * @return
      */
-    boolean process(Block block, Repository repository);
+    boolean process(Block block, StateDB stateDB);
 
     /**
      * roll back a block
      * @param block
-     * @param repository
+     * @param stateDB
      * @return
      */
-    boolean rollback(Block block, Repository repository);
+    boolean rollback(Block block, StateDB stateDB);
 }

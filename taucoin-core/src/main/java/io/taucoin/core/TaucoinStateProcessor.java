@@ -1,6 +1,6 @@
 package io.taucoin.core;
 
-import io.taucoin.db.Repository;
+import io.taucoin.db.StateDB;
 import io.taucoin.types.Block;
 
 public class TaucoinStateProcessor implements StateProcessor {
@@ -8,11 +8,11 @@ public class TaucoinStateProcessor implements StateProcessor {
      * process block
      *
      * @param block      to be processed
-     * @param repository : state db
+     * @param stateDB : state db
      * @return
      */
     @Override
-    public boolean process(Block block, Repository repository) {
+    public boolean process(Block block, StateDB stateDB) {
         return false;
     }
 
@@ -21,11 +21,11 @@ public class TaucoinStateProcessor implements StateProcessor {
      * roll back a block
      *
      * @param block
-     * @param repository
+     * @param stateDB
      * @return
      */
     @Override
-    public boolean rollback(Block block, Repository repository) {
+    public boolean rollback(Block block, StateDB stateDB) {
         return false;
     }
 }
