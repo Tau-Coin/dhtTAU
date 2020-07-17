@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.ui.user;
 
 import android.app.Application;
 import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 
@@ -13,6 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.BackpressureStrategy;
@@ -28,6 +31,9 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.utils.ViewUtils;
+import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.util.ByteUtil;
 
@@ -58,30 +64,43 @@ public class UserViewModel extends AndroidViewModel {
 
     /**
      * 显示保存Seed的对话框，也起到确认效果,确认后执行后续操作
-     * @param seed 不null：导入; null:生成新的seed
+     * @param generate：false导入; true:生成新的seed
      */
-    public void showSaveSeedDialog(Context context, String seed){
-        View view = LinearLayout.inflate(context, R.layout.view_dialog, null);
+    void showSaveSeedDialog(Context context, boolean generate){
+        SeedDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.seed_dialog, null, false);
+        if(generate){
+            binding.etSeed.setVisibility(View.GONE);
+        }
+        binding.ivClose.setOnClickListener(v -> {
+            if(commonDialog != null){
+                commonDialog.closeDialog();
+            }
+        });
         commonDialog = new CommonDialog.Builder(context)
-                .setContentView(view)
+                .setContentView(binding.getRoot())
                 .setButtonWidth(240)
-                .setExchange(seed == null)
-                .setPositiveButton(R.string.common_proceed, (dialog, which) -> {
-                    dialog.cancel();
-                    if(StringUtil.isNotEmpty(seed)){
-                        importSeed(seed);
+                .setPositiveButton(R.string.common_submit, (dialog, which) -> {
+                    String name = ViewUtils.getText(binding.etName);
+                    if(generate){
+                        dialog.cancel();
+                        generateSeed(name);
                     }else{
-                        generateSeed();
+                        String seed = ViewUtils.getText(binding.etSeed);
+                        if(StringUtil.isEmpty(seed)){
+                            ToastUtils.showShortToast(R.string.user_seed_empty);
+                        }else {
+                            dialog.cancel();
+                            importSeed(seed, name);
+                        }
                     }
-                }).setNegativeButton(R.string.common_back, (dialog, which) -> dialog.cancel())
-                .create();
+                }).create();
         commonDialog.show();
     }
 
     /**
-     * 导入/切换Seed
+     * 导入并切换Seed
      */
-    private void importSeed(String seed) {
+    void importSeed(String seed, String name) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String result = "";
             try {
@@ -89,9 +108,18 @@ public class UserViewModel extends AndroidViewModel {
                 Pair<byte[], byte[]> keypair = Ed25519.createKeypair(seedBytes);
                 String publicKey = ByteUtil.toHexString(keypair.first);
                 Logger.d("import publicKey::%s, size::%d", publicKey, publicKey.length());
+                User user = userRepo.getUserByPublicKey(publicKey);
                 userRepo.setCurrentUser(MainApplication.getInstance().getPublicKey(), false);
-                User user = new User(publicKey, seed, null, true);
-                userRepo.addUser(user);
+                if(null == user){
+                    user = new User(publicKey, seed, name, true);
+                    userRepo.addUser(user);
+                }else{
+                    if(StringUtil.isNotEmpty(name)){
+                        user.localName = name;
+                    }
+                    user.isCurrentUser = true;
+                    userRepo.updateUser(user);
+                }
             }catch (Exception e){
                 result = e.getMessage();
                 Logger.d("import seed error::%s", seed, result);
@@ -115,10 +143,10 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 生成新的Seed
      */
-    private void generateSeed() {
+    private void generateSeed(String name) {
         byte[] seedBytes = Ed25519.createSeed();
         String seed = ByteUtil.toHexString(seedBytes);
-        importSeed(seed);
+        importSeed(seed, name);
     }
 
     /**
@@ -126,6 +154,13 @@ public class UserViewModel extends AndroidViewModel {
      */
     public Flowable<User> observeCurrentUser() {
         return userRepo.observeCurrentUser();
+    }
+
+    /**
+     * 观察Sees历史列表
+     */
+    Flowable<List<User>> observeSeedHistoryList() {
+        return userRepo.observeSeedHistoryList();
     }
 
     /**
@@ -173,4 +208,5 @@ public class UserViewModel extends AndroidViewModel {
                 .subscribe();
         disposables.add(disposable);
     }
+
 }

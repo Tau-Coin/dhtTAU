@@ -20,6 +20,8 @@ public interface UserDao {
     String QUERY_GET_USERS_IN_BLACKLIST = "SELECT * FROM User where blacklist = 1";
     String QUERY_SET_CURRENT_USER = "UPDATE User SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
     String QUERY_ADD_USER_BLACKLIST = "UPDATE User SET blacklist = :blacklist WHERE publicKey = :publicKey";
+    String QUERY_SEED_HISTORY_LIST = "SELECT * FROM User WHERE isCurrentUser != 1 and seed not null";
+    String QUERY_USER_BY_PUBLIC_KEY = "SELECT * FROM User WHERE publicKey = :publicKey";
 
     /**
      * 添加新的User/Seed
@@ -67,4 +69,18 @@ public interface UserDao {
      */
     @Query(QUERY_ADD_USER_BLACKLIST)
     void setUserBlacklist(String publicKey, int blacklist);
+
+    /**
+     * 观察Sees历史列表
+     */
+    @Query(QUERY_SEED_HISTORY_LIST)
+    Flowable<List<User>> observeSeedHistoryList();
+
+    /**
+     * 根据公钥获取用户
+     * @param publicKey 公钥
+     * @return 当前用户User实例
+     */
+    @Query(QUERY_USER_BY_PUBLIC_KEY)
+    User getUserByPublicKey(String publicKey);
 }

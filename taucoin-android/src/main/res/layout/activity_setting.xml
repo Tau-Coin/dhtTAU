@@ -78,18 +78,81 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:background="@color/color_white"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="5dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/setting_community"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textColor="@color/primary_light"
+                android:includeFontPadding="false"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/ll_favorites"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:onClick="onClick"
+                android:layout_marginTop="5dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:includeFontPadding="false"
+                    android:text="@string/setting_favorites"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:contentDescription="@null"
+                    android:src="@mipmap/icon_arrow"/>
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:background="@color/color_white"
             android:layout_marginTop="15dp"
             android:paddingTop="10dp"
             android:paddingBottom="10dp">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/setting_title"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textColor="@color/primary_light"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="10dp"
+                android:includeFontPadding="false"
+                android:textStyle="bold" />
+
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_notification_sounds"
+                android:id="@+id/item_dashboard"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:onClick="onClick"
                 app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/setting_notification_sounds"/>
+                app:rightText="@string/setting_dashboard"/>
+
+            <include
+                android:layout_marginStart="65dp"
+                layout="@layout/view_line"
+                android:layout_width="match_parent"
+                android:layout_height="1dp" />
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_privacy_security"
@@ -99,16 +162,11 @@
                 app:leftImage="@mipmap/icon_copy"
                 app:rightText="@string/setting_privacy_security"/>
 
-            <include layout="@layout/view_line"/>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_data_storage"
+            <include
+                android:layout_marginStart="65dp"
+                layout="@layout/view_line"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:onClick="onClick"
-                app:leftImage="@mipmap/icon_copy"
-                app:rightText="@string/setting_data_storage"/>
-
+                android:layout_height="1dp" />
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_journal"
@@ -118,6 +176,11 @@
                 app:leftImage="@mipmap/icon_copy"
                 app:rightText="@string/setting_journal"/>
 
+            <include
+                android:layout_marginStart="65dp"
+                layout="@layout/view_line"
+                android:layout_width="match_parent"
+                android:layout_height="1dp" />
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_help"

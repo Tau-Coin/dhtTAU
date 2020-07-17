@@ -2,6 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -16,6 +22,8 @@
         android:focusable="true" >
 
         <RelativeLayout
+            android:id="@+id/toolbar_title"
+            android:onClick="@{listener::onClick}"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -23,14 +31,16 @@
                 android:id="@+id/tv_group_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                android:layout_centerHorizontal="true"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"/>
 
             <TextView
                 android:layout_below="@+id/tv_group_name"
                 android:id="@+id/tv_users_stats"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+                android:layout_centerHorizontal="true"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
 
         </RelativeLayout>
 

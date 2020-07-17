@@ -95,7 +95,7 @@ public class PopUpDialog extends Dialog{
 
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             if(position >= 0 && position < items.size() && holder.binding != null){
-//                holder.binding.topLine.setVisibility(position == 0 ? View.VISIBLE : View.INVISIBLE);
+                holder.binding.topLine.setVisibility(View.INVISIBLE);
                 holder.binding.topLine.setVisibility(View.INVISIBLE);
                 ItemBean itemBean = items.get(position);
                 holder.binding.tvItemTitle.setText(itemBean.name);

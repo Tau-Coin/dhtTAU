@@ -58,22 +58,28 @@
             android:name=".ui.community.CommunityChooseActivity"/>
 
         <activity
+            android:name=".ui.community.CommunityInfoActivity"/>
+
+        <activity
+            android:name=".ui.community.MiningInfoActivity"/>
+
+        <activity
+            android:name=".ui.community.MembersActivity"/>
+
+        <activity
             android:name=".ui.contacts.ContactsActivity"/>
 
         <activity
             android:name=".ui.setting.SettingActivity"/>
 
         <activity
-            android:name=".ui.setting.NotificationSoundsActivity"/>
-
-        <activity
             android:name=".ui.setting.PrivacySecurityActivity"/>
 
         <activity
-            android:name=".ui.setting.DataStorageActivity"/>
+            android:name=".ui.setting.BlacklistActivity"/>
 
         <activity
-            android:name=".ui.setting.BlacklistActivity"/>
+            android:name=".ui.setting.DashboardActivity"/>
 
         <activity
             android:name=".ui.user.SeedActivity"/>
@@ -83,6 +89,12 @@
 
         <activity
             android:name=".ui.transaction.TransactionCreateActivity"/>
+
+        <activity
+            android:name=".ui.transaction.MessageActivity"/>
+
+        <activity
+            android:name=".ui.transaction.BootStrapNodesActivity"/>
 
     </application>
 

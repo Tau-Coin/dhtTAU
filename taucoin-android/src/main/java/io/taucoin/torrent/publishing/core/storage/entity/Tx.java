@@ -51,6 +51,15 @@ public class Tx implements Parcelable {
     }
 
     @Ignore
+    public Tx(@NonNull String chainID, String name, long fee, int txType, String memo){
+        this.chainID = chainID;
+        this.name = name;
+        this.fee = fee;
+        this.txType = txType;
+        this.memo = memo;
+    }
+
+    @Ignore
     private Tx(Parcel in) {
         txID = in.readString();
         chainID = in.readString();
