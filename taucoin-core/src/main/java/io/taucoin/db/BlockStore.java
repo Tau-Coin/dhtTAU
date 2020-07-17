@@ -2,6 +2,7 @@ package io.taucoin.db;
 
 import io.taucoin.types.Block;
 
+import java.util.List;
 import java.util.Set;
 
 public interface BlockStore {
@@ -27,6 +28,15 @@ public interface BlockStore {
      * @throws Exception
      */
     Block getBlockByHash(byte[] chainID, byte[] hash) throws Exception;
+
+    /**
+     * get block info by hash
+     * @param chainID
+     * @param hash
+     * @return
+     * @throws Exception
+     */
+    BlockInfo getBlockInfoByHash(byte[] chainID, byte[] hash) throws Exception;
 
     /**
      * get main chain block by number
@@ -75,4 +85,20 @@ public interface BlockStore {
      * @throws Exception
      */
     Block getForkPointBlock(Block block) throws Exception;
+
+    /**
+     * get fork info
+     * @param forkBlock fork point block
+     * @param undoBlocks blocks to roll back
+     * @param newBlocks blocks to connect
+     * @return
+     */
+    boolean getForkBlocksInfo(Block forkBlock, List<Block> undoBlocks, List<Block> newBlocks);
+
+    /**
+     * re-branch blocks
+     * @param undoBlocks move to non-main chain
+     * @param newBlocks move to main chain
+     */
+    void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks);
 }

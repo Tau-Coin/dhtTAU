@@ -54,6 +54,51 @@ public class BlockDB implements BlockStore {
     }
 
     /**
+     * get block info
+     * @param chainID
+     * @param number
+     * @param hash
+     * @return
+     * @throws Exception
+     */
+    private BlockInfo getBlockInfo(byte[] chainID, long number, byte[] hash) throws Exception {
+        byte[] rlp = db.get(PrefixKey.blockInfoKey(chainID, number));
+        if (null == rlp) {
+            logger.info("ChainID[{}]:There is no block in this height:{}", chainID.toString(), number);
+            return null;
+        }
+        BlockInfos blockInfos = new BlockInfos(rlp);
+        List<BlockInfo> list = blockInfos.getBlockInfoList();
+        for (BlockInfo blockInfo: list) {
+            if (Arrays.equals(blockInfo.getHash(), hash)) {
+                return blockInfo;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * get block info by hash
+     *
+     * @param chainID
+     * @param hash
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public BlockInfo getBlockInfoByHash(byte[] chainID, byte[] hash) throws Exception {
+        byte[] rlp = db.get(PrefixKey.blockKey(chainID, hash));
+        if (null != rlp) {
+            Block block = new Block(rlp);
+            return getBlockInfo(chainID, block.getBlockNum(), hash);
+        }
+
+        logger.info("ChainID[{}]:Cannot find block info by hash:{}", chainID.toString(), Hex.toHexString(hash));
+        return null;
+    }
+
+    /**
      * get main chain block by number
      * @param number
      * @return
@@ -274,5 +319,28 @@ public class BlockDB implements BlockStore {
         }
     }
 
+    /**
+     * get fork info
+     *
+     * @param forkBlock  fork point block
+     * @param undoBlocks blocks to roll back
+     * @param newBlocks  blocks to connect
+     * @return
+     */
+    @Override
+    public boolean getForkBlocksInfo(Block forkBlock, List<Block> undoBlocks, List<Block> newBlocks) {
+        return false;
+    }
+
+    /**
+     * re-branch blocks
+     *
+     * @param undoBlocks move to non-main chain
+     * @param newBlocks  move to main chain
+     */
+    @Override
+    public void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks) {
+
+    }
 }
 

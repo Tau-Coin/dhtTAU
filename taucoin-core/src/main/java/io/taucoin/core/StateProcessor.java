@@ -11,4 +11,12 @@ public interface StateProcessor {
      * @return
      */
     boolean process(Block block, Repository repository);
+
+    /**
+     * roll back a block
+     * @param block
+     * @param repository
+     * @return
+     */
+    boolean rollback(Block block, Repository repository);
 }

@@ -15,4 +15,17 @@ public class TaucoinStateProcessor implements StateProcessor {
     public boolean process(Block block, Repository repository) {
         return false;
     }
+
+
+    /**
+     * roll back a block
+     *
+     * @param block
+     * @param repository
+     * @return
+     */
+    @Override
+    public boolean rollback(Block block, Repository repository) {
+        return false;
+    }
 }

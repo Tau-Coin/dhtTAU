@@ -3,6 +3,7 @@ package io.taucoin.chain;
 import io.taucoin.account.AccountManager;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.core.*;
+import io.taucoin.db.BlockInfo;
 import io.taucoin.db.BlockStore;
 import io.taucoin.db.Repository;
 import io.taucoin.listener.TauListener;
@@ -18,10 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Chain represents one blockchain for tau multi-chain system.
@@ -63,8 +61,6 @@ public class Chain {
     private BlockStore blockStore;
 
     private Repository repository;
-
-    private Repository track;
 
     private StateProcessor stateProcessor;
 
@@ -114,11 +110,9 @@ public class Chain {
      * init chain
      */
     private void init() {
-        this.track = this.repository.startTracking(this.chainID);
-
         // get best block
         try {
-            byte[] bestBlockHash = this.track.getBestBlockHash(this.chainID);
+            byte[] bestBlockHash = this.repository.getBestBlockHash(this.chainID);
             this.bestBlock = this.blockStore.getBlockByHash(this.chainID, bestBlockHash);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -133,7 +127,7 @@ public class Chain {
 
         // get peers form db
         try {
-            Set<byte[]> pubKeys = this.track.getPeers(this.chainID);
+            Set<byte[]> pubKeys = this.repository.getPeers(this.chainID);
             if (null != pubKeys && !pubKeys.isEmpty()) {
                 for (byte[] pubKey: pubKeys) {
                     this.peers.put(new ByteArrayWrapper(pubKey), (long) 0);
@@ -160,7 +154,8 @@ public class Chain {
 
     private void loop() {
         while (!Thread.interrupted()) {
-            boolean voteFlag = false;
+            boolean votingFlag = false;
+            boolean miningFlag = false;
 
             // keep looking for more difficult chain
             while (!Thread.interrupted()) {
@@ -174,65 +169,117 @@ public class Chain {
                 }
 
                 // if a more difficult chain
+                // download block
                 try {
                     if (tip.getBlockNum() > ChainParam.MUTABLE_RANGE) {
                         byte[] immutableBlockHash = tip.getImmutableBlockHash();
-                        Block immutableBlock = this.blockStore.getBlockByHash(this.chainID, immutableBlockHash);
-                        // if immutable block is not in local main chain, then start to vote
-                        if (null == immutableBlock) {
-                            voteFlag = true;
+                        BlockInfo blockInfo = this.blockStore.getBlockInfoByHash(this.chainID, immutableBlockHash);
+                        // cannot found in block store
+                        if (null == blockInfo) {
+                            votingFlag = true;
+                            break;
                         } else {
-                            // download mutable range blocks, and connect them
+                            // found in block store
                             int counter = 0;
                             byte[] previousHash = tip.getPreviousBlockHash();
+                            this.blockStore.saveBlock(tip, false);
                             while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
                                 Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
-                                // TODO:: re-check
-                                if (null != block && block.getBlockNum() > 0) {
-                                    this.blockStore.saveBlock(block, true);
-                                    previousHash = block.getPreviousBlockHash();
+                                if (null != block) {
+                                    // found in local
                                     break;
+                                }
+                                // get from dht
+                                Block dhtBlock = getBlockFromDHT(previousHash);
+                                if (null != dhtBlock) {
+                                    previousHash = dhtBlock.getPreviousBlockHash();
+                                    this.blockStore.saveBlock(dhtBlock, false);
                                 }
                                 counter++;
                             }
                         }
                     }
 
-                    if (!Arrays.equals(this.bestBlock.getBlockHash(), tip.getPreviousBlockHash())) {
-                        // find fork point
-                        Block forkPointBlock = this.blockStore.getForkPointBlock(tip);
-                        if (null == forkPointBlock) {
-                            continue;
-                        }
-
-                        // calc fork range
-                        long forkRange = this.bestBlock.getBlockNum() - forkPointBlock.getBlockNum();
-
-                        if (forkRange > ChainParam.WARNING_RANGE) {
-                            // an attack chain, ignore it
-                            continue;
-                        } else {
-
-                        }
-                    } else {
-                        // the best block is parent block of the tip
-                        if (tryToConnect(tip)) {
-                            setBestBlock(tip);
-                            this.track.commit();
-                        }
+                    // find fork point
+                    Block forkPointBlock = this.blockStore.getForkPointBlock(tip);
+                    if (null == forkPointBlock) {
+                        // cannot find fork point
+                        continue;
                     }
+
+                    // calc fork range
+                    long forkRange = this.bestBlock.getBlockNum() - forkPointBlock.getBlockNum();
+
+                    if (forkRange > ChainParam.WARNING_RANGE) {
+                        // an attack chain, ignore it
+                        continue;
+                    } else if (forkRange < ChainParam.MUTABLE_RANGE){
+                        // change to more difficult chain
+                        reBranch(tip, repository);
+                        miningFlag = true;
+                        break;
+                    } else {
+                        // vote
+                        votingFlag = true;
+                        break;
+                    }
+
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }
             }
 
-            // voting
-            if (minable()) {
-                Block block = mineBlock();
-                tryToConnect(block);
-            } else {
-
+            // vote
+            if (votingFlag) {
+                vote();
+                continue;
             }
+
+            // mine
+            if (miningFlag) {
+                Repository track = this.repository.startTracking(this.chainID);
+                if (minable(track)) {
+                    Block block = mineBlock();
+                    // the best block is parent block of the tip
+                    if (tryToConnect(block, track)) {
+                        setBestBlock(block);
+                        try {
+                            track.commit();
+                        } catch (Exception e) {
+                            logger.error(e.getMessage(), e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * re-branch chain
+     * @param block
+     * @param repository
+     */
+    private void reBranch(Block block, Repository repository) {
+        //try to roll back and reconnect
+        Repository track = repository.startTracking(this.chainID);
+        List<Block> undoBlocks = new ArrayList<>();
+        List<Block> newBlocks = new ArrayList<>();
+        blockStore.getForkBlocksInfo(block, undoBlocks, newBlocks);
+        for (Block undoBlock : undoBlocks) {
+            this.stateProcessor.rollback(undoBlock, track);
+        }
+        int size = newBlocks.size();
+        for (int i = size - 1; i >= 0; i--) {
+            this.stateProcessor.process(newBlocks.get(i), track);
+        }
+        try {
+            this.blockStore.reBranchBlocks(undoBlocks, newBlocks);
+
+            setBestBlock(block);
+
+            track.commit();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -296,25 +343,39 @@ public class Chain {
         return null;
     }
 
-    private boolean tryToConnect(final Block block) {
+    /**
+     * connect a block
+     * @param block
+     * @param repository
+     * @return
+     */
+    private boolean tryToConnect(final Block block, Repository repository) {
         // if main chain
         if (Arrays.equals(bestBlock.getBlockHash(), block.getPreviousBlockHash())) {
             // main chain
-        } else {
-            // if has parent
-            try {
-                Block parent = this.blockStore.getBlockByHash(this.chainID, block.getPreviousBlockHash());
-                if (null == parent) {
-                    logger.error("ChainID[{}]: Cannot find parent!", this.chainID.toString());
-                    return false;
-                }
-                // TODO:: simply check
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+            if (!isValidBlock(block, repository)) {
                 return false;
             }
+
+            if (!processBlock(block, repository)) {
+                return false;
+            }
+            return true;
+        } else {
+            return false;
+//            // if has parent
+//            try {
+//                Block parent = this.blockStore.getBlockByHash(this.chainID, block.getPreviousBlockHash());
+//                if (null == parent) {
+//                    logger.error("ChainID[{}]: Cannot find parent!", this.chainID.toString());
+//                    return false;
+//                }
+//            } catch (Exception e) {
+//                logger.error(e.getMessage(), e);
+//                return false;
+//            }
         }
-        return true;
+//        return true;
     }
 
     /**
@@ -336,9 +397,10 @@ public class Chain {
     /**
      * check if a block valid
      * @param block
+     * @param repository
      * @return
      */
-    private boolean isValidBlock(Block block) {
+    private boolean isValidBlock(Block block, Repository repository) {
         // 是否本链
         if (!Arrays.equals(this.chainID, block.getChainID())) {
             logger.error("ChainID[{}]: ChainID mismatch!", this.chainID.toString());
@@ -375,7 +437,7 @@ public class Chain {
         }
 
         // POT共识验证
-        if (!verifyPOT(block)) {
+        if (!verifyPOT(block, repository)) {
             logger.error("ChainID[{}]: Validate block param error!", this.chainID.toString());
             return false;
         }
@@ -386,13 +448,14 @@ public class Chain {
     /**
      * check pot consensus
      * @param block
+     * @param repository
      * @return
      */
-    private boolean verifyPOT(Block block) {
+    private boolean verifyPOT(Block block, Repository repository) {
         try {
             byte[] pubKey = block.getMinerPubkey();
 
-            BigInteger power = this.track.getNonce(this.chainID, pubKey);
+            BigInteger power = repository.getNonce(this.chainID, pubKey);
             logger.info("Address: {}, mining power: {}", Hex.toHexString(pubKey), power);
 
             Block parentBlock = this.blockStore.getBlockByHash(this.chainID, block.getPreviousBlockHash());
@@ -447,13 +510,14 @@ public class Chain {
 
     /**
      * check if be able to mine now
+     * @param repository
      * @return
      */
-    private boolean minable() {
+    private boolean minable(Repository repository) {
         try {
             byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-            BigInteger power = this.track.getNonce(this.chainID, pubKey);
+            BigInteger power = repository.getNonce(this.chainID, pubKey);
             logger.info("ChainID[{}]: My mining power: {}", this.chainID.toString(), power);
 
             // check base target

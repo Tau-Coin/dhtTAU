@@ -1,5 +1,6 @@
 package io.taucoin.core;
 
+import io.taucoin.db.BlockInfo;
 import io.taucoin.db.BlockStore;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
@@ -13,6 +14,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,6 +60,43 @@ public class ProofOfTransactionTest {
             } else {
                 return new Block(rlp);
             }
+        }
+
+        /**
+         * get block info by hash
+         *
+         * @param chainID
+         * @param hash
+         * @return
+         * @throws Exception
+         */
+        @Override
+        public BlockInfo getBlockInfoByHash(byte[] chainID, byte[] hash) throws Exception {
+            return null;
+        }
+
+        /**
+         * get fork info
+         *
+         * @param forkBlock  fork point block
+         * @param undoBlocks blocks to roll back
+         * @param newBlocks  blocks to connect
+         * @return
+         */
+        @Override
+        public boolean getForkBlocksInfo(Block forkBlock, List<Block> undoBlocks, List<Block> newBlocks) {
+            return false;
+        }
+
+        /**
+         * re-branch blocks
+         *
+         * @param undoBlocks move to non-main chain
+         * @param newBlocks  move to main chain
+         */
+        @Override
+        public void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks) {
+
         }
 
         @Override
