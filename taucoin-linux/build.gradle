@@ -13,6 +13,8 @@ dependencies {
     // https://mvnrepository.com/artifact/net.minidev/json-smart
     compile group: 'net.minidev', name: 'json-smart', version: '2.1.1'
 
+    // https://mvnrepository.com/artifact/org.rocksdb/rocksdbjni
+    compile group: 'org.rocksdb', name: 'rocksdbjni', version: '6.7.3'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
