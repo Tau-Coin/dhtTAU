@@ -8,8 +8,7 @@ public enum PlatformType {
     WhatsApp(1),
     Facebook(2),
     WeChat(3),
-    Others(4),
-    Nothing( -1);
+    Others(4);
 
     private int code;
     PlatformType(int code){

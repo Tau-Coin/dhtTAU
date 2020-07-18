@@ -15,7 +15,7 @@ import io.taucoin.torrent.publishing.core.storage.entity.Tx;
  */
 @Dao
 public interface TxDao {
-    String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT * FROM Tx WHERE chainID = :chainID";
+    String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT * FROM Txs WHERE chainID = :chainID";
 
     /**
      * 添加新的交易

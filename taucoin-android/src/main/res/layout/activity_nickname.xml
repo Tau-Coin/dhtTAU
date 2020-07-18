@@ -64,19 +64,13 @@
             android:layout_marginStart="20dp"
             android:gravity="center_vertical"
             android:layout_marginEnd="10dp">
-            <TextView
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="@string/tx_contact_platform"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
 
             <TextView
                 android:id="@+id/tv_contact_platform"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:gravity="center_vertical"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:onClick="@{listener::onClick}"
+                android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
 
             <ImageView

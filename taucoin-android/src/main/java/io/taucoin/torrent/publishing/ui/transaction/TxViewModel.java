@@ -183,18 +183,13 @@ public class TxViewModel extends AndroidViewModel {
                     CommunityAnnouncement communityAnn = new CommunityAnnouncement(annChainID, genesisPk, tx.memo);
                     txData = new TxData(msgType, communityAnn.getEncode());
                     break;
-                case DHTBootStrapNodeAnnouncement:
-                    String[] bootNodes = tx.memo.split(",");
-                    DHTbootstrapNodeAnnouncement dhTBootstrapNodeAnn = new DHTbootstrapNodeAnnouncement(new byte[32], bootNodes);
-                    txData = new TxData(msgType, dhTBootstrapNodeAnn.getEncode());
-                    break;
                 case Wiring:
                     byte[] receiverPk = ByteUtil.toByte(tx.receiverPk);
                     WireTransaction wireTx = new WireTransaction(receiverPk, tx.amount, tx.memo);
                     txData = new TxData(msgType, wireTx.getEncode());
                     break;
                 case IdentityAnnouncement:
-                    IdentityAnnouncement identityAnn = new IdentityAnnouncement(new byte[32], tx.name);
+                    IdentityAnnouncement identityAnn = new IdentityAnnouncement(tx.name, tx.memo);
                     txData = new TxData(msgType, identityAnn.getEncode());
                     break;
             }
@@ -219,11 +214,6 @@ public class TxViewModel extends AndroidViewModel {
         }else if(msgType == MsgType.ForumComment.getVaLue()){
             if(StringUtil.isEmpty(tx.memo)){
                 ToastUtils.showShortToast(R.string.tx_error_invalid_comment);
-                return false;
-            }
-        }else if(msgType == MsgType.DHTBootStrapNodeAnnouncement.getVaLue()){
-            if(StringUtil.isEmpty(tx.memo) || !Utils.validateUrl(tx.memo)){
-                ToastUtils.showShortToast(R.string.tx_error_invalid_bootstrap);
                 return false;
             }
         }else if(msgType == MsgType.Wiring.getVaLue()){

@@ -36,7 +36,6 @@ public class CommunityCreateActivity extends BaseActivity {
     private ActivityCommunityCreateBinding binding;
     private CommunityViewModel viewModel;
     private Community community;
-    private boolean isAnnounce;
     private CommonDialog successDialog;
 
     @Override
@@ -147,7 +146,7 @@ public class CommunityCreateActivity extends BaseActivity {
                 community.publicKey = publicKey;
             }
             if(viewModel.validateCommunity(community)){
-                viewModel.addCommunity(community, isAnnounce);
+                viewModel.addCommunity(community);
             }
         }
         return true;
@@ -159,8 +158,15 @@ public class CommunityCreateActivity extends BaseActivity {
         if(requestCode == REQUEST_CODE && resultCode == RESULT_OK){
             if(data != null){
                 community = data.getParcelableExtra(IntentExtra.BEAN);
-                isAnnounce = data.getBooleanExtra(IntentExtra.ANNOUNCE, false);
             }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(successDialog != null){
+            successDialog.closeDialog();
         }
     }
 }

@@ -65,8 +65,9 @@ public class NicknameActivity extends BaseActivity implements View.OnClickListen
         binding.toolbarInclude.toolbar.setTitle(R.string.community_nickname);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
-        binding.tvContactPlatform.setText(PlatformType.Nothing.name());
-        binding.tvContactPlatform.setTag(PlatformType.Nothing.getCode());
+        binding.tvContactPlatform.setText(PlatformType.Telegram.name());
+        binding.tvContactPlatform.setTag(PlatformType.Telegram.getCode());
+        binding.etContactId.setHint(getString(R.string.tx_contact_id, PlatformType.Telegram.name()));
 
         if(community != null){
             binding.tvFee.setText(getString(R.string.tx_median_fee, "96.5", UsersUtil.getCoinName(community)));
@@ -128,11 +129,6 @@ public class NicknameActivity extends BaseActivity implements View.OnClickListen
         nameDescription.setContactID(ViewUtils.getText(binding.etContactId));
         nameDescription.setContactPlatform(ViewUtils.getIntTag(binding.tvContactPlatform));
         nameDescription.setPersonalProfile(ViewUtils.getText(binding.etPersonalProfile));
-        if(nameDescription.getContactPlatform() != PlatformType.Nothing.getCode()
-                && StringUtil.isEmpty(nameDescription.getContactID())){
-            ToastUtils.showShortToast(R.string.tx_error_invalid_contact);
-            return null;
-        }
         String memo = new Gson().toJson(nameDescription);
         return new Tx(chainID, name, FmtMicrometer.fmtTxLongValue(fee), txType, memo);
     }
@@ -161,6 +157,7 @@ public class NicknameActivity extends BaseActivity implements View.OnClickListen
             if(type != null){
                 binding.tvContactPlatform.setText(type.name());
                 binding.tvContactPlatform.setTag(type.getCode());
+                binding.etContactId.setHint(getString(R.string.tx_contact_id, PlatformType.Telegram.name()));
             }
         });
         for (PlatformType type : PlatformType.values()) {

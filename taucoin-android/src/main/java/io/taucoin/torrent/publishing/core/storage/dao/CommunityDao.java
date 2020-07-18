@@ -15,12 +15,12 @@ import io.taucoin.torrent.publishing.core.storage.entity.Community;
  */
 @Dao
 public interface CommunityDao {
-    String QUERY_GET_COMMUNITIES_NOT_IN_BLACKLIST = "SELECT * FROM Community where blacklist = 0";
-    String QUERY_GET_COMMUNITIES_IN_BLACKLIST = "SELECT * FROM Community where blacklist = 1";
-    String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Community WHERE chainID = :chainID";
-    String QUERY_ADD_COMMUNITY_BLACKLIST = "Update Community set blacklist =:blacklist WHERE chainID = :chainID";
-    String QUERY_SET_COMMUNITY_MUTE = "Update Community set mute =:mute WHERE chainID = :chainID";
-    String QUERY_JOINED_COMMUNITY = "SELECT * FROM Community";
+    String QUERY_GET_COMMUNITIES_NOT_IN_BLACKLIST = "SELECT * FROM Communities where blacklist = 0";
+    String QUERY_GET_COMMUNITIES_IN_BLACKLIST = "SELECT * FROM Communities where blacklist = 1";
+    String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Communities WHERE chainID = :chainID";
+    String QUERY_ADD_COMMUNITY_BLACKLIST = "Update Communities set blacklist =:blacklist WHERE chainID = :chainID";
+    String QUERY_SET_COMMUNITY_MUTE = "Update Communities set mute =:mute WHERE chainID = :chainID";
+    String QUERY_JOINED_COMMUNITY = "SELECT * FROM Communities";
 
     /**
      * 添加新的社区

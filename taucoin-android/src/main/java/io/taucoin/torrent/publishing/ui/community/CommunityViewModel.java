@@ -82,7 +82,7 @@ public class CommunityViewModel extends AndroidViewModel {
      * 添加新的社区到数据库
      * @param community 社区数据
      */
-    void addCommunity(@NonNull Community community, boolean isAnnounce){
+    void addCommunity(@NonNull Community community){
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String state = "";
             try {
@@ -93,10 +93,6 @@ public class CommunityViewModel extends AndroidViewModel {
                 communityRepo.addCommunity(community);
                 Logger.d("Add community to database: communityName=%s, chainID=%s",
                         community.communityName, community.chainID);
-
-                if(isAnnounce){
-                    // TODO: 2、TauController:Announce on TAU
-                }
             }catch (Exception e){
                 state = e.getMessage();
             }

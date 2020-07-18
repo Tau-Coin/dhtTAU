@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey;
 /**
  * Room: 数据库存储Transaction实体类
  */
-@Entity
+@Entity(tableName = "Txs")
 public class Tx implements Parcelable {
     @NonNull
     @PrimaryKey

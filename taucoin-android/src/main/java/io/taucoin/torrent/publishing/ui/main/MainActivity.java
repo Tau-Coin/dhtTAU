@@ -45,6 +45,14 @@ public class MainActivity extends BaseActivity {
         viewModel = provider.get(UserViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main_drawer);
         initLayout();
+        checkCurrentUser();
+    }
+
+    /**
+     * 检查当前用户
+     */
+    private void checkCurrentUser() {
+        viewModel.checkCurrentUser();
     }
 
     /**

@@ -8,33 +8,33 @@ import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
+import io.taucoin.torrent.publishing.core.utils.PlatformType;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityCommunitySettingBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.customviews.PopUpDialog;
 
 /**
  * 社区更多设置页面
  */
-public class CommunitySettingActivity extends BaseActivity {
+public class CommunitySettingActivity extends BaseActivity implements View.OnClickListener {
     private ActivityCommunitySettingBinding binding;
-
-    private CommunityViewModel viewModel;
+    private PopUpDialog popUpDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ViewModelProvider provider = new ViewModelProvider(this);
-        viewModel = provider.get(CommunityViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_community_setting);
+        binding.setListener(this);
         initLayout();
     }
 
@@ -48,10 +48,14 @@ public class CommunitySettingActivity extends BaseActivity {
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         String totalCoin = FmtMicrometer.fmtLong(Constants.TOTAL_COIN);
-        binding.etTotalCoin.setText(getString(R.string.community_total_coin, totalCoin));
-        binding.etTotalCoin.setTag(Constants.TOTAL_COIN);
-        binding.etBlockAvg.setText(getString(R.string.community_block_avg, Constants.BLOCK_IN_AVG / 60));
-        binding.etBlockAvg.setTag(Constants.BLOCK_IN_AVG);
+        binding.tvTotalCoins.setText(totalCoin);
+        binding.tvTotalCoins.setTag(Constants.TOTAL_COIN);
+        binding.tvAvgBlock.setText(getString(R.string.community_avg_block_time, Constants.BLOCK_IN_AVG / 60));
+        binding.tvAvgBlock.setTag(Constants.BLOCK_IN_AVG);
+
+        binding.tvContactPlatform.setText(PlatformType.Telegram.name());
+        binding.tvContactPlatform.setTag(PlatformType.Telegram.getCode());
+        binding.etContactId.setHint(getString(R.string.tx_contact_id, PlatformType.Telegram.name()));
 
         // 简介添加限制
         binding.tvIntroLimit.setText(getString(R.string.common_slant, 0, Constants.LENGTH_LIMIT));
@@ -91,11 +95,9 @@ public class CommunitySettingActivity extends BaseActivity {
         // 社区更多设置确认事件
         if (item.getItemId() == R.id.menu_done) {
             Community community = buildCommunity();
-            boolean isAnnounce = binding.cbAnnounce.isChecked();
             // 返回上个页面的传递数据
             Intent intent = new Intent();
             intent.putExtra(IntentExtra.BEAN, community);
-            intent.putExtra(IntentExtra.ANNOUNCE, isAnnounce);
             this.setResult(RESULT_OK, intent);
             this.finish();
         }
@@ -113,10 +115,49 @@ public class CommunitySettingActivity extends BaseActivity {
      */
     private Community buildCommunity() {
         String coinName = ViewUtils.getText(binding.etCoinName);
-        long totalCoin = ViewUtils.getLongTag(binding.etTotalCoin);
-        int blockAvg = ViewUtils.getIntTag(binding.etBlockAvg);
+        long totalCoin = ViewUtils.getLongTag(binding.tvTotalCoins);
+        int blockAvg = ViewUtils.getIntTag(binding.tvAvgBlock);
         String intro = ViewUtils.getText(binding.etIntro);
-        String contact = ViewUtils.getText(binding.etContact);
+        String contact = ViewUtils.getText(binding.etContactId);
         return new Community("", coinName, "", totalCoin, blockAvg, intro, contact);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.tv_contact_platform:
+            case R.id.iv_contact_platform:
+                showContactPlatformDialog();
+                break;
+        }
+    }
+
+    /**
+     * 显示联系平台的对话框
+     */
+    private void showContactPlatformDialog() {
+        PopUpDialog.Builder builder = new PopUpDialog.Builder(this);
+        builder.setOnItemClickListener((dialog, name, code) -> {
+            dialog.dismiss();
+            PlatformType type = PlatformType.getPlatformType(code);
+            if(type != null){
+                binding.tvContactPlatform.setText(type.name());
+                binding.tvContactPlatform.setTag(type.getCode());
+                binding.etContactId.setHint(getString(R.string.tx_contact_id, type.name()));
+            }
+        });
+        for (PlatformType type : PlatformType.values()) {
+            builder.addItems(type.name(), type.getCode());
+        }
+        popUpDialog = builder.create();
+        popUpDialog.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(popUpDialog != null){
+            popUpDialog.closeDialog();
+        }
     }
 }

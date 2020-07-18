@@ -1,7 +1,11 @@
 package io.taucoin.torrent.publishing.ui.setting;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+
+import com.github.naturs.logger.Logger;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
@@ -10,7 +14,9 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivitySettingBinding;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -41,8 +47,36 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private void initView() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
         binding.toolbarInclude.toolbar.setTitle(R.string.setting_title);
-//        binding.tvPublicKey.setText(Constants.PUBLIC_KEY);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        binding.etUsername.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String newName = s.toString().trim();
+                String oldName = ViewUtils.getStringTag(binding.etUsername);
+                if(StringUtil.isNotEquals(oldName, newName)){
+                    Logger.d("saveUserName::%s", newName);
+                    binding.etUsername.setTag(newName);
+                    saveUserName(newName);
+                }
+            }
+        });
+    }
+
+    /**
+     * 保存用户名
+     */
+    private void saveUserName(String name) {
+        viewModel.saveUserName(name);
     }
 
     /**
@@ -65,8 +99,11 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
             return;
         }
         binding.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
-        String noteName = UsersUtil.getShowName(user);
-        binding.etUsername.setText(UsersUtil.getDefaultName(noteName));
+        String userName = UsersUtil.getShowName(user);
+        userName = UsersUtil.getDefaultName(userName);
+        binding.etUsername.setText(userName);
+        binding.etUsername.setTag(userName);
+        disposables.clear();
     }
 
     @Override
@@ -86,7 +123,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.ll_favorites:
-                ActivityUtil.startActivity(this, DashboardActivity.class);
                 break;
             case R.id.item_dashboard:
                 ActivityUtil.startActivity(this, DashboardActivity.class);

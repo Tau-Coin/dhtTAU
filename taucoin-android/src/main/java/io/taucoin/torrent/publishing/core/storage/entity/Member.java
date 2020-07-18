@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey;
 /**
  * 数据库存储社区Member实体类
  */
-@Entity
+@Entity(tableName = "Members")
 public class Member implements Parcelable {
     @NonNull
     @PrimaryKey(autoGenerate = true)

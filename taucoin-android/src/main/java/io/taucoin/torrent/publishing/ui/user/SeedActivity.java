@@ -97,6 +97,6 @@ public class SeedActivity extends BaseActivity implements View.OnClickListener, 
 
     @Override
     public void onItemClicked(User user) {
-        viewModel.importSeed(user.publicKey, null);
+        viewModel.importSeed(user.seed, null);
     }
 }

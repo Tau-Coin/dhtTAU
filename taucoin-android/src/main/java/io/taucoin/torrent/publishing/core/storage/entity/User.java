@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey;
 /**
  * 数据库存储User实体类
  */
-@Entity
+@Entity(tableName = "Users")
 public class User implements Parcelable {
     @NonNull
     @PrimaryKey

@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey;
 /**
  * 数据库存储Community实体类
  */
-@Entity
+@Entity(tableName = "Communities")
 public class Community implements Parcelable {
     @NonNull
     @PrimaryKey

@@ -15,13 +15,13 @@ import io.taucoin.torrent.publishing.core.storage.entity.User;
  */
 @Dao
 public interface UserDao {
-    String QUERY_GET_CURRENT_USER = "SELECT * FROM User WHERE isCurrentUser = 1";
-    String QUERY_GET_USER_LIST = "SELECT * FROM User";
-    String QUERY_GET_USERS_IN_BLACKLIST = "SELECT * FROM User where blacklist = 1";
-    String QUERY_SET_CURRENT_USER = "UPDATE User SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
-    String QUERY_ADD_USER_BLACKLIST = "UPDATE User SET blacklist = :blacklist WHERE publicKey = :publicKey";
-    String QUERY_SEED_HISTORY_LIST = "SELECT * FROM User WHERE isCurrentUser != 1 and seed not null";
-    String QUERY_USER_BY_PUBLIC_KEY = "SELECT * FROM User WHERE publicKey = :publicKey";
+    String QUERY_GET_CURRENT_USER = "SELECT * FROM Users WHERE isCurrentUser = 1";
+    String QUERY_GET_USER_LIST = "SELECT * FROM Users";
+    String QUERY_GET_USERS_IN_BLACKLIST = "SELECT * FROM Users where blacklist = 1";
+    String QUERY_SET_CURRENT_USER = "UPDATE Users SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
+    String QUERY_ADD_USER_BLACKLIST = "UPDATE Users SET blacklist = :blacklist WHERE publicKey = :publicKey";
+    String QUERY_SEED_HISTORY_LIST = "SELECT * FROM Users WHERE isCurrentUser != 1 and seed not null";
+    String QUERY_USER_BY_PUBLIC_KEY = "SELECT * FROM Users WHERE publicKey = :publicKey";
 
     /**
      * 添加新的User/Seed

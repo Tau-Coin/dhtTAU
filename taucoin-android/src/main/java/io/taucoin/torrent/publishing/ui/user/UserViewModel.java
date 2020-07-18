@@ -4,18 +4,15 @@ import android.app.Application;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.LinearLayout;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
 import com.github.naturs.logger.Logger;
 
-import java.util.Arrays;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
-import androidx.databinding.ViewDataBinding;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.BackpressureStrategy;
@@ -25,7 +22,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
@@ -109,7 +105,10 @@ public class UserViewModel extends AndroidViewModel {
                 String publicKey = ByteUtil.toHexString(keypair.first);
                 Logger.d("import publicKey::%s, size::%d", publicKey, publicKey.length());
                 User user = userRepo.getUserByPublicKey(publicKey);
-                userRepo.setCurrentUser(MainApplication.getInstance().getPublicKey(), false);
+                User currentUser = userRepo.getCurrentUser();
+                if(currentUser != null){
+                    userRepo.setCurrentUser(currentUser.publicKey, false);
+                }
                 if(null == user){
                     user = new User(publicKey, seed, name, true);
                     userRepo.addUser(user);
@@ -209,4 +208,40 @@ public class UserViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
+    /**
+     * 检查当前用户
+     */
+    public void checkCurrentUser() {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            User user = userRepo.getCurrentUser();
+            if(null == user){
+                generateSeed(null);
+            }
+            emitter.onNext(true);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
+        disposables.add(disposable);
+    }
+
+    /**
+     * 保存用户名
+     */
+    public void saveUserName(String name) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            User user = userRepo.getCurrentUser();
+            if(user != null){
+                user.localName = name;
+                userRepo.updateUser(user);
+            }
+            emitter.onNext(true);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
+        disposables.add(disposable);
+    }
 }

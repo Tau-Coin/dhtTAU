@@ -14,7 +14,7 @@ import io.taucoin.torrent.publishing.core.storage.entity.Message;
  */
 @Dao
 public interface MessageDao {
-    String QUERY_GET_MESSAGES_BY_CHAIN_ID = "SELECT * FROM Message WHERE chainID = :chainID";
+    String QUERY_GET_MESSAGES_BY_CHAIN_ID = "SELECT * FROM Messages WHERE chainID = :chainID";
 
     /**
      * 添加新的消息

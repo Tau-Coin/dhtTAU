@@ -25,6 +25,9 @@ public class MainApplication extends MultiDexApplication {
         Logger.addLogAdapter(new AndroidLogAdapter("TAU", false));
         Logger.setLogConverter(new AndroidLogConverter());
         Logger.setDebuggable(BuildConfig.DEBUG);
+
+//        // SQLite数据库测试
+//        Stetho.initializeWithDefaults(this);
     }
 
     public static MainApplication getInstance(){
