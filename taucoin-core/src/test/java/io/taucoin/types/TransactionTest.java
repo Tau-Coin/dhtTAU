@@ -15,11 +15,13 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WIT
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.RLP;
 
 public class TransactionTest {
     private static final Logger log = LoggerFactory.getLogger("transactionTest");
@@ -37,6 +39,9 @@ public class TransactionTest {
         log.debug(ByteUtil.toHexString(tx.getEncoded()));
         log.debug("size of tx: "+transaction.length()/2);
         log.debug("hash is: "+ ByteUtil.toHexString(tx.getTxID()));
+        byte[] hashbyte = RLP.encodeElement(ByteUtil.toByte("f8e201b4544155636f696e233330302333393338"));
+        Assert.assertArrayEquals(hashbyte,ByteUtil.toByte("94f8e201b4544155636f696e233330302333393338"));
+        log.debug("encode size is: "+hashbyte.length);
     }
 
     @Test
