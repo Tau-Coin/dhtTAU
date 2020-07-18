@@ -1,21 +1,21 @@
 # Block 
   No              |  Key           | Size-Byte        | Notes | RLP encoded size-byte 
   ---------------|----------------|------------------|:---------------------|----------------------
-   1   |version        | 1          | "0x1" as initial default, increase block through version(less than 127) | 2 
+   1   |version        | 1          | "0x0" as initial default, increase block through version | 2 
    2   |chainID        | 64       | Community ChainID := community name#optional block time interval in seconds#hash(GenesisMInerPubkey + timestamp) | 66 
    3   |timestamp      | 8         | unix timestamp for winning the block package right| 9 
    4   |blockNumber    | 8          | block number| 9 
    5   |previousBlockHash  | 20   | hash of previous block| 21 
    6   |immutableBlockHash | 20   | hash of immutable point block| 21 
    7   |baseTarget     | 8          |  for POT - Proof of Transaction calculation| 9 
-   8   |cumulativeDifficulty  | 8   | current consensus chain parameter| 9 
-   9   |generationSignature  | 32  | for POT calculation, $9 x power x time| 33 
+   8   |cumulativeDifficulty  | 8   | block chain difficulty parameter | 9 
+   9   |generationSignature  | 32  | for POT calculation, $7 x power x time | 33 
    10  |txMsg          | **less than 683** | packaged transaction in block, One block only have one transaction| **less than 686** 
    11  |minerBalance    | 8        | miner's balance| 9 
    12  |senderBalance  | 8        | sender's balance| 9 
    13  |receiverBalance| 8        | receiver's balance| 9 
-   14  |senderNonce      | 8       | sender's nonce, == power| 9 
-   15  |signature      | 64         | r: 32 bytes, s: 32 bytes, when at #6 same difficulty, high signature number wins.| 66 
+   14  |senderNonce      | 8       | sender's nonce(power) | 9 
+   15  |signature      | 64         | r: 32 bytes, s: 32 bytes, when at #8 same difficulty, high signature number wins. | 66 
    16  |minerPk        | 32         | miner public key| 33 
 
 
@@ -24,14 +24,14 @@
 # Transaction
  No              |  Key           | Size-Byte        |  Notes| RLP encoded size-byte 
  ----------------|----------------|------------------|----------------------|----------------------
- 1   |version     | 1          | "0x1" as initial default, increase block through version | 2 
+ 1   |version     | 1          | "0x0" as initial default, increase block through version | 2 
  2   |chainID     | 64       | Community ChainID := community name#optional block time interval in seconds#hash(GenesisMInerPubkey + timestamp) | 66 
- 3   |timestamp   | 8         | unix timestamp for winning the block package right| 9 
+ 3   |timestamp   | 8         | unix timestamp for this transaction. | 9 
  4   |txFee         | 8         | tx fee| 9 
  5   |senderPk      | 32         | sender public key| 33 
- 6   |nonce       | 8          | for POT - Proof of Transaction calculation| 9 
- 7   |txData      | **less than 483** | packaged transaction in block, One block only have one transaction| **less than 486** 
- 8   |signature   | 64         | r: 32 bytes, s: 32 bytes, when at #6 same difficulty, high signature number wins.| 66 
+ 6   |nonce       | 8          | deny replicated tx | 9 
+ 7   |txData      | **less than 483** | packaged transaction data in a block. | **less than 486** 
+ 8   |signature   | 64         | r: 32 bytes, s: 32 bytes. | 66 
 
 ## TxData
 8 - txdata class
@@ -59,7 +59,7 @@ No |  Key     |type   | Size-Byte |  Notes| RLP encoded size-byte
 No |  Key           |type   | Size-Byte |  Notes| RLP encoded size-byte 
 ---|----------------|-------|-----------|----------------------|----------------------
  1 | annChainID    |byte[] |  64       | communityChainID| 66 
- 2 | bootstrapPks |byte[] |  32       | genesisMiner pubkey| 33 
+ 2 | bootstrapPk |byte[] |  32       | bootstrap pubkey | 33 
  3 | description |String | 370 | community description | **less than 373** 
 
 8.4-WiringTransaction

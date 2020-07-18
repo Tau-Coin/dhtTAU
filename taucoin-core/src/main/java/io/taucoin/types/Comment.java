@@ -24,7 +24,7 @@ import io.taucoin.util.RLPList;
 
 public class Comment {
     /**
-     * @param reference: reference block hash.
+     * @param reference: reference transaction hash.
      * @param comment:your option about reference history message.
      */
     private byte[] reference;
@@ -106,7 +106,7 @@ public class Comment {
      */
     public boolean isValidateParamMsg(){
         if(!isParsed) parseRLP();
-        if(this.reference.length != ChainParam.HashLength || this.comment.getBytes().length > ChainParam.DescriptionLength){
+        if(this.reference.length != ChainParam.HashLength || this.comment.getBytes().length > ChainParam.CommentLength){
             return false;
         }
         return true;

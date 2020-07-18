@@ -24,8 +24,8 @@ import io.taucoin.util.RLPList;
  * community announcement transaction code used to announcement a community in b community.
  */
 public class CommunityAnnouncement {
-    private byte[] chainID;
-    private byte[] genesisMinerPubkey;
+    private byte[] annChainID;
+    private byte[] bootstrapPk;
     private String description;
 
     private byte[] rlpEncode;
@@ -34,9 +34,9 @@ public class CommunityAnnouncement {
     /**
      * construct community announcement message from user device.
      */
-    public CommunityAnnouncement(byte[] chainID,byte[] genesisMinerPubkey,String description){
-        this.chainID = chainID;
-        this.genesisMinerPubkey = genesisMinerPubkey;
+    public CommunityAnnouncement(byte[] chainID,byte[] bootstrapPks,String description){
+        this.annChainID = chainID;
+        this.bootstrapPk = bootstrapPks;
         this.description = description;
         this.isParsed = true;
     }
@@ -56,11 +56,11 @@ public class CommunityAnnouncement {
      */
     public byte[] getEncode(){
        if(rlpEncode == null) {
-           byte[] chainid = RLP.encodeElement(this.chainID);
-           byte[] genesisminerpubkey = RLP.encodeElement(this.genesisMinerPubkey);
+           byte[] chainid = RLP.encodeElement(this.annChainID);
+           byte[] bootstrappubkey = RLP.encodeElement(this.bootstrapPk);
            byte[] description = RLP.encodeString(this.description);
 
-           this.rlpEncode = RLP.encodeList(chainid,genesisminerpubkey,description);
+           this.rlpEncode = RLP.encodeList(chainid,bootstrappubkey,description);
        }
        return rlpEncode;
     }
@@ -74,8 +74,8 @@ public class CommunityAnnouncement {
         }else {
             RLPList list = RLP.decode2(this.rlpEncode);
             RLPList commannounce = (RLPList) list.get(0);
-            this.chainID = commannounce.get(0).getRLPData();
-            this.genesisMinerPubkey = commannounce.get(1).getRLPData();
+            this.annChainID = commannounce.get(0).getRLPData();
+            this.bootstrapPk = commannounce.get(1).getRLPData();
             this.description = new String(commannounce.get(2).getRLPData());
             isParsed = true;
         }
@@ -87,16 +87,16 @@ public class CommunityAnnouncement {
      */
     public byte[] getChainID(){
         if(!isParsed) parseRLP();
-        return this.chainID;
+        return this.annChainID;
     }
 
     /**
      * get miner pubkey that dht peers can use as communication slot.
      * @return
      */
-    public byte[] getGenesisMinerPubkey(){
+    public byte[] getBootstrapPks(){
         if(!isParsed) parseRLP();
-        return this.genesisMinerPubkey;
+        return this.bootstrapPk;
     }
 
     /**
@@ -114,9 +114,9 @@ public class CommunityAnnouncement {
      */
     public boolean isValidateParamMsg(){
         if(!isParsed) parseRLP();
-        if(this.chainID.length > ChainParam.ChainIDlength) return false;
-        if(this.genesisMinerPubkey.length != ChainParam.PubkeyLength) return false;
-        if(this.description.getBytes().length > ChainParam.DescriptionLength) return false;
+        if(this.annChainID.length > ChainParam.ChainIDlength) return false;
+        if(this.bootstrapPk.length != ChainParam.PubkeyLength) return false;
+        if(this.description.getBytes().length > ChainParam.CommunityDescriptionLength) return false;
         return true;
     }
 }

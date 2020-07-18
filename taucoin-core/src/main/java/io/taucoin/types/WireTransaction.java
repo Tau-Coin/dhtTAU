@@ -25,7 +25,7 @@ import io.taucoin.util.RLPList;
  * wire transaction
  */
 public class WireTransaction {
-    private byte[] receiverPubkey;
+    private byte[] receiverPk;
     private long amount;
     private String notes;
 
@@ -34,11 +34,11 @@ public class WireTransaction {
 
     /**
      * construct wire transaction from user device.
-     * @param receiverPubkey
+     * @param receiverPk
      * @param amount
      */
-    public WireTransaction(byte[] receiverPubkey,long amount,String notes){
-        this.receiverPubkey = receiverPubkey;
+    public WireTransaction(byte[] receiverPk,long amount,String notes){
+        this.receiverPk = receiverPk;
         this.amount = amount;
         this.notes = notes;
         this.isParsed = true;
@@ -59,7 +59,7 @@ public class WireTransaction {
      */
     public byte[] getEncode(){
         if(rlpEncode == null){
-            byte[] receiverpub = RLP.encodeElement(this.receiverPubkey);
+            byte[] receiverpub = RLP.encodeElement(this.receiverPk);
             byte[] amount = RLP.encodeElement(ByteUtil.longToBytes(this.amount));
             byte[] notes = RLP.encodeString(this.notes);
             this.rlpEncode = RLP.encodeList(receiverpub,amount,notes);
@@ -76,7 +76,7 @@ public class WireTransaction {
         }else {
             RLPList list = RLP.decode2(this.rlpEncode);
             RLPList wtx = (RLPList) list.get(0);
-            this.receiverPubkey = wtx.get(0).getRLPData();
+            this.receiverPk = wtx.get(0).getRLPData();
             this.amount = ByteUtil.byteArrayToLong(wtx.get(1).getRLPData());
             this.notes = new String(wtx.get(2).getRLPData());
             isParsed = true;
@@ -89,7 +89,7 @@ public class WireTransaction {
      */
     public byte[] getReceiverPubkey(){
         if(!isParsed) parseRLP();
-        return this.receiverPubkey;
+        return this.receiverPk;
     }
 
     /**
@@ -116,7 +116,7 @@ public class WireTransaction {
      */
     public boolean isValidateParamMsg(){
         if(!isParsed) parseRLP();
-        if(this.receiverPubkey.length != ChainParam.PubkeyLength) return false;
+        if(this.receiverPk.length != ChainParam.PubkeyLength) return false;
         if(this.amount <0) return false;
         if(this.notes.getBytes().length > ChainParam.WireNoteLength) return false;
 

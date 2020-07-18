@@ -60,6 +60,7 @@ public class GenesisMsgTest {
        msg.appendAccount(pubkeyC,item);
        msg.appendAccount(pubkeyD,item);
        String encodeStr= ByteUtil.toHexString(msg.getEncoded());
+       log.debug("genesis msg: "+encodeStr);
        log.debug("msg size is: "+encodeStr.length()/2);
        log.debug("is validate: "+ msg.validateGenesisMsg());
        log.debug("genesis power is: "+item.getPower());

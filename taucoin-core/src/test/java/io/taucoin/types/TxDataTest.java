@@ -59,7 +59,7 @@ public class TxDataTest {
         String str4 = ByteUtil.toHexString(txData4.getEncoded());
         log.debug(str4);
 
-        IdentityAnnouncement ida = new IdentityAnnouncement(minerpubkey,"taugenesis");
+        IdentityAnnouncement ida = new IdentityAnnouncement("hello","taugenesis");
         TxData txData5 = new TxData(MsgType.IdentityAnnouncement,ida.getEncode());
         String str5 = ByteUtil.toHexString(txData5.getEncoded());
         log.debug(str5);

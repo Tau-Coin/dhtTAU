@@ -184,17 +184,17 @@ public class TxData {
     /**
      * get genesispubkey about CommunityAnnouncement tx.
      */
-    public byte[] getCommunityAnnouncementGenesisPubkey(){
+    public byte[] getCommunityAnnouncementBootstrapPubkey(){
         if(!isParsed) parseRLP();
         if(this.msgType == MsgType.CommunityAnnouncement){
             if(!isInstance){
                 CommunityAnnouncement cma = new CommunityAnnouncement(this.txCode);
                 ob = cma;
                 isInstance = true;
-                return cma.getGenesisMinerPubkey();
+                return cma.getBootstrapPks();
             }else{
                 CommunityAnnouncement cma = (CommunityAnnouncement)ob;
-                return cma.getGenesisMinerPubkey();
+                return cma.getBootstrapPks();
             }
         }
         return null;
@@ -298,19 +298,19 @@ public class TxData {
     }
 
     /**
-     * get pubkey about IdentityAnnouncement tx.
+     * get name about IdentityAnnouncement tx.
      */
-    public byte[] getIdentityAnnouncementPubkey(){
+    public String getIdentityAnnouncementName(){
         if(!isParsed) parseRLP();
         if(this.msgType == MsgType.IdentityAnnouncement){
             if(!isInstance){
                 IdentityAnnouncement ian = new IdentityAnnouncement(this.txCode);
                 ob = ian;
                 isInstance = true;
-                return ian.getRenamePubkey();
+                return ian.getName();
             }else {
                 IdentityAnnouncement ian  = (IdentityAnnouncement) ob;
-                return ian.getRenamePubkey();
+                return ian.getName();
             }
         }
         return null;
@@ -319,17 +319,17 @@ public class TxData {
     /**
      * get new name about IdentityAnnouncement.
      */
-    public String getIdentityAnnouncementNewName(){
+    public String getIdentityAnnouncementDescription(){
         if(!isParsed) parseRLP();
         if(this.msgType == MsgType.IdentityAnnouncement){
             if(!isInstance){
                 IdentityAnnouncement ian = new IdentityAnnouncement(this.txCode);
                 ob = ian;
                 isInstance = true;
-                return ian.getNewName();
+                return ian.getDescription();
             }else {
                 IdentityAnnouncement ian  = (IdentityAnnouncement) ob;
-                return ian.getNewName();
+                return ian.getDescription();
             }
         }
         return "";

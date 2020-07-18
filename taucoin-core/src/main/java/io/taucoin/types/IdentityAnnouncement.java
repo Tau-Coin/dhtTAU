@@ -24,20 +24,20 @@ import io.taucoin.util.RLPList;
  * peer Identity Announcement.
  */
 public class IdentityAnnouncement {
-    private byte[] renamePubkey;
-    private String newName;
+    private String name;
+    private String description;
 
     private byte[] rlpEncode;
     private boolean isParsed;
 
     /**
      * construct Identity Announcement from user devices.
-     * @param renamePubkey
-     * @param newName
+     * @param name
+     * @param description
      */
-    public IdentityAnnouncement(byte[] renamePubkey,String newName){
-        this.renamePubkey = renamePubkey;
-        this.newName = newName;
+    public IdentityAnnouncement(String name,String description){
+        this.name = name;
+        this.description = description;
         isParsed = true;
     }
 
@@ -56,9 +56,9 @@ public class IdentityAnnouncement {
      */
     public byte[] getEncode(){
         if(this.rlpEncode == null){
-            byte[] pubkey = RLP.encodeElement(this.renamePubkey);
-            byte[] name = RLP.encodeString(this.newName);
-            this.rlpEncode = RLP.encodeList(pubkey,name);
+            byte[] name = RLP.encodeString(this.name);
+            byte[] description = RLP.encodeString(this.description);
+            this.rlpEncode = RLP.encodeList(name,description);
         }
         return this.rlpEncode;
     }
@@ -72,28 +72,28 @@ public class IdentityAnnouncement {
         }else {
             RLPList list = RLP.decode2(this.rlpEncode);
             RLPList IDannouncement = (RLPList) list.get(0);
-            this.renamePubkey = IDannouncement.get(0).getRLPData();
-            this.newName = new String(IDannouncement.get(1).getRLPData());
+            this.name = new String(IDannouncement.get(0).getRLPData());
+            this.description = new String(IDannouncement.get(1).getRLPData());
             isParsed = true;
         }
     }
 
     /**
-     * get reference renamepubkey.
+     * get name.
      * @return
      */
-    public byte[] getRenamePubkey(){
+    public String getName(){
         if(!isParsed) parseRLP();
-        return this.renamePubkey;
+        return this.name;
     }
 
     /**
      * get newName;
      * @return
      */
-    public String getNewName(){
+    public String getDescription(){
         if(!isParsed) parseRLP();
-        return this.newName;
+        return this.description;
     }
 
     /**
@@ -102,8 +102,8 @@ public class IdentityAnnouncement {
      */
     public boolean isValidateParamMsg(){
         if(!isParsed) parseRLP();
-        if(this.renamePubkey.length != ChainParam.PubkeyLength) return false;
-        if(this.newName.getBytes().length > ChainParam.NewNameLength) return false;
+        if(this.name.getBytes().length > ChainParam.IDnameLength) return false;
+        if(this.description.getBytes().length > ChainParam.IDdescLength) return false;
         return true;
     }
 }
