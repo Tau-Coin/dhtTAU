@@ -29,7 +29,8 @@ public class ProofOfTransaction {
 
     private BigInteger genesisBaseTarget;
 
-    private ProofOfTransaction() {
+    public ProofOfTransaction() {
+        this(AverageCommunityChainBlockTime);
     }
 
     public ProofOfTransaction(int averageBlockTime) {

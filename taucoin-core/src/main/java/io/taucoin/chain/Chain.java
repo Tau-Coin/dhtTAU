@@ -295,7 +295,22 @@ public class Chain {
         }
     }
 
-    private void vote() {}
+    private void vote() {
+        while (!Thread.interrupted()) {
+            byte[] peer = getOptimalPeer();
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, blockSalt, TIMEOUT);
+            byte[] data = TorrentDHTEngine.getInstance().dhtGet(spec);
+            if (null != data) {
+                Block block = new Block(data);
+                // vote on immutable point
+                votingPool.putIntoVotingPool(block.getImmutableBlockHash(),
+                        (int) block.getBlockNum() - ChainParam.MUTABLE_RANGE);
+            }
+        }
+        Vote bestVote = votingPool.getBestVote();
+        // sync from best vote
+        // TODO
+    }
 
     private byte[] getOptimalPeer() {
         return null;

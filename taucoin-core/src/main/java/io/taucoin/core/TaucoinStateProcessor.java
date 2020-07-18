@@ -2,8 +2,15 @@ package io.taucoin.core;
 
 import io.taucoin.db.StateDB;
 import io.taucoin.types.Block;
+import io.taucoin.types.MsgType;
+import io.taucoin.types.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TaucoinStateProcessor implements StateProcessor {
+
+    private static final Logger logger = LoggerFactory.getLogger("TauStateProcessor");
+
     /**
      * process block
      *
@@ -13,6 +20,24 @@ public class TaucoinStateProcessor implements StateProcessor {
      */
     @Override
     public boolean process(Block block, StateDB stateDB) {
+        // check balance and nonce, then update state
+        Transaction tx = block.getTxMsg();
+        switch (tx.getTxData().getMsgType()) {
+            case Wiring: {
+                break;
+            }
+            case CommunityAnnouncement: {
+                break;
+            }
+            case IdentityAnnouncement: {
+                break;
+            }
+            default:{
+                return false;
+            }
+        }
+
+        //
         return false;
     }
 
