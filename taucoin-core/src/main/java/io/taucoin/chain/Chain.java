@@ -8,6 +8,7 @@ import io.taucoin.db.BlockStore;
 import io.taucoin.db.StateDB;
 import io.taucoin.listener.TauListener;
 import io.taucoin.param.ChainParam;
+import io.taucoin.processor.StateProcessor;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.types.Block;

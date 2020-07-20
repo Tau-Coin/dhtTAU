@@ -324,6 +324,21 @@ public class StateDBImpl implements StateDB {
     }
 
     /**
+     * update account state
+     *
+     * @param chainID
+     * @param pubKey
+     * @param account
+     * @throws Exception
+     */
+    @Override
+    public void updateAccount(byte[] chainID, byte[] pubKey, AccountState account) throws Exception {
+        if (null != account) {
+            db.put(PrefixKey.accountKey(chainID, pubKey), account.getEncoded());
+        }
+    }
+
+    /**
      * get a account state
      * @param chainID
      * @param pubKey

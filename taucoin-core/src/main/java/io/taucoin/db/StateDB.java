@@ -227,6 +227,15 @@ public interface StateDB {
     void updateAccounts(byte[] chainID, Map<ByteArrayWrapper, AccountState> accountStateMap) throws Exception;
 
     /**
+     * update account state
+     * @param chainID
+     * @param pubKey
+     * @param account
+     * @throws Exception
+     */
+    void updateAccount(byte[] chainID, byte[] pubKey, AccountState account) throws Exception;
+
+    /**
      * get a account state
      * @param chainID
      * @param pubKey
