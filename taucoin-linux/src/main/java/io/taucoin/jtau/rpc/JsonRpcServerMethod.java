@@ -37,6 +37,7 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
     /**
      * Indicate which requests this method handles.
      */
+    @Override
     public String[] handledRequests() {
         return new String[]{name};
     }
@@ -48,6 +49,7 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
      * @param ctx request context
      * @return JSONRPC2Response
      */
+    @Override
     public JSONRPC2Response process(JSONRPC2Request req, MessageContext ctx) {
         if (req.getMethod().equals(name)) {
             return worker(req, ctx);

@@ -36,7 +36,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.VARY;
 
 /**
- * JsonRpcServerHandler reads http request and dispatch the request to the
+ * JsonRpcServerHandler reads http request and dispatches the request to the
  * responding method handler.
  */
 public class JsonRpcServerHandler extends SimpleChannelInboundHandler<HttpObject> {
@@ -73,7 +73,6 @@ public class JsonRpcServerHandler extends SimpleChannelInboundHandler<HttpObject
             HttpRequest req = this.request = (HttpRequest) msg;
             if (request.getMethod().equals(HttpMethod.OPTIONS)) {
                 isOptions = true;
-                return;
             } else if (!req.getUri().equals("/") || !request.getMethod().equals(HttpMethod.POST)) {
                 responseContent.append("Hi, how are you?!!");
                 return;
