@@ -33,12 +33,28 @@ public class AccountState implements Cloneable {
         this.balance = balance;
     }
 
+    public void addBalance(BigInteger value) {
+        this.balance = this.balance.add(value);
+    }
+
+    public void subBalance(BigInteger value) {
+        this.balance = this.balance.subtract(value);
+    }
+
     public BigInteger getNonce() {
         return nonce;
     }
 
     public void setNonce(BigInteger nonce) {
         this.nonce = nonce;
+    }
+
+    public void increaseNonce() {
+        this.nonce = this.nonce.add(BigInteger.ONE);
+    }
+
+    public void reduceNonce() {
+        this.nonce = this.nonce.subtract(BigInteger.ONE);
     }
 
     public byte[] getEncoded() {

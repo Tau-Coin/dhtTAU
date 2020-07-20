@@ -351,6 +351,18 @@ public class StateDBTrack implements StateDB {
     }
 
     /**
+     * update account state
+     *
+     * @param chainID
+     * @param pubKey
+     * @param account
+     * @throws Exception
+     */
+    @Override
+    public void updateAccount(byte[] chainID, byte[] pubKey, AccountState account) throws Exception {
+    }
+
+    /**
      * get a account state
      *
      * @param chainID
