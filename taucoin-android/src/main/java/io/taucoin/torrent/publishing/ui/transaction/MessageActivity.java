@@ -122,7 +122,10 @@ public class MessageActivity extends BaseActivity implements View.OnClickListene
         String fee = ViewUtils.getStringTag(binding.tvFee);
         String memo = ViewUtils.getText(binding.etInput);
         Tx tx = new Tx(chainID, FmtMicrometer.fmtTxLongValue(fee), txType, memo);
-        tx.replyID = replyID;
+        if(StringUtil.isNotEmpty(replyID)){
+            tx.replyID = replyID;
+            tx.txType = MsgType.ForumComment.getVaLue();
+        }
         return tx;
     }
 

@@ -12,23 +12,30 @@ import com.leinardi.android.speeddial.SpeedDialActionItem;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.paging.DataSource;
+import androidx.paging.LivePagedListBuilder;
+import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.ReplyAndAllTxs;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
-import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentTxsTabBinding;
 import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
@@ -87,10 +94,21 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
             }
         };
         LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
-//        layoutManager.setReverseLayout(true);
         binding.txList.setLayoutManager(layoutManager);
         binding.txList.setItemAnimator(animator);
         binding.txList.setAdapter(adapter);
+
+        PagedList.Config pagedListConfig = new PagedList.Config.Builder()
+                .setEnablePlaceholders(Page.ENABLE_PLACEHOLDERS)
+                .setPageSize(Page.PAGE_SIZE)
+                .setInitialLoadSizeHint(Page.PAGE_SIZE)
+                .build();
+        LiveData<PagedList<ReplyAndAllTxs>> postList = new LivePagedListBuilder<>(
+                txViewModel.queryCommunityTxs(community.chainID), pagedListConfig).build();
+        postList.observe(activity, replyAndAllTxs -> {
+            adapter.submitList(replyAndAllTxs);
+            binding.txList.smoothScrollToPosition(adapter.getItemCount());
+        });
     }
 
     /**
@@ -143,12 +161,12 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         if(null == community){
             return;
         }
-        disposables.add(txViewModel.observeTxsByChainID(community.chainID)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(list -> {
-                adapter.setDataList(list);
-                binding.txList.smoothScrollToPosition(adapter.getItemCount());
-            }));
+//        disposables.add(txViewModel.observeTxsByChainID(community.chainID)
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .subscribe(list -> {
+//                adapter.setDataList(list);
+//                binding.txList.smoothScrollToPosition(adapter.getItemCount());
+//            }));
     }
 
     @Override
@@ -175,22 +193,28 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
      */
 
     @Override
-    public void onItemClicked(Tx tx) {
+    public void onItemClicked(ReplyAndAllTxs tx) {
 
     }
 
     @Override
-    public void onItemLongClicked(Tx tx, String msg) {
+    public void onItemLongClicked(ReplyAndAllTxs tx, String msg) {
         showItemOperationDialog(tx, msg);
     }
 
     /**
      * 显示每个item长按操作选项对话框
      */
-    private void showItemOperationDialog(Tx tx, String msg) {
+    private void showItemOperationDialog(ReplyAndAllTxs tx, String msg) {
         ItemOperationsBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.item_operations, null, false);
         binding.setListener(this);
+        // 用户不能回复自己的消息
+        if(StringUtil.isEquals(tx.senderPk,
+                MainApplication.getInstance().getPublicKey())){
+            binding.replay.setVisibility(View.GONE);
+            binding.blacklist.setVisibility(View.GONE);
+        }
         binding.replay.setTag(tx.txID);
         binding.copy.setTag(msg);
         binding.copyLink.setTag(msg);

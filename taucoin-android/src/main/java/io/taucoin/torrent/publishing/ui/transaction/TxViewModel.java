@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
+import androidx.paging.DataSource;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -22,6 +23,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.ReplyAndAllTxs;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.UserRepository;
@@ -55,7 +57,7 @@ public class TxViewModel extends AndroidViewModel {
     private TxRepository txRepo;
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private MutableLiveData<List<Tx>> chainTxs = new MutableLiveData<>();
+    private MutableLiveData<List<ReplyAndAllTxs>> chainTxs = new MutableLiveData<>();
     private MutableLiveData<String> addState = new MutableLiveData<>();
     private CommonDialog editFeeDialog;
     public TxViewModel(@NonNull Application application) {
@@ -76,7 +78,7 @@ public class TxViewModel extends AndroidViewModel {
      * 获取社区链交易的被观察者
      * @return 被观察者
      */
-    public MutableLiveData<List<Tx>> getChainTxs() {
+    public MutableLiveData<List<ReplyAndAllTxs>> getChainTxs() {
         return chainTxs;
     }
 
@@ -94,8 +96,8 @@ public class TxViewModel extends AndroidViewModel {
      * @param chainID 社区链id
      */
     public void getTxsByChainID(String chainID){
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<Tx>>) emitter -> {
-            List<Tx> txs = txRepo.getTxsByChainID(chainID);
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<ReplyAndAllTxs>>) emitter -> {
+            List<ReplyAndAllTxs> txs = txRepo.getTxsByChainID(chainID);
             emitter.onNext(txs);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -109,9 +111,18 @@ public class TxViewModel extends AndroidViewModel {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public Flowable<List<Tx>> observeTxsByChainID(String chainID){
+    public Flowable<List<ReplyAndAllTxs>> observeTxsByChainID(String chainID){
         return txRepo.observeTxsByChainID(chainID);
     }
+
+    /**
+     * 根据chainID获取社区的交易的被被观察者
+     * @param chainID 社区链id
+     */
+    public DataSource.Factory<Integer, ReplyAndAllTxs> queryCommunityTxs(String chainID){
+        return txRepo.queryCommunityTxs(chainID);
+    }
+
 
     /**
      * 添加新的交易

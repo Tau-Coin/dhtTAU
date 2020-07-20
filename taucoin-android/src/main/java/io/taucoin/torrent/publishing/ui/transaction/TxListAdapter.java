@@ -4,17 +4,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
+import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.storage.entity.Tx;
+import io.taucoin.torrent.publishing.core.model.data.ReplyAndAllTxs;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -26,10 +24,9 @@ import io.taucoin.types.MsgType;
 /**
  * 消息/交易列表显示的Adapter
  */
-public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
-    implements Selectable<Tx> {
+public class TxListAdapter extends PagedListAdapter<ReplyAndAllTxs, TxListAdapter.ViewHolder>
+    implements Selectable<ReplyAndAllTxs> {
     private ClickListener listener;
-    private List<Tx> dataList = new ArrayList<>();
 
     TxListAdapter(ClickListener listener) {
         super(diffCallback);
@@ -52,11 +49,6 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
                     parent,
                     false);
         }else if(viewType == MsgType.CommunityAnnouncement.getVaLue()){
-            binding = DataBindingUtil.inflate(inflater,
-                    R.layout.item_wiring_tx,
-                    parent,
-                    false);
-        }else if(viewType == MsgType.DHTBootStrapNodeAnnouncement.getVaLue()){
             binding = DataBindingUtil.inflate(inflater,
                     R.layout.item_wiring_tx,
                     parent,
@@ -86,34 +78,28 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
     }
 
     @Override
-    public int getItemCount() {
-        return dataList.size();
+    public ReplyAndAllTxs getItemKey(int position) {
+        if(getCurrentList() != null){
+            return getCurrentList().get(position);
+        }
+        return null;
     }
 
     @Override
-    public Tx getItemKey(int position) {
-        return dataList.get(position);
-    }
-
-    @Override
-    public int getItemPosition(Tx key) {
-        return getCurrentList().indexOf(key);
+    public int getItemPosition(ReplyAndAllTxs key) {
+        if(getCurrentList() != null){
+            return getCurrentList().indexOf(key);
+        }
+        return 0;
     }
 
     @Override
     public int getItemViewType(int position) {
-        Tx tx = getItemKey(position);
-        return tx.txType;
-    }
-
-    /**
-     * 设置列表交易展示数据
-     * @param txs 社区数据
-     */
-    void setDataList(List<Tx> txs) {
-        dataList.clear();
-        dataList.addAll(txs);
-        notifyDataSetChanged();
+        ReplyAndAllTxs tx = getItemKey(position);
+        if(tx != null){
+            return tx.txType;
+        }
+        return -1;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -126,21 +112,36 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
             this.listener = listener;
         }
 
-        void bind(ViewHolder holder, Tx tx) {
+        void bind(ViewHolder holder, ReplyAndAllTxs tx) {
             if(null == binding || null == holder || null == tx){
                 return;
             }
-            String msg = "";
             if(binding instanceof ItemWiringTxBinding){
                 ItemWiringTxBinding txBinding = (ItemWiringTxBinding) holder.binding;
                 String time = DateUtil.formatTime(tx.timestamp, DateUtil.pattern0);
                 txBinding.leftView.setBgColor(Utils.getGroupColor(tx.senderPk));
-                String showName = UsersUtil.getDefaultName(tx.senderPk);
+                String showName = UsersUtil.getShowName(tx);
                 txBinding.leftView.setText(StringUtil.getFirstLettersOfName(showName));
                 txBinding.tvName.setText(showName);
-                msg = tx.memo;
+                String msg = tx.memo;
+                msg = tx.txType + "--" + msg;
                 txBinding.tvMsg.setText(msg);
                 txBinding.tvTime.setText(time);
+
+                if(tx.txType == MsgType.ForumComment.getVaLue()){
+                    if(tx.replyTx != null){
+                        showName = UsersUtil.getShowReplyName(tx);
+                        msg = "@" + showName + "\n" + tx.replyTx.memo + "\n\n" + msg;
+                    }
+                    txBinding.tvMsg.setText(msg);
+                }
+
+                if(StringUtil.isEquals(tx.senderPk,
+                        MainApplication.getInstance().getPublicKey())){
+                    txBinding.tvBlacklist.setVisibility(View.INVISIBLE);
+                }
+
+                setOnLongClickListener(txBinding.middleView, tx, msg);
             }else{
                 ItemWiringTxBinding txBinding = (ItemWiringTxBinding) holder.binding;
                 String time = DateUtil.formatTime(tx.timestamp, DateUtil.pattern0);
@@ -148,7 +149,7 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
                 String showName = UsersUtil.getDefaultName(tx.senderPk);
                 txBinding.leftView.setText(StringUtil.getFirstLettersOfName(showName));
                 txBinding.tvName.setText(showName);
-                msg = tx.memo;
+                String msg = tx.memo;
                 txBinding.tvMsg.setText(msg);
                 txBinding.tvTime.setText(time);
             }
@@ -158,10 +159,12 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
                     listener.onItemClicked(tx);
                 }
             });
-            String finalMsg = msg;
-            root.setOnLongClickListener(view -> {
+        }
+
+        private void setOnLongClickListener(View llMsg, ReplyAndAllTxs tx, String msg) {
+            llMsg.setOnLongClickListener(view ->{
                 if(listener != null){
-                    listener.onItemLongClicked(tx, finalMsg);
+                    listener.onItemLongClicked(tx, msg);
                 }
                 return false;
             });
@@ -169,18 +172,18 @@ public class TxListAdapter extends ListAdapter<Tx, TxListAdapter.ViewHolder>
     }
 
     public interface ClickListener {
-        void onItemClicked(Tx tx);
-        void onItemLongClicked(Tx tx, String msg);
+        void onItemClicked(ReplyAndAllTxs tx);
+        void onItemLongClicked(ReplyAndAllTxs tx, String msg);
     }
 
-    private static final DiffUtil.ItemCallback<Tx> diffCallback = new DiffUtil.ItemCallback<Tx>() {
+    private static final DiffUtil.ItemCallback<ReplyAndAllTxs> diffCallback = new DiffUtil.ItemCallback<ReplyAndAllTxs>() {
         @Override
-        public boolean areContentsTheSame(@NonNull Tx oldItem, @NonNull Tx newItem) {
+        public boolean areContentsTheSame(@NonNull ReplyAndAllTxs oldItem, @NonNull ReplyAndAllTxs newItem) {
             return oldItem.equals(newItem);
         }
 
         @Override
-        public boolean areItemsTheSame(@NonNull Tx oldItem, @NonNull Tx newItem) {
+        public boolean areItemsTheSame(@NonNull ReplyAndAllTxs oldItem, @NonNull ReplyAndAllTxs newItem) {
             return oldItem.equals(newItem);
         }
     };

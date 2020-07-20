@@ -1,6 +1,5 @@
 package io.taucoin.torrent.publishing.ui.transaction;
 
-import android.app.Dialog;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -122,7 +121,7 @@ public class NicknameActivity extends BaseActivity implements View.OnClickListen
      */
     private Tx buildTx() {
         String chainID = community.chainID;
-        int txType = MsgType.RegularForum.getVaLue();
+        int txType = MsgType.IdentityAnnouncement.getVaLue();
         String fee = ViewUtils.getStringTag(binding.tvFee);
         String name = ViewUtils.getText(binding.etName);
         NameDescription nameDescription = new NameDescription();
