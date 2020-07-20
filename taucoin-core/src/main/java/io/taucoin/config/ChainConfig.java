@@ -17,13 +17,13 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 package io.taucoin.config;
 
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import io.taucoin.param.ChainParam;
-import io.taucoin.genesis.GenesisMsg;
+import io.taucoin.types.GenesisMsg;
+import io.taucoin.types.MsgType;
+import io.taucoin.types.Transaction;
+import io.taucoin.types.TxData;
 import io.taucoin.util.ByteUtil;
-import io.taucoin.util.RLP;
 
 import com.frostwire.jlibtorrent.swig.byte_vector;
 import com.frostwire.jlibtorrent.swig.sha1_hash;
@@ -41,7 +41,7 @@ public class ChainConfig {
     private BigInteger BaseTarget= new BigInteger("21D0369D036978",16);
     private BigInteger CummulativeDifficulty = BigInteger.ZERO;
     private String GenerationSignature;
-    private GenesisMsg Msg;
+    private Transaction Msg;
     private String Signature="";
 
     /**
@@ -51,17 +51,20 @@ public class ChainConfig {
      * @param blockTimeInterval
      * @param genesisMinerPubkey
      * @param generationSignature
-     * @param msg
      */
-    private  ChainConfig(byte version, String communityName,int blockTimeInterval,String genesisMinerPubkey,
-                         String generationSignature,GenesisMsg msg){
+    private  ChainConfig(byte version, String communityName, int blockTimeInterval, String genesisMinerPubkey,
+                         String generationSignature, GenesisMsg msg){
         this.version = version;
         this.CommunityName = communityName;
         this.BlockTimeInterval = blockTimeInterval;
         this.GenesisMinerPubkey = genesisMinerPubkey;
         this.GenesisTimeStamp = System.currentTimeMillis()/1000;
         this.GenerationSignature = generationSignature;
-        this.Msg = msg;
+
+        TxData txData = new TxData(MsgType.GenesisMsg,msg.getEncoded());
+        //construct genesis transaction without signature
+        //this special tx will be signed simultaneously when genesis block is signed.
+        this.Msg = new Transaction(version,communityName,blockTimeInterval,this.GenesisTimeStamp,genesisMinerPubkey,txData);
     }
 
     /**
@@ -98,8 +101,6 @@ public class ChainConfig {
      * @param blockTimeInterval block mined time interval on new chain.
      * @param genesisMinerPubkey genesis miner pubkey.
      * @param generationSignature initial generation signature to bring up block chain.
-     * @param msg genesis initial K-V state.
-     * @param signature genesis block signature.
      * @return
      */
     public static ChainConfig NewChainConfig(byte version, String communityName,int blockTimeInterval,String genesisMinerPubkey,
@@ -198,10 +199,10 @@ public class ChainConfig {
     }
 
     /**
-     * get genesis message.
+     * get genesis tx message.
      * @return
      */
-    public GenesisMsg getMsg() {
+    public Transaction getMsg() {
         return Msg;
     }
 }

@@ -21,6 +21,7 @@ import com.frostwire.jlibtorrent.Ed25519;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import io.taucoin.config.ChainConfig;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.RLP;
@@ -30,7 +31,7 @@ public class Transaction {
     private byte version;
     private byte[] chainID;
     private long timestamp;
-    private int txFee;
+    private long txFee;
     private byte[] senderPubkey;
     private long nonce;
     private TxData txData;
@@ -103,6 +104,23 @@ public class Transaction {
     }
 
     /**
+     * construct genesis transaction
+     */
+    public Transaction(byte version,String communityName,int blockTimeInterval,long genesisTimeStamp,String genesisMinerPk,TxData txData){
+        this.version = version;
+        String str = genesisMinerPk + genesisTimeStamp;
+        String hash = ByteUtil.toHexString(HashUtil.sha1hash(str.getBytes()));
+        String ID = communityName + ChainParam.ChainidDelimeter + blockTimeInterval + ChainParam.ChainidDelimeter + hash;
+        this.chainID = ID.getBytes();
+        this.timestamp = genesisTimeStamp;
+        this.txFee = 0;
+        this.senderPubkey = ByteUtil.toByte(genesisMinerPk);
+        this.nonce = 0;
+        this.txData = txData;
+        isParsed = true;
+    }
+
+    /**
      * construct transaction from complete byte encoding.
      * @param rlpEncoded:complete byte encoding.
      */
@@ -120,7 +138,7 @@ public class Transaction {
             byte[] version = RLP.encodeByte(this.version);
             byte[] chainid = RLP.encodeElement(this.chainID);
             byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
-            byte[] txfee = RLP.encodeInt(this.txFee);
+            byte[] txfee = RLP.encodeElement(ByteUtil.longToBytes(this.txFee));
             byte[] sender = RLP.encodeElement(this.senderPubkey);
             byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
             byte[] txdata = this.txData.getEncoded();
@@ -139,7 +157,7 @@ public class Transaction {
             byte[] version = RLP.encodeByte(this.version);
             byte[] chainid = RLP.encodeElement(this.chainID);
             byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
-            byte[] txfee = RLP.encodeInt(this.txFee);
+            byte[] txfee = RLP.encodeElement(ByteUtil.longToBytes(this.txFee));
             byte[] sender = RLP.encodeElement(this.senderPubkey);
             byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
             byte[] txdata = this.txData.getEncoded();
@@ -160,7 +178,7 @@ public class Transaction {
             this.version = tx.get(0).getRLPData()[0];
             this.chainID = tx.get(1).getRLPData();
             this.timestamp = ByteUtil.byteArrayToLong(tx.get(2).getRLPData());
-            this.txFee = ByteUtil.byteArrayToInt(tx.get(3).getRLPData());
+            this.txFee = ByteUtil.byteArrayToLong(tx.get(3).getRLPData());
             this.senderPubkey = tx.get(4).getRLPData();
             this.nonce = ByteUtil.byteArrayToLong(tx.get(5).getRLPData());
             this.txData = new TxData(tx.get(6).getRLPData());
@@ -200,7 +218,7 @@ public class Transaction {
      * get tx fee maybe negative.
      * @return
      */
-    public int getTxFee() {
+    public long getTxFee() {
         if(!isParsed) parseRLP();
         return txFee;
     }
@@ -273,10 +291,21 @@ public class Transaction {
         if(!isParsed) parseRLP();
         if(chainID.length > ChainParam.ChainIDlength) return false;
         if(timestamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
-        if(senderPubkey.length != ChainParam.PubkeyLength) return false;
+        if(senderPubkey != null && senderPubkey.length != ChainParam.PubkeyLength) return false;
         if(nonce < 0) return false;
         if(signature != null && signature.length != ChainParam.SignatureLength) return false;
         return true;
+    }
+
+    /**
+     * sign transaction with sender prikey.
+     * @param prikey
+     * @return
+     */
+    public byte[] signTransaction(byte[] prikey){
+        byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.senderPubkey, prikey);
+        this.signature = sig;
+        return this.signature;
     }
 
     /**
@@ -295,7 +324,7 @@ public class Transaction {
      */
     public byte[] getTxID(){
         if(txID == null){
-            txID = HashUtil.sha1hash(this.getEncoded());
+           txID = HashUtil.sha1hash(this.getEncoded());
         }
         return txID;
     }

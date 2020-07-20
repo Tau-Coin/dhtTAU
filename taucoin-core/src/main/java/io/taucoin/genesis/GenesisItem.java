@@ -59,8 +59,8 @@ public class GenesisItem {
      */
     public byte[] getEncoded(){
         if(rlpEncoded == null){
-            byte[] balance = RLP.encodeBigInteger(this.balance);
-            byte[] power = RLP.encodeBigInteger(this.power);
+            byte[] balance = RLP.encodeElement(this.balance.toByteArray());
+            byte[] power = RLP.encodeElement(this.power.toByteArray());
             rlpEncoded = RLP.encodeList(balance,power);
         }
         return rlpEncoded;

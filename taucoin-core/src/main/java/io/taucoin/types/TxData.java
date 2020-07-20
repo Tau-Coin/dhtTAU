@@ -40,7 +40,7 @@ public class TxData {
      * @param txCode Description of txdata.
      */
     public TxData (MsgType type,byte[] txCode){
-        if (type != MsgType.RegularForum && type != MsgType.ForumComment && type != MsgType.DHTBootStrapNodeAnnouncement
+        if (type != MsgType.GenesisMsg && type != MsgType.RegularForum && type != MsgType.ForumComment && type != MsgType.DHTBootStrapNodeAnnouncement
             && type != MsgType.Wiring && type != MsgType.CommunityAnnouncement && type != MsgType.IdentityAnnouncement) {
             throw new IllegalArgumentException("illegal tx type");
         }

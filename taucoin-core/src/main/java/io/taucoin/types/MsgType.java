@@ -18,20 +18,22 @@ package io.taucoin.types;
 
 /**
  * transaction type used to create transaction.
- * 0:Regular forum message.
- * 1:forum message comment.
- * 2:Community Announcement message.
- * 3:bootstrap node Announcement.
+ * 0:community genesis message.
+ * 1:Regular forum message.
+ * 2:forum message comment.
+ * 3:Community Announcement message.
  * 4:wire transaction.
  * 5:Identity Announcement.
+ * 6:bootstrap node Announcement.
  */
 public enum MsgType {
-    RegularForum(0),
-    ForumComment(1),
-    CommunityAnnouncement(2),
-    DHTBootStrapNodeAnnouncement(3),
+    GenesisMsg(0),
+    RegularForum(1),
+    ForumComment(2),
+    CommunityAnnouncement(3),
     Wiring(4),
-    IdentityAnnouncement(5);
+    IdentityAnnouncement(5),
+    DHTBootStrapNodeAnnouncement(6);
     int index;
     MsgType(int value){
         this.index = value;

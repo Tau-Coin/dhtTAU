@@ -23,6 +23,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import io.taucoin.config.ChainConfig;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.RLP;
@@ -140,6 +141,29 @@ public class Block {
         this.receiverBalance = receiverBalance;
         this.senderNonce = senderNonce;
         this.minerPubkey = minerPubkey;
+        isParsed = true;
+    }
+
+    /**
+     * construct genesis block respecting user intention.
+     * @param cf
+     */
+    public Block(ChainConfig cf){
+        this.version = cf.getVersion();
+        this.chainID = cf.getChainid();
+        this.timestamp = cf.getGenesisTimeStamp();
+        this.blockNum = cf.getBlockNum();
+        this.previousBlockHash = null;
+        this.immutableBlockHash = null;
+        this.baseTarget = cf.getBaseTarget();
+        this.cumulativeDifficulty = cf.getCummulativeDifficulty();
+        this.generationSignature = cf.getGenerationSignature();
+        this.txMsg = cf.getMsg();
+        this.minerBalance = 0;
+        this.senderBalance = 0;
+        this.receiverBalance = 0;
+        this.senderNonce = 0 ;
+        this.minerPubkey = cf.getGenesisMinerPubkey();
         isParsed = true;
     }
 
@@ -551,6 +575,20 @@ public class Block {
     }
 
     /**
+     * sign block with miner prikey.
+     * @param prikey
+     * @return
+     */
+    public byte[] signBlock(byte[] prikey){
+        if(this.txMsg.getTxData().getMsgType() == MsgType.GenesisMsg){
+            this.txMsg.signTransaction(prikey);
+        }
+        byte[] sig = Ed25519.sign(this.getBlockSigMsg(), this.minerPubkey, prikey);
+        this.signature = sig;
+        return this.signature;
+    }
+
+    /**
      * Validate block
      * 1:paramter is valid?
      * 2:about signature,your should verify it besides.
@@ -562,8 +600,8 @@ public class Block {
         if(chainID.length >ChainParam.ChainIDlength) return false;
         if(timestamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
         if(blockNum < 0) return false;
-        if(previousBlockHash.length > ChainParam.HashLength) return false;
-        if(immutableBlockHash.length > ChainParam.HashLength) return false;
+        if(previousBlockHash != null && previousBlockHash.length > ChainParam.HashLength) return false;
+        if(immutableBlockHash != null && immutableBlockHash.length > ChainParam.HashLength) return false;
         if(1 == baseTarget.compareTo(ChainParam.MaxBaseTarget)) return false;
         if(1 == cumulativeDifficulty.compareTo(ChainParam.MaxCummulativeDiff)) return false;
         if(generationSignature.length != ChainParam.GenerationSigLength) return false;

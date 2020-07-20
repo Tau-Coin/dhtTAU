@@ -20,6 +20,9 @@ import com.frostwire.jlibtorrent.swig.sha1_hash;
 import com.frostwire.jlibtorrent.Vectors;
 import com.frostwire.jlibtorrent.swig.byte_vector;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 /**
  * hash utils used to calculate bytes length at least more than 20 bytes
  * warming:
@@ -27,7 +30,13 @@ import com.frostwire.jlibtorrent.swig.byte_vector;
  */
 public class HashUtil {
     public static byte[] sha1hash(byte[] bytes){
-       byte_vector bvs = Vectors.bytes2byte_vector(bytes);
+       MessageDigest digest;
+       try{
+           digest = MessageDigest.getInstance("SHA-1");
+       }catch (NoSuchAlgorithmException e){
+           return null;
+       }
+       byte_vector bvs = Vectors.bytes2byte_vector(digest.digest(bytes));
        sha1_hash hash = new sha1_hash(bvs);
        return  Vectors.byte_vector2bytes(hash.to_bytes());
     }
