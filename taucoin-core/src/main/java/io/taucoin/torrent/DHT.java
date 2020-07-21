@@ -3,6 +3,8 @@ package io.taucoin.torrent;
 import com.frostwire.jlibtorrent.Entry;
 import com.frostwire.jlibtorrent.Sha1Hash;
 
+import java.nio.charset.Charset;
+
 /**
  * This class defines some structures about getting and putting immutable and mutable items.
  */
@@ -14,7 +16,7 @@ public final class DHT {
         Entry entry;
 
         public ImmutableItem(byte[] data) {
-            this.entry = Entry.bdecode(data);
+            this.entry = new Entry(new String(data, Charset.forName("UTF-8")));
         }
     }
 
@@ -28,7 +30,7 @@ public final class DHT {
         public MutableItem(byte[] publicKey, byte[] privateKey, byte[] data, byte[] salt) {
             this.publicKey = publicKey;
             this.privateKey = privateKey;
-            this.entry = Entry.bdecode(data);
+            this.entry = new Entry(new String(data, Charset.forName("UTF-8")));
             this.salt= salt;
         }
     }

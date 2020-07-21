@@ -7,6 +7,8 @@ import com.frostwire.jlibtorrent.alerts.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
+
 import static io.taucoin.torrent.DHT.*;
 
 /**
@@ -200,7 +202,15 @@ public class TorrentDHTEngine {
         Sha1Hash hash = this.dhtPut(item);
 
         Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
-        byte[] data = entry == null ? null : entry.bencode();
+        byte[] data = null;
+        if (entry != null) {
+            String str =  entry.string();
+            try {
+                data = str.getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
 
         return new ExchangeImmutableItemResult(data, hash);
     }
