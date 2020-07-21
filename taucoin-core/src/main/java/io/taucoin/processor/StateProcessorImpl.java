@@ -11,9 +11,9 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-public class TAUChainStateProcessor implements StateProcessor {
+public class StateProcessorImpl implements StateProcessor {
 
-    private static final Logger logger = LoggerFactory.getLogger("TauStateProcessor");
+    private static final Logger logger = LoggerFactory.getLogger("StateProcessor");
 
     /**
      * process block
@@ -143,7 +143,24 @@ public class TAUChainStateProcessor implements StateProcessor {
                     break;
                 }
                 case IdentityAnnouncement: {
-                    // TODO:: to deal with
+                    // check balance
+                    if (sendState.getBalance().longValue() < fee) {
+                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
+                                fee, sendState.getBalance(), Hex.toHexString(sender));
+                        return false;
+                    }
+
+                    //Execute the transaction
+                    // miner
+                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
+                    minerState.addBalance(BigInteger.valueOf(fee));
+                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
+                    // sender
+                    sendState.subBalance(BigInteger.valueOf(fee));
+                    sendState.increaseNonce();
+                    sendState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
+                    stateDB.updateAccount(chainID, sender, sendState);
+                    // TODO: announce app
                     break;
                 }
                 default: {
@@ -246,7 +263,17 @@ public class TAUChainStateProcessor implements StateProcessor {
                     break;
                 }
                 case IdentityAnnouncement: {
-                    // TODO:: to deal with
+                    //roll back the transaction
+                    // miner
+                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
+                    minerState.subBalance(BigInteger.valueOf(fee));
+                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
+                    // sender
+                    // note: don't need to roll back identity
+                    sendState.addBalance(BigInteger.valueOf(fee));
+                    sendState.reduceNonce();
+                    stateDB.updateAccount(chainID, sender, sendState);
+                    // TODO: announce app
                     break;
                 }
                 default: {

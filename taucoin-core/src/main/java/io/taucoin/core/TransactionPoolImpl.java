@@ -1,5 +1,6 @@
 package io.taucoin.core;
 
+import io.taucoin.account.AccountManager;
 import io.taucoin.db.StateDB;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Transaction;
@@ -27,6 +28,12 @@ public class TransactionPoolImpl implements TransactionPool {
     public PriorityQueue<MemoryPoolEntry> remotes = new PriorityQueue<>(1, new MemoryPoolPolicy());
     // remote account transaction: pubKey <-> txid
     private Map<ByteArrayWrapper, byte[]> accountTx = new HashMap<>();
+
+    // peer from tx that has latest timestamp
+    private byte[] optimalPeer = AccountManager.getInstance().getKeyPair().first;
+
+    // latest timestamp
+    private long latestTime = 0;
 
 
     private TransactionPoolImpl() {
@@ -501,5 +508,14 @@ public class TransactionPoolImpl implements TransactionPool {
         originalRemotes.clear();
     }
 
+    /**
+     * get a peer that has latest timestamp
+     *
+     * @return myself pubKey when there is no tx in pool
+     */
+    @Override
+    public byte[] getOptimalPeer() {
+        return new byte[0];
+    }
 }
 
