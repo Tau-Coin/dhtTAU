@@ -53,7 +53,7 @@ public class TAUChainStateProcessor implements StateProcessor {
                 return false;
             }
 
-            int fee = tx.getTxFee();
+            long fee = tx.getTxFee();
 
             switch (tx.getTxData().getMsgType()) {
                 case Wiring: {
@@ -183,7 +183,7 @@ public class TAUChainStateProcessor implements StateProcessor {
                 return false;
             }
 
-            int fee = tx.getTxFee();
+            long fee = tx.getTxFee();
 
             switch (tx.getTxData().getMsgType()) {
                 case Wiring: {
