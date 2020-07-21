@@ -18,6 +18,7 @@ package io.taucoin.types;
 
 import java.util.Map;
 
+import io.taucoin.genesis.CheckInfo;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.RLP;
@@ -386,6 +387,10 @@ public class TxData {
         if(!isParsed) parseRLP();
         boolean retval;
         switch (msgType){
+            case GenesisMsg:
+                GenesisMsg msg = new GenesisMsg(this.txCode);
+                retval = (msg.validateGenesisMsg() == CheckInfo.CheckPassed);
+                break;
             case RegularForum:
                 Note note = new Note(this.txCode);
                 retval = note.isValidateParamMsg();
