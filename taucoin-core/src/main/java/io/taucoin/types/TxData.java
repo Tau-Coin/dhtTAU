@@ -16,6 +16,9 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
+import java.util.Map;
+
+import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -217,6 +220,46 @@ public class TxData {
             }
         }
         return "";
+    }
+
+    /**
+     * get genesis message description.
+     * @return
+     */
+    public String getGenesisMsgDescription(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.GenesisMsg){
+            if(!isInstance){
+                GenesisMsg msg = new GenesisMsg(this.txCode);
+                ob = msg;
+                isInstance = true;
+                return msg.getDescription();
+            }else {
+                GenesisMsg msg = (GenesisMsg)ob;
+                return msg.getDescription();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * get genesis message K-V state.
+     * @return
+     */
+    public Map<String, GenesisItem> getGenesisMsgKV(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.GenesisMsg){
+            if(!isInstance){
+                GenesisMsg msg = new GenesisMsg(this.txCode);
+                ob = msg;
+                isInstance = true;
+                return msg.getAccountKV();
+            }else {
+                GenesisMsg msg = (GenesisMsg)ob;
+                return msg.getAccountKV();
+            }
+        }
+        return null;
     }
 
     /**
