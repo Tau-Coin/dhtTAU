@@ -14,19 +14,20 @@ SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
-package io.taucoin.genesis;
+package io.taucoin.types;
 
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import io.taucoin.genesis.CheckInfo;
+import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.*;
 
 public class GenesisMsg {
     private String description;
-    private HashMap<String,GenesisItem> accountKV;
+    private HashMap<String, GenesisItem> accountKV;
     private byte[] rlpEncoded;
     private boolean isParsed;
 
@@ -78,11 +79,13 @@ public class GenesisMsg {
             int i= 1;
             while (it.hasNext()){
                 Map.Entry<String,GenesisItem> entry = it.next();
-                String state = entry.getKey() + ":" +ByteUtil.toHexString(entry.getValue().getEncoded());
-                genesisMsg[i] = RLP.encodeElement(state.getBytes());
+                //String state = entry.getKey() + ":" +ByteUtil.toHexString(entry.getValue().getEncoded());
+                byte[] addr = RLP.encodeElement(entry.getKey().getBytes());
+                byte[] value = RLP.encodeElement(entry.getValue().getEncoded());
+                genesisMsg[i] = RLP.encodeList(addr,value);
                 i++;
             }
-            this.rlpEncoded = RLP.encode(genesisMsg);
+            this.rlpEncoded = RLP.encodeList(genesisMsg);
         }
         return rlpEncoded;
     }
@@ -96,15 +99,15 @@ public class GenesisMsg {
         }else{
             RLPList msg =RLP.decode2(this.rlpEncoded);
             RLPList list = (RLPList) msg.get(0);
-            byte[] descByte = RLP.decode2(list.get(0).getRLPData()).get(0).getRLPData();
+            //byte[] descByte = RLP.decode2(list.get(0).getRLPData()).get(0).getRLPData();
+            byte[] descByte = list.get(0).getRLPData();
             this.description = new String(descByte);
-            String kvItem;
-            String[] spliteKV;
+
             for(int i=1;i<list.size();i++){
-                byte[] state = RLP.decode2(list.get(i).getRLPData()).get(0).getRLPData();
-                kvItem = new String(state);
-                spliteKV = kvItem.split(":");
-                this.accountKV.put(spliteKV[0], new GenesisItem(ByteUtil.toByte(spliteKV[1])));
+                RLPList state = (RLPList) list.get(i);
+                String addr = new String(state.get(0).getRLPData());
+                GenesisItem item = new GenesisItem(state.get(1).getRLPData());
+                this.accountKV.put(addr, item);
             }
             isParsed = true;
         }

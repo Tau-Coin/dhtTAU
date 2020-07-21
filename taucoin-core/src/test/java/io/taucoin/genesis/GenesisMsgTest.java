@@ -24,6 +24,7 @@ import com.frostwire.jlibtorrent.Pair;
 import java.math.BigInteger;
 import java.util.HashMap;
 
+import io.taucoin.types.GenesisMsg;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.param.ChainParam;
 
@@ -53,7 +54,7 @@ public class GenesisMsgTest {
    @Test
     public void createGenesisMsg(){
        GenesisMsg msg = new GenesisMsg();
-       msg.setDescription("community chain...uu");
+       msg.setDescription("community chain...");
        GenesisItem item = new GenesisItem(defaultValue);
        msg.appendAccount(pubkeyA,item);
        msg.appendAccount(pubkeyB,item);
@@ -63,6 +64,7 @@ public class GenesisMsgTest {
        log.debug("genesis msg: "+encodeStr);
        log.debug("msg size is: "+encodeStr.length()/2);
        log.debug("is validate: "+ msg.validateGenesisMsg());
+       log.debug("genesis balance is: "+item.getBalance());
        log.debug("genesis power is: "+item.getPower());
    }
 
@@ -71,8 +73,8 @@ public class GenesisMsgTest {
         GenesisMsg msg = new GenesisMsg(ByteUtil.toByte(ChainParam.TauGenesisMsg));
         HashMap<String,GenesisItem> dictory = msg.getAccountKV();
         log.debug(msg.getDescription());
-        GenesisItem item = dictory.get(pubkeyA);
-        log.debug(item.getBalance().toString());
+        GenesisItem item = dictory.get(pubkeyB);
+        log.debug("balance is: "+item.getBalance());
         log.debug(item.getPower().toString());
    }
 }
