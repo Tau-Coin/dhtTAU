@@ -20,6 +20,16 @@ public class AccountStateTest {
     }
 
     @Test
+    public void Codec1Test() {
+        AccountState accountState = new AccountState(BigInteger.valueOf(100), BigInteger.valueOf(3), "Jim");
+        byte[] rlp = accountState.getEncoded();
+        AccountState accountState1 = new AccountState(rlp);
+        Assert.assertEquals(accountState.getBalance(), accountState1.getBalance());
+        Assert.assertEquals(accountState.getNonce(), accountState1.getNonce());
+        Assert.assertEquals(accountState.getIdentity(), accountState1.getIdentity());
+    }
+
+    @Test
     public void CodecBalanceZeroTest() {
         AccountState accountState = new AccountState(BigInteger.valueOf(0), BigInteger.valueOf(5));
         byte[] rlp = accountState.getEncoded();

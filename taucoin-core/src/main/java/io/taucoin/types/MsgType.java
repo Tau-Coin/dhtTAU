@@ -43,17 +43,19 @@ public enum MsgType {
     }
     public static MsgType setValue(byte value){
         if (value == 0){
-            return RegularForum;
+            return GenesisMsg;
         }else if (value == 1){
-            return ForumComment;
+            return RegularForum;
         }else if (value == 2){
-            return CommunityAnnouncement;
+            return ForumComment;
         }else if (value == 3){
-            return DHTBootStrapNodeAnnouncement;
+            return CommunityAnnouncement;
         }else if (value == 4){
             return Wiring;
         }else if (value == 5){
             return IdentityAnnouncement;
+        }else if (value == 6){
+            return DHTBootStrapNodeAnnouncement;
         }
         return null;
     }

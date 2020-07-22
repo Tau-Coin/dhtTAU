@@ -20,4 +20,4 @@ dependencies {
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-mainClassName = 'io.taucoin.jtau.cmd'
+mainClassName = 'io.taucoin.jtau.cmd.JTau'

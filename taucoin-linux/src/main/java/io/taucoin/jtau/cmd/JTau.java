@@ -1,8 +1,69 @@
 package io.taucoin.jtau.cmd;
 
+import io.taucoin.jtau.config.Config;
+import io.taucoin.jtau.util.Repo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static io.taucoin.jtau.cmd.CLIInterface.ArgumentException;
+import static io.taucoin.jtau.util.Repo.RepoException;
+
 public class JTau {
 
     public static void main(String[] args) {
-        System.out.println("Hello, gtau...");
+
+        Config config = new Config();
+        Repo repo = new Repo();
+        boolean isHelp = false;
+
+        // parse commandline arguments.
+        try {
+            isHelp = CLIInterface.parse(config, args);
+        } catch (ArgumentException e) {
+            System.out.println(e.getMessage());
+            System.exit(-1);
+        }
+        if (isHelp) {
+            System.exit(0);
+        }
+
+        // init repo
+        try {
+            repo.init(config);
+        } catch (RepoException e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+            System.exit(-2);
+        }
+
+        // Create tau daemon and start it.
+        final TauDaemon tauDaemon = new TauDaemon(config);
+        final Thread thread = new Thread(tauDaemon);
+        thread.setDaemon(true);
+        thread.start();
+
+        // Register shutdown hook.
+        // Note: this hook can capture INT(ctrl + c or kill -2)
+        // and TERM(kill -15) signal. But it can't capture
+        // KILL(kill -9) signal.
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                System.out.println("JTau is exiting...");
+                if (tauDaemon != null) {
+                    tauDaemon.stop();
+                }
+                if (thread != null) {
+                    thread.interrupt();
+                }
+            }
+        });
+
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            // Ignore this exception
+        }
     }
 }

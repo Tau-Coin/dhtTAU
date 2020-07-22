@@ -16,6 +16,10 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
+import java.util.Map;
+
+import io.taucoin.genesis.CheckInfo;
+import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -220,6 +224,46 @@ public class TxData {
     }
 
     /**
+     * get genesis message description.
+     * @return
+     */
+    public String getGenesisMsgDescription(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.GenesisMsg){
+            if(!isInstance){
+                GenesisMsg msg = new GenesisMsg(this.txCode);
+                ob = msg;
+                isInstance = true;
+                return msg.getDescription();
+            }else {
+                GenesisMsg msg = (GenesisMsg)ob;
+                return msg.getDescription();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * get genesis message K-V state.
+     * @return
+     */
+    public Map<String, GenesisItem> getGenesisMsgKV(){
+        if(!isParsed) parseRLP();
+        if(this.msgType == MsgType.GenesisMsg){
+            if(!isInstance){
+                GenesisMsg msg = new GenesisMsg(this.txCode);
+                ob = msg;
+                isInstance = true;
+                return msg.getAccountKV();
+            }else {
+                GenesisMsg msg = (GenesisMsg)ob;
+                return msg.getAccountKV();
+            }
+        }
+        return null;
+    }
+
+    /**
      * get chainid about NodeAnnouncement tx.
      */
     public byte[] getNodeAnnouncementChainID(){
@@ -343,6 +387,10 @@ public class TxData {
         if(!isParsed) parseRLP();
         boolean retval;
         switch (msgType){
+            case GenesisMsg:
+                GenesisMsg msg = new GenesisMsg(this.txCode);
+                retval = (msg.validateGenesisMsg() == CheckInfo.CheckPassed);
+                break;
             case RegularForum:
                 Note note = new Note(this.txCode);
                 retval = note.isValidateParamMsg();

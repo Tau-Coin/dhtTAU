@@ -55,6 +55,8 @@ public class Chain {
     // Voting thread.
     private Thread votingThread;
 
+    private Thread txThread;
+
     private TauListener tauListener;
 
     // consensus: pot
@@ -79,7 +81,11 @@ public class Chain {
 
     private Block bestBlock;
 
-    private Map<ByteArrayWrapper, Long> peers;
+    // all peers
+    private Set<ByteArrayWrapper> peers;
+
+    // peer info: peer <-> time
+    private Map<ByteArrayWrapper, Long> peerInfo;
 
     /**
      * Chain constructor.
@@ -141,10 +147,11 @@ public class Chain {
             Set<byte[]> pubKeys = this.stateDB.getPeers(this.chainID);
             if (null != pubKeys && !pubKeys.isEmpty()) {
                 for (byte[] pubKey: pubKeys) {
-                    this.peers.put(new ByteArrayWrapper(pubKey), (long) 0);
+                    this.peers.add(new ByteArrayWrapper(pubKey));
+                    this.peerInfo.put(new ByteArrayWrapper(pubKey), (long) 0);
                 }
             } else {
-                this.peers.put(new ByteArrayWrapper(this.chainConfig.getGenesisMinerPubkey()), (long) 0);
+                this.peerInfo.put(new ByteArrayWrapper(this.chainConfig.getGenesisMinerPubkey()), (long) 0);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -158,7 +165,10 @@ public class Chain {
 
     }
 
-    private void processChain() {
+    /**
+     * block chain main process
+     */
+    private void blockChainProcess() {
         init();
         loop();
     }
@@ -634,18 +644,47 @@ public class Chain {
         return block;
     }
 
+    private void txProcess() {
+
+    }
+
     /**
      * Start activities of this chain, mainly including votint and mining.
      *
      * @return boolean successful or not.
      */
     public boolean start() {
-        return false;
+        logger.info("Start voting and tx thread...");
+        votingThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                blockChainProcess();
+            }
+        }, "blockChain");
+        votingThread.start();
+
+        txThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                txProcess();
+            }
+        });
+        txThread.start();
+
+        return true;
     }
 
     /**
      * Stop all activities of this chain.
      */
     public void stop() {
+        if (null != votingThread) {
+            logger.info("Stop voting thread.");
+            votingThread.interrupt();
+        }
+        if (null != txThread) {
+            logger.info("Stop tx thread.");
+            txThread.interrupt();
+        }
     }
 }
