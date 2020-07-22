@@ -9,6 +9,7 @@ import io.taucoin.db.StateDB;
 import io.taucoin.listener.TauListener;
 import io.taucoin.param.ChainParam;
 import io.taucoin.processor.StateProcessor;
+import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.types.Block;
@@ -68,6 +69,9 @@ public class Chain {
     // voting pool
     private VotingPool votingPool;
 
+    // peer manager
+    private PeerManager peerManager;
+
     // block db
     private BlockStore blockStore;
 
@@ -81,12 +85,6 @@ public class Chain {
 
     private Block bestBlock;
 
-    // all peers
-    private Set<ByteArrayWrapper> peers;
-
-    // peer info: peer <-> time
-    private Map<ByteArrayWrapper, Long> peerInfo;
-
     /**
      * Chain constructor.
      *
@@ -95,8 +93,6 @@ public class Chain {
     public Chain(byte[] chainID, TauListener tauListener) {
         this.chainID = chainID;
         this.tauListener = tauListener;
-        this.blockSalt = makeBlockSalt();
-        this.txSalt = makeTxSalt();
     }
 
     /**
@@ -126,36 +122,62 @@ public class Chain {
     /**
      * init chain
      */
-    private void init() {
-        // get best block
+    private boolean init() {
+        // init salt
+        this.blockSalt = makeBlockSalt();
+        this.txSalt = makeTxSalt();
+
+        // init tx pool
+        this.txPool = new TransactionPoolImpl(this.chainID,
+                AccountManager.getInstance().getKeyPair().first, this.stateDB);
+        this.txPool.init();
+
+        // init voting pool
+        this.votingPool = new VotingPool();
+
+        // init pot consensus
+        this.pot = new ProofOfTransaction();
+
+        // init state processor
+        this.stateProcessor = new StateProcessorImpl(this.chainID);
+
+        // init best block
         try {
             byte[] bestBlockHash = this.stateDB.getBestBlockHash(this.chainID);
-            this.bestBlock = this.blockStore.getBlockByHash(this.chainID, bestBlockHash);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            logger.error("ChainID[{}]: Exception, load genesis.", this.chainID.toString());
-            loadGenesisBlock();
-        }
-
-        if (null == this.bestBlock) {
-            logger.error("ChainID[{}]: Best block is empty, load genesis.", this.chainID.toString());
-            loadGenesisBlock();
-        }
-
-        // get peers form db
-        try {
-            Set<byte[]> pubKeys = this.stateDB.getPeers(this.chainID);
-            if (null != pubKeys && !pubKeys.isEmpty()) {
-                for (byte[] pubKey: pubKeys) {
-                    this.peers.add(new ByteArrayWrapper(pubKey));
-                    this.peerInfo.put(new ByteArrayWrapper(pubKey), (long) 0);
-                }
-            } else {
-                this.peerInfo.put(new ByteArrayWrapper(this.chainConfig.getGenesisMinerPubkey()), (long) 0);
+            if (null != bestBlockHash) {
+                this.bestBlock = this.blockStore.getBlockByHash(this.chainID, bestBlockHash);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+            return false;
         }
+
+        // init peer manager
+        this.peerManager = new PeerManager(this.chainID);
+        // get peers form db
+        try {
+            Set<byte[]> peers = this.stateDB.getPeers(this.chainID);
+            Set<ByteArrayWrapper> allPeers = new HashSet<>(1);
+            if (null != peers && !peers.isEmpty()) {
+                for (byte[] peer: peers) {
+                    allPeers.add(new ByteArrayWrapper(peer));
+                }
+            } else {
+                // if there is no peers, add yourself
+                peers.add(AccountManager.getInstance().getKeyPair().first);
+            }
+            //
+            if (null != bestBlock) {
+                // get priority peers in mutable range
+            } else {
+                // get from all peers
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
+        return true;
     }
 
     /**

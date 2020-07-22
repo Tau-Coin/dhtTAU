@@ -2,7 +2,6 @@ package io.taucoin.processor;
 
 import io.taucoin.core.AccountState;
 import io.taucoin.db.StateDB;
-import io.taucoin.processor.StateProcessor;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
 import org.slf4j.Logger;
@@ -15,6 +14,12 @@ public class StateProcessorImpl implements StateProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger("StateProcessor");
 
+    private byte[] chainID;
+
+    public StateProcessorImpl(byte[] chainID) {
+        this.chainID = chainID;
+    }
+
     /**
      * process block
      *
@@ -26,8 +31,6 @@ public class StateProcessorImpl implements StateProcessor {
     public boolean process(Block block, StateDB stateDB) {
         // check balance and nonce, then update state
         try {
-            byte[] chainID = block.getChainID();
-
             Transaction tx = block.getTxMsg();
             if (!tx.isTxParamValidate()) {
                 logger.error("Tx validate fail!");
@@ -188,8 +191,6 @@ public class StateProcessorImpl implements StateProcessor {
     public boolean rollback(Block block, StateDB stateDB) {
         // check balance and nonce, then update state
         try {
-            byte[] chainID = block.getChainID();
-
             Transaction tx = block.getTxMsg();
 
             byte[] sender = tx.getSenderPubkey();

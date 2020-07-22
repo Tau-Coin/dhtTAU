@@ -76,7 +76,7 @@ public class AccountState implements Cloneable {
     public byte[] getEncoded() {
         byte[] balance = RLP.encodeBigInteger(this.balance);
         byte[] nonce = RLP.encodeBigInteger(this.nonce);
-        byte[] identity = this.identity == null ? RLP.encodeElement(null): RLP.encodeString(this.identity);
+        byte[] identity = this.identity == null ? RLP.encodeElement(null) : RLP.encodeString(this.identity);
         return RLP.encodeList(balance, nonce, identity);
     }
 

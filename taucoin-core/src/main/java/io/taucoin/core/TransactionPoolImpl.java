@@ -29,12 +29,6 @@ public class TransactionPoolImpl implements TransactionPool {
     // remote account transaction: pubKey <-> txid
     private Map<ByteArrayWrapper, byte[]> accountTx = new HashMap<>();
 
-    // peer from tx that has latest timestamp
-    private byte[] optimalPeer = AccountManager.getInstance().getKeyPair().first;
-
-    // latest timestamp
-    private long latestTime = 0;
-
 
     private TransactionPoolImpl() {
     }
@@ -82,7 +76,7 @@ public class TransactionPoolImpl implements TransactionPool {
                 for (Transaction transaction: transactionSet) {
                     // put transactions that are not on chain into pool
                     if (transaction.getNonce() > currentNonce) {
-                        locals.add(LocalTxEntry.with(transaction));
+                        locals.offer(LocalTxEntry.with(transaction));
                     }
                 }
             }
@@ -132,7 +126,7 @@ public class TransactionPoolImpl implements TransactionPool {
             all.put(new ByteArrayWrapper(tx.getTxID()), tx);
 
             // record in local
-            locals.add(LocalTxEntry.with(tx));
+            locals.offer(LocalTxEntry.with(tx));
         } else {
             logger.info("ChainID[{}]: tx[{}] nonce is not bigger than current nonce.",
                     chainID.toString(), Hex.toHexString(tx.getTxID()));
@@ -283,7 +277,7 @@ public class TransactionPoolImpl implements TransactionPool {
         all.put(new ByteArrayWrapper(tx.getTxID()), tx);
         // record in the remotes
         accountTx.put(new ByteArrayWrapper(pubKey), tx.getTxID());
-        remotes.add(MemoryPoolEntry.with(tx));
+        remotes.offer(MemoryPoolEntry.with(tx));
     }
 
     /**
@@ -489,7 +483,7 @@ public class TransactionPoolImpl implements TransactionPool {
 
         // add
         while (iterator.hasNext() && i < size / 2) {
-            remotes.add(iterator.next());
+            remotes.offer(iterator.next());
             i++;
         }
 
@@ -515,7 +509,19 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     @Override
     public byte[] getOptimalPeer() {
-        return new byte[0];
+        // get transaction that has the maximum fee
+        MemoryPoolEntry entry = remotes.peek();
+        if (null != entry) {
+            Transaction tx = getTransactionByTxid(entry.txid);
+            if (null != tx) {
+                return tx.getSenderPubkey();
+            } else {
+                // if not found, remove it from remotes
+                remotes.poll();
+            }
+        }
+
+        return AccountManager.getInstance().getKeyPair().first;
     }
 }
 
