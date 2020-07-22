@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.github.naturs.logger.Logger;
 import com.leinardi.android.speeddial.SpeedDialActionItem;
 
 import androidx.annotation.NonNull;
@@ -14,17 +15,15 @@ import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.paging.DataSource;
 import androidx.paging.LivePagedListBuilder;
 import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndAllTxs;
+import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
@@ -95,6 +94,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         };
         LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
         binding.txList.setLayoutManager(layoutManager);
+
         binding.txList.setItemAnimator(animator);
         binding.txList.setAdapter(adapter);
 
@@ -103,11 +103,12 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 .setPageSize(Page.PAGE_SIZE)
                 .setInitialLoadSizeHint(Page.PAGE_SIZE)
                 .build();
-        LiveData<PagedList<ReplyAndAllTxs>> postList = new LivePagedListBuilder<>(
+        LiveData<PagedList<ReplyAndTx>> postList = new LivePagedListBuilder<>(
                 txViewModel.queryCommunityTxs(community.chainID), pagedListConfig).build();
         postList.observe(activity, replyAndAllTxs -> {
             adapter.submitList(replyAndAllTxs);
-            binding.txList.smoothScrollToPosition(adapter.getItemCount());
+            Logger.d("adapter.size::%s, newSize::%s", adapter.getItemCount(), replyAndAllTxs.size());
+            binding.txList.scrollToPosition(adapter.getItemCount() - 1);
         });
     }
 
@@ -193,19 +194,19 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
      */
 
     @Override
-    public void onItemClicked(ReplyAndAllTxs tx) {
+    public void onItemClicked(ReplyAndTx tx) {
 
     }
 
     @Override
-    public void onItemLongClicked(ReplyAndAllTxs tx, String msg) {
+    public void onItemLongClicked(ReplyAndTx tx, String msg) {
         showItemOperationDialog(tx, msg);
     }
 
     /**
      * 显示每个item长按操作选项对话框
      */
-    private void showItemOperationDialog(ReplyAndAllTxs tx, String msg) {
+    private void showItemOperationDialog(ReplyAndTx tx, String msg) {
         ItemOperationsBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.item_operations, null, false);
         binding.setListener(this);

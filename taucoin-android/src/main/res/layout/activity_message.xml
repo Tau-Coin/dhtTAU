@@ -30,12 +30,11 @@
             android:id="@+id/et_input"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:singleLine="true"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
             android:layout_marginTop="5dp"
             android:hint="@string/tx_message"
-            android:inputType="text"
+            android:inputType="textMultiLine"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
             android:autofillHints="@string/tx_new_name" />
 

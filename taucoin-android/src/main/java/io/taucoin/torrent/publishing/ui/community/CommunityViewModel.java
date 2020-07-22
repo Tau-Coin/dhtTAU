@@ -24,6 +24,8 @@ import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
+import io.taucoin.types.GenesisMsg;
+import io.taucoin.util.ByteUtil;
 
 /**
  * Community模块的ViewModel
@@ -87,9 +89,11 @@ public class CommunityViewModel extends AndroidViewModel {
             String state = "";
             try {
                 // TODO: 1、TauController:创建Community社区
+                GenesisMsg genesisMsg = new GenesisMsg();
+                genesisMsg.setDescription("test");
                 ChainConfig chainConfig = ChainConfig.NewChainConfig((byte)1, community.communityName, community.blockInAvg,
-                        community.publicKey , "", null);
-                community.chainID = new String(chainConfig.getChainid());
+                        community.publicKey , "", genesisMsg);
+                community.chainID = ByteUtil.toHexString(chainConfig.getChainid());
                 communityRepo.addCommunity(community);
                 Logger.d("Add community to database: communityName=%s, chainID=%s",
                         community.communityName, community.chainID);

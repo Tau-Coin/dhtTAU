@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndAllTxs;
+import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -24,8 +24,8 @@ import io.taucoin.types.MsgType;
 /**
  * 消息/交易列表显示的Adapter
  */
-public class TxListAdapter extends PagedListAdapter<ReplyAndAllTxs, TxListAdapter.ViewHolder>
-    implements Selectable<ReplyAndAllTxs> {
+public class TxListAdapter extends PagedListAdapter<ReplyAndTx, TxListAdapter.ViewHolder>
+    implements Selectable<ReplyAndTx> {
     private ClickListener listener;
 
     TxListAdapter(ClickListener listener) {
@@ -78,7 +78,7 @@ public class TxListAdapter extends PagedListAdapter<ReplyAndAllTxs, TxListAdapte
     }
 
     @Override
-    public ReplyAndAllTxs getItemKey(int position) {
+    public ReplyAndTx getItemKey(int position) {
         if(getCurrentList() != null){
             return getCurrentList().get(position);
         }
@@ -86,7 +86,7 @@ public class TxListAdapter extends PagedListAdapter<ReplyAndAllTxs, TxListAdapte
     }
 
     @Override
-    public int getItemPosition(ReplyAndAllTxs key) {
+    public int getItemPosition(ReplyAndTx key) {
         if(getCurrentList() != null){
             return getCurrentList().indexOf(key);
         }
@@ -95,7 +95,7 @@ public class TxListAdapter extends PagedListAdapter<ReplyAndAllTxs, TxListAdapte
 
     @Override
     public int getItemViewType(int position) {
-        ReplyAndAllTxs tx = getItemKey(position);
+        ReplyAndTx tx = getItemKey(position);
         if(tx != null){
             return tx.txType;
         }
@@ -112,7 +112,7 @@ public class TxListAdapter extends PagedListAdapter<ReplyAndAllTxs, TxListAdapte
             this.listener = listener;
         }
 
-        void bind(ViewHolder holder, ReplyAndAllTxs tx) {
+        void bind(ViewHolder holder, ReplyAndTx tx) {
             if(null == binding || null == holder || null == tx){
                 return;
             }
@@ -161,7 +161,7 @@ public class TxListAdapter extends PagedListAdapter<ReplyAndAllTxs, TxListAdapte
             });
         }
 
-        private void setOnLongClickListener(View llMsg, ReplyAndAllTxs tx, String msg) {
+        private void setOnLongClickListener(View llMsg, ReplyAndTx tx, String msg) {
             llMsg.setOnLongClickListener(view ->{
                 if(listener != null){
                     listener.onItemLongClicked(tx, msg);
@@ -172,18 +172,18 @@ public class TxListAdapter extends PagedListAdapter<ReplyAndAllTxs, TxListAdapte
     }
 
     public interface ClickListener {
-        void onItemClicked(ReplyAndAllTxs tx);
-        void onItemLongClicked(ReplyAndAllTxs tx, String msg);
+        void onItemClicked(ReplyAndTx tx);
+        void onItemLongClicked(ReplyAndTx tx, String msg);
     }
 
-    private static final DiffUtil.ItemCallback<ReplyAndAllTxs> diffCallback = new DiffUtil.ItemCallback<ReplyAndAllTxs>() {
+    private static final DiffUtil.ItemCallback<ReplyAndTx> diffCallback = new DiffUtil.ItemCallback<ReplyAndTx>() {
         @Override
-        public boolean areContentsTheSame(@NonNull ReplyAndAllTxs oldItem, @NonNull ReplyAndAllTxs newItem) {
+        public boolean areContentsTheSame(@NonNull ReplyAndTx oldItem, @NonNull ReplyAndTx newItem) {
             return oldItem.equals(newItem);
         }
 
         @Override
-        public boolean areItemsTheSame(@NonNull ReplyAndAllTxs oldItem, @NonNull ReplyAndAllTxs newItem) {
+        public boolean areItemsTheSame(@NonNull ReplyAndTx oldItem, @NonNull ReplyAndTx newItem) {
             return oldItem.equals(newItem);
         }
     };

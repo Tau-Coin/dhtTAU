@@ -6,10 +6,11 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
+import androidx.room.Query;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.MainApplication;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndAllTxs;
+import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
 import io.taucoin.torrent.publishing.core.storage.entity.Tx;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.types.MsgType;
 
 /**
@@ -51,7 +52,7 @@ public class TxRepositoryImpl implements TxRepository{
      * @param chainID 社区链id
      */
     @Override
-    public List<ReplyAndAllTxs> getTxsByChainID(String chainID){
+    public List<ReplyAndTx> getTxsByChainID(String chainID){
         return db.txDao().getTxsByChainID(MsgType.IdentityAnnouncement.getVaLue(), chainID);
     }
 
@@ -60,12 +61,38 @@ public class TxRepositoryImpl implements TxRepository{
      * @param chainID 社区链id
      */
     @Override
-    public Flowable<List<ReplyAndAllTxs>> observeTxsByChainID(String chainID){
+    public Flowable<List<ReplyAndTx>> observeTxsByChainID(String chainID){
         return db.txDao().observeTxsByChainID(MsgType.IdentityAnnouncement.getVaLue(), chainID);
     }
 
     @Override
-    public DataSource.Factory<Integer, ReplyAndAllTxs> queryCommunityTxs(String chainID){
+    public DataSource.Factory<Integer, ReplyAndTx> queryCommunityTxs(String chainID){
         return db.txDao().queryCommunityTxs(MsgType.IdentityAnnouncement.getVaLue(), chainID);
+    }
+
+    /**
+     * 获取社区里用户未上链并且未过期的交易数
+     * @param chainID chainID
+     * @param senderPk 公钥
+     * @param expireTime 过期时间时长
+     * @return int
+     */
+    @Override
+    public int getPendingTxsNotExpired(String chainID, String senderPk, long expireTime){
+        long expireTimePoint = DateUtil.getTime() - expireTime;
+        return db.txDao().getPendingTxsNotExpired(chainID, senderPk, expireTimePoint);
+    }
+
+    /**
+     * 获取社区里用户未上链并且过期的最早的交易
+     * @param chainID chainID
+     * @param senderPk 公钥
+     * @param expireTime 过期时间时长
+     * @return int
+     */
+    @Override
+    public Tx getEarliestExpireTx(String chainID, String senderPk, long expireTime){
+        long expireTimePoint = DateUtil.getTime() - expireTime;
+        return db.txDao().getEarliestExpireTx(chainID, senderPk, expireTimePoint);
     }
 }

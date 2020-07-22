@@ -5,9 +5,8 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndAllTxs;
+import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
-import io.taucoin.torrent.publishing.core.storage.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
 
 /**
@@ -58,7 +57,7 @@ public class UsersUtil {
      * @param tx 当前交易
      * @return 显示名字
      */
-    public static String getShowName(@NonNull ReplyAndAllTxs tx) {
+    public static String getShowName(@NonNull ReplyAndTx tx) {
         if(StringUtil.isNotEmpty(tx.nickName)){
             return tx.nickName;
         }else{
@@ -71,7 +70,7 @@ public class UsersUtil {
      * @param tx 当前交易
      * @return 显示名字
      */
-    public static String getShowReplyName(@NonNull ReplyAndAllTxs tx) {
+    public static String getShowReplyName(@NonNull ReplyAndTx tx) {
         if(StringUtil.isNotEmpty(tx.replyName)){
             return tx.replyName;
         }else{

@@ -23,7 +23,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndAllTxs;
+import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.UserRepository;
@@ -34,13 +34,12 @@ import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
-import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.EditFeeDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.constant.Chain;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.types.Comment;
 import io.taucoin.types.CommunityAnnouncement;
-import io.taucoin.types.DHTbootstrapNodeAnnouncement;
 import io.taucoin.types.IdentityAnnouncement;
 import io.taucoin.types.MsgType;
 import io.taucoin.types.Note;
@@ -57,7 +56,7 @@ public class TxViewModel extends AndroidViewModel {
     private TxRepository txRepo;
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private MutableLiveData<List<ReplyAndAllTxs>> chainTxs = new MutableLiveData<>();
+    private MutableLiveData<List<ReplyAndTx>> chainTxs = new MutableLiveData<>();
     private MutableLiveData<String> addState = new MutableLiveData<>();
     private CommonDialog editFeeDialog;
     public TxViewModel(@NonNull Application application) {
@@ -78,7 +77,7 @@ public class TxViewModel extends AndroidViewModel {
      * 获取社区链交易的被观察者
      * @return 被观察者
      */
-    public MutableLiveData<List<ReplyAndAllTxs>> getChainTxs() {
+    public MutableLiveData<List<ReplyAndTx>> getChainTxs() {
         return chainTxs;
     }
 
@@ -96,8 +95,8 @@ public class TxViewModel extends AndroidViewModel {
      * @param chainID 社区链id
      */
     public void getTxsByChainID(String chainID){
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<ReplyAndAllTxs>>) emitter -> {
-            List<ReplyAndAllTxs> txs = txRepo.getTxsByChainID(chainID);
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<ReplyAndTx>>) emitter -> {
+            List<ReplyAndTx> txs = txRepo.getTxsByChainID(chainID);
             emitter.onNext(txs);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -111,7 +110,7 @@ public class TxViewModel extends AndroidViewModel {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public Flowable<List<ReplyAndAllTxs>> observeTxsByChainID(String chainID){
+    public Flowable<List<ReplyAndTx>> observeTxsByChainID(String chainID){
         return txRepo.observeTxsByChainID(chainID);
     }
 
@@ -119,7 +118,7 @@ public class TxViewModel extends AndroidViewModel {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public DataSource.Factory<Integer, ReplyAndAllTxs> queryCommunityTxs(String chainID){
+    public DataSource.Factory<Integer, ReplyAndTx> queryCommunityTxs(String chainID){
         return txRepo.queryCommunityTxs(chainID);
     }
 
@@ -128,7 +127,7 @@ public class TxViewModel extends AndroidViewModel {
      * 添加新的交易
      * @param tx 根据用户输入构建的用户数据
      */
-    public void addTransaction(Tx tx) {
+    void addTransaction(Tx tx) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             // 获取当前用户的Seed, 获取公私钥
             User currentUser = userRepo.getCurrentUser();
@@ -139,9 +138,23 @@ public class TxViewModel extends AndroidViewModel {
             try {
                 TxData txData = buildChainTxData(tx);
                 if(txData != null){
-                    // TODO: 获取当前的交易最大nonce值
+                    // TODO: 获取当前用户在社区中链上nonce值
                     long nonce = 0;
-                    nonce += 1;
+                    // 获取最早过期的交易，并且其nonce后来未被使用
+                    Tx earliestExpireTx = txRepo.getEarliestExpireTx(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
+                    if(earliestExpireTx != null){
+                        Logger.d("chain nonce::%d, earliestExpireTx.nonce::%d", nonce, earliestExpireTx.nonce);
+                        nonce = earliestExpireTx.nonce;
+                    }else{
+                        // 获取社区里用户未上链并且未过期的交易数
+                        int pendingTxs = txRepo.getPendingTxsNotExpired(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
+                        Logger.d("chain nonce::%d, pending txs::%d", nonce, pendingTxs);
+                        nonce = nonce == 0 ? 0 : nonce + 1;
+                        if(pendingTxs > 0){
+                            nonce += pendingTxs;
+                        }
+                    }
+                    // 交易签名
                     long timestamp = DateUtil.getTime();
                     Transaction transaction = new Transaction((byte)1, tx.chainID.getBytes(), timestamp, (int)tx.fee, keypair.first, nonce, txData);
                     byte[] signature = Ed25519.sign(transaction.getSigEncoded(), keypair.first, keypair.second);
@@ -153,6 +166,7 @@ public class TxViewModel extends AndroidViewModel {
                     tx.senderPk = currentUser.publicKey;
                     tx.nonce = nonce;
                     txRepo.addTransaction(tx);
+                    Logger.d("adding transaction txID::%s", tx.txID);
                 }else{
                     result = getApplication().getString(R.string.tx_error_type);
                 }
