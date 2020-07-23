@@ -39,17 +39,17 @@ public class TauController {
      * TauController constructor.
      *
      * @param repoPath the directory where data is stored.
-     * @param key the pair of public key and private key.
+     * @param keySeed seed to generate the pair of public key and private key.
      * @param db key-value database factory implementation.
      * @param enableRpc enable rpc server or not.
      */
-    public TauController(String repoPath, Pair<byte[], byte[]> key,
+    public TauController(String repoPath, byte[] keySeed,
             KeyValueDataBaseFactory dbFactory) {
 
         // set the root directory.
         Repo.setRepoPath(repoPath);
         // store public key and private key.
-        this.accountManager.updateKey(key);
+        this.accountManager.updateKey(keySeed);
 
         // Add TauListener into TorrentDHTEngine.
         this.torrentDHTEngine.setTauListener(compositeTauListener);
