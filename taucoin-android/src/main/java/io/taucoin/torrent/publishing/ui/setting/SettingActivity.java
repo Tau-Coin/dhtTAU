@@ -5,7 +5,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 
-import com.github.naturs.logger.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
@@ -27,6 +28,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
  */
 public class SettingActivity extends BaseActivity implements View.OnClickListener {
 
+    private static final Logger logger = LoggerFactory.getLogger("SettingActivity");
     private ActivitySettingBinding binding;
     private UserViewModel viewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
@@ -64,7 +66,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 String newName = s.toString().trim();
                 String oldName = ViewUtils.getStringTag(binding.etUsername);
                 if(StringUtil.isNotEquals(oldName, newName)){
-                    Logger.d("saveUserName::%s", newName);
+                    logger.debug("saveUserName::{}", newName);
                     binding.etUsername.setTag(newName);
                     saveUserName(newName);
                 }

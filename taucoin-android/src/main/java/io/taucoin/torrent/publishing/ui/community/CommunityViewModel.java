@@ -2,7 +2,8 @@ package io.taucoin.torrent.publishing.ui.community;
 
 import android.app.Application;
 
-import com.github.naturs.logger.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -32,6 +33,7 @@ import io.taucoin.util.ByteUtil;
  */
 public class CommunityViewModel extends AndroidViewModel {
 
+    private static final Logger logger = LoggerFactory.getLogger("CommunityViewModel");
     private CommunityRepository communityRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> addCommunityState = new MutableLiveData<>();
@@ -95,7 +97,7 @@ public class CommunityViewModel extends AndroidViewModel {
                         community.publicKey , "", genesisMsg);
                 community.chainID = ByteUtil.toHexString(chainConfig.getChainid());
                 communityRepo.addCommunity(community);
-                Logger.d("Add community to database: communityName=%s, chainID=%s",
+                logger.debug("Add community to database: communityName={}, chainID={}",
                         community.communityName, community.chainID);
             }catch (Exception e){
                 state = e.getMessage();

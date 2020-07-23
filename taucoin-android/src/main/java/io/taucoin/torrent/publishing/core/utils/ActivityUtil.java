@@ -22,7 +22,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 
-import com.github.naturs.logger.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -38,6 +39,7 @@ import io.taucoin.torrent.publishing.ui.main.MainActivity;
  * Date: 2019/01/02
  */
 public class ActivityUtil {
+    private static final Logger logger = LoggerFactory.getLogger("ActivityUtil");
 
     public static void startActivity(FragmentActivity context, Class<?> zClass){
         Intent intent = new Intent(context, zClass);
@@ -83,7 +85,7 @@ public class ActivityUtil {
                 }
             }
         }catch (Exception e){
-            Logger.e(e, "Task switch err!");
+            logger.error("Task switch err!", e);
         }
         return isSuccess;
     }
@@ -108,7 +110,7 @@ public class ActivityUtil {
                 isExistBrowser = false;
             }
         }catch (Exception e){
-            Logger.e(e, "No browser installed");
+            logger.error("No browser installed", e);
             isExistBrowser = false;
         }
         if(!isExistBrowser){
