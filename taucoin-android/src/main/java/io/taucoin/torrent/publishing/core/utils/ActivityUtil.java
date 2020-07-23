@@ -39,7 +39,7 @@ import io.taucoin.torrent.publishing.ui.main.MainActivity;
  * Date: 2019/01/02
  */
 public class ActivityUtil {
-    private static final Logger logger = LoggerFactory.getLogger(ActivityUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger("ActivityUtil");
 
     public static void startActivity(FragmentActivity context, Class<?> zClass){
         Intent intent = new Intent(context, zClass);

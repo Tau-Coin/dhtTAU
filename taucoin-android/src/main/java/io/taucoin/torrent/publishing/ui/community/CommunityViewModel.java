@@ -33,7 +33,7 @@ import io.taucoin.util.ByteUtil;
  */
 public class CommunityViewModel extends AndroidViewModel {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommunityViewModel.class);
+    private static final Logger logger = LoggerFactory.getLogger("CommunityViewModel");
     private CommunityRepository communityRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> addCommunityState = new MutableLiveData<>();

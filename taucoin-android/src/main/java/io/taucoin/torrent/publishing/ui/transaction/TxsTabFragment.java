@@ -45,7 +45,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
  */
 public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickListener, View.OnClickListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(TxsTabFragment.class);
+    private static final Logger logger = LoggerFactory.getLogger("TxsTabFragment");
     private BaseActivity activity;
     private FragmentTxsTabBinding binding;
     private TxViewModel txViewModel;

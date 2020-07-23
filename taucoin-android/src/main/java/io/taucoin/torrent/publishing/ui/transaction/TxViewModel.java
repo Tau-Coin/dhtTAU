@@ -55,7 +55,7 @@ import io.taucoin.util.ByteUtil;
  */
 public class TxViewModel extends AndroidViewModel {
 
-    private static final Logger logger = LoggerFactory.getLogger(TxViewModel.class);
+    private static final Logger logger = LoggerFactory.getLogger("TxViewModel");
     private TxRepository txRepo;
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();

@@ -40,7 +40,7 @@ import io.taucoin.util.ByteUtil;
  */
 public class UserViewModel extends AndroidViewModel {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserViewModel.class);
+    private static final Logger logger = LoggerFactory.getLogger("UserViewModel");
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
@@ -218,6 +218,7 @@ public class UserViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             User user = userRepo.getCurrentUser();
             if(null == user){
+                logger.info("Create default user");
                 generateSeed(null);
             }
             emitter.onNext(true);

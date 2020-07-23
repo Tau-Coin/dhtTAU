@@ -28,7 +28,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
  */
 public class SettingActivity extends BaseActivity implements View.OnClickListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(SettingActivity.class);
+    private static final Logger logger = LoggerFactory.getLogger("SettingActivity");
     private ActivitySettingBinding binding;
     private UserViewModel viewModel;
     private CompositeDisposable disposables = new CompositeDisposable();

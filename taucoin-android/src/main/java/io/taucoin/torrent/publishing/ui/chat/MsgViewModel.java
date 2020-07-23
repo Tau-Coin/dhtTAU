@@ -29,7 +29,7 @@ import io.taucoin.torrent.publishing.core.utils.DateUtil;
  */
 public class MsgViewModel extends AndroidViewModel {
 
-    private static final Logger logger = LoggerFactory.getLogger(MsgViewModel.class);
+    private static final Logger logger = LoggerFactory.getLogger("MsgViewModel");
     private MsgRepository msgRepo;
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
