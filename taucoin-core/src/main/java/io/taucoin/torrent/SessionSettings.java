@@ -20,7 +20,7 @@ public final class SessionSettings {
         DefaultBootstrapNodes.add("router.silotis.us:6881");
     }
 
-    public static int TauDHTMaxItems = 10000;
+    public static int TauDHTMaxItems = 1000;
 
     // DHT bootstrap nodes.
     final Set<String> bootstrapNodes;
