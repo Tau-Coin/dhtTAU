@@ -1,9 +1,5 @@
 package io.taucoin.torrent.publishing;
 
-import com.github.naturs.logger.Logger;
-import com.github.naturs.logger.android.adapter.AndroidLogAdapter;
-import com.github.naturs.logger.android.strategy.converter.AndroidLogConverter;
-
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.multidex.MultiDexApplication;
 
@@ -20,11 +16,6 @@ public class MainApplication extends MultiDexApplication {
     public void onCreate() {
         super.onCreate();
         instance = this;
-
-        // Logger init
-        Logger.addLogAdapter(new AndroidLogAdapter("TAU", false));
-        Logger.setLogConverter(new AndroidLogConverter());
-        Logger.setDebuggable(BuildConfig.DEBUG);
 
 //        // SQLite数据库测试
 //        Stetho.initializeWithDefaults(this);

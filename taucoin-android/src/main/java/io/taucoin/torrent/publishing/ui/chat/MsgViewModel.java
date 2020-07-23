@@ -2,7 +2,8 @@ package io.taucoin.torrent.publishing.ui.chat;
 
 import android.app.Application;
 
-import com.github.naturs.logger.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ import io.taucoin.torrent.publishing.core.utils.DateUtil;
  */
 public class MsgViewModel extends AndroidViewModel {
 
+    private static final Logger logger = LoggerFactory.getLogger(MsgViewModel.class);
     private MsgRepository msgRepo;
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
@@ -101,7 +103,7 @@ public class MsgViewModel extends AndroidViewModel {
                 msgRepo.sendMessage(msg);
             }catch (Exception e){
                 result = e.getMessage();
-                Logger.d("Error sending message::%s", result);
+                logger.debug("Error sending message::{}", result);
             }
             emitter.onNext(result);
             emitter.onComplete();

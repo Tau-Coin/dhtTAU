@@ -7,7 +7,9 @@ import android.view.View;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
-import com.github.naturs.logger.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -38,6 +40,7 @@ import io.taucoin.util.ByteUtil;
  */
 public class UserViewModel extends AndroidViewModel {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserViewModel.class);
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
@@ -103,7 +106,7 @@ public class UserViewModel extends AndroidViewModel {
                 byte[] seedBytes = ByteUtil.toByte(seed);
                 Pair<byte[], byte[]> keypair = Ed25519.createKeypair(seedBytes);
                 String publicKey = ByteUtil.toHexString(keypair.first);
-                Logger.d("import publicKey::%s, size::%d", publicKey, publicKey.length());
+                logger.debug("import publicKey::{}, size::{}", publicKey, publicKey.length());
                 User user = userRepo.getUserByPublicKey(publicKey);
                 User currentUser = userRepo.getCurrentUser();
                 if(currentUser != null){
@@ -121,7 +124,7 @@ public class UserViewModel extends AndroidViewModel {
                 }
             }catch (Exception e){
                 result = e.getMessage();
-                Logger.d("import seed error::%s", seed, result);
+                logger.debug("import seed error::{}", result);
             }
             emitter.onNext(result);
             emitter.onComplete();

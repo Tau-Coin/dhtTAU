@@ -6,7 +6,9 @@ import android.widget.TextView;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
-import com.github.naturs.logger.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -53,6 +55,7 @@ import io.taucoin.util.ByteUtil;
  */
 public class TxViewModel extends AndroidViewModel {
 
+    private static final Logger logger = LoggerFactory.getLogger(TxViewModel.class);
     private TxRepository txRepo;
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
@@ -143,12 +146,12 @@ public class TxViewModel extends AndroidViewModel {
                     // 获取最早过期的交易，并且其nonce后来未被使用
                     Tx earliestExpireTx = txRepo.getEarliestExpireTx(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
                     if(earliestExpireTx != null){
-                        Logger.d("chain nonce::%d, earliestExpireTx.nonce::%d", nonce, earliestExpireTx.nonce);
+                        logger.debug("chain nonce::{}, earliestExpireTx.nonce::{}", nonce, earliestExpireTx.nonce);
                         nonce = earliestExpireTx.nonce;
                     }else{
                         // 获取社区里用户未上链并且未过期的交易数
                         int pendingTxs = txRepo.getPendingTxsNotExpired(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
-                        Logger.d("chain nonce::%d, pending txs::%d", nonce, pendingTxs);
+                        logger.debug("chain nonce::{}, pending txs::{}", nonce, pendingTxs);
                         nonce = nonce == 0 ? 0 : nonce + 1;
                         if(pendingTxs > 0){
                             nonce += pendingTxs;
@@ -166,13 +169,13 @@ public class TxViewModel extends AndroidViewModel {
                     tx.senderPk = currentUser.publicKey;
                     tx.nonce = nonce;
                     txRepo.addTransaction(tx);
-                    Logger.d("adding transaction txID::%s", tx.txID);
+                    logger.debug("adding transaction txID::{}", tx.txID);
                 }else{
                     result = getApplication().getString(R.string.tx_error_type);
                 }
             }catch (Exception e){
                 result = e.getMessage();
-                Logger.d("Error adding transaction::%s", result);
+                logger.debug("Error adding transaction::{}", result);
             }
 
             emitter.onNext(result);

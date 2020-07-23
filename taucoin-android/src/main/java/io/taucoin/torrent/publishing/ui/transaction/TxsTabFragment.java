@@ -7,8 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.github.naturs.logger.Logger;
 import com.leinardi.android.speeddial.SpeedDialActionItem;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -43,6 +45,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
  */
 public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickListener, View.OnClickListener {
 
+    private static final Logger logger = LoggerFactory.getLogger(TxsTabFragment.class);
     private BaseActivity activity;
     private FragmentTxsTabBinding binding;
     private TxViewModel txViewModel;
@@ -107,7 +110,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 txViewModel.queryCommunityTxs(community.chainID), pagedListConfig).build();
         postList.observe(activity, replyAndAllTxs -> {
             adapter.submitList(replyAndAllTxs);
-            Logger.d("adapter.size::%s, newSize::%s", adapter.getItemCount(), replyAndAllTxs.size());
+            logger.debug("adapter.size::{}, newSize::{}", adapter.getItemCount(), replyAndAllTxs.size());
             binding.txList.scrollToPosition(adapter.getItemCount() - 1);
         });
     }
