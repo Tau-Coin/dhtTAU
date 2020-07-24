@@ -11,6 +11,8 @@ import static io.taucoin.jtau.util.Repo.RepoException;
 
 public class JTau {
 
+    private static final Logger logger = LoggerFactory.getLogger("jtau");
+
     public static void main(String[] args) {
 
         Config config = new Config();
@@ -21,7 +23,7 @@ public class JTau {
         try {
             isHelp = CLIInterface.parse(config, args);
         } catch (ArgumentException e) {
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage());
             System.exit(-1);
         }
         if (isHelp) {
@@ -33,7 +35,7 @@ public class JTau {
             repo.init(config);
         } catch (RepoException e) {
             e.printStackTrace();
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage());
             System.exit(-2);
         }
 
@@ -50,13 +52,9 @@ public class JTau {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                System.out.println("JTau is exiting...");
-                if (tauDaemon != null) {
-                    tauDaemon.stop();
-                }
-                if (thread != null) {
-                    thread.interrupt();
-                }
+                logger.info("handling shutdown signal");
+                tauDaemon.stop();
+                thread.interrupt();
             }
         });
 
@@ -65,5 +63,7 @@ public class JTau {
         } catch (InterruptedException e) {
             // Ignore this exception
         }
+
+        logger.info("JTau is exiting...");
     }
 }

@@ -3,21 +3,23 @@ package io.taucoin.jtau.util;
 import io.taucoin.jtau.config.Config;
 
 import com.frostwire.jlibtorrent.Ed25519;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 /**
  * Repo is the root directory of storing data for jtau.
  * Repo is responsible for creating data directory, generating seed and so on.
  */
 public class Repo {
+
+    private static final Logger logger = LoggerFactory.getLogger("repo");
 
     // environment variable to specify the data root directory.
     public static final String TAU_PATH = "TAU_PATH";
@@ -43,6 +45,7 @@ public class Repo {
         File rootDir = new File(dir);
         if (!rootDir.exists()) {
             rootDir.mkdir();
+            logger.info("make directory:" + dir);
         }
 
         // generate or load key seed.
@@ -50,46 +53,24 @@ public class Repo {
             File keyFile = new File(dir + "/" + KEY_FILE_NAME);
 
             if (keyFile.exists()) {
-                FileInputStream fis;
-
                 try {
-                    fis = new FileInputStream(keyFile);
-                } catch (FileNotFoundException e) {
-                    throw new RepoException(e.getMessage());
-                }
+                    byte[] seed = Files.readAllBytes(Paths.get(keyFile.getAbsolutePath()));
+                    String hexStr = new String(seed);
 
-                FileChannel ch = fis.getChannel();
-                ByteBuffer buf = ByteBuffer.allocate(200);
-                try {
-                    ch.read(buf);
-                    fis.close();
+                    logger.info("loading key seed:" + hexStr);
+                    config.setKeySeed(Hex.decode(hexStr));
                 } catch (IOException e) {
                     throw new RepoException(e.getMessage());
                 }
-
-                byte[] seed = buf.array();
-                config.setKeySeed(seed);
             } else {
                 byte[] seed = Ed25519.createSeed();
                 config.setKeySeed(seed);
+                String hexStr = Hex.toHexString(seed);
+                logger.info("generating key seed:" + hexStr);
 
                 try {
-                    keyFile.createNewFile();
-                } catch (IOException e) {
-                    throw new RepoException(e.getMessage());
-                }
-
-                FileOutputStream fos;
-                try {
-                    fos = new FileOutputStream(keyFile);
-                } catch (FileNotFoundException e) {
-                    throw new RepoException(e.getMessage());
-                }
-
-                try {
-                    fos.write(seed);
-                    fos.flush();
-                    fos.close();
+                    Files.write(Paths.get(keyFile.getAbsolutePath()), hexStr.getBytes(),
+                            StandardOpenOption.CREATE, StandardOpenOption.APPEND);
                 } catch (IOException e) {
                     throw new RepoException(e.getMessage());
                 }

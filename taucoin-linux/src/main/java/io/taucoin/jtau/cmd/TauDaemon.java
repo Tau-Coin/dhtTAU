@@ -12,6 +12,8 @@ import io.taucoin.jtau.rpc.JsonRpcServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class TauDaemon implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger("tau-daemon");
@@ -33,6 +35,9 @@ public class TauDaemon implements Runnable {
 
     // torrent session settings
     private SessionSettings sessionSettings;
+
+    // for test
+    private AtomicBoolean testRunning = new AtomicBoolean(true);
 
     public TauDaemon(Config config) {
 
@@ -75,7 +80,10 @@ public class TauDaemon implements Runnable {
         start();
     }
 
-    public synchronized void start() {
+    public void start() {
+
+        logger.info("starting tau daemon...");
+        logger.info("Config:" + "\n"  + this.config);
 
         // start tau blockchain and torrent dht engine
         //startTau();
@@ -86,12 +94,17 @@ public class TauDaemon implements Runnable {
         testLoop();
     }
 
-    public synchronized void stop() {
+    public void stop() {
+
+        logger.info("stopping tau daemon...");
+
         // stop rpc server
         //stopRpcServer()
 
         // stop tau blockchain and torrent dht engine
         //stopTau()
+
+        stopTestLoop();
     }
 
     private void startTau() {
@@ -125,7 +138,7 @@ public class TauDaemon implements Runnable {
 
     private void testLoop() {
 
-        while (true) {
+        while (testRunning.get()) {
             System.out.println("Hi, JTau...");
 
             try {
@@ -135,5 +148,9 @@ public class TauDaemon implements Runnable {
                 return;
             }
         }
+    }
+
+    private void stopTestLoop() {
+        testRunning.set(false);
     }
 }

@@ -2,6 +2,8 @@ package io.taucoin.jtau.config;
 
 import io.taucoin.jtau.util.Repo;
 
+import org.spongycastle.util.encoders.Hex;
+
 public class Config {
 
     // default http json rpc server listening port.
@@ -78,5 +80,17 @@ public class Config {
      */
     public void setKeySeed(byte[] seed) {
         this.keySeed = seed;
+    }
+
+    @Override
+    public String toString() {
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("\t -dataDir:" + this.dataDir + "\n");
+        sb.append("\t -rpcPort:" + this.rpcPort + "\n");
+        sb.append("\t -keySeed:" + Hex.toHexString(this.keySeed) + "\n");
+
+        return sb.toString();
     }
 }

@@ -6,7 +6,9 @@ ext {
 }
 
 dependencies {
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs/natives', include: ['*.so'])
 
     implementation(project(':taucoin-core')){
         //exclude group: "log4j", module: "apache-log4j-extras"
@@ -26,5 +28,10 @@ dependencies {
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
+
+// Thw following makes "gradle run" work
+run {
+    jvmArgs = ['-Djava.library.path=./libs/natives/x64']
+}
 
 mainClassName = 'io.taucoin.jtau.cmd.JTau'
