@@ -187,5 +187,21 @@ public class PeerManager {
         }
     }
 
+    /**
+     * get all peers
+     * @return
+     */
+    public Set<ByteArrayWrapper> getAllPeers() {
+        return this.allPeers;
+    }
+
+    /**
+     * get all peers number
+     * @return
+     */
+    public int getPeerNumber() {
+        return this.allPeers.size();
+    }
+
 }
 

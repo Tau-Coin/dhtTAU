@@ -5,12 +5,20 @@ import io.taucoin.types.Block;
 
 public interface StateProcessor {
     /**
-     * process block
-     * @param block to be processed
+     * forward process block, when sync new block
+     * @param block block to be processed
      * @param stateDB: state db
      * @return
      */
-    boolean process(Block block, StateDB stateDB);
+    boolean forwardProcess(Block block, StateDB stateDB);
+
+    /**
+     * backward process block, when sync old block
+     * @param block block to be processed
+     * @param stateDB state db
+     * @return
+     */
+    boolean backwardProcess(Block block, StateDB stateDB);
 
     /**
      * roll back a block

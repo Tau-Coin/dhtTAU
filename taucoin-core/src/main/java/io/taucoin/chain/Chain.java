@@ -1,5 +1,7 @@
 package io.taucoin.chain;
 
+import com.frostwire.jlibtorrent.Pair;
+import com.frostwire.jlibtorrent.Sha1Hash;
 import io.taucoin.account.AccountManager;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.core.*;
@@ -158,33 +160,47 @@ public class Chain {
         try {
             Set<byte[]> peers = this.stateDB.getPeers(this.chainID);
             Set<ByteArrayWrapper> allPeers = new HashSet<>(1);
+            List<ByteArrayWrapper> priorityPeers = new ArrayList<>();
             if (null != peers && !peers.isEmpty()) {
                 for (byte[] peer: peers) {
                     allPeers.add(new ByteArrayWrapper(peer));
                 }
             } else {
                 // if there is no peers, add yourself
-                peers.add(AccountManager.getInstance().getKeyPair().first);
+                allPeers.add(new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first));
             }
-            //
+            // get from mutable block
             if (null != bestBlock) {
                 // get priority peers in mutable range
-            } else {
-                // get from all peers
+                priorityPeers.add(new ByteArrayWrapper(bestBlock.getMinerPubkey()));
+                byte[] previousHash = bestBlock.getPreviousBlockHash();
+                for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
+                    Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
+                    if (null != block) {
+                        priorityPeers.add(new ByteArrayWrapper(block.getMinerPubkey()));
+                        previousHash = block.getPreviousBlockHash();
+                    } else {
+                        break;
+                    }
+                }
             }
+            // if no enough peers, get from all peers
+            Iterator<ByteArrayWrapper> iterator = allPeers.iterator();
+            for (int i = priorityPeers.size(); i < ChainParam.MUTABLE_RANGE; i++) {
+                if (iterator.hasNext()) {
+                    priorityPeers.add(new ByteArrayWrapper(iterator.next().getData()));
+                } else {
+                    break;
+                }
+            }
+
+            this.peerManager.init(allPeers, priorityPeers);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
         }
 
         return true;
-    }
-
-    /**
-     * load genesis block when chain is empty
-     */
-    private void loadGenesisBlock() {
-
     }
 
     /**
@@ -202,7 +218,7 @@ public class Chain {
 
             // keep looking for more difficult chain
             while (!Thread.interrupted()) {
-                byte[] pubKey = getOptimalPeer();
+                byte[] pubKey = peerManager.popUpOptimalBlockPeer();
                 Block tip = getTipBlockFromPeer(pubKey);
 
                 // give up the less difficult chain
@@ -287,12 +303,14 @@ public class Chain {
                     Block block = mineBlock();
                     // the best block is parent block of the tip
                     if (tryToConnect(block, track)) {
-                        setBestBlock(block);
                         try {
                             track.commit();
                         } catch (Exception e) {
                             logger.error(e.getMessage(), e);
                         }
+                        setBestBlock(block);
+
+                        publishBestBlock();
                     }
                 }
             }
@@ -315,52 +333,70 @@ public class Chain {
         }
         int size = newBlocks.size();
         for (int i = size - 1; i >= 0; i--) {
-            this.stateProcessor.process(newBlocks.get(i), track);
+            this.stateProcessor.forwardProcess(newBlocks.get(i), track);
         }
         try {
             this.blockStore.reBranchBlocks(undoBlocks, newBlocks);
 
+            track.commit();
+
             setBestBlock(block);
 
-            track.commit();
+            publishBestBlock();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
 
     private void vote() {
-        while (!Thread.interrupted()) {
-            byte[] peer = getOptimalPeer();
-            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, blockSalt, TIMEOUT);
-            byte[] data = TorrentDHTEngine.getInstance().dhtGet(spec);
-            if (null != data) {
-                Block block = new Block(data);
+        // try to use all peers to vote
+        int counter = peerManager.getPeerNumber();
+        while (!Thread.interrupted() && counter > 0) {
+            byte[] peer = peerManager.popUpOptimalBlockPeer();
+            Block block = getTipBlockFromPeer(peer);
+            if (null != block) {
                 // vote on immutable point
                 votingPool.putIntoVotingPool(block.getImmutableBlockHash(),
                         (int) block.getBlockNum() - ChainParam.MUTABLE_RANGE);
             }
-        }
-        Vote bestVote = votingPool.getBestVote();
-        // sync from best vote
-        // TODO
-    }
 
-    private byte[] getOptimalPeer() {
-        return null;
+            counter--;
+        }
+        // get best vote
+        Vote bestVote = votingPool.getBestVote();
+        // clear state and block, sync from best vote
+        // TODO
     }
 
     /**
      * get tip block from peer
-     * @param pubKey
-     * @return
+     * @param pubKey peer pubKey
+     * @return tip block or null
      */
     private Block getTipBlockFromPeer(byte[] pubKey) {
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey, this.blockSalt, TIMEOUT);
-        byte[] data = TorrentDHTEngine.getInstance().dhtGet(spec);
-        if (null != data) {
-            return new Block(data);
+        byte[] blockHash = TorrentDHTEngine.getInstance().dhtGet(spec);
+        if (null != blockHash) {
+            return getBlockFromDHT(blockHash);
         }
         return null;
+    }
+
+    /**
+     * publish tip block on main chain to dht
+     */
+    private void publishBestBlock() {
+        if (null != this.bestBlock) {
+            // put immutable block first
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(this.bestBlock.getEncoded());
+            TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+
+            // put mutable item
+            Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
+                    this.bestBlock.getBlockHash(), blockSalt);
+            TorrentDHTEngine.getInstance().dhtPut(mutableItem);
+        }
     }
 
     /**
@@ -373,18 +409,75 @@ public class Chain {
 
         // when you get a block, you need to put a block simultaneously
         Block block = getBlockRandomlyFromDB();
+
         if (null == block) {
             block = this.bestBlock;
         }
-        DHT.ImmutableItem item = new DHT.ImmutableItem(block.getEncoded());
 
-        DHT.ExchangeImmutableItemResult result = TorrentDHTEngine.getInstance().dhtTauGet(spec, item);
+        DHT.ExchangeImmutableItemResult result;
+        if (null != block) {
+            DHT.ImmutableItem blockItem = new DHT.ImmutableItem(block.getEncoded());
+            result = TorrentDHTEngine.getInstance().dhtTauGet(spec, blockItem);
+        } else {
+            result = TorrentDHTEngine.getInstance().dhtTauGet(spec, null);
+        }
 
         if (null != result.getData()) {
-            new Block(result.getData());
+            return new Block(result.getData());
         }
 
         return null;
+    }
+
+    /**
+     * get a tx from dht on tx channel
+     * @param peer peer to get
+     * @return transaction
+     */
+    private Transaction getTxFromDHT(byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalt, TIMEOUT);
+        byte[] rlp = TorrentDHTEngine.getInstance().dhtGet(spec);
+        if (null != rlp) {
+            MutableItemValue value = new MutableItemValue(rlp);
+            if (null != value.getPeer()) {
+                this.peerManager.addTxPeer(value.getPeer());
+            }
+            if (null != value.getHash()) {
+                DHT.GetImmutableItemSpec immutableItemSpec = new DHT.GetImmutableItemSpec(value.getHash(), TIMEOUT);
+                Transaction tx = this.txPool.getBestTransaction();
+                DHT.ExchangeImmutableItemResult result;
+                if (null != tx) {
+                    DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
+                    result = TorrentDHTEngine.getInstance().dhtTauGet(immutableItemSpec, immutableItem);
+                } else {
+                    result = TorrentDHTEngine.getInstance().dhtTauGet(immutableItemSpec, null);
+                }
+                if (null != result) {
+                    return new Transaction(result.getData());
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * put a tx in mutable item
+     * @param tx
+     */
+    private void publishTransaction(Transaction tx) {
+        if (null != tx) {
+            // put immutable tx first
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
+            TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+
+            // put mutable item
+            byte[] peer = this.txPool.getOptimalPeer();
+            MutableItemValue value = new MutableItemValue(tx.getTxID(), peer);
+            Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second, value.getEncoded(), txSalt);
+            TorrentDHTEngine.getInstance().dhtPut(mutableItem);
+        }
     }
 
     /**
@@ -639,7 +732,7 @@ public class Chain {
                 AccountManager.getInstance().getKeyPair().first);
         // get state
         StateDB miningTrack = this.stateDB.startTracking(this.chainID);
-        this.stateProcessor.process(block, miningTrack);
+        this.stateProcessor.forwardProcess(block, miningTrack);
 
         try {
             // set state
@@ -667,7 +760,22 @@ public class Chain {
     }
 
     private void txProcess() {
+        Transaction lastTx = null;
+        while (!Thread.interrupted()) {
+            // get tx
+            byte[] peer = this.peerManager.popUpOptimalTxPeer();
+            Transaction tx = getTxFromDHT(peer);
+            if (null != tx) {
+                this.txPool.addRemote(tx);
+            }
 
+            // publish myself tx
+            Transaction myselfTx = this.txPool.getLocalBestTransaction();
+            if (null != myselfTx && myselfTx != lastTx) {
+                publishTransaction(myselfTx);
+                lastTx = myselfTx;
+            }
+        }
     }
 
     /**
@@ -710,3 +818,4 @@ public class Chain {
         }
     }
 }
+
