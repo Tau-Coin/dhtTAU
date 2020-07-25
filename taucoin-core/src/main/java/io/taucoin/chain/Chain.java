@@ -364,8 +364,23 @@ public class Chain {
         }
         // get best vote
         Vote bestVote = votingPool.getBestVote();
+        Block bestBlock = getBlockFromDHT(bestVote.getBlockHash());
         // clear state and block, sync from best vote
-        // TODO
+        if (null != bestBlock) {
+            try {
+                Block forkPointBlock = this.blockStore.getForkPointBlock(bestBlock);
+                // if cannot find fork point block, clear state and block database, restart
+                if (null != forkPointBlock) {
+                    reBranch(bestBlock, stateDB);
+                } else {
+                    // if cannot find fork point block, clear state and block database,
+                    // then sync block with mutable range
+                    this.blockStore.removeChain(this.chainID);
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
     }
 
     /**

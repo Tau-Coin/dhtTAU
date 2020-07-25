@@ -7,6 +7,7 @@ import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -203,22 +204,59 @@ public class StateProcessorImpl implements StateProcessor {
             }
 
             byte[] sender = tx.getSenderPubkey();
+            byte[] miner = block.getMinerPubkey();
 
-            AccountState sendState = stateDB.getAccount(this.chainID, sender);
+            AccountState minerState = stateDB.getAccount(this.chainID, miner);
+            AccountState senderState = stateDB.getAccount(this.chainID, sender);
+
+            long minerBalance = block.getMinerBalance();
+            long senderBalance = block.getSenderBalance();
+            long senderNonce = block.getSenderNonce();
+            long receiverBalance = block.getReceiverBalance();
 
             // if not existed , update it
-            if (null == sendState) {
-                long senderBalance = block.getSenderBalance();
-                long senderNonce = block.getSenderNonce();
-                sendState = new AccountState(BigInteger.valueOf(senderBalance), BigInteger.valueOf(senderNonce));
+            if (null == senderState) {
+                senderState = new AccountState(BigInteger.valueOf(senderBalance), BigInteger.valueOf(senderNonce));
                 if (tx.getTxData().getMsgType() == MsgType.IdentityAnnouncement) {
-                    sendState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
+                    senderState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
                 }
             } else {
-                if (tx.getTxData().getMsgType() == MsgType.IdentityAnnouncement
-                        && null == sendState.getIdentity()) {
-                    sendState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
+                // sender账户存在，则不用管miner和receiver与sender是同一账户的情况
+                // if account is existed, but nonce is null, update nonce
+                if (0 == senderState.getNonce().longValue()) {
+                    senderState.setNonce(BigInteger.valueOf(senderNonce));
                 }
+
+                switch (tx.getTxData().getMsgType()) {
+                    case Wiring: {
+                        AccountState receiverState = stateDB.getAccount(this.chainID, tx.getTxData().getReceiver());
+                        // receiver账户状态不存在与receiver == sender，两种情况不会同时发生
+                        if (null == receiverState) {
+                            // 执行到这里，说明receiver != sender
+                            receiverState = new AccountState(BigInteger.valueOf(receiverBalance), BigInteger.ZERO);
+                            stateDB.updateAccount(this.chainID, tx.getTxData().getReceiver(), receiverState);
+                        }
+                        break;
+                    }
+                    case IdentityAnnouncement: {
+                        if (null == senderState.getIdentity()) {
+                            senderState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
+                        }
+                        break;
+                    }
+                    default: {
+
+                    }
+                }
+            }
+
+            // update sender state
+            stateDB.updateAccount(this.chainID, sender, senderState);
+
+            // if miner != sender && null, update miner
+            if (!Arrays.areEqual(sender, block.getMinerPubkey()) && null == minerState) {
+                minerState = new AccountState(BigInteger.valueOf(minerBalance), BigInteger.ZERO);
+                stateDB.updateAccount(this.chainID, miner, minerState);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

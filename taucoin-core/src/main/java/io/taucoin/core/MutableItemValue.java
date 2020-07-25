@@ -5,7 +5,9 @@ import io.taucoin.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 public class MutableItemValue {
+    // content including tx/message hash
     byte[] hash;
+    // hash link or pubKey for optimization
     byte[] peer;
 
     public MutableItemValue(byte[] hash, byte[] peer) {
