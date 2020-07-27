@@ -33,7 +33,7 @@
     <string name="drawer_setting">Settings</string>
     <string name="drawer_share">Share</string>
     <string name="drawer_dht_nodes">DHT Nodes/%1$d</string>
-    <string name="drawer_net_speed">%1$d KB/s</string>
+    <string name="drawer_net_speed">%1$s KB/s</string>
 
     <!-- Strings used for menu -->
     <string name="menu_alert">Alert</string>
@@ -109,6 +109,8 @@
     <string name="setting_charging">Charging</string>
     <string name="setting_internet">Internet</string>
     <string name="setting_wake_lock">Wake Lock</string>
+    <string name="setting_telecom_data">Using telecom data may incur additional fees.\nHow long would you like the service to be
+    operated with telecom data?</string>
 
     <!-- Strings used for privacy and security -->
     <string name="setting_privacy">Privacy</string>
@@ -163,5 +165,12 @@
     <string name="tx_error_invalid_name">Invalid Name</string>
     <string name="tx_error_invalid_message">Invalid Message</string>
     <string name="tx_error_invalid_comment">Invalid Comment</string>
+
+    <!-- Strings used for notifier -->
+    <string name="app_running_in_the_background">TAUcoin running in the background</string>
+    <string name="app_shutdown">Shutdown</string>
+    <string name="def">Default</string>
+    <string name="finished">Finished</string>
+    <string name="foreground_notification">Foreground notification</string>
 
 </resources>

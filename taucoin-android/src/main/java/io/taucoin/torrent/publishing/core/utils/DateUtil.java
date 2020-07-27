@@ -233,4 +233,19 @@ public class DateUtil {
         }
         return formerTime;
     }
+
+    public static long addTimeDuration(int duration) {
+        Calendar calendar = Calendar.getInstance();
+        long timeInMillis = System.currentTimeMillis();
+
+        calendar.setTimeInMillis(timeInMillis);
+        calendar.set(Calendar.HOUR_OF_DAY, duration / (60 * 60));
+        calendar.set(Calendar.MINUTE, duration / 60);
+        calendar.set(Calendar.SECOND, duration % 60);
+        calendar.set(Calendar.MILLISECOND, 0);
+        if (calendar.getTimeInMillis() < timeInMillis + 2000L){
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        return calendar.getTimeInMillis();
+    }
 }

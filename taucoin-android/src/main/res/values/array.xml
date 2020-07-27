@@ -8,4 +8,15 @@
         <item>#C9BDD3</item>
         <item>#7C7386</item>
     </array>
+
+    <string-array name="duration_name">
+        <item>1 hr</item>
+        <item>3 hrs</item>
+        <item>5 hrs</item>
+    </string-array>
+    <integer-array name="duration_value">
+        <item>3600</item>
+        <item>10800</item>
+        <item>18000</item>
+    </integer-array>
 </resources>

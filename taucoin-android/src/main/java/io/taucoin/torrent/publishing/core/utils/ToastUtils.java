@@ -118,7 +118,7 @@ public class ToastUtils {
         private void show() {
             sToast = new Toast(MainApplication.getInstance());
 
-            sToast = Toast.makeText(MainApplication.getInstance(), null, duration);
+            sToast = Toast.makeText(MainApplication.getInstance(), "", duration);
 
             TextView tv = (TextView) LayoutInflater.from(MainApplication.getInstance()).inflate(R.layout.toast_layout, null);
             tv.setText(message);

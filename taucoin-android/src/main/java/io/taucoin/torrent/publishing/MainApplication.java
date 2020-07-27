@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.multidex.MultiDexApplication;
+import io.taucoin.torrent.publishing.ui.TauNotifier;
 
 public class MainApplication extends MultiDexApplication {
     static {
@@ -17,8 +18,7 @@ public class MainApplication extends MultiDexApplication {
         super.onCreate();
         instance = this;
 
-//        // SQLite数据库测试
-//        Stetho.initializeWithDefaults(this);
+        TauNotifier.getInstance(this).makeNotifyChans();
     }
 
     public static MainApplication getInstance(){

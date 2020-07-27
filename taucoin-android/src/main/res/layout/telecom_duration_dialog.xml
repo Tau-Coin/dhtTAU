@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:gravity="center_horizontal"
+        android:background="@color/color_white">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:text="@string/setting_telecom_data"
+            android:gravity="center_horizontal"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+        <RadioGroup
+            android:id="@+id/radio_group"
+            android:layout_marginTop="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </RadioGroup>
+
+    </LinearLayout>
+</layout>

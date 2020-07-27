@@ -96,6 +96,39 @@
         <activity
             android:name=".ui.transaction.BootStrapNodesActivity"/>
 
+        <service
+            android:name=".service.TauService" />
+
+        <receiver
+            android:name=".receiver.NotificationReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="io.taucoin.torrent.publishing.receiver.NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.BootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.SchedulerReceiver" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"/>
+        </provider>
+
     </application>
 
 </manifest>

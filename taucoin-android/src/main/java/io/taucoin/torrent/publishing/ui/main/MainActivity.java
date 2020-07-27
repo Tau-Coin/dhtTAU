@@ -1,9 +1,15 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.os.Bundle;
+import android.text.format.Formatter;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+
+import com.frostwire.jlibtorrent.SessionStats;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.view.GravityCompat;
@@ -14,6 +20,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -22,6 +29,7 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityMainDrawerBinding;
 import io.taucoin.torrent.publishing.core.storage.entity.User;
+import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
 import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
@@ -32,17 +40,30 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
  * APP主页面：包含左侧抽屉页面，顶部工具栏，群组列表
  */
 public class MainActivity extends BaseActivity {
+    private static final Logger logger = LoggerFactory.getLogger("MainActivity");
     private ActivityMainDrawerBinding binding;
     private ActionBarDrawerToggle toggle;
 
-    private UserViewModel viewModel;
+    private UserViewModel userViewModel;
+    private MainViewModel mainViewModel;
+    private TauInfoProvider infoProvider;
     private CompositeDisposable disposables = new CompositeDisposable();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        String action =  getIntent().getAction();
+        if (StringUtil.isNotEmpty(action) && StringUtil.isEquals(action, NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP)) {
+            logger.info("MainActivity finished");
+            finish();
+            return;
+        }
+
         ViewModelProvider provider = new ViewModelProvider(this);
-        viewModel = provider.get(UserViewModel.class);
+        userViewModel = provider.get(UserViewModel.class);
+        mainViewModel = provider.get(MainViewModel.class);
+        infoProvider = TauInfoProvider.getInstance(getApplicationContext());
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main_drawer);
         initLayout();
         checkCurrentUser();
@@ -52,7 +73,7 @@ public class MainActivity extends BaseActivity {
      * 检查当前用户
      */
     private void checkCurrentUser() {
-        viewModel.checkCurrentUser();
+        userViewModel.checkCurrentUser();
     }
 
     /**
@@ -69,9 +90,7 @@ public class MainActivity extends BaseActivity {
                 R.string.close_navigation_drawer);
         binding.drawerLayout.addDrawerListener(toggle);
 
-        binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, 0));
-        binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed, 0));
-        binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed, 0));
+        updateDHTStats(null);
 
         initFabSpeedDial();
     }
@@ -97,11 +116,50 @@ public class MainActivity extends BaseActivity {
      * 订阅当前用户
      */
     private void subscribeCurrentUser() {
-        disposables.add(viewModel.observeCurrentUser()
+        disposables.add(userViewModel.observeCurrentUser()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(this::updateUserInfo));
 
+    }
+
+    /**
+     * 订阅DHT的状态
+     */
+    private void subscribeDHTStatus() {
+        disposables.add(infoProvider.observeSessionStats()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::updateDHTStats));
+    }
+
+    /**
+     * 更新DHT的状态
+     */
+    private void updateDHTStats(SessionStats sessionStats) {
+        long dhtNodes = 0;
+        long wifiSpeed = 0;
+        long telecomSpeed = 0;
+        if(sessionStats != null){
+            dhtNodes = sessionStats.dhtNodes();
+            wifiSpeed = sessionStats.downloadRate() + sessionStats.uploadRate();
+            telecomSpeed = sessionStats.downloadRate() + sessionStats.uploadRate();
+        }
+        binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, dhtNodes));
+        binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed,
+                Formatter.formatFileSize(this, wifiSpeed)));
+        binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed,
+                Formatter.formatFileSize(this, telecomSpeed)));
+    }
+
+    /**
+     * 订阅是否需要启动TauDaemon
+     */
+    private void subscribeNeedStartDaemon(){
+        disposables.add(mainViewModel.observeNeedStartEngine()
+                .subscribeOn(Schedulers.io())
+                .filter((needStart) -> needStart)
+                .subscribe((needStart) -> mainViewModel.startDaemon()));
     }
 
     /**
@@ -125,6 +183,8 @@ public class MainActivity extends BaseActivity {
     public void onStart() {
         super.onStart();
         subscribeCurrentUser();
+        subscribeDHTStatus();
+        subscribeNeedStartDaemon();
     }
 
     @Override

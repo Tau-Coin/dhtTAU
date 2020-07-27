@@ -1,26 +1,9 @@
-/*
- * Copyright (C) 2019 Yaroslav Pronin <proninyaroslav@mail.ru>
- *
- * This file is part of LibreTorrent.
- *
- * LibreTorrent is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LibreTorrent is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LibreTorrent.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package io.taucoin.torrent.publishing.core.storage;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepositoryImpl;
 
 /**
  * RepositoryHelper创建数据库操作单例
@@ -31,6 +14,7 @@ public class RepositoryHelper {
     private static UserRepositoryImpl userRepo;
     private static TxRepositoryImpl txRepo;
     private static MsgRepositoryImpl msgRepo;
+    private static SettingsRepository settingsRepo;
 
     /**
      * 获取CommunityRepository单例
@@ -94,5 +78,17 @@ public class RepositoryHelper {
                     AppDatabase.getInstance(appContext));
 
         return msgRepo;
+    }
+
+    /**
+     * 获取SettingsRepository单例
+     * @param appContext 上下文
+     * @return TxRepository
+     */
+    public synchronized static SettingsRepository getSettingsRepository(@NonNull Context appContext) {
+        if (settingsRepo == null)
+            settingsRepo = new SettingsRepositoryImpl(appContext);
+
+        return settingsRepo;
     }
 }

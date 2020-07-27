@@ -8,7 +8,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -17,8 +16,6 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
-import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -35,12 +32,11 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-
-import org.apache.commons.io.IOUtils;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
+import io.taucoin.torrent.publishing.receiver.BootReceiver;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.IDN;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
@@ -51,7 +47,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -172,7 +167,7 @@ public class Utils
 //
 //        return noUnmeteredOnly && noRoaming;
 //    }
-//
+
 //    public static boolean isMetered(@NonNull Context context)
 //    {
 //        SystemFacade systemFacade = SystemFacadeHelper.getSystemFacade(context);
@@ -186,8 +181,7 @@ public class Utils
 //        }
 //    }
 //
-//    public static boolean isRoaming(@NonNull Context context)
-//    {
+//    public static boolean isRoaming(@NonNull Context context) {
 //        SystemFacade systemFacade = SystemFacadeHelper.getSystemFacade(context);
 //
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -203,8 +197,7 @@ public class Utils
      * Returns the link as "(http[s]|ftp)://[www.]name.domain/...".
      */
 
-    public static String normalizeURL(@NonNull String url)
-    {
+    public static String normalizeURL(@NonNull String url) {
         url = IDN.toUnicode(url);
 
         if (!url.startsWith(HTTP_PREFIX) && !url.startsWith(HTTPS_PREFIX))
@@ -329,8 +322,7 @@ public class Utils
                 context.getResources().getDisplayMetrics());
     }
 
-    public static int getDefaultBatteryLowLevel()
-    {
+    public static int getDefaultBatteryLowLevel() {
         return Resources.getSystem().getInteger(
                 Resources.getSystem().getIdentifier("config_lowBatteryWarningLevel", "integer", "android"));
     }
@@ -511,105 +503,22 @@ public class Utils
             context.startService(i);
     }
 
-//    public static void enableBootReceiver(@NonNull Context context, boolean enable)
-//    {
-//        SettingsRepository pref = RepositoryHelper.getSettingsRepository(context);
-//        boolean schedulingStart = pref.enableSchedulingStart();
-//        boolean schedulingStop = pref.enableSchedulingShutdown();
-//        boolean autostart = pref.autostart();
-//        int flag = (!(enable || schedulingStart || schedulingStop || autostart) ?
-//                PackageManager.COMPONENT_ENABLED_STATE_DISABLED :
-//                PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
-//        ComponentName bootReceiver = new ComponentName(context, BootReceiver.class);
-//        context.getPackageManager()
-//                .setComponentEnabledSetting(bootReceiver, flag, PackageManager.DONT_KILL_APP);
-//    }
-//
-//    public static void enableBootReceiverIfNeeded(@NonNull Context context)
-//    {
-//        SettingsRepository pref = RepositoryHelper.getSettingsRepository(context);
-//        boolean schedulingStart = pref.enableSchedulingStart();
-//        boolean schedulingStop = pref.enableSchedulingShutdown();
-//        boolean autostart = pref.autostart();
-//        int flag = (!(schedulingStart || schedulingStop || autostart) ?
-//                PackageManager.COMPONENT_ENABLED_STATE_DISABLED :
-//                PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
-//        ComponentName bootReceiver = new ComponentName(context, BootReceiver.class);
-//        context.getPackageManager()
-//                .setComponentEnabledSetting(bootReceiver, flag, PackageManager.DONT_KILL_APP);
-//    }
-//
-//    public static byte[] fetchHttpUrl(@NonNull Context context,
-//                                      @NonNull String url) throws FetchLinkException
-//    {
-//        byte[][] response = new byte[1][];
-//
-//        if (!Utils.checkConnectivity(context))
-//            throw new FetchLinkException("No network connection");
-//
-//        final ArrayList<Throwable> errorArray = new ArrayList<>(1);
-//        HttpConnection connection;
-//        try {
-//            connection = new HttpConnection(url);
-//        } catch (Exception e) {
-//            throw new FetchLinkException(e);
-//        }
-//
-//        connection.setListener(new HttpConnection.Listener() {
-//            @Override
-//            public void onConnectionCreated(HttpURLConnection conn)
-//            {
-//                /* Nothing */
-//            }
-//
-//            @Override
-//            public void onResponseHandle(HttpURLConnection conn, int code, String message)
-//            {
-//                if (code == HttpURLConnection.HTTP_OK) {
-//                    try {
-//                        response[0] = IOUtils.toByteArray(conn.getInputStream());
-//
-//                    } catch (IOException e) {
-//                        errorArray.add(e);
-//                    }
-//                } else {
-//                    errorArray.add(new FetchLinkException("Failed to fetch link, response code: " + code));
-//                }
-//            }
-//
-//            @Override
-//            public void onMovedPermanently(String newUrl)
-//            {
-//                /* Nothing */
-//            }
-//
-//            @Override
-//            public void onIOException(IOException e)
-//            {
-//                errorArray.add(e);
-//            }
-//
-//            @Override
-//            public void onTooManyRedirects()
-//            {
-//                errorArray.add(new FetchLinkException("Too many redirects"));
-//            }
-//        });
-//        connection.run();
-//
-//        if (!errorArray.isEmpty()) {
-//            StringBuilder s = new StringBuilder();
-//            for (Throwable e : errorArray) {
-//                String msg = e.getMessage();
-//                if (msg != null)
-//                    s.append(msg.concat("\n"));
-//            }
-//
-//            throw new FetchLinkException(s.toString());
-//        }
-//
-//        return response[0];
-//    }
+    /**
+     * 启动/禁止设备启动广播接收器
+     * @param context 上下文
+     * @param enable 是否启动
+     */
+    public static void enableBootReceiver(@NonNull Context context, boolean enable) {
+        SettingsRepository pref = RepositoryHelper.getSettingsRepository(context);
+        boolean autoStart = pref.bootStart();
+        int flag = (!(enable || autoStart) ?
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED :
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
+        ComponentName bootReceiver = new ComponentName(context, BootReceiver.class);
+        context.getPackageManager()
+                .setComponentEnabledSetting(bootReceiver, flag, PackageManager.DONT_KILL_APP);
+    }
+
 
     /*
      * Without additional information (e.g -DEBUG)

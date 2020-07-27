@@ -6,8 +6,10 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.storage.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.entity.Community;
@@ -18,10 +20,12 @@ import io.taucoin.torrent.publishing.core.storage.entity.Community;
 public class MainViewModel extends AndroidViewModel {
 
     private CommunityRepository communityRepo;
+    private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
     public MainViewModel(@NonNull Application application) {
         super(application);
         communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
+        daemon = TauDaemon.getInstance(application);
     }
 
     /**
@@ -36,5 +40,20 @@ public class MainViewModel extends AndroidViewModel {
     protected void onCleared() {
         super.onCleared();
         disposables.clear();
+    }
+
+    /**
+     * 观察是否需要启动Daemon
+     * @return Flowable
+     */
+    Flowable<Boolean> observeNeedStartEngine() {
+        return daemon.observeNeedStartDaemon();
+    }
+
+    /**
+     * 启动TauDaemon
+     */
+    void startDaemon() {
+        daemon.start();
     }
 }

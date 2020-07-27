@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Behavior and appearance settings -->
+    <string name="pref_key_boot_start" translatable="false">pref_key_boot_start</string>
+    <string name="pref_key_server_mode" translatable="false">pref_key_server_mode</string>
+    <string name="pref_key_wifi_only" translatable="false">pref_key_wifi_only</string>
+    <string name="pref_key_telecom_data_end_time" translatable="false">pref_key_telecom_data_end_time</string>
+    <string name="pref_key_charging_state" translatable="false">pref_key_charging_state</string>
+    <string name="pref_key_internet_state" translatable="false">pref_key_internet_state</string>
+    <string name="pref_key_wake_lock" translatable="false">pref_key_wake_lock</string>
+</resources>
