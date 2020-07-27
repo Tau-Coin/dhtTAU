@@ -23,6 +23,7 @@ import io.taucoin.util.RLPList;
 /**
  * peer Identity Announcement.
  */
+@Deprecated
 public class IdentityAnnouncement {
     private String name;
     private String description;
