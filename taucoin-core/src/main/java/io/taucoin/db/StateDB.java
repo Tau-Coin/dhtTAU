@@ -91,6 +91,29 @@ public interface StateDB {
     void deleteBestBlockHash(byte[] chainID) throws Exception;
 
     /**
+     * set current chain synced block hash
+     * @param chainID
+     * @param hash
+     * @throws Exception
+     */
+    void setSyncBlockHash(byte[] chainID, byte[] hash) throws Exception;
+
+    /**
+     * get current chain synced block hash
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    byte[] getSyncBlockHash(byte[] chainID) throws Exception;
+
+    /**
+     * delete current chain synced block hash
+     * @param chainID
+     * @throws Exception
+     */
+    void deleteSyncBlockHash(byte[] chainID) throws Exception;
+
+    /**
      * set mutable range
      * @param chainID
      * @param number

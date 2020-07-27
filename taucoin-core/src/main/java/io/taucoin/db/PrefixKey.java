@@ -11,6 +11,7 @@ public class PrefixKey {
     private static final byte[] immutablePointBlockHash = "i-".getBytes();
     private static final byte[] mutableRange = "M-".getBytes();
     private static final byte[] peer = "P-".getBytes();
+    private static final byte[] syncBlockHash = "s-".getBytes();
     private static final byte[] txPool = "T-".getBytes();
     private static final byte[] votesCountingPointBlockHash = "V-".getBytes();
 
@@ -35,6 +36,18 @@ public class PrefixKey {
         byte[] key = new byte[chainID.length + bestBlock.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
         System.arraycopy(bestBlock, 0, key, chainID.length, bestBlock.length);
+        return key;
+    }
+
+    /**
+     * synced block hash key: chainID + 'SyncBlockHash'
+     * @param chainID
+     * @return
+     */
+    public static byte[] syncBlockHashKey(byte[] chainID) {
+        byte[] key = new byte[chainID.length + syncBlockHash.length];
+        System.arraycopy(chainID, 0, key, 0, chainID.length);
+        System.arraycopy(syncBlockHash, 0, key, chainID.length, syncBlockHash.length);
         return key;
     }
 

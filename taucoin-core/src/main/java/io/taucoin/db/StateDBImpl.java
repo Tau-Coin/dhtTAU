@@ -125,6 +125,41 @@ public class StateDBImpl implements StateDB {
     }
 
     /**
+     * set current chain synced block hash
+     *
+     * @param chainID
+     * @param hash
+     * @throws Exception
+     */
+    @Override
+    public void setSyncBlockHash(byte[] chainID, byte[] hash) throws Exception {
+        db.put(PrefixKey.syncBlockHashKey(chainID), hash);
+    }
+
+    /**
+     * get current chain synced block hash
+     *
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public byte[] getSyncBlockHash(byte[] chainID) throws Exception {
+        return db.get(PrefixKey.syncBlockHashKey(chainID));
+    }
+
+    /**
+     * delete current chain synced block hash
+     *
+     * @param chainID
+     * @throws Exception
+     */
+    @Override
+    public void deleteSyncBlockHash(byte[] chainID) throws Exception {
+        db.delete(PrefixKey.syncBlockHashKey(chainID));
+    }
+
+    /**
      * set mutable range
      * @param chainID
      * @param number

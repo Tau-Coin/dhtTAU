@@ -34,7 +34,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void open(String path) throws Exception {
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -42,7 +42,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void close() {
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -89,7 +89,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void followChain(byte[] chainID) throws Exception {
-
+        this.stateDB.followChain(chainID);
     }
 
     /**
@@ -100,7 +100,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public Set<byte[]> getAllFollowedChains() throws Exception {
-        return null;
+        return this.stateDB.getAllFollowedChains();
     }
 
     /**
@@ -111,7 +111,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void unfollowChain(byte[] chainID) throws Exception {
-
+        this.stateDB.unfollowChain(chainID);
     }
 
     /**
@@ -146,6 +146,41 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void deleteBestBlockHash(byte[] chainID) throws Exception {
+
+    }
+
+    /**
+     * set current chain synced block hash
+     *
+     * @param chainID
+     * @param hash
+     * @throws Exception
+     */
+    @Override
+    public void setSyncBlockHash(byte[] chainID, byte[] hash) throws Exception {
+
+    }
+
+    /**
+     * get current chain synced block hash
+     *
+     * @param chainID
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public byte[] getSyncBlockHash(byte[] chainID) throws Exception {
+        return new byte[0];
+    }
+
+    /**
+     * delete current chain synced block hash
+     *
+     * @param chainID
+     * @throws Exception
+     */
+    @Override
+    public void deleteSyncBlockHash(byte[] chainID) throws Exception {
 
     }
 
@@ -193,7 +228,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void addPeer(byte[] chainID, byte[] pubkey) throws Exception {
-
+        this.stateDB.addPeer(chainID, pubkey);
     }
 
     /**
@@ -205,7 +240,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public Set<byte[]> getPeers(byte[] chainID) throws Exception {
-        return null;
+        return this.stateDB.getPeers(chainID);
     }
 
     /**
@@ -217,7 +252,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void deletePeer(byte[] chainID, byte[] pubkey) throws Exception {
-
+        this.stateDB.deletePeer(chainID, pubkey);
     }
 
     /**
@@ -228,7 +263,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void deleteAllPeers(byte[] chainID) throws Exception {
-
+        this.stateDB.deleteAllPeers(chainID);
     }
 
     /**
@@ -241,7 +276,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public Set<Transaction> getSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception {
-        return null;
+        return this.stateDB.getSelfTxPool(chainID, pubKey);
     }
 
     /**
@@ -253,7 +288,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws Exception {
-
+        this.stateDB.putTxIntoSelfTxPool(chainID, tx);
     }
 
     /**
@@ -265,7 +300,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void deleteSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception {
-
+        this.stateDB.deleteSelfTxPool(chainID, pubKey);
     }
 
     /**

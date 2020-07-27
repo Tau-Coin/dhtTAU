@@ -226,6 +226,41 @@ public class TransactionPoolTest {
         }
 
         /**
+         * set current chain synced block hash
+         *
+         * @param chainID
+         * @param hash
+         * @throws Exception
+         */
+        @Override
+        public void setSyncBlockHash(byte[] chainID, byte[] hash) throws Exception {
+
+        }
+
+        /**
+         * get current chain synced block hash
+         *
+         * @param chainID
+         * @return
+         * @throws Exception
+         */
+        @Override
+        public byte[] getSyncBlockHash(byte[] chainID) throws Exception {
+            return new byte[0];
+        }
+
+        /**
+         * delete current chain synced block hash
+         *
+         * @param chainID
+         * @throws Exception
+         */
+        @Override
+        public void deleteSyncBlockHash(byte[] chainID) throws Exception {
+
+        }
+
+        /**
          * set mutable range
          *
          * @param chainID

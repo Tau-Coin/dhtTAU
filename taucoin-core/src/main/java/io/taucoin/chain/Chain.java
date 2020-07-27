@@ -85,7 +85,11 @@ public class Chain {
 
     private byte[] genesisBlockHash;
 
+    // the best block of current chain
     private Block bestBlock;
+
+    // the synced block of current chain
+    private Block syncBlock;
 
     /**
      * Chain constructor.
@@ -348,7 +352,7 @@ public class Chain {
         }
     }
 
-    private void vote() {
+    private Vote vote() {
         // try to use all peers to vote
         int counter = peerManager.getPeerNumber();
         while (!Thread.interrupted() && counter > 0) {
@@ -362,16 +366,19 @@ public class Chain {
 
             counter--;
         }
-        // get best vote
-        Vote bestVote = votingPool.getBestVote();
-        Block bestBlock = getBlockFromDHT(bestVote.getBlockHash());
+
+        return votingPool.getBestVote();
+    }
+
+    private void sync(Block block) {
+        Block bestVoteBlock = getBlockFromDHT(block.getBlockHash());
         // clear state and block, sync from best vote
-        if (null != bestBlock) {
+        if (null != bestVoteBlock) {
             try {
-                Block forkPointBlock = this.blockStore.getForkPointBlock(bestBlock);
+                Block forkPointBlock = this.blockStore.getForkPointBlock(bestVoteBlock);
                 // if cannot find fork point block, clear state and block database, restart
                 if (null != forkPointBlock) {
-                    reBranch(bestBlock, stateDB);
+                    reBranch(bestVoteBlock, stateDB);
                 } else {
                     // if cannot find fork point block, clear state and block database,
                     // then sync block with mutable range
@@ -385,15 +392,29 @@ public class Chain {
 
     /**
      * get tip block from peer
-     * @param pubKey peer pubKey
+     * @param peer peer pubKey
      * @return tip block or null
      */
-    private Block getTipBlockFromPeer(byte[] pubKey) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey, this.blockSalt, TIMEOUT);
-        byte[] blockHash = TorrentDHTEngine.getInstance().dhtGet(spec);
-        if (null != blockHash) {
-            return getBlockFromDHT(blockHash);
+    private Block getTipBlockFromPeer(byte[] peer) {
+//        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey, this.blockSalt, TIMEOUT);
+//        byte[] blockHash = TorrentDHTEngine.getInstance().dhtGet(spec);
+//        if (null != blockHash) {
+//            return getBlockFromDHT(blockHash);
+//        }
+//        return null;
+
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalt, TIMEOUT);
+        byte[] rlp = TorrentDHTEngine.getInstance().dhtGet(spec);
+        if (null != rlp) {
+            MutableItemValue value = new MutableItemValue(rlp);
+            if (null != value.getPeer()) {
+                this.peerManager.addBlockPeer(value.getPeer());
+            }
+            if (null != value.getHash()) {
+                return getBlockFromDHT(value.getHash());
+            }
         }
+
         return null;
     }
 
@@ -406,10 +427,12 @@ public class Chain {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(this.bestBlock.getEncoded());
             TorrentDHTEngine.getInstance().dhtPut(immutableItem);
 
+            MutableItemValue mutableItemValue = new MutableItemValue(this.bestBlock.getBlockHash(), null);
+
             // put mutable item
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                    this.bestBlock.getBlockHash(), blockSalt);
+                    mutableItemValue.getEncoded(), blockSalt);
             TorrentDHTEngine.getInstance().dhtPut(mutableItem);
         }
     }
