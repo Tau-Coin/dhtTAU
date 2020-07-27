@@ -35,6 +35,7 @@ import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.receiver.PowerReceiver;
 import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
+import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -335,6 +336,8 @@ public class TauDaemon {
                 Scheduler.setSwitchWifiOnlyAlarm(appContext, endTime);
                 // TODO：恢复链端业务
                 // auController.resume();
+            }else{
+                settingsRepo.wifiOnly(true);
             }
         }
     }
@@ -384,5 +387,13 @@ public class TauDaemon {
             }
         }
         settingsRepo.wakeLock(enable);
+    }
+
+    /**
+     * 提交交易到链端交易池
+     * @param tx 签过名的交易数据
+     */
+    public void submitTransaction(Transaction tx){
+
     }
 }

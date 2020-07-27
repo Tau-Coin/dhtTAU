@@ -33,7 +33,8 @@
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:textColor="@color/color_white"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"/>
+                android:textSize="@dimen/font_big_size"
+                android:textAppearance="@style/TextAppearanceHeadline6"/>
 
             <TextView
                 android:layout_below="@+id/tv_group_name"
@@ -42,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:textColor="@color/color_white"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                android:textAppearance="@style/TextAppearanceBody2"/>
 
         </RelativeLayout>
 
@@ -62,7 +63,7 @@
                 android:textColor="@color/primary"
                 android:textStyle="bold"
                 android:text="@string/community_info"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                android:textAppearance="@style/TextAppearanceBody1"/>
 
             <TextView
                 android:id="@+id/tv_invite_link"
@@ -71,7 +72,7 @@
                 android:layout_marginTop="5dp"
                 android:paddingEnd="20dp"
                 android:paddingStart="0dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+                android:textAppearance="@style/TextAppearanceBody2"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -81,7 +82,7 @@
                 android:paddingStart="0dp"
                 android:textColor="@color/gray_dark"
                 android:text="@string/community_invite_link"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+                android:textAppearance="@style/TextAppearanceBody2"/>
 
             <View
                 android:layout_width="match_parent"
@@ -104,7 +105,7 @@
                     android:textColor="@color/primary"
                     android:textStyle="bold"
                     android:text="@string/community_notifications"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                    android:textAppearance="@style/TextAppearanceBody1"/>
 
                 <TextView
                     android:layout_below="@+id/tv_notifications"
@@ -116,7 +117,7 @@
                     android:paddingStart="0dp"
                     android:textColor="@color/gray_dark"
                     android:text="@string/community_notifications_off"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+                    android:textAppearance="@style/TextAppearanceBody2"/>
 
                 <View
                     android:layout_toStartOf="@+id/switch_notifications"
@@ -169,7 +170,7 @@
                     android:textStyle="bold"
                     android:layout_marginStart="20dp"
                     android:text="@string/community_add_member"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                    android:textAppearance="@style/TextAppearanceBody1"/>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView

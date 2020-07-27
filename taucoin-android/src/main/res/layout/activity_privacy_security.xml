@@ -31,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/setting_privacy"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:textColor="@color/primary_light"
                 android:includeFontPadding="false"
                 android:textStyle="bold" />
@@ -45,7 +45,7 @@
                 android:layout_marginTop="10dp"
                 android:gravity="center_vertical"
                 android:text="@string/setting_blacklist_users"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                android:textAppearance="@style/TextAppearanceBody1"/>
 
 
             <include layout="@layout/view_line"/>
@@ -58,7 +58,7 @@
                 android:onClick="@{listener::onClick}"
                 android:gravity="center_vertical"
                 android:text="@string/setting_blacklist_communities"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                android:textAppearance="@style/TextAppearanceBody1"/>
 
         </LinearLayout>
 
@@ -77,7 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/setting_security"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:textColor="@color/primary_light"
                 android:includeFontPadding="false"
                 android:textStyle="bold" />
@@ -97,7 +97,7 @@
                     android:layout_weight="1"
                     android:includeFontPadding="false"
                     android:text="@string/setting_seeds"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                    android:textAppearance="@style/TextAppearanceBody1"/>
 
                 <ImageView
                     android:layout_width="16dp"

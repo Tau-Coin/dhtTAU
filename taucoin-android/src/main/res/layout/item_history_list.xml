@@ -21,7 +21,7 @@
             android:singleLine="true"
             android:layout_marginTop="5dp"
             android:ellipsize="end"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+            android:textAppearance="@style/TextAppearanceHeadline6" />
 
 
         <TextView
@@ -34,7 +34,7 @@
             android:textColor="@color/gray_dark"
             android:singleLine="true"
             android:ellipsize="end"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+            android:textAppearance="@style/TextAppearanceBody1" />
 
         <include
             android:layout_width="match_parent"

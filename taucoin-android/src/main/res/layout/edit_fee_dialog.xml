@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:text="@string/tx_on_chain_msg"
             android:textStyle="bold"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+            android:textAppearance="@style/TextAppearanceBody1"/>
 
         <EditText
             android:id="@+id/et_fee"
@@ -30,14 +30,14 @@
             android:hint="@string/tx_fee_hint"
             android:inputType="numberDecimal|number"
             android:autofillHints="@string/tx_fee_hint"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+            android:textAppearance="@style/TextAppearanceBody1"/>
 
         <TextView
             android:id="@+id/tv_median_fee"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/tx_median_fee_tips"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+            android:textAppearance="@style/TextAppearanceBody2"/>
 
         <TextView
             android:layout_width="match_parent"
@@ -45,7 +45,7 @@
             android:layout_marginTop="20dp"
             android:text="@string/tx_fee_tips"
             android:textColor="@color/gray_light"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+            android:textAppearance="@style/TextAppearanceBody2"/>
 
     </LinearLayout>
 </layout>

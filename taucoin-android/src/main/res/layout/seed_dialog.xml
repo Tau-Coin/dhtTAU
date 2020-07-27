@@ -32,7 +32,7 @@
             android:gravity="center_horizontal|bottom"
             android:hint="@string/user_seed_import_hint"
             android:inputType="text"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="@style/TextAppearanceBody1"
             android:autofillHints="@string/user_seed_import_hint" />
 
         <EditText
@@ -47,7 +47,7 @@
             android:gravity="center_horizontal|bottom"
             android:hint="@string/user_nickname"
             android:inputType="text"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="@style/TextAppearanceBody1"
             android:autofillHints="@string/user_nickname" />
 
     </RelativeLayout>

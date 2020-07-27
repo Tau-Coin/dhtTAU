@@ -5,6 +5,6 @@
     android:layout_height="wrap_content"
     android:background="@color/color_black"
     android:textColor="@color/color_white"
-    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+    android:textAppearance="@style/TextAppearanceBody1"
     android:gravity="center"
     android:padding="6dp" />

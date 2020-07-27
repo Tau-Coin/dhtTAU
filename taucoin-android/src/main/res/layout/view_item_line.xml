@@ -12,8 +12,8 @@
 
         <ImageView
             android:id="@+id/iv_left"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
             android:layout_centerVertical="true"
             android:layout_marginStart="20dp"
             android:contentDescription="@null" />
@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_marginStart="20dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="@style/TextAppearanceBody1"
             android:layout_toEndOf="@+id/iv_left" />
     </RelativeLayout>
 </layout>

@@ -78,7 +78,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/user_seeds_history"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:textColor="@color/primary"
                 android:paddingBottom="20dp"
                 android:textStyle="bold" />

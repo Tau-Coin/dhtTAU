@@ -36,7 +36,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/community_today_mining_income"
                 android:textColor="@color/color_white"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+                android:textAppearance="@style/TextAppearanceBody2"/>
 
             <TextView
                 android:id="@+id/tv_today_mining_income_value"
@@ -45,7 +45,7 @@
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:textColor="@color/color_white"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+                android:textAppearance="@style/TextAppearanceBody2"/>
 
             <ImageView
                 android:id="@+id/iv_mining_income_close"

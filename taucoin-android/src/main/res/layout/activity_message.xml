@@ -24,7 +24,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
             android:layout_marginTop="15dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+            android:textAppearance="@style/TextAppearanceBody2"/>
 
         <EditText
             android:id="@+id/et_input"
@@ -35,7 +35,7 @@
             android:layout_marginTop="5dp"
             android:hint="@string/tx_message"
             android:inputType="textMultiLine"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="@style/TextAppearanceBody1"
             android:autofillHints="@string/tx_new_name" />
 
         <TextView
@@ -47,7 +47,7 @@
             android:onClick="@{listener::onClick}"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+            android:textAppearance="@style/TextAppearanceBody2"/>
 
     </LinearLayout>
 </layout>

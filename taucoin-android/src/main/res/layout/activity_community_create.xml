@@ -46,7 +46,7 @@
                 android:layout_marginTop="10dp"
                 android:hint="@string/community_community_name"
                 android:inputType="text"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:autofillHints="@string/community_community_name" />
 
             <TextView
@@ -55,7 +55,7 @@
                 android:id="@+id/tv_public_key"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+                android:textAppearance="@style/TextAppearanceBody2" />
 
         </RelativeLayout>
 
@@ -69,7 +69,7 @@
             android:textColor="@color/gray_dark"
             android:text="@string/community_more_settings"
             android:textSize="@dimen/font_big_size"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+            android:textAppearance="@style/TextAppearanceBody1" />
 
 
     </LinearLayout>
