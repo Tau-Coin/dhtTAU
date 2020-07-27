@@ -1,6 +1,7 @@
 package io.taucoin.jtau.cmd;
 
 import io.taucoin.controller.TauController;
+import io.taucoin.db.KeyValueDataBase;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.listener.TauListener;
 import io.taucoin.torrent.SessionSettings;
@@ -35,6 +36,10 @@ public class TauDaemon implements Runnable {
 
     // torrent session settings
     private SessionSettings sessionSettings;
+
+    // blocks this daemon thread
+    private final Object signal = new Object();
+    private boolean stopped = false;
 
     // for test
     private AtomicBoolean testRunning = new AtomicBoolean(true);
@@ -86,12 +91,27 @@ public class TauDaemon implements Runnable {
         logger.info("Config:" + "\n"  + this.config);
 
         // start tau blockchain and torrent dht engine
-        //startTau();
+        startTau();
 
         // start rpc server
-        //startRpcServer();
+        startRpcServer();
 
-        testLoop();
+        // wait for stop signal
+        logger.info("waiting for stopping signal");
+        synchronized (signal) {
+            while (!stopped) {
+                try {
+                    signal.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    logger.error(e.getMessage());
+                }
+            }
+        }
+
+        logger.info("tau daemon is exiting...");
+
+        //testLoop();
     }
 
     public void stop() {
@@ -99,12 +119,18 @@ public class TauDaemon implements Runnable {
         logger.info("stopping tau daemon...");
 
         // stop rpc server
-        //stopRpcServer()
+        stopRpcServer();
 
         // stop tau blockchain and torrent dht engine
-        //stopTau()
+        stopTau();
 
-        stopTestLoop();
+        // notify this daemon exiting
+        synchronized (signal) {
+            stopped = true;
+            signal.notify();
+        }
+
+        //stopTestLoop();
     }
 
     private void startTau() {

@@ -60,7 +60,7 @@ public final class JsonRpcServer {
      *
      * @param port http server listening port
      */
-    public synchronized void start(int port) throws Exception {
+    public void start(int port) throws Exception {
         bossGroup = new NioEventLoopGroup(1);
         workerGroup = new NioEventLoopGroup();
         this.port = port;
@@ -86,7 +86,7 @@ public final class JsonRpcServer {
     /**
      * Stop http json rcp server.
      */
-    public synchronized void stop() {
+    public void stop() {
         if (bossGroup != null) {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();

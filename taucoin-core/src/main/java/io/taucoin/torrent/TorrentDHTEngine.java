@@ -17,7 +17,7 @@ import static io.taucoin.torrent.DHT.*;
  */
 public class TorrentDHTEngine {
 
-    private static final Logger logger = LoggerFactory.getLogger(TorrentDHTEngine.class);
+    private static final Logger logger = LoggerFactory.getLogger("DHT-Engine");
 
     private static volatile TorrentDHTEngine INSTANCE;
 
@@ -129,6 +129,7 @@ public class TorrentDHTEngine {
             return;
         }
 
+        logger.info("starting dht engine daemon");
         this.settings = settings;
         torrentDaemon = new Thread(torrentSession);
         torrentDaemon.setDaemon(true);
@@ -142,6 +143,8 @@ public class TorrentDHTEngine {
         if (!sessionManager.isRunning()) {
             return;
         }
+
+        logger.info("stopping dht engine daemon");
 
         sessionManager.stop();
 
