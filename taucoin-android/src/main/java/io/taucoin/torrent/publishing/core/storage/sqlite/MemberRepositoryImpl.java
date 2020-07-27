@@ -1,9 +1,9 @@
-package io.taucoin.torrent.publishing.core.storage;
+package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import io.taucoin.torrent.publishing.core.storage.entity.Member;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**
  * CommunityRepository接口实现

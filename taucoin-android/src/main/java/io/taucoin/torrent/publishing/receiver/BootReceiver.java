@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
-import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 
 /**
  * 设备启动接收器

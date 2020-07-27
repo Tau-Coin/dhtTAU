@@ -7,7 +7,7 @@ import android.net.wifi.WifiManager;
 
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
-import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 
 import static io.taucoin.torrent.publishing.service.Scheduler.SCHEDULER_WORK_SWITCH_WIFI_ONLY;
 import static io.taucoin.torrent.publishing.service.Scheduler.SCHEDULER_WORK_WAKE_UP_APP;

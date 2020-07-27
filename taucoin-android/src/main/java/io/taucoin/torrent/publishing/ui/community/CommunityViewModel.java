@@ -22,9 +22,9 @@ import io.taucoin.config.ChainConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
-import io.taucoin.torrent.publishing.core.storage.CommunityRepository;
-import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.types.GenesisMsg;
 import io.taucoin.util.ByteUtil;
 

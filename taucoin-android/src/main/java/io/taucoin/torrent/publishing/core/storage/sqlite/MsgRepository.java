@@ -1,9 +1,9 @@
-package io.taucoin.torrent.publishing.core.storage;
+package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import java.util.List;
 
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.storage.entity.Message;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 
 /**
  * 提供外部操作User数据的接口

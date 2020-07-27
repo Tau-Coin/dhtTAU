@@ -14,7 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
-import io.taucoin.torrent.publishing.core.storage.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.PlatformType;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;

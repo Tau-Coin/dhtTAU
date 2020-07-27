@@ -33,7 +33,7 @@ import androidx.core.content.ContextCompat;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
-import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.receiver.BootReceiver;
 
 import java.io.File;

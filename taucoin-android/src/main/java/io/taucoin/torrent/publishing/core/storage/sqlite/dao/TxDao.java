@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.core.storage.dao;
+package io.taucoin.torrent.publishing.core.storage.sqlite.dao;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
-import io.taucoin.torrent.publishing.core.storage.entity.Tx;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 
 /**
  * Room:Transaction操作接口

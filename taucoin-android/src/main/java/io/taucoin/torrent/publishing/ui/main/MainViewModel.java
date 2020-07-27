@@ -6,13 +6,12 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
-import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.storage.CommunityRepository;
-import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 
 /**
  * 主页的ViewModel

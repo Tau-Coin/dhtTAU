@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.core.storage;
+package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import android.content.Context;
 
@@ -6,16 +6,16 @@ import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-import io.taucoin.torrent.publishing.core.storage.dao.CommunityDao;
-import io.taucoin.torrent.publishing.core.storage.dao.MemberDao;
-import io.taucoin.torrent.publishing.core.storage.dao.MessageDao;
-import io.taucoin.torrent.publishing.core.storage.dao.TxDao;
-import io.taucoin.torrent.publishing.core.storage.dao.UserDao;
-import io.taucoin.torrent.publishing.core.storage.entity.Community;
-import io.taucoin.torrent.publishing.core.storage.entity.Member;
-import io.taucoin.torrent.publishing.core.storage.entity.Message;
-import io.taucoin.torrent.publishing.core.storage.entity.Tx;
-import io.taucoin.torrent.publishing.core.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.sqlite.dao.CommunityDao;
+import io.taucoin.torrent.publishing.core.storage.sqlite.dao.MemberDao;
+import io.taucoin.torrent.publishing.core.storage.sqlite.dao.MessageDao;
+import io.taucoin.torrent.publishing.core.storage.sqlite.dao.TxDao;
+import io.taucoin.torrent.publishing.core.storage.sqlite.dao.UserDao;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
 @Database(entities = {Community.class,
         Member.class,

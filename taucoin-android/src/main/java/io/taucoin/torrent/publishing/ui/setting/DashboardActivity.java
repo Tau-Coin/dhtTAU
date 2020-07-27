@@ -14,7 +14,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
-import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -94,19 +94,17 @@ public class DashboardActivity extends BaseActivity {
                 radioButton.setChecked(true);
             }
         }
-
-        binding.radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            logger.info("Duration selected::{}, {}, {}", checkedId, values[checkedId], names[checkedId]);
-            if(dialog != null){
-                dialog.closeDialog();
-            }
-            int duration = values[checkedId];
-            long endTime = DateUtil.addTimeDuration(duration);
-            settingsRepo.telecomDataEndTime(endTime);
-        });
         dialog = new CommonDialog.Builder(this)
                 .setContentView(binding.getRoot())
                 .setCanceledOnTouchOutside(false)
+                .setPositiveButton(R.string.common_proceed, (dialog, which) -> {
+                    dialog.dismiss();
+                    int checkedId = binding.radioGroup.getCheckedRadioButtonId();
+                    int duration = values[checkedId];
+                    long endTime = DateUtil.addTimeDuration(duration);
+                    settingsRepo.telecomDataEndTime(endTime);
+                    logger.info("Duration selected::{}, {}, {}", checkedId, values[checkedId], names[checkedId]);
+                })
                 .create();
         dialog.show();
     }

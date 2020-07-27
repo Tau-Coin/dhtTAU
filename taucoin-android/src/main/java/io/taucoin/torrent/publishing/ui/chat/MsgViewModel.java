@@ -17,11 +17,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.core.storage.MsgRepository;
-import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.UserRepository;
-import io.taucoin.torrent.publishing.core.storage.entity.Message;
-import io.taucoin.torrent.publishing.core.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.sqlite.MsgRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 
 /**

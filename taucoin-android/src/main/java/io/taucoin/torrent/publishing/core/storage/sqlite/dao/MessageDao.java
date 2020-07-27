@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.core.storage.dao;
+package io.taucoin.torrent.publishing.core.storage.sqlite.dao;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.storage.entity.Message;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 
 /**
  * Room:Message操作接口

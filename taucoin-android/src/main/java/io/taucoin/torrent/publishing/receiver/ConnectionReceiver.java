@@ -8,7 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
-import io.taucoin.torrent.publishing.core.storage.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 
 /*
  * The receiver for Network connection state changes state.

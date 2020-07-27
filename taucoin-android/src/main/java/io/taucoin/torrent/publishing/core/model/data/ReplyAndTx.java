@@ -3,7 +3,7 @@ package io.taucoin.torrent.publishing.core.model.data;
 import androidx.annotation.NonNull;
 import androidx.room.Ignore;
 import androidx.room.Relation;
-import io.taucoin.torrent.publishing.core.storage.entity.Tx;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 
 /**
  * Room: 包含被回复的交易信息的实体类

@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.core.storage;
+package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import android.content.Context;
 
@@ -6,10 +6,9 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
-import androidx.room.Query;
 import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
-import io.taucoin.torrent.publishing.core.storage.entity.Tx;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.types.MsgType;
 

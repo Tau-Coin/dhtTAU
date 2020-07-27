@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.core.storage;
+package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import android.content.Context;
 
@@ -6,7 +6,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.storage.entity.Message;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 
 /**
  * TxRepository接口实现

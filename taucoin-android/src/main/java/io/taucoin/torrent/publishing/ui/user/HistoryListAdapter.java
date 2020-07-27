@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.ItemHistoryListBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;

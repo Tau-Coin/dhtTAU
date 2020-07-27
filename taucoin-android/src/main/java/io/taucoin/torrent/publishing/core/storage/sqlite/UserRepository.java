@@ -1,11 +1,10 @@
-package io.taucoin.torrent.publishing.core.storage;
+package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.room.Query;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.storage.entity.User;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
 /**
  * 提供外部操作User数据的接口

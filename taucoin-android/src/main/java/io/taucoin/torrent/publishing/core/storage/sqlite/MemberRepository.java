@@ -1,8 +1,8 @@
-package io.taucoin.torrent.publishing.core.storage;
+package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 
 import androidx.annotation.NonNull;
-import io.taucoin.torrent.publishing.core.storage.entity.Member;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**
  * 提供操作Member数据的接口
