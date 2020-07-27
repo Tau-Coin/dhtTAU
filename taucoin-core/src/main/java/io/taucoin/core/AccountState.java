@@ -8,7 +8,7 @@ import java.math.BigInteger;
 public class AccountState implements Cloneable {
     private BigInteger balance;
     private BigInteger nonce;
-    private String identity;
+//    private String identity;
 
     public AccountState(byte[] rlp) {
         RLPList decodedTxList = RLP.decode2(rlp);
@@ -19,19 +19,20 @@ public class AccountState implements Cloneable {
         byte[] nonceBytes = accountState.get(1).getRLPData();
         this.nonce = nonceBytes == null ? BigInteger.ZERO :
                 new BigInteger(1, nonceBytes);
-        byte[] identityBytes = accountState.get(2).getRLPData();
-        this.identity = identityBytes == null ? null : new String(identityBytes);
+//        byte[] identityBytes = accountState.get(2).getRLPData();
+//        this.identity = identityBytes == null ? null : new String(identityBytes);
     }
 
     public AccountState(BigInteger balance, BigInteger nonce) {
-        this(balance, nonce, null);
-    }
-
-    public AccountState(BigInteger balance, BigInteger nonce, String identity) {
         this.balance = balance;
         this.nonce = nonce;
-        this.identity = identity;
     }
+
+//    public AccountState(BigInteger balance, BigInteger nonce, String identity) {
+//        this.balance = balance;
+//        this.nonce = nonce;
+//        this.identity = identity;
+//    }
 
     public BigInteger getBalance() {
         return balance;
@@ -49,13 +50,13 @@ public class AccountState implements Cloneable {
         this.balance = this.balance.subtract(value);
     }
 
-    public String getIdentity() {
-        return identity;
-    }
-
-    public void setIdentity(String identity) {
-        this.identity = identity;
-    }
+//    public String getIdentity() {
+//        return identity;
+//    }
+//
+//    public void setIdentity(String identity) {
+//        this.identity = identity;
+//    }
 
     public BigInteger getNonce() {
         return nonce;
@@ -76,8 +77,9 @@ public class AccountState implements Cloneable {
     public byte[] getEncoded() {
         byte[] balance = RLP.encodeBigInteger(this.balance);
         byte[] nonce = RLP.encodeBigInteger(this.nonce);
-        byte[] identity = this.identity == null ? RLP.encodeElement(null) : RLP.encodeString(this.identity);
-        return RLP.encodeList(balance, nonce, identity);
+//        byte[] identity = this.identity == null ? RLP.encodeElement(null) : RLP.encodeString(this.identity);
+//        return RLP.encodeList(balance, nonce, identity);
+        return RLP.encodeList(balance, nonce);
     }
 
     @Override
@@ -87,10 +89,14 @@ public class AccountState implements Cloneable {
 
     @Override
     public String toString() {
+//        return "AccountState{" +
+//                "balance=" + balance +
+//                ", nonce=" + nonce +
+//                ", identity='" + identity + '\'' +
+//                '}';
         return "AccountState{" +
                 "balance=" + balance +
                 ", nonce=" + nonce +
-                ", identity='" + identity + '\'' +
                 '}';
     }
 }

@@ -147,27 +147,27 @@ public class StateProcessorImpl implements StateProcessor {
                     // TODO: announce app
                     break;
                 }
-                case IdentityAnnouncement: {
-                    // check balance
-                    if (sendState.getBalance().longValue() < fee) {
-                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-                                fee, sendState.getBalance(), Hex.toHexString(sender));
-                        return false;
-                    }
-
-                    //Execute the transaction
-                    // miner
-                    AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
-                    minerState.addBalance(BigInteger.valueOf(fee));
-                    stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
-                    // sender
-                    sendState.subBalance(BigInteger.valueOf(fee));
-                    sendState.increaseNonce();
-                    sendState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
-                    stateDB.updateAccount(this.chainID, sender, sendState);
-                    // TODO: announce app
-                    break;
-                }
+//                case IdentityAnnouncement: {
+//                    // check balance
+//                    if (sendState.getBalance().longValue() < fee) {
+//                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
+//                                fee, sendState.getBalance(), Hex.toHexString(sender));
+//                        return false;
+//                    }
+//
+//                    //Execute the transaction
+//                    // miner
+//                    AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
+//                    minerState.addBalance(BigInteger.valueOf(fee));
+//                    stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
+//                    // sender
+//                    sendState.subBalance(BigInteger.valueOf(fee));
+//                    sendState.increaseNonce();
+//                    sendState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
+//                    stateDB.updateAccount(this.chainID, sender, sendState);
+//                    // TODO: announce app
+//                    break;
+//                }
                 default: {
                     logger.error("Transaction type not supported");
                     return false;
@@ -217,9 +217,9 @@ public class StateProcessorImpl implements StateProcessor {
             // if not existed , update it
             if (null == senderState) {
                 senderState = new AccountState(BigInteger.valueOf(senderBalance), BigInteger.valueOf(senderNonce));
-                if (tx.getTxData().getMsgType() == MsgType.IdentityAnnouncement) {
-                    senderState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
-                }
+//                if (tx.getTxData().getMsgType() == MsgType.IdentityAnnouncement) {
+//                    senderState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
+//                }
             } else {
                 // sender账户存在，则不用管miner和receiver与sender是同一账户的情况
                 // if account is existed, but nonce is null, update nonce
@@ -238,12 +238,12 @@ public class StateProcessorImpl implements StateProcessor {
                         }
                         break;
                     }
-                    case IdentityAnnouncement: {
-                        if (null == senderState.getIdentity()) {
-                            senderState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
-                        }
-                        break;
-                    }
+//                    case IdentityAnnouncement: {
+//                        if (null == senderState.getIdentity()) {
+//                            senderState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
+//                        }
+//                        break;
+//                    }
                     default: {
 
                     }
@@ -294,7 +294,7 @@ public class StateProcessorImpl implements StateProcessor {
                     long amount = tx.getTxData().getAmount();
                     long cost = amount + fee;
 
-                    //roll back the transaction
+                    // roll back the transaction
                     // miner
                     AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
                     minerState.subBalance(BigInteger.valueOf(fee));
@@ -311,7 +311,7 @@ public class StateProcessorImpl implements StateProcessor {
                     break;
                 }
                 case CommunityAnnouncement: {
-                    //roll back the transaction
+                    // roll back the transaction
                     // miner
                     AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
                     minerState.subBalance(BigInteger.valueOf(fee));
@@ -324,7 +324,7 @@ public class StateProcessorImpl implements StateProcessor {
                     break;
                 }
                 case ForumComment: {
-                    //roll back the transaction
+                    // roll back the transaction
                     // miner
                     AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
                     minerState.subBalance(BigInteger.valueOf(fee));
@@ -337,7 +337,7 @@ public class StateProcessorImpl implements StateProcessor {
                     break;
                 }
                 case RegularForum: {
-                    //roll back the transaction
+                    // roll back the transaction
                     // miner
                     AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
                     minerState.subBalance(BigInteger.valueOf(fee));
@@ -349,20 +349,20 @@ public class StateProcessorImpl implements StateProcessor {
                     // TODO: announce app
                     break;
                 }
-                case IdentityAnnouncement: {
-                    //roll back the transaction
-                    // miner
-                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-                    minerState.subBalance(BigInteger.valueOf(fee));
-                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-                    // sender
-                    // note: don't need to roll back identity
-                    sendState.addBalance(BigInteger.valueOf(fee));
-                    sendState.reduceNonce();
-                    stateDB.updateAccount(chainID, sender, sendState);
-                    // TODO: announce app
-                    break;
-                }
+//                case IdentityAnnouncement: {
+//                    // roll back the transaction
+//                    // miner
+//                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
+//                    minerState.subBalance(BigInteger.valueOf(fee));
+//                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
+//                    // sender
+//                    // note: don't need to roll back identity
+//                    sendState.addBalance(BigInteger.valueOf(fee));
+//                    sendState.reduceNonce();
+//                    stateDB.updateAccount(chainID, sender, sendState);
+//                    // TODO: announce app
+//                    break;
+//                }
                 default: {
                     logger.error("Transaction type not supported");
                     return false;

@@ -370,24 +370,60 @@ public class Chain {
         return votingPool.getBestVote();
     }
 
-    private void sync(Block block) {
-        Block bestVoteBlock = getBlockFromDHT(block.getBlockHash());
-        // clear state and block, sync from best vote
-        if (null != bestVoteBlock) {
-            try {
-                Block forkPointBlock = this.blockStore.getForkPointBlock(bestVoteBlock);
-                // if cannot find fork point block, clear state and block database, restart
-                if (null != forkPointBlock) {
-                    reBranch(bestVoteBlock, stateDB);
-                } else {
-                    // if cannot find fork point block, clear state and block database,
-                    // then sync block with mutable range
-                    this.blockStore.removeChain(this.chainID);
-                }
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+    /**
+     * first sync when follow a chain
+     * @param bestVote best vote
+     * @return true[success]/false[fail]
+     */
+    private boolean initSync(Vote bestVote) {
+        try {
+            Block bestVoteBlock = getBlockFromDHT(bestVote.getBlockHash());
+
+            // initial sync from best vote
+            StateDB track = this.stateDB.startTracking(this.chainID);
+            if (this.stateProcessor.backwardProcess(bestVoteBlock, track)) {
+                this.bestBlock = bestVoteBlock;
+                this.syncBlock = bestVoteBlock;
+            } else {
+                return false;
             }
+
+            Block block = bestVoteBlock;
+            int counter = 0;
+            while (!Thread.interrupted() && block.getBlockNum() > 0 && counter < ChainParam.MUTABLE_RANGE) {
+                block = getBlockFromDHT(this.syncBlock.getPreviousBlockHash());
+                if (this.stateProcessor.backwardProcess(block, track)) {
+                    this.blockStore.saveBlock(block, true);
+                    this.syncBlock = block;
+                } else {
+                    return false;
+                }
+                counter++;
+            }
+
+//        if (null != bestVoteBlock) {
+//            try {
+//                Block forkPointBlock = this.blockStore.getForkPointBlock(bestVoteBlock);
+//                // if cannot find fork point block, clear state and block database, restart
+//                if (null != forkPointBlock) {
+//                    reBranch(bestVoteBlock, stateDB);
+//                } else {
+//                    // if cannot find fork point block, clear state and block database,
+//                    // then sync block with mutable range
+//                    this.blockStore.removeChain(this.chainID);
+//                }
+//            } catch (Exception e) {
+//                logger.error(e.getMessage(), e);
+//            }
+//        }
+
+            track.commit();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
         }
+
+        return true;
     }
 
     /**
