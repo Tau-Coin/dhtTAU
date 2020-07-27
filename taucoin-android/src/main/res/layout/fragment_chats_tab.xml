@@ -65,7 +65,7 @@
                 android:text="@string/tx_send"
                 android:background="@drawable/primary_rect_round_bg"
                 android:textColor="@color/color_white"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                android:textAppearance="@style/TextAppearanceBody1"/>
         </LinearLayout>
 
     </RelativeLayout>

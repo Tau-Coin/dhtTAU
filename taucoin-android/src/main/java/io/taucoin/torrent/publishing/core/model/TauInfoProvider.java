@@ -14,7 +14,7 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposables;
 
-/*
+/**
  * Provides runtime information about Tau, which isn't saved to the database.
  */
 public class TauInfoProvider {

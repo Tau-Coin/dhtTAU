@@ -40,7 +40,7 @@
             android:textStyle="bold"
             android:singleLine="true"
             android:ellipsize="end"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+            android:textAppearance="@style/TextAppearanceBody1" />
 
 
         <TextView
@@ -53,7 +53,7 @@
             android:textColor="@color/gray_dark"
             android:singleLine="true"
             android:ellipsize="end"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+            android:textAppearance="@style/TextAppearanceBody2" />
 
         <include
             android:layout_width="match_parent"

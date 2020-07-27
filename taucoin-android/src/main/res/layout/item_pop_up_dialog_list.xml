@@ -24,7 +24,7 @@
             android:singleLine="true"
             android:ellipsize="middle"
             android:textSize="@dimen/font_big_size"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+            android:textAppearance="@style/TextAppearanceBody1" />
 
         <include layout="@layout/view_line"/>
     </LinearLayout>

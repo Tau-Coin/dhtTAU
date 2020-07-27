@@ -29,7 +29,7 @@
             android:enabled="false"
             android:textColor="@color/color_black"
             android:inputType="text"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+            android:textAppearance="@style/TextAppearanceBody1" />
 
         <EditText
             android:id="@+id/et_name"
@@ -41,7 +41,7 @@
             android:layout_marginTop="10dp"
             android:hint="@string/tx_new_name"
             android:inputType="text"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="@style/TextAppearanceBody1"
             android:autofillHints="@string/tx_new_name" />
 
         <EditText
@@ -54,7 +54,7 @@
             android:layout_marginTop="10dp"
             android:hint="@string/tx_personal_profile"
             android:inputType="text"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="@style/TextAppearanceBody1"
             android:autofillHints="@string/tx_personal_profile" />
 
         <LinearLayout
@@ -71,7 +71,7 @@
                 android:layout_weight="1"
                 android:onClick="@{listener::onClick}"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                android:textAppearance="@style/TextAppearanceBody1"/>
 
             <ImageView
                 android:id="@+id/iv_contact_platform"
@@ -93,7 +93,7 @@
             android:layout_marginTop="10dp"
             android:hint="@string/tx_contact_id"
             android:inputType="text"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="@style/TextAppearanceBody1"
             android:autofillHints="@string/tx_contact_id" />
 
         <TextView
@@ -105,7 +105,7 @@
             android:onClick="@{listener::onClick}"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"/>
+            android:textAppearance="@style/TextAppearanceBody2"/>
 
     </LinearLayout>
 </layout>

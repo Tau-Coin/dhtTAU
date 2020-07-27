@@ -27,7 +27,7 @@
             android:paddingEnd="20dp"
             android:paddingBottom="20dp"
             android:background="@color/color_white"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+            android:textAppearance="@style/TextAppearanceBody1" />
 
         <TextView
             android:id="@+id/tv_community_intro"
@@ -37,7 +37,7 @@
             android:paddingEnd="20dp"
             android:paddingBottom="20dp"
             android:background="@color/color_white"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+            android:textAppearance="@style/TextAppearanceBody2" />
 
 
         <LinearLayout
@@ -57,7 +57,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:text="@string/community_mining_info"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                android:textAppearance="@style/TextAppearanceBody1" />
 
             <ImageView
                 android:layout_width="20dp"
@@ -85,7 +85,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:text="@string/community_settings"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                android:textAppearance="@style/TextAppearanceBody1" />
 
             <ImageView
                 android:layout_width="20dp"
@@ -112,7 +112,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:text="@string/community_invite_friends"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                android:textAppearance="@style/TextAppearanceBody1" />
 
             <ImageView
                 android:layout_width="20dp"
@@ -141,14 +141,14 @@
                 android:layout_height="wrap_content"
                 android:text="@string/community_blacklist"
                 android:textColor="@color/color_red"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                android:textAppearance="@style/TextAppearanceBody1" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/community_blacklist_tips"
                 android:textColor="@color/gray_dark"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+                android:textAppearance="@style/TextAppearanceBody2" />
 
         </LinearLayout>
 

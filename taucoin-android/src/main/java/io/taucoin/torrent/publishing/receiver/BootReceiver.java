@@ -19,7 +19,7 @@ public class BootReceiver extends BroadcastReceiver {
         Context appContext = context.getApplicationContext();
         SettingsRepository settingsRepo = RepositoryHelper.getSettingsRepository(appContext);
 
-        // 设备启动成功
+        // 设备启动完成
         if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
             if (settingsRepo.bootStart()){
                 TauDaemon.getInstance(appContext).start();

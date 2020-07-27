@@ -32,7 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/community_info"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:textColor="@color/primary_light"
                 android:includeFontPadding="false"
                 android:textStyle="bold" />
@@ -50,14 +50,14 @@
                     android:layout_weight="1"
                     android:includeFontPadding="false"
                     android:text="@string/community_total_coin"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                    android:textAppearance="@style/TextAppearanceBody1"/>
 
                 <TextView
                     android:id="@+id/tv_total_coins"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:includeFontPadding="false"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                    android:textAppearance="@style/TextAppearanceBody1"/>
             </LinearLayout>
 
             <LinearLayout
@@ -72,7 +72,7 @@
                     android:layout_weight="1"
                     android:includeFontPadding="false"
                     android:text="@string/community_avg_block"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                    android:textAppearance="@style/TextAppearanceBody1"/>
 
                 <TextView
                     android:id="@+id/tv_avg_block"
@@ -80,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:includeFontPadding="false"
                     android:text="@string/community_avg_block_time"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                    android:textAppearance="@style/TextAppearanceBody1"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -99,7 +99,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/community_settings"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:textColor="@color/primary_light"
                 android:includeFontPadding="false"
                 android:textStyle="bold" />
@@ -112,7 +112,7 @@
                 android:layout_marginTop="10dp"
                 android:hint="@string/community_coin_name"
                 android:inputType="text"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:autofillHints="@string/community_coin_name" />
 
             <LinearLayout
@@ -129,7 +129,7 @@
                     android:layout_weight="1"
                     android:onClick="@{listener::onClick}"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"/>
+                    android:textAppearance="@style/TextAppearanceBody1"/>
 
                 <ImageView
                     android:id="@+id/iv_contact_platform"
@@ -149,7 +149,7 @@
                 android:singleLine="true"
                 android:hint="@string/tx_contact_id"
                 android:inputType="text"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:autofillHints="@string/tx_contact_id" />
 
             <EditText
@@ -160,7 +160,7 @@
                 android:layout_marginTop="10dp"
                 android:hint="@string/community_intro"
                 android:inputType="textMultiLine"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:autofillHints="@string/community_intro" />
 
             <TextView
@@ -170,7 +170,7 @@
                 android:layout_marginStart="30dp"
                 android:layout_marginEnd="30dp"
                 android:layout_gravity="end"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textAppearance="@style/TextAppearanceBody1"
                 android:autofillHints="@string/community_intro" />
         </LinearLayout>
     </LinearLayout>

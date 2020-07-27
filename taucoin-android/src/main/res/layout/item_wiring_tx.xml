@@ -34,7 +34,7 @@
                 android:paddingBottom="2dp"
                 android:includeFontPadding="false"
                 android:background="@drawable/red_rect_round_bg"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                android:textAppearance="@style/TextAppearanceBody1" />
 
 
             <io.taucoin.torrent.publishing.ui.customviews.RoundButton
@@ -77,7 +77,7 @@
                 android:ellipsize="middle"
                 android:textSize="@dimen/font_small_size"
                 android:textColor="@color/color_yellow"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                android:textAppearance="@style/TextAppearanceBody1" />
 
             <TextView
                 android:id="@+id/tv_msg"
@@ -85,7 +85,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:textSize="@dimen/font_small_size"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                android:textAppearance="@style/TextAppearanceBody1" />
 
             <TextView
                 android:id="@+id/tv_time"
@@ -94,7 +94,7 @@
                 android:layout_gravity="end"
                 android:textSize="@dimen/font_little_small_size"
                 android:textColor="@color/gray_dark"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+                android:textAppearance="@style/TextAppearanceBody2" />
 
         </LinearLayout>
 

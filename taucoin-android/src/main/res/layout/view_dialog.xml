@@ -23,7 +23,7 @@
             android:includeFontPadding="false"
             android:lineSpacingExtra="5dp"
             android:textColor="@color/color_blue"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="@style/TextAppearanceBody1"
             android:text="@string/user_seed_save_tips" />
 
     </LinearLayout>
