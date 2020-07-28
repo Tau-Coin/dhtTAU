@@ -70,10 +70,27 @@ public class TorrentDHTEngine {
         }
     };
 
+    // blocks torrent daemon thread
+    private final Object signal = new Object();
+    private boolean stopped = false;
+
     private Runnable torrentSession = new Runnable() {
         @Override
         public void run() {
             sessionManager.start(settings.getSessionParams());
+
+            synchronized (TorrentDHTEngine.this.signal) {
+                while (!TorrentDHTEngine.this.stopped) {
+                    try {
+                        TorrentDHTEngine.this.signal.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        logger.error(e.getMessage());
+                    }
+                }
+            }
+
+            logger.info("torrent daemon is exiting...");
         }
     };
 
@@ -147,6 +164,11 @@ public class TorrentDHTEngine {
         logger.info("stopping dht engine daemon");
 
         sessionManager.stop();
+
+        synchronized (signal) {
+            stopped = true;
+            signal.notify();
+        }
 
         torrentDaemon.interrupt();
         try {

@@ -20,7 +20,7 @@ public final class SessionSettings {
         DefaultBootstrapNodes.add("router.silotis.us:6881");
     }
 
-    public static int TauDHTMaxItems = 1000;
+    public static int TauDHTMaxItems = 700;
 
     // DHT bootstrap nodes.
     final Set<String> bootstrapNodes;
@@ -63,10 +63,13 @@ public final class SessionSettings {
         StringBuilder sb = new StringBuilder();
 
         for (String n : this.bootstrapNodes) {
-            sb.append(n);
+            sb.append(n).append(",");
         }
 
-        return sb.toString();
+        String s = sb.toString();
+        String result = s.substring(0, s.length() - 1);
+
+        return result;
     }
 
 
