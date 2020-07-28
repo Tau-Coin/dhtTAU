@@ -1,5 +1,6 @@
 package io.taucoin.processor;
 
+import io.taucoin.core.ImportResult;
 import io.taucoin.db.StateDB;
 import io.taucoin.types.Block;
 
@@ -10,7 +11,7 @@ public interface StateProcessor {
      * @param stateDB: state db
      * @return
      */
-    boolean forwardProcess(Block block, StateDB stateDB);
+    ImportResult forwardProcess(Block block, StateDB stateDB);
 
     /**
      * backward process block, when sync old block

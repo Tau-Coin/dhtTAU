@@ -1,7 +1,6 @@
 package io.taucoin.chain;
 
 import com.frostwire.jlibtorrent.Pair;
-import com.frostwire.jlibtorrent.Sha1Hash;
 import io.taucoin.account.AccountManager;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.core.*;
@@ -34,6 +33,10 @@ public class Chain {
     private static final Logger logger = LoggerFactory.getLogger("Chain");
 
     private static final int TIMEOUT = 10;
+
+    private static final int ONE_MONTH = 60 * 60 * 24 * 30; // one month
+
+    private static final int ONE_MONTH_NUMBER = ONE_MONTH / 60 * 5; // block number in one month
 
     // mutable item salt suffix: block
     private static final String BLOCK_CHANNEL = "#block";
@@ -147,11 +150,16 @@ public class Chain {
         // init state processor
         this.stateProcessor = new StateProcessorImpl(this.chainID);
 
-        // init best block
+        // init best block and sync block
         try {
             byte[] bestBlockHash = this.stateDB.getBestBlockHash(this.chainID);
             if (null != bestBlockHash) {
                 this.bestBlock = this.blockStore.getBlockByHash(this.chainID, bestBlockHash);
+            }
+
+            byte[] syncBlockHash = this.stateDB.getSyncBlockHash(this.chainID);
+            if (null != bestBlockHash) {
+                this.syncBlock = this.blockStore.getBlockByHash(this.chainID, syncBlockHash);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -204,6 +212,25 @@ public class Chain {
             return false;
         }
 
+        // vote for new chain, when there is nothing in local
+        if (null == this.bestBlock || null == this.syncBlock) {
+            Vote bestVote = vote();
+            if (!initialSync(bestVote)) {
+                logger.error("Initial sync fail!");
+                return false;
+            }
+        }
+
+        // if offline for up to one month, vote as a new chain
+        if (null != this.bestBlock &&
+                (System.currentTimeMillis() / 1000 - this.bestBlock.getTimeStamp()) > ONE_MONTH) {
+            Vote bestVote = vote();
+            if (!initialSync(bestVote)) {
+                logger.error("Initial sync fail!");
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -225,9 +252,12 @@ public class Chain {
                 byte[] pubKey = peerManager.popUpOptimalBlockPeer();
                 Block tip = getTipBlockFromPeer(pubKey);
 
+                if (null == tip) {
+                    continue;
+                }
+
                 // give up the less difficult chain
-                if (null == tip || tip.getCumulativeDifficulty().
-                        compareTo(this.bestBlock.getCumulativeDifficulty()) < 0) {
+                if (tip.getCumulativeDifficulty().compareTo(this.bestBlock.getCumulativeDifficulty()) < 0) {
                     txPool.addRemote(tip.getTxMsg());
                     continue;
                 }
@@ -238,8 +268,7 @@ public class Chain {
                     if (tip.getBlockNum() > ChainParam.MUTABLE_RANGE) {
                         byte[] immutableBlockHash = tip.getImmutableBlockHash();
                         BlockInfo blockInfo = this.blockStore.getBlockInfoByHash(this.chainID, immutableBlockHash);
-                        // cannot found in block store
-                        // TODO
+                        // immutable block cannot found in block store, vote
                         if (null == blockInfo) {
                             votingFlag = true;
                             break;
@@ -248,7 +277,7 @@ public class Chain {
                             int counter = 0;
                             byte[] previousHash = tip.getPreviousBlockHash();
                             this.blockStore.saveBlock(tip, false);
-                            while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
+                            while (!Thread.interrupted() && counter < ONE_MONTH_NUMBER) {
                                 Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
                                 if (null != block) {
                                     // found in local
@@ -259,6 +288,10 @@ public class Chain {
                                 if (null != dhtBlock) {
                                     previousHash = dhtBlock.getPreviousBlockHash();
                                     this.blockStore.saveBlock(dhtBlock, false);
+                                }
+
+                                if (dhtBlock.getBlockNum() <= 0) {
+                                    break;
                                 }
                                 counter++;
                             }
@@ -284,7 +317,7 @@ public class Chain {
                         miningFlag = true;
                         break;
                     } else {
-                        // vote
+                        // vote when fork point between mutable range and warning range
                         votingFlag = true;
                         break;
                     }
@@ -294,9 +327,10 @@ public class Chain {
                 }
             }
 
-            // vote
+            // vote for new chain
             if (votingFlag) {
-                vote();
+                Vote bestVote = vote();
+                syncFromVote(bestVote);
                 continue;
             }
 
@@ -322,6 +356,37 @@ public class Chain {
     }
 
     /**
+     * Is block synchronization complete
+     * @return
+     */
+    private boolean isSyncComplete() {
+        if (null != this.syncBlock && this.syncBlock.getBlockNum() == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * sync a block for more state when needed
+     * @param stateDB
+     */
+    private void syncBlockForMoreState(StateDB stateDB) {
+        if (null != this.syncBlock) {
+            Block block = getBlockFromDHT(this.syncBlock.getPreviousBlockHash());
+            if (null != block) {
+                try {
+                    StateDB track = stateDB.startTracking(this.chainID);
+                    if (this.stateProcessor.backwardProcess(block, track)) {
+                        track.commit();
+                    }
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    /**
      * re-branch chain
      * @param block
      * @param stateDB
@@ -337,7 +402,11 @@ public class Chain {
         }
         int size = newBlocks.size();
         for (int i = size - 1; i >= 0; i--) {
-            this.stateProcessor.forwardProcess(newBlocks.get(i), track);
+            ImportResult result = this.stateProcessor.forwardProcess(newBlocks.get(i), track);
+            if (result == ImportResult.NO_ACCOUNT_INFO && !isSyncComplete()) {
+                syncBlockForMoreState(stateDB);
+                i++;
+            }
         }
         try {
             this.blockStore.reBranchBlocks(undoBlocks, newBlocks);
@@ -352,6 +421,10 @@ public class Chain {
         }
     }
 
+    /**
+     * vote for best chain
+     * @return
+     */
     private Vote vote() {
         // try to use all peers to vote
         int counter = peerManager.getPeerNumber();
@@ -375,7 +448,9 @@ public class Chain {
      * @param bestVote best vote
      * @return true[success]/false[fail]
      */
-    private boolean initSync(Vote bestVote) {
+    private boolean initialSync(Vote bestVote) {
+        // TODO: clear block store and state
+
         try {
             Block bestVoteBlock = getBlockFromDHT(bestVote.getBlockHash());
 
@@ -418,6 +493,40 @@ public class Chain {
 //        }
 
             track.commit();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean syncFromVote(Vote bestVote) {
+        try {
+            // download block first
+            int counter = 0;
+            byte[] previousHash = bestVote.getBlockHash();
+            while (!Thread.interrupted() && counter < ONE_MONTH_NUMBER) {
+                Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
+                if (null != block) {
+                    // found in local
+                    break;
+                }
+                // get from dht
+                Block dhtBlock = getBlockFromDHT(previousHash);
+                if (null != dhtBlock) {
+                    previousHash = dhtBlock.getPreviousBlockHash();
+                    this.blockStore.saveBlock(dhtBlock, false);
+                }
+
+                if (dhtBlock.getBlockNum() <= 0) {
+                    break;
+                }
+                counter++;
+            }
+
+            Block bestVoteBlock = this.blockStore.getBlockByHash(this.chainID, bestVote.getBlockHash());
+            reBranch(bestVoteBlock, this.stateDB);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;

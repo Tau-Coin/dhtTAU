@@ -1,6 +1,7 @@
 package io.taucoin.processor;
 
 import io.taucoin.core.AccountState;
+import io.taucoin.core.ImportResult;
 import io.taucoin.db.StateDB;
 import io.taucoin.types.Block;
 import io.taucoin.types.MsgType;
@@ -11,6 +12,8 @@ import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
+import static io.taucoin.core.ImportResult.*;
 
 public class StateProcessorImpl implements StateProcessor {
 
@@ -30,18 +33,18 @@ public class StateProcessorImpl implements StateProcessor {
      * @return
      */
     @Override
-    public boolean forwardProcess(Block block, StateDB stateDB) {
+    public ImportResult forwardProcess(Block block, StateDB stateDB) {
         // check balance and nonce, then update state
         try {
             Transaction tx = block.getTxMsg();
             if (!tx.isTxParamValidate()) {
                 logger.error("Tx validate fail!");
-                return false;
+                return INVALID_BLOCK;
             }
 
             if (!tx.verifyTransactionSig()) {
                 logger.error("Bad Signature.");
-                return false;
+                return INVALID_BLOCK;
             }
 
             byte[] sender = tx.getSenderPubkey();
@@ -49,13 +52,18 @@ public class StateProcessorImpl implements StateProcessor {
             AccountState sendState = stateDB.getAccount(chainID, sender);
             if (null == sendState) {
                 logger.error("Cannot find account[{}] state.", Hex.toHexString(sender));
-                return false;
+                return NO_ACCOUNT_INFO;
+            } else {
+                if (sendState.getNonce().compareTo(BigInteger.ZERO) == 0) {
+                    logger.error("Cannot find account[{}] nonce info.", Hex.toHexString(sender));
+                    return NO_ACCOUNT_INFO;
+                }
             }
 
             // check nonce
             if (sendState.getNonce().longValue() + 1 != tx.getNonce()) {
                 logger.error("Account:{} nonce mismatch!", Hex.toHexString(sender));
-                return false;
+                return INVALID_BLOCK;
             }
 
             long fee = tx.getTxFee();
@@ -68,7 +76,7 @@ public class StateProcessorImpl implements StateProcessor {
                     if (sendState.getBalance().longValue() < cost) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
                                 cost, sendState.getBalance(), Hex.toHexString(sender));
-                        return false;
+                        return INVALID_BLOCK;
                     }
 
                     //Execute the transaction
@@ -92,7 +100,7 @@ public class StateProcessorImpl implements StateProcessor {
                     if (sendState.getBalance().longValue() < fee) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
                                 fee, sendState.getBalance(), Hex.toHexString(sender));
-                        return false;
+                        return INVALID_BLOCK;
                     }
 
                     //Execute the transaction
@@ -112,7 +120,7 @@ public class StateProcessorImpl implements StateProcessor {
                     if (sendState.getBalance().longValue() < fee) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
                                 fee, sendState.getBalance(), Hex.toHexString(sender));
-                        return false;
+                        return INVALID_BLOCK;
                     }
 
                     //Execute the transaction
@@ -132,7 +140,7 @@ public class StateProcessorImpl implements StateProcessor {
                     if (sendState.getBalance().longValue() < fee) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
                                 fee, sendState.getBalance(), Hex.toHexString(sender));
-                        return false;
+                        return INVALID_BLOCK;
                     }
 
                     //Execute the transaction
@@ -170,15 +178,15 @@ public class StateProcessorImpl implements StateProcessor {
 //                }
                 default: {
                     logger.error("Transaction type not supported");
-                    return false;
+                    return INVALID_BLOCK;
                 }
             }
         } catch (Exception e) {
         logger.error(e.getMessage(), e);
-        return false;
+        return EXCEPTION;
     }
 
-        return true;
+        return IMPORTED_BEST;
     }
 
     /**
