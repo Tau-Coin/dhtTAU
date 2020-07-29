@@ -79,7 +79,7 @@ public interface BlockStore {
     void removeChain(byte[] chainID) throws Exception;
 
     /**
-     * get fork point block which on main chain
+     * get fork point block between main chain and fork chain
      * @param block
      * @return
      * @throws Exception
@@ -87,18 +87,28 @@ public interface BlockStore {
     Block getForkPointBlock(Block block) throws Exception;
 
     /**
+     * get fork point block between chain 1 and chain 2
+     * @param chain1Block block on chain 1
+     * @param chain2Block block on chain 2
+     * @return
+     * @throws Exception
+     */
+    Block getForkPointBlock(Block chain1Block, Block chain2Block) throws Exception;
+
+    /**
      * get fork info
      * @param forkBlock fork point block
-     * @param undoBlocks blocks to roll back
-     * @param newBlocks blocks to connect
+     * @param bestBlock current chain best block
+     * @param undoBlocks blocks to roll back from high to low
+     * @param newBlocks blocks to connect from high to low
      * @return
      */
-    boolean getForkBlocksInfo(Block forkBlock, List<Block> undoBlocks, List<Block> newBlocks);
+    boolean getForkBlocksInfo(Block forkBlock, Block bestBlock, List<Block> undoBlocks, List<Block> newBlocks) throws Exception;
 
     /**
      * re-branch blocks
      * @param undoBlocks move to non-main chain
      * @param newBlocks move to main chain
      */
-    void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks);
+    void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks) throws Exception;
 }

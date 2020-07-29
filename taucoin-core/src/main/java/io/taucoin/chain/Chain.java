@@ -392,23 +392,24 @@ public class Chain {
      * @param stateDB
      */
     private void reBranch(Block block, StateDB stateDB) {
-        //try to roll back and reconnect
-        StateDB track = stateDB.startTracking(this.chainID);
-        List<Block> undoBlocks = new ArrayList<>();
-        List<Block> newBlocks = new ArrayList<>();
-        blockStore.getForkBlocksInfo(block, undoBlocks, newBlocks);
-        for (Block undoBlock : undoBlocks) {
-            this.stateProcessor.rollback(undoBlock, track);
-        }
-        int size = newBlocks.size();
-        for (int i = size - 1; i >= 0; i--) {
-            ImportResult result = this.stateProcessor.forwardProcess(newBlocks.get(i), track);
-            if (result == ImportResult.NO_ACCOUNT_INFO && !isSyncComplete()) {
-                syncBlockForMoreState(stateDB);
-                i++;
-            }
-        }
         try {
+            //try to roll back and reconnect
+            StateDB track = stateDB.startTracking(this.chainID);
+            List<Block> undoBlocks = new ArrayList<>();
+            List<Block> newBlocks = new ArrayList<>();
+            blockStore.getForkBlocksInfo(block, this.bestBlock, undoBlocks, newBlocks);
+            for (Block undoBlock : undoBlocks) {
+                this.stateProcessor.rollback(undoBlock, track);
+            }
+            int size = newBlocks.size();
+            for (int i = size - 1; i >= 0; i--) {
+                ImportResult result = this.stateProcessor.forwardProcess(newBlocks.get(i), track);
+                if (result == ImportResult.NO_ACCOUNT_INFO && !isSyncComplete()) {
+                    syncBlockForMoreState(stateDB);
+                    i++;
+                }
+            }
+
             this.blockStore.reBranchBlocks(undoBlocks, newBlocks);
 
             track.commit();

@@ -76,15 +76,29 @@ public class ProofOfTransactionTest {
         }
 
         /**
+         * get fork point block which on main chain
+         *
+         * @param chain1Block block on chain 1
+         * @param chain2Block block on chain 2
+         * @return
+         * @throws Exception
+         */
+        @Override
+        public Block getForkPointBlock(Block chain1Block, Block chain2Block) throws Exception {
+            return null;
+        }
+
+        /**
          * get fork info
          *
          * @param forkBlock  fork point block
-         * @param undoBlocks blocks to roll back
-         * @param newBlocks  blocks to connect
+         * @param bestBlock  current chain best block
+         * @param undoBlocks blocks to roll back from high to low
+         * @param newBlocks  blocks to connect from high to low
          * @return
          */
         @Override
-        public boolean getForkBlocksInfo(Block forkBlock, List<Block> undoBlocks, List<Block> newBlocks) {
+        public boolean getForkBlocksInfo(Block forkBlock, Block bestBlock, List<Block> undoBlocks, List<Block> newBlocks) {
             return false;
         }
 

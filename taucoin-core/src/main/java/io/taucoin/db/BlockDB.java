@@ -244,7 +244,7 @@ public class BlockDB implements BlockStore {
     }
 
     /**
-     * get fork point block
+     * get fork point block between main chain and fork chain
      * @param block
      * @return
      * @throws Exception
@@ -320,16 +320,113 @@ public class BlockDB implements BlockStore {
     }
 
     /**
+     * get fork point block between chain 1 and chain 2
+     *
+     * @param chain1Block block on chain 1
+     * @param chain2Block block on chain 2
+     * @return fork point block or null if not found
+     * @throws Exception
+     */
+    @Override
+    public Block getForkPointBlock(Block chain1Block, Block chain2Block) throws Exception {
+        byte[] chainID = chain1Block.getChainID();
+        long maxLevel = Math.max(chain1Block.getBlockNum(), chain2Block.getBlockNum());
+
+        // 1. First ensure that you are one the save level
+        long currentLevel = maxLevel;
+        Block chain1Line = chain1Block;
+        if (chain1Block.getBlockNum() > chain2Block.getBlockNum()) {
+
+            while (currentLevel > chain2Block.getBlockNum()) {
+                chain1Line = getBlockByHash(chainID, chain1Line.getPreviousBlockHash());
+                if (chain1Line == null)
+                    return null;
+                --currentLevel;
+            }
+        }
+
+        Block chain2Line = chain2Block;
+        if (chain2Block.getBlockNum() > chain1Block.getBlockNum()) {
+
+            while (currentLevel > chain1Block.getBlockNum()) {
+                chain2Line = getBlockByHash(chainID, chain2Line.getPreviousBlockHash());
+                if (chain2Line == null)
+                    return null;
+                --currentLevel;
+            }
+        }
+
+        // 2. Loop back on each level until common block
+        while (!Arrays.equals(chain2Line.getBlockHash(), chain1Line.getBlockHash())) {
+            chain2Line = getBlockByHash(chainID, chain2Line.getPreviousBlockHash());
+            chain1Line = getBlockByHash(chainID, chain1Line.getPreviousBlockHash());
+
+            if (chain1Line == null || chain2Line == null)
+                return null;
+        }
+
+        if (Arrays.equals(chain2Line.getBlockHash(), chain1Line.getBlockHash())) {
+            return chain1Block;
+        }
+
+        return null;
+    }
+
+    /**
      * get fork info
      *
      * @param forkBlock  fork point block
-     * @param undoBlocks blocks to roll back
-     * @param newBlocks  blocks to connect
+     * @param bestBlock current chain best block
+     * @param undoBlocks blocks to roll back from high to low
+     * @param newBlocks  blocks to connect from high to low
      * @return
      */
     @Override
-    public boolean getForkBlocksInfo(Block forkBlock, List<Block> undoBlocks, List<Block> newBlocks) {
-        return false;
+    public boolean getForkBlocksInfo(Block forkBlock, Block bestBlock, List<Block> undoBlocks, List<Block> newBlocks) throws Exception{
+        byte[] chainID = bestBlock.getChainID();
+        long maxLevel = Math.max(bestBlock.getBlockNum(), forkBlock.getBlockNum());
+
+        // 1. First ensure that you are one the save level
+        long currentLevel = maxLevel;
+        Block forkLine = forkBlock;
+        if (forkBlock.getBlockNum() > bestBlock.getBlockNum()) {
+
+            while (currentLevel > bestBlock.getBlockNum()) {
+                newBlocks.add(forkLine);
+
+                forkLine = getBlockByHash(chainID, forkLine.getPreviousBlockHash());
+                if (forkLine == null)
+                    return false;
+                --currentLevel;
+            }
+        }
+
+        Block bestLine = bestBlock;
+        if (bestBlock.getBlockNum() > forkBlock.getBlockNum()) {
+
+            while (currentLevel > forkBlock.getBlockNum()) {
+                undoBlocks.add(bestLine);
+
+                bestLine = getBlockByHash(chainID, bestLine.getPreviousBlockHash());
+                --currentLevel;
+            }
+        }
+
+        // 2. Loop back on each level until common block
+        while (!Arrays.equals(bestLine.getBlockHash(), forkLine.getBlockHash())) {
+            newBlocks.add(forkLine);
+            undoBlocks.add(bestLine);
+
+            bestLine = getBlockByHash(chainID, bestLine.getPreviousBlockHash());
+            forkLine = getBlockByHash(chainID, forkLine.getPreviousBlockHash());
+
+            if (forkLine == null)
+                return false;
+
+            --currentLevel;
+        }
+
+        return true;
     }
 
     /**
@@ -339,8 +436,20 @@ public class BlockDB implements BlockStore {
      * @param newBlocks  move to main chain
      */
     @Override
-    public void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks) {
+    public void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks) throws Exception {
+        if (undoBlocks != null) {
+            for (Block block : undoBlocks) {
+                saveBlockInfo(block, false);
+            }
+        }
 
+        if (newBlocks != null) {
+            for (Block block : newBlocks) {
+                saveBlockInfo(block, true);
+            }
+        }
     }
+
+
 }
 
