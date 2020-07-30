@@ -254,6 +254,31 @@ public class TorrentDHTEngine {
     }
 
     /**
+     * dht gets immutable item.
+     *
+     * @param spec getting immutable item specification
+     * @return immutable data
+     */
+    public byte[] dhtGet(GetImmutableItemSpec spec) {
+        if (!sessionManager.isRunning()) {
+            return null;
+        }
+
+        Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
+        byte[] data = null;
+        if (entry != null) {
+            String str =  entry.string();
+            try {
+                data = str.getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return data;
+    }
+
+    /**
      * dht tau gets mutable item.
      *
      * @param spec getting mutable item specification
