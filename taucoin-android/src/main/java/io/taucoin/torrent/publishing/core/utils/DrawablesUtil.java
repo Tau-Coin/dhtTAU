@@ -2,7 +2,11 @@ package io.taucoin.torrent.publishing.core.utils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -87,5 +91,25 @@ public class DrawablesUtil {
     public static void setForeground(FrameLayout view, int drawable, float size) {
         Drawable mDrawable = getDrawable(view.getContext(), drawable, size, size);
         view.setForeground(mDrawable);
+    }
+
+    public static Drawable textToDrawable(Context context, String text, int size, int textSizeDp) {
+        size = DimensionsUtil.dp2px(context, size);
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint();
+        textSizeDp = DimensionsUtil.dp2px(context, textSizeDp);
+        paint.setTextSize(textSizeDp);
+        paint.setTextAlign(Paint.Align.CENTER);
+        paint.setColor(Color.WHITE);
+        Paint.FontMetrics fm = paint.getFontMetrics();
+//        canvas.drawText(text, 0, 145 + fm.top - fm.ascent, paint);
+//        canvas.drawText(text, 0, fm.top - fm.ascent, paint);
+        canvas.drawText(text, 0, 0, paint);
+        canvas.save();
+        Drawable drawableRight = new BitmapDrawable(bitmap);
+        drawableRight.setBounds(0, 0, drawableRight.getMinimumWidth(),
+                drawableRight.getMinimumHeight());
+        return drawableRight;
     }
 }

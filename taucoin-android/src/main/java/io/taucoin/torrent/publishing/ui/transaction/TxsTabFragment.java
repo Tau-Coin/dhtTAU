@@ -126,9 +126,6 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 case R.id.community_transaction:
                     ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
                     break;
-                case R.id.community_nickname:
-                    ActivityUtil.startActivity(intent, this, NicknameActivity.class);
-                    break;
                 case R.id.community_message:
                     ActivityUtil.startActivity(intent, this, MessageActivity.class);
                     break;
@@ -138,12 +135,6 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
             binding.fabButton.close();
             return true;
         });
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_nickname,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_nickname)
-                .create());
 
         binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
                 R.id.community_transaction,

@@ -21,7 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:onClick="@{listener::onClick}"
-            app:leftImage="@mipmap/icon_copy"
+            app:leftImage="@mipmap/icon_reply"
             app:rightText="@string/tx_operation_reply"/>
 
         <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:onClick="@{listener::onClick}"
-            app:leftImage="@mipmap/icon_copy"
+            app:leftImage="@mipmap/icon_copy_link"
             app:rightText="@string/tx_operation_copy_link"/>
 
         <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
@@ -45,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:onClick="@{listener::onClick}"
-            app:leftImage="@mipmap/icon_copy"
+            app:leftImage="@mipmap/icon_blacklist"
             app:rightText="@string/tx_operation_blacklist"/>
 
         <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
@@ -53,7 +53,7 @@
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:onClick="@{listener::onClick}"
-            app:leftImage="@mipmap/icon_copy"
+            app:leftImage="@mipmap/icon_favourite"
             app:rightText="@string/tx_operation_favorite"/>
 
     </LinearLayout>

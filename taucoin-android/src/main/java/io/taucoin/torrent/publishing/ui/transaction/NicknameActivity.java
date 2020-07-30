@@ -29,6 +29,7 @@ import io.taucoin.types.MsgType;
 /**
  * 修改群组个人昵称页面
  */
+@Deprecated
 public class NicknameActivity extends BaseActivity implements View.OnClickListener {
     private ActivityNicknameBinding binding;
 

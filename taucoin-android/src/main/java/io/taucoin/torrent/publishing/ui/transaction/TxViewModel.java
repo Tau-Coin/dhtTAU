@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.widget.TextView;
 
 import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Pair;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,8 +162,11 @@ public class TxViewModel extends AndroidViewModel {
                     }
                     // 交易签名
                     long timestamp = DateUtil.getTime();
-                    Transaction transaction = new Transaction((byte)1, tx.chainID.getBytes(), timestamp, (int)tx.fee, senderPk, nonce, txData);
-                    transaction.signTransaction(senderSeed);
+                    byte[] chainID = ByteUtil.toByte(tx.chainID);
+                    Transaction transaction = new Transaction((byte)1, chainID, timestamp, (int)tx.fee, senderPk, nonce, txData);
+                    Pair<byte[], byte[]> keypair = Ed25519.createKeypair(senderSeed);
+                    byte[] privateKey = keypair.second;
+                    transaction.signTransaction(privateKey);
                     // 把交易数据transaction.getEncoded()提交给链端
                     daemon.submitTransaction(transaction);
                     // 保存交易数据到本地数据库
@@ -218,10 +222,6 @@ public class TxViewModel extends AndroidViewModel {
                     WireTransaction wireTx = new WireTransaction(receiverPk, tx.amount, tx.memo);
                     txData = new TxData(msgType, wireTx.getEncode());
                     break;
-                case IdentityAnnouncement:
-                    IdentityAnnouncement identityAnn = new IdentityAnnouncement(tx.name, tx.memo);
-                    txData = new TxData(msgType, identityAnn.getEncode());
-                    break;
             }
         }
         return txData;
@@ -258,11 +258,6 @@ public class TxViewModel extends AndroidViewModel {
                 return false;
             }else if(tx.amount > balance || tx.amount + tx.fee > balance){
                 ToastUtils.showShortToast(R.string.tx_error_no_enough_coins);
-                return false;
-            }
-        }else if(msgType == MsgType.IdentityAnnouncement.getVaLue()){
-            if(StringUtil.isEmpty(tx.name)){
-                ToastUtils.showShortToast(R.string.tx_error_invalid_name);
                 return false;
             }
         }

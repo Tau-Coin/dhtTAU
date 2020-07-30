@@ -58,11 +58,6 @@ public class TxListAdapter extends PagedListAdapter<ReplyAndTx, TxListAdapter.Vi
                     R.layout.item_wiring_tx,
                     parent,
                     false);
-        }else if(viewType == MsgType.IdentityAnnouncement.getVaLue()){
-            binding = DataBindingUtil.inflate(inflater,
-                    R.layout.item_wiring_tx,
-                    parent,
-                    false);
         }else {
             binding = DataBindingUtil.inflate(inflater,
                     R.layout.item_wiring_tx,

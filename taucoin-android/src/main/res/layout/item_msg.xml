@@ -36,7 +36,6 @@
                 android:background="@drawable/red_rect_round_bg"
                 android:textAppearance="@style/TextAppearanceBody1" />
 
-
             <io.taucoin.torrent.publishing.ui.customviews.RoundButton
                 android:id="@+id/left_view"
                 android:layout_width="40dp"
@@ -48,7 +47,7 @@
                 android:textColor="@color/color_white"
                 app:borderColor="@color/primary_light"
                 app:borderWidth="0dp"
-                app:radius="20dp"
+                app:radius="10dp"
                 app:isRadiusAutoHalf="true"
                 app:bgColor="@color/primary_light"
                 app:textColorForPressed="@color/color_white" />

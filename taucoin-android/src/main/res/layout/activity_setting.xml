@@ -156,7 +156,7 @@
                         android:layout_height="44dp"
                         android:onClick="onClick"
                         android:layout_marginTop="10dp"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_dashboard"
                         app:rightText="@string/setting_dashboard"/>
 
                     <include
@@ -170,7 +170,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:onClick="onClick"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_privacy_security"
                         app:rightText="@string/setting_privacy_security"/>
 
                     <include
@@ -184,7 +184,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:onClick="onClick"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_journal"
                         app:rightText="@string/setting_journal"/>
 
                     <include
@@ -198,7 +198,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:onClick="onClick"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_help"
                         app:rightText="@string/setting_help"/>
 
                 </LinearLayout>

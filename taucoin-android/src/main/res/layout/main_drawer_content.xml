@@ -107,7 +107,7 @@
                         android:layout_height="44dp"
                         android:layout_marginTop="10dp"
                         android:onClick="onClick"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_community"
                         app:rightText="@string/drawer_new_community"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
@@ -115,7 +115,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:onClick="onClick"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_contacts"
                         app:rightText="@string/drawer_contacts"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
@@ -124,7 +124,7 @@
                         android:layout_height="44dp"
                         android:layout_marginBottom="5dp"
                         android:onClick="onClick"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_settings"
                         app:rightText="@string/drawer_setting"/>
 
                     <include layout="@layout/view_line"/>
@@ -134,7 +134,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:onClick="onClick"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_share"
                         app:rightText="@string/drawer_share"/>
 
                     <include layout="@layout/view_line"/>
@@ -144,21 +144,21 @@
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:layout_marginTop="5dp"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_dht_node"
                         app:rightText="@string/drawer_dht_nodes"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_wifi_speed"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_dht_node"
                         app:rightText="@string/drawer_net_speed"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_telecom_speed"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        app:leftImage="@mipmap/icon_copy"
+                        app:leftImage="@mipmap/icon_dht_node"
                         app:rightText="@string/drawer_net_speed"/>
 
                 </LinearLayout>
