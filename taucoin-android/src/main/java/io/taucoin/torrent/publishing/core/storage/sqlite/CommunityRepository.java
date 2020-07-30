@@ -4,6 +4,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
+import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 
 /**
@@ -49,7 +50,13 @@ public interface CommunityRepository {
 
     /**
      * 获取用户加入的社区列表
-     * @param chainID
+     * @param chainID 社区chainID
      */
     List<Community> getJoinedCommunityList(String chainID);
+
+    /**
+     * 根据chainID查询社区
+     * @param chainID 社区chainID
+     */
+    Single<Community> getCommunityByChainIDSingle(String chainID);
 }

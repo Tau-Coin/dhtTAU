@@ -6,7 +6,7 @@ import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 
 /**
- * 提供外部操作User数据的接口
+ * 提供外部操作Message数据的接口
  */
 public interface MsgRepository {
 

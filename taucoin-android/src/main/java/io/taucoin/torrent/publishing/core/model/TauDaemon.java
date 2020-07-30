@@ -18,24 +18,29 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.config.ChainConfig;
 import io.taucoin.controller.TauController;
 import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.receiver.PowerReceiver;
 import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
+import io.taucoin.types.Block;
+import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.TxData;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -49,7 +54,7 @@ public class TauDaemon {
     private UserRepository userRepo;
     private MemberRepository memberRepo;
     private TxRepository txRepo;
-    private MsgRepository msgRepo;
+    private CommunityRepository communityRepo;
     private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private PowerReceiver powerReceiver = new PowerReceiver();
@@ -60,7 +65,6 @@ public class TauDaemon {
     private SystemServiceManager systemServiceManager;
     private ExecutorService exec = Executors.newSingleThreadExecutor();
     private boolean isRunning = false;
-    private String seed;
 
     private static volatile TauDaemon instance;
 
@@ -82,7 +86,7 @@ public class TauDaemon {
         userRepo = RepositoryHelper.getUserRepository(appContext);
         memberRepo = RepositoryHelper.getMemberRepository(appContext);
         txRepo = RepositoryHelper.getTxRepository(appContext);
-        msgRepo = RepositoryHelper.getMsgRepository(appContext);
+        communityRepo = RepositoryHelper.getCommunityRepository(appContext);
         settingsRepo = RepositoryHelper.getSettingsRepository(appContext);
         systemServiceManager = SystemServiceManager.getInstance(appContext);
 
@@ -104,17 +108,8 @@ public class TauDaemon {
      * @param seed Seed
      */
     public void updateSeed(String seed) {
-        this.seed = seed;
         byte[] byteSeed = ByteUtil.toByte(seed);
         tauController.updateKey(byteSeed);
-    }
-
-    /**
-     * 获取用户Seed
-     * @return Seed
-     */
-    public String getSeed() {
-        return seed;
     }
 
     /**
@@ -201,15 +196,91 @@ public class TauDaemon {
         }, BackpressureStrategy.LATEST);
     }
 
-    private TauDaemonListener daemonListener = new TauDaemonListener() {
+    /**
+     * 链端事件监听逻辑处理
+     */
+    private final TauDaemonListener daemonListener = new TauDaemonListener() {
         @Override
         public void onTauStarted() {
             isRunning = true;
             rescheduleTauBySettings();
-            boolean wifiOnly = settingsRepo.wifiOnly();
-            settingsRepo.wifiOnly(wifiOnly);
+        }
+
+        @Override
+        public void onNewBlock(Block block) {
+            // 解析交易类型
+            MsgType msgType = parseMsgType(block);
+            if(null == msgType){
+                return;
+            }
+            saveCommunity(block);
+            if(msgType != MsgType.GenesisMsg){
+
+            }
+        }
+
+        @Override
+        public void onRollBack(Block block) {
+            // 解析交易类型
+            MsgType msgType = parseMsgType(block);
+            if(null == msgType){
+                return;
+            }
+            if(msgType != MsgType.GenesisMsg){
+
+            }
+        }
+
+        @Override
+        public void onSyncBlock(Block block) {
+            // 解析交易类型
+            MsgType msgType = parseMsgType(block);
+            if(null == msgType){
+                return;
+            }
+            if(msgType != MsgType.GenesisMsg){
+
+            }
         }
     };
+
+    /**
+     * 保存社区：查询本地是否有此社区，没有则添加到本地
+     * @param block 链上区块
+     */
+    private void saveCommunity(Block block) {
+        String chainID = ByteUtil.toHexString(block.getChainID());
+        disposables.add(communityRepo.getCommunityByChainIDSingle(chainID)
+                .subscribeOn(Schedulers.io())
+                .filter(community -> null == community)
+                .subscribe(community -> {
+                    if(null == community){
+                        community = new Community();
+                        community.chainID = ByteUtil.toHexString(block.getChainID());
+                        String[] splits = community.chainID.split("#");
+                        if(splits.length > 0){
+                            community.communityName = splits[0];
+                        }
+                        communityRepo.addCommunity(community);
+                    }
+                }));
+    }
+
+    /**
+     * 从区块中解析交易的类型
+     * @param block 区块
+     * @return MsgType
+     */
+    private MsgType parseMsgType(Block block) {
+        Transaction transaction = block.getTxMsg();
+        if(transaction != null){
+            TxData txData = transaction.getTxData();
+            if(txData != null){
+                return txData.getMsgType();
+            }
+        }
+        return null;
+    }
 
     /**
      * Only calls from TauService
@@ -298,6 +369,9 @@ public class TauDaemon {
         } else if (key.equals(appContext.getString(R.string.pref_key_internet_state))) {
             logger.info("SettingsChanged, internet state::{}", settingsRepo.internetState());
             enableServerMode(settingsRepo.serverMode());
+            if(settingsRepo.wifiOnly()){
+                rescheduleTauBySettings();
+            }
         } else if (key.equals(appContext.getString(R.string.pref_key_charging_state))) {
             logger.info("SettingsChanged, charging state::{}", settingsRepo.chargingState());
             enableServerMode(settingsRepo.serverMode());
@@ -335,7 +409,7 @@ public class TauDaemon {
             if(!settingsRepo.wifiOnly() && endTime > currentTime){
                 Scheduler.setSwitchWifiOnlyAlarm(appContext, endTime);
                 // TODO：恢复链端业务
-                // auController.resume();
+                // tauController.resume();
             }else{
                 settingsRepo.wifiOnly(true);
             }
@@ -346,6 +420,7 @@ public class TauDaemon {
      * 设置是否启动服务器模式
      */
     public void enableServerMode(boolean enable) {
+        Utils.enableBootReceiver(appContext, enable);
         logger.info("EnableServerMode, enable::{}", enable);
         if (enable) {
             keepCPUWakeLock(true);
@@ -395,5 +470,29 @@ public class TauDaemon {
      */
     public void submitTransaction(Transaction tx){
 
+    }
+
+    /**
+     * 添加或创建社区
+     * @param chainConfig 链的配置
+     */
+    public void createCommunity(ChainConfig chainConfig) {
+
+    }
+
+    /**
+     * 获取用户Nonce值
+     * @return long
+     */
+    public long getUserNonce() {
+        return 0;
+    }
+
+    /**
+     * 获取用户余额
+     * @return long
+     */
+    public long getUserBalance() {
+        return 0;
     }
 }

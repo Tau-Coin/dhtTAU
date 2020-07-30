@@ -509,11 +509,9 @@ public class Utils
      * @param enable 是否启动
      */
     public static void enableBootReceiver(@NonNull Context context, boolean enable) {
-        SettingsRepository pref = RepositoryHelper.getSettingsRepository(context);
-        boolean autoStart = pref.bootStart();
-        int flag = (!(enable || autoStart) ?
+        int flag = !enable ?
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED :
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
         ComponentName bootReceiver = new ComponentName(context, BootReceiver.class);
         context.getPackageManager()
                 .setComponentEnabledSetting(bootReceiver, flag, PackageManager.DONT_KILL_APP);

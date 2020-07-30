@@ -6,6 +6,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
+import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 
 /**
@@ -88,5 +89,13 @@ public class CommunityRepositoryImpl implements CommunityRepository{
      */
     public List<Community> getJoinedCommunityList(String chainID){
         return db.communityDao().getJoinedCommunityList();
+    }
+
+    /**
+     * 根据chainID查询社区
+     * @param chainID 社区chainID
+     */
+    public Single<Community> getCommunityByChainIDSingle(String chainID){
+        return db.communityDao().getCommunityByChainIDSingle(chainID);
     }
 }

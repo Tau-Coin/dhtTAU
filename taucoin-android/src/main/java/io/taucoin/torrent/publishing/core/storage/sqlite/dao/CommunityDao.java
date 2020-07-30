@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 import io.reactivex.Flowable;
+import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 
 /**
@@ -69,4 +70,11 @@ public interface CommunityDao {
      */
     @Query(QUERY_JOINED_COMMUNITY)
     List<Community> getJoinedCommunityList();
+
+    /**
+     * 根据chainID查询社区
+     * @param chainID 社区chainID
+     */
+    @Query(QUERY_GET_COMMUNITY_BY_CHAIN_ID)
+    Single<Community> getCommunityByChainIDSingle(String chainID);
 }

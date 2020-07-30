@@ -21,7 +21,6 @@ import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
 
@@ -35,7 +34,8 @@ public class TauService extends Service {
     private static final Logger logger = LoggerFactory.getLogger(TAG);
     public static final String ACTION_SHUTDOWN = "io.taucoin.torrent.publishing.service.ACTION_SHUTDOWN";
 
-    private AtomicBoolean isAlreadyRunning = new AtomicBoolean();
+    // 是不是已经在运行
+    private AtomicBoolean isAlreadyRunning = new AtomicBoolean(false);
     private TauDaemon daemon;
     private SettingsRepository settingsRepo;
     private UserRepository userRepo;
@@ -62,14 +62,14 @@ public class TauService extends Service {
             action = intent.getAction();
         }
 
-        // 在初始化之前先处理关闭动作
+        // 处理关闭动作
         if (action != null && (StringUtil.isEquals(action, ACTION_SHUTDOWN)
                 || StringUtil.isEquals(action, NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP))) {
             shutdown();
             return START_NOT_STICKY;
         }
 
-        /* 第一次启动 */
+        // 是不是已经在运行
         if (isAlreadyRunning.compareAndSet(false, true)){
             subscribeCurrentUser();
         }
@@ -80,6 +80,7 @@ public class TauService extends Service {
      * 订阅当前用户
      */
     private void subscribeCurrentUser() {
+        final AtomicBoolean isAlreadyInit = new AtomicBoolean(false);
         disposables.add(userRepo.observeCurrentUser()
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -87,22 +88,19 @@ public class TauService extends Service {
                     if(null == user){
                         return;
                     }
-                    if(StringUtil.isEmpty(daemon.getSeed())){
-                        initAndStart(user.seed);
-                    }else{
-                        if(StringUtil.isNotEquals(user.seed, daemon.getSeed())){
-                            daemon.updateSeed(user.seed);
-                            logger.info("Start update user seed");
-                        }
+                    // 更新设置用户seed
+                    daemon.updateSeed(user.seed);
+                    logger.info("Update user seed");
+                    if(isAlreadyInit.compareAndSet(false, true)){
+                        initAndStart();
                     }
                 }));
     }
 
     /**
      * 初始化并启动TauDaemon
-     * @param seed 当前用户seed
      */
-    private void initAndStart(String seed) {
+    private void initAndStart() {
         logger.info("initAndStart {}", TAG);
 
         TauNotifier.makeForegroundNotify(this);
@@ -110,12 +108,8 @@ public class TauService extends Service {
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribe(this::handleSettingsChanged));
 
-        Utils.enableBootReceiver(getApplicationContext(), true);
         daemon.enableServerMode(settingsRepo.serverMode());
 
-        // 更新设置用户seed
-        daemon.updateSeed(seed);
-        logger.info("Start update user seed");
         daemon.doStart();
         daemon.registerListener(daemonListener);
     }

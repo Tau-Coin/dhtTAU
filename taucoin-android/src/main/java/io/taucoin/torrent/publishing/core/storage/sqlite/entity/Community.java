@@ -19,7 +19,6 @@ public class Community implements Parcelable {
     @NonNull
     public String communityName;            // 社区名字
     public String coinName;                 // 社区币名
-    @NonNull
     public String publicKey;                // 社区创建者的公钥
     public long totalCoin;                  // 社区总共的币量
     public int blockInAvg;                  // 社区平均出块时间（单位：秒）
@@ -28,7 +27,7 @@ public class Community implements Parcelable {
     public boolean mute = false;            // 社区有新消息到来时，是否静音
     public boolean blacklist = false;       // 社区是否被用户拉入黑名单
 
-    public Community(@NonNull String communityName, String coinName, @NonNull String publicKey,
+    public Community(@NonNull String communityName, String coinName, String publicKey,
                      long totalCoin, int blockInAvg, String intro, String contactInfo){
         this.communityName = communityName;
         this.coinName = coinName;
@@ -37,6 +36,10 @@ public class Community implements Parcelable {
         this.blockInAvg = blockInAvg;
         this.intro = intro;
         this.contactInfo = contactInfo;
+    }
+
+    @Ignore
+    public Community(){
     }
 
     @Ignore

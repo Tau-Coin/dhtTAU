@@ -5,6 +5,7 @@ import android.app.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -19,7 +20,9 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.config.ChainConfig;
+import io.taucoin.genesis.GenesisItem;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
@@ -35,15 +38,18 @@ public class CommunityViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("CommunityViewModel");
     private CommunityRepository communityRepo;
+    private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> addCommunityState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setBlacklistState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setMuteState = new MutableLiveData<>();
     private MutableLiveData<List<Community>> blackList = new MutableLiveData<>();
     private MutableLiveData<List<Community>> joinedList = new MutableLiveData<>();
+
     public CommunityViewModel(@NonNull Application application) {
         super(application);
         communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
+        daemon = TauDaemon.getInstance(getApplication());
     }
 
     public MutableLiveData<List<Community>> getJoinedList() {
@@ -90,11 +96,17 @@ public class CommunityViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String state = "";
             try {
-                // TODO: 1、TauController:创建Community社区
+                // TauController:创建Community社区
                 GenesisMsg genesisMsg = new GenesisMsg();
-                genesisMsg.setDescription("test");
+                genesisMsg.setDescription("");
+                BigInteger totalCoin = BigInteger.valueOf(community.totalCoin);
+                GenesisItem item = new GenesisItem(totalCoin);
+                genesisMsg.appendAccount(community.publicKey, item);
+                genesisMsg.getEncoded();
+
                 ChainConfig chainConfig = ChainConfig.NewChainConfig((byte)1, community.communityName, community.blockInAvg,
                         community.publicKey , "", genesisMsg);
+                daemon.createCommunity(chainConfig);
                 community.chainID = ByteUtil.toHexString(chainConfig.getChainid());
                 communityRepo.addCommunity(community);
                 logger.debug("Add community to database: communityName={}, chainID={}",

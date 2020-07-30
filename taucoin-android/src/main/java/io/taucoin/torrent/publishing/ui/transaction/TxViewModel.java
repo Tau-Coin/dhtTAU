@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.widget.TextView;
 
 import com.frostwire.jlibtorrent.Ed25519;
-import com.frostwire.jlibtorrent.Pair;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +24,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
@@ -58,6 +58,7 @@ public class TxViewModel extends AndroidViewModel {
     private static final Logger logger = LoggerFactory.getLogger("TxViewModel");
     private TxRepository txRepo;
     private UserRepository userRepo;
+    private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<List<ReplyAndTx>> chainTxs = new MutableLiveData<>();
     private MutableLiveData<String> addState = new MutableLiveData<>();
@@ -66,6 +67,7 @@ public class TxViewModel extends AndroidViewModel {
         super(application);
         txRepo = RepositoryHelper.getTxRepository(application);
         userRepo = RepositoryHelper.getUserRepository(application);
+        daemon  = TauDaemon.getInstance(application);
     }
 
     public MutableLiveData<String> getAddState() {
@@ -135,14 +137,14 @@ public class TxViewModel extends AndroidViewModel {
             // 获取当前用户的Seed, 获取公私钥
             User currentUser = userRepo.getCurrentUser();
             byte[] senderSeed = ByteUtil.toByte(currentUser.seed);
-            Pair<byte[], byte[]> keypair = Ed25519.createKeypair(senderSeed);
+            byte[] senderPk = ByteUtil.toByte(currentUser.publicKey);
 
             String result = "";
             try {
                 TxData txData = buildChainTxData(tx);
                 if(txData != null){
-                    // TODO: 获取当前用户在社区中链上nonce值
-                    long nonce = 0;
+                    // 获取当前用户在社区中链上nonce值
+                    long nonce = daemon.getUserNonce();
                     // 获取最早过期的交易，并且其nonce后来未被使用
                     Tx earliestExpireTx = txRepo.getEarliestExpireTx(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
                     if(earliestExpireTx != null){
@@ -159,10 +161,10 @@ public class TxViewModel extends AndroidViewModel {
                     }
                     // 交易签名
                     long timestamp = DateUtil.getTime();
-                    Transaction transaction = new Transaction((byte)1, tx.chainID.getBytes(), timestamp, (int)tx.fee, keypair.first, nonce, txData);
-                    byte[] signature = Ed25519.sign(transaction.getSigEncoded(), keypair.first, keypair.second);
-                    transaction.setSignature(signature);
-                    // TODO: 把交易数据transaction.getEncoded()提交给链端
+                    Transaction transaction = new Transaction((byte)1, tx.chainID.getBytes(), timestamp, (int)tx.fee, senderPk, nonce, txData);
+                    transaction.signTransaction(senderSeed);
+                    // 把交易数据transaction.getEncoded()提交给链端
+                    daemon.submitTransaction(transaction);
                     // 保存交易数据到本地数据库
                     tx.txID = ByteUtil.toHexString(transaction.getTxID());
                     tx.timestamp = timestamp;
@@ -245,8 +247,8 @@ public class TxViewModel extends AndroidViewModel {
                 return false;
             }
         }else if(msgType == MsgType.Wiring.getVaLue()){
-            // TODO: 获取当前用户的余额
-            long balance = 100000000000L;
+            // 获取当前用户的余额
+            long balance = daemon.getUserBalance();
             if(StringUtil.isEmpty(tx.receiverPk) ||
                     ByteUtil.toByte(tx.receiverPk).length != Ed25519.PUBLIC_KEY_SIZE){
                 ToastUtils.showShortToast(R.string.tx_error_invalid_pk);
