@@ -46,9 +46,11 @@ public class JTau {
         thread.start();
 
         // Register shutdown hook.
-        // Note: this hook can capture INT(ctrl + c or kill -2)
-        // and TERM(kill -15) signal. But it can't capture
-        // KILL(kill -9) signal.
+        // Note: for foreground application, this hook
+        // can capture INT(ctrl + c or kill -2) and TERM(kill -15) signal.
+        // But for background application, this hook can only
+        // capture TERM(kill -15) signal.
+        // And for both types application, it can't capture KILL(kill -9) signal.
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
