@@ -11,15 +11,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static io.taucoin.util.ByteUtil.wrap;
+
 public class StateDBTrack implements StateDB {
 
-    private static final Logger logger = LoggerFactory.getLogger("repository");
+    private static final Logger logger = LoggerFactory.getLogger("StateTrack");
 
-    byte[] chainID;
+    private byte[] chainID;
 
-    Map<ByteArrayWrapper, AccountState> cacheAccounts = new HashMap<>();
+    // cache changed account only
+    // key: chainID + pubKey
+    // value: account state
+    private Map<ByteArrayWrapper, AccountState> cacheAccounts = new HashMap<>();
 
-    StateDB stateDB;
+    private byte[] bestBlockHash;
+
+    private byte[] syncBlockHash;
+
+    private StateDB stateDB;
 
     public StateDBTrack(StateDB stateDB, byte[] chainID) {
         this.stateDB = stateDB;
@@ -66,8 +75,31 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void commit() throws Exception {
-        stateDB.updateAccounts(chainID, cacheAccounts);
+        // update changed accounts
+        Map<byte[], byte[]> rows = new HashMap<>();
+        if (null != cacheAccounts) {
+            for (Map.Entry<ByteArrayWrapper, AccountState> entry: cacheAccounts.entrySet()) {
+                rows.put(entry.getKey().getData(), entry.getValue().getEncoded());
+            }
+        }
+
+        // update best block hash
+        if (null != this.bestBlockHash) {
+            rows.put(PrefixKey.bestBlockHashKey(this.chainID), this.bestBlockHash);
+        }
+
+        // update synced block hash
+        if (null != this.syncBlockHash) {
+            rows.put(PrefixKey.syncBlockHashKey(this.chainID), this.syncBlockHash);
+        }
+
+        // commit
+        this.stateDB.updateBatch(rows);
+
         cacheAccounts.clear();
+        this.bestBlockHash = null;
+        this.syncBlockHash = null;
+
         logger.debug("committed changes");
     }
 
@@ -123,7 +155,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void setBestBlockHash(byte[] chainID, byte[] hash) throws Exception {
-
+        this.bestBlockHash = hash;
     }
 
     /**
@@ -135,7 +167,11 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public byte[] getBestBlockHash(byte[] chainID) throws Exception {
-        return new byte[0];
+        if (null != this.bestBlockHash) {
+            return this.bestBlockHash;
+        } else {
+            return this.stateDB.getBestBlockHash(chainID);
+        }
     }
 
     /**
@@ -144,10 +180,9 @@ public class StateDBTrack implements StateDB {
      * @param chainID
      * @throws Exception
      */
-    @Override
-    public void deleteBestBlockHash(byte[] chainID) throws Exception {
-
-    }
+//    @Override
+//    public void deleteBestBlockHash(byte[] chainID) throws Exception {
+//    }
 
     /**
      * set current chain synced block hash
@@ -158,7 +193,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void setSyncBlockHash(byte[] chainID, byte[] hash) throws Exception {
-
+        this.syncBlockHash = hash;
     }
 
     /**
@@ -170,7 +205,11 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public byte[] getSyncBlockHash(byte[] chainID) throws Exception {
-        return new byte[0];
+        if (null != this.syncBlockHash) {
+            return this.syncBlockHash;
+        } else {
+            return this.stateDB.getSyncBlockHash(chainID);
+        }
     }
 
     /**
@@ -179,10 +218,10 @@ public class StateDBTrack implements StateDB {
      * @param chainID
      * @throws Exception
      */
-    @Override
-    public void deleteSyncBlockHash(byte[] chainID) throws Exception {
-
-    }
+//    @Override
+//    public void deleteSyncBlockHash(byte[] chainID) throws Exception {
+//
+//    }
 
     /**
      * set mutable range
@@ -192,8 +231,8 @@ public class StateDBTrack implements StateDB {
      * @throws Exception
      */
     @Override
-    public void setMutableRange(byte[] chainID, int number) throws Exception {
-
+    public void setMutableRange(byte[] chainID, int number) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -204,8 +243,8 @@ public class StateDBTrack implements StateDB {
      * @throws Exception
      */
     @Override
-    public int getMutableRange(byte[] chainID) throws Exception {
-        return 0;
+    public int getMutableRange(byte[] chainID) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -215,8 +254,8 @@ public class StateDBTrack implements StateDB {
      * @throws Exception
      */
     @Override
-    public void deleteMutableRange(byte[] chainID) throws Exception {
-
+    public void deleteMutableRange(byte[] chainID) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -311,8 +350,8 @@ public class StateDBTrack implements StateDB {
      * @throws Exception
      */
     @Override
-    public void setImmutablePointBlockHash(byte[] chainID, byte[] hash) throws Exception {
-
+    public void setImmutablePointBlockHash(byte[] chainID, byte[] hash) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -323,8 +362,8 @@ public class StateDBTrack implements StateDB {
      * @throws Exception
      */
     @Override
-    public byte[] getImmutablePointBlockHash(byte[] chainID) throws Exception {
-        return new byte[0];
+    public byte[] getImmutablePointBlockHash(byte[] chainID) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -334,8 +373,8 @@ public class StateDBTrack implements StateDB {
      * @throws Exception
      */
     @Override
-    public void deleteImmutablePointBlockHash(byte[] chainID) throws Exception {
-
+    public void deleteImmutablePointBlockHash(byte[] chainID) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -346,8 +385,8 @@ public class StateDBTrack implements StateDB {
      * @throws Exception
      */
     @Override
-    public void setVotesCountingPointBlockHash(byte[] chainID, byte[] hash) throws Exception {
-
+    public void setVotesCountingPointBlockHash(byte[] chainID, byte[] hash) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -358,8 +397,8 @@ public class StateDBTrack implements StateDB {
      * @throws Exception
      */
     @Override
-    public byte[] getVotesCountingPointBlockHash(byte[] chainID) throws Exception {
-        return new byte[0];
+    public byte[] getVotesCountingPointBlockHash(byte[] chainID) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -369,8 +408,8 @@ public class StateDBTrack implements StateDB {
      * @throws Exception
      */
     @Override
-    public void deleteVotesCountingPointBlockHash(byte[] chainID) throws Exception {
-
+    public void deleteVotesCountingPointBlockHash(byte[] chainID) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -382,7 +421,11 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void updateAccounts(byte[] chainID, Map<ByteArrayWrapper, AccountState> accountStateMap) throws Exception {
-
+        if (null != accountStateMap) {
+            for (Map.Entry<ByteArrayWrapper, AccountState> entry: accountStateMap.entrySet()) {
+                updateAccount(chainID, entry.getKey().getData(), entry.getValue());
+            }
+        }
     }
 
     /**
@@ -395,6 +438,7 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public void updateAccount(byte[] chainID, byte[] pubKey, AccountState account) throws Exception {
+        this.cacheAccounts.put(wrap(PrefixKey.accountKey(chainID, pubKey)), account);
     }
 
     /**
@@ -407,7 +451,14 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public AccountState getAccount(byte[] chainID, byte[] pubKey) throws Exception {
-        return null;
+
+        AccountState accountState = cacheAccounts.get(wrap(PrefixKey.accountKey(chainID, pubKey)));
+
+        if (accountState == null) {
+            return this.stateDB.getAccount(chainID, pubKey);
+        }
+
+        return accountState;
     }
 
     /**
@@ -420,18 +471,38 @@ public class StateDBTrack implements StateDB {
      */
     @Override
     public BigInteger getNonce(byte[] chainID, byte[] pubKey) throws Exception {
-        return null;
+        AccountState accountState = cacheAccounts.get(wrap(PrefixKey.accountKey(chainID, pubKey)));
+
+        if (accountState == null) {
+            return this.stateDB.getNonce(chainID, pubKey);
+        }
+
+        return accountState.getNonce();
     }
 
+//    /**
+//     * delete a account
+//     *
+//     * @param chainID
+//     * @param pubKey
+//     * @throws Exception
+//     */
+//    @Override
+//    public void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception {
+//
+//    }
+
+
     /**
-     * delete a account
+     * Write batch into the database.
      *
-     * @param chainID
-     * @param pubKey
+     * @param rows key-value batch
      * @throws Exception
      */
     @Override
-    public void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception {
-
+    public void updateBatch(Map<byte[], byte[]> rows) {
+        throw new UnsupportedOperationException();
     }
+
 }
+

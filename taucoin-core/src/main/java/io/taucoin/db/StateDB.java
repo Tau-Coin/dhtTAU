@@ -88,7 +88,7 @@ public interface StateDB {
      * @param chainID
      * @throws Exception
      */
-    void deleteBestBlockHash(byte[] chainID) throws Exception;
+//    void deleteBestBlockHash(byte[] chainID) throws Exception;
 
     /**
      * set current chain synced block hash
@@ -111,7 +111,7 @@ public interface StateDB {
      * @param chainID
      * @throws Exception
      */
-    void deleteSyncBlockHash(byte[] chainID) throws Exception;
+//    void deleteSyncBlockHash(byte[] chainID) throws Exception;
 
     /**
      * set mutable range
@@ -276,12 +276,20 @@ public interface StateDB {
      */
     BigInteger getNonce(byte[] chainID, byte[] pubKey) throws Exception;
 
+//    /**
+//     * delete a account
+//     * @param chainID
+//     * @param pubKey
+//     * @throws Exception
+//     */
+//    void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception;
+
     /**
-     * delete a account
-     * @param chainID
-     * @param pubKey
+     * Write batch into the database.
+     *
+     * @param rows key-value batch
      * @throws Exception
      */
-    void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception;
+    void updateBatch(Map<byte[], byte[]> rows) throws Exception;
 }
 

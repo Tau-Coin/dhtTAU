@@ -214,16 +214,16 @@ public class TransactionPoolTest {
             return new byte[0];
         }
 
-        /**
-         * delete best block hash
-         *
-         * @param chainID
-         * @throws Exception
-         */
-        @Override
-        public void deleteBestBlockHash(byte[] chainID) throws Exception {
-
-        }
+//        /**
+//         * delete best block hash
+//         *
+//         * @param chainID
+//         * @throws Exception
+//         */
+//        @Override
+//        public void deleteBestBlockHash(byte[] chainID) throws Exception {
+//
+//        }
 
         /**
          * set current chain synced block hash
@@ -249,16 +249,16 @@ public class TransactionPoolTest {
             return new byte[0];
         }
 
-        /**
-         * delete current chain synced block hash
-         *
-         * @param chainID
-         * @throws Exception
-         */
-        @Override
-        public void deleteSyncBlockHash(byte[] chainID) throws Exception {
-
-        }
+//        /**
+//         * delete current chain synced block hash
+//         *
+//         * @param chainID
+//         * @throws Exception
+//         */
+//        @Override
+//        public void deleteSyncBlockHash(byte[] chainID) throws Exception {
+//
+//        }
 
         /**
          * set mutable range
@@ -500,15 +500,27 @@ public class TransactionPoolTest {
             return null;
         }
 
+//        /**
+//         * delete a account
+//         *
+//         * @param chainID
+//         * @param pubKey
+//         * @throws Exception
+//         */
+//        @Override
+//        public void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception {
+//
+//        }
+
+
         /**
-         * delete a account
+         * Write batch into the database.
          *
-         * @param chainID
-         * @param pubKey
+         * @param rows key-value batch
          * @throws Exception
          */
         @Override
-        public void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception {
+        public void updateBatch(Map<byte[], byte[]> rows) throws Exception {
 
         }
     }

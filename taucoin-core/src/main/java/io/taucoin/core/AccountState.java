@@ -10,6 +10,9 @@ public class AccountState implements Cloneable {
     private BigInteger nonce;
 //    private String identity;
 
+//    private boolean dirty = false;
+//    private boolean deleted = false;
+
     public AccountState(byte[] rlp) {
         RLPList decodedTxList = RLP.decode2(rlp);
         RLPList accountState = (RLPList) decodedTxList.get(0);
@@ -82,6 +85,22 @@ public class AccountState implements Cloneable {
         return RLP.encodeList(balance, nonce);
     }
 
+//    public void setDirty(boolean dirty) {
+//        this.dirty = dirty;
+//    }
+
+//    public void setDeleted(boolean deleted) {
+//        this.deleted = deleted;
+//    }
+
+//    public boolean isDirty() {
+//        return dirty;
+//    }
+
+//    public boolean isDeleted() {
+//        return deleted;
+//    }
+
     @Override
     protected AccountState clone() throws CloneNotSupportedException {
         return (AccountState)super.clone();
@@ -100,3 +119,4 @@ public class AccountState implements Cloneable {
                 '}';
     }
 }
+

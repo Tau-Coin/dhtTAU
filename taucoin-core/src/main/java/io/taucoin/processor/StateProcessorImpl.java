@@ -4,7 +4,6 @@ import io.taucoin.core.AccountState;
 import io.taucoin.core.ImportResult;
 import io.taucoin.db.StateDB;
 import io.taucoin.types.Block;
-import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

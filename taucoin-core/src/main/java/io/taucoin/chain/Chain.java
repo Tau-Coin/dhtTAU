@@ -56,8 +56,6 @@ public class Chain {
     // Chain nick name specified by the transaction of creating new blockchain.
     private String nickName;
 
-    private ChainConfig chainConfig;
-
     // Voting thread.
     private Thread votingThread;
 
@@ -85,8 +83,6 @@ public class Chain {
 
     // state processor: process and roll back block
     private StateProcessor stateProcessor;
-
-    private byte[] genesisBlockHash;
 
     // the best block of current chain
     private Block bestBlock;
@@ -894,21 +890,25 @@ public class Chain {
         BigInteger cumulativeDifficulty = pot.calculateCumulativeDifficulty(this.bestBlock.getCumulativeDifficulty(),
                 baseTarget);
 
-        byte[] immutableBlockHash;
-        if (this.bestBlock.getBlockNum() + 1 >= ChainParam.MUTABLE_RANGE) {
-            try {
+        byte[] immutableBlockHash = null;
+        try {
+            if (this.bestBlock.getBlockNum() + 1 >= ChainParam.MUTABLE_RANGE) {
                 immutableBlockHash = blockStore.getMainChainBlockHashByNumber(this.chainID,
                         this.bestBlock.getBlockNum() + 1 - ChainParam.MUTABLE_RANGE);
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                return null;
+            } else {
+                Block genesisBlock = this.blockStore.getMainChainBlockByNumber(this.chainID, 0);
+                if (null != genesisBlock) {
+                    immutableBlockHash = genesisBlock.getBlockHash();
+                }
             }
-            if (null == immutableBlockHash) {
-                logger.error("ChainID[{}]-Get immutable block hash error!", this.chainID.toString());
-                return null;
-            }
-        } else {
-            immutableBlockHash = genesisBlockHash;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+
+        if (null == immutableBlockHash) {
+            logger.error("ChainID[{}]-Get immutable block hash error!", this.chainID.toString());
+            return null;
         }
 
         Block block = new Block((byte)1, this.chainID, 0, this.bestBlock.getBlockNum() + 1, this.bestBlock.getBlockHash(),

@@ -114,15 +114,15 @@ public class StateDBImpl implements StateDB {
         return db.get(PrefixKey.bestBlockHashKey(chainID));
     }
 
-    /**
-     * delete best block hash
-     * @param chainID
-     * @throws Exception
-     */
-    @Override
-    public void deleteBestBlockHash(byte[] chainID) throws Exception {
-        db.delete(PrefixKey.bestBlockHashKey(chainID));
-    }
+//    /**
+//     * delete best block hash
+//     * @param chainID
+//     * @throws Exception
+//     */
+//    @Override
+//    public void deleteBestBlockHash(byte[] chainID) throws Exception {
+//        db.delete(PrefixKey.bestBlockHashKey(chainID));
+//    }
 
     /**
      * set current chain synced block hash
@@ -148,16 +148,16 @@ public class StateDBImpl implements StateDB {
         return db.get(PrefixKey.syncBlockHashKey(chainID));
     }
 
-    /**
-     * delete current chain synced block hash
-     *
-     * @param chainID
-     * @throws Exception
-     */
-    @Override
-    public void deleteSyncBlockHash(byte[] chainID) throws Exception {
-        db.delete(PrefixKey.syncBlockHashKey(chainID));
-    }
+//    /**
+//     * delete current chain synced block hash
+//     *
+//     * @param chainID
+//     * @throws Exception
+//     */
+//    @Override
+//    public void deleteSyncBlockHash(byte[] chainID) throws Exception {
+//        db.delete(PrefixKey.syncBlockHashKey(chainID));
+//    }
 
     /**
      * set mutable range
@@ -407,15 +407,29 @@ public class StateDBImpl implements StateDB {
         return BigInteger.ZERO;
     }
 
+//    /**
+//     * delete a account
+//     * @param chainID
+//     * @param pubKey
+//     * @throws Exception
+//     */
+//    @Override
+//    public void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception {
+//        db.delete(PrefixKey.accountKey(chainID, pubKey));
+//    }
+
+
     /**
-     * delete a account
-     * @param chainID
-     * @param pubKey
+     * Write batch into the database.
+     *
+     * @param rows key-value batch
      * @throws Exception
      */
     @Override
-    public void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception {
-        db.delete(PrefixKey.accountKey(chainID, pubKey));
+    public void updateBatch(Map<byte[], byte[]> rows) throws Exception {
+        if (null != rows) {
+            this.db.updateBatch(rows);
+        }
     }
 }
 
