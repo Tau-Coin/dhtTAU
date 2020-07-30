@@ -209,6 +209,14 @@ public class Block {
     }
 
     /**
+     * get hex string to save in libtorrent.
+     * @return
+     */
+    public String getEncodeHexStr(){
+        return ByteUtil.toHexString(getEncoded());
+    }
+    
+    /**
      * encoding block signature parts which is under protection of cryptographic signature.
      * @return
      */
