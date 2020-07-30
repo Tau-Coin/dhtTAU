@@ -291,5 +291,11 @@ public interface StateDB {
      * @throws Exception
      */
     void updateBatch(Map<byte[], byte[]> rows) throws Exception;
+
+    /**
+     * clear all state data
+     * @throws Exception
+     */
+    void clearAllState(byte[] chainID) throws Exception;
 }
 

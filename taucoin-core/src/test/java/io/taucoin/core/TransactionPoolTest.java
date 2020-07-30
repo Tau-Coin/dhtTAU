@@ -523,5 +523,16 @@ public class TransactionPoolTest {
         public void updateBatch(Map<byte[], byte[]> rows) throws Exception {
 
         }
+
+        /**
+         * clear all state data
+         *
+         * @param chainID
+         * @throws Exception
+         */
+        @Override
+        public void clearAllState(byte[] chainID) throws Exception {
+
+        }
     }
 }

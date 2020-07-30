@@ -431,5 +431,18 @@ public class StateDBImpl implements StateDB {
             this.db.updateBatch(rows);
         }
     }
+
+    /**
+     * clear all state data
+     *
+     * @param chainID
+     * @throws Exception
+     */
+    @Override
+    public void clearAllState(byte[] chainID) throws Exception {
+        this.db.removeWithKeyPrefix(PrefixKey.accountPrefix(chainID));
+        this.db.delete(PrefixKey.bestBlockHashKey(chainID));
+        this.db.delete(PrefixKey.syncBlockHashKey(chainID));
+    }
 }
 

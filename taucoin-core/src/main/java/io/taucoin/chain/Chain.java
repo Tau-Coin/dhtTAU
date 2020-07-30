@@ -2,7 +2,6 @@ package io.taucoin.chain;
 
 import com.frostwire.jlibtorrent.Pair;
 import io.taucoin.account.AccountManager;
-import io.taucoin.config.ChainConfig;
 import io.taucoin.core.*;
 import io.taucoin.db.BlockInfo;
 import io.taucoin.db.BlockStore;
@@ -33,10 +32,6 @@ public class Chain {
     private static final Logger logger = LoggerFactory.getLogger("Chain");
 
     private static final int TIMEOUT = 10;
-
-    private static final int ONE_MONTH = 60 * 60 * 24 * 30; // one month
-
-    private static final int ONE_MONTH_NUMBER = ONE_MONTH / 60 * 5; // block number in one month
 
     // mutable item salt suffix: block
     private static final String BLOCK_CHANNEL = "#block";
@@ -132,11 +127,6 @@ public class Chain {
         this.blockSalt = makeBlockSalt();
         this.txSalt = makeTxSalt();
 
-        // init tx pool
-        this.txPool = new TransactionPoolImpl(this.chainID,
-                AccountManager.getInstance().getKeyPair().first, this.stateDB);
-        this.txPool.init();
-
         // init voting pool
         this.votingPool = new VotingPool();
 
@@ -217,15 +207,21 @@ public class Chain {
             }
         }
 
-        // if offline for up to one month, vote as a new chain
+        // if offline too long, vote as a new chain
         if (null != this.bestBlock &&
-                (System.currentTimeMillis() / 1000 - this.bestBlock.getTimeStamp()) > ONE_MONTH) {
+                (System.currentTimeMillis() / 1000 - this.bestBlock.getTimeStamp()) >
+                        ChainParam.WARNING_RANGE * ChainParam.DefaultBlockTimeInterval) {
             Vote bestVote = vote();
             if (!initialSync(bestVote)) {
                 logger.error("Initial sync fail!");
                 return false;
             }
         }
+
+        // init tx pool
+        this.txPool = new TransactionPoolImpl(this.chainID,
+                AccountManager.getInstance().getKeyPair().first, this.stateDB);
+        this.txPool.init();
 
         return true;
     }
@@ -238,6 +234,9 @@ public class Chain {
         loop();
     }
 
+    /**
+     * main loop
+     */
     private void loop() {
         while (!Thread.interrupted()) {
             boolean votingFlag = false;
@@ -273,7 +272,7 @@ public class Chain {
                             int counter = 0;
                             byte[] previousHash = tip.getPreviousBlockHash();
                             this.blockStore.saveBlock(tip, false);
-                            while (!Thread.interrupted() && counter < ONE_MONTH_NUMBER) {
+                            while (!Thread.interrupted() && counter < ChainParam.WARNING_RANGE) {
                                 Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
                                 if (null != block) {
                                     // found in local
@@ -425,6 +424,9 @@ public class Chain {
     private Vote vote() {
         // try to use all peers to vote
         int counter = peerManager.getPeerNumber();
+
+        counter = Math.max(counter, (int)Math.log(counter));
+
         while (!Thread.interrupted() && counter > 0) {
             byte[] peer = peerManager.popUpOptimalBlockPeer();
             Block block = getTipBlockFromPeer(peer);
@@ -446,9 +448,11 @@ public class Chain {
      * @return true[success]/false[fail]
      */
     private boolean initialSync(Vote bestVote) {
-        // TODO: clear block store and state
 
         try {
+            this.blockStore.removeChain(this.chainID);
+            this.stateDB.clearAllState(this.chainID);
+
             Block bestVoteBlock = getBlockFromDHT(bestVote.getBlockHash());
 
             // initial sync from best vote
@@ -498,12 +502,17 @@ public class Chain {
         return true;
     }
 
+    /**
+     * sync block from given vote
+     * @param bestVote
+     * @return
+     */
     private boolean syncFromVote(Vote bestVote) {
         try {
             // download block first
             int counter = 0;
             byte[] previousHash = bestVote.getBlockHash();
-            while (!Thread.interrupted() && counter < ONE_MONTH_NUMBER) {
+            while (!Thread.interrupted() && counter < ChainParam.WARNING_RANGE) {
                 Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
                 if (null != block) {
                     // found in local
@@ -690,9 +699,11 @@ public class Chain {
                 return false;
             }
 
-            if (!processBlock(block, stateDB)) {
+            ImportResult result = this.stateProcessor.forwardProcess(block, stateDB);
+            if (!result.isSuccessful()) {
                 return false;
             }
+
             return true;
         } else {
             return false;
@@ -834,10 +845,6 @@ public class Chain {
             return false;
         }
 
-        return true;
-    }
-
-    private boolean processBlock(Block block, StateDB stateDB) {
         return true;
     }
 
@@ -1001,5 +1008,30 @@ public class Chain {
             txThread.interrupt();
         }
     }
+
+    /**
+     * get transaction pool
+     * @return
+     */
+    public TransactionPool getTransactionPool() {
+        return this.txPool;
+    }
+
+    /**
+     * get state database
+     * @return
+     */
+    public StateDB getStateDB() {
+        return this.stateDB;
+    }
+
+    /**
+     * get block store
+     * @return
+     */
+    public BlockStore getBlockStore() {
+        return this.blockStore;
+    }
+
 }
 

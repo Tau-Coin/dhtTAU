@@ -4,6 +4,7 @@ import io.taucoin.util.ByteUtil;
 
 public class PrefixKey {
     // prefix
+    private static final byte[] account = "A-".getBytes();
     private static final byte[] block = "B-".getBytes();
     private static final byte[] bestBlock = "b-".getBytes();
     public static final byte[] chain = "C-".getBytes();
@@ -143,15 +144,28 @@ public class PrefixKey {
     }
 
     /**
-     * account key: chainID + pubkey
+     * account prefix: chainID + 'account'
+     * @param chainID
+     * @return
+     */
+    public static byte[] accountPrefix(byte[] chainID) {
+        byte[] prefix = new byte[chainID.length + account.length];
+        System.arraycopy(chainID, 0, prefix, 0, chainID.length);
+        System.arraycopy(account, 0, prefix, chainID.length, account.length);
+        return prefix;
+    }
+
+    /**
+     * account key: chainID + 'account' + pubkey
      * @param chainID
      * @param pubkey
      * @return
      */
     public static byte[] accountKey(byte[] chainID, byte[] pubkey) {
-        byte[] key = new byte[chainID.length + pubkey.length];
+        byte[] key = new byte[chainID.length + account.length + pubkey.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(pubkey, 0, key, chainID.length, pubkey.length);
+        System.arraycopy(account, 0, key, chainID.length, account.length);
+        System.arraycopy(pubkey, 0, key, chainID.length + account.length, pubkey.length);
         return key;
     }
 

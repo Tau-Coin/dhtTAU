@@ -504,5 +504,15 @@ public class StateDBTrack implements StateDB {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * clear all state data
+     *
+     * @param chainID
+     * @throws Exception
+     */
+    @Override
+    public void clearAllState(byte[] chainID) throws Exception {
+        throw new UnsupportedOperationException();
+    }
 }
 
