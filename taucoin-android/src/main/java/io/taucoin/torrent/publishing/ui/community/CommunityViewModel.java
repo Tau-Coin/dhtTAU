@@ -161,23 +161,6 @@ public class CommunityViewModel extends AndroidViewModel {
     }
 
     /**
-     * 设置社区是否静音
-     * @param chainID 社区chainID
-     * @param isMute 是否静音
-     */
-    void setCommunityMute(String chainID, boolean isMute) {
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
-            communityRepo.setCommunityMute(chainID, isMute);
-            emitter.onNext(true);
-            emitter.onComplete();
-        }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(state -> setMuteState.postValue(state));
-        disposables.add(disposable);
-    }
-
-    /**
      * 获取在黑名单的社区列表
      */
     public void getCommunitiesInBlacklist(){

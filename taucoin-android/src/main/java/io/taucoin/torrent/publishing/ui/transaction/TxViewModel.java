@@ -43,7 +43,6 @@ import io.taucoin.torrent.publishing.ui.constant.Chain;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.types.Comment;
 import io.taucoin.types.CommunityAnnouncement;
-import io.taucoin.types.IdentityAnnouncement;
 import io.taucoin.types.MsgType;
 import io.taucoin.types.Note;
 import io.taucoin.types.Transaction;
@@ -213,7 +212,7 @@ public class TxViewModel extends AndroidViewModel {
                     break;
                 case CommunityAnnouncement:
                     byte[] annChainID = tx.chainID.getBytes();
-                    byte[] genesisPk = ByteUtil.toByte(tx.genesisPk);
+                    byte[] genesisPk = ByteUtil.toByte(tx.bootstrapPk);
                     CommunityAnnouncement communityAnn = new CommunityAnnouncement(annChainID, genesisPk, tx.memo);
                     txData = new TxData(msgType, communityAnn.getEncode());
                     break;

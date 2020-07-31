@@ -26,6 +26,7 @@ import io.taucoin.torrent.publishing.ui.customviews.PopUpDialog;
 /**
  * 社区更多设置页面
  */
+@Deprecated
 public class CommunitySettingActivity extends BaseActivity implements View.OnClickListener {
     private ActivityCommunitySettingBinding binding;
     private PopUpDialog popUpDialog;
@@ -119,7 +120,8 @@ public class CommunitySettingActivity extends BaseActivity implements View.OnCli
         int blockAvg = ViewUtils.getIntTag(binding.tvAvgBlock);
         String intro = ViewUtils.getText(binding.etIntro);
         String contact = ViewUtils.getText(binding.etContactId);
-        return new Community("", coinName, "", totalCoin, blockAvg, intro, contact);
+//        return new Community("", coinName, "", totalCoin, blockAvg, intro, contact);
+        return null;
     }
 
     @Override

@@ -42,13 +42,6 @@ public interface CommunityRepository {
     void setCommunityBlacklist(String chainID, boolean blacklist);
 
     /**
-     * 设置社区是否静音实现
-     * @param chainID 社区chainID
-     * @param isMute 是否静音
-     */
-    void setCommunityMute(String chainID, boolean isMute);
-
-    /**
      * 获取用户加入的社区列表
      * @param chainID 社区chainID
      */

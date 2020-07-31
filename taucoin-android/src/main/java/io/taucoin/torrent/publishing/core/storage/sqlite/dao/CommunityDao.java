@@ -20,7 +20,6 @@ public interface CommunityDao {
     String QUERY_GET_COMMUNITIES_IN_BLACKLIST = "SELECT * FROM Communities where blacklist = 1";
     String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Communities WHERE chainID = :chainID";
     String QUERY_ADD_COMMUNITY_BLACKLIST = "Update Communities set blacklist =:blacklist WHERE chainID = :chainID";
-    String QUERY_SET_COMMUNITY_MUTE = "Update Communities set mute =:mute WHERE chainID = :chainID";
     String QUERY_JOINED_COMMUNITY = "SELECT * FROM Communities";
 
     /**
@@ -58,12 +57,6 @@ public interface CommunityDao {
      */
     @Query(QUERY_ADD_COMMUNITY_BLACKLIST)
     void setCommunityBlacklist(String chainID, int blacklist);
-
-    /**
-     * 设置社区是否静音
-     */
-    @Query(QUERY_SET_COMMUNITY_MUTE)
-    void setCommunityMute(String chainID, int mute);
 
     /**
      * 获取用户加入的社区列表

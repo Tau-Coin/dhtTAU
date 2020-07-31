@@ -18,24 +18,26 @@ public class Community implements Parcelable {
     public String chainID;                  // 社区的chainID
     @NonNull
     public String communityName;            // 社区名字
-    public String coinName;                 // 社区币名
-    public String publicKey;                // 社区创建者的公钥
-    public long totalCoin;                  // 社区总共的币量
-    public int blockInAvg;                  // 社区平均出块时间（单位：秒）
-    public String intro;                    // 社区的介绍
-    public String contactInfo;              // 社区的联系方式
-    public boolean mute = false;            // 社区有新消息到来时，是否静音
-    public boolean blacklist = false;       // 社区是否被用户拉入黑名单
+    public long totalBlocks;                // 社区总区块数（不上链）
+    public long syncBlock;                  // 已同步到区块数（不上链）
+    public boolean blacklist = false;       // 社区是否被用户拉入黑名单（不上链）
+    @Ignore
+    public long totalCoin;                  // 社区总的币量（不上链，不入数据库）
+    @Ignore
+    public int blockInAvg;                  // 社区创建者的公钥平均出块时间（不上链，不入数据库）
+    @Ignore
+    public String publicKey;                // 社区创建者的公钥（不上链，不入数据库）
 
-    public Community(@NonNull String communityName, String coinName, String publicKey,
-                     long totalCoin, int blockInAvg, String intro, String contactInfo){
+    public Community(@NonNull String chainID, @NonNull String communityName){
         this.communityName = communityName;
-        this.coinName = coinName;
+        this.chainID = chainID;
+    }
+
+    public Community(@NonNull String communityName, String publicKey, long totalCoin, int blockInAvg){
+        this.communityName = communityName;
         this.publicKey = publicKey;
         this.totalCoin = totalCoin;
         this.blockInAvg = blockInAvg;
-        this.intro = intro;
-        this.contactInfo = contactInfo;
     }
 
     @Ignore
@@ -46,28 +48,25 @@ public class Community implements Parcelable {
     protected Community(Parcel in) {
         chainID = in.readString();
         communityName = in.readString();
-        coinName = in.readString();
-        publicKey = in.readString();
+        totalBlocks = in.readLong();
+        syncBlock = in.readLong();
+        blacklist = in.readByte() != 0;
+
         totalCoin = in.readLong();
         blockInAvg = in.readInt();
-        intro = in.readString();
-        contactInfo = in.readString();
-        mute = in.readByte() != 0;
-        blacklist = in.readByte() != 0;
+        publicKey = in.readString();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(chainID);
         dest.writeString(communityName);
-        dest.writeString(coinName);
-        dest.writeString(publicKey);
+        dest.writeLong(totalBlocks);
+        dest.writeLong(syncBlock);
+        dest.writeByte((byte) (blacklist ? 1 : 0));
         dest.writeLong(totalCoin);
         dest.writeInt(blockInAvg);
-        dest.writeString(intro);
-        dest.writeString(contactInfo);
-        dest.writeByte((byte) (mute ? 1 : 0));
-        dest.writeByte((byte) (blacklist ? 1 : 0));
+        dest.writeString(publicKey);
     }
 
     @Override

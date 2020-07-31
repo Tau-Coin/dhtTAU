@@ -210,7 +210,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
             binding.replay.setVisibility(View.GONE);
             binding.blacklist.setVisibility(View.GONE);
         }
-        binding.replay.setTag(tx.txID);
+        binding.replay.setTag(tx);
         binding.copy.setTag(msg);
         binding.copyLink.setTag(msg);
         binding.blacklist.setTag(tx.senderPk);
@@ -235,20 +235,22 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         if(operationsDialog != null){
             operationsDialog.closeDialog();
         }
-        String tag = ViewUtils.getStringTag(v);
         switch (v.getId()){
             case R.id.replay:
+                ReplyAndTx tx = (ReplyAndTx) v.getTag();
                 Intent intent = new Intent();
                 intent.putExtra(IntentExtra.BEAN, community);
-                intent.putExtra(IntentExtra.REPLY_ID, tag);
+                intent.putExtra(IntentExtra.REPLY, tx);
                 ActivityUtil.startActivity(intent, this, MessageActivity.class);
                 break;
             case R.id.copy:
             case R.id.copy_link:
-                CopyManager.copyText(tag);
+                String msg = ViewUtils.getStringTag(v);
+                CopyManager.copyText(msg);
                 break;
             case R.id.blacklist:
-                userViewModel.setUserBlacklist(tag, true);
+                String publicKey = ViewUtils.getStringTag(v);
+                userViewModel.setUserBlacklist(publicKey, true);
                 break;
             case R.id.favourite:
                 break;

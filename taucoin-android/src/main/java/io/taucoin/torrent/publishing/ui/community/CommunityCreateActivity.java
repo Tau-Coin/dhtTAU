@@ -139,8 +139,8 @@ public class CommunityCreateActivity extends BaseActivity {
             String communityName = ViewUtils.getText(binding.etCommunityName);
             String publicKey = ViewUtils.getText(binding.tvPublicKey);
             if(community == null){
-                community = new Community(communityName, null, publicKey,
-                        Constants.TOTAL_COIN, Constants.BLOCK_IN_AVG, null, null);
+                community = new Community(communityName, publicKey,
+                        Constants.TOTAL_COIN, Constants.BLOCK_IN_AVG);
             }else {
                 community.communityName = communityName;
                 community.publicKey = publicKey;

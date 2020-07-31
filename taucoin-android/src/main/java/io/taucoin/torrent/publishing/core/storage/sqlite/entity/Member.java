@@ -19,6 +19,8 @@ public class Member implements Parcelable {
     public String chainID;              // 成员所属社区的chainID
     @NonNull
     public String publicKey;            // 成员的公钥
+    public long balance;                // 成员的balance
+    public long power;                  // 成员的power
 
     public Member(@NonNull long id, @NonNull String chainID, @NonNull String publicKey){
         this.id = id;
@@ -29,7 +31,8 @@ public class Member implements Parcelable {
     protected Member(Parcel in) {
         id = in.readLong();
         chainID = in.readString();
-        publicKey = in.readString();
+        balance = in.readLong();
+        power = in.readLong();
     }
 
     @Override
@@ -37,6 +40,8 @@ public class Member implements Parcelable {
         dest.writeLong(id);
         dest.writeString(chainID);
         dest.writeString(publicKey);
+        dest.writeLong(balance);
+        dest.writeLong(power);
     }
 
     @Override

@@ -18,23 +18,10 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
  */
 @Dao
 public interface TxDao {
-    // SQL:查询用户的最新名字
-    String QUERY_USERS_LATEST_NAME = "SELECT a.senderPk, a.name FROM" +
-            " (SELECT name, senderPk FROM Txs WHERE chainID = :chainID AND txType = :txType ORDER BY timestamp) a" +
-            " GROUP BY a.senderPk";
-
-    // SQL:查询被回复用户的最新名字
-    String QUERY_REPLY_TXS_AND_LATEST_NAME = "SELECT b.txID, c.name FROM Txs AS b" +
-            " LEFT JOIN (" + QUERY_USERS_LATEST_NAME + ") AS c ON b.senderPK = c.senderPK" +
-            " WHERE b.txID IN (SELECT replyID FROM Txs WHERE replyID NOT NULL)";
-
     // SQL:查询社区里的交易
-    String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT d.*, e.name AS nickName, f.name AS replyName" +
-            " FROM Txs AS d" +
-            " LEFT JOIN (" + QUERY_USERS_LATEST_NAME + ") AS e ON d.senderPk = e.senderPk" +
-            " LEFT JOIN (" + QUERY_REPLY_TXS_AND_LATEST_NAME + ") AS f ON d.replyID = f.txID" +
-            " WHERE d.chainID = :chainID" +
-            " and d.senderPk NOT IN (SELECT publicKey FROM Users WHERE blacklist == 1 and isCurrentUser != 1)";
+    String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT * FROM Txs" +
+            " WHERE chainID = :chainID" +
+            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE blacklist == 1 and isCurrentUser != 1)";
 
     // SQL:查询未上链并且已过期的条件语句
     String QUERY_PENDING_TXS_NOT_EXPIRED_WHERE = " WHERE senderPk = :senderPk AND chainID = :chainID and txStatus = 0 and timestamp > :expireTimePoint ";
@@ -69,7 +56,7 @@ public interface TxDao {
      */
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    List<ReplyAndTx> getTxsByChainID(int txType, String chainID);
+    List<ReplyAndTx> getTxsByChainID(String chainID);
 
     /**
      * 根据chainID获取社区的交易的被观察者
@@ -77,7 +64,7 @@ public interface TxDao {
      */
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    Flowable<List<ReplyAndTx>> observeTxsByChainID(int txType, String chainID);
+    Flowable<List<ReplyAndTx>> observeTxsByChainID(String chainID);
 
     /**
      * 根据chainID获取社区中的交易的被观察者
@@ -85,7 +72,7 @@ public interface TxDao {
      */
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    DataSource.Factory<Integer, ReplyAndTx> queryCommunityTxs(int txType, String chainID);
+    DataSource.Factory<Integer, ReplyAndTx> queryCommunityTxs(String chainID);
 
     /**
      * 获取社区里用户未上链并且未过期的交易数
@@ -104,6 +91,7 @@ public interface TxDao {
      * @param expireTimePoint 过期的时间点
      * @return Tx
      */
+    @Transaction
     @Query(QUERY_USERS_EARLIEST_EXPIRE_TX)
     Tx getEarliestExpireTx(String chainID, String senderPk, long expireTimePoint);
 }

@@ -58,8 +58,8 @@ public class UsersUtil {
      * @return 显示名字
      */
     public static String getShowName(@NonNull ReplyAndTx tx) {
-        if(StringUtil.isNotEmpty(tx.nickName)){
-            return tx.nickName;
+        if(tx.sender != null && StringUtil.isNotEmpty(tx.sender.localName)){
+            return tx.sender.localName;
         }else{
             return getDefaultName(tx.senderPk);
         }
@@ -71,11 +71,14 @@ public class UsersUtil {
      * @return 显示名字
      */
     public static String getShowReplyName(@NonNull ReplyAndTx tx) {
-        if(StringUtil.isNotEmpty(tx.replyName)){
-            return tx.replyName;
-        }else{
-            return getDefaultName(tx.replyTx.senderPk);
+        if(tx.reply != null){
+            if(tx.reply != null && StringUtil.isNotEmpty(tx.reply.localName)){
+                return tx.reply.localName;
+            }else{
+                return getDefaultName(tx.replyTx.senderPk);
+            }
         }
+        return null;
     }
 
     /**
@@ -84,26 +87,22 @@ public class UsersUtil {
      * @return 显示名字
      */
     public static String getCoinName(Community community) {
-        if(null == community){
-            return null;
-        }
-        String coin;
-        if(StringUtil.isNotEmpty(community.coinName)){
-            coin = community.coinName;
-        }else {
-            coin = StringUtil.getFirstLettersOfName(community.communityName) + "Coin";
-        }
-        return coin;
+
+        return "TAU";
     }
 
     /**
      * 获取社区邀请链接
-     * @param community 当前社区
+     * @param chainID 链的chainID
+     * @param publicKeys 社区成员的公钥
      * @return 显示名字
      */
-    public static String getCommunityInviteLink(Community community) {
+    public static String getCommunityInviteLink(@NonNull String chainID, @NonNull String... publicKeys) {
         Context context = MainApplication.getInstance();
-        String bs = context.getString(R.string.community_invite_link_bs, community.publicKey);
-        return context.getString(R.string.community_invite_link_form, bs, community.chainID);
+        StringBuilder bs = new StringBuilder();
+        for(String publicKey : publicKeys){
+            bs.append(context.getString(R.string.community_invite_link_bs, publicKey));
+        }
+        return context.getString(R.string.community_invite_link_form, bs.toString(), chainID);
     }
 }

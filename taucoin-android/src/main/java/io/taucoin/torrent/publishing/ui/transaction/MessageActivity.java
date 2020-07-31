@@ -8,6 +8,7 @@ import android.view.View;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
@@ -28,7 +29,8 @@ public class MessageActivity extends BaseActivity implements View.OnClickListene
     private ActivityMessageBinding binding;
     private TxViewModel txViewModel;
     private Community community;
-    private String replyID;
+    private Tx replyTx;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +50,7 @@ public class MessageActivity extends BaseActivity implements View.OnClickListene
     private void initParameter() {
         if(getIntent() != null){
             community = getIntent().getParcelableExtra(IntentExtra.BEAN);
-            replyID = getIntent().getStringExtra(IntentExtra.REPLY_ID);
+            replyTx = getIntent().getParcelableExtra(IntentExtra.REPLY);
         }
     }
 
@@ -61,7 +63,7 @@ public class MessageActivity extends BaseActivity implements View.OnClickListene
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        if(StringUtil.isNotEmpty(replyID)){
+        if(replyTx != null){
             binding.toolbarInclude.toolbar.setTitle(R.string.community_comment);
             binding.etInput.setHint(R.string.tx_comment);
         }
@@ -122,8 +124,9 @@ public class MessageActivity extends BaseActivity implements View.OnClickListene
         String fee = ViewUtils.getStringTag(binding.tvFee);
         String memo = ViewUtils.getText(binding.etInput);
         Tx tx = new Tx(chainID, FmtMicrometer.fmtTxLongValue(fee), txType, memo);
-        if(StringUtil.isNotEmpty(replyID)){
-            tx.replyID = replyID;
+        if(replyTx != null){
+            tx.replyID = replyTx.txID;
+            tx.replyPk = replyTx.senderPk;
             tx.txType = MsgType.ForumComment.getVaLue();
         }
         return tx;

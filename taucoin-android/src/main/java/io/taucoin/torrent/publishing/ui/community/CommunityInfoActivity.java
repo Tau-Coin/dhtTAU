@@ -55,16 +55,16 @@ public class CommunityInfoActivity extends BaseActivity implements View.OnClickL
 
         if(community != null){
             binding.tvCommunityName.setText(community.communityName);
-            if(StringUtil.isEmpty(community.intro)){
-                binding.tvCommunityIntro.setVisibility(View.GONE);
-            }
-            binding.tvCommunityIntro.setText(community.intro);
+//            if(StringUtil.isEmpty(community.intro)){
+//                binding.tvCommunityIntro.setVisibility(View.GONE);
+//            }
+//            binding.tvCommunityIntro.setText(community.intro);
 
             // 用户不能把自己创建的社区拉入黑名单
-            if(StringUtil.isEquals(community.publicKey,
-                    MainApplication.getInstance().getPublicKey())){
-                binding.llBlacklist.setVisibility(View.GONE);
-            }
+//            if(StringUtil.isEquals(community.publicKey,
+//                    MainApplication.getInstance().getPublicKey())){
+//                binding.llBlacklist.setVisibility(View.GONE);
+//            }
         }
     }
 

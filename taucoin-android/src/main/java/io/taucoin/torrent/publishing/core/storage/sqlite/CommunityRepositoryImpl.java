@@ -74,16 +74,6 @@ public class CommunityRepositoryImpl implements CommunityRepository{
     }
 
     /**
-     * 设置社区是否静音实现
-     * @param chainID 社区chainID
-     * @param isMute 是否静音
-     */
-    @Override
-    public void setCommunityMute(String chainID, boolean isMute){
-        db.communityDao().setCommunityMute(chainID, isMute ? 1 : 0);
-    }
-
-    /**
      * 获取用户加入的社区列表
      * @param chainID
      */

@@ -8,6 +8,7 @@ import android.view.View;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
@@ -67,7 +68,8 @@ public class MembersActivity extends BaseActivity implements View.OnClickListene
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         if(community != null){
-            binding.tvInviteLink.setText(UsersUtil.getCommunityInviteLink(community));
+            String inviteLink = UsersUtil.getCommunityInviteLink(MainApplication.getInstance().getPublicKey());
+            binding.tvInviteLink.setText(inviteLink);
         }
     }
 

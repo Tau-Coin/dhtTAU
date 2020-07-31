@@ -85,16 +85,12 @@
             android:name=".ui.user.SeedActivity"/>
 
         <activity
-            android:name=".ui.transaction.NicknameActivity"/>
-
-        <activity
             android:name=".ui.transaction.TransactionCreateActivity"/>
 
         <activity
             android:name=".ui.transaction.MessageActivity"/>
 
-        <activity
-            android:name=".ui.transaction.BootStrapNodesActivity"/>
+
 
         <service
             android:name=".service.TauService" />

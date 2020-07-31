@@ -10,7 +10,6 @@ import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
-import io.taucoin.types.MsgType;
 
 /**
  * TxRepository接口实现
@@ -52,7 +51,7 @@ public class TxRepositoryImpl implements TxRepository{
      */
     @Override
     public List<ReplyAndTx> getTxsByChainID(String chainID){
-        return db.txDao().getTxsByChainID(MsgType.IdentityAnnouncement.getVaLue(), chainID);
+        return db.txDao().getTxsByChainID(chainID);
     }
 
     /**
@@ -61,12 +60,12 @@ public class TxRepositoryImpl implements TxRepository{
      */
     @Override
     public Flowable<List<ReplyAndTx>> observeTxsByChainID(String chainID){
-        return db.txDao().observeTxsByChainID(MsgType.IdentityAnnouncement.getVaLue(), chainID);
+        return db.txDao().observeTxsByChainID(chainID);
     }
 
     @Override
     public DataSource.Factory<Integer, ReplyAndTx> queryCommunityTxs(String chainID){
-        return db.txDao().queryCommunityTxs(MsgType.IdentityAnnouncement.getVaLue(), chainID);
+        return db.txDao().queryCommunityTxs(chainID);
     }
 
     /**

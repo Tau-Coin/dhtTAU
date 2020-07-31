@@ -5,8 +5,12 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
+import androidx.room.Relation;
+
+import static androidx.room.ForeignKey.CASCADE;
 
 /**
  * Room: 数据库存储Transaction实体类
@@ -27,11 +31,11 @@ public class Tx implements Parcelable {
     public String memo;                     // 交易的备注、描述、bootstraps、评论等
     public int txStatus;                    // 交易的状态 0：未上链（在交易池中）；1：上链成功 (不上链)
 
-    public String genesisPk;                // 创世区块者的公钥 只针对MsgType.CommunityAnnouncement类型
+    public String bootstrapPk;              // 引导者公钥 只针对MsgType.CommunityAnnouncement类型
     public String receiverPk;               // 交易接收者的公钥 只针对MsgType.Wiring类型
     public long amount;                     // 交易金额 只针对MsgType.Wiring类型
-    public String name;                     // 用户的链上名字 只针对MsgType.CommunityAnnouncement类型
-    public String replyID;                  // 回复的txID 只针对MsgType.ForumComment类型
+    public String replyID;                  // 回复的txID
+    public String replyPk;                  // 回复的用户的公钥
 
     public Tx(@NonNull String chainID, String receiverPk, long amount, long fee, int txType, String memo){
         this.chainID = chainID;
@@ -51,15 +55,6 @@ public class Tx implements Parcelable {
     }
 
     @Ignore
-    public Tx(@NonNull String chainID, String name, long fee, int txType, String memo){
-        this.chainID = chainID;
-        this.name = name;
-        this.fee = fee;
-        this.txType = txType;
-        this.memo = memo;
-    }
-
-    @Ignore
     private Tx(Parcel in) {
         txID = in.readString();
         chainID = in.readString();
@@ -67,13 +62,14 @@ public class Tx implements Parcelable {
         fee = in.readLong();
         senderPk = in.readString();
         receiverPk = in.readString();
-        genesisPk = in.readString();
+        bootstrapPk = in.readString();
         memo = in.readString();
         timestamp = in.readLong();
         nonce = in.readLong();
         txType = in.readInt();
         txStatus = in.readInt();
         replyID = in.readString();
+        replyPk = in.readString();
     }
 
     @Override
@@ -84,13 +80,14 @@ public class Tx implements Parcelable {
         dest.writeLong(fee);
         dest.writeString(senderPk);
         dest.writeString(receiverPk);
-        dest.writeString(genesisPk);
+        dest.writeString(bootstrapPk);
         dest.writeString(memo);
         dest.writeLong(timestamp);
         dest.writeLong(nonce);
         dest.writeInt(txType);
         dest.writeInt(txStatus);
         dest.writeString(replyID);
+        dest.writeString(replyPk);
     }
 
     @Override
