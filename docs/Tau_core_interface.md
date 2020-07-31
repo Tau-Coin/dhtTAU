@@ -1,4 +1,4 @@
-# taucoin-android 和 taucoin-core 两个Moudule之间的交互接口
+# taucoin-android 和 taucoin-core 两个Module之间的交互接口
 
 ## taucoin-core上报事件
 ### 区块链相关
