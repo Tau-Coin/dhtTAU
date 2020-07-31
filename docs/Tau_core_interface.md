@@ -26,6 +26,27 @@
   
 ## taucoin-android可调用的接口
 ### 区块链相关
+- 启动链端业务<br/>
+  void start();
+
+- 停止链端业务<br/>
+  void stop();
+
+- 暂停链端业务<br/>
+  void pause();
+
+- 恢复链端业务<br/>
+  void resume();
+
+- 更新用户seed<br/>
+   void updateKey(byte[] seed);
+
+- 注册事件<br/>
+  registerListener(TauListener listener)
+
+- 反注册事件<br/>
+  unregisterListener(TauListener listener)
+
 - 创建社区<br/>
   void createCommunity(ChainConfig chainConfig);
   
