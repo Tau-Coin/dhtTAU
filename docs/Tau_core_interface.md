@@ -5,7 +5,7 @@
 - 区块链组件全部启动完成<br/>
   void onTauStarted();
   
-- 区块链组件全部启动完成<br/>
+- 区块链组件全部停止结束<br/>
   void onTauStopped();
   
 - 区块链组件出错<br/>
@@ -15,13 +15,13 @@
   void onNewBlock(@NonNull Block block);
   
 - 区块回滚<br/>
-  void onNewBlock(@NonNull Block block);
+  void onRollBack(@NonNull Block block);
   
 - 同步区块<br/>
-  void onNewBlock(@NonNull Block block);  
+  void onSyncBlock(@NonNull Block block);
   
 ###  DHT相关
-- DHT SessionStat变化事件sSessionStats<br/>
+- DHT SessionStat变化事件<br/>
   void onSessionStats(@NonNull SessionStats newStats)
   
 ## taucoin-android可调用的接口
