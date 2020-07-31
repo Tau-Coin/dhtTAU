@@ -4,6 +4,7 @@ import io.taucoin.db.BlockDB;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.db.StateDBImpl;
 import io.taucoin.listener.TauListener;
+import io.taucoin.util.ByteArrayWrapper;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,16 +18,22 @@ import java.util.Map;
 public class ChainManager {
 
     // Chain maps: chainID -> Chain.
-    private Map<byte[], Chain> chains
-            = Collections.synchronizedMap(new HashMap<byte[], Chain>());
+    private Map<ByteArrayWrapper, Chain> chains
+            = Collections.synchronizedMap(new HashMap<>());
 
     private TauListener listener;
 
     // state database
     private StateDBImpl repositoryImpl;
 
+    // state path
+    private static final String STATE_PATH = "state";
+
     // block database
     private BlockDB blockDB;
+
+    // block store path
+    private static final String BLOCK_PATH = "block";
 
     /**
      * ChainManager constructor.
@@ -41,6 +48,16 @@ public class ChainManager {
         // If not exist, create new database.
         this.repositoryImpl = new StateDBImpl(dbFactory.newDatabase());
         this.blockDB = new BlockDB(dbFactory.newDatabase());
+    }
+
+    public boolean init() {
+        try {
+            this.repositoryImpl.open(STATE_PATH);
+            this.blockDB.open(BLOCK_PATH);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -75,5 +92,14 @@ public class ChainManager {
      */
     public boolean unfollowChain(byte[] chainID) {
         return false;
+    }
+
+    /**
+     * get chain by chain ID
+     * @param chainID chain ID
+     * @return chain or null if not found
+     */
+    public Chain getChain(byte[] chainID) {
+        return chains.get(new ByteArrayWrapper(chainID));
     }
 }

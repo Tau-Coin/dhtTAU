@@ -89,9 +89,13 @@ public class Chain {
      * Chain constructor.
      *
      * @param chainID chain identity.
+     * @param blockStore block store
+     * @param stateDB state db
      */
-    public Chain(byte[] chainID, TauListener tauListener) {
+    public Chain(byte[] chainID, BlockStore blockStore, StateDB stateDB, TauListener tauListener) {
         this.chainID = chainID;
+        this.blockStore = blockStore;
+        this.stateDB = stateDB;
         this.tauListener = tauListener;
     }
 
