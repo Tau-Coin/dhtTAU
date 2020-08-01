@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 /**
@@ -27,6 +28,7 @@ public class Member implements Parcelable {
         this.publicKey = publicKey;
     }
 
+    @Ignore
     public Member(@NonNull String chainID, @NonNull String publicKey, long balance, long power){
         this.chainID = chainID;
         this.publicKey = publicKey;
