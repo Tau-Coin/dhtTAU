@@ -54,7 +54,11 @@ public class Chain {
     // Voting thread.
     private Thread votingThread;
 
+    // collect thread
     private Thread txThread;
+
+    // publish thread
+    private Timer timer;
 
     private TauListener tauListener;
 
@@ -996,6 +1000,10 @@ public class Chain {
         });
         txThread.start();
 
+        timer = new Timer();
+        TimerTask timerTask = new PublishTask();
+        timer.schedule(timerTask, 30, ChainParam.DefaultBlockTimeInterval);
+
         return true;
     }
 
@@ -1010,6 +1018,11 @@ public class Chain {
         if (null != txThread) {
             logger.info("Stop tx thread.");
             txThread.interrupt();
+        }
+
+        if (null != timer) {
+            logger.info("Stop publish thread.");
+            timer.cancel();
         }
     }
 
@@ -1035,6 +1048,16 @@ public class Chain {
      */
     public BlockStore getBlockStore() {
         return this.blockStore;
+    }
+
+    public class PublishTask extends TimerTask {
+        /**
+         * The action to be performed by this timer task.
+         */
+        @Override
+        public void run() {
+            // TODO:: publish
+        }
     }
 
 }
