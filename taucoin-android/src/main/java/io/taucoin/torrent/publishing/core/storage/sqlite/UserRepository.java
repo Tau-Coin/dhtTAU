@@ -69,4 +69,9 @@ public interface UserRepository {
      * @return 当前用户User实例
      */
     User getUserByPublicKey(String publicKey);
+
+    /**
+     * 添加新的多个User
+     */
+    long[] addUsers(User... user);
 }

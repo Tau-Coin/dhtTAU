@@ -5,7 +5,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
@@ -57,7 +57,7 @@ public class UsersUtil {
      * @param tx 当前交易
      * @return 显示名字
      */
-    public static String getShowName(@NonNull ReplyAndTx tx) {
+    public static String getShowName(@NonNull UserAndTx tx) {
         if(tx.sender != null && StringUtil.isNotEmpty(tx.sender.localName)){
             return tx.sender.localName;
         }else{
@@ -66,29 +66,13 @@ public class UsersUtil {
     }
 
     /**
-     * 获取被回复的用户显示名字
-     * @param tx 当前交易
-     * @return 显示名字
-     */
-    public static String getShowReplyName(@NonNull ReplyAndTx tx) {
-        if(tx.reply != null){
-            if(tx.reply != null && StringUtil.isNotEmpty(tx.reply.localName)){
-                return tx.reply.localName;
-            }else{
-                return getDefaultName(tx.replyTx.senderPk);
-            }
-        }
-        return null;
-    }
-
-    /**
      * 获取显示coin name
      * @param community 当前社区
      * @return 显示名字
      */
     public static String getCoinName(Community community) {
-
-        return "TAU";
+        String firstLetters = StringUtil.getFirstLettersOfName(community.communityName);
+        return firstLetters + "coin";
     }
 
     /**

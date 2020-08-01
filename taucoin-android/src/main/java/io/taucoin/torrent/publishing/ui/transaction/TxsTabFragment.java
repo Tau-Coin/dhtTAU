@@ -25,7 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
@@ -106,7 +106,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 .setPageSize(Page.PAGE_SIZE)
                 .setInitialLoadSizeHint(Page.PAGE_SIZE)
                 .build();
-        LiveData<PagedList<ReplyAndTx>> postList = new LivePagedListBuilder<>(
+        LiveData<PagedList<UserAndTx>> postList = new LivePagedListBuilder<>(
                 txViewModel.queryCommunityTxs(community.chainID), pagedListConfig).build();
         postList.observe(activity, replyAndAllTxs -> {
             adapter.submitList(replyAndAllTxs);
@@ -188,19 +188,19 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
      */
 
     @Override
-    public void onItemClicked(ReplyAndTx tx) {
+    public void onItemClicked(UserAndTx tx) {
 
     }
 
     @Override
-    public void onItemLongClicked(ReplyAndTx tx, String msg) {
+    public void onItemLongClicked(UserAndTx tx, String msg) {
         showItemOperationDialog(tx, msg);
     }
 
     /**
      * 显示每个item长按操作选项对话框
      */
-    private void showItemOperationDialog(ReplyAndTx tx, String msg) {
+    private void showItemOperationDialog(UserAndTx tx, String msg) {
         ItemOperationsBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.item_operations, null, false);
         binding.setListener(this);
@@ -237,10 +237,9 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         }
         switch (v.getId()){
             case R.id.replay:
-                ReplyAndTx tx = (ReplyAndTx) v.getTag();
+                UserAndTx tx = (UserAndTx) v.getTag();
                 Intent intent = new Intent();
                 intent.putExtra(IntentExtra.BEAN, community);
-                intent.putExtra(IntentExtra.REPLY, tx);
                 ActivityUtil.startActivity(intent, this, MessageActivity.class);
                 break;
             case R.id.copy:

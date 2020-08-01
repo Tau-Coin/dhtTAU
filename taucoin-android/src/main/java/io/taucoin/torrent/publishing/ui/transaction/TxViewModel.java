@@ -24,9 +24,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
@@ -41,8 +42,6 @@ import io.taucoin.torrent.publishing.databinding.EditFeeDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.Chain;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
-import io.taucoin.types.Comment;
-import io.taucoin.types.CommunityAnnouncement;
 import io.taucoin.types.MsgType;
 import io.taucoin.types.Note;
 import io.taucoin.types.Transaction;
@@ -60,7 +59,7 @@ public class TxViewModel extends AndroidViewModel {
     private UserRepository userRepo;
     private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private MutableLiveData<List<ReplyAndTx>> chainTxs = new MutableLiveData<>();
+    private MutableLiveData<List<UserAndTx>> chainTxs = new MutableLiveData<>();
     private MutableLiveData<String> addState = new MutableLiveData<>();
     private CommonDialog editFeeDialog;
     public TxViewModel(@NonNull Application application) {
@@ -82,7 +81,7 @@ public class TxViewModel extends AndroidViewModel {
      * 获取社区链交易的被观察者
      * @return 被观察者
      */
-    public MutableLiveData<List<ReplyAndTx>> getChainTxs() {
+    public MutableLiveData<List<UserAndTx>> getChainTxs() {
         return chainTxs;
     }
 
@@ -100,8 +99,8 @@ public class TxViewModel extends AndroidViewModel {
      * @param chainID 社区链id
      */
     public void getTxsByChainID(String chainID){
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<ReplyAndTx>>) emitter -> {
-            List<ReplyAndTx> txs = txRepo.getTxsByChainID(chainID);
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<UserAndTx>>) emitter -> {
+            List<UserAndTx> txs = txRepo.getTxsByChainID(chainID);
             emitter.onNext(txs);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -115,7 +114,7 @@ public class TxViewModel extends AndroidViewModel {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public Flowable<List<ReplyAndTx>> observeTxsByChainID(String chainID){
+    public Flowable<List<UserAndTx>> observeTxsByChainID(String chainID){
         return txRepo.observeTxsByChainID(chainID);
     }
 
@@ -123,7 +122,7 @@ public class TxViewModel extends AndroidViewModel {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public DataSource.Factory<Integer, ReplyAndTx> queryCommunityTxs(String chainID){
+    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID){
         return txRepo.queryCommunityTxs(chainID);
     }
 
@@ -144,7 +143,7 @@ public class TxViewModel extends AndroidViewModel {
                 TxData txData = buildChainTxData(tx);
                 if(txData != null){
                     // 获取当前用户在社区中链上nonce值
-                    long nonce = daemon.getUserNonce();
+                    long nonce = daemon.getUserBalance(tx.chainID, currentUser.publicKey);
                     // 获取最早过期的交易，并且其nonce后来未被使用
                     Tx earliestExpireTx = txRepo.getEarliestExpireTx(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
                     if(earliestExpireTx != null){
@@ -175,6 +174,8 @@ public class TxViewModel extends AndroidViewModel {
                     tx.nonce = nonce;
                     txRepo.addTransaction(tx);
                     logger.debug("adding transaction txID::{}", tx.txID);
+                    // 如果是WiringTransaction交易
+                    addUserInfo(tx);
                 }else{
                     result = getApplication().getString(R.string.tx_error_type);
                 }
@@ -193,6 +194,23 @@ public class TxViewModel extends AndroidViewModel {
     }
 
     /**
+     * 添加用户信息到本地
+     * @param tx 交易
+     */
+    private void addUserInfo(Tx tx) {
+        MsgType msgType = MsgType.setValue((byte) tx.txType);
+        if(msgType == MsgType.Wiring){
+            User user = userRepo.getUserByPublicKey(tx.receiverPk);
+            if(null == user){
+                user = new User(tx.receiverPk);
+                userRepo.addUser(user);
+                logger.info("addUserInfo to local, publicKey::{}",
+                        tx.receiverPk);
+            }
+        }
+    }
+
+    /**
      * 根据不同交易类型构建不同的链上数据
      * @param tx 交易数据
      */
@@ -204,17 +222,6 @@ public class TxViewModel extends AndroidViewModel {
                 case RegularForum:
                     Note note = new Note(tx.memo);
                     txData = new TxData(msgType, note.getTxCode());
-                    break;
-                case ForumComment:
-                    byte[] replyID = ByteUtil.toByte(tx.replyID);
-                    Comment comment = new Comment(replyID, tx.memo);
-                    txData = new TxData(msgType, comment.getEncode());
-                    break;
-                case CommunityAnnouncement:
-                    byte[] annChainID = tx.chainID.getBytes();
-                    byte[] genesisPk = ByteUtil.toByte(tx.bootstrapPk);
-                    CommunityAnnouncement communityAnn = new CommunityAnnouncement(annChainID, genesisPk, tx.memo);
-                    txData = new TxData(msgType, communityAnn.getEncode());
                     break;
                 case Wiring:
                     byte[] receiverPk = ByteUtil.toByte(tx.receiverPk);
@@ -247,7 +254,8 @@ public class TxViewModel extends AndroidViewModel {
             }
         }else if(msgType == MsgType.Wiring.getVaLue()){
             // 获取当前用户的余额
-            long balance = daemon.getUserBalance();
+            String senderPk = MainApplication.getInstance().getPublicKey();
+            long balance = daemon.getUserBalance(tx.chainID, senderPk);
             if(StringUtil.isEmpty(tx.receiverPk) ||
                     ByteUtil.toByte(tx.receiverPk).length != Ed25519.PUBLIC_KEY_SIZE){
                 ToastUtils.showShortToast(R.string.tx_error_invalid_pk);

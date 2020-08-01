@@ -24,13 +24,8 @@ import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
@@ -38,9 +33,7 @@ import io.taucoin.torrent.publishing.receiver.PowerReceiver;
 import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
 import io.taucoin.types.Block;
-import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
-import io.taucoin.types.TxData;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -51,10 +44,6 @@ public class TauDaemon {
     private static final Logger logger = LoggerFactory.getLogger(TAG);
 
     private Context appContext;
-    private UserRepository userRepo;
-    private MemberRepository memberRepo;
-    private TxRepository txRepo;
-    private CommunityRepository communityRepo;
     private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private PowerReceiver powerReceiver = new PowerReceiver();
@@ -64,6 +53,7 @@ public class TauDaemon {
     private PowerManager.WakeLock wakeLock;
     private SystemServiceManager systemServiceManager;
     private ExecutorService exec = Executors.newSingleThreadExecutor();
+    private TauListenHandler tauListenHandler;
     private boolean isRunning = false;
 
     private static volatile TauDaemon instance;
@@ -83,12 +73,9 @@ public class TauDaemon {
      */
     private TauDaemon(@NonNull Context appContext) {
         this.appContext = appContext;
-        userRepo = RepositoryHelper.getUserRepository(appContext);
-        memberRepo = RepositoryHelper.getMemberRepository(appContext);
-        txRepo = RepositoryHelper.getTxRepository(appContext);
-        communityRepo = RepositoryHelper.getCommunityRepository(appContext);
         settingsRepo = RepositoryHelper.getSettingsRepository(appContext);
         systemServiceManager = SystemServiceManager.getInstance(appContext);
+        tauListenHandler = new TauListenHandler(appContext, this);
 
         AndroidLeveldbFactory androidLeveldbFactory = new AndroidLeveldbFactory();
         String repoPath = appContext.getApplicationInfo().dataDir;
@@ -208,79 +195,20 @@ public class TauDaemon {
 
         @Override
         public void onNewBlock(Block block) {
-            // 解析交易类型
-            MsgType msgType = parseMsgType(block);
-            if(null == msgType){
-                return;
-            }
-            saveCommunity(block);
-            if(msgType != MsgType.GenesisMsg){
-
-            }
+            tauListenHandler.saveCommunity(block);
+            tauListenHandler.handleBlockData(block, false, false);
         }
 
         @Override
         public void onRollBack(Block block) {
-            // 解析交易类型
-            MsgType msgType = parseMsgType(block);
-            if(null == msgType){
-                return;
-            }
-            if(msgType != MsgType.GenesisMsg){
-
-            }
+            tauListenHandler.handleBlockData(block, true, false);
         }
 
         @Override
         public void onSyncBlock(Block block) {
-            // 解析交易类型
-            MsgType msgType = parseMsgType(block);
-            if(null == msgType){
-                return;
-            }
-            if(msgType != MsgType.GenesisMsg){
-
-            }
+            tauListenHandler.handleBlockData(block, false, true);
         }
     };
-
-    /**
-     * 保存社区：查询本地是否有此社区，没有则添加到本地
-     * @param block 链上区块
-     */
-    private void saveCommunity(Block block) {
-        String chainID = ByteUtil.toHexString(block.getChainID());
-        disposables.add(communityRepo.getCommunityByChainIDSingle(chainID)
-                .subscribeOn(Schedulers.io())
-                .filter(community -> null == community)
-                .subscribe(community -> {
-                    if(null == community){
-                        community = new Community();
-                        community.chainID = ByteUtil.toHexString(block.getChainID());
-                        String[] splits = community.chainID.split("#");
-                        if(splits.length > 0){
-                            community.communityName = splits[0];
-                        }
-                        communityRepo.addCommunity(community);
-                    }
-                }));
-    }
-
-    /**
-     * 从区块中解析交易的类型
-     * @param block 区块
-     * @return MsgType
-     */
-    private MsgType parseMsgType(Block block) {
-        Transaction transaction = block.getTxMsg();
-        if(transaction != null){
-            TxData txData = transaction.getTxData();
-            if(txData != null){
-                return txData.getMsgType();
-            }
-        }
-        return null;
-    }
 
     /**
      * Only calls from TauService
@@ -302,6 +230,7 @@ public class TauDaemon {
             return;
         isRunning = false;
         disposables.clear();
+        tauListenHandler.destroy();
         tauController.stop();
     }
 
@@ -390,12 +319,17 @@ public class TauDaemon {
             settingsRepo.telecomDataEndTime(0);
             Scheduler.cancelSwitchWifiOnlyAlarm(appContext);
             if(systemServiceManager.isMobileConnected()){
-                // TODO：电信网络暂停链端业务
-                // tauController.pause();
+                if(isRunning){
+                    // TODO：电信网络暂停链端业务
+                    // tauController.pause();
+                }
+
                 logger.info("rescheduleTauBySettings, network type::MobileConnected");
             }else if(systemServiceManager.isWifiConnected()){
-                // TODO：wifi网络恢复链端业务
-                // tauController.resume();
+                if(isRunning){
+                    // TODO：wifi网络恢复链端业务
+                    // tauController.resume();
+                }
                 logger.info("rescheduleTauBySettings, network type::WifiConnected");
             }
         }else{
@@ -408,8 +342,10 @@ public class TauDaemon {
             logger.info("rescheduleTauBySettings, current time::{}", currentTime);
             if(!settingsRepo.wifiOnly() && endTime > currentTime){
                 Scheduler.setSwitchWifiOnlyAlarm(appContext, endTime);
-                // TODO：恢复链端业务
-                // tauController.resume();
+                if(isRunning){
+                    // TODO：恢复链端业务
+                    // tauController.resume();
+                }
             }else{
                 settingsRepo.wifiOnly(true);
             }
@@ -484,7 +420,7 @@ public class TauDaemon {
      * 获取用户Nonce值
      * @return long
      */
-    public long getUserNonce() {
+    public long getUserPower(String chainID, String publicKey) {
         return 0;
     }
 
@@ -492,7 +428,7 @@ public class TauDaemon {
      * 获取用户余额
      * @return long
      */
-    public long getUserBalance() {
+    public long getUserBalance(String chainID, String publicKey) {
         return 0;
     }
 }

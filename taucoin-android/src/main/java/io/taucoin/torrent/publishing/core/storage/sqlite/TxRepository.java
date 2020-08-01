@@ -4,7 +4,8 @@ import java.util.List;
 
 import androidx.paging.DataSource;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
+import io.reactivex.Single;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 
 /**
@@ -26,15 +27,15 @@ public interface TxRepository {
      * 根据chainID查询社区
      * @param chainID 社区链ID
      */
-    List<ReplyAndTx> getTxsByChainID(String chainID);
+    List<UserAndTx> getTxsByChainID(String chainID);
 
     /**
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链ID
      */
-    Flowable<List<ReplyAndTx>> observeTxsByChainID(String chainID);
+    Flowable<List<UserAndTx>> observeTxsByChainID(String chainID);
 
-    DataSource.Factory<Integer, ReplyAndTx> queryCommunityTxs(String chainID);
+    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID);
 
     /**
      * 获取社区里用户未上链并且未过期的交易数
@@ -52,4 +53,10 @@ public interface TxRepository {
      * @return int
      */
     Tx getEarliestExpireTx(String chainID, String senderPk, long expireTime);
+
+    /**
+     * 根据txID查询交易
+     * @param txID 交易ID
+     */
+    Single<Tx> getTxByTxIDSingle(String txID);
 }

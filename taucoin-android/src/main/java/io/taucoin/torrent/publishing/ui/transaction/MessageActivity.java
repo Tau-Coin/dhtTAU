@@ -8,7 +8,6 @@ import android.view.View;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
@@ -50,7 +49,6 @@ public class MessageActivity extends BaseActivity implements View.OnClickListene
     private void initParameter() {
         if(getIntent() != null){
             community = getIntent().getParcelableExtra(IntentExtra.BEAN);
-            replyTx = getIntent().getParcelableExtra(IntentExtra.REPLY);
         }
     }
 
@@ -123,13 +121,7 @@ public class MessageActivity extends BaseActivity implements View.OnClickListene
         int txType = MsgType.RegularForum.getVaLue();
         String fee = ViewUtils.getStringTag(binding.tvFee);
         String memo = ViewUtils.getText(binding.etInput);
-        Tx tx = new Tx(chainID, FmtMicrometer.fmtTxLongValue(fee), txType, memo);
-        if(replyTx != null){
-            tx.replyID = replyTx.txID;
-            tx.replyPk = replyTx.senderPk;
-            tx.txType = MsgType.ForumComment.getVaLue();
-        }
-        return tx;
+        return new Tx(chainID, FmtMicrometer.fmtTxLongValue(fee), txType, memo);
     }
 
     @Override

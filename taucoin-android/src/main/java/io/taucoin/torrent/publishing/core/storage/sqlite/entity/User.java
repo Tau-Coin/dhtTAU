@@ -36,6 +36,11 @@ public class User implements Parcelable {
     }
 
     @Ignore
+    public User(@NonNull String publicKey){
+        this.publicKey = publicKey;
+    }
+
+    @Ignore
     protected User(Parcel in) {
         publicKey = in.readString();
         seed = in.readString();

@@ -43,4 +43,13 @@ public class MemberRepositoryImpl implements MemberRepository{
         return db.memberDao().updateMember(member);
     }
 
+    /**
+     * 获取Member根据公钥和链ID
+     * @param chainID 社区链ID
+     * @param publicKey 公钥
+     * @return Member
+     */
+    public Member getMemberByChainIDAndPk(@NonNull String chainID, @NonNull String publicKey){
+        return db.memberDao().getMemberByChainIDAndPk(chainID, publicKey);
+    }
 }

@@ -22,4 +22,12 @@ public interface MemberRepository {
      * @return 结果
      */
     int updateMember(@NonNull Member member);
+
+    /**
+     * 获取Member根据公钥和链ID
+     * @param chainID 社区链ID
+     * @param publicKey 公钥
+     * @return Member
+     */
+    Member getMemberByChainIDAndPk(@NonNull String chainID, @NonNull String publicKey);
 }

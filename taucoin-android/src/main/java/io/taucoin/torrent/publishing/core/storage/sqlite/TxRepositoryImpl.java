@@ -7,7 +7,8 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
+import io.reactivex.Single;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 
@@ -50,7 +51,7 @@ public class TxRepositoryImpl implements TxRepository{
      * @param chainID 社区链id
      */
     @Override
-    public List<ReplyAndTx> getTxsByChainID(String chainID){
+    public List<UserAndTx> getTxsByChainID(String chainID){
         return db.txDao().getTxsByChainID(chainID);
     }
 
@@ -59,12 +60,12 @@ public class TxRepositoryImpl implements TxRepository{
      * @param chainID 社区链id
      */
     @Override
-    public Flowable<List<ReplyAndTx>> observeTxsByChainID(String chainID){
+    public Flowable<List<UserAndTx>> observeTxsByChainID(String chainID){
         return db.txDao().observeTxsByChainID(chainID);
     }
 
     @Override
-    public DataSource.Factory<Integer, ReplyAndTx> queryCommunityTxs(String chainID){
+    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID){
         return db.txDao().queryCommunityTxs(chainID);
     }
 
@@ -92,5 +93,13 @@ public class TxRepositoryImpl implements TxRepository{
     public Tx getEarliestExpireTx(String chainID, String senderPk, long expireTime){
         long expireTimePoint = DateUtil.getTime() - expireTime;
         return db.txDao().getEarliestExpireTx(chainID, senderPk, expireTimePoint);
+    }
+
+    /**
+     * 根据txID查询交易
+     * @param txID 交易ID
+     */
+    public Single<Tx> getTxByTxIDSingle(String txID){
+        return db.txDao().getTxByTxIDSingle(txID);
     }
 }

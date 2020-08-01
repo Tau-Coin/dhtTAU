@@ -30,6 +30,12 @@ public interface UserDao {
     long addUser(User user);
 
     /**
+     * 添加新的多个User
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long[] addUsers(User... user);
+
+    /**
      * 更新的User/Seed
      */
     @Update

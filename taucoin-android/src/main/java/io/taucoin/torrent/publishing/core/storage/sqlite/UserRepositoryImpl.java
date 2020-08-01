@@ -114,4 +114,11 @@ public class UserRepositoryImpl implements UserRepository{
     public User getUserByPublicKey(String publicKey){
         return db.userDao().getUserByPublicKey(publicKey);
     }
+
+    /**
+     * 添加新的多个User
+     */
+    public long[] addUsers(User... user){
+        return db.userDao().addUsers(user);
+    }
 }

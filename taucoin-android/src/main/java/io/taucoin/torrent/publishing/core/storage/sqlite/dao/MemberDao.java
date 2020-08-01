@@ -1,8 +1,10 @@
 package io.taucoin.torrent.publishing.core.storage.sqlite.dao;
 
+import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
+import androidx.room.Query;
 import androidx.room.Update;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
@@ -11,8 +13,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
  */
 @Dao
 public interface MemberDao {
-    String QUERY_GET_COMMUNITIES_NOT_BLOCKED = "SELECT * FROM Members where blocked = 0";
-    String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Members WHERE chainID = :chainID";
+    String QUERY_GET_Member_BY_CHAIN_ID_PK = "SELECT * FROM Members WHERE chainID = :chainID AND publicKey = :publicKey";
 
     /**
      * 添加新社区成员
@@ -25,4 +26,13 @@ public interface MemberDao {
      */
     @Update
     int updateMember(Member member);
+
+    /**
+     * 获取Member根据公钥和链ID
+     * @param chainID 社区链ID
+     * @param publicKey 公钥
+     * @return Member
+     */
+    @Query(QUERY_GET_Member_BY_CHAIN_ID_PK)
+    Member getMemberByChainIDAndPk(@NonNull String chainID, @NonNull String publicKey);
 }

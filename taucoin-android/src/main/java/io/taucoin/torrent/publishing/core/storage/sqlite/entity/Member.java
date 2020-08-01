@@ -22,10 +22,16 @@ public class Member implements Parcelable {
     public long balance;                // 成员的balance
     public long power;                  // 成员的power
 
-    public Member(@NonNull long id, @NonNull String chainID, @NonNull String publicKey){
-        this.id = id;
+    public Member(@NonNull String chainID, @NonNull String publicKey){
         this.chainID = chainID;
         this.publicKey = publicKey;
+    }
+
+    public Member(@NonNull String chainID, @NonNull String publicKey, long balance, long power){
+        this.chainID = chainID;
+        this.publicKey = publicKey;
+        this.balance = balance;
+        this.power = power;
     }
 
     protected Member(Parcel in) {

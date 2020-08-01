@@ -10,7 +10,8 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.model.data.ReplyAndTx;
+import io.reactivex.Single;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 
 /**
@@ -38,6 +39,10 @@ public interface TxDao {
             " AND nonce NOT IN (" + QUERY_PENDING_TX_IDS_NOT_EXPIRED + ")" +
             " ORDER BY nonce LIMIT 1";
 
+    String QUERY_GET_TX_BY_TX_ID = "SELECT * FROM Txs" +
+            " WHERE txID = :txID";
+
+
     /**
      * 添加新的交易
      */
@@ -56,7 +61,7 @@ public interface TxDao {
      */
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    List<ReplyAndTx> getTxsByChainID(String chainID);
+    List<UserAndTx> getTxsByChainID(String chainID);
 
     /**
      * 根据chainID获取社区的交易的被观察者
@@ -64,7 +69,7 @@ public interface TxDao {
      */
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    Flowable<List<ReplyAndTx>> observeTxsByChainID(String chainID);
+    Flowable<List<UserAndTx>> observeTxsByChainID(String chainID);
 
     /**
      * 根据chainID获取社区中的交易的被观察者
@@ -72,7 +77,7 @@ public interface TxDao {
      */
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    DataSource.Factory<Integer, ReplyAndTx> queryCommunityTxs(String chainID);
+    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID);
 
     /**
      * 获取社区里用户未上链并且未过期的交易数
@@ -94,4 +99,11 @@ public interface TxDao {
     @Transaction
     @Query(QUERY_USERS_EARLIEST_EXPIRE_TX)
     Tx getEarliestExpireTx(String chainID, String senderPk, long expireTimePoint);
+
+    /**
+     * 根据txID查询交易
+     * @param txID 交易ID
+     */
+    @Query(QUERY_GET_TX_BY_TX_ID)
+    Single<Tx> getTxByTxIDSingle(String txID);
 }
