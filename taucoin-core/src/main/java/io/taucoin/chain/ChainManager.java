@@ -7,6 +7,7 @@ import io.taucoin.db.StateDBImpl;
 import io.taucoin.listener.TauListener;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
+import io.taucoin.util.Repo;
 import io.taucoin.types.Block;
 
 import org.slf4j.Logger;
@@ -57,14 +58,13 @@ public class ChainManager {
         this.blockDB = new BlockDB(dbFactory.newDatabase());
     }
 
-    public boolean openChainDB() {
+    public void openChainDB() throws Exception {
         try {
-            this.repositoryImpl.open(STATE_PATH);
-            this.blockDB.open(BLOCK_PATH);
+            this.repositoryImpl.open(Repo.getRepoPath() + "/" + STATE_PATH);
+            this.blockDB.open(Repo.getRepoPath() + "/" + BLOCK_PATH);
         } catch (Exception e) {
-            return false;
+            throw e;
         }
-        return true;
     }
 
     public void closeChainDB() {
@@ -77,35 +77,32 @@ public class ChainManager {
      * This method is called by TauController.
      */
     public void start() {
+
 		// Open the db for repo and block
-		if(openChainDB()){
+        try {
+            openChainDB();
 
-			Set<byte[]> followedChains = new HashSet<byte[]>();
-			try{
-				followedChains= this.repositoryImpl.getAllFollowedChains();
-        	} catch (Exception e) {
-            	logger.error(e.getMessage(), e);
-        	}
+            Set<byte[]> followedChains = new HashSet<byte[]>();
+            followedChains= this.repositoryImpl.getAllFollowedChains();
 
-			Iterator<byte[]> chainsItor = followedChains.iterator();
-			while (chainsItor.hasNext()) {
+            Iterator<byte[]> chainsItor = followedChains.iterator();
+            while (chainsItor.hasNext()) {
 
-				// New single chain
-				byte[] chainid= chainsItor.next();
-				ByteArrayWrapper wrapperChainID= new ByteArrayWrapper(chainid);
+                // New single chain
+                byte[] chainid = chainsItor.next();
+                ByteArrayWrapper wrapperChainID = new ByteArrayWrapper(chainid);
 
-			    Chain chain= new Chain(chainid, this.blockDB, this.repositoryImpl, this.listener);
-				
-				// Add chain
-    			this.chains.put(wrapperChainID, chain);
-						
-				// start chain process
-				chain.start();
-				
-        	}
-			
-		}		
-		
+                Chain chain = new Chain(chainid, this.blockDB, this.repositoryImpl, this.listener);
+
+                // Add chain
+                this.chains.put(wrapperChainID, chain);
+                // start chain process
+                chain.start();
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            // TODO: notify starting blockchains exception.
+        }
     }
 
     /**
