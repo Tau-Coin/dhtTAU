@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey;
 public class Message implements Parcelable {
     @NonNull
     @PrimaryKey
-    public String msgHash;                  // 消息的Hash
+    public String msgID;                    // 消息的ID
     @NonNull
     public String chainID;                  // 消息所属社区chainID
     @NonNull
@@ -24,6 +24,7 @@ public class Message implements Parcelable {
     public long timestamp;                  // 消息时间戳
     @NonNull
     public String context;                  // 消息内容
+    public String replyID;                  // 被回复消息ID
 
     public Message(@NonNull String chainID, String context){
         this.chainID = chainID;
@@ -32,18 +33,22 @@ public class Message implements Parcelable {
 
     @Ignore
     private Message(Parcel in) {
+        msgID = in.readString();
         chainID = in.readString();
         senderPk = in.readString();
         context = in.readString();
         timestamp = in.readLong();
+        replyID = in.readString();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(msgID);
         dest.writeString(chainID);
         dest.writeString(senderPk);
         dest.writeString(context);
         dest.writeLong(timestamp);
+        dest.writeString(replyID);
     }
 
     @Override
@@ -65,11 +70,11 @@ public class Message implements Parcelable {
 
     @Override
     public int hashCode() {
-        return msgHash.hashCode();
+        return msgID.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Message && (o == this || msgHash.equals(((Message)o).msgHash));
+        return o instanceof Message && (o == this || msgID.equals(((Message)o).msgID));
     }
 }

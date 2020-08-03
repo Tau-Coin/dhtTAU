@@ -269,9 +269,9 @@
 	</tr>
 	<tr>
 		<td>1</td>
-		<td>msgHash</td>
+		<td>msgID</td>
 		<td>TEXT</td>
-		<td>消息的Hash</td>
+		<td>消息的ID</td>
 		<td></td>
 		<td>主键</td>
 	</tr>
@@ -305,6 +305,14 @@
 		<td>TEXT</td>
 		<td>消息内容</td>
 		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>6</td>
+		<td>replyID</td>
+		<td>TEXT</td>
+		<td>被回复的消息ID</td>
+		<td>&radic;</td>
 		<td></td>
 	</tr>
 </table>
