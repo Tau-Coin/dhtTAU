@@ -21,8 +21,6 @@
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />
-<!--    <uses-feature android:name="android.software.leanback"-->
-<!--        android:required="false" />-->
 
     <application
         android:name=".MainApplication"
@@ -31,9 +29,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="GoogleAppIndexingWarning,UnusedAttribute"
+        tools:replace="android:allowBackup, android:supportsRtl">
         <activity
             android:name=".ui.main.MainActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:theme="@style/AppTheme.Launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -43,54 +44,68 @@
         </activity>
 
         <activity
-            android:name=".ui.search.SearchActivity"/>
+            android:name=".ui.search.SearchActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.community.CommunityActivity"/>
+            android:name=".ui.community.CommunityActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.community.CommunityCreateActivity"/>
+            android:name=".ui.community.CommunityCreateActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.community.CommunitySettingActivity"/>
+            android:name=".ui.community.CommunitySettingActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.community.CommunityChooseActivity"/>
+            android:name=".ui.community.CommunityChooseActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.community.CommunityInfoActivity"/>
+            android:name=".ui.community.CommunityInfoActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.community.MiningInfoActivity"/>
+            android:name=".ui.community.MiningInfoActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.community.MembersActivity"/>
+            android:name=".ui.community.MembersActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.contacts.ContactsActivity"/>
+            android:name=".ui.contacts.ContactsActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.setting.SettingActivity"/>
+            android:name=".ui.setting.SettingActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.setting.PrivacySecurityActivity"/>
+            android:name=".ui.setting.PrivacySecurityActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.setting.BlacklistActivity"/>
+            android:name=".ui.setting.BlacklistActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.setting.DashboardActivity"/>
+            android:name=".ui.setting.DashboardActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.user.SeedActivity"/>
+            android:name=".ui.user.SeedActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.transaction.TransactionCreateActivity"/>
+            android:name=".ui.transaction.TransactionCreateActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.transaction.MessageActivity"/>
-
-
+            android:name=".ui.transaction.MessageActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <service
             android:name=".service.TauService" />
