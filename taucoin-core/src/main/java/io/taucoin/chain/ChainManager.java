@@ -1,10 +1,13 @@
 package io.taucoin.chain;
 
+import io.taucoin.config.ChainConfig;
 import io.taucoin.db.BlockDB;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.db.StateDBImpl;
 import io.taucoin.listener.TauListener;
+import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
+import io.taucoin.types.Block;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -101,5 +104,40 @@ public class ChainManager {
      */
     public Chain getChain(byte[] chainID) {
         return chains.get(new ByteArrayWrapper(chainID));
+    }
+
+    /**
+     * create new community.
+     * @param cf
+     * @return chainid.
+     */
+    public byte[] createNewCommunity(ChainConfig cf){
+        Block genesis = new Block(cf);
+        boolean ret = followChain(genesis.getChainID());
+        try{
+            blockDB.saveBlock(genesis,true);
+        }catch (Exception e){
+            ret = false;
+        }
+        return ret == true ? genesis.getChainID(): null;
+    }
+
+    /**
+     * according to chainid select a chain to sendTransaction.
+     * @param tx
+     * @return
+     * todo
+     */
+    public byte[] sendTransaction(Transaction tx){
+        return null;
+    }
+
+    /**
+     * make all followed chain start mining.
+     * @return
+     * todo
+     */
+    public byte[][] startMining(){
+        return null;
     }
 }
