@@ -51,7 +51,7 @@ class TauListenHandler {
      * 保存社区：查询本地是否有此社区，没有则添加到本地
      * @param block 链上区块
      */
-    void saveCommunity(Block block) {
+    private void saveCommunity(Block block, boolean isSync) {
         String chainID = ByteUtil.toHexString(block.getChainID());
         disposables.add(communityRepo.getCommunityByChainIDSingle(chainID)
                 .subscribeOn(Schedulers.io())
@@ -63,9 +63,20 @@ class TauListenHandler {
                         if(splits.length > 0){
                             community.communityName = splits[0];
                         }
+                        community.totalBlocks = block.getBlockNum();
+                        community.syncBlock = block.getBlockNum();
                         communityRepo.addCommunity(community);
-                        logger.info("SaveCommunity to local, communityName::{}, chainID::{}",
-                                community.communityName, community.chainID);
+                        logger.info("SaveCommunity to local, communityName::{}, chainID::{}, totalBlocks::{}, syncBlock::{}",
+                                community.communityName, community.chainID, community.totalBlocks, community.syncBlock);
+                    }else {
+                        if(isSync){
+                            community.syncBlock = block.getBlockNum();
+                        }else{
+                            community.totalBlocks = block.getBlockNum();
+                        }
+                        communityRepo.addCommunity(community);
+                        logger.info("Update Community Info, communityName::{}, chainID::{}, totalBlocks::{}, syncBlock::{}",
+                                community.communityName, community.chainID, community.totalBlocks, community.syncBlock);
                     }
                 }));
     }
@@ -80,6 +91,8 @@ class TauListenHandler {
      */
     void handleBlockData(Block block, boolean isRollback, boolean isSync) {
         if(block != null){
+            // 更新社区信息
+            saveCommunity(block, isSync);
             Transaction txMsg = block.getTxMsg();
             // 更新矿工的信息
             saveUserInfo(block.getMinerPubkey(), block.getTimeStamp());

@@ -14,14 +14,14 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "Messages")
 public class Message implements Parcelable {
     @NonNull
-    @PrimaryKey(autoGenerate = true)
-    public long id;                         // 自增id
+    @PrimaryKey
+    public String msgHash;                  // 消息的Hash
     @NonNull
     public String chainID;                  // 消息所属社区chainID
     @NonNull
     public String senderPk;                 // 消息发送者的公钥
     @NonNull
-    public long timestamp;                // 消息时间戳
+    public long timestamp;                  // 消息时间戳
     @NonNull
     public String context;                  // 消息内容
 
@@ -64,7 +64,12 @@ public class Message implements Parcelable {
     };
 
     @Override
+    public int hashCode() {
+        return msgHash.hashCode();
+    }
+
+    @Override
     public boolean equals(Object o) {
-        return o instanceof Message && (o == this || id == (((Message)o).id));
+        return o instanceof Message && (o == this || msgHash.equals(((Message)o).msgHash));
     }
 }

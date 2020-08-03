@@ -195,7 +195,6 @@ public class TauDaemon {
 
         @Override
         public void onNewBlock(Block block) {
-            tauListenHandler.saveCommunity(block);
             tauListenHandler.handleBlockData(block, false, false);
         }
 

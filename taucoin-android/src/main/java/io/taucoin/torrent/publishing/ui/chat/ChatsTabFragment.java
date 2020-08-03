@@ -173,7 +173,7 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
         binding.copy.setTag(msg);
         binding.copyLink.setTag(msg);
         binding.blacklist.setTag(msg.senderPk);
-        binding.favourite.setTag(msg.id);
+        binding.favourite.setTag(msg.msgHash);
         binding.setListener(this);
         operationsDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())

@@ -11,11 +11,8 @@ import androidx.room.PrimaryKey;
 /**
  * 数据库存储社区Member实体类
  */
-@Entity(tableName = "Members")
+@Entity(tableName = "Members", primaryKeys = {"chainID", "publicKey"})
 public class Member implements Parcelable {
-    @NonNull
-    @PrimaryKey(autoGenerate = true)
-    public long id;                     // 自增id
     @NonNull
     public String chainID;              // 成员所属社区的chainID
     @NonNull
@@ -37,15 +34,14 @@ public class Member implements Parcelable {
     }
 
     protected Member(Parcel in) {
-        id = in.readLong();
         chainID = in.readString();
+        publicKey = in.readString();
         balance = in.readLong();
         power = in.readLong();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(id);
         dest.writeString(chainID);
         dest.writeString(publicKey);
         dest.writeLong(balance);
@@ -71,11 +67,13 @@ public class Member implements Parcelable {
 
     @Override
     public int hashCode() {
-        return (int)(id ^ (id >>> 32));
+        return chainID.hashCode() + publicKey.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Member && (o == this || id == (((Member)o).id));
+
+        return o instanceof Member && (o == this || (chainID.equals(((Member)o).chainID) &&
+                publicKey.equals(((Member)o).publicKey)));
     }
 }
