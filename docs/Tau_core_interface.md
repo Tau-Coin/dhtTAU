@@ -1,60 +1,129 @@
-# taucoin-android 和 taucoin-core 两个Module之间的交互接口
+# Taucoin UI 端功能需求分析
 
-## taucoin-core上报事件
+## Taucoin-android 调用接口
+
 ### 区块链相关
-- 区块链组件全部启动完成<br/>
-  void onTauStarted();
-  
-- 区块链组件全部停止结束<br/>
-  void onTauStopped();
-  
-- 区块链组件出错<br/>
-  void onTauError(@NonNull String errorMsg);
-  
-- 新的区块<br/>
-  void onNewBlock(@NonNull Block block);
-  
-- 区块回滚<br/>
-  void onRollBack(@NonNull Block block);
-  
-- 同步区块<br/>
-  void onSyncBlock(@NonNull Block block);
-  
-###  DHT相关
-- DHT SessionStat变化事件<br/>
-  void onSessionStats(@NonNull SessionStats newStats)
-  
-## taucoin-android可调用的接口
-### 区块链相关
-- 启动链端业务<br/>
-  void start();
 
-- 停止链端业务<br/>
-  void stop();
+- 启动链端运行环境
+```
+	void startTau();
+```
 
-- 暂停链端业务<br/>
-  void pause();
+- 停止链端运行环境
+```
+	void stopTau();
+```
 
-- 恢复链端业务<br/>
-  void resume();
+- 暂停链端挖矿
+```
+	void startApplications();
+```
 
-- 更新用户seed<br/>
-   void updateKey(byte[] seed);
+- 恢复链端挖矿
+```
+	void stopApplications();
+```
 
-- 注册事件<br/>
-  registerListener(TauListener listener)
+- 获取 DHT Engine 状态
+```
+	DhtNodeList getDhtEngineStatus();
+```
 
-- 反注册事件<br/>
-  unregisterListener(TauListener listener)
+- 产生新用户seed
+```
+	void generateAccountSeed(byte[] seed);
+```
 
-- 创建社区<br/>
-  void createCommunity(ChainConfig chainConfig);
+- 更新用户seed
+```
+	void updateAccountSeed(byte[] seed);
+```
+
+- 获取用户某链的状态
+```
+	AccountState getAccountState(String chainID, String publicKey);
+```
+
+- 创建交易-(Note, Comment, CommuintyAnnouncement, Wiring, ???)
+```
+  Transaction createTransaction(ChainConfig chainConfig);
+```
   
-- 提交交易到链端交易池<br/>
+- 提交交易
+```
   void submitTransaction(Transaction tx);
+```
 
-- 获取用户当前链的Power值<br/>
-  void getUserPower(String chainID, String publicKey);
-  
-- 获取用户当前链的Balance值<br/>
-  void getUserBalance(String chainID, String publicKey);
+- 获取交易池交易
+ 
+### Chat 相关
+- Instant chat
+```
+  void createInstantChat(String chainID, byte[] msg， Hash hash);
+```
+
+- Invite chat
+
+
+### 事件管理相关
+- 增加事件
+```
+	void registerListener(TauListener listener)；
+```
+
+- 取消事件
+```
+	void unregisterListener(TauListener listener)；
+```
+## Taucoin-core 模块事件
+
+###  DHT 相关
+- DHT SessionStatus (Nodes no, Nodes info- ip、port、nodeid)
+```
+	void onSessionStats(@NonNull SessionStats newStats)；
+```
+
+### 区块链业务相关
+
+- 区块链组件启动完成通知
+```
+	void onTauStarted();
+```
+
+- 区块链组件停止完成通知
+```
+	void onTauStopped();
+```
+
+- 区块链组件出错通知
+```
+	void onTauError(@NonNull String errorMsg);
+```
+
+- 新的区块通知
+```
+	void onNewBlock(@NonNull Block block);
+```
+
+- 区块回滚通知
+```
+	void onRollBackBlock(@NonNull Block block);
+```
+
+- 区块同步通知
+```
+	void onSyncBlock(@NonNull Block block);
+```
+
+### Chat 相关事件
+- Instant chat
+```
+  void createInstantChat(@NonNull DhtItem item);
+```
+
+- Invite chat
+
+## 其他
+- Contact list
+- Transaction fee
+- Journal
