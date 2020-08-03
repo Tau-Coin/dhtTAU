@@ -1,8 +1,10 @@
 package io.taucoin.core;
 
 import io.taucoin.types.Transaction;
+import io.taucoin.util.ByteArrayWrapper;
 
 import java.util.List;
+import java.util.Set;
 
 public interface TransactionPool {
 
@@ -145,6 +147,18 @@ public interface TransactionPool {
      * @return myself pubKey when there is no tx in pool
      */
     byte[] getOptimalPeer();
+
+    /**
+     * re-check the legality of the corresponding account transaction
+     * @param pubKey public key
+     */
+    void recheckAccoutTx(byte[] pubKey);
+
+    /**
+     * re-check the legality of the corresponding accounts transaction
+     * @param accounts public key set
+     */
+    void recheckAccoutTx(Set<ByteArrayWrapper> accounts);
 
 }
 

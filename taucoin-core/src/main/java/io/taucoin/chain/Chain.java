@@ -287,7 +287,7 @@ public class Chain {
                                     break;
                                 }
                                 // get from dht
-                                Block dhtBlock = getBlockFromDHT(previousHash);
+                                Block dhtBlock = getBlockFromDHTByHash(previousHash);
                                 if (null != dhtBlock) {
                                     previousHash = dhtBlock.getPreviousBlockHash();
                                     this.blockStore.saveBlock(dhtBlock, false);
@@ -375,7 +375,7 @@ public class Chain {
      */
     private void syncBlockForMoreState(StateDB stateDB) {
         if (null != this.syncBlock) {
-            Block block = getBlockFromDHT(this.syncBlock.getPreviousBlockHash());
+            Block block = getBlockFromDHTByHash(this.syncBlock.getPreviousBlockHash());
             if (null != block) {
                 try {
                     StateDB track = stateDB.startTracking(this.chainID);
@@ -461,7 +461,7 @@ public class Chain {
             this.blockStore.removeChain(this.chainID);
             this.stateDB.clearAllState(this.chainID);
 
-            Block bestVoteBlock = getBlockFromDHT(bestVote.getBlockHash());
+            Block bestVoteBlock = getBlockFromDHTByHash(bestVote.getBlockHash());
 
             // initial sync from best vote
             StateDB track = this.stateDB.startTracking(this.chainID);
@@ -475,7 +475,7 @@ public class Chain {
             Block block = bestVoteBlock;
             int counter = 0;
             while (!Thread.interrupted() && block.getBlockNum() > 0 && counter < ChainParam.MUTABLE_RANGE) {
-                block = getBlockFromDHT(this.syncBlock.getPreviousBlockHash());
+                block = getBlockFromDHTByHash(this.syncBlock.getPreviousBlockHash());
                 if (this.stateProcessor.backwardProcess(block, track)) {
                     this.blockStore.saveBlock(block, true);
                     this.syncBlock = block;
@@ -527,7 +527,7 @@ public class Chain {
                     break;
                 }
                 // get from dht
-                Block dhtBlock = getBlockFromDHT(previousHash);
+                Block dhtBlock = getBlockFromDHTByHash(previousHash);
                 if (null != dhtBlock) {
                     previousHash = dhtBlock.getPreviousBlockHash();
                     this.blockStore.saveBlock(dhtBlock, false);
@@ -558,7 +558,7 @@ public class Chain {
 //        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey, this.blockSalt, TIMEOUT);
 //        byte[] blockHash = TorrentDHTEngine.getInstance().dhtGet(spec);
 //        if (null != blockHash) {
-//            return getBlockFromDHT(blockHash);
+//            return getBlockFromDHTByHash(blockHash);
 //        }
 //        return null;
 
@@ -570,7 +570,7 @@ public class Chain {
                 this.peerManager.addBlockPeer(value.getPeer());
             }
             if (null != value.getHash()) {
-                return getBlockFromDHT(value.getHash());
+                return getBlockFromDHTByHash(value.getHash());
             }
         }
 
@@ -601,26 +601,28 @@ public class Chain {
      * @param hash
      * @return
      */
-    private Block getBlockFromDHT(byte[] hash) {
+    private Block getBlockFromDHTByHash(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
 
         // when you get a block, you need to put a block simultaneously
-        Block block = getBlockRandomlyFromDB();
+//        Block block = getBlockRandomlyFromDB();
+//
+//        if (null == block) {
+//            block = this.bestBlock;
+//        }
+//
+//        DHT.ExchangeImmutableItemResult result;
+//        if (null != block) {
+//            DHT.ImmutableItem blockItem = new DHT.ImmutableItem(block.getEncoded());
+//            result = TorrentDHTEngine.getInstance().dhtTauGet(spec, blockItem);
+//        } else {
+//            result = TorrentDHTEngine.getInstance().dhtTauGet(spec, null);
+//        }
 
-        if (null == block) {
-            block = this.bestBlock;
-        }
+        byte[] result = TorrentDHTEngine.getInstance().dhtGet(spec);
 
-        DHT.ExchangeImmutableItemResult result;
-        if (null != block) {
-            DHT.ImmutableItem blockItem = new DHT.ImmutableItem(block.getEncoded());
-            result = TorrentDHTEngine.getInstance().dhtTauGet(spec, blockItem);
-        } else {
-            result = TorrentDHTEngine.getInstance().dhtTauGet(spec, null);
-        }
-
-        if (null != result.getData()) {
-            return new Block(result.getData());
+        if (null != result) {
+            return new Block(result);
         }
 
         return null;
@@ -631,28 +633,45 @@ public class Chain {
      * @param peer peer to get
      * @return transaction
      */
-    private Transaction getTxFromDHT(byte[] peer) {
+    private Transaction getTxFromPeer(byte[] peer) {
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalt, TIMEOUT);
-        byte[] rlp = TorrentDHTEngine.getInstance().dhtGet(spec);
-        if (null != rlp) {
-            MutableItemValue value = new MutableItemValue(rlp);
+        byte[] data = TorrentDHTEngine.getInstance().dhtGet(spec);
+        if (null != data) {
+            MutableItemValue value = new MutableItemValue(data);
             if (null != value.getPeer()) {
                 this.peerManager.addTxPeer(value.getPeer());
             }
             if (null != value.getHash()) {
-                DHT.GetImmutableItemSpec immutableItemSpec = new DHT.GetImmutableItemSpec(value.getHash(), TIMEOUT);
-                Transaction tx = this.txPool.getBestTransaction();
-                DHT.ExchangeImmutableItemResult result;
-                if (null != tx) {
-                    DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
-                    result = TorrentDHTEngine.getInstance().dhtTauGet(immutableItemSpec, immutableItem);
-                } else {
-                    result = TorrentDHTEngine.getInstance().dhtTauGet(immutableItemSpec, null);
-                }
-                if (null != result) {
-                    return new Transaction(result.getData());
-                }
+                return getTxFromDHTByHash(value.getHash());
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * get a tx by hash from dht
+     * @param hash
+     * @return
+     */
+    private Transaction getTxFromDHTByHash(byte[] hash) {
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
+
+        // when you get a tx, you need to put a tx simultaneously
+//        DHT.GetImmutableItemSpec immutableItemSpec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
+//        Transaction tx = this.txPool.getBestTransaction();
+//        DHT.ExchangeImmutableItemResult result;
+//        if (null != tx) {
+//            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
+//            result = TorrentDHTEngine.getInstance().dhtTauGet(immutableItemSpec, immutableItem);
+//        } else {
+//            result = TorrentDHTEngine.getInstance().dhtTauGet(immutableItemSpec, null);
+//        }
+
+        byte[] result = TorrentDHTEngine.getInstance().dhtGet(spec);
+
+        if (null != result) {
+            return new Transaction(result);
         }
 
         return null;
@@ -958,12 +977,16 @@ public class Chain {
         return block;
     }
 
+    /**
+     * 1. get tx from peer
+     * 2. publish self tx
+     */
     private void txProcess() {
         Transaction lastTx = null;
         while (!Thread.interrupted()) {
             // get tx
             byte[] peer = this.peerManager.popUpOptimalTxPeer();
-            Transaction tx = getTxFromDHT(peer);
+            Transaction tx = getTxFromPeer(peer);
             if (null != tx) {
                 this.txPool.addRemote(tx);
             }
@@ -1056,7 +1079,26 @@ public class Chain {
          */
         @Override
         public void run() {
-            // TODO:: publish
+            // publish block randomly
+            Block block = getBlockRandomlyFromDB();
+            if (null != block) {
+                DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(block.getEncoded());
+                TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+            }
+
+            // publish tx
+            Transaction tx = txPool.getLocalBestTransaction();
+            if (null != tx) {
+                DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
+                TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+            }
+            List<Transaction> list = txPool.getLocals();
+            if (list.size() > 1) {
+                Random random = new Random(System.currentTimeMillis());
+                int i = random.nextInt(list.size());
+                DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(list.get(i).getEncoded());
+                TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+            }
         }
     }
 

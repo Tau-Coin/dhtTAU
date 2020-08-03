@@ -112,6 +112,24 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     @Override
     public void addLocal(Transaction tx) {
+        if (null == tx) {
+            logger.error("Tx is null.");
+            return;
+        }
+
+        if (!tx.isTxParamValidate()) {
+            return;
+        }
+
+        if (!tx.verifyTransactionSig()) {
+            return;
+        }
+
+        if (!checkTypeAndBalance(tx)) {
+            return;
+        }
+
+
         // save to db first
         try {
             this.stateDB.putTxIntoSelfTxPool(chainID, tx);
@@ -240,6 +258,18 @@ public class TransactionPoolImpl implements TransactionPool {
             addLocal(tx);
         }
 
+        if (!tx.isTxParamValidate()) {
+            return;
+        }
+
+        if (!tx.verifyTransactionSig()) {
+            return;
+        }
+
+        if (!checkTypeAndBalance(tx)) {
+            return;
+        }
+
         // check nonce
         long currentNonce = getNonce(pubKey);
         if (tx.getNonce() != currentNonce + 1) {
@@ -278,6 +308,54 @@ public class TransactionPoolImpl implements TransactionPool {
         // record in the remotes
         accountTx.put(new ByteArrayWrapper(pubKey), tx.getTxID());
         remotes.offer(MemoryPoolEntry.with(tx));
+    }
+
+    /**
+     * validate tx
+     * @param tx
+     * @return
+     */
+    private boolean checkTypeAndBalance(Transaction tx) {
+        try {
+            switch (tx.getTxData().getMsgType()) {
+                case Wiring: {
+                    long cost = tx.getTxData().getAmount() + tx.getTxFee();
+                    AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
+                    if (accountState.getBalance().longValue() < cost) {
+                        logger.error("Balance is not enough.");
+                        return false;
+                    }
+                    break;
+                }
+                case RegularForum: {
+                    long cost = tx.getTxFee();
+                    AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
+                    if (accountState.getBalance().longValue() < cost) {
+                        logger.error("Balance is not enough.");
+                        return false;
+                    }
+                    break;
+                }
+                case ForumComment: {
+                    long cost = tx.getTxFee();
+                    AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
+                    if (accountState.getBalance().longValue() < cost) {
+                        logger.error("Balance is not enough.");
+                        return false;
+                    }
+                    break;
+                }
+                default: {
+                    logger.error("Type is not supported!");
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -522,6 +600,94 @@ public class TransactionPoolImpl implements TransactionPool {
         }
 
         return AccountManager.getInstance().getKeyPair().first;
+    }
+
+    /**
+     * re-check the legality of the corresponding account transaction
+     *
+     * @param pubKey
+     */
+    @Override
+    public void recheckAccoutTx(byte[] pubKey) {
+        try {
+            if (Arrays.equals(this.userPubKey, pubKey)) {
+                Transaction tx = getLocalBestTransaction();
+                if (null != tx) {
+                    // check nonce
+                    AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
+                    // if local best tx nonce is too little, remove it until big enough
+                    if (accountState.getNonce().longValue() >= tx.getNonce()) {
+                        removeRemote(tx);
+                        recheckAccoutTx(this.userPubKey);
+                    }
+
+                }
+            } else {
+                byte[] txid = this.accountTx.get(new ByteArrayWrapper(pubKey));
+                if (null == txid) {
+                    return;
+                }
+
+                Transaction tx = this.all.get(new ByteArrayWrapper(txid));
+                if (null != tx) {
+                    // check nonce
+                    AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
+                    if (accountState.getNonce().longValue() + 1 != tx.getNonce()) {
+                        logger.error("Nonce is discontinuity.");
+                        removeRemote(tx);
+                    }
+
+                    // check type and balance
+                    switch (tx.getTxData().getMsgType()) {
+                        case Wiring: {
+                            long cost = tx.getTxData().getAmount() + tx.getTxFee();
+
+                            if (accountState.getBalance().longValue() < cost) {
+                                logger.error("Balance is not enough.");
+                                removeRemote(tx);
+                            }
+                            break;
+                        }
+                        case RegularForum: {
+                            long cost = tx.getTxFee();
+                            if (accountState.getBalance().longValue() < cost) {
+                                logger.error("Balance is not enough.");
+                                removeRemote(tx);
+                            }
+                            break;
+                        }
+                        case ForumComment: {
+                            long cost = tx.getTxFee();
+                            if (accountState.getBalance().longValue() < cost) {
+                                logger.error("Balance is not enough.");
+                                removeRemote(tx);
+                            }
+                            break;
+                        }
+                        default: {
+                            logger.error("Type is not supported!");
+                            removeRemote(tx);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * re-check the legality of the corresponding accounts transaction
+     *
+     * @param accounts public key set
+     */
+    @Override
+    public void recheckAccoutTx(Set<ByteArrayWrapper> accounts) {
+        if (null != accounts) {
+            for (ByteArrayWrapper account: accounts) {
+                recheckAccoutTx(account.getData());
+            }
+        }
     }
 }
 

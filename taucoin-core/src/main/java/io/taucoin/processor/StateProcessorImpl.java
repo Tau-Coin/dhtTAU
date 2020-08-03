@@ -94,26 +94,26 @@ public class StateProcessorImpl implements StateProcessor {
                     stateDB.updateAccount(chainID, receiver, receiverState);
                     break;
                 }
-                case CommunityAnnouncement: {
-                    // check balance
-                    if (sendState.getBalance().longValue() < fee) {
-                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-                                fee, sendState.getBalance(), Hex.toHexString(sender));
-                        return INVALID_BLOCK;
-                    }
-
-                    //Execute the transaction
-                    // miner
-                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-                    minerState.addBalance(BigInteger.valueOf(fee));
-                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-                    // sender
-                    sendState.subBalance(BigInteger.valueOf(fee));
-                    sendState.increaseNonce();
-                    stateDB.updateAccount(chainID, sender, sendState);
-                    // TODO: announce app
-                    break;
-                }
+//                case CommunityAnnouncement: {
+//                    // check balance
+//                    if (sendState.getBalance().longValue() < fee) {
+//                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
+//                                fee, sendState.getBalance(), Hex.toHexString(sender));
+//                        return INVALID_BLOCK;
+//                    }
+//
+//                    //Execute the transaction
+//                    // miner
+//                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
+//                    minerState.addBalance(BigInteger.valueOf(fee));
+//                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
+//                    // sender
+//                    sendState.subBalance(BigInteger.valueOf(fee));
+//                    sendState.increaseNonce();
+//                    stateDB.updateAccount(chainID, sender, sendState);
+//                    // TODO: announce app
+//                    break;
+//                }
                 case ForumComment: {
                     // check balance
                     if (sendState.getBalance().longValue() < fee) {
@@ -317,19 +317,19 @@ public class StateProcessorImpl implements StateProcessor {
                     stateDB.updateAccount(this.chainID, receiver, receiverState);
                     break;
                 }
-                case CommunityAnnouncement: {
-                    // roll back the transaction
-                    // miner
-                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-                    minerState.subBalance(BigInteger.valueOf(fee));
-                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-                    // sender
-                    sendState.addBalance(BigInteger.valueOf(fee));
-                    sendState.reduceNonce();
-                    stateDB.updateAccount(chainID, sender, sendState);
-                    // TODO:: announcement app
-                    break;
-                }
+//                case CommunityAnnouncement: {
+//                    // roll back the transaction
+//                    // miner
+//                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
+//                    minerState.subBalance(BigInteger.valueOf(fee));
+//                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
+//                    // sender
+//                    sendState.addBalance(BigInteger.valueOf(fee));
+//                    sendState.reduceNonce();
+//                    stateDB.updateAccount(chainID, sender, sendState);
+//                    // TODO:: announcement app
+//                    break;
+//                }
                 case ForumComment: {
                     // roll back the transaction
                     // miner
