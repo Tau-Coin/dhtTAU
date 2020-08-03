@@ -7,11 +7,14 @@ import io.taucoin.db.StateDBImpl;
 import io.taucoin.listener.TauListener;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
+import io.taucoin.util.Repo;
 import io.taucoin.types.Block;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * ChainManager manages all blockchains for tau multi-chain system.
@@ -19,6 +22,8 @@ import java.util.Map;
  * pause chain, resume chain and so on.
  */
 public class ChainManager {
+
+    private static final Logger logger = LoggerFactory.getLogger("ChainManager");
 
     // Chain maps: chainID -> Chain.
     private Map<ByteArrayWrapper, Chain> chains
@@ -48,19 +53,23 @@ public class ChainManager {
 
         // create state and block database.
         // If database does not exist, directly load.
-        // If not exist, create new database.
+        // If not exist, create log
         this.repositoryImpl = new StateDBImpl(dbFactory.newDatabase());
         this.blockDB = new BlockDB(dbFactory.newDatabase());
     }
 
-    public boolean init() {
+    public void openChainDB() throws Exception {
         try {
-            this.repositoryImpl.open(STATE_PATH);
-            this.blockDB.open(BLOCK_PATH);
+            this.repositoryImpl.open(Repo.getRepoPath() + "/" + STATE_PATH);
+            this.blockDB.open(Repo.getRepoPath() + "/" + BLOCK_PATH);
         } catch (Exception e) {
-            return false;
+            throw e;
         }
-        return true;
+    }
+
+    public void closeChainDB() {
+        this.repositoryImpl.close();
+        this.blockDB.close();
     }
 
     /**
@@ -68,6 +77,32 @@ public class ChainManager {
      * This method is called by TauController.
      */
     public void start() {
+
+		// Open the db for repo and block
+        try {
+            openChainDB();
+
+            Set<byte[]> followedChains = new HashSet<byte[]>();
+            followedChains= this.repositoryImpl.getAllFollowedChains();
+
+            Iterator<byte[]> chainsItor = followedChains.iterator();
+            while (chainsItor.hasNext()) {
+
+                // New single chain
+                byte[] chainid = chainsItor.next();
+                ByteArrayWrapper wrapperChainID = new ByteArrayWrapper(chainid);
+
+                Chain chain = new Chain(chainid, this.blockDB, this.repositoryImpl, this.listener);
+
+                // Add chain
+                this.chains.put(wrapperChainID, chain);
+                // start chain process
+                chain.start();
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            // TODO: notify starting blockchains exception.
+        }
     }
 
     /**
@@ -75,6 +110,14 @@ public class ChainManager {
      * This method is called by TauController.
      */
     public void stop() {
+		// stop chains
+        Iterator<ByteArrayWrapper> chainsItor = this.chains.keySet().iterator();
+        while(chainsItor.hasNext()) {
+			chains.get(chainsItor.next()).stop();	
+		}
+
+		// close db
+		closeChainDB();
     }
 
     /**

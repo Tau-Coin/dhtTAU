@@ -255,6 +255,14 @@
 		<td></td>
 		<td>只针对MsgType.Wiring类型</td>
 	</tr>
+	<tr>
+		<td>12</td>
+		<td>favourite</td>
+		<td>INTEGER</td>
+		<td>交易是否加入收藏</td>
+		<td></td>
+		<td></td>
+	</tr>
 </table>
 
 ## 消息表（Messages）设计
@@ -313,6 +321,14 @@
 		<td>TEXT</td>
 		<td>被回复的消息ID</td>
 		<td>&radic;</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>7</td>
+		<td>favourite</td>
+		<td>INTEGER</td>
+		<td>消息是否加入收藏</td>
+		<td></td>
 		<td></td>
 	</tr>
 </table>

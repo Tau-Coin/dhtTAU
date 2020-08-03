@@ -1,5 +1,7 @@
 package io.taucoin.torrent.publishing.ui.main;
 
+import android.annotation.SuppressLint;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.format.Formatter;
 import android.view.Menu;
@@ -11,6 +13,8 @@ import com.frostwire.jlibtorrent.SessionStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.view.GravityCompat;
 import androidx.databinding.DataBindingUtil;
@@ -18,8 +22,11 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
@@ -48,6 +55,7 @@ public class MainActivity extends BaseActivity {
     private MainViewModel mainViewModel;
     private TauInfoProvider infoProvider;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private Subject<Integer> mBackClick = PublishSubject.create();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +75,7 @@ public class MainActivity extends BaseActivity {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main_drawer);
         initLayout();
         checkCurrentUser();
+        initExitApp();
     }
 
     /**
@@ -236,5 +245,37 @@ public class MainActivity extends BaseActivity {
         if (item.getItemId() == R.id.menu_alert) {
         }
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        mBackClick.onNext(1);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressLint("CheckResult")
+    private void initExitApp() {
+        mBackClick.mergeWith(mBackClick.debounce(2000, TimeUnit.MILLISECONDS)
+                .map(i -> 0))
+                .scan((prev, cur) -> {
+                    if (cur == 0) return 0;
+                    return prev + 1;
+                })
+                .filter(v -> v > 0)
+                .subscribe(v -> {
+                    if (v == 1) {
+                        ToastUtils.showLongToast(R.string.main_exit);
+                    } else if (v == 2) {
+                        appExit();
+                    }
+                });
+    }
+
+    /**
+     * APP退出
+     */
+    private void appExit(){
+        this.finish();
+        TauDaemon.getInstance(this).forceStop();
     }
 }
