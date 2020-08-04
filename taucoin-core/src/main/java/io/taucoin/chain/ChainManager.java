@@ -171,8 +171,30 @@ public class ChainManager {
      * @return
      * todo
      */
-    public byte[] sendTransaction(Transaction tx){
-        return null;
+    public void sendTransaction(Transaction tx){
+		// get chainid
+		ByteArrayWrapper chainid= new ByteArrayWrapper(tx.getChainID());
+
+		// get chain and then add tx into the txpool
+		chains.get(chainid).getTransactionPool().addRemote(tx);
+    }
+
+    /**
+     * get best block
+     * @param tx
+     * @return
+     * todo
+     */
+    public ArrayList<Block> getAllBestBlocks(){
+
+		ArrayList<Block> blocks= new ArrayList<Block>();
+
+        Iterator<ByteArrayWrapper> chainsItor = this.chains.keySet().iterator();
+        while(chainsItor.hasNext()) {
+			blocks.add(chains.get(chainsItor.next()).getBestBlock());	
+		}
+
+		return blocks;
     }
 
     /**
