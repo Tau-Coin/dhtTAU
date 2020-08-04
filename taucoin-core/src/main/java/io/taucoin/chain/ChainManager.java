@@ -68,6 +68,16 @@ public class ChainManager {
         }
     }
 
+    public void initTauChain() throws Exception {
+		// New TauConfig
+		ChainConfig tauConfig= ChainConfig.NewTauChainConfig();
+		byte[] chainid= tauConfig.getChainid();
+		if(!this.repositoryImpl.isChainFollowed(chainid)) {
+			// New TauChain
+    		chainid= createNewCommunity(tauConfig);
+		}
+    }
+
     public void closeChainDB() {
         this.repositoryImpl.close();
         this.blockDB.close();
@@ -81,7 +91,10 @@ public class ChainManager {
 
 		// Open the db for repo and block
         try {
+
             openChainDB();
+			
+			initTauChain();
 
             Set<byte[]> followedChains = new HashSet<byte[]>();
             followedChains= this.repositoryImpl.getAllFollowedChains();
@@ -128,7 +141,13 @@ public class ChainManager {
      * @return boolean successful or not.
      */
     public boolean followChain(byte[] chainID) {
-        return false;
+		try{
+			this.repositoryImpl.followChain(chainID);
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			return false;
+		}
+        return true;
     }
 
     /**
@@ -158,12 +177,15 @@ public class ChainManager {
     public byte[] createNewCommunity(ChainConfig cf){
         Block genesis = new Block(cf);
         boolean ret = followChain(genesis.getChainID());
-        try{
-            blockDB.saveBlock(genesis,true);
-        }catch (Exception e){
-            ret = false;
-        }
-        return ret == true ? genesis.getChainID(): null;
+		if(ret) {
+        	try {
+            	blockDB.saveBlock(genesis,true);
+        	} catch (Exception e) {
+            	logger.error(e.getMessage(), e);
+				return null;
+        	}
+		}
+		return genesis.getChainID();
     }
 
     /**
