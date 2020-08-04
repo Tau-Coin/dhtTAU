@@ -46,11 +46,13 @@ public class TorrentDHTEngine {
             if (type == AlertType.LISTEN_SUCCEEDED) {
                 ListenSucceededAlert a = (ListenSucceededAlert) alert;
                 logger.info(a.message());
+                TorrentDHTEngine.this.tauListener.onDHTStarted(true, "");
             }
 
             if (type == AlertType.LISTEN_FAILED) {
                 ListenFailedAlert a = (ListenFailedAlert) alert;
                 logger.info(a.message());
+                TorrentDHTEngine.this.tauListener.onDHTStarted(false, "listen failed");
             }
 
             if (type == AlertType.DHT_MUTABLE_ITEM) {
@@ -178,6 +180,8 @@ public class TorrentDHTEngine {
         }
         torrentDaemon = null;
         this.settings = null;
+
+        this.tauListener.onDHTStopped();
     }
 
     /**

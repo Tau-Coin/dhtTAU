@@ -79,6 +79,9 @@ public class TauController {
      * @param settings SessionSettings
      */
     public void start(SessionSettings settings) {
+
+        registerListener(new StartListener(this, compositeTauListener));
+
         // First of all, start torrent engine.
         torrentDHTEngine.start(settings);
 
@@ -91,6 +94,8 @@ public class TauController {
      * Stop all the blockchain core components.
      */
     public void stop() {
+
+        registerListener(new StopListener(this, compositeTauListener));
 
         // Stop all blockchains.
         chainManager.stop();

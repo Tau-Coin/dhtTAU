@@ -115,8 +115,12 @@ public class ChainManager {
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            // TODO: notify starting blockchains exception.
+            // notify starting blockchains exception.
+            listener.onChainManagerStarted(false, e.getMessage());
+            return;
         }
+
+        listener.onChainManagerStarted(true, "");
     }
 
     /**
@@ -132,6 +136,8 @@ public class ChainManager {
 
 		// close db
 		closeChainDB();
+
+        listener.onChainManagerStopped();
     }
 
     /**
