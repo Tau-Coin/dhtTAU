@@ -32,9 +32,9 @@ public class GenesisMsgTest {
     private static final Logger log = LoggerFactory.getLogger("genesisTest");
     private static final BigInteger defaultValue = new BigInteger("250000000000000");
     private static final BigInteger genesisPower = BigInteger.ZERO;
-    private static final String pubkeyA= "f89870f606f84306232d3009d59f99a092c0cc6a5508e1a94c0b41119735716c83a9a06503697239f8db65cc757f3123199945c7ecbd98c9cbeece33b443372c";
-    private static final String pubkeyB= "78dc6ac127dd8a59bf5ec869f059f71ed21626f2670230321141e07ba472b24690fb0a71db6869d70a0ed30546957aadf4fcc08477c44cc5c30fca6cae312591";
-    private static final String pubkeyC= "f008065e3ff567d4471231a4a0609e118b28f0639f9768d3f8bb123f8f0b38706ade0527cb0dd1e57ad0003fbf8e5af51c0bf0471e639b4920ab49ac17ff88f1";
+    private static final String pubkeyA= "809df518ee450ded0a659aeb4bc5bec636e2cff012fc88d343b7419af974bb81";
+    private static final String pubkeyB= "2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9";
+    private static final String pubkeyC= "3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124";
    @Test
    public void derivKey() {
        byte[] seed = Ed25519.createSeed();
