@@ -15,11 +15,14 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WIT
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.genesis;
+import com.frostwire.jlibtorrent.Ed25519;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.taucoin.config.ChainConfig;
+import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import io.taucoin.types.GenesisMsg;
 import io.taucoin.util.ByteUtil;
@@ -41,7 +44,17 @@ public class GenesisTest {
     public void createTauGenesis(){
         Block genesis = new Block(cf);
         log.debug("is genesis block validate??: "+genesis.isBlockParamValidate());
-        log.debug(ByteUtil.toHexString(genesis.getEncoded()));
+//        byte[] prikey = ByteUtil.toByte("Known by tau genesis");
+//        byte[] sig = genesis.signBlock(prikey);
+        log.debug("signature: "+ChainParam.TauGenesisSignature);
+        genesis.setSignature(ByteUtil.toByte(ChainParam.TauGenesisSignature));
+//        log.debug(ByteUtil.toHexString(genesis.getSignature()));
+        log.debug("genesis: "+ByteUtil.toHexString(genesis.getEncoded()));
+        log.debug("tau genesis block: "+genesis.toString());
+        if(Ed25519.verify(genesis.getSignature(),genesis.getBlockSigMsg(),ByteUtil.toByte(ChainParam.TauGenesisMinerPubkey))){
+            log.debug("verify passed....");
+        }
+        log.debug("signature verify ?: "+genesis.verifyBlockSig());
     }
 
     @Test

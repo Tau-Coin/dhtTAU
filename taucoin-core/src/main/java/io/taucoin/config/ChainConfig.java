@@ -59,6 +59,13 @@ public class ChainConfig {
         this.BlockTimeInterval = blockTimeInterval;
         this.GenesisMinerPubkey = genesisMinerPubkey;
         this.GenesisTimeStamp = System.currentTimeMillis()/1000;
+
+        //TAU is a special status.
+        if(genesisMinerPubkey == ChainParam.TauGenesisMinerPubkey){
+            this.GenesisTimeStamp = ChainParam.TauGenesisTimeStamp;
+        }
+
+        //System.out.println("time stamp: "+this.GenesisTimeStamp);
         this.GenerationSignature = generationSignature;
 
         TxData txData = new TxData(MsgType.GenesisMsg,msg.getEncoded());
