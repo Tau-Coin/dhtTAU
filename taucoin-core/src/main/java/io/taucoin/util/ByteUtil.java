@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -119,6 +120,18 @@ public class ByteUtil {
         byte[] data = ByteBuffer.allocate(8).putLong(val).array();
 
         return stripLeadingZeroes(data);
+    }
+
+    /**
+     * padding 4 bytes to hash.
+     * @param val
+     * @return
+     */
+    public static byte[] keep4bytesOfLong(long val){
+        byte[] data = ByteBuffer.allocate(8).putLong(val).array();
+        byte[] retval = new byte[4];
+        System.arraycopy(data,4,retval,0,4);
+        return retval;
     }
 
     public static byte[] intToBytes(int val){
@@ -246,6 +259,122 @@ public class ByteUtil {
         return new BigInteger(1, b).longValue();
     }
 
+    /**
+     * express 8 bytes with a long num to save encoded storage.
+     * @param b: 8 bytes will be transfered into long number.
+     * @return negative , positive or 0 num
+     */
+    public static long byteArrayToSignLong(byte[] b){
+        if (b.length != 8){
+            throw new IllegalArgumentException("this function only accept 8 bytes argument");
+        }
+
+        if(b[0] == b[1] && b[1] == b[2] && b[2] == b[3] && b[3] == b[4] && b[4] == b[5] && b[5] == b[6]
+        && b[6] == b[7] && b[7] == 0x00){
+           return new BigInteger(0,b).longValue();
+        }
+        if(b[0] <= 0x7f){
+           return new BigInteger(1,b).longValue();
+        }
+        if(b[0] > 0x7f){
+           return new BigInteger(-1,b).longValue();
+        }
+        return 0;
+    }
+
+    public static int byteArrayToSignInt(byte[] b){
+        if (b.length != 4){
+            throw new IllegalArgumentException("this function only accept 4 bytes argument");
+        }
+        if(b[0] == b[1] && b[1] == b[2] && b[2] == b[3] && b[3] == 0x00){
+            return new BigInteger(0,b).intValue();
+        }
+        if(b[0] <= 0x7f){
+            return new BigInteger(1,b).intValue();
+        }
+        if(b[0] > 0x7f){
+            return new BigInteger(-1,b).intValue();
+        }
+        return 0;
+    }
+
+    /**
+     * slice bytes array into array consisting of long number.
+     * @param b: byte array will be cut into piece num elements long array.
+     * @param piece: element num of long array.
+     * @return long array that express this bytes array b
+     */
+    public static ArrayList<Long> byteArrayToSignLongArray(byte[] b, int piece){
+        if(b.length != 8*piece){
+            throw new IllegalArgumentException("bytes array length must == "+8*piece);
+        }
+        ArrayList<Long> retval = new ArrayList<>();
+        byte[] slice = new byte[8];
+        for(int i = 0;i <piece;++i){
+           System.arraycopy(b,8*i,slice,0,8);
+           retval.add(byteArrayToSignLong(slice));
+        }
+        return retval;
+    }
+
+    public static int[] byteArrayToSignIntArray(byte[] b,int piece){
+        if(b.length != 4*piece){
+            throw new IllegalArgumentException("bytes array length must == "+4*piece);
+        }
+        int[] retval = new int[piece];
+        byte[] slice = new byte[4];
+        for(int i = 0;i <piece;++i){
+            System.arraycopy(b,4*i,slice,0,4);
+            retval[i] = byteArrayToSignInt(slice);
+        }
+        return retval;
+    }
+
+    /**
+     * the last bytes piece in temp should be padding 0 before head byte.
+     * @param b:[byte,byte,......,byte]
+     * @param piece: b.length/8 +1
+     * @return
+     */
+    public static ArrayList<Long> unAlignByteArrayToSignLongArray(byte[] b, int piece){
+        byte[] temp = new byte[8*piece];
+        int alignCount = piece - 1;
+        byte[] zero = new byte[8*piece - b.length];
+
+        for(int i = 0;i< zero.length;i++){
+            zero[i] = 0x00;
+        }
+        System.arraycopy(b,0,temp,0,alignCount*8);
+        System.arraycopy(zero,0,temp,alignCount*8,zero.length);
+        System.arraycopy(b,alignCount*8,temp,alignCount*8 + zero.length,b.length-alignCount*8);
+        return byteArrayToSignLongArray(temp,piece);
+    }
+
+    public static ArrayList<Long> stringToArrayList(String str){
+        int start = str.indexOf("'");
+        int end  = str.lastIndexOf("'");
+        String newStr = str.substring(start,end+1);
+        String[] strArr = newStr.split(",");
+        ArrayList<Long> ret = new ArrayList<>();
+        for(int i=0; i < strArr.length;i++){
+            ret.add(Long.valueOf(strArr[i].trim().replace("'","")));
+        }
+        return ret;
+    }
+
+    public static byte stringToByte(String str){
+        int start = str.indexOf("'");
+        int end  = str.lastIndexOf("'");
+        String newStr = str.substring(start+1,end);
+        return Byte.valueOf(newStr);
+    }
+
+    public static Long stringToLong(String str){
+        int start = str.indexOf("'");
+        int end  = str.lastIndexOf("'");
+        String newStr = str.substring(start+1,end);
+        return Long.valueOf(newStr);
+    }
 
     /**
      * Turn nibbles to a pretty looking output string

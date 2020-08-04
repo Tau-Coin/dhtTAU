@@ -110,7 +110,13 @@ public class BlockTest {
 
     @Test
     public void print(){
+       log.debug(System.getProperty("java.library.path"));
+       long var = 0x7fffffffffffffffL;
        log.debug("max basetarget: "+ ChainParam.MaxBaseTarget.toString());
+
+       log.debug("equal ? : "+ (Long.MAX_VALUE == var));
        log.debug("max balance: "+ Long.MAX_VALUE);
+       log.debug("bytes are: "+ BigInteger.valueOf(Long.MAX_VALUE).longValue());
+       log.debug("-1 bytes are: "+ByteUtil.toHexString(ByteUtil.longToBytes(-1)));
     }
 }
