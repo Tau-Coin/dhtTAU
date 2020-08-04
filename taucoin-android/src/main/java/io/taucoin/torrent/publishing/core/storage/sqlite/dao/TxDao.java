@@ -42,6 +42,9 @@ public interface TxDao {
     String QUERY_GET_TX_BY_TX_ID = "SELECT * FROM Txs" +
             " WHERE txID = :txID";
 
+    String QUERY_SET_TX_FAVOURITE = "UPDATE Txs SET favourite = :favourite" +
+            " WHERE txID = :txID";
+
 
     /**
      * 添加新的交易
@@ -106,4 +109,11 @@ public interface TxDao {
      */
     @Query(QUERY_GET_TX_BY_TX_ID)
     Single<Tx> getTxByTxIDSingle(String txID);
+
+    /**
+     * 设置交易加入到收藏
+     * @param favourite 收藏
+     */
+    @Query(QUERY_SET_TX_FAVOURITE)
+    void setFavourite(String txID, int favourite);
 }

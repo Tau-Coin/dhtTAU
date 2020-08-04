@@ -27,6 +27,7 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.databinding.ViewItemLineBinding;
 
 public class ItemLineView extends RelativeLayout {
+    private String leftText;
     private String rightText;
     private int rightTextColor;
     private int leftImage;
@@ -49,6 +50,7 @@ public class ItemLineView extends RelativeLayout {
     private void initData(AttributeSet attrs) {
         TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.ItemLineView);
         this.leftImage = a.getResourceId(R.styleable.ItemLineView_leftImage, -1);
+        this.leftText = a.getString(R.styleable.ItemLineView_leftText);
         this.rightText = a.getString(R.styleable.ItemLineView_rightText);
         this.rightTextColor = a.getColor(R.styleable.ItemLineView_rightTextColor, getResources().getColor(R.color.color_black));
         a.recycle();
@@ -59,6 +61,9 @@ public class ItemLineView extends RelativeLayout {
         binding = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.view_item_line, this, true);
         if(leftImage != -1){
             binding.ivLeft.setImageResource(leftImage);
+        }
+        if(StringUtil.isNotEmpty(leftText)){
+            binding.tvLeft.setText(leftText);
         }
         if(StringUtil.isNotEmpty(rightText)){
             binding.tvRight.setText(rightText);

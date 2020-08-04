@@ -34,6 +34,9 @@
     <string name="drawer_share">Share</string>
     <string name="drawer_dht_nodes">DHT Nodes/%1$d</string>
     <string name="drawer_net_speed">%1$s KB/s</string>
+    <string name="drawer_export_seed">Export Seed</string>
+    <string name="drawer_wifi">Wifi</string>
+    <string name="drawer_telecom">Tele\ncom</string>
 
     <!-- Strings used for menu -->
     <string name="menu_alert">Alert</string>
@@ -135,6 +138,11 @@
     <string name="copy_seed">Seed copied</string>
     <string name="copy_public_key">Public key copied</string>
     <string name="copy_invite_link">Invite link copied</string>
+    <string name="copy_message_hash">Message hash copied</string>
+    <string name="copy_successfully">Copy successfully</string>
+    <string name="copy_link_successfully">Copy link successfully</string>
+    <string name="blacklist_successfully">Blacklist successfully</string>
+    <string name="favourite_successfully">Added favourite successfully</string>
 
     <!-- Strings used for transactions -->
     <string name="tx_send">Send</string>
@@ -154,6 +162,7 @@
     <string name="tx_operation_forward">Forward</string>
     <string name="tx_operation_blacklist">Blacklist</string>
     <string name="tx_operation_favorite">Favorite</string>
+    <string name="tx_operation_msg_hash">Message Hash</string>
     <string name="tx_error_type">No such transaction type!</string>
     <string name="tx_on_chain_msg">On-Chain Message</string>
     <string name="tx_fee_hint">Fee</string>

@@ -44,22 +44,33 @@
 	</tr>
 	<tr>
 		<td>5</td>
-		<td>onlineTime</td>
+		<td>lastTxOrBlockTime</td>
 		<td>INTEGER</td>
-		<td>成员最后一次在线时间</td>
+		<td>用户最后一次交易和出块时间</td>
 		<td></td>
-		<td>成员发新的message或挖新的block时更新此值</td>
+		<td></td>
 	</tr>
 	<tr>
 		<td>6</td>
 		<td>blacklist</td>
 		<td>INTEGER</td>
-		<td>成员是否被用户拉入黑名单</td>
+		<td>用户是否被用户拉入黑名单</td>
 		<td></td>
 		<td></td>
 	</tr>
 </table>
 
+- 增：
+ - 默认创建用户；
+ - 创建新用户；
+ - onNewBlock、onRollback、onSyncBlock事件；
+- 改：
+ - 修改用户本地名；
+ - 切换用户；
+ - onNewBlock、onRollback、onSyncBlock事件；
+ - 拉入或移出黑名单；
+- 查:
+ - UI显示等
 
 ## 社区表（Communities）设计
 <table>
@@ -99,7 +110,7 @@
 		<td>4</td>
 		<td>syncBlock</td>
 		<td>INTEGER</td>
-		<td>已同步到区块数</td>
+		<td>社区已同步到的区块号</td>
 		<td></td>
 		<td></td>
 	</tr>
@@ -112,6 +123,15 @@
 		<td></td>
 	</tr>
 </table>
+
+- 增：
+ - 创建社区
+ - onNewBlock、onSyncBlock事件；
+- 改：
+ - onNewBlock、onRollback、onSyncBlock事件；
+ - 加入或移出黑名单；
+- 查:
+ - UI显示等
 
 ## 成员表（Members）设计
 <table>
@@ -156,6 +176,16 @@
 		<td></td>
 	</tr>
 </table>
+
+注：chainID和publicKey共同组成复合主键，标识唯一性。
+
+- 增：
+ - onNewBlock、onSyncBlock事件；
+- 改：
+ - onNewBlock、onRollback、onSyncBlock事件；
+ - 加入或移出黑名单；
+- 查:
+ - UI显示等
 
 ## 交易表（Txs）设计
 <table>
@@ -265,6 +295,16 @@
 	</tr>
 </table>
 
+- 增：
+ - 发送新的交易；
+ - onNewBlock、onRollback、onSyncBlock事件；
+- 改：
+ - onNewBlock、onRollback事件；
+ - 收藏和取消收藏；
+- 查:
+ - UI显示等
+
+
 ## 消息表（Messages）设计
 <table>
 	<tr>
@@ -332,3 +372,9 @@
 		<td></td>
 	</tr>
 </table>
+- 增：
+ - 发送新的消息；
+- 改：
+ - 收藏和取消收藏；
+- 查:
+ - UI显示等

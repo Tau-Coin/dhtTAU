@@ -1,9 +1,9 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.annotation.SuppressLint;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.format.Formatter;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,10 +36,12 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityMainDrawerBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.databinding.UserDialogBinding;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
 import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
+import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
@@ -56,6 +58,8 @@ public class MainActivity extends BaseActivity {
     private TauInfoProvider infoProvider;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Subject<Integer> mBackClick = PublishSubject.create();
+    private CommonDialog seedDialog;
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,6 +183,7 @@ public class MainActivity extends BaseActivity {
         if(null == user){
             return;
         }
+        this.user = user;
         MainApplication.getInstance().setPublicKey(user.publicKey);
         binding.drawer.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
         binding.drawer.tvPublicKey.setTag(user.publicKey);
@@ -202,12 +207,26 @@ public class MainActivity extends BaseActivity {
         disposables.clear();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(seedDialog != null){
+            seedDialog.closeDialog();
+        }
+    }
+
     /**
      * 左侧抽屉布局点击事件
      */
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.round_button:
+                break;
             case R.id.tv_public_key:
+            case R.id.tv_public_key_title:
+            case R.id.tv_note_name:
+                showSeedDialog();
+                break;
             case R.id.iv_public_key_copy:
                 String publicKey = ViewUtils.getStringTag(view);
                 CopyManager.copyText(publicKey);
@@ -226,6 +245,34 @@ public class MainActivity extends BaseActivity {
                 break;
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START);
+    }
+
+    private void showSeedDialog() {
+        if(null == user){
+            return;
+        }
+        UserDialogBinding dialogBinding = DataBindingUtil.inflate(LayoutInflater.from(this),
+                R.layout.user_dialog, null, false);
+        dialogBinding.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
+        dialogBinding.ivClose.setOnClickListener(v -> {
+            if(seedDialog != null){
+                seedDialog.closeDialog();
+            }
+        });
+        dialogBinding.ivPublicKeyCopy.setOnClickListener(v -> {
+            CopyManager.copyText(user.publicKey);
+            ToastUtils.showShortToast(R.string.copy_public_key);
+        });
+        dialogBinding.llExportSeed.setOnClickListener(v -> {
+            CopyManager.copyText(user.seed);
+            ToastUtils.showShortToast(R.string.copy_seed);
+        });
+        seedDialog = new CommonDialog.Builder(this)
+                .setContentView(dialogBinding.getRoot())
+                .enableWarpWidth(true)
+                .setCanceledOnTouchOutside(false)
+                .create();
+        seedDialog.show();
     }
 
     /**

@@ -25,6 +25,7 @@ public class Message implements Parcelable {
     @NonNull
     public String context;                  // 消息内容
     public String replyID;                  // 被回复消息ID
+    public boolean favourite = false;       // 消息是否加入收藏
 
     public Message(@NonNull String chainID, String context){
         this.chainID = chainID;
@@ -39,6 +40,7 @@ public class Message implements Parcelable {
         context = in.readString();
         timestamp = in.readLong();
         replyID = in.readString();
+        favourite = in.readByte() != 0;
     }
 
     @Override
@@ -49,6 +51,7 @@ public class Message implements Parcelable {
         dest.writeString(context);
         dest.writeLong(timestamp);
         dest.writeString(replyID);
+        dest.writeByte((byte) (favourite ? 1 : 0));
     }
 
     @Override

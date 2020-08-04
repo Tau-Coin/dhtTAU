@@ -122,6 +122,9 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
             }));
 
         msgViewModel.getAddState().observe(this, result -> {
+            if(isHidden()){
+                return;
+            }
             if(StringUtil.isNotEmpty(result)){
                 ToastUtils.showShortToast(result);
             }else {

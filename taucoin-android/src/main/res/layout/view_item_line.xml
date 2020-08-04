@@ -10,6 +10,17 @@
         android:layout_height="match_parent"
         android:background="@color/color_white">
 
+        <TextView
+            android:id="@+id/tv_left"
+            android:layout_centerVertical="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:textColor="@color/gray_dark"
+            android:lineSpacingExtra="0dp"
+            android:lineSpacingMultiplier="0.7"
+            android:textAppearance="@style/TextAppearanceBody2"/>
+
         <ImageView
             android:id="@+id/iv_left"
             android:layout_width="22dp"

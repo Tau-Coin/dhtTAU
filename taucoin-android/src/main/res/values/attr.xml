@@ -282,6 +282,7 @@
 
     <declare-styleable name="ItemLineView">
         <attr name="leftImage" format="reference" />
+        <attr name="leftText" format="string" />
         <attr name="rightText" format="string" />
         <attr name="rightTextColor" format="color" />
     </declare-styleable>

@@ -26,6 +26,7 @@
                     android:layout_height="60dp"
                     android:textAllCaps="true"
                     android:textColor="@color/color_white"
+                    android:textStyle="bold"
                     android:gravity="center_vertical|center"
                     android:textAppearance="@style/TextAppearanceHeadline6"
                     app:borderColor="@color/primary_light"
@@ -43,6 +44,7 @@
                     android:layout_marginStart="15dp"
                     android:layout_marginTop="0dp"
                     android:includeFontPadding="false"
+                    android:onClick="onClick"
                     android:singleLine="true"
                     android:textStyle="bold"
                     android:ellipsize="end"
@@ -58,6 +60,7 @@
                     android:includeFontPadding="false"
                     android:layout_marginStart="15dp"
                     android:layout_marginTop="2dp"
+                    android:onClick="onClick"
                     android:text="@string/tx_public_key_hint"
                     android:singleLine="true"
                     android:ellipsize="end"
@@ -151,14 +154,14 @@
                         android:id="@+id/item_wifi_speed"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        app:leftImage="@mipmap/icon_dht_node"
+                        app:leftText="@string/drawer_wifi"
                         app:rightText="@string/drawer_net_speed"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_telecom_speed"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        app:leftImage="@mipmap/icon_dht_node"
+                        app:leftText="@string/drawer_telecom"
                         app:rightText="@string/drawer_net_speed"/>
 
                 </LinearLayout>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="50dp"
+        android:paddingEnd="0dp"
+        android:paddingBottom="20dp"
+        android:background="@color/color_white">
+
+        <ImageView
+            android:id="@+id/iv_close"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            android:contentDescription="@null"
+            android:src="@mipmap/icon_close" />
+
+        <TextView
+            android:layout_below="@+id/iv_close"
+            android:id="@+id/tx_public_key_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tx_public_key_hint"
+            android:textAppearance="@style/TextAppearanceBody2"/>
+
+        <ImageView
+            android:id="@+id/iv_public_key_copy"
+            android:layout_below="@+id/iv_close"
+            android:layout_toEndOf="@+id/tx_public_key_hint"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginTop="3dp"
+            android:contentDescription="@null"
+            android:layout_marginStart="5dp"
+            android:src="@mipmap/icon_copy"/>
+
+        <TextView
+            android:layout_below="@+id/tx_public_key_hint"
+            android:id="@+id/tv_public_key"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/primary_dark"
+            android:layout_marginTop="5dp"
+            android:textAppearance="@style/TextAppearanceBody1"/>
+
+        <LinearLayout
+            android:id="@+id/ll_export_seed"
+            android:layout_below="@+id/tv_public_key"
+            android:orientation="horizontal"
+            android:layout_marginTop="30dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginTop="3dp"
+                android:contentDescription="@null"
+                android:src="@mipmap/icon_copy"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="0dp"
+                android:text="@string/drawer_export_seed"
+                android:textAppearance="@style/TextAppearanceBody1"/>
+        </LinearLayout>
+
+    </RelativeLayout>
+</layout>

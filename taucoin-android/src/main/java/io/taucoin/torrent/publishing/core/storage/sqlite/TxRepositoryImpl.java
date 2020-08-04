@@ -102,4 +102,12 @@ public class TxRepositoryImpl implements TxRepository{
     public Single<Tx> getTxByTxIDSingle(String txID){
         return db.txDao().getTxByTxIDSingle(txID);
     }
+
+    /**
+     * 设置交易加入到收藏
+     * @param favourite 收藏
+     */
+    public void setFavourite(String txID, boolean favourite){
+        db.txDao().setFavourite(txID, favourite ? 1 : 0);
+    }
 }

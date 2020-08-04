@@ -99,6 +99,7 @@ public class MsgViewModel extends AndroidViewModel {
                 User currentUser = userRepo.getCurrentUser();
                 msg.senderPk = currentUser.publicKey;
                 msg.timestamp = DateUtil.getTime();
+                msg.msgID = DateUtil.getCurrentTime();
                 // TODO: 发送消息到DHT
                 msgRepo.sendMessage(msg);
             }catch (Exception e){

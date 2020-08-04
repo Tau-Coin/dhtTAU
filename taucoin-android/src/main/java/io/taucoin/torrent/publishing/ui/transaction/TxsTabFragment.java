@@ -30,6 +30,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentTxsTabBinding;
 import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
@@ -215,6 +216,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         binding.copyLink.setTag(msg);
         binding.blacklist.setTag(tx.senderPk);
         binding.favourite.setTag(tx.txID);
+        binding.msgHash.setTag(tx.txID);
         operationsDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
                 .enableWarpWidth(true)
@@ -243,15 +245,29 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 ActivityUtil.startActivity(intent, this, MessageActivity.class);
                 break;
             case R.id.copy:
-            case R.id.copy_link:
                 String msg = ViewUtils.getStringTag(v);
                 CopyManager.copyText(msg);
+                ToastUtils.showShortToast(R.string.copy_successfully);
+                break;
+            case R.id.copy_link:
+                String link = ViewUtils.getStringTag(v);
+                CopyManager.copyText(link);
+                ToastUtils.showShortToast(R.string.copy_link_successfully);
                 break;
             case R.id.blacklist:
                 String publicKey = ViewUtils.getStringTag(v);
                 userViewModel.setUserBlacklist(publicKey, true);
+                ToastUtils.showShortToast(R.string.blacklist_successfully);
                 break;
             case R.id.favourite:
+                String txID = ViewUtils.getStringTag(v);
+                userViewModel.setFavourite(txID, true);
+                ToastUtils.showShortToast(R.string.favourite_successfully);
+                break;
+            case R.id.msg_hash:
+                String msgHash = ViewUtils.getStringTag(v);
+                CopyManager.copyText(msgHash);
+                ToastUtils.showShortToast(R.string.copy_message_hash);
                 break;
         }
     }

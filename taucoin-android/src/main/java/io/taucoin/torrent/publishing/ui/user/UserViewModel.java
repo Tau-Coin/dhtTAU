@@ -25,6 +25,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
@@ -42,6 +43,7 @@ public class UserViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("UserViewModel");
     private UserRepository userRepo;
+    private TxRepository txRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
     private MutableLiveData<List<User>> blackList = new MutableLiveData<>();
@@ -49,6 +51,7 @@ public class UserViewModel extends AndroidViewModel {
     public UserViewModel(@NonNull Application application) {
         super(application);
         userRepo = RepositoryHelper.getUserRepository(getApplication());
+        txRepo = RepositoryHelper.getTxRepository(getApplication());
     }
 
     @Override
@@ -202,6 +205,22 @@ public class UserViewModel extends AndroidViewModel {
     public void setUserBlacklist(String publicKey, boolean blacklist) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             userRepo.setUserBlacklist(publicKey, blacklist);
+            emitter.onNext(true);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
+        disposables.add(disposable);
+    }
+
+    /**
+     * 设置交易加入到收藏
+     * @param favourite 收藏
+     */
+    public void setFavourite(String txID, boolean favourite) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            txRepo.setFavourite(txID, favourite);
             emitter.onNext(true);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)

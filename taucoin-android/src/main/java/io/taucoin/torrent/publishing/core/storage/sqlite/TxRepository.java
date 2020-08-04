@@ -59,4 +59,10 @@ public interface TxRepository {
      * @param txID 交易ID
      */
     Single<Tx> getTxByTxIDSingle(String txID);
+
+    /**
+     * 设置交易加入到收藏
+     * @param favourite 收藏
+     */
+    void setFavourite(String txID, boolean favourite);
 }

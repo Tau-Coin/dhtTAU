@@ -12,13 +12,13 @@
 
         <ImageView
             android:id="@+id/iv_close"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="10dp"
             android:layout_marginBottom="20dp"
             android:contentDescription="@null"
-            android:src="@mipmap/icon_copy" />
+            android:src="@mipmap/icon_close" />
 
         <EditText
             android:layout_below="@+id/iv_close"
