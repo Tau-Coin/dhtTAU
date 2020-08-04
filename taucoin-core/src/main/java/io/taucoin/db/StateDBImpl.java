@@ -73,6 +73,18 @@ public class StateDBImpl implements StateDB {
     }
 
     /**
+     * if follow a chain
+     *
+     * @param chainID chain ID
+     * @return true:followed, false: not followed
+     * @throws Exception
+     */
+    @Override
+    public boolean isChainFollowed(byte[] chainID) throws Exception {
+        return  null != db.get(PrefixKey.chainKey(chainID));
+    }
+
+    /**
      * get all followed chains
      * @return
      * @throws Exception

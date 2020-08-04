@@ -125,6 +125,18 @@ public class StateDBTrack implements StateDB {
     }
 
     /**
+     * if follow a chain
+     *
+     * @param chainID chain ID
+     * @return true:followed, false: not followed
+     * @throws Exception
+     */
+    @Override
+    public boolean isChainFollowed(byte[] chainID) throws Exception {
+        return this.stateDB.isChainFollowed(chainID);
+    }
+
+    /**
      * get all followed chains
      *
      * @return

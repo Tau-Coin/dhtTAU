@@ -52,6 +52,14 @@ public interface StateDB {
     void followChain(byte[] chainID) throws Exception;
 
     /**
+     * if follow a chain
+     * @param chainID chain ID
+     * @return true:followed, false: not followed
+     * @throws Exception
+     */
+    boolean isChainFollowed(byte[] chainID) throws Exception;
+
+    /**
      * get all followed chains
      * @return
      * @throws Exception
