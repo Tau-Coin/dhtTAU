@@ -70,7 +70,7 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
         return data;
     }
 
-    protected byte[] jsToAddress(String data) {
+    protected byte[] jsToBytes(String data) {
         return Hex.decode(clearJSString(data));
     }
 
@@ -81,6 +81,7 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
      * @throws Exception
      */
     protected Transaction jsToTransaction(JSONObject obj) throws Exception {
+
         logger.info("json to tx: {}", obj);
 
         if ((!obj.containsKey("to") || ((String)obj.get("to")).equals(""))   || (!obj.containsKey("value") || ((long)obj.get("value")) <= 0)
@@ -97,7 +98,7 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
         byte[] to = null;
         if (obj.containsKey("to") && !((String)obj.get("to")).equals("")) {
             if(type==0){
-                to = jsToAddress((String) obj.get("to"));
+                to = jsToBytes((String) obj.get("to"));
             }
             logger.info("json to address: {}", Hex.toHexString(to));
         }
@@ -136,11 +137,10 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
         /**
          * todo:create transaction by chain.
          */
-      Transaction tx = null;
-      //tx =chain.createTransaction();
+		Transaction tx = null;
+		//tx =chain.createTransaction();
 
         tx.signTransaction(senderPrivkey);
-
         return tx;
     }
 }

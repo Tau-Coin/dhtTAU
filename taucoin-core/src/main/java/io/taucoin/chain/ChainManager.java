@@ -1,6 +1,7 @@
 package io.taucoin.chain;
 
 import io.taucoin.config.ChainConfig;
+import io.taucoin.core.AccountState;
 import io.taucoin.db.BlockDB;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.db.StateDBImpl;
@@ -180,8 +181,27 @@ public class ChainManager {
     }
 
     /**
+     * get account state according to chainid and pubkey
+     * @param chainid
+     * @param pubkey
+     * @return
+     * todo
+     */
+    public AccountState getAccountState(byte[] chainid, byte[] pubkey) throws Exception {
+
+		AccountState account= null;
+
+		try{
+			account= this.repositoryImpl.getAccount(chainid, pubkey);
+        } catch (Exception e) {
+            throw e;
+        }
+
+		return account;
+    }
+
+    /**
      * get best block
-     * @param tx
      * @return
      * todo
      */

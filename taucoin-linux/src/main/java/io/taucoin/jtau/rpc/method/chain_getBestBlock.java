@@ -19,7 +19,7 @@ package io.taucoin.jtau.rpc.method;
 import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.types.Transaction;
+import io.taucoin.types.Block;
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
@@ -30,42 +30,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.List;
+import java.util.ArrayList;
 
-public class chain_sendTransaction extends JsonRpcServerMethod {
+public class chain_getBestBlock extends JsonRpcServerMethod {
 
     private static final Logger logger = LoggerFactory.getLogger("rpc");
 
-    public chain_sendTransaction (TauController tauController) {
+    public chain_getBestBlock (TauController tauController) {
         super(tauController);
     }
 
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
+		ChainManager chainmanager = tauController.getChainManager();
+		ArrayList<Block> blocks= chainmanager.getAllBestBlocks();
+		ArrayList<String> results= new ArrayList<String>();
+		
+		for (Block block: blocks) {
+			String result = "0xblock1"; //+ block.toString();
+			results.add(result);
+		}
 
-        List<Object> params = req.getPositionalParams();
-        if (params.size() != 1) {
-            return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
-        } else {
-            JSONObject obj = (JSONObject)params.get(0);
-            Transaction tx;
-            try {
-                tx = jsToTransaction(obj);
-                // verify transaction
-                if (!tx.isTxParamValidate()) {
-                    throw new Exception("Invalid params");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
-            }
-
-			// get chainmanager and send tx	
-            ChainManager chainmanager = tauController.getChainManager();
-			chainmanager.sendTransaction(tx);
-
-            String result = "0x" + Hex.toHexString(tx.getTxID());
-            JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
-            return response;
-        }
+		JSONRPC2Response response = new JSONRPC2Response(results, req.getID());
+		return response;
     }
 }

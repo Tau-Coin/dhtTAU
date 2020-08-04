@@ -16,56 +16,40 @@
  */
 package io.taucoin.jtau.rpc.method;
 
-import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.types.Transaction;
 
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
+import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Pair;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response;
 import com.thetransactioncompany.jsonrpc2.server.MessageContext;
-import net.minidev.json.JSONObject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.List;
+import java.util.ArrayList;
 
-public class chain_sendTransaction extends JsonRpcServerMethod {
+public class chain_generateNewSeed extends JsonRpcServerMethod {
 
     private static final Logger logger = LoggerFactory.getLogger("rpc");
 
-    public chain_sendTransaction (TauController tauController) {
+    public chain_generateNewSeed (TauController tauController) {
         super(tauController);
     }
 
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
+			byte[] seed = Ed25519.createSeed();
+			Pair<byte[], byte[]> keypair = Ed25519.createKeypair(seed);
 
-        List<Object> params = req.getPositionalParams();
-        if (params.size() != 1) {
-            return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
-        } else {
-            JSONObject obj = (JSONObject)params.get(0);
-            Transaction tx;
-            try {
-                tx = jsToTransaction(obj);
-                // verify transaction
-                if (!tx.isTxParamValidate()) {
-                    throw new Exception("Invalid params");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
-            }
+			ArrayList<String> result = new ArrayList<String>();
+			result.add("Seed: 0x" + Hex.toHexString(seed));
+			result.add("Prikey: 0x" + Hex.toHexString(keypair.first));
+			result.add("Pubkey: 0x" + Hex.toHexString(keypair.second));
 
-			// get chainmanager and send tx	
-            ChainManager chainmanager = tauController.getChainManager();
-			chainmanager.sendTransaction(tx);
-
-            String result = "0x" + Hex.toHexString(tx.getTxID());
             JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
+
             return response;
-        }
     }
 }

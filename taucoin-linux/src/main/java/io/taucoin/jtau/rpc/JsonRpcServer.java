@@ -53,6 +53,13 @@ public final class JsonRpcServer {
         // register all rpc methods.
         // methods about dht
         this.dispatcher.register(new dht_nodesCount(this.tauController));
+
+		// methods about chain
+        this.dispatcher.register(new chain_generateNewSeed(this.tauController));
+        this.dispatcher.register(new chain_getBestBlock(this.tauController));
+        this.dispatcher.register(new chain_getAccountState(this.tauController));
+
+        this.dispatcher.register(new chain_sendTransaction(this.tauController));
         this.dispatcher.register(new chain_sendRawBlock(this.tauController));
     }
 

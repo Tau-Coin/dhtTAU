@@ -28,4 +28,5 @@ public class dht_nodesCount extends JsonRpcServerMethod {
         JSONRPC2Response res = new JSONRPC2Response(tmp, req.getID());
         return res;
     }
+
 }
