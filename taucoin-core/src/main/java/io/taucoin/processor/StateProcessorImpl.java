@@ -3,7 +3,9 @@ package io.taucoin.processor;
 import io.taucoin.core.AccountState;
 import io.taucoin.core.ImportResult;
 import io.taucoin.db.StateDB;
+import io.taucoin.genesis.GenesisItem;
 import io.taucoin.types.Block;
+import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,7 @@ import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Map;
 
 import static io.taucoin.core.ImportResult.*;
 
@@ -189,6 +192,59 @@ public class StateProcessorImpl implements StateProcessor {
     }
 
     /**
+     * sync genesis block
+     *
+     * @param block   genesis block
+     * @param stateDB state db
+     * @return
+     */
+    @Override
+    public boolean backwardProcessGenesisBlock(Block block, StateDB stateDB) {
+        try {
+            Transaction tx = block.getTxMsg();
+            if (!tx.isTxParamValidate()) {
+                logger.error("Tx validate fail!");
+                return false;
+            }
+
+            if (!tx.verifyTransactionSig()) {
+                logger.error("Bad Signature.");
+                return false;
+            }
+
+            // if genesis block
+            if (block.getBlockNum() != 0 || MsgType.GenesisMsg == tx.getTxData().getMsgType()) {
+                logger.error("Genesis type error!");
+                return false;
+            }
+
+
+            Map<String, GenesisItem> map = tx.getTxData().getGenesisMsgKV();
+            if (null != map) {
+                for (Map.Entry<String, GenesisItem> entry : map.entrySet()) {
+                    byte[] pubKey = Hex.decode(entry.getKey());
+                    AccountState accountState = stateDB.getAccount(this.chainID, pubKey);
+                    if (null == accountState) {
+                        accountState = new AccountState(entry.getValue().getBalance(),
+                                entry.getValue().getPower());
+                        stateDB.updateAccount(this.chainID, pubKey, accountState);
+                    } else {
+                        if (0 == accountState.getNonce().longValue()) {
+                            accountState.setNonce(entry.getValue().getPower());
+                            stateDB.updateAccount(this.chainID, pubKey, accountState);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * backward process block, when sync old block
      *
      * @param block   block to be processed
@@ -208,6 +264,11 @@ public class StateProcessorImpl implements StateProcessor {
             if (!tx.verifyTransactionSig()) {
                 logger.error("Bad Signature.");
                 return false;
+            }
+
+            // if genesis block
+            if (block.getBlockNum() == 0) {
+                return backwardProcessGenesisBlock(block, stateDB);
             }
 
             byte[] sender = tx.getSenderPubkey();
@@ -252,7 +313,6 @@ public class StateProcessorImpl implements StateProcessor {
 //                        break;
 //                    }
                     default: {
-
                     }
                 }
             }

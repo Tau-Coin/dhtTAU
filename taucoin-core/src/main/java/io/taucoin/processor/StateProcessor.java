@@ -22,6 +22,14 @@ public interface StateProcessor {
     boolean backwardProcess(Block block, StateDB stateDB);
 
     /**
+     * sync genesis block
+     * @param block genesis block
+     * @param stateDB state db
+     * @return
+     */
+    boolean backwardProcessGenesisBlock(Block block, StateDB stateDB);
+
+    /**
      * roll back a block
      * @param block
      * @param stateDB
