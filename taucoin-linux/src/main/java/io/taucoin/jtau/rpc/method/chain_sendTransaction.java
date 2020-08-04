@@ -64,6 +64,10 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
             ChainManager chainmanager = tauController.getChainManager();
 			Transaction tx = null;
 
+			byte[] chainID = obj.getAsString("chainid").getBytes();
+			long timeStamp = System.currentTimeMillis() / 1000;
+			byte version = obj.getAsNumber("version").byteValue();
+
 			// seed operation
         	byte[] senderSeed = null;
 	        if (obj.containsKey("seed") && !((String)obj.get("seed")).equals("")) {
@@ -78,27 +82,21 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 			byte[] publicKey = keypair.first;
 			byte[] privateKey = keypair.second;
 
+        	long balance = 0;
+			long nonce = 0;
+        	try{
+				balance = chainmanager.getAccountState(chainID,publicKey).getBalance().longValue();
+				nonce = chainmanager.getAccountState(chainID,publicKey).getNonce().longValue() + 1;
+			}catch (Exception e){
+
+			}
+
         	//different type refer to different tx.
-        	long type= 0;
+        	long type= -1;
         	if (obj.containsKey("type") && ((long)obj.get("type")) >= 0) {
             	type= (long) obj.get("type");
         	} else {
             	logger.error("Please add a valid transaction type");
-			}
-			// Check account balance, only wire tx
-			byte[] chainID = obj.getAsString("chainid").getBytes();
-        	long balance = 0;
-        	try{
-				balance = chainmanager.getAccountState(chainID,publicKey).getBalance().longValue();
-			}catch (Exception e){
-
-			}
-			if (type == 1){
-				if(obj.getAsNumber("value").longValue() > balance){
-					String result = "no enough balance , current balance is: "+balance;
-					JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
-					return response;
-				}
 			}
 
 			// txFee
@@ -109,7 +107,6 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
             	logger.error("Please add a valid transaction type");
 			}
 
-
 			//to do: txFee check
             if(fee.longValue() > balance){
 				String result = "no enough balance pay txfee , current balance is: "+balance;
@@ -117,11 +114,7 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 				return response;
 			}
 
-            if(type == 1 && (fee.longValue()+ obj.getAsNumber("value").longValue()) > balance){
-				String result = "no enough balance pay txfee and amount , current balance is: "+balance;
-				JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
-				return response;
-			}
+			int txfee = fee.intValue();
 
 			// type = 0: Msg transaction, 1: wiring transaction
 			if( 0 == type){
@@ -130,19 +123,17 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 				String forumMsg = obj.getAsString("msg");
 				Note note = new Note(forumMsg);
 				TxData txdata = new TxData(MsgType.RegularForum,note.getTxCode());
-				byte version = obj.getAsNumber("version").byteValue();
-				long timeStamp = System.currentTimeMillis() / 1000;
-				int txfee = fee.intValue();
-				long nonce = 0;
-				try {
-					nonce = chainmanager.getAccountState(chainID,publicKey).getNonce().longValue() + 1;
-				}catch (Exception e){
-
-				}
 
 				tx = new Transaction(version,chainID,timeStamp,txfee,publicKey,nonce,txdata);
 				tx.signTransaction(privateKey);
+
 			} else if(1 == type) {
+
+            	if((fee.longValue()+ obj.getAsNumber("value").longValue()) > balance){
+					String result = "No enough balance pay txfee and amount, current balance is: "+ balance;
+					JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
+					return response;
+				}
 
 				// receiver
         		byte[] to = null;
@@ -150,6 +141,7 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
                 	to = jsToBytes((String) obj.get("to"));
             		logger.info("json to address: {}", Hex.toHexString(to));
 				}
+
 				// amount
         		BigInteger value = BigInteger.ZERO;
         		if (obj.containsKey("value") && ((long)obj.get("value")) > 0) {
@@ -161,18 +153,7 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 
 				TxData txdata = new TxData(MsgType.Wiring,wtx.getEncode());
 
-				byte version = obj.getAsNumber("version").byteValue();
-				long timeStamp = System.currentTimeMillis() / 1000;
-				int txfee = fee.intValue();
-				long nonce = 0;
-				try {
-					nonce = chainmanager.getAccountState(chainID,publicKey).getNonce().longValue() + 1;
-				}catch (Exception e){
-
-				}
 				// tx construct
-				// tx.signTransaction();
-
 				tx = new Transaction(version,chainID,timeStamp,txfee,publicKey,nonce,txdata);
 				tx.signTransaction(privateKey);
         	}
