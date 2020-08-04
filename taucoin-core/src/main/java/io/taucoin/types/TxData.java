@@ -21,6 +21,7 @@ import java.util.Map;
 import io.taucoin.genesis.CheckInfo;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
+import io.taucoin.util.ByteUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
@@ -419,5 +420,14 @@ public class TxData {
                 retval = false;
         }
         return retval;
+    }
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("txData: [\n");
+        sb.append("type: ").append(this.getMsgType()).append("\n");
+        sb.append("txCode: ").append(ByteUtil.toHexString(this.getTxCode())).append("\n");
+        sb.append("]\n");
+        return sb.toString();
     }
 }

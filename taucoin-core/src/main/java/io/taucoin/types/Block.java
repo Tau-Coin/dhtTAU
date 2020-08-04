@@ -632,4 +632,28 @@ public class Block {
         byte[] sigmsg = this.getBlockSigMsg();
         return Ed25519.verify(signature,sigmsg,this.minerPubkey);
     }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("block: [\n");
+        sb.append("version: ").append(this.getVersion()).append("\n");
+        sb.append("chainID: ").append(new String(this.getChainID())).append("\n");
+        sb.append("timestamp: ").append(this.getTimeStamp()).append("\n");
+        sb.append("blocknum: ").append(this.getBlockNum()).append("\n");
+        sb.append("previousblockhash: ").append(ByteUtil.toHexString(this.getPreviousBlockHash())).append("\n");
+        sb.append("immutableblockhash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash())).append("\n");
+        sb.append("generationsignature: ").append(ByteUtil.toHexString(this.getGenerationSignature())).append("\n");
+        if(this.getTxMsg() != null){
+            sb.append("transaction: ").append(this.getTxMsg().toString()).append("\n");
+        }
+        sb.append("minerbalance: ").append(this.getMinerBalance()).append("\n");
+        sb.append("senderbalance: ").append(this.getSenderBalance()).append("\n");
+        sb.append("receiverbalance: ").append(this.getReceiverBalance()).append("\n");
+        sb.append("sendernonce: ").append(this.getSenderNonce()).append("\n");
+        sb.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
+        sb.append("minerpubkey: ").append(ByteUtil.toHexString(this.getMinerPubkey())).append("\n");
+        sb.append("]\n");
+        return sb.toString();
+    }
 }

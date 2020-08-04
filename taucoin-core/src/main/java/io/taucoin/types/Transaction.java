@@ -328,4 +328,20 @@ public class Transaction {
         }
         return txID;
     }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("transaction: [\n");
+        sb.append("version: ").append(this.getVersion()).append("\n");
+        sb.append("chainID: ").append(new String(this.getChainID())).append("\n");
+        sb.append("timestamp: ").append(this.getTimeStamp()).append("\n");
+        sb.append("txFee: ").append(this.getTxFee()).append("\n");
+        sb.append("senderpubkey: ").append(ByteUtil.toHexString(this.getSenderPubkey())).append("\n");
+        sb.append("nonce: ").append(this.getNonce()).append("\n");
+        sb.append("txData: ").append(this.getTxData().toString()).append("\n");
+        sb.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
+        sb.append("]\n");
+        return sb.toString();
+    }
 }
