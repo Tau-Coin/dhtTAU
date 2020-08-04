@@ -32,10 +32,9 @@ public class GenesisMsgTest {
     private static final Logger log = LoggerFactory.getLogger("genesisTest");
     private static final BigInteger defaultValue = new BigInteger("250000000000000");
     private static final BigInteger genesisPower = BigInteger.ZERO;
-    private static final String pubkeyA= "18dc4ee9316770f261ca17cd3bbf319301a9f0930be3abcffbb73e73a50d9fb1";
-    private static final String pubkeyB= "c798fc91a403bcfc6db20ffb3c1d9f5952efcb8e09b4097338cb7974993a210c";
-    private static final String pubkeyC= "ca72fa9c10053142c1302425412d6f6ac1b03ebdc2cbc5fc7676d1c31fddb6e1";
-    private static final String pubkeyD= "090139b40cdfbc4e803f0a5293f3005aab5132e088321baf44c276ad3cf4abda";
+    private static final String pubkeyA= "f89870f606f84306232d3009d59f99a092c0cc6a5508e1a94c0b41119735716c83a9a06503697239f8db65cc757f3123199945c7ecbd98c9cbeece33b443372c";
+    private static final String pubkeyB= "78dc6ac127dd8a59bf5ec869f059f71ed21626f2670230321141e07ba472b24690fb0a71db6869d70a0ed30546957aadf4fcc08477c44cc5c30fca6cae312591";
+    private static final String pubkeyC= "f008065e3ff567d4471231a4a0609e118b28f0639f9768d3f8bb123f8f0b38706ade0527cb0dd1e57ad0003fbf8e5af51c0bf0471e639b4920ab49ac17ff88f1";
    @Test
    public void derivKey() {
        byte[] seed = Ed25519.createSeed();
@@ -59,7 +58,6 @@ public class GenesisMsgTest {
        msg.appendAccount(pubkeyA,item);
        msg.appendAccount(pubkeyB,item);
        msg.appendAccount(pubkeyC,item);
-       msg.appendAccount(pubkeyD,item);
        String encodeStr= ByteUtil.toHexString(msg.getEncoded());
        log.debug("genesis msg: "+encodeStr);
        log.debug("msg size is: "+encodeStr.length()/2);
