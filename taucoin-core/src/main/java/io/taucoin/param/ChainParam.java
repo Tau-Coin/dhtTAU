@@ -63,4 +63,11 @@ public class ChainParam {
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
+
+    /**********CHANNEL**********/
+    // mutable item salt suffix: block
+    public static final byte[] BLOCK_CHANNEL = "#block".getBytes();
+
+    // mutable item salt suffix: tx
+    public static final byte[] TX_CHANNEL = "#tx".getBytes();
 }

@@ -33,12 +33,6 @@ public class Chain {
 
     private static final int TIMEOUT = 10;
 
-    // mutable item salt suffix: block
-    private static final String BLOCK_CHANNEL = "#block";
-
-    // mutable item salt suffix: tx
-    private static final String TX_CHANNEL = "#tx";
-
     // Chain id specified by the transaction of creating new blockchain.
     private byte[] chainID;
 
@@ -108,10 +102,10 @@ public class Chain {
      * @return
      */
     private byte[] makeBlockSalt() {
-        byte[] salt = new byte[this.chainID.length + BLOCK_CHANNEL.getBytes().length];
+        byte[] salt = new byte[this.chainID.length + ChainParam.BLOCK_CHANNEL.length];
         System.arraycopy(this.chainID, 0, salt, 0, this.chainID.length);
-        System.arraycopy(BLOCK_CHANNEL.getBytes(), 0, salt, this.chainID.length,
-                BLOCK_CHANNEL.getBytes().length);
+        System.arraycopy(ChainParam.BLOCK_CHANNEL, 0, salt, this.chainID.length,
+                ChainParam.BLOCK_CHANNEL.length);
         return salt;
     }
 
@@ -120,10 +114,10 @@ public class Chain {
      * @return
      */
     private byte[] makeTxSalt() {
-        byte[] salt = new byte[this.chainID.length + TX_CHANNEL.getBytes().length];
+        byte[] salt = new byte[this.chainID.length + ChainParam.TX_CHANNEL.length];
         System.arraycopy(this.chainID, 0, salt, 0, this.chainID.length);
-        System.arraycopy(TX_CHANNEL.getBytes(), 0, salt, this.chainID.length,
-                TX_CHANNEL.getBytes().length);
+        System.arraycopy(ChainParam.TX_CHANNEL, 0, salt, this.chainID.length,
+                ChainParam.TX_CHANNEL.length);
         return salt;
     }
 
@@ -152,7 +146,7 @@ public class Chain {
             }
 
             byte[] syncBlockHash = this.stateDB.getSyncBlockHash(this.chainID);
-            if (null != bestBlockHash) {
+            if (null != syncBlockHash) {
                 this.syncBlock = this.blockStore.getBlockByHash(this.chainID, syncBlockHash);
             }
         } catch (Exception e) {
@@ -238,14 +232,13 @@ public class Chain {
      * block chain main process
      */
     private void blockChainProcess() {
-        init();
-        loop();
+        chainLoop();
     }
 
     /**
-     * main loop
+     * main chain loop
      */
-    private void loop() {
+    private void chainLoop() {
         while (!Thread.interrupted()) {
             boolean votingFlag = false;
             boolean miningFlag = false;
@@ -885,6 +878,11 @@ public class Chain {
             byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
             BigInteger power = stateDB.getNonce(this.chainID, pubKey);
+            if (null == power || power.longValue() <= 0) {
+                logger.error("No mining power.");
+                return false;
+            }
+
             logger.info("ChainID[{}]: My mining power: {}", this.chainID.toString(), power);
 
             // check base target
@@ -1006,6 +1004,11 @@ public class Chain {
      * @return boolean successful or not.
      */
     public boolean start() {
+        // chain init
+        if (!init()) {
+            return false;
+        }
+
         logger.info("Start voting and tx thread...");
         votingThread = new Thread(new Runnable() {
             @Override
@@ -1038,6 +1041,7 @@ public class Chain {
             logger.info("Stop voting thread.");
             votingThread.interrupt();
         }
+
         if (null != txThread) {
             logger.info("Stop tx thread.");
             txThread.interrupt();
@@ -1073,6 +1077,9 @@ public class Chain {
         return this.blockStore;
     }
 
+    /**
+     * publish block/tx/message and so on
+     */
     public class PublishTask extends TimerTask {
         /**
          * The action to be performed by this timer task.
