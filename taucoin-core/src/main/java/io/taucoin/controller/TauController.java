@@ -172,4 +172,131 @@ public class TauController {
     public SessionManager getSessionManager() {
         return torrentDHTEngine.getSessionManager();
     }
+
+    public static class StartListener extends StartstopListener {
+
+        private TauController tauController;
+        private TauListener compositeTauListener;
+
+        private boolean dhtStartedReceived;
+        private boolean dhtStartedResult;
+        private String dhtStartedErrMsg;
+
+        private boolean chainMgrStartedReceived;
+        private boolean chainMgrStartedResult;
+        private String chainMgrStartedErrMsg;
+
+        public StartListener(TauController tauController,
+                TauListener compositeTauListener) {
+
+            this.tauController = tauController;
+            this.compositeTauListener = compositeTauListener;
+
+            this.dhtStartedReceived = false;
+            this.dhtStartedResult = false;
+            this.dhtStartedErrMsg = null;
+
+            this.chainMgrStartedReceived = false;
+            this.chainMgrStartedResult = false;
+            this.chainMgrStartedErrMsg = null;
+        }
+
+        @Override
+        public void onDHTStarted(boolean success, String errMsg) {
+            dhtStartedReceived = true;
+            dhtStartedResult = success;
+            dhtStartedErrMsg = errMsg;
+
+            tryToNotifyStatrtedResult();
+        }
+
+        @Override
+        public void onChainManagerStarted(boolean success, String errMsg) {
+            chainMgrStartedReceived = true;
+            chainMgrStartedResult = success;
+            chainMgrStartedErrMsg = errMsg;
+
+            tryToNotifyStatrtedResult();
+        }
+
+        @Override
+        public void onDHTStopped() {}
+
+        @Override
+        public void onChainManagerStopped() {}
+
+        private void tryToNotifyStatrtedResult() {
+            if (!dhtStartedReceived || !chainMgrStartedReceived) {
+                return;
+            }
+
+            tauController.unregisterListener(this);
+
+            boolean success = dhtStartedResult && chainMgrStartedResult;
+            String errMsg = "";
+
+            if (!dhtStartedResult) {
+                errMsg += dhtStartedErrMsg;
+            }
+            if (!chainMgrStartedResult) {
+                errMsg += chainMgrStartedErrMsg;
+            }
+
+            logger.info("notify start TauController result: OK:" + success
+                   + ", err:" + errMsg);
+            compositeTauListener.onTauStarted(success, errMsg);
+        }
+    }
+
+    public static class StopListener extends StartstopListener {
+
+        private TauController tauController;
+        private TauListener compositeTauListener;
+
+        private boolean dhtStoppedReceived;
+
+        private boolean chainMgrStoppedReceived;
+
+        public StopListener(TauController tauController,
+                TauListener compositeTauListener) {
+
+            this.tauController = tauController;
+            this.compositeTauListener = compositeTauListener;
+
+            this.dhtStoppedReceived = false;
+
+            this.chainMgrStoppedReceived = false;
+        }
+
+        @Override
+        public void onDHTStarted(boolean success, String errMsg) {}
+
+        @Override
+        public void onChainManagerStarted(boolean success, String errMsg) {}
+
+        @Override
+        public void onDHTStopped() {
+            dhtStoppedReceived = true;
+
+            tryToNotifyStoppedResult();
+        }
+
+        @Override
+        public void onChainManagerStopped() {
+            chainMgrStoppedReceived = true;
+
+            tryToNotifyStoppedResult();
+        }
+
+        private void tryToNotifyStoppedResult() {
+            if (!dhtStoppedReceived || !chainMgrStoppedReceived) {
+                return;
+            }
+
+            tauController.unregisterListener(this);
+
+            logger.info("notify TauController stopped");
+            compositeTauListener.onTauStopped();
+        }
+    }
 }
