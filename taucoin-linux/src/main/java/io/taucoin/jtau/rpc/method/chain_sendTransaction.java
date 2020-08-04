@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.List;
 
 public class chain_sendTransaction extends JsonRpcServerMethod {
@@ -46,26 +47,69 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
         if (params.size() != 1) {
             return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
         } else {
+
             JSONObject obj = (JSONObject)params.get(0);
-            Transaction tx;
-            try {
-                tx = jsToTransaction(obj);
-                // verify transaction
-                if (!tx.isTxParamValidate()) {
-                    throw new Exception("Invalid params");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
-            }
+
+            ChainManager chainmanager = tauController.getChainManager();
+			Transaction tx = null;
+
+			// seed operation
+        	byte[] senderSeed = null;
+	        if (obj.containsKey("seed") && !((String)obj.get("seed")).equals("")) {
+            	String prikey = (String) obj.get("seed");
+            	logger.info("seed is {}",prikey);
+        	} else {
+            	logger.error("seed is needed");
+			}
+			// to do: seed -> private+ pubkey -> accountstate(balance, power)
+
+        	// Check account balance
+        	long timeStamp = System.currentTimeMillis() / 1000;
+
+        	//different type refer to different tx.
+        	long type= 0;
+        	if (obj.containsKey("type") && ((long)obj.get("type")) >= 0) {
+            	type= (long) obj.get("type");
+        	} else {
+            	logger.error("Please add a valid transaction type");
+			}
+
+			// txFee
+        	BigInteger fee = BigInteger.ZERO;
+        	if (obj.containsKey("fee") && ((long)obj.get("fee")) > 0) {
+            	fee = BigInteger.valueOf((long) obj.get("fee"));
+        	} else {
+            	logger.error("Please add a valid transaction type");
+			}
+			//to do: txFee check
+
+			// type = 0: Msg transaction, 1: wiring transaction
+			if( 0 == type){
+				// msg
+				// tx construct	
+			} else if(1 == type) {
+
+				// receiver
+        		byte[] to = null;
+        		if (obj.containsKey("to") && !((String)obj.get("to")).equals("")) {
+                	to = jsToBytes((String) obj.get("to"));
+            		logger.info("json to address: {}", Hex.toHexString(to));
+				}
+				// amount
+        		BigInteger value = BigInteger.ZERO;
+        		if (obj.containsKey("value") && ((long)obj.get("value")) > 0) {
+            		value = BigInteger.valueOf((long) obj.get("value"));
+        		}
+				// tx construct	
+        		// tx.signTransaction();
+        	}
 
 			// get chainmanager and send tx	
-            ChainManager chainmanager = tauController.getChainManager();
 			chainmanager.sendTransaction(tx);
 
             String result = "0x" + Hex.toHexString(tx.getTxID());
             JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
             return response;
-        }
-    }
+    	}
+	}
 }

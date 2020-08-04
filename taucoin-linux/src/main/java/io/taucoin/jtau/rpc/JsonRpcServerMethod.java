@@ -82,18 +82,21 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
      */
     protected Transaction jsToTransaction(JSONObject obj) throws Exception {
 
-        logger.info("json to tx: {}", obj);
-
-        if ((!obj.containsKey("to") || ((String)obj.get("to")).equals(""))   || (!obj.containsKey("value") || ((long)obj.get("value")) <= 0)
-                || (!obj.containsKey("privkey") || ((String)obj.get("privkey")).equals(""))) {
-            throw new Exception("Invalid params");
-        }
-
         //different type refer to different tx.
         long type= 0;
         if (obj.containsKey("type") && ((long)obj.get("type")) >= 0) {
             type= (long) obj.get("type");
-        }
+        } else {
+            throw new Exception("Please add a valid transaction type");
+		}
+
+		// txFee
+        BigInteger fee = BigInteger.ZERO;
+        if (obj.containsKey("fee") && ((long)obj.get("fee")) > 0) {
+            fee = BigInteger.valueOf((long) obj.get("fee"));
+        } else {
+            throw new Exception("Please add a valid transaction type");
+		}
 
         byte[] to = null;
         if (obj.containsKey("to") && !((String)obj.get("to")).equals("")) {
@@ -106,11 +109,6 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
         BigInteger value = BigInteger.ZERO;
         if (obj.containsKey("value") && ((long)obj.get("value")) > 0) {
             value = BigInteger.valueOf((long) obj.get("value"));
-        }
-
-        BigInteger fee = BigInteger.ZERO;
-        if (obj.containsKey("fee") && ((long)obj.get("fee")) > 0) {
-            fee = BigInteger.valueOf((long) obj.get("fee"));
         }
 
         byte[] senderPrivkey = null;
