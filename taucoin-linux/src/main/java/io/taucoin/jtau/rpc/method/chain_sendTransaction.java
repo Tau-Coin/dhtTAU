@@ -19,8 +19,15 @@ package io.taucoin.jtau.rpc.method;
 import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
+import io.taucoin.types.MsgType;
+import io.taucoin.types.Note;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.TxData;
+import io.taucoin.types.WireTransaction;
+import io.taucoin.util.ByteUtil;
 
+import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Pair;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response;
@@ -33,6 +40,10 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * eg:
+ *curl --data-binary '{"jsonrpc": "2.0", "id":"1", "method": "chain_sendTransaction", "params": [{"type": 1, "to":"ac1508fd291d91adf0f0fb9403eac94e837f205f81e4b17a45d88783b234f498", "value": 10, "fee": 1, "seed":"ddcfe7cb9c6395deec34d639f0b5237364fa1f1c00afd678ada44a8403042894", "version": 1, "notes":"test", "chainid":"taucoinX#300#edf23"}] }'  http://127.0.0.1:9088/
+ */
 public class chain_sendTransaction extends JsonRpcServerMethod {
 
     private static final Logger logger = LoggerFactory.getLogger("rpc");
@@ -57,14 +68,15 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
         	byte[] senderSeed = null;
 	        if (obj.containsKey("seed") && !((String)obj.get("seed")).equals("")) {
             	String prikey = (String) obj.get("seed");
+            	senderSeed = ByteUtil.toByte(prikey);
             	logger.info("seed is {}",prikey);
         	} else {
             	logger.error("seed is needed");
 			}
 			// to do: seed -> private+ pubkey -> accountstate(balance, power)
-
-        	// Check account balance
-        	long timeStamp = System.currentTimeMillis() / 1000;
+			Pair<byte[], byte[]> keypair = Ed25519.createKeypair(senderSeed);
+			byte[] publicKey = keypair.first;
+			byte[] privateKey = keypair.second;
 
         	//different type refer to different tx.
         	long type= 0;
@@ -72,6 +84,21 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
             	type= (long) obj.get("type");
         	} else {
             	logger.error("Please add a valid transaction type");
+			}
+			// Check account balance, only wire tx
+			byte[] chainID = obj.getAsString("chainid").getBytes();
+        	long balance = 0;
+        	try{
+				balance = chainmanager.getAccountState(chainID,publicKey).getBalance().longValue();
+			}catch (Exception e){
+
+			}
+			if (type == 1){
+				if(obj.getAsNumber("value").longValue() > balance){
+					String result = "no enough balance , current balance is: "+balance;
+					JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
+					return response;
+				}
 			}
 
 			// txFee
@@ -81,12 +108,40 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
         	} else {
             	logger.error("Please add a valid transaction type");
 			}
+
+
 			//to do: txFee check
+            if(fee.longValue() > balance){
+				String result = "no enough balance pay txfee , current balance is: "+balance;
+				JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
+				return response;
+			}
+
+            if(type == 1 && (fee.longValue()+ obj.getAsNumber("value").longValue()) > balance){
+				String result = "no enough balance pay txfee and amount , current balance is: "+balance;
+				JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
+				return response;
+			}
 
 			// type = 0: Msg transaction, 1: wiring transaction
 			if( 0 == type){
 				// msg
-				// tx construct	
+				// tx construct
+				String forumMsg = obj.getAsString("msg");
+				Note note = new Note(forumMsg);
+				TxData txdata = new TxData(MsgType.RegularForum,note.getTxCode());
+				byte version = obj.getAsNumber("version").byteValue();
+				long timeStamp = System.currentTimeMillis() / 1000;
+				int txfee = fee.intValue();
+				long nonce = 0;
+				try {
+					nonce = chainmanager.getAccountState(chainID,publicKey).getNonce().longValue() + 1;
+				}catch (Exception e){
+
+				}
+
+				tx = new Transaction(version,chainID,timeStamp,txfee,publicKey,nonce,txdata);
+				tx.signTransaction(privateKey);
 			} else if(1 == type) {
 
 				// receiver
@@ -100,9 +155,29 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
         		if (obj.containsKey("value") && ((long)obj.get("value")) > 0) {
             		value = BigInteger.valueOf((long) obj.get("value"));
         		}
-				// tx construct	
-        		// tx.signTransaction();
+
+        		String note = obj.getAsString("notes");
+				WireTransaction wtx = new WireTransaction(to,value.longValue(),note);
+
+				TxData txdata = new TxData(MsgType.Wiring,wtx.getEncode());
+
+				byte version = obj.getAsNumber("version").byteValue();
+				long timeStamp = System.currentTimeMillis() / 1000;
+				int txfee = fee.intValue();
+				long nonce = 0;
+				try {
+					nonce = chainmanager.getAccountState(chainID,publicKey).getNonce().longValue() + 1;
+				}catch (Exception e){
+
+				}
+				// tx construct
+				// tx.signTransaction();
+
+				tx = new Transaction(version,chainID,timeStamp,txfee,publicKey,nonce,txdata);
+				tx.signTransaction(privateKey);
         	}
+
+
 
 			// get chainmanager and send tx	
 			chainmanager.sendTransaction(tx);
