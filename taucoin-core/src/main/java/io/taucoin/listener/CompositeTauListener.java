@@ -26,4 +26,53 @@ public class CompositeTauListener implements TauListener {
             listener.onNewChain(chainId, nickName);
         }
     }
+
+    @Override
+    public void onTauStarted(boolean success, String errMsg) {
+        for (TauListener listener : listeners) {
+            listener.onTauStarted(success, errMsg);
+        }
+    }
+
+    @Override
+    public void onTauStopped() {
+        for (TauListener listener : listeners) {
+            listener.onTauStopped();
+        }
+    }
+
+    @Override
+    public void onTauError(String errMsg) {
+        for (TauListener listener : listeners) {
+            listener.onTauError(errMsg);
+        }
+    }
+
+    @Override
+    public void onDHTStarted(boolean success, String errMsg) {
+        for (TauListener listener : listeners) {
+            listener.onDHTStarted(success, errMsg);
+        }
+    }
+
+    @Override
+    public void onChainManagerStarted(boolean success, String errMsg) {
+        for (TauListener listener : listeners) {
+            listener.onChainManagerStarted(success, errMsg);
+        }
+    }
+
+    @Override
+    public void onDHTStopped() {
+        for (TauListener listener : listeners) {
+            listener.onDHTStopped();
+        }
+    }
+
+    @Override
+    public void onChainManagerStopped() {
+        for (TauListener listener : listeners) {
+            listener.onChainManagerStopped();
+        }
+    }
 }

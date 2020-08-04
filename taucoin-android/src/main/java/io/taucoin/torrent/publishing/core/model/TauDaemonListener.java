@@ -11,11 +11,13 @@ public abstract class TauDaemonListener implements TauListener {
     /**
      * 链端业务组件已全部启动
      */
-    public void onTauStarted() {}
+    @Override
+    public void onTauStarted(boolean success, String errMsg) {}
 
     /**
      * 链端业务组件已全部停止
      */
+    @Override
     public void onTauStopped() {}
 
     /**
@@ -53,4 +55,24 @@ public abstract class TauDaemonListener implements TauListener {
      * @param block 区块
      */
     public void onSyncBlock(Block block) {}
+
+    @Override
+    public void onDHTStarted(boolean success, String errMsg) {
+        // Ignore this event
+    }
+
+    @Override
+    public void onChainManagerStarted(boolean success, String errMsg) {
+        // Ignore this event
+    }
+
+    @Override
+    public void onDHTStopped() {
+        // Ignore this event
+    }
+
+    @Override
+    public void onChainManagerStopped() {
+        // Ignore this event
+    }
 }

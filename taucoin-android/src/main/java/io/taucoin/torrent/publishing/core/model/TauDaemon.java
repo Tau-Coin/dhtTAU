@@ -162,7 +162,7 @@ public class TauDaemon {
 
             TauDaemonListener listener = new TauDaemonListener() {
                 @Override
-                public void onTauStarted() {
+                public void onTauStarted(boolean success, String errMsg) {
                     if (!emitter.isCancelled())
                         emitter.onNext(true);
                 }
@@ -188,9 +188,13 @@ public class TauDaemon {
      */
     private final TauDaemonListener daemonListener = new TauDaemonListener() {
         @Override
-        public void onTauStarted() {
-            isRunning = true;
-            rescheduleTauBySettings();
+        public void onTauStarted(boolean success, String errMsg) {
+            if (success) {
+                isRunning = true;
+                rescheduleTauBySettings();
+            } else {
+                // TODO:
+            }
         }
 
         @Override

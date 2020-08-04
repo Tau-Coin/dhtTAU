@@ -7,4 +7,55 @@ package io.taucoin.listener;
 public interface TauListener {
 
     void onNewChain(String chainId, String nickName);
+
+    /**
+     * When starting TauController sucessfully or not,
+     * this event will be notified.
+     *
+     * @param success true starting sucessfully, or else false
+     * @param errMsg error message
+     */
+    void onTauStarted(boolean success, String errMsg);
+
+    /**
+     * This event will be notified after stopping TauController.
+     */
+    void onTauStopped();
+
+    /**
+     * This event will be notified if error happens during running time.
+     * Note: this event won't be notified if error happens
+     * during starting TauController.
+     */
+    void onTauError(String errMsg);
+
+    /**
+     * When starting DHT Engine sucessfully or not,
+     * this event will be notified.
+     * Note: this is designed just for blockchain internally and
+     * application should ignore this event.
+     */
+    void onDHTStarted(boolean success, String errMsg);
+
+    /**
+     * When starting Chain Manager sucessfully or not,
+     * this event will be notified.
+     * Note: this is designed just for blockchain internally and
+     * application should ignore this event.
+     */
+    void onChainManagerStarted(boolean success, String errMsg);
+
+    /**
+     * This event will be notified after DHT Engine stopped.
+     * Note: this is designed just for blockchain internally and
+     * application should ignore this event.
+     */
+    void onDHTStopped();
+
+    /**
+     * This event will be notified after Chain Manager stopped.
+     * Note: this is designed just for blockchain internally and
+     * application should ignore this event.
+     */
+    void onChainManagerStopped();
 }
