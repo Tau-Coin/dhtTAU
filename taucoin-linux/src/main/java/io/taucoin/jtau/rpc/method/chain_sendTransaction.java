@@ -72,7 +72,7 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
         	byte[] senderSeed = null;
 	        if (obj.containsKey("seed") && !((String)obj.get("seed")).equals("")) {
             	String prikey = (String) obj.get("seed");
-            	senderSeed = ByteUtil.toByte(prikey);
+            	senderSeed = jsToBytes(prikey);
             	logger.info("seed is {}",prikey);
         	} else {
             	logger.error("seed is needed");

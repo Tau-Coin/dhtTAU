@@ -164,6 +164,7 @@ public class Block {
         this.receiverBalance = 0;
         this.senderNonce = 0 ;
         this.minerPubkey = cf.getGenesisMinerPubkey();
+        this.signature = cf.getSignature();
         isParsed = true;
     }
 
