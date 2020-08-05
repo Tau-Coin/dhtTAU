@@ -43,10 +43,11 @@ public class chain_getBestBlock extends JsonRpcServerMethod {
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
 		ChainManager chainmanager = tauController.getChainManager();
 		ArrayList<Block> blocks= chainmanager.getAllBestBlocks();
+		logger.info("Best blocks size of all chain is {}", blocks.size());
 		ArrayList<String> results= new ArrayList<String>();
 		
 		for (Block block: blocks) {
-			String result = "0xblock1"; //+ block.toString();
+			String result = block.toString(); //+ block.toString();
 			results.add(result);
 		}
 

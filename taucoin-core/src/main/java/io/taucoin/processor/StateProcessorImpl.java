@@ -206,17 +206,18 @@ public class StateProcessorImpl implements StateProcessor {
                 logger.error("Tx validate fail!");
                 return false;
             }
-
+            /*
             if (!tx.verifyTransactionSig()) {
                 logger.error("Bad Signature.");
                 return false;
             }
 
-            // if genesis block
+            // if genesis block -> msg type == error
             if (block.getBlockNum() != 0 || MsgType.GenesisMsg == tx.getTxData().getMsgType()) {
                 logger.error("Genesis type error!");
                 return false;
             }
+            */
 
 
             Map<String, GenesisItem> map = tx.getTxData().getGenesisMsgKV();

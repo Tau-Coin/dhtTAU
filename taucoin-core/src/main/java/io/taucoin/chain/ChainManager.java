@@ -84,6 +84,8 @@ public class ChainManager {
 		// New TauConfig
 		ChainConfig tauConfig= ChainConfig.NewTauChainConfig();
 		byte[] chainid= tauConfig.getChainid();
+		logger.info("Initial tau chain chainid: {}", new String(chainid));
+
 		if(!this.stateDB.isChainFollowed(chainid)) {
 			// New TauChain
     		if (!createNewCommunity(tauConfig)) {
@@ -197,6 +199,7 @@ public class ChainManager {
      * @return true/false.
      */
     public boolean createNewCommunity(ChainConfig cf){
+		
         Block genesis = new Block(cf);
         boolean ret = followChain(genesis.getChainID());
 
@@ -221,6 +224,7 @@ public class ChainManager {
         // add peer and put block to dht
         for (Map.Entry<String, GenesisItem> entry : map.entrySet()) {
             byte[] pubKey = Hex.decode(entry.getKey());
+			logger.info("create new community pubkey: {}", Hex.toHexString(pubKey));
             try {
                 this.stateDB.addPeer(chainID, pubKey);
             } catch (Exception e) {
@@ -346,6 +350,9 @@ public class ChainManager {
 
         Iterator<ByteArrayWrapper> chainsItor = this.chains.keySet().iterator();
         while(chainsItor.hasNext()) {
+			String chainid= new String(chainsItor.next().getData());
+			logger.info("ChainManager chanid string: {}", chainid);
+			logger.info("ChainManager block string: {}", chains.get(chainsItor.next()).getBestBlock().toString());
 			blocks.add(chains.get(chainsItor.next()).getBestBlock());	
 		}
 

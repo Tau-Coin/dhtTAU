@@ -158,8 +158,6 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 				tx.signTransaction(privateKey);
         	}
 
-
-
 			// get chainmanager and send tx	
 			chainmanager.sendTransaction(tx);
 

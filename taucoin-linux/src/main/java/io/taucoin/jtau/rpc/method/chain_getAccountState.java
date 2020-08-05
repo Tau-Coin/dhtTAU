@@ -27,11 +27,11 @@ public class chain_getAccountState extends JsonRpcServerMethod {
     @Override
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
         List<Object> params = req.getPositionalParams();
-        if (params.size() != 1) {
+        if (params.size() != 2) {
             return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
         } else {
 			// get pubkey
-            byte[] chainid = jsToBytes((String)(params.get(0)));
+            byte[] chainid = ((String)(params.get(0))).getBytes();
             byte[] pubkey = jsToBytes((String)(params.get(1)));
 
 			// get account state

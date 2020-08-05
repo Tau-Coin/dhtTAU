@@ -16,8 +16,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.config;
 
-import java.math.BigInteger;
-
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.GenesisMsg;
 import io.taucoin.types.MsgType;
@@ -27,11 +25,18 @@ import io.taucoin.util.ByteUtil;
 
 import com.frostwire.jlibtorrent.swig.byte_vector;
 import com.frostwire.jlibtorrent.swig.sha1_hash;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
 
 /**
  * configure every new chain parameter.
  */
 public class ChainConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger("ChainManager");
+
     private byte version;
     private String CommunityName;
     private int BlockTimeInterval=600;

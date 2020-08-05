@@ -15,18 +15,19 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WIT
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.genesis;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.frostwire.jlibtorrent.Ed25519;
-import com.frostwire.jlibtorrent.Pair;
-
-import java.math.BigInteger;
-import java.util.HashMap;
 
 import io.taucoin.types.GenesisMsg;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.param.ChainParam;
+
+import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Pair;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
+import java.util.HashMap;
 
 public class GenesisMsgTest {
     private static final Logger log = LoggerFactory.getLogger("genesisTest");

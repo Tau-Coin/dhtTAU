@@ -91,7 +91,14 @@ public class StateDBImpl implements StateDB {
      */
     @Override
     public Set<byte[]> getAllFollowedChains() throws Exception {
-        return db.retrieveKeysWithPrefix(PrefixKey.chain);
+        Set<byte[]> ret = new HashSet<>();
+        Set<byte[]> set = db.retrieveKeysWithPrefix(PrefixKey.chain);
+        if (null != set) {
+            for(byte[] chainID: set) {
+                ret.add(Arrays.copyOfRange(chainID, PrefixKey.chain.length, chainID.length));
+            }
+        }
+        return ret;
     }
 
     /**
