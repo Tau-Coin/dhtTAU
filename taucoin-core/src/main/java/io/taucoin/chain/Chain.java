@@ -170,13 +170,16 @@ public class Chain {
                 allPeers.add(new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first));
             }
             // get from mutable block
-            if (null != bestBlock) {
+            if (null != bestBlock && bestBlock.getBlockNum() > 0) {
                 // get priority peers in mutable range
                 priorityPeers.add(new ByteArrayWrapper(bestBlock.getMinerPubkey()));
                 byte[] previousHash = bestBlock.getPreviousBlockHash();
                 for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
                     Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
                     if (null != block) {
+                        if (block.getBlockNum() <= 0) {
+                            break;
+                        }
                         priorityPeers.add(new ByteArrayWrapper(block.getMinerPubkey()));
                         previousHash = block.getPreviousBlockHash();
                     } else {
@@ -212,13 +215,6 @@ public class Chain {
      * block chain main process
      */
     private void blockChainProcess() {
-        chainLoop();
-    }
-
-    /**
-     * main chain loop
-     */
-    private void chainLoop() {
         // vote for new chain, when there is nothing in local
         if (null == this.bestBlock || null == this.syncBlock) {
             Vote bestVote = vote();
@@ -237,14 +233,32 @@ public class Chain {
             }
         }
 
+        chainLoop();
+    }
+
+    /**
+     * main chain loop
+     */
+    private void chainLoop() {
         while (!Thread.interrupted()) {
             boolean votingFlag = false;
             boolean miningFlag = false;
 
             // keep looking for more difficult chain
+            int limit = peerManager.getPeerNumber();
+            if (limit <= 0) {
+                miningFlag = true;
+            }
+
             while (!Thread.interrupted()) {
                 byte[] pubKey = peerManager.popUpOptimalBlockPeer();
                 Block tip = getTipBlockFromPeer(pubKey);
+
+                limit--;
+                if (limit <=0) {
+                    miningFlag = true;
+                    break;
+                }
 
                 if (null == tip) {
                     continue;
@@ -336,6 +350,7 @@ public class Chain {
                     // the best block is parent block of the tip
                     if (tryToConnect(block, track)) {
                         try {
+                            this.blockStore.saveBlock(block, true);
                             track.commit();
                         } catch (Exception e) {
                             logger.error(e.getMessage(), e);
@@ -456,6 +471,10 @@ public class Chain {
      * @return true[success]/false[fail]
      */
     private boolean initialSync(Vote bestVote) {
+        if (null == bestVote) {
+            logger.error("Best vote is null.");
+            return false;
+        }
 
         try {
             this.blockStore.removeChain(this.chainID);
@@ -466,6 +485,7 @@ public class Chain {
             // initial sync from best vote
             StateDB track = this.stateDB.startTracking(this.chainID);
             if (this.stateProcessor.backwardProcess(bestVoteBlock, track)) {
+                this.blockStore.saveBlock(bestVoteBlock, true);
                 this.bestBlock = bestVoteBlock;
                 this.syncBlock = bestVoteBlock;
             } else {
@@ -476,6 +496,10 @@ public class Chain {
             int counter = 0;
             while (!Thread.interrupted() && block.getBlockNum() > 0 && counter < ChainParam.MUTABLE_RANGE) {
                 block = getBlockFromDHTByHash(this.syncBlock.getPreviousBlockHash());
+                if (null == block) {
+                    return false;
+                }
+
                 if (this.stateProcessor.backwardProcess(block, track)) {
                     this.blockStore.saveBlock(block, true);
                     this.syncBlock = block;
