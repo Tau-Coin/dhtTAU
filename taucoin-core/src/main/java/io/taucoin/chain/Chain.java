@@ -200,26 +200,6 @@ public class Chain {
             return false;
         }
 
-        // vote for new chain, when there is nothing in local
-        if (null == this.bestBlock || null == this.syncBlock) {
-            Vote bestVote = vote();
-            if (!initialSync(bestVote)) {
-                logger.error("Initial sync fail!");
-                return false;
-            }
-        }
-
-        // if offline too long, vote as a new chain
-        if (null != this.bestBlock &&
-                (System.currentTimeMillis() / 1000 - this.bestBlock.getTimeStamp()) >
-                        ChainParam.WARNING_RANGE * ChainParam.DefaultBlockTimeInterval) {
-            Vote bestVote = vote();
-            if (!initialSync(bestVote)) {
-                logger.error("Initial sync fail!");
-                return false;
-            }
-        }
-
         // init tx pool
         this.txPool = new TransactionPoolImpl(this.chainID,
                 AccountManager.getInstance().getKeyPair().first, this.stateDB);
@@ -239,6 +219,24 @@ public class Chain {
      * main chain loop
      */
     private void chainLoop() {
+        // vote for new chain, when there is nothing in local
+        if (null == this.bestBlock || null == this.syncBlock) {
+            Vote bestVote = vote();
+            if (!initialSync(bestVote)) {
+                logger.error("Initial sync fail!");
+            }
+        }
+
+        // if offline too long, vote as a new chain
+        if (null != this.bestBlock &&
+                (System.currentTimeMillis() / 1000 - this.bestBlock.getTimeStamp()) >
+                        ChainParam.WARNING_RANGE * ChainParam.DefaultBlockTimeInterval) {
+            Vote bestVote = vote();
+            if (!initialSync(bestVote)) {
+                logger.error("Initial sync fail!");
+            }
+        }
+
         while (!Thread.interrupted()) {
             boolean votingFlag = false;
             boolean miningFlag = false;
@@ -433,14 +431,23 @@ public class Chain {
             Block block = getTipBlockFromPeer(peer);
             if (null != block) {
                 // vote on immutable point
-                votingPool.putIntoVotingPool(block.getImmutableBlockHash(),
-                        (int) block.getBlockNum() - ChainParam.MUTABLE_RANGE);
+                if (block.getBlockNum() > ChainParam.MUTABLE_RANGE) {
+                    votingPool.putIntoVotingPool(block.getImmutableBlockHash(),
+                            (int) block.getBlockNum() - ChainParam.MUTABLE_RANGE);
+                } else {
+                    votingPool.putIntoVotingPool(block.getBlockHash(), (int) block.getBlockNum());
+                }
             }
 
             counter--;
         }
 
-        return votingPool.getBestVote();
+        Vote bestVote = votingPool.getBestVote();
+
+        // clear voting pool for next time when voting end
+        votingPool.clearVotingPool();
+
+        return bestVote;
     }
 
     /**

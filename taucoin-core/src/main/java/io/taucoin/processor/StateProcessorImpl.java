@@ -254,6 +254,12 @@ public class StateProcessorImpl implements StateProcessor {
      */
     @Override
     public boolean backwardProcess(Block block, StateDB stateDB) {
+
+        // if genesis block
+        if (block.getBlockNum() == 0) {
+            return backwardProcessGenesisBlock(block, stateDB);
+        }
+
         // check balance and nonce, then update state
         try {
             Transaction tx = block.getTxMsg();
