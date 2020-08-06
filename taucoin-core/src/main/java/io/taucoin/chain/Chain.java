@@ -267,52 +267,59 @@ public class Chain {
 
                 // if a less difficult chain, jump to mine
                 if (tip.getCumulativeDifficulty().compareTo(this.bestBlock.getCumulativeDifficulty()) < 0) {
-                    txPool.addRemote(tip.getTxMsg());
+                    if (null != tip.getTxMsg()) {
+                        txPool.addRemote(tip.getTxMsg());
+                    }
                     miningFlag = true;
                     break;
 //                    continue;
                 }
 
-                // if a more difficult chain
-                // download block
+                // if found a more difficult chain
+                // download block first
                 try {
-                    if (tip.getBlockNum() > ChainParam.MUTABLE_RANGE) {
-                        byte[] immutableBlockHash = tip.getImmutableBlockHash();
-                        BlockInfo blockInfo = this.blockStore.getBlockInfoByHash(this.chainID, immutableBlockHash);
+//                    if (tip.getBlockNum() > ChainParam.MUTABLE_RANGE) {
+//                        byte[] immutableBlockHash = tip.getImmutableBlockHash();
+//                        BlockInfo blockInfo = this.blockStore.getBlockInfoByHash(this.chainID, immutableBlockHash);
                         // immutable block cannot found in block store, vote
-                        if (null == blockInfo) {
-                            votingFlag = true;
-                            break;
-                        } else {
+//                        if (null == blockInfo) {
+//                            votingFlag = true;
+//                            break;
+//                        } else {
                             // found in block store
-                            int counter = 0;
-                            byte[] previousHash = tip.getPreviousBlockHash();
-                            this.blockStore.saveBlock(tip, false);
-                            while (!Thread.interrupted() && counter < ChainParam.WARNING_RANGE) {
-                                Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
-                                if (null != block) {
-                                    // found in local
-                                    break;
-                                }
-                                // get from dht
-                                Block dhtBlock = getBlockFromDHTByHash(previousHash);
-                                if (null != dhtBlock) {
-                                    previousHash = dhtBlock.getPreviousBlockHash();
-                                    this.blockStore.saveBlock(dhtBlock, false);
-                                }
-
-                                if (dhtBlock.getBlockNum() <= 0) {
-                                    break;
-                                }
-                                counter++;
+                    if (tip.getBlockNum() > 0) {
+                        int counter = 0;
+                        byte[] previousHash = tip.getPreviousBlockHash();
+                        this.blockStore.saveBlock(tip, false);
+                        while (!Thread.interrupted() && counter < ChainParam.WARNING_RANGE) {
+                            Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
+                            if (null != block) {
+                                // found in local
+                                break;
                             }
+                            // get from dht
+                            Block dhtBlock = getBlockFromDHTByHash(previousHash);
+                            if (null != dhtBlock) {
+                                previousHash = dhtBlock.getPreviousBlockHash();
+                                this.blockStore.saveBlock(dhtBlock, false);
+                            }
+
+                            if (dhtBlock.getBlockNum() <= 0) {
+                                break;
+                            }
+                            counter++;
                         }
+                    } else {
+                        miningFlag = true;
+                        break;
                     }
+//                        }
+//                    }
 
                     // find fork point
-                    Block forkPointBlock = this.blockStore.getForkPointBlock(tip);
+                    Block forkPointBlock = this.blockStore.getForkPointBlock(this.bestBlock, tip);
                     if (null == forkPointBlock) {
-                        // cannot find fork point
+                        // cannot find fork point, maybe a attack that fork point is beyond warning range
                         logger.info("Cannot find fork point.");
                         continue;
                     }
@@ -325,7 +332,7 @@ public class Chain {
                         continue;
                     } else if (forkRange < ChainParam.MUTABLE_RANGE){
                         // change to more difficult chain
-                        reBranch(tip, stateDB);
+                        reBranch(tip);
                         miningFlag = true;
                         break;
                     } else {
@@ -342,7 +349,7 @@ public class Chain {
             // vote for new chain
             if (votingFlag) {
                 Vote bestVote = vote();
-                syncFromVote(bestVote);
+                tryChangeToBestVote(bestVote);
                 continue;
             }
 
@@ -353,14 +360,28 @@ public class Chain {
                     // the best block is parent block of the tip
                     if (null != block) {
                         StateDB track = this.stateDB.startTracking(this.chainID);
+
                         if (tryToConnect(block, track)) {
                             try {
+                                // after chain change
+                                // 1. save block
+                                // 2. save best block hash
+                                // 3. commit new state
+                                // 4. set best block
+                                // 5. add new block peer to peer pool
+                                // 6. update tx pool
+                                // 7. publish new block
                                 this.blockStore.saveBlock(block, true);
+                                track.setBestBlockHash(this.chainID, block.getBlockHash());
                                 track.commit();
+                                setBestBlock(block);
+                                this.peerManager.addNewBlockPeer(block.getMinerPubkey());
                             } catch (Exception e) {
                                 logger.error(e.getMessage(), e);
                             }
-                            setBestBlock(block);
+
+                            Set<ByteArrayWrapper> accounts = extractAccountFromBlock(block);
+                            this.txPool.recheckAccoutTx(accounts);
 
                             publishBestBlock();
                         }
@@ -385,16 +406,24 @@ public class Chain {
      * sync a block for more state when needed
      */
     private void syncBlockForMoreState() {
-        if (null != this.syncBlock) {
+        if (null != this.syncBlock && this.syncBlock.getBlockNum() >0) {
             Block block = getBlockFromDHTByHash(this.syncBlock.getPreviousBlockHash());
             if (null != block) {
                 try {
                     StateDB track = this.stateDB.startTracking(this.chainID);
                     if (this.stateProcessor.backwardProcess(block, track)) {
-                        this.peerManager.addNewPeer(block.getMinerPubkey());
+                        // after sync
+                        // 1. save block
+                        // 2. save sync block hash
+                        // 3. commit new state
+                        // 4. set sync block
+                        // 5. add old block peer to peer pool
+
                         this.blockStore.saveBlock(block, true);
+                        track.setSyncBlockHash(this.chainID, block.getBlockHash());
                         track.commit();
                         this.syncBlock = block;
+                        this.peerManager.addOldBlockPeer(block.getMinerPubkey());
                     }
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
@@ -405,38 +434,76 @@ public class Chain {
 
     /**
      * re-branch chain
-     * @param block
-     * @param stateDB
+     * @param targetBlock block that chain will change to
      */
-    private void reBranch(Block block, StateDB stateDB) {
+    private boolean reBranch(Block targetBlock) {
         try {
             //try to roll back and reconnect
             StateDB track = stateDB.startTracking(this.chainID);
+
             List<Block> undoBlocks = new ArrayList<>();
             List<Block> newBlocks = new ArrayList<>();
-            blockStore.getForkBlocksInfo(block, this.bestBlock, undoBlocks, newBlocks);
-            for (Block undoBlock : undoBlocks) {
-                this.stateProcessor.rollback(undoBlock, track);
+            if (!blockStore.getForkBlocksInfo(targetBlock, this.bestBlock, undoBlocks, newBlocks)) {
+                logger.error("Cannot get fork block, best block[{}], target block[{}]",
+                        Hex.toHexString(this.bestBlock.getBlockHash()),
+                        Hex.toHexString(targetBlock.getBlockHash()));
+                return false;
             }
-            int size = newBlocks.size();
-            for (int i = size - 1; i >= 0; i--) {
-                ImportResult result = this.stateProcessor.forwardProcess(newBlocks.get(i), track);
-                if (result == ImportResult.NO_ACCOUNT_INFO && !isSyncComplete()) {
-                    syncBlockForMoreState();
-                    i++;
+
+            for (Block undoBlock : undoBlocks) {
+                if (!this.stateProcessor.rollback(undoBlock, track)) {
+                    logger.error("Roll back fail, block hash:{}", Hex.toHexString(undoBlock.getBlockHash()));
+                    return false;
                 }
             }
 
+            int size = newBlocks.size();
+            for (int i = size - 1; i >= 0; i--) {
+                ImportResult result = this.stateProcessor.forwardProcess(newBlocks.get(i), track);
+                // if need sync more block
+                if (result == ImportResult.NO_ACCOUNT_INFO && !isSyncComplete()) {
+                    syncBlockForMoreState();
+                    i++;
+                    continue;
+                }
+
+                if (result != ImportResult.IMPORTED_BEST) {
+                    logger.error("Import block fail, block hash:{}",
+                            Hex.toHexString(newBlocks.get(i).getBlockHash()));
+                    return false;
+                }
+
+                this.peerManager.addNewBlockPeer(newBlocks.get(i).getMinerPubkey());
+            }
+
+            // after chain change
+            // 1. save block
+            // 2. save best block hash
+            // 3. commit new state
+            // 4. set best block
+            // 5. save and add new block peer to peer pool
+            // 6. update tx pool
+            // 7. publish new block
+
             this.blockStore.reBranchBlocks(undoBlocks, newBlocks);
+
+            track.setBestBlockHash(this.chainID, targetBlock.getBlockHash());
 
             track.commit();
 
-            setBestBlock(block);
+            setBestBlock(targetBlock);
+
+            Set<ByteArrayWrapper> accounts = extractAccountFromBlock(undoBlocks);
+            accounts.addAll(extractAccountFromBlock(newBlocks));
+            this.txPool.recheckAccoutTx(accounts);
 
             publishBestBlock();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+            return false;
         }
+
+        return true;
     }
 
     /**
@@ -451,14 +518,16 @@ public class Chain {
 
         while (!Thread.interrupted() && counter > 0) {
             byte[] peer = peerManager.getBlockPeerRandomly();
-            Block block = getTipBlockFromPeer(peer);
-            if (null != block) {
-                // vote on immutable point
-                if (block.getBlockNum() > ChainParam.MUTABLE_RANGE) {
-                    votingPool.putIntoVotingPool(block.getImmutableBlockHash(),
-                            (int) block.getBlockNum() - ChainParam.MUTABLE_RANGE);
-                } else {
-                    votingPool.putIntoVotingPool(block.getImmutableBlockHash(), 0);
+            if (null != peer) {
+                Block block = getTipBlockFromPeer(peer);
+                if (null != block) {
+                    // vote on immutable point
+                    if (block.getBlockNum() > ChainParam.MUTABLE_RANGE) {
+                        votingPool.putIntoVotingPool(block.getImmutableBlockHash(),
+                                (int) block.getBlockNum() - ChainParam.MUTABLE_RANGE);
+                    } else {
+                        votingPool.putIntoVotingPool(block.getImmutableBlockHash(), 0);
+                    }
                 }
             }
 
@@ -495,30 +564,54 @@ public class Chain {
                 return false;
             }
 
+            // after sync
+            // 1. save block
+            // 2. save best and sync block hash
+            // 3. commit new state
+            // 4. set best and sync block
+            // 5. add old block peer to peer pool
+
             // initial sync from best vote
             StateDB track = this.stateDB.startTracking(this.chainID);
-            if (this.stateProcessor.backwardProcess(bestVoteBlock, track)) {
-                this.blockStore.saveBlock(bestVoteBlock, true);
-                this.bestBlock = bestVoteBlock;
-                this.syncBlock = bestVoteBlock;
-            } else {
+            if (!this.stateProcessor.backwardProcess(bestVoteBlock, track)) {
+                logger.error("Process block[{}] fail!", Hex.toHexString(bestVoteBlock.getBlockHash()));
                 return false;
             }
 
+            this.blockStore.saveBlock(bestVoteBlock, true);
+
+            track.setBestBlockHash(this.chainID, bestVoteBlock.getBlockHash());
+            track.setSyncBlockHash(this.chainID, bestVoteBlock.getBlockHash());
+
+            this.bestBlock = bestVoteBlock;
+            this.syncBlock = bestVoteBlock;
+
+            this.peerManager.addOldBlockPeer(bestVoteBlock.getMinerPubkey());
+
             Block block = bestVoteBlock;
             int counter = 0;
-            while (!Thread.interrupted() && block.getBlockNum() > 0 && counter < ChainParam.WARNING_RANGE) {
+            while (!Thread.interrupted() && block.getBlockNum() > 0 && counter < ChainParam.MUTABLE_RANGE) {
                 block = getBlockFromDHTByHash(this.syncBlock.getPreviousBlockHash());
                 if (null == block) {
                     return false;
                 }
 
-                if (this.stateProcessor.backwardProcess(block, track)) {
-                    this.blockStore.saveBlock(block, true);
-                    this.syncBlock = block;
-                } else {
+                if (!this.stateProcessor.backwardProcess(block, track)) {
+                    logger.error("Process block[{}] fail!", Hex.toHexString(block.getBlockHash()));
                     return false;
                 }
+
+                // after sync
+                // 1. save block
+                // 2. save sync block hash
+                // 3. commit new state
+                // 4. set sync block
+                // 5. add old block peer to peer pool
+                this.blockStore.saveBlock(block, true);
+                track.setSyncBlockHash(this.chainID, block.getBlockHash());
+                this.syncBlock = block;
+                this.peerManager.addOldBlockPeer(block.getMinerPubkey());
+
                 counter++;
             }
 
@@ -548,15 +641,21 @@ public class Chain {
     }
 
     /**
-     * sync block from given vote
-     * @param bestVote
-     * @return
+     * try to change chain tip to best vote block
+     * 如果投票出的新ImmutablePointBlock，root在同一链上mutable range内，说明是链的正常发展;
+     * 如果投出来的新ImmutablePointBlock, 这个block is within 1x - 3x out of mutable range，
+     * 把自己当作新节点处理。检查下自己的历史交易是否在新链上，不在新链上的放回交易池。
+     * 如果分叉点在3x mutable range之外，Alert the user of a potential attack。
+     * @param bestVote best vote
+     * @return true/false
      */
-    private boolean syncFromVote(Vote bestVote) {
+    private boolean tryChangeToBestVote(Vote bestVote) {
         try {
             // download block first
             int counter = 0;
             byte[] previousHash = bestVote.getBlockHash();
+
+            // download at most 3 * mutable range blocks
             while (!Thread.interrupted() && counter < ChainParam.WARNING_RANGE) {
                 Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
                 if (null != block) {
@@ -576,8 +675,34 @@ public class Chain {
                 counter++;
             }
 
+            // get best vote block
             Block bestVoteBlock = this.blockStore.getBlockByHash(this.chainID, bestVote.getBlockHash());
-            reBranch(bestVoteBlock, this.stateDB);
+
+            // find fork point
+            Block forkPointBlock = this.blockStore.getForkPointBlock(this.bestBlock, bestVoteBlock);
+            if (null == forkPointBlock) {
+                // cannot find fork point, maybe fork point is beyond warning range
+                logger.info("Cannot find fork point.");
+                return false;
+            }
+
+            // calc fork range
+            // fork point block number must be less than best block, so fork range >= 0
+            long forkRange = this.bestBlock.getBlockNum() - forkPointBlock.getBlockNum();
+
+            if (forkRange > ChainParam.WARNING_RANGE) {
+                // an attack chain, ignore it
+            } else if (forkRange < ChainParam.MUTABLE_RANGE){
+                // change to more difficult chain
+                reBranch(bestVoteBlock);
+            } else {
+                // be as a new chain when fork point between mutable range and warning range
+                // re-init tx pool and chain
+                this.txPool.reinit();
+                initialSync(bestVote);
+            }
+
+//            reBranch(this.bestBlock, bestVoteBlock);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -801,6 +926,22 @@ public class Chain {
      */
     public Block getBestBlock() {
         return this.bestBlock;
+    }
+
+    /**
+     * set synced block of this chain
+     * @param block synced block
+     */
+    public void setSyncBlock(Block block) {
+        this.syncBlock = block;
+    }
+
+    /**
+     * get synced block of this chain
+     * @return
+     */
+    public Block getSyncBlock() {
+        return this.syncBlock;
     }
 
     /**
@@ -1159,6 +1300,51 @@ public class Chain {
             }
         }
     }
+
+    /**
+     * extract accounts from block
+     * @param block block to be extracted
+     * @return account set
+     */
+    private Set<ByteArrayWrapper> extractAccountFromBlock(Block block) {
+        Set<ByteArrayWrapper> set = new HashSet<>();
+        if (null != block && block.getBlockNum() > 0) {
+            set.add(new ByteArrayWrapper(block.getMinerPubkey()));
+            Transaction tx = block.getTxMsg();
+            if (null != tx) {
+                set.add(new ByteArrayWrapper(tx.getSenderPubkey()));
+                if (MsgType.Wiring == tx.getTxData().getMsgType()) {
+                    set.add(new ByteArrayWrapper(tx.getTxData().getReceiver()));
+                }
+            }
+        }
+        return set;
+    }
+
+    /**
+     * extract accounts from block list
+     * @param list block list
+     * @return account set
+     */
+    private Set<ByteArrayWrapper> extractAccountFromBlock(List<Block> list) {
+        Set<ByteArrayWrapper> set = new HashSet<>();
+        if (null != list) {
+            for (Block block: list) {
+                Set<ByteArrayWrapper> accountSet = extractAccountFromBlock(block);
+                set.addAll(accountSet);
+            }
+        }
+        return set;
+    }
+
+    // after chain change
+    // 0. commit new state
+    // 1. save block
+    // 2. set best block
+    // 3. save best block
+    // 4. publish new block
+    // 5. add new block peer to peer pool
+    // 6. update tx pool
 
 }
 

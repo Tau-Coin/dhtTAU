@@ -368,6 +368,7 @@ public class TransactionPoolImpl implements TransactionPool {
         if (null != list) {
             for (Transaction tx: list) {
                 addRemote(tx);
+                trySlimDownPool();
             }
         }
     }

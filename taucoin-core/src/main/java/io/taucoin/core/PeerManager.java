@@ -74,15 +74,26 @@ public class PeerManager {
     }
 
     /**
-     * add a peer to all peer set
-     * @param peer
+     * add a new peer to all peer set when connect a new block
+     * @param peer a peer
      */
-    public void addNewPeer(byte[] peer) {
+    public void addNewBlockPeer(byte[] peer) {
         this.allPeers.add(new ByteArrayWrapper(peer));
         if (this.priorityPeers.size() >= ChainParam.MUTABLE_RANGE) {
             this.priorityPeers.remove(0);
         }
         this.priorityPeers.add(new ByteArrayWrapper(peer));
+    }
+
+    /**
+     * add a peer to all peer set when sync old block
+     * @param peer a peer
+     */
+    public void addOldBlockPeer(byte[] peer) {
+        this.allPeers.add(new ByteArrayWrapper(peer));
+        if (this.priorityPeers.size() <= ChainParam.MUTABLE_RANGE) {
+            this.priorityPeers.add(new ByteArrayWrapper(peer));
+        }
     }
 
     /**

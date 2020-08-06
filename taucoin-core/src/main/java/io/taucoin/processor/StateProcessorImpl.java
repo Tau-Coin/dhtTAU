@@ -37,6 +37,9 @@ public class StateProcessorImpl implements StateProcessor {
     public ImportResult forwardProcess(Block block, StateDB stateDB) {
         // check balance and nonce, then update state
         try {
+            // collect new peer
+            stateDB.addPeer(this.chainID, block.getMinerPubkey());
+
             Transaction tx = block.getTxMsg();
             if (null != tx) {
                 if (!tx.isTxParamValidate()) {
@@ -271,6 +274,9 @@ public class StateProcessorImpl implements StateProcessor {
 
         // check balance and nonce, then update state
         try {
+            // collect new peer
+            stateDB.addPeer(this.chainID, block.getMinerPubkey());
+
             Transaction tx = block.getTxMsg();
 
             if (null != tx) {
