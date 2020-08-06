@@ -2,6 +2,7 @@ package io.taucoin.jtau.event;
 
 import io.taucoin.controller.TauController;
 import io.taucoin.listener.TauListener;
+import io.taucoin.torrent.SessionStats;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,4 +67,8 @@ public class TauListenerImpl implements TauListener {
         // Ignore this event
     }
 
+    @Override
+    public void onSessionStats(SessionStats newStats) {
+        logger.debug("session stats:" + newStats);
+    }
 }

@@ -1,6 +1,7 @@
 package io.taucoin.controller;
 
 import io.taucoin.listener.TauListener;
+import io.taucoin.torrent.SessionStats;
 
 public abstract class StartstopListener implements TauListener {
 
@@ -27,4 +28,7 @@ public abstract class StartstopListener implements TauListener {
 
     @Override
     public abstract void onChainManagerStopped();
+
+    @Override
+    public void onSessionStats(SessionStats newStats) {}
 }

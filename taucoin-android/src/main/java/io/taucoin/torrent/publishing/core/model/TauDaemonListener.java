@@ -1,6 +1,6 @@
 package io.taucoin.torrent.publishing.core.model;
 
-import com.frostwire.jlibtorrent.SessionStats;
+import io.taucoin.torrent.SessionStats;
 
 import androidx.annotation.NonNull;
 import io.taucoin.listener.TauListener;
@@ -28,6 +28,7 @@ public abstract class TauDaemonListener implements TauListener {
     /**
      * torrent SessionStats
      */
+    @Override
     public void onSessionStats(@NonNull SessionStats newStats){}
 
     /**

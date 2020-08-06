@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.taucoin.torrent.DHT.*;
 
@@ -47,6 +50,9 @@ public class TorrentDHTEngine {
                 ListenSucceededAlert a = (ListenSucceededAlert) alert;
                 logger.info(a.message());
                 TorrentDHTEngine.this.tauListener.onDHTStarted(true, "");
+
+                // start session statistic after listening successfully.
+                startStatsPoller();
             }
 
             if (type == AlertType.LISTEN_FAILED) {
@@ -97,6 +103,30 @@ public class TorrentDHTEngine {
     };
 
     private Thread torrentDaemon;
+
+    // timer to poll session statistics.
+    // Ture indicates this timer runs as a daemon thread.
+    private Timer statsPoller = new Timer(true);
+
+    private SessionStats stats = new SessionStats();
+    private TimerTask statsTask = new TimerTask() {
+        @Override
+        public void run() {
+            stats.update(sessionManager.dhtNodes(),
+                    sessionManager.downloadRate(),
+                    sessionManager.uploadRate(),
+                    sessionManager.totalDownload(),
+                    sessionManager.totalUpload());
+
+            //logger.info("session stats:" + stats);
+            TorrentDHTEngine.this.tauListener.onSessionStats(stats);
+        }
+    };
+
+    private AtomicBoolean statsPollerStarted = new AtomicBoolean(false);
+
+    private static final long START_STATS_DELAY = 2 * 1000;
+    private static final long STATS_PERIOD = 10 * 1000;
 
     /**
      * Get TorrentDHTEngine instance.
@@ -164,6 +194,9 @@ public class TorrentDHTEngine {
         }
 
         logger.info("stopping dht engine daemon");
+
+        // First of all, session statistic should be canceled.
+        stopStatsPoller();
 
         sessionManager.stop();
 
@@ -314,5 +347,26 @@ public class TorrentDHTEngine {
      */
     public void addDhtNode(Pair<String, Integer> node) {
         new SessionHandle(sessionManager.swig()).addDhtNode(node);
+    }
+
+    // start polling session statistics
+    private void startStatsPoller() {
+        if (statsPollerStarted.get()) {
+            return;
+        }
+        statsPollerStarted.set(true);
+
+        logger.debug("starting stats poller");
+        statsPoller.schedule(statsTask, START_STATS_DELAY, STATS_PERIOD);
+    }
+
+    // stop polling session statistics
+    private void stopStatsPoller() {
+        if (!statsPollerStarted.get()) {
+            return;
+        }
+        statsPollerStarted.set(false);
+        logger.debug("stopping stats poller");
+        statsPoller.cancel();
     }
 }

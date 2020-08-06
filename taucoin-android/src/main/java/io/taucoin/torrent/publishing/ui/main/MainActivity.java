@@ -8,7 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.frostwire.jlibtorrent.SessionStats;
+import io.taucoin.torrent.SessionStats;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
