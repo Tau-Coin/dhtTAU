@@ -144,6 +144,56 @@ public class PeerManager {
     }
 
     /**
+     * get a block peer randomly
+     * @return
+     */
+    public byte[] getBlockPeerRandomly() {
+        byte[] peer;
+
+        // if empty, fill it up
+        if (this.blockPeers.isEmpty()) {
+            int size = this.priorityPeers.size();
+            Random random = new Random(System.currentTimeMillis());
+
+            for (int i = 0; i < PEER_NUMBER; i++) {
+                // add a peer to block peers randomly from priority peers
+                this.blockPeers.add(priorityPeers.get(random.nextInt(size)));
+            }
+        }
+
+        // get first peer, then remove it
+        Iterator<ByteArrayWrapper> iterator = this.blockPeers.iterator();
+        peer = iterator.next().getData();
+        iterator.remove();
+
+        return peer;
+    }
+
+    /**
+     * get peer last visiting time
+     * @param pubKey peer public key
+     * @return last visiting time, or 0 if first visit
+     */
+    public long getPeerVisitTime(byte[] pubKey) {
+        Long time = this.peerInfo.get(new ByteArrayWrapper(pubKey));
+        if (null != time) {
+            return time;
+        }
+
+        return 0;
+    }
+
+    /**
+     * update peer the revisit time
+     * @param pubKey
+     */
+    public void updateVisitTime(byte[] pubKey) {
+        // update latest timestamp
+        long currentTime = System.currentTimeMillis() / 1000;
+        this.peerInfo.put(new ByteArrayWrapper(pubKey), currentTime);
+    }
+
+    /**
      * add a peer to block peer set
      * @param peer
      */
@@ -201,6 +251,20 @@ public class PeerManager {
      */
     public int getPeerNumber() {
         return this.allPeers.size();
+    }
+
+    /**
+     * get a peer in mutable range randomly
+     * @return peer or null if empty
+     */
+    public byte[] getMutableRangePeerRandomly() {
+        int size = this.priorityPeers.size();
+        if (size > 0) {
+            Random random = new Random(System.currentTimeMillis());
+            return priorityPeers.get(random.nextInt(size)).getData();
+        } else {
+            return null;
+        }
     }
 
 }
