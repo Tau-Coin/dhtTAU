@@ -50,7 +50,7 @@ public class Repo {
 
         // generate or load key seed.
         if (config.getKeySeed() == null) {
-            File keyFile = new File(dir + "/" + KEY_FILE_NAME);
+            File keyFile = new File(dir + File.separator + KEY_FILE_NAME);
 
             if (keyFile.exists()) {
                 try {
@@ -66,6 +66,7 @@ public class Repo {
                 byte[] seed = Ed25519.createSeed();
                 config.setKeySeed(seed);
                 String hexStr = Hex.toHexString(seed);
+                // TODO: confuse key seed
                 logger.info("generating key seed:" + hexStr);
 
                 try {
@@ -85,7 +86,7 @@ public class Repo {
             return dir;
         }
 
-        return System.getenv("HOME") + "/" + DIR_NAME;
+        return System.getenv("HOME") + File.separator + DIR_NAME;
     }
 
     public static class RepoException extends Exception {

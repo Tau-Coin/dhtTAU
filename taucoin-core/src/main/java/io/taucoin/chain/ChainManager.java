@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.*;
 
@@ -73,8 +74,8 @@ public class ChainManager {
 
     public void openChainDB() throws Exception {
         try {
-            this.stateDB.open(Repo.getRepoPath() + "/" + STATE_PATH);
-            this.blockDB.open(Repo.getRepoPath() + "/" + BLOCK_PATH);
+            this.stateDB.open(Repo.getRepoPath() + File.separator + STATE_PATH);
+            this.blockDB.open(Repo.getRepoPath() + File.separator + BLOCK_PATH);
         } catch (Exception e) {
             throw e;
         }
