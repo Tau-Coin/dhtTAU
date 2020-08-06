@@ -163,7 +163,7 @@ public class TauDaemon {
             TauDaemonListener listener = new TauDaemonListener() {
                 @Override
                 public void onTauStarted(boolean success, String errMsg) {
-                    if (!emitter.isCancelled())
+                    if (!emitter.isCancelled() && success)
                         emitter.onNext(true);
                 }
 
@@ -193,7 +193,7 @@ public class TauDaemon {
                 isRunning = true;
                 rescheduleTauBySettings();
             } else {
-                // TODO:
+                logger.error("Tau failed to start::{}", errMsg);
             }
         }
 
@@ -424,7 +424,7 @@ public class TauDaemon {
      * @return long
      */
     public long getUserPower(String chainID, String publicKey) {
-        return 0;
+        return 100;
     }
 
     /**
@@ -432,6 +432,6 @@ public class TauDaemon {
      * @return long
      */
     public long getUserBalance(String chainID, String publicKey) {
-        return 0;
+        return 100000000000L;
     }
 }

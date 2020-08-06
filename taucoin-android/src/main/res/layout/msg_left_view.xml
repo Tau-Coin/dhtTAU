@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:gravity="center_horizontal"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_edit_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/user_name"
+            android:textColor="@color/color_yellow"
+            android:paddingStart="3dp"
+            android:paddingEnd="3dp"
+            android:paddingBottom="1dp"
+            android:textAllCaps="true"
+            android:includeFontPadding="false"
+            android:textAppearance="@style/TextAppearanceBody4" />
+
+        <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+            android:id="@+id/round_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:textAllCaps="true"
+            android:textColor="@color/color_white"
+            android:textAppearance="@style/TextAppearanceBody1"
+            app:borderColor="@color/primary_light"
+            app:borderWidth="0dp"
+            app:radius="10dp"
+            app:isRadiusAutoHalf="true"
+            app:bgColor="@color/primary_light"
+            app:textColorForPressed="@color/color_white" />
+
+        <TextView
+            android:id="@+id/tv_blacklist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/user_ban"
+            android:textColor="@color/color_red"
+            android:textAllCaps="true"
+            android:paddingStart="3dp"
+            android:paddingEnd="3dp"
+            android:paddingTop="1dp"
+            android:includeFontPadding="false"
+            android:textAppearance="@style/TextAppearanceBody4" />
+
+    </LinearLayout>
+</layout>

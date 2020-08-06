@@ -135,4 +135,17 @@ public class SettingsRepositoryImpl implements SettingsRepository {
         pref.edit().putBoolean(appContext.getString(R.string.pref_key_wake_lock),val)
                 .apply();
     }
+
+    @Override
+    public String lastTxFee(String chainID){
+        String key = appContext.getString(R.string.pref_key_last_tx_fee) + chainID;
+        return pref.getString(key, "");
+    }
+
+    @Override
+    public void lastTxFee(String chainID, String fee){
+        String key = appContext.getString(R.string.pref_key_last_tx_fee) + chainID;
+        pref.edit().putString(key, fee)
+                .apply();
+    }
 }

@@ -2,6 +2,8 @@ package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import android.content.Context;
 
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -60,13 +62,13 @@ public class TxRepositoryImpl implements TxRepository{
      * @param chainID 社区链id
      */
     @Override
-    public Flowable<List<UserAndTx>> observeTxsByChainID(String chainID){
-        return db.txDao().observeTxsByChainID(chainID);
+    public Flowable<List<UserAndTx>> observeTxsByChainID(String chainID, int txType){
+        return db.txDao().observeTxsByChainID(chainID, txType);
     }
 
     @Override
-    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID){
-        return db.txDao().queryCommunityTxs(chainID);
+    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType){
+        return db.txDao().queryCommunityTxs(chainID, txType);
     }
 
     /**
@@ -109,5 +111,13 @@ public class TxRepositoryImpl implements TxRepository{
      */
     public void setFavourite(String txID, boolean favourite){
         db.txDao().setFavourite(txID, favourite ? 1 : 0);
+    }
+
+    /**
+     * 观察中位数交易费
+     * @param chainID 交易所属的社区chainID
+     */
+    public Single<List<Long>> observeMedianFee(String chainID){
+        return db.txDao().observeMedianFee(chainID);
     }
 }

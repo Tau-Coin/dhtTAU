@@ -1,6 +1,5 @@
 package io.taucoin.torrent.publishing.ui.community;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -9,13 +8,11 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
-import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.EditTextInhibitInput;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
@@ -25,17 +22,14 @@ import io.taucoin.torrent.publishing.databinding.ActivityCommunityCreateBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
-import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 
 /**
  * 群组/社区创建页面
  */
 public class CommunityCreateActivity extends BaseActivity {
-    private static final int REQUEST_CODE = 100;
     private ActivityCommunityCreateBinding binding;
     private CommunityViewModel viewModel;
-    private Community community;
     private CommonDialog successDialog;
 
     @Override
@@ -80,8 +74,6 @@ public class CommunityCreateActivity extends BaseActivity {
 
             }
         });
-        binding.tvMoreSetting.setOnClickListener(view ->
-                ActivityUtil.startActivityForResult(this, CommunitySettingActivity.class, REQUEST_CODE));
     }
 
     /**
@@ -138,28 +130,13 @@ public class CommunityCreateActivity extends BaseActivity {
         if (item.getItemId() == R.id.menu_done) {
             String communityName = ViewUtils.getText(binding.etCommunityName);
             String publicKey = ViewUtils.getText(binding.tvPublicKey);
-            if(community == null){
-                community = new Community(communityName, publicKey,
-                        Constants.TOTAL_COIN, Constants.BLOCK_IN_AVG);
-            }else {
-                community.communityName = communityName;
-                community.publicKey = publicKey;
-            }
+            Community community = new Community(communityName, publicKey,
+                    Constants.TOTAL_COIN, Constants.BLOCK_IN_AVG);
             if(viewModel.validateCommunity(community)){
                 viewModel.addCommunity(community);
             }
         }
         return true;
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == REQUEST_CODE && resultCode == RESULT_OK){
-            if(data != null){
-                community = data.getParcelableExtra(IntentExtra.BEAN);
-            }
-        }
     }
 
     @Override

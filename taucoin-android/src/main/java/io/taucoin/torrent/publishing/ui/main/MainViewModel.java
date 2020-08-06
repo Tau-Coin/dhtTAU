@@ -9,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
+import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
@@ -31,7 +32,7 @@ public class MainViewModel extends AndroidViewModel {
      * 观察不在黑名单的社区列表数据变化
      * @return 被观察的社区数据列表
      */
-    Flowable<List<Community>> observeCommunitiesNotInBlacklist(){
+    Flowable<List<CommunityAndMember>> observeCommunitiesNotInBlacklist(){
         return communityRepo.observeCommunitiesNotInBlacklist();
     }
 

@@ -16,18 +16,36 @@
             android:id="@+id/toolbar_include"
             layout="@layout/toolbar" />
 
-        <EditText
-            android:id="@+id/et_public_key"
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="50dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="10dp"
-            android:hint="@string/tx_public_key_hint"
-            android:inputType="textMultiLine"
-            android:textAppearance="@style/TextAppearanceBody1"
-            android:autofillHints="@string/tx_public_key_hint" />
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/et_public_key"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="50dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="0dp"
+                android:layout_marginTop="10dp"
+                android:hint="@string/tx_public_key_hint"
+                android:inputType="textMultiLine"
+                android:textAppearance="@style/TextAppearanceBody1"
+                android:autofillHints="@string/tx_public_key_hint" />
+
+            <ImageView
+                android:id="@+id/iv_select_pk"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginTop="25dp"
+                android:layout_marginEnd="20dp"
+                android:onClick="@{listener::onClick}"
+                android:contentDescription="@null"
+                android:src="@mipmap/icon_blacklist"/>
+
+        </LinearLayout>
 
         <EditText
             android:id="@+id/et_amount"

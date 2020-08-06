@@ -95,4 +95,14 @@ public interface SettingsRepository {
      * @param val 是否持有
      */
     void wakeLock(boolean val);
+
+    /**
+     * 获取社区发送的最后一次交易费
+     */
+    String lastTxFee(String chainID);
+
+    /**
+     * 设置社区发送的最后一次交易费
+     */
+    void lastTxFee(String chainID, String fee);
 }

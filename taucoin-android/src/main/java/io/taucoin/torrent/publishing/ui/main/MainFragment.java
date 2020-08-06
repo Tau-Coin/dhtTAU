@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.databinding.FragmentMainBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
@@ -78,10 +79,9 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
         disposables.add(viewModel.observeCommunitiesNotInBlacklist()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::showCommunityList));
-
     }
 
-    private void showCommunityList(List<Community> communities) {
+    private void showCommunityList(List<CommunityAndMember> communities) {
         if(communities != null){
             adapter.setDataList(communities);
         }

@@ -89,12 +89,12 @@ public class MsgListAdapter extends ListAdapter<Message, MsgListAdapter.ViewHold
             if(null == binding || null == holder || null == msg){
                 return;
             }
-            binding.leftView.setBgColor(Utils.getGroupColor(msg.senderPk));
+            binding.leftView.roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
             String showName = UsersUtil.getDefaultName(msg.senderPk);
-            binding.leftView.setText(StringUtil.getFirstLettersOfName(showName));
+            binding.leftView.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
             binding.tvName.setText(showName);
             binding.tvMsg.setText(msg.context);
-            String time = DateUtil.formatTime(msg.timestamp, DateUtil.pattern0);
+            String time = DateUtil.getWeekTime(msg.timestamp);
             binding.tvTime.setText(time);
 
             View root = binding.getRoot();

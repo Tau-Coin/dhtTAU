@@ -20,6 +20,11 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 @Dao
 public interface TxDao {
     // SQL:查询社区里的交易
+    String QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE = "SELECT * FROM Txs" +
+            " WHERE chainID = :chainID AND txType = :txType" +
+            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE blacklist == 1 and isCurrentUser != 1)";
+
+    // SQL:查询社区里的交易
     String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT * FROM Txs" +
             " WHERE chainID = :chainID" +
             " and senderPk NOT IN (SELECT publicKey FROM Users WHERE blacklist == 1 and isCurrentUser != 1)";
@@ -45,7 +50,10 @@ public interface TxDao {
     String QUERY_SET_TX_FAVOURITE = "UPDATE Txs SET favourite = :favourite" +
             " WHERE txID = :txID";
 
-
+    String QUERY_TX_MEDIAN_FEE = "SELECT fee FROM Txs " +
+            " WHERE chainID = :chainID and " +
+            " senderPk NOT IN (SELECT publicKey FROM Users WHERE blacklist == 1 and isCurrentUser != 1)" +
+            " ORDER BY fee";
     /**
      * 添加新的交易
      */
@@ -71,16 +79,16 @@ public interface TxDao {
      * @param chainID 社区链id
      */
     @Transaction
-    @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    Flowable<List<UserAndTx>> observeTxsByChainID(String chainID);
+    @Query(QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE)
+    Flowable<List<UserAndTx>> observeTxsByChainID(String chainID, int txType);
 
     /**
      * 根据chainID获取社区中的交易的被观察者
      * @param chainID 社区链id
      */
     @Transaction
-    @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID);
+    @Query(QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE)
+    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType);
 
     /**
      * 获取社区里用户未上链并且未过期的交易数
@@ -116,4 +124,11 @@ public interface TxDao {
      */
     @Query(QUERY_SET_TX_FAVOURITE)
     void setFavourite(String txID, int favourite);
+
+    /**
+     * 观察中位数交易费
+     * @param chainID 交易所属的社区chainID
+     */
+    @Query(QUERY_TX_MEDIAN_FEE)
+    Single<List<Long>> observeMedianFee(String chainID);
 }

@@ -361,6 +361,24 @@
         <item name="android:letterSpacing">0.0178571429</item>
     </style>
 
+    <style name="TextAppearanceBody3" parent="TextAppearance.AppCompat.Body1">
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">12dp</item>
+        <item name="android:letterSpacing">0.0178571429</item>
+    </style>
+
+    <style name="TextAppearanceBody4" parent="TextAppearance.AppCompat.Body1">
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">10dp</item>
+        <item name="android:letterSpacing">0.0178571429</item>
+    </style>
+
     <style name="Toolbar.TitleText" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:textSize">18dp</item>
     </style>

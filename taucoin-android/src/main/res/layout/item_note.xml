@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="10dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="7dp"
         android:gravity="bottom">
 
         <include android:id="@+id/left_view"
@@ -38,26 +38,23 @@
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:ellipsize="middle"
-                android:textSize="@dimen/font_small_size"
                 android:textColor="@color/color_yellow"
-                android:textAppearance="@style/TextAppearanceBody1" />
+                android:textAppearance="@style/TextAppearanceBody2" />
 
             <TextView
                 android:id="@+id/tv_msg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textSize="@dimen/font_small_size"
-                android:textAppearance="@style/TextAppearanceBody1" />
+                android:textAppearance="@style/TextAppearanceBody2" />
 
             <TextView
                 android:id="@+id/tv_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:textSize="@dimen/font_little_small_size"
                 android:textColor="@color/gray_dark"
-                android:textAppearance="@style/TextAppearanceBody2" />
+                android:textAppearance="@style/TextAppearanceBody3" />
 
         </LinearLayout>
 

@@ -7,8 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.leinardi.android.speeddial.SpeedDialActionItem;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +38,7 @@ import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
+import io.taucoin.types.MsgType;
 
 /**
  * 交易Tab页
@@ -56,6 +55,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     private CommonDialog operationsDialog;
 
     private Community community;
+    private int txType;
 
     @Nullable
     @Override
@@ -82,6 +82,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     private void initParameter() {
         if(getArguments() != null){
             community = getArguments().getParcelable(IntentExtra.BEAN);
+            txType = getArguments().getInt(IntentExtra.TYPE, MsgType.RegularForum.getVaLue());
         }
     }
 
@@ -89,7 +90,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
      * 初始化视图
      */
     private void initView() {
-        adapter = new TxListAdapter(this);
+        adapter = new TxListAdapter(this, community);
         DefaultItemAnimator animator = new DefaultItemAnimator() {
             @Override
             public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {
@@ -108,7 +109,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 .setInitialLoadSizeHint(Page.PAGE_SIZE)
                 .build();
         LiveData<PagedList<UserAndTx>> postList = new LivePagedListBuilder<>(
-                txViewModel.queryCommunityTxs(community.chainID), pagedListConfig).build();
+                txViewModel.queryCommunityTxs(community.chainID, txType), pagedListConfig).build();
         postList.observe(activity, replyAndAllTxs -> {
             adapter.submitList(replyAndAllTxs);
             logger.debug("adapter.size::{}, newSize::{}", adapter.getItemCount(), replyAndAllTxs.size());
@@ -120,49 +121,16 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
      * 初始化右下角悬浮按钮组件
      */
     private void initFabSpeedDial() {
-        binding.fabButton.setOnActionSelectedListener((item) -> {
-            Intent intent = new Intent();
-            intent.putExtra(IntentExtra.BEAN, community);
-            switch (item.getId()) {
-                case R.id.community_transaction:
-                    ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
-                    break;
-                case R.id.community_message:
-                    ActivityUtil.startActivity(intent, this, MessageActivity.class);
-                    break;
-                default:
-                    return false;
-            }
-            binding.fabButton.close();
-            return true;
+        // 自定义点击事件
+        binding.fabButton.getMainFab().setOnClickListener(v ->{
+                    Intent intent = new Intent();
+                    intent.putExtra(IntentExtra.BEAN, community);
+                    if(txType == MsgType.Wiring.getVaLue()){
+                        ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
+                    }else{
+                        ActivityUtil.startActivity(intent, this, MessageActivity.class);
+                    }
         });
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_transaction,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_transaction)
-                .create());
-
-        binding.fabButton.addActionItem(new SpeedDialActionItem.Builder(
-                R.id.community_message,
-                R.drawable.ic_add_36dp)
-                .setLabel(R.string.community_message)
-                .create());
-    }
-
-    /**
-     * 订阅社区交易列表
-     */
-    private void subscribeTxViewModel() {
-        if(null == community){
-            return;
-        }
-//        disposables.add(txViewModel.observeTxsByChainID(community.chainID)
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe(list -> {
-//                adapter.setDataList(list);
-//                binding.txList.smoothScrollToPosition(adapter.getItemCount());
-//            }));
     }
 
     @Override
@@ -175,7 +143,6 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     @Override
     public void onStart() {
         super.onStart();
-        subscribeTxViewModel();
     }
 
     @Override
@@ -205,10 +172,10 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         ItemOperationsBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.item_operations, null, false);
         binding.setListener(this);
-        // 用户不能回复自己的消息
+        binding.replay.setVisibility(View.GONE);
+        // 用户不能拉黑自己
         if(StringUtil.isEquals(tx.senderPk,
                 MainApplication.getInstance().getPublicKey())){
-            binding.replay.setVisibility(View.GONE);
             binding.blacklist.setVisibility(View.GONE);
         }
         binding.replay.setTag(tx);

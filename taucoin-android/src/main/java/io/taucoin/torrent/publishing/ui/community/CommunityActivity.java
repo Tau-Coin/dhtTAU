@@ -25,7 +25,9 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.chat.ChatsTabFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.search.SearchActivity;
 import io.taucoin.torrent.publishing.ui.transaction.TxsTabFragment;
+import io.taucoin.types.MsgType;
 
 /**
  * 单个群组页面
@@ -38,7 +40,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private CompositeDisposable disposables = new CompositeDisposable();
     private Community community;
     private List<Fragment> fragmentList = new ArrayList<>();
-    private int[] titles = new int[]{R.string.community_instant_chat, R.string.community_chain_note};
+    private int[] titles = new int[]{R.string.community_instant_chat, R.string.community_chain_note, R.string.community_wiring};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,16 +78,30 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         // 初始化Tab页
+
+        // 添加Chat页面
+        Fragment chatTab = new ChatsTabFragment();
+        Bundle chatBundle = new Bundle();
+        chatBundle.putParcelable(IntentExtra.BEAN, community);
+        chatTab.setArguments(chatBundle);
+        fragmentList.add(chatTab);
+
         // 添加Chain Note页面
-        Fragment chainNoteTab = new ChatsTabFragment();
-        Bundle bundle = new Bundle();
-        bundle.putParcelable(IntentExtra.BEAN, community);
-        chainNoteTab.setArguments(bundle);
+        Fragment chainNoteTab = new TxsTabFragment();
+        Bundle noteBundle = new Bundle();
+        noteBundle.putParcelable(IntentExtra.BEAN, community);
+        noteBundle.putInt(IntentExtra.TYPE, MsgType.RegularForum.getVaLue());
+        chainNoteTab.setArguments(noteBundle);
         fragmentList.add(chainNoteTab);
-        // 添加Instant Chat页面
-        Fragment instantChatTab = new TxsTabFragment();
-        instantChatTab.setArguments(bundle);
-        fragmentList.add(instantChatTab);
+
+        // 添加Wiring页面
+        Fragment wiringTab = new TxsTabFragment();
+        Bundle wiringBundle = new Bundle();
+        wiringBundle.putParcelable(IntentExtra.BEAN, community);
+        wiringBundle.putInt(IntentExtra.TYPE, MsgType.Wiring.getVaLue());
+        wiringTab.setArguments(wiringBundle);
+        fragmentList.add(wiringTab);
+
         FragmentManager fragmentManager = getSupportFragmentManager();
         MyAdapter fragmentAdapter = new MyAdapter(fragmentManager);
         binding.viewPager.setAdapter(fragmentAdapter);
@@ -132,10 +148,10 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         if( null == community){
             return false;
         }
-        if (item.getItemId() == R.id.menu_community_info) {
+        if (item.getItemId() == R.id.community_search) {
             Intent intent = new Intent();
             intent.putExtra(IntentExtra.BEAN, community);
-            ActivityUtil.startActivityForResult(intent, this, CommunityInfoActivity.class, REQUEST_CODE);
+            ActivityUtil.startActivity(intent, this, SearchActivity.class);
         }
         return true;
     }

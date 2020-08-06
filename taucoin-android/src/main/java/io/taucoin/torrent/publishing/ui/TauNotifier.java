@@ -98,7 +98,7 @@ public class TauNotifier {
                 .setTicker(context.getString(R.string.app_running_in_the_background))
                 .setWhen(System.currentTimeMillis());
 
-        foregroundNotify.addAction(makeShutdownAction(service));
+//        foregroundNotify.addAction(makeShutdownAction(service));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
             foregroundNotify.setCategory(Notification.CATEGORY_SERVICE);
         }

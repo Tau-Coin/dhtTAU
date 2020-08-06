@@ -46,6 +46,8 @@ public class DateUtil {
     public static final String pattern9 = "yyyy-MM-dd HH:mm:ss.SSS";
     public static final String pattern10 = "HH:mm:ss\nyyyy-MM-dd";
 
+    private static String[] weeks = {"Sun", "Mon","Tue","Wed","Thu","Fri","Sat"};
+
     @SuppressWarnings("CanBeFinal")
     private static SimpleDateFormat format;
 
@@ -247,5 +249,34 @@ public class DateUtil {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
         }
         return calendar.getTimeInMillis();
+    }
+
+
+    /**
+     * 获取显示时间
+     * 当天时间显示hh:mm
+     * 前一周显示周几
+     * 一周前显示日期
+     * @return 显示时期
+     */
+    public static String getWeekTime(long time) {
+        long timeSeconds = time * 1000;
+        Date  date1 = new Date(timeSeconds);
+        Date  date2 = new Date();
+        int days = differentDays(date1, date2);
+        if(days == 0){
+            return formatTime(time, pattern0);
+        }else if(days > weeks.length){
+            return formatTime(time, pattern4);
+        }else{
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeZone(TimeZone.getDefault());
+            cal.setTimeInMillis(timeSeconds);
+            int weekIndex = cal.get(Calendar.DAY_OF_WEEK) - 1;
+            if(weekIndex < 0){
+                weekIndex = 0;
+            }
+            return weeks[weekIndex];
+        }
     }
 }

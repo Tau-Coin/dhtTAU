@@ -21,6 +21,8 @@
     <string name="main_empty_title">Welcome to TAU</string>
     <string name="main_empty_content">Start messaging by tapping the pencil\nbutton in the bottom right corner.</string>
     <string name="main_exit">Click again to exit the application!</string>
+    <string name="main_balance_power">Balance %1$s, Power %2$s</string>
+    <string name="main_read_only">READ\nONLY</string>
 
     <string name="main_publish_video">Publish Video</string>
     <string name="main_new_community">New Community</string>
@@ -84,7 +86,8 @@
     <string name="community_mining_income">Mining Income</string>
     <string name="community_today_mining_income">Today Mining Income(%1$s)</string>
     <string name="community_chain_note">Chain Note</string>
-    <string name="community_instant_chat">Instant Chat</string>
+    <string name="community_instant_chat">Chat</string>
+    <string name="community_wiring">Wiring</string>
 
     <string name="error_community_name_empty">Community name cannot be empty!</string>
     <string name="error_coin_name_empty">Coin name cannot be empty!</string>
@@ -133,7 +136,10 @@
     <string name="user_seed_generate">Generate New Seed</string>
     <string name="user_seed_empty">Seed cannot be empty!</string>
     <string name="user_seed_save_tips">Please make sure your seed\nhas been saved</string>
-    <string name="user_blacklist">Blacklist</string>
+    <string name="user_name">Name</string>
+    <string name="user_show_name">%1$s(%2$s)</string>
+    <string name="user_ban">Ban</string>
+    <string name="user_ban_list">Banlist</string>
 
     <string name="copy_seed">Seed copied</string>
     <string name="copy_public_key">Public key copied</string>
@@ -152,7 +158,7 @@
     <string name="tx_median_fee">Transaction median fee/%1$s %2$s</string>
     <string name="tx_new_name">Nick Name(required)</string>
     <string name="tx_personal_profile">Personal profile(Optional)</string>
-    <string name="tx_message">Message(required)</string>
+    <string name="tx_message">Comment(required)</string>
     <string name="tx_contact_id">%1$s(Optional)</string>
     <string name="tx_bootstrap_node">Bootstrap node(required)</string>
     <string name="tx_comment">Comment(required)</string>
@@ -170,13 +176,22 @@
     <string name="tx_fee_tips">*More transaction fees more opportunities be packaged miners.</string>
     <string name="tx_error_invalid_pk">Invalid receiver\'s public key!</string>
     <string name="tx_error_invalid_amount">Invalid Transaction amount</string>
-    <string name="tx_error_no_enough_coins">Insufficient Balance :\nAmount + Transaction Fee >= Balance</string>
+    <string name="tx_error_no_enough_coins">Insufficient Balance :\nAmount + Transaction Fee > Balance</string>
+    <string name="tx_error_no_enough_coins_for_fee">Insufficient Balance :\nTransaction Fee > Balance</string>
     <string name="tx_error_invalid_name">Invalid Name</string>
     <string name="tx_error_invalid_message">Invalid Message</string>
     <string name="tx_error_invalid_comment">Invalid Comment</string>
 
+    <string name="tx_result_successfully">Successfully</string>
+    <string name="tx_result_processing">In processing,expected to confirm</string>
+    <string name="tx_result_failed">Failed</string>
+    <string name="tx_to">To/</string>
+    <string name="tx_fee">Fee/</string>
+    <string name="tx_hash">Hash/</string>
+    <string name="tx_memo">Memo/</string>
+
     <!-- Strings used for notifier -->
-    <string name="app_running_in_the_background">TAUcoin running in the background</string>
+    <string name="app_running_in_the_background">TAU running in the background</string>
     <string name="app_shutdown">Shutdown</string>
     <string name="def">Default</string>
     <string name="finished">Finished</string>

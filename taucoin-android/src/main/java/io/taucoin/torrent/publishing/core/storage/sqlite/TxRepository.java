@@ -33,9 +33,9 @@ public interface TxRepository {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链ID
      */
-    Flowable<List<UserAndTx>> observeTxsByChainID(String chainID);
+    Flowable<List<UserAndTx>> observeTxsByChainID(String chainID, int txType);
 
-    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID);
+    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType);
 
     /**
      * 获取社区里用户未上链并且未过期的交易数
@@ -65,4 +65,10 @@ public interface TxRepository {
      * @param favourite 收藏
      */
     void setFavourite(String txID, boolean favourite);
+
+    /**
+     * 观察中位数交易费
+     * @param chainID 交易所属的社区chainID
+     */
+    Single<List<Long>> observeMedianFee(String chainID);
 }

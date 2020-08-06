@@ -1,24 +1,32 @@
 package io.taucoin.torrent.publishing.ui.transaction;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityTransactionCreateBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.types.MsgType;
 
 /**
@@ -26,6 +34,7 @@ import io.taucoin.types.MsgType;
  */
 public class TransactionCreateActivity extends BaseActivity implements View.OnClickListener {
 
+    private static final int REQUEST_CODE = 0x01;
     private ActivityTransactionCreateBinding binding;
 
     private TxViewModel txViewModel;
@@ -62,9 +71,19 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         if(community != null){
-            binding.tvFee.setText(getString(R.string.tx_median_fee, "96.5", UsersUtil.getCoinName(community)));
-            binding.tvFee.setTag("96.5");
+            String fee = "0";
+            binding.tvFee.setTag(R.id.median_fee, fee);
+            String lastTxFee = txViewModel.getLastTxFee(community.chainID);
+            if(StringUtil.isNotEmpty(lastTxFee)){
+                fee = FmtMicrometer.fmtFeeValue(lastTxFee);
+            }
+            showFeeView(binding.tvFee, fee);
         }
+    }
+
+    private void showFeeView(TextView tvFee, String fee) {
+        tvFee.setText(getString(R.string.tx_median_fee, fee, UsersUtil.getCoinName(community)));
+        tvFee.setTag(fee);
     }
 
     @Override
@@ -77,6 +96,18 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
                 onBackPressed();
             }
         });
+        if(community != null){
+            disposables.add(txViewModel.observeMedianFee(community.chainID)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(fees -> {
+                        String medianFee = FmtMicrometer.fmtFeeValue(Utils.getMedianData(fees));
+                        binding.tvFee.setTag(R.id.median_fee, medianFee);
+                        if(StringUtil.isEmpty(txViewModel.getLastTxFee(community.chainID))){
+                            showFeeView(binding.tvFee, medianFee);
+                        }
+                    }));
+        }
     }
 
     @Override
@@ -130,6 +161,22 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
             case R.id.tv_fee:
                 txViewModel.showEditFeeDialog(this, binding.tvFee, community);
                 break;
+            case R.id.iv_select_pk:
+                ActivityUtil.startActivityForResult(this, ContactsActivity.class, REQUEST_CODE);
+                break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == REQUEST_CODE && resultCode == RESULT_OK){
+            if(data != null){
+                String publicKey = data.getStringExtra(IntentExtra.PUBLIC_KEY);
+                if(StringUtil.isNotEmpty(publicKey)){
+                    binding.etPublicKey.setText(publicKey);
+                }
+            }
         }
     }
 }

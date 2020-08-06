@@ -27,6 +27,8 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import org.slf4j.LoggerFactory;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -869,5 +871,16 @@ public class Utils
         Matcher matcher = pattern.matcher(url);
         return matcher.find();
     }
-}
 
+    public static long getMedianData(List<Long> total) {
+        if(total.size() > 0){
+            int size = total.size();
+            if(size % 2 == 1){
+                return total.get((size -1 ) / 2);
+            }else {
+                return (long) ((total.get(size / 2 - 1) + total.get(size / 2) + 0.0) / 2);
+            }
+        }
+        return 0;
+    }
+}

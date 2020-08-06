@@ -7,6 +7,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
+import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 
 /**
@@ -51,7 +52,7 @@ public class CommunityRepositoryImpl implements CommunityRepository{
      * @return 被观察的社区数据列表
      */
     @Override
-    public Flowable<List<Community>> observeCommunitiesNotInBlacklist() {
+    public Flowable<List<CommunityAndMember>> observeCommunitiesNotInBlacklist() {
         return db.communityDao().observeCommunitiesNotInBlacklist();
     }
 

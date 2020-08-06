@@ -8,13 +8,13 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="65dp"
         android:layout_marginStart="7dp">
 
         <io.taucoin.torrent.publishing.ui.customviews.RoundButton
             android:id="@+id/left_view"
-            android:layout_width="55dp"
-            android:layout_height="55dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginEnd="7dp"
             android:layout_centerVertical="true"
             android:gravity="center"
@@ -41,27 +41,25 @@
                 android:id="@+id/tv_group_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TAU Community"
                 android:includeFontPadding="false"
                 android:singleLine="true"
                 android:ellipsize="middle"
                 android:textAppearance="@style/TextAppearanceHeadline6" />
 
             <TextView
-                android:id="@+id/tv_user_name"
+                android:id="@+id/tv_balance_power"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Johnson kite"
                 android:includeFontPadding="false"
                 android:singleLine="true"
                 android:ellipsize="end"
+                android:textColor="@color/gray_dark"
                 android:textAppearance="@style/TextAppearanceBody2" />
 
             <TextView
                 android:id="@+id/tv_user_message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Is this still working sir? Is this still working sir? Is this still working sir?"
                 android:singleLine="true"
                 android:includeFontPadding="false"
                 android:ellipsize="end"
@@ -70,45 +68,51 @@
 
         </LinearLayout>
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/right_view"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
-            android:gravity="end"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="10dp"
             android:minWidth="50dp"
             android:orientation="vertical">
 
             <TextView
+                android:layout_above="@+id/read_only"
                 android:id="@+id/tv_msg_last_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:ellipsize="end"
-                android:layout_marginTop="2dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginEnd="0dp"
                 android:textColor="@color/gray_dark"
-                android:textAppearance="@style/TextAppearanceBody2" />
+                android:textAppearance="@style/TextAppearanceBody3" />
 
-            <TextView
-                android:id="@+id/tv_msg_number"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+                android:id="@+id/read_only"
+                android:layout_width="32dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="0dp"
+                android:layout_marginBottom="10dp"
                 android:layout_marginTop="10dp"
-                android:paddingStart="7dp"
-                android:paddingEnd="7dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:singleLine="true"
-                android:includeFontPadding="false"
-                android:ellipsize="end"
+                android:gravity="center"
+                android:textAllCaps="true"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:text="@string/main_read_only"
                 android:textColor="@color/color_white"
-                android:background="@drawable/grey_rect_round_bg_no_border"
-                android:textAppearance="@style/TextAppearanceBody2" />
+                android:includeFontPadding="false"
+                android:textAppearance="@style/TextAppearanceBody4"
+                android:lineSpacingMultiplier="0.75"
+                android:lineSpacingExtra="0dp"
+                app:borderColor="@color/primary_light"
+                app:borderWidth="0dp"
+                app:radius="5dp"
+                app:isRadiusAutoHalf="true"
+                app:bgColor="@color/primary_light"
+                app:textColorForPressed="@color/color_white" />
 
-        </LinearLayout>
+        </RelativeLayout>
 
         <include
             android:layout_width="match_parent"

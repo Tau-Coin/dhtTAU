@@ -110,8 +110,8 @@ public class TauService extends Service {
 
         daemon.enableServerMode(settingsRepo.serverMode());
 
-        daemon.doStart();
-        daemon.registerListener(daemonListener);
+//        daemon.doStart();
+//        daemon.registerListener(daemonListener);
     }
 
     /**

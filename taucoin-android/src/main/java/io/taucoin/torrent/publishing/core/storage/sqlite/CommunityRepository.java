@@ -5,6 +5,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
+import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 
 /**
@@ -26,7 +27,7 @@ public interface CommunityRepository {
      * 观察不在黑名单的社区列表数据变化
      * @return 被观察的社区数据列表
      */
-    Flowable<List<Community>> observeCommunitiesNotInBlacklist();
+    Flowable<List<CommunityAndMember>> observeCommunitiesNotInBlacklist();
 
     /**
      * 获取在黑名单的社区列表

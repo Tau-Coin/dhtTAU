@@ -20,6 +20,7 @@ import androidx.paging.DataSource;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -28,6 +29,7 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
@@ -57,6 +59,7 @@ public class TxViewModel extends AndroidViewModel {
     private static final Logger logger = LoggerFactory.getLogger("TxViewModel");
     private TxRepository txRepo;
     private UserRepository userRepo;
+    private SettingsRepository settingsRepo;
     private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<List<UserAndTx>> chainTxs = new MutableLiveData<>();
@@ -67,6 +70,7 @@ public class TxViewModel extends AndroidViewModel {
         txRepo = RepositoryHelper.getTxRepository(application);
         userRepo = RepositoryHelper.getUserRepository(application);
         daemon  = TauDaemon.getInstance(application);
+        settingsRepo  = RepositoryHelper.getSettingsRepository(application);
     }
 
     public MutableLiveData<String> getAddState() {
@@ -114,16 +118,16 @@ public class TxViewModel extends AndroidViewModel {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public Flowable<List<UserAndTx>> observeTxsByChainID(String chainID){
-        return txRepo.observeTxsByChainID(chainID);
+    public Flowable<List<UserAndTx>> observeTxsByChainID(String chainID, int txType){
+        return txRepo.observeTxsByChainID(chainID, txType);
     }
 
     /**
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID){
-        return txRepo.queryCommunityTxs(chainID);
+    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType){
+        return txRepo.queryCommunityTxs(chainID, txType);
     }
 
 
@@ -143,7 +147,7 @@ public class TxViewModel extends AndroidViewModel {
                 TxData txData = buildChainTxData(tx);
                 if(txData != null){
                     // 获取当前用户在社区中链上nonce值
-                    long nonce = daemon.getUserBalance(tx.chainID, currentUser.publicKey);
+                    long nonce = daemon.getUserPower(tx.chainID, currentUser.publicKey);
                     // 获取最早过期的交易，并且其nonce后来未被使用
                     Tx earliestExpireTx = txRepo.getEarliestExpireTx(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
                     if(earliestExpireTx != null){
@@ -176,6 +180,7 @@ public class TxViewModel extends AndroidViewModel {
                     logger.debug("adding transaction txID::{}", tx.txID);
                     // 如果是WiringTransaction交易
                     addUserInfo(tx);
+                    settingsRepo.lastTxFee(tx.chainID, String.valueOf(tx.fee));
                 }else{
                     result = getApplication().getString(R.string.tx_error_type);
                 }
@@ -247,6 +252,12 @@ public class TxViewModel extends AndroidViewModel {
                 ToastUtils.showShortToast(R.string.tx_error_invalid_message);
                 return false;
             }
+            String senderPk = MainApplication.getInstance().getPublicKey();
+            long balance = daemon.getUserBalance(tx.chainID, senderPk);
+            if(tx.fee > balance){
+                ToastUtils.showShortToast(R.string.tx_error_no_enough_coins_for_fee);
+                return false;
+            }
         }else if(msgType == MsgType.ForumComment.getVaLue()){
             if(StringUtil.isEmpty(tx.memo)){
                 ToastUtils.showShortToast(R.string.tx_error_invalid_comment);
@@ -271,25 +282,42 @@ public class TxViewModel extends AndroidViewModel {
         return true;
     }
 
+    String getLastTxFee(String chainID){
+        return settingsRepo.lastTxFee(chainID);
+    }
+
     /**
      * 显示编辑交易费的对话框
      */
-    public void showEditFeeDialog(BaseActivity activity, TextView tvFee, Community community) {
+    void showEditFeeDialog(BaseActivity activity, TextView tvFee, Community community) {
+        if(null == community){
+            return;
+        }
         EditFeeDialogBinding editFeeBinding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.edit_fee_dialog, null, false);
-        editFeeBinding.etFee.setText("96.5");
-        editFeeBinding.tvMedianFee.setText(activity.getString(R.string.tx_median_fee_tips, "96.5"));
+        String fee = tvFee.getTag().toString();
+        String medianFee = tvFee.getTag(R.id.median_fee).toString();
+        editFeeBinding.etFee.setText(fee);
+        editFeeBinding.tvMedianFee.setText(activity.getString(R.string.tx_median_fee_tips, medianFee));
         editFeeDialog = new CommonDialog.Builder(activity)
                 .setContentView(editFeeBinding.getRoot())
                 .setPositiveButton(R.string.common_submit, (dialog, which) -> {
                     dialog.cancel();
-                    String fee = editFeeBinding.etFee.getText().toString();
-                    if(StringUtil.isNotEmpty(fee)){
-                        tvFee.setText(activity.getString(R.string.tx_median_fee, fee, UsersUtil.getCoinName(community)));
-                        tvFee.setTag(fee);
+                    String etFee = editFeeBinding.etFee.getText().toString();
+                    if(StringUtil.isNotEmpty(etFee)){
+                        tvFee.setText(activity.getString(R.string.tx_median_fee, etFee, UsersUtil.getCoinName(community)));
+                        tvFee.setTag(etFee);
                     }
                 })
                 .create();
         editFeeDialog.show();
+    }
+
+    /**
+     * 观察中位数交易费
+     * @param chainID 交易所属的社区chainID
+     */
+    Single<List<Long>> observeMedianFee(String chainID) {
+        return txRepo.observeMedianFee(chainID);
     }
 }
