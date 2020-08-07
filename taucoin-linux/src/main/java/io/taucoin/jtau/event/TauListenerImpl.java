@@ -7,6 +7,8 @@ import io.taucoin.torrent.SessionStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.taucoin.jtau.cmd.ExitCode.*;
+
 public class TauListenerImpl implements TauListener {
 
     private static final Logger logger = LoggerFactory.getLogger("TauListenerImpl");
@@ -32,7 +34,7 @@ public class TauListenerImpl implements TauListener {
             logger.info("Starting Tau successfully");
         } else {
             logger.error("Starting Tau error: " + errMsg);
-            // TODO: exit application
+            System.exit(START_TAU_ERROR);
         }
     }
 
@@ -44,7 +46,7 @@ public class TauListenerImpl implements TauListener {
     @Override
     public void onTauError(String errMsg) {
         logger.error("Tau runtime error:" + errMsg);
-        // TODO: exit application
+        System.exit(TAU_RUNTIME_ERROR);
     }
 
     @Override

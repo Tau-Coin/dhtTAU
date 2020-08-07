@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.taucoin.jtau.cmd.CLIInterface.ArgumentException;
+import static io.taucoin.jtau.cmd.ExitCode.*;
 import static io.taucoin.jtau.util.Repo.RepoException;
 
 public class JTau {
@@ -24,10 +25,10 @@ public class JTau {
             isHelp = CLIInterface.parse(config, args);
         } catch (ArgumentException e) {
             logger.error(e.getMessage());
-            System.exit(-1);
+            System.exit(CLI_ARGUMENTS_PARSE_ERROR);
         }
         if (isHelp) {
-            System.exit(0);
+            System.exit(NORM);
         }
 
         // init repo
@@ -36,7 +37,7 @@ public class JTau {
         } catch (RepoException e) {
             e.printStackTrace();
             logger.error(e.getMessage());
-            System.exit(-2);
+            System.exit(INIT_REPO_ERROR);
         }
 
         // Create tau daemon and start it.
