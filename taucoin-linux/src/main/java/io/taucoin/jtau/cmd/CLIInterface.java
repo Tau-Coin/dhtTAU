@@ -1,6 +1,7 @@
 package io.taucoin.jtau.cmd;
 
 import io.taucoin.jtau.config.Config;
+import io.taucoin.jtau.util.Version;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,7 @@ public class CLIInterface {
      *
      * @param config Config
      * @param args command line arguments
-     * @return boolean is help or not.
+     * @return boolean is normal exit.
      * @throws ArgumentException.
      */
     public static boolean parse(Config config, String[] args) throws ArgumentException {
@@ -30,6 +31,10 @@ public class CLIInterface {
 
             // process help
             if (processHelp(arg)) {
+                return true;
+            }
+
+            if (processVersion(arg)) {
                 return true;
             }
 
@@ -93,8 +98,22 @@ public class CLIInterface {
         return true;
     }
 
+    private static boolean processVersion(String arg) {
+        if (!"--version".equals(arg) && !"-v".equals(arg)) {
+            return false;
+        }
+
+        printVersion();
+        return true;
+    }
+
+    private static void printVersion() {
+        System.out.println(Version.get());
+        System.out.println();
+    }
+
     private static boolean processHelp(String arg) {
-        if (!"--help".equals(arg) || "-h".equals(arg)) {
+        if (!"--help".equals(arg) && !"-h".equals(arg)) {
             return false;
         }
 
@@ -104,10 +123,11 @@ public class CLIInterface {
 
     private static void printHelp() {
 
-        System.out.println("--help              -- this help message ");
+        System.out.println("-h --help           -- this help message ");
         System.out.println("-rpcPort  <port>    -- port to listen on json rpc server ");
         System.out.println("-dataDir            -- data directory ");
         System.out.println("-keySeed            -- data key seed ");
+        System.out.println("-v --version        -- software version ");
         System.out.println();
     }
 

@@ -18,17 +18,17 @@ public class JTau {
 
         Config config = new Config();
         Repo repo = new Repo();
-        boolean isHelp = false;
+        boolean isNormalExit = false;
 
         // parse commandline arguments.
         try {
-            isHelp = CLIInterface.parse(config, args);
+            isNormalExit = CLIInterface.parse(config, args);
         } catch (ArgumentException e) {
             logger.error(e.getMessage());
             System.exit(CLI_ARGUMENTS_PARSE_ERROR);
         }
-        if (isHelp) {
-            System.exit(NORM);
+        if (isNormalExit) {
+            System.exit(NORMAL);
         }
 
         // init repo

@@ -2,7 +2,7 @@ package io.taucoin.jtau.cmd;
 
 public class ExitCode {
 
-    public static final int NORM = 0;
+    public static final int NORMAL = 0;
 
     public static final int CLI_ARGUMENTS_PARSE_ERROR = -1;
 
