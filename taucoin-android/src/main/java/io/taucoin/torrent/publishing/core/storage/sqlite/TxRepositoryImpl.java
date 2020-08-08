@@ -106,14 +106,6 @@ public class TxRepositoryImpl implements TxRepository{
     }
 
     /**
-     * 设置交易加入到收藏
-     * @param favourite 收藏
-     */
-    public void setFavourite(String txID, boolean favourite){
-        db.txDao().setFavourite(txID, favourite ? 1 : 0);
-    }
-
-    /**
      * 观察中位数交易费
      * @param chainID 交易所属的社区chainID
      */

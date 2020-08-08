@@ -18,6 +18,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.BackpressureStrategy;
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -25,7 +26,9 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
@@ -117,6 +120,7 @@ public class UserViewModel extends AndroidViewModel {
                 }
                 if(null == user){
                     user = new User(publicKey, seed, name, true);
+                    user.lastUpdateTime = DateUtil.getTime();
                     userRepo.addUser(user);
                 }else{
                     if(StringUtil.isNotEmpty(name)){
@@ -215,22 +219,6 @@ public class UserViewModel extends AndroidViewModel {
     }
 
     /**
-     * 设置交易加入到收藏
-     * @param favourite 收藏
-     */
-    public void setFavourite(String txID, boolean favourite) {
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
-            txRepo.setFavourite(txID, favourite);
-            emitter.onNext(true);
-            emitter.onComplete();
-        }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe();
-        disposables.add(disposable);
-    }
-
-    /**
      * 检查当前用户
      */
     public void checkCurrentUser() {
@@ -266,5 +254,12 @@ public class UserViewModel extends AndroidViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe();
         disposables.add(disposable);
+    }
+
+    /**
+     * 观察不在黑名单的列表中
+     */
+    public Flowable<List<UserAndMember>> observeUsersNotInBanList() {
+        return userRepo.observeUsersNotInBanList();
     }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
+import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
 /**
@@ -74,4 +75,9 @@ public interface UserRepository {
      * 添加新的多个User
      */
     long[] addUsers(User... user);
+
+    /**
+     * 观察不在黑名单的列表中
+     */
+    Flowable<List<UserAndMember>> observeUsersNotInBanList();
 }

@@ -29,6 +29,7 @@ import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentTxsTabBinding;
 import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
@@ -180,7 +181,12 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         }
         binding.replay.setTag(tx);
         binding.copy.setTag(msg);
-        binding.copyLink.setTag(msg);
+        String link = Utils.parseUrlFormStr(msg);
+        if(StringUtil.isNotEmpty(link)){
+            binding.copyLink.setTag(link);
+        }else{
+            binding.copyLink.setVisibility(View.GONE);
+        }
         binding.blacklist.setTag(tx.senderPk);
         binding.favourite.setTag(tx.txID);
         binding.msgHash.setTag(tx.txID);
@@ -228,7 +234,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 break;
             case R.id.favourite:
                 String txID = ViewUtils.getStringTag(v);
-                userViewModel.setFavourite(txID, true);
+//                userViewModel.setFavourite(txID, true);
                 ToastUtils.showShortToast(R.string.favourite_successfully);
                 break;
             case R.id.msg_hash:

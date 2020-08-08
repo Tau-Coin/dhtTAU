@@ -6,8 +6,10 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Flowable;
+import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
 /**
@@ -17,9 +19,10 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 public interface UserDao {
     String QUERY_GET_CURRENT_USER = "SELECT * FROM Users WHERE isCurrentUser = 1";
     String QUERY_GET_USER_LIST = "SELECT * FROM Users";
-    String QUERY_GET_USERS_IN_BLACKLIST = "SELECT * FROM Users where blacklist = 1";
+    String QUERY_GET_USERS_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 1 and isCurrentUser != 1";
+    String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 0 and isCurrentUser != 1 ORDER BY lastUpdateTime DESC";
     String QUERY_SET_CURRENT_USER = "UPDATE Users SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
-    String QUERY_ADD_USER_BLACKLIST = "UPDATE Users SET blacklist = :blacklist WHERE publicKey = :publicKey";
+    String QUERY_ADD_USER_BLACKLIST = "UPDATE Users SET isBanned = :isBanned WHERE publicKey = :publicKey";
     String QUERY_SEED_HISTORY_LIST = "SELECT * FROM Users WHERE isCurrentUser != 1 and seed not null";
     String QUERY_USER_BY_PUBLIC_KEY = "SELECT * FROM Users WHERE publicKey = :publicKey";
 
@@ -67,14 +70,14 @@ public interface UserDao {
      * 获取在黑名单的用户列表
      * @return  List<User>
      */
-    @Query(QUERY_GET_USERS_IN_BLACKLIST)
+    @Query(QUERY_GET_USERS_IN_BAN_LIST)
     List<User> getUsersInBlacklist();
 
     /**
      * 设置用户是否加入黑名单
      */
     @Query(QUERY_ADD_USER_BLACKLIST)
-    void setUserBlacklist(String publicKey, int blacklist);
+    void setUserBlacklist(String publicKey, int isBanned);
 
     /**
      * 观察Sees历史列表
@@ -89,4 +92,11 @@ public interface UserDao {
      */
     @Query(QUERY_USER_BY_PUBLIC_KEY)
     User getUserByPublicKey(String publicKey);
+
+    /**
+     * 观察不在黑名单的列表中
+     */
+    @Transaction
+    @Query(QUERY_GET_USERS_NOT_IN_BAN_LIST)
+    Flowable<List<UserAndMember>> observeUsersNotInBanList();
 }

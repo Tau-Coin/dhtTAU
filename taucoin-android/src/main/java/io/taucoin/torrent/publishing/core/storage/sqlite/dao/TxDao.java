@@ -22,12 +22,12 @@ public interface TxDao {
     // SQL:查询社区里的交易
     String QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE = "SELECT * FROM Txs" +
             " WHERE chainID = :chainID AND txType = :txType" +
-            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE blacklist == 1 and isCurrentUser != 1)";
+            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
 
     // SQL:查询社区里的交易
     String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT * FROM Txs" +
             " WHERE chainID = :chainID" +
-            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE blacklist == 1 and isCurrentUser != 1)";
+            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
 
     // SQL:查询未上链并且已过期的条件语句
     String QUERY_PENDING_TXS_NOT_EXPIRED_WHERE = " WHERE senderPk = :senderPk AND chainID = :chainID and txStatus = 0 and timestamp > :expireTimePoint ";
@@ -47,12 +47,9 @@ public interface TxDao {
     String QUERY_GET_TX_BY_TX_ID = "SELECT * FROM Txs" +
             " WHERE txID = :txID";
 
-    String QUERY_SET_TX_FAVOURITE = "UPDATE Txs SET favourite = :favourite" +
-            " WHERE txID = :txID";
-
     String QUERY_TX_MEDIAN_FEE = "SELECT fee FROM Txs " +
             " WHERE chainID = :chainID and " +
-            " senderPk NOT IN (SELECT publicKey FROM Users WHERE blacklist == 1 and isCurrentUser != 1)" +
+            " senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)" +
             " ORDER BY fee";
     /**
      * 添加新的交易
@@ -117,13 +114,6 @@ public interface TxDao {
      */
     @Query(QUERY_GET_TX_BY_TX_ID)
     Single<Tx> getTxByTxIDSingle(String txID);
-
-    /**
-     * 设置交易加入到收藏
-     * @param favourite 收藏
-     */
-    @Query(QUERY_SET_TX_FAVOURITE)
-    void setFavourite(String txID, int favourite);
 
     /**
      * 观察中位数交易费

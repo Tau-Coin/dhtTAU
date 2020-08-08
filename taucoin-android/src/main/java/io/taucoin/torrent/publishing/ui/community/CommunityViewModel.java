@@ -107,7 +107,7 @@ public class CommunityViewModel extends AndroidViewModel {
                 ChainConfig chainConfig = ChainConfig.NewChainConfig((byte)1, community.communityName, community.blockInAvg,
                         community.publicKey , "", genesisMsg);
                 daemon.createCommunity(chainConfig);
-                community.chainID = ByteUtil.toHexString(chainConfig.getChainid());
+                community.chainID = new String(chainConfig.getChainid());
                 communityRepo.addCommunity(community);
                 logger.debug("Add community to database: communityName={}, chainID={}",
                         community.communityName, community.chainID);

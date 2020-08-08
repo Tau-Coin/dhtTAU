@@ -18,6 +18,7 @@ import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 /**
  * 社区信息页面
  */
+@Deprecated
 public class CommunityInfoActivity extends BaseActivity implements View.OnClickListener {
     private ActivityCommunityInfoBinding binding;
 

@@ -120,8 +120,8 @@
 
     <!-- Strings used for privacy and security -->
     <string name="setting_privacy">Privacy</string>
-    <string name="setting_blacklist_users">Blacklist Users</string>
-    <string name="setting_blacklist_communities">Blacklist Communities</string>
+    <string name="setting_blacklist_users">Banlist Users</string>
+    <string name="setting_blacklist_communities">Banlist Communities</string>
     <string name="setting_Unblock">Unblock</string>
     <string name="setting_security">Security</string>
     <string name="setting_seeds">Seeds</string>
@@ -196,5 +196,13 @@
     <string name="def">Default</string>
     <string name="finished">Finished</string>
     <string name="foreground_notification">Foreground notification</string>
+
+    <!-- Strings used for contacts -->
+    <string name="contacts_title">Contacts</string>
+    <string name="contacts_empty">No contacts！</string>
+    <string name="contacts_community">From&#160;</string>
+    <string name="contacts_community_more">,C/%1$s</string>
+    <string name="contacts_empty_content">Start adding by tapping the pencil\nbutton in the bottom right corner.</string>
+    <string name="contacts_last_seen">Last seen %1$s</string>
 
 </resources>

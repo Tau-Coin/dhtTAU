@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.transaction;
 
 import android.content.Context;
+import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
+import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -113,6 +115,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
                 && StringUtil.isNotEquals(tx.sender.localName, showName)){
                 showName = context.getString(R.string.user_show_name, tx.sender.localName, showName);
             }
+            SpannableStringBuilder memo = Utils.getSpannableStringUrl(tx.memo);
             String firstLettersName = StringUtil.getFirstLettersOfName(showName);
             if(binding instanceof ItemWiringTxBinding){
                 ItemWiringTxBinding txBinding = (ItemWiringTxBinding) holder.binding;
@@ -132,12 +135,12 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
                 txBinding.tvReceiver.setText(tx.receiverPk);
                 txBinding.tvFee.setText(FmtMicrometer.fmtFeeValue(tx.fee));
                 txBinding.tvHash.setText(tx.txID);
-                txBinding.tvMemo.setText(tx.memo);
+                txBinding.tvMemo.setText(memo);
                 txBinding.tvTime.setText(time);
 
                 if(StringUtil.isEquals(tx.senderPk,
                         MainApplication.getInstance().getPublicKey())){
-                    txBinding.leftView.tvBlacklist.setVisibility(View.INVISIBLE);
+                    txBinding.leftView.tvBlacklist.setVisibility(View.GONE);
                 }
                 setOnLongClickListener(txBinding.middleView, tx, tx.memo);
             }else{
@@ -145,7 +148,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
                 noteBinding.leftView.roundButton.setBgColor(bgColor);
                 noteBinding.leftView.roundButton.setText(firstLettersName);
                 noteBinding.tvName.setText(showName);
-                noteBinding.tvMsg.setText(tx.memo);
+                noteBinding.tvMsg.setText(memo);
                 noteBinding.tvTime.setText(time);
 
                 if(StringUtil.isEquals(tx.senderPk,

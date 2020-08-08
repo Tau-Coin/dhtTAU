@@ -20,7 +20,7 @@ public class Community implements Parcelable {
     public String communityName;            // 社区名字
     public long totalBlocks;                // 社区总区块数（不上链）
     public long syncBlock;                  // 已同步到区块数（不上链）
-    public boolean blacklist = false;       // 社区是否被用户拉入黑名单（不上链）
+    public boolean isBanned = false;        // 社区是否被用户拉入黑名单（不上链）
     @Ignore
     public long totalCoin;                  // 社区总的币量（不上链，不入数据库）
     @Ignore
@@ -50,7 +50,7 @@ public class Community implements Parcelable {
         communityName = in.readString();
         totalBlocks = in.readLong();
         syncBlock = in.readLong();
-        blacklist = in.readByte() != 0;
+        isBanned = in.readByte() != 0;
 
         totalCoin = in.readLong();
         blockInAvg = in.readInt();
@@ -63,7 +63,7 @@ public class Community implements Parcelable {
         dest.writeString(communityName);
         dest.writeLong(totalBlocks);
         dest.writeLong(syncBlock);
-        dest.writeByte((byte) (blacklist ? 1 : 0));
+        dest.writeByte((byte) (isBanned ? 1 : 0));
         dest.writeLong(totalCoin);
         dest.writeInt(blockInAvg);
         dest.writeString(publicKey);

@@ -30,10 +30,12 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
@@ -59,6 +61,7 @@ public class TxViewModel extends AndroidViewModel {
     private static final Logger logger = LoggerFactory.getLogger("TxViewModel");
     private TxRepository txRepo;
     private UserRepository userRepo;
+    private MemberRepository memberRepo;
     private SettingsRepository settingsRepo;
     private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
@@ -71,6 +74,7 @@ public class TxViewModel extends AndroidViewModel {
         userRepo = RepositoryHelper.getUserRepository(application);
         daemon  = TauDaemon.getInstance(application);
         settingsRepo  = RepositoryHelper.getSettingsRepository(application);
+        memberRepo = RepositoryHelper.getMemberRepository(application);
     }
 
     public MutableLiveData<String> getAddState() {
@@ -164,7 +168,7 @@ public class TxViewModel extends AndroidViewModel {
                     }
                     // 交易签名
                     long timestamp = DateUtil.getTime();
-                    byte[] chainID = ByteUtil.toByte(tx.chainID);
+                    byte[] chainID = tx.chainID.getBytes();
                     Transaction transaction = new Transaction((byte)1, chainID, timestamp, (int)tx.fee, senderPk, nonce, txData);
                     Pair<byte[], byte[]> keypair = Ed25519.createKeypair(senderSeed);
                     byte[] privateKey = keypair.second;
@@ -180,6 +184,7 @@ public class TxViewModel extends AndroidViewModel {
                     logger.debug("adding transaction txID::{}", tx.txID);
                     // 如果是WiringTransaction交易
                     addUserInfo(tx);
+                    addMemberInfo(tx);
                     settingsRepo.lastTxFee(tx.chainID, String.valueOf(tx.fee));
                 }else{
                     result = getApplication().getString(R.string.tx_error_type);
@@ -208,8 +213,35 @@ public class TxViewModel extends AndroidViewModel {
             User user = userRepo.getUserByPublicKey(tx.receiverPk);
             if(null == user){
                 user = new User(tx.receiverPk);
+                user.lastUpdateTime = DateUtil.getTime();
                 userRepo.addUser(user);
                 logger.info("addUserInfo to local, publicKey::{}",
+                        tx.receiverPk);
+            }
+        }
+    }
+
+    /**
+     * 添加社区成员信息
+     * @param tx 交易
+     */
+    private void addMemberInfo(Tx tx) {
+        MsgType msgType = MsgType.setValue((byte) tx.txType);
+        Member member = memberRepo.getMemberByChainIDAndPk(tx.chainID, tx.senderPk);
+        if(null == member){
+            member = new Member(tx.chainID, tx.senderPk);
+            member.balance = daemon.getUserBalance(tx.chainID, tx.senderPk);
+            member.power = daemon.getUserBalance(tx.chainID, tx.senderPk);
+            memberRepo.addMember(member);
+        }
+        if(msgType == MsgType.Wiring && StringUtil.isNotEquals(tx.senderPk, tx.receiverPk)){
+            Member receiverMember = memberRepo.getMemberByChainIDAndPk(tx.chainID, tx.receiverPk);
+            if(null == receiverMember){
+                receiverMember = new Member(tx.chainID, tx.receiverPk);
+                receiverMember.balance = daemon.getUserBalance(tx.chainID, tx.receiverPk);
+                receiverMember.power = daemon.getUserBalance(tx.chainID, tx.receiverPk);
+                memberRepo.addMember(receiverMember);
+                logger.info("addMemberInfo to local, publicKey::{}",
                         tx.receiverPk);
             }
         }

@@ -61,12 +61,6 @@ public interface TxRepository {
     Single<Tx> getTxByTxIDSingle(String txID);
 
     /**
-     * 设置交易加入到收藏
-     * @param favourite 收藏
-     */
-    void setFavourite(String txID, boolean favourite);
-
-    /**
      * 观察中位数交易费
      * @param chainID 交易所属的社区chainID
      */

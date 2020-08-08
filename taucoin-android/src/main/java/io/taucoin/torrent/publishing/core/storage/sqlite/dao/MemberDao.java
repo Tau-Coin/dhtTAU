@@ -13,7 +13,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
  */
 @Dao
 public interface MemberDao {
-    String QUERY_GET_Member_BY_CHAIN_ID_PK = "SELECT * FROM Members WHERE chainID = :chainID AND publicKey = :publicKey";
+    String QUERY_GET_MEMBER_BY_CHAIN_ID_PK = "SELECT * FROM Members WHERE chainID = :chainID AND publicKey = :publicKey";
 
     /**
      * 添加新社区成员
@@ -33,6 +33,6 @@ public interface MemberDao {
      * @param publicKey 公钥
      * @return Member
      */
-    @Query(QUERY_GET_Member_BY_CHAIN_ID_PK)
+    @Query(QUERY_GET_MEMBER_BY_CHAIN_ID_PK)
     Member getMemberByChainIDAndPk(@NonNull String chainID, @NonNull String publicKey);
 }

@@ -17,15 +17,11 @@ import io.taucoin.torrent.publishing.ui.main.MainViewModel;
  * 联系人页面
  */
 public class ContactsActivity extends BaseActivity {
-    private MainViewModel viewModel;
     private ActivityContactsBinding binding;
-    private CompositeDisposable disposables = new CompositeDisposable();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ViewModelProvider provider = new ViewModelProvider(this);
-        viewModel = provider.get(MainViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_contacts);
         initView();
     }
@@ -35,18 +31,12 @@ public class ContactsActivity extends BaseActivity {
      */
     private void initView() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.setting_title);
+        binding.toolbarInclude.toolbar.setTitle(R.string.contacts_title);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        disposables.clear();
+        ContactsFragment fragment = new ContactsFragment();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 }

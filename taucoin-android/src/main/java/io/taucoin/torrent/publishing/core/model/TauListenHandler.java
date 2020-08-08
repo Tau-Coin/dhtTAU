@@ -20,6 +20,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.types.Block;
 import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
@@ -51,7 +52,7 @@ class TauListenHandler {
      * 保存社区：查询本地是否有此社区，没有则添加到本地
      * @param block 链上区块
      */
-    private void saveCommunity(Block block, boolean isSync) {
+    private void saveCommunityInfo(Block block, boolean isSync) {
         String chainID = ByteUtil.toHexString(block.getChainID());
         disposables.add(communityRepo.getCommunityByChainIDSingle(chainID)
                 .subscribeOn(Schedulers.io())
@@ -59,10 +60,7 @@ class TauListenHandler {
                     if(null == community){
                         community = new Community();
                         community.chainID = ByteUtil.toHexString(block.getChainID());
-                        String[] splits = community.chainID.split("#");
-                        if(splits.length > 0){
-                            community.communityName = splits[0];
-                        }
+                        community.communityName = Utils.getCommunityName(community.chainID);
                         community.totalBlocks = block.getBlockNum();
                         community.syncBlock = block.getBlockNum();
                         communityRepo.addCommunity(community);
@@ -83,8 +81,9 @@ class TauListenHandler {
 
 
     /**
-     * 处理Block数据：解析Block数据，处理交易数据、用户数据、社区成员、
-     * 1、首先处理矿工数据
+     * 处理Block数据：解析Block数据，处理社区、交易、用户、社区成员数据
+     * 0、更新社区信息
+     * 1、处理矿工用户数据
      * 2、本地不存在该交易，添加交易数据、用户数据、社区成员数据
      * 3、本地存在该交易，更新交易状态、以及成员的balance和power值
      * @param block 链上区块
@@ -92,7 +91,7 @@ class TauListenHandler {
     void handleBlockData(Block block, boolean isRollback, boolean isSync) {
         if(block != null){
             // 更新社区信息
-            saveCommunity(block, isSync);
+            saveCommunityInfo(block, isSync);
             Transaction txMsg = block.getTxMsg();
             // 更新矿工的信息
             saveUserInfo(block.getMinerPubkey(), block.getTimeStamp());
@@ -212,13 +211,13 @@ class TauListenHandler {
         User user = userRepo.getUserByPublicKey(publicKey);
         if(null == user){
             user = new User(publicKey);
-            user.onlineTime = timeStamp;
+            user.lastUpdateTime = timeStamp;
             userRepo.addUser(user);
             logger.info("SaveUserInfo to local, publicKey::{}, onlineTime::{}",
                     publicKey, timeStamp);
         }else{
-            if(user.onlineTime < timeStamp){
-                user.onlineTime = timeStamp;
+            if(user.lastUpdateTime < timeStamp){
+                user.lastUpdateTime = timeStamp;
                 userRepo.addUser(user);
                 logger.info("Update onlineTime, publicKey::{}, onlineTime::{}",
                         publicKey, timeStamp);

@@ -44,15 +44,15 @@
 	</tr>
 	<tr>
 		<td>5</td>
-		<td>lastTxOrBlockTime</td>
+		<td>lastUpdateTime</td>
 		<td>INTEGER</td>
-		<td>用户最后一次交易和出块时间</td>
+		<td>用户最后一次交易、出块、聊天时间</td>
 		<td></td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>6</td>
-		<td>blacklist</td>
+		<td>isBanned</td>
 		<td>INTEGER</td>
 		<td>用户是否被用户拉入黑名单</td>
 		<td></td>
@@ -116,7 +116,7 @@
 	</tr>
 	<tr>
 		<td>5</td>
-		<td>blacklist</td>
+		<td>isBanned</td>
 		<td>INTEGER</td>
 		<td>社区是否被用户拉入黑名单</td>
 		<td></td>
@@ -285,14 +285,6 @@
 		<td></td>
 		<td>只针对MsgType.Wiring类型</td>
 	</tr>
-	<tr>
-		<td>12</td>
-		<td>favourite</td>
-		<td>INTEGER</td>
-		<td>交易是否加入收藏</td>
-		<td></td>
-		<td></td>
-	</tr>
 </table>
 
 - 增：
@@ -300,7 +292,6 @@
  - onNewBlock、onRollback、onSyncBlock事件；
 - 改：
  - onNewBlock、onRollback事件；
- - 收藏和取消收藏；
 - 查:
  - UI显示等
 
@@ -363,18 +354,73 @@
 		<td>&radic;</td>
 		<td></td>
 	</tr>
+</table>
+- 增：
+ - 发送新的消息；
+- 查:
+ - UI显示等
+
+ 
+ ## 收藏表（Favorites）设计
+<table>
 	<tr>
-		<td>7</td>
-		<td>favourite</td>
-		<td>INTEGER</td>
-		<td>消息是否加入收藏</td>
+		<th>序号</th>
+		<th>列名</th>
+		<th>类型</th>
+		<th>说明</th>
+		<th>是否允许为空</th>
+		<th>备注</th>
+	</tr>
+	<tr>
+		<td>1</td>
+		<td>ID</td>
+		<td>TEXT</td>
+		<td>消息或交易的ID</td>
 		<td></td>
+		<td>主键</td>
+	</tr>
+	<tr>
+		<td>2</td>
+		<td>communityName</td>
+		<td>TEXT</td>
+		<td>所属社区名</td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>3</td>
+		<td>senderPk</td>
+		<td>TEXT</td>
+		<td>发送者的公钥</td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>4</td>
+		<td>timestamp</td>
+		<td>INTEGER</td>
+		<td>收藏创建时间</td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>5</td>
+		<td>context</td>
+		<td>TEXT</td>
+		<td>消息内容</td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>6</td>
+		<td>replyID</td>
+		<td>TEXT</td>
+		<td>被回复的消息ID</td>
+		<td>&radic;</td>
 		<td></td>
 	</tr>
 </table>
 - 增：
- - 发送新的消息；
-- 改：
- - 收藏和取消收藏；
-- 查:
- - UI显示等
+ - 收藏；
+- 删:
+ - 取消收藏

@@ -29,7 +29,6 @@ public class Tx implements Parcelable {
 
     public String receiverPk;               // 交易接收者的公钥 只针对MsgType.Wiring类型
     public long amount;                     // 交易金额 只针对MsgType.Wiring类型
-    public boolean favourite = false;       // 交易是否加入收藏
 
     public Tx(@NonNull String chainID, String receiverPk, long amount, long fee, int txType, String memo){
         this.chainID = chainID;
@@ -69,7 +68,6 @@ public class Tx implements Parcelable {
         nonce = in.readLong();
         txType = in.readInt();
         txStatus = in.readInt();
-        favourite = in.readByte() != 0;
     }
 
     @Override
@@ -85,7 +83,6 @@ public class Tx implements Parcelable {
         dest.writeLong(nonce);
         dest.writeInt(txType);
         dest.writeInt(txStatus);
-        dest.writeByte((byte) (favourite ? 1 : 0));
     }
 
     @Override
