@@ -16,7 +16,7 @@ public final class DHT {
         Entry entry;
 
         public ImmutableItem(byte[] data) {
-            this.entry = new Entry(new String(data, Charset.forName("UTF-8")));
+            this.entry = Entry.bdecode(data);
         }
     }
 
@@ -30,7 +30,7 @@ public final class DHT {
         public MutableItem(byte[] publicKey, byte[] privateKey, byte[] data, byte[] salt) {
             this.publicKey = publicKey;
             this.privateKey = privateKey;
-            this.entry = new Entry(new String(data, Charset.forName("UTF-8")));
+            this.entry = Entry.bdecode(data);
             this.salt= salt;
         }
     }

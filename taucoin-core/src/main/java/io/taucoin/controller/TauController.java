@@ -235,6 +235,7 @@ public class TauController {
                 return;
             }
 
+            // Note: unregister this listener to prevent memory leaks.
             tauController.unregisterListener(this);
 
             boolean success = dhtStartedResult && chainMgrStartedResult;
@@ -298,6 +299,7 @@ public class TauController {
                 return;
             }
 
+            // Note: unregister this listener to prevent memory leaks.
             tauController.unregisterListener(this);
 
             logger.info("notify TauController stopped");

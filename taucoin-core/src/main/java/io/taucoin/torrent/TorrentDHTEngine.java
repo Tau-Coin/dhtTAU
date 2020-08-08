@@ -266,12 +266,7 @@ public class TorrentDHTEngine {
         Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
         byte[] data = null;
         if (entry != null) {
-            String str =  entry.string();
-            try {
-                data = str.getBytes("UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+            data = entry.bencode();
         }
 
         return new ExchangeImmutableItemResult(data, hash);
@@ -304,12 +299,7 @@ public class TorrentDHTEngine {
         Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
         byte[] data = null;
         if (entry != null) {
-            String str =  entry.string();
-            try {
-                data = str.getBytes("UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+            data = entry.bencode();
         }
 
         return data;
