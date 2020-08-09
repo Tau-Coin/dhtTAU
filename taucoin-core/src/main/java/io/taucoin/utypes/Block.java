@@ -260,7 +260,7 @@ public class Block {
     /**
      * parse block bytes field to flat block field.
      */
-    private void parseRLP(){
+    private void parseEncoded(){
         if(isParsed){
             return;
         }else{
@@ -301,7 +301,7 @@ public class Block {
      * @return
      */
     public byte getVersion() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return (byte)version;
     }
 
@@ -310,7 +310,7 @@ public class Block {
      * @return
      */
     public byte[] getChainID() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return chainID.getBytes(UTF_8);
     }
 
@@ -319,7 +319,7 @@ public class Block {
      * @return
      */
     public long getTimeStamp() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return timestamp;
     }
 
@@ -328,7 +328,7 @@ public class Block {
      * @return
      */
     public long getBlockNum() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return blockNum;
     }
 
@@ -337,7 +337,7 @@ public class Block {
      * @return
      */
     public byte[] getPreviousBlockHash() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         byte[] longbyte0 = ByteUtil.longToBytes(previousBlockHash.get(0));
         byte[] longbyte1 = ByteUtil.longToBytes(previousBlockHash.get(1));
         byte[] longbyte2 = ByteUtil.keep4bytesOfLong(previousBlockHash.get(2));
@@ -353,7 +353,7 @@ public class Block {
      * @return
      */
     public byte[] getImmutableBlockHash() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         byte[] longbyte0 = ByteUtil.longToBytes(immutableBlockHash.get(0));
         byte[] longbyte1 = ByteUtil.longToBytes(immutableBlockHash.get(1));
         byte[] longbyte2 = ByteUtil.keep4bytesOfLong(immutableBlockHash.get(2));
@@ -369,7 +369,7 @@ public class Block {
      * @return
      */
     public BigInteger getBaseTarget() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         byte[] targetbyte = ByteUtil.longToBytes(baseTarget);
         //transfer signed bytes to unsigned.
         return new BigInteger(targetbyte);
@@ -380,7 +380,7 @@ public class Block {
      * @return
      */
     public BigInteger getCumulativeDifficulty() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         byte[] difficultybyte = ByteUtil.longToBytes(cumulativeDifficulty);
         return new BigInteger(difficultybyte);
     }
@@ -390,7 +390,7 @@ public class Block {
      * @return
      */
     public byte[] getGenerationSignature() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         byte[] longbyte0 = ByteUtil.longToBytes(generationSignature.get(0));
         byte[] longbyte1 = ByteUtil.longToBytes(generationSignature.get(1));
         byte[] longbyte2 = ByteUtil.longToBytes(generationSignature.get(2));
@@ -408,7 +408,7 @@ public class Block {
      * @return
      */
     public Transaction getTxMsg() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return txMsg;
     }
 
@@ -417,7 +417,7 @@ public class Block {
      * @return
      */
     public long getMinerBalance() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return minerBalance;
     }
 
@@ -426,7 +426,7 @@ public class Block {
      * @return
      */
     public long getSenderBalance() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return senderBalance;
     }
 
@@ -435,7 +435,7 @@ public class Block {
      * @return
      */
     public long getReceiverBalance() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return receiverBalance;
     }
 
@@ -444,7 +444,7 @@ public class Block {
      * @return
      */
     public long getSenderNonce() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return senderNonce;
     }
 
@@ -453,7 +453,7 @@ public class Block {
      * @return
      */
     public byte[] getSignature() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         byte[] longbyte0 = ByteUtil.longToBytes(signature.get(0));
         byte[] longbyte1 = ByteUtil.longToBytes(signature.get(1));
         byte[] longbyte2 = ByteUtil.longToBytes(signature.get(2));
@@ -479,7 +479,7 @@ public class Block {
      * @return
      */
     public byte[] getMinerPubkey(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         byte[] longbyte0 = ByteUtil.longToBytes(minerPubkey.get(0));
         byte[] longbyte1 = ByteUtil.longToBytes(minerPubkey.get(1));
         byte[] longbyte2 = ByteUtil.longToBytes(minerPubkey.get(2));
@@ -668,7 +668,7 @@ public class Block {
      */
     public boolean isBlockParamValidate(){
 //        if(this.getEncoded().length > ChainParam.MaxBlockSize) return false;
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
 //        if(chainID.length >ChainParam.ChainIDlength) return false;
         if(timestamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
         if(blockNum < 0) return false;

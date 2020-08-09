@@ -43,26 +43,10 @@ public class TxDataTest {
         String str1 = ByteUtil.toHexString(txData1.getEncoded());
         log.debug(str1);
 
-        CommunityAnnouncement cua = new CommunityAnnouncement(chainid,minerpubkey,description);
-        TxData txData2 = new TxData(MsgType.CommunityAnnouncement,cua.getEncode());
-        String str2 = ByteUtil.toHexString(txData2.getEncoded());
-        log.debug(str2);
-
-        String[] network = new String[]{"taucoin.io","192.168.2.118:3033"};
-        DHTbootstrapNodeAnnouncement dbn = new DHTbootstrapNodeAnnouncement(chainid,network);
-        TxData txData3 = new TxData(MsgType.DHTBootStrapNodeAnnouncement,dbn.getEncode());
-        String str3 = ByteUtil.toHexString(txData3.getEncoded());
-        log.debug("bootnode: "+str3);
-
         WireTransaction wtx = new WireTransaction(ByteUtil.toByte("c5897865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c"),1000000000,"buy");
         TxData txData4 = new TxData(MsgType.Wiring,wtx.getEncode());
         String str4 = ByteUtil.toHexString(txData4.getEncoded());
         log.debug(str4);
-
-        IdentityAnnouncement ida = new IdentityAnnouncement("hello","taugenesis");
-        TxData txData5 = new TxData(MsgType.IdentityAnnouncement,ida.getEncode());
-        String str5 = ByteUtil.toHexString(txData5.getEncoded());
-        log.debug(str5);
     }
 
     @Test

@@ -59,7 +59,7 @@ public class Transaction {
      * @param txData
      * @param signature
      */
-    public Transaction(byte version,byte[] chainID,long timestamp,int txFee,byte[] sender
+    public Transaction(long version,byte[] chainID,long timestamp,int txFee,byte[] sender
            ,long nonce,TxData txData,byte[] signature){
             if(chainID.length > ChainParam.ChainIDlength) {
                 throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
@@ -91,7 +91,7 @@ public class Transaction {
      * @param nonce: sender transaction counter.
      * @param txData:transaction message.
      */
-    public Transaction(byte version,byte[] chainID,long timeStamp,int txFee,byte[] sender
+    public Transaction(long version,byte[] chainID,long timeStamp,int txFee,byte[] sender
             ,long nonce,TxData txData){
         if(chainID.length > ChainParam.ChainIDlength) {
             throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
@@ -112,7 +112,7 @@ public class Transaction {
     /**
      * construct genesis transaction
      */
-    public Transaction(byte version,String communityName,int blockTimeInterval,long genesisTimeStamp,String genesisMinerPk,TxData txData){
+    public Transaction(long version,String communityName,int blockTimeInterval,long genesisTimeStamp,String genesisMinerPk,TxData txData){
         this.version = version;
         String str = genesisMinerPk + genesisTimeStamp;
         String hash = ByteUtil.toHexString(HashUtil.sha1hash(str.getBytes()));
@@ -203,9 +203,9 @@ public class Transaction {
      * get tx version.
      * @return
      */
-    public byte getVersion() {
+    public long getVersion() {
         if(!isParsed) parseRLP();
-        return (byte)version;
+        return version;
     }
 
     /**

@@ -52,8 +52,7 @@ public class TxData {
      * @param txCode Description of txdata.
      */
     public TxData (MsgType type,byte[] txCode){
-        if (type != MsgType.GenesisMsg && type != MsgType.RegularForum && type != MsgType.ForumComment && type != MsgType.DHTBootStrapNodeAnnouncement
-            && type != MsgType.Wiring && type != MsgType.CommunityAnnouncement && type != MsgType.IdentityAnnouncement) {
+        if (type != MsgType.GenesisMsg && type != MsgType.ForumComment && type != MsgType.Wiring ) {
             throw new IllegalArgumentException("illegal tx type");
         }
         if (txCode.length > ChainParam.ForumMsgLength){
@@ -69,20 +68,10 @@ public class TxData {
             pieces = txCode.length/8 + 1;
             isAlign = false;
         }
-//        System.out.println("pieces is : "+pieces);
+
         if(isAlign) {
             this.txCode = ByteUtil.byteArrayToSignLongArray(txCode, pieces);
         }else{
-//            ArrayList<Long> temp = ByteUtil.unAlignByteArrayToSignLongArray(txCode,pieces);
-//            for(int i=0; i < temp.size();++i){
-//                System.out.println(temp.get(i));
-//                if(i < temp.size()-1){
-//                    System.out.println(ByteUtil.toHexString(ByteUtil.longToBytes(temp.get(i))));
-//                }else{
-//                    System.out.println(ByteUtil.toHexString(ByteUtil.longToBytesNoLeadZeroes(temp.get(i))));
-//                }
-//                this.txCode.add(temp.get(i));
-//            }
             this.lastAlign = 0;
             this.txCode = ByteUtil.unAlignByteArrayToSignLongArray(txCode,pieces);
         }
@@ -113,7 +102,7 @@ public class TxData {
     /**
      * parse txdata.
      */
-    private void parseRLP(){
+    private void parseEncoded(){
         if(isParsed){
              return;
         }else{
@@ -131,7 +120,7 @@ public class TxData {
      * @return
      */
     public MsgType getMsgType(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return this.msgType;
     }
 
@@ -140,7 +129,7 @@ public class TxData {
      * @return
      */
     public byte[] getTxCode(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         int size = this.txCode.size();
         byte[] txCodeBytes = new byte[size*8];
         byte[] longbyte;
@@ -166,7 +155,7 @@ public class TxData {
      * @return
      */
     public String getNoteMsg(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         if(this.msgType == MsgType.RegularForum){
             if(!isInstance) {
                 Note note = new Note(getTxCode());
@@ -182,106 +171,11 @@ public class TxData {
     }
 
     /**
-     * get reference about Comment tx;
-     */
-    public byte[] getCommentReference(){
-        if(!isParsed) parseRLP();
-        if(this.msgType == MsgType.ForumComment){
-           if(!isInstance){
-               Comment comment = new Comment(getTxCode());
-               ob = comment;
-               isInstance = true;
-               return comment.getReference();
-           }else {
-               Comment comment = (Comment)ob;
-               return comment.getReference();
-           }
-        }
-        return null;
-    }
-
-    /**
-     * get comment message about Comment tx
-     */
-    public String getCommentMsg(){
-        if(!isParsed) parseRLP();
-        if(this.msgType == MsgType.ForumComment){
-           if(!isInstance){
-               Comment comment = new Comment(getTxCode());
-               ob = comment;
-               isInstance = true;
-               return comment.getComment();
-           }else {
-               Comment comment = (Comment)ob;
-               return comment.getComment();
-           }
-        }
-        return "";
-    }
-
-    /**
-     * get chainid about CommunityAnnouncement tx.
-     */
-    public byte[] getCommunityAnnouncementChainID(){
-        if(!isParsed) parseRLP();
-        if(this.msgType == MsgType.CommunityAnnouncement){
-            if(!isInstance) {
-                CommunityAnnouncement cma = new CommunityAnnouncement(getTxCode());
-                ob = cma;
-                isInstance = true;
-                return cma.getChainID();
-            }else{
-                CommunityAnnouncement cma = (CommunityAnnouncement)ob;
-                return cma.getChainID();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * get genesispubkey about CommunityAnnouncement tx.
-     */
-    public byte[] getCommunityAnnouncementBootstrapPubkey(){
-        if(!isParsed) parseRLP();
-        if(this.msgType == MsgType.CommunityAnnouncement){
-            if(!isInstance){
-                CommunityAnnouncement cma = new CommunityAnnouncement(getTxCode());
-                ob = cma;
-                isInstance = true;
-                return cma.getBootstrapPks();
-            }else{
-                CommunityAnnouncement cma = (CommunityAnnouncement)ob;
-                return cma.getBootstrapPks();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * get community description about CommunityAnnouncement tx.
-     */
-    public String getCommunityAnnouncementDescription(){
-        if(!isParsed) parseRLP();
-        if(this.msgType == MsgType.CommunityAnnouncement){
-            if(!isInstance){
-                CommunityAnnouncement cma = new CommunityAnnouncement(getTxCode());
-                ob = cma;
-                isInstance = true;
-                return cma.getDescription();
-            }else{
-                CommunityAnnouncement cma = (CommunityAnnouncement)ob;
-                return cma.getDescription();
-            }
-        }
-        return "";
-    }
-
-    /**
      * get genesis message description.
      * @return
      */
     public String getGenesisMsgDescription(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         if(this.msgType == MsgType.GenesisMsg){
             if(!isInstance){
                 GenesisMsg msg = new GenesisMsg(getTxCode());
@@ -301,7 +195,7 @@ public class TxData {
      * @return
      */
     public Map<String, GenesisItem> getGenesisMsgKV(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         if(this.msgType == MsgType.GenesisMsg){
             if(!isInstance){
                 GenesisMsg msg = new GenesisMsg(getTxCode());
@@ -320,7 +214,7 @@ public class TxData {
      * get chainid about NodeAnnouncement tx.
      */
     public byte[] getNodeAnnouncementChainID(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return null;
     }
 
@@ -328,7 +222,7 @@ public class TxData {
      * get bootnodes about NodeAnnouncement tx.
      */
     public String[] getNodeAnnouncementBootNodes(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return null;
     }
 
@@ -337,7 +231,7 @@ public class TxData {
      * @return
      */
     public byte[] getReceiver(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         if(this.msgType == MsgType.Wiring){
             if(!isInstance) {
                 WireTransaction wtx = new WireTransaction(getTxCode());
@@ -357,7 +251,7 @@ public class TxData {
      * @return
      */
     public long getAmount(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         if(this.msgType == MsgType.Wiring){
             if(!isInstance) {
                 WireTransaction wtx = new WireTransaction(getTxCode());
@@ -376,7 +270,7 @@ public class TxData {
      * get name about IdentityAnnouncement tx.
      */
     public String getIdentityAnnouncementName(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return null;
     }
 
@@ -384,7 +278,7 @@ public class TxData {
      * get new name about IdentityAnnouncement.
      */
     public String getIdentityAnnouncementDescription(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         return "";
     }
 
@@ -393,7 +287,7 @@ public class TxData {
      * @return
      */
     public boolean isTxDataValidate(){
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncoded();
         boolean retval;
         switch (msgType){
             case GenesisMsg:
@@ -404,23 +298,9 @@ public class TxData {
                 Note note = new Note(getTxCode());
                 retval = note.isValidateParamMsg();
                 break;
-            case ForumComment:
-                Comment comment = new Comment(getTxCode());
-                retval = comment.isValidateParamMsg();
-                break;
-            case CommunityAnnouncement:
-                CommunityAnnouncement commAnnouncement = new CommunityAnnouncement(getTxCode());
-                retval = commAnnouncement.isValidateParamMsg();
-                break;
-            case DHTBootStrapNodeAnnouncement:
-                retval = false;
-                break;
             case Wiring:
                 WireTransaction wtx = new WireTransaction(getTxCode());
                 retval = wtx.isValidateParamMsg();
-                break;
-            case IdentityAnnouncement:
-                retval = false;
                 break;
             default:
                 retval = false;

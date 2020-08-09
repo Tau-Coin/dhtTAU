@@ -49,27 +49,27 @@ public class BlockTest {
                     basetarget, cummulativediff, generationSig, tx, 100000, 100000,
                     80000, 2, signature, pubkey);
             String str = ByteUtil.toHexString(block.getEncoded());
-            log.debug(str);
-            log.debug("block size is: " + ByteUtil.toByte(str).length + " bytes");
+            log.info(str);
+            log.info("block size is: " + ByteUtil.toByte(str).length + " bytes");
             boolean ret1 = block.isBlockParamValidate();
-            log.debug("param validate ?: "+ret1);
+            log.info("param validate ?: "+ret1);
     }
 
     @Test
     public void decodeBlock(){
         Block block = new Block(ByteUtil.toByte(bk));
-        log.debug("version: "+block.getVersion());
+        log.info("version: "+block.getVersion());
         String chainid = new String(block.getChainID());
-        log.debug("chainid: "+chainid);
-        log.debug("timestamp: "+block.getTimeStamp());
-        log.debug("blocknum: "+block.getBlockNum());
-        log.debug("phash: "+ByteUtil.toHexString(block.getPreviousBlockHash()));
-        log.debug("imhash: "+ByteUtil.toHexString(block.getImmutableBlockHash()));
-        log.debug("basetarget: "+block.getBaseTarget().toString());
-        log.debug("cummulativediff: "+block.getCumulativeDifficulty().toString());
-        log.debug("blockhash: "+ByteUtil.toHexString(block.getBlockHash()));
+        log.info("chainid: "+chainid);
+        log.info("timestamp: "+block.getTimeStamp());
+        log.info("blocknum: "+block.getBlockNum());
+        log.info("phash: "+ByteUtil.toHexString(block.getPreviousBlockHash()));
+        log.info("imhash: "+ByteUtil.toHexString(block.getImmutableBlockHash()));
+        log.info("basetarget: "+block.getBaseTarget().toString());
+        log.info("cummulativediff: "+block.getCumulativeDifficulty().toString());
+        log.info("blockhash: "+ByteUtil.toHexString(block.getBlockHash()));
         boolean ret1 = block.isBlockParamValidate();
-        log.debug("param validate ?: "+ret1);
+        log.info("param validate ?: "+ret1);
     }
     @Test
     public void unSigBlock(){
@@ -78,19 +78,19 @@ public class BlockTest {
                     basetarget, cummulativediff, generationSig, null, 100000, 100000,
                     80000, 2, pubkey);
         boolean ret2 = block.isBlockParamValidate();
-        log.debug("===>param validate ?: "+ret2);
+        log.info("===>param validate ?: "+ret2);
             String str = ByteUtil.toHexString(block.getSigEncoded());
-            log.debug(str);
-            log.debug("block size is: " + ByteUtil.toByte(str).length + " bytes");
-            log.debug("block sig msg: " + ByteUtil.toHexString(block.getBlockSigMsg()));
+            log.info(str);
+            log.info("block size is: " + ByteUtil.toByte(str).length + " bytes");
+            log.info("block sig msg: " + ByteUtil.toHexString(block.getBlockSigMsg()));
             byte[] blocksig = Ed25519.sign(block.getBlockSigMsg(), pubkey, ByteUtil.toByte(prikey));
             block.setSignature(blocksig);
-            log.debug("signature is: " + ByteUtil.toHexString(blocksig));
-            log.debug("signature size is: " + blocksig.length);
+            log.info("signature is: " + ByteUtil.toHexString(blocksig));
+            log.info("signature size is: " + blocksig.length);
             String str1 = ByteUtil.toHexString(block.getEncoded());
-            log.debug("block with sig is: " + str1);
+            log.info("block with sig is: " + str1);
             boolean ret1 = block.isBlockParamValidate();
-            log.debug("param validate ?: "+ret1);
+            log.info("param validate ?: "+ret1);
     }
 
     @Test
@@ -98,25 +98,25 @@ public class BlockTest {
         byte[] signature = ByteUtil.toByte("f7ebadc98ef9adad8ef61ec5c1bad145a2ccd81e4eb499e1662799313c059d6fd0b086f1c9c443b99fce0b08bf7a4473e57b3c022cfc3baf1e1255af8d1c270c");
         byte[] sigmsg = ByteUtil.toByte("74fcd625ffeb9c8fddae19a1572d01cc1756921a823aaad40c229d9fb8bd7819");
         if(Ed25519.verify(signature,sigmsg,pubkey)){
-            log.debug("verify passed....");
+            log.info("verify passed....");
         }
         Block bk = new Block(ByteUtil.toByte(bks));
         if (bk.verifyBlockSig()){
-            log.debug("verify passed too....");
+            log.info("verify passed too....");
         }
         boolean ret1 = bk.isBlockParamValidate();
-        log.debug("param validate ?: "+ret1);
+        log.info("param validate ?: "+ret1);
     }
 
     @Test
     public void print(){
-       log.debug(System.getProperty("java.library.path"));
+       log.info(System.getProperty("java.library.path"));
        long var = 0x7fffffffffffffffL;
-       log.debug("max basetarget: "+ ChainParam.MaxBaseTarget.toString());
+       log.info("max basetarget: "+ ChainParam.MaxBaseTarget.toString());
 
-       log.debug("equal ? : "+ (Long.MAX_VALUE == var));
-       log.debug("max balance: "+ Long.MAX_VALUE);
-       log.debug("bytes are: "+ BigInteger.valueOf(Long.MAX_VALUE).longValue());
-       log.debug("-1 bytes are: "+ByteUtil.toHexString(ByteUtil.longToBytes(-1)));
+       log.info("equal ? : "+ (Long.MAX_VALUE == var));
+       log.info("max balance: "+ Long.MAX_VALUE);
+       log.info("bytes are: "+ BigInteger.valueOf(Long.MAX_VALUE).longValue());
+       log.info("-1 bytes are: "+ByteUtil.toHexString(ByteUtil.longToBytes(-1)));
     }
 }
