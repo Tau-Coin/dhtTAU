@@ -245,12 +245,25 @@ public class Chain {
             boolean miningFlag = false;
 
             // keep looking for more difficult chain
+            long startTime = 0;
+            long lastTime;
             while (!Thread.interrupted()) {
+                lastTime = startTime;
+                startTime = System.currentTimeMillis() / 1000;
+                if (startTime - lastTime < 1) {
+                    logger.info("Sleep 1 s");
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                }
+
                 byte[] pubKey = this.peerManager.getBlockPeerRandomly();
 
                 // if last visiting time is letter default block time, jump to mine
-                long lastTime = this.peerManager.getPeerVisitTime(pubKey);
-                if ((System.currentTimeMillis() / 1000 - lastTime) < ChainParam.DefaultBlockTimeInterval) {
+                long lastVisitTime = this.peerManager.getPeerVisitTime(pubKey);
+                if ((System.currentTimeMillis() / 1000 - lastVisitTime) < ChainParam.DefaultBlockTimeInterval) {
                     miningFlag = true;
                     break;
                 }
@@ -514,7 +527,7 @@ public class Chain {
         // try to use all peers to vote
         int counter = peerManager.getPeerNumber();
 
-        counter = Math.max(counter, (int)Math.log(counter));
+        counter = counter > 0 ? (int)Math.log(counter) : 0;
 
         while (!Thread.interrupted() && counter > 0) {
             byte[] peer = peerManager.getBlockPeerRandomly();
