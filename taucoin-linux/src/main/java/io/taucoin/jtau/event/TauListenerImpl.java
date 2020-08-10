@@ -3,6 +3,7 @@ package io.taucoin.jtau.event;
 import io.taucoin.controller.TauController;
 import io.taucoin.listener.TauListener;
 import io.taucoin.torrent.SessionStats;
+import io.taucoin.types.Block;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,4 +74,14 @@ public class TauListenerImpl implements TauListener {
     public void onSessionStats(SessionStats newStats) {
         logger.debug("session stats:" + newStats);
     }
+
+    @Override
+    public void onNewBlock(Block block) {}
+
+    @Override
+    public void onRollBack(Block block) {}
+
+    @Override
+    public void onSyncBlock(Block block) {}
+
 }

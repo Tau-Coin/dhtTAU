@@ -1,6 +1,7 @@
 package io.taucoin.listener;
 
 import io.taucoin.torrent.SessionStats;
+import io.taucoin.types.Block;
 
 /**
  * TauListener is the event listener of the tau blockchain.
@@ -65,4 +66,10 @@ public interface TauListener {
      * Session statistics will be notified periodally.
      */
     void onSessionStats(SessionStats newStats);
+
+    void onNewBlock(Block block);
+
+    void onRollBack(Block block);
+
+    void onSyncBlock(Block block);
 }

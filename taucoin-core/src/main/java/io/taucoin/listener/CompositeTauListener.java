@@ -1,6 +1,7 @@
 package io.taucoin.listener;
 
 import io.taucoin.torrent.SessionStats;
+import io.taucoin.types.Block;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -82,6 +83,27 @@ public class CompositeTauListener implements TauListener {
     public void onSessionStats(SessionStats newStats) {
         for (TauListener listener : listeners) {
             listener.onSessionStats(newStats);
+        }
+    }
+
+    @Override
+    public void onNewBlock(Block block) {
+        for (TauListener listener : listeners) {
+            listener.onNewBlock(block);
+        }
+    }
+
+    @Override
+    public void onRollBack(Block block) {
+        for (TauListener listener : listeners) {
+            listener.onRollBack(block);
+        }
+    }
+
+    @Override
+    public void onSyncBlock(Block block) {
+        for (TauListener listener : listeners) {
+            listener.onSyncBlock(block);
         }
     }
 }

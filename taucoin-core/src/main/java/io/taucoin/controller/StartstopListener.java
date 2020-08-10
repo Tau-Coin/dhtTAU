@@ -2,6 +2,7 @@ package io.taucoin.controller;
 
 import io.taucoin.listener.TauListener;
 import io.taucoin.torrent.SessionStats;
+import io.taucoin.types.Block;
 
 public abstract class StartstopListener implements TauListener {
 
@@ -31,4 +32,13 @@ public abstract class StartstopListener implements TauListener {
 
     @Override
     public void onSessionStats(SessionStats newStats) {}
+
+    @Override
+    public void onNewBlock(Block block) {}
+
+    @Override
+    public void onRollBack(Block block) {}
+
+    @Override
+    public void onSyncBlock(Block block) {}
 }
