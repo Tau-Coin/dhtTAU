@@ -48,9 +48,9 @@ public class CommunitySettingActivity extends BaseActivity implements View.OnCli
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        String totalCoin = FmtMicrometer.fmtLong(Constants.TOTAL_COIN);
+        String totalCoin = FmtMicrometer.fmtLong(Constants.TOTAL_COIN.longValue());
         binding.tvTotalCoins.setText(totalCoin);
-        binding.tvTotalCoins.setTag(Constants.TOTAL_COIN);
+        binding.tvTotalCoins.setTag(Constants.TOTAL_COIN.longValue());
         binding.tvAvgBlock.setText(getString(R.string.community_avg_block_time, Constants.BLOCK_IN_AVG / 60));
         binding.tvAvgBlock.setTag(Constants.BLOCK_IN_AVG);
 

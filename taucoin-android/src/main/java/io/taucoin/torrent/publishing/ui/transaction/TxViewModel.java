@@ -27,6 +27,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -39,9 +40,11 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.EditFeeDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.Chain;
@@ -66,6 +69,7 @@ public class TxViewModel extends AndroidViewModel {
     private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<List<UserAndTx>> chainTxs = new MutableLiveData<>();
+    private MutableLiveData<String> airdropState = new MutableLiveData<>();
     private MutableLiveData<String> addState = new MutableLiveData<>();
     private CommonDialog editFeeDialog;
     public TxViewModel(@NonNull Application application) {
@@ -134,6 +138,9 @@ public class TxViewModel extends AndroidViewModel {
         return txRepo.queryCommunityTxs(chainID, txType);
     }
 
+    public MutableLiveData<String> getAirdropState(){
+        return airdropState;
+    }
 
     /**
      * 添加新的交易
@@ -141,59 +148,7 @@ public class TxViewModel extends AndroidViewModel {
      */
     void addTransaction(Tx tx) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
-            // 获取当前用户的Seed, 获取公私钥
-            User currentUser = userRepo.getCurrentUser();
-            byte[] senderSeed = ByteUtil.toByte(currentUser.seed);
-            byte[] senderPk = ByteUtil.toByte(currentUser.publicKey);
-
-            String result = "";
-            try {
-                TxData txData = buildChainTxData(tx);
-                if(txData != null){
-                    // 获取当前用户在社区中链上nonce值
-                    long nonce = daemon.getUserPower(tx.chainID, currentUser.publicKey);
-                    // 获取最早过期的交易，并且其nonce后来未被使用
-                    Tx earliestExpireTx = txRepo.getEarliestExpireTx(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
-                    if(earliestExpireTx != null){
-                        logger.debug("chain nonce::{}, earliestExpireTx.nonce::{}", nonce, earliestExpireTx.nonce);
-                        nonce = earliestExpireTx.nonce;
-                    }else{
-                        // 获取社区里用户未上链并且未过期的交易数
-                        int pendingTxs = txRepo.getPendingTxsNotExpired(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
-                        logger.debug("chain nonce::{}, pending txs::{}", nonce, pendingTxs);
-                        nonce = nonce == 0 ? 0 : nonce + 1;
-                        if(pendingTxs > 0){
-                            nonce += pendingTxs;
-                        }
-                    }
-                    // 交易签名
-                    long timestamp = DateUtil.getTime();
-                    byte[] chainID = tx.chainID.getBytes();
-                    Transaction transaction = new Transaction((byte)1, chainID, timestamp, (int)tx.fee, senderPk, nonce, txData);
-                    Pair<byte[], byte[]> keypair = Ed25519.createKeypair(senderSeed);
-                    byte[] privateKey = keypair.second;
-                    transaction.signTransaction(privateKey);
-                    // 把交易数据transaction.getEncoded()提交给链端
-                    daemon.submitTransaction(transaction);
-                    // 保存交易数据到本地数据库
-                    tx.txID = ByteUtil.toHexString(transaction.getTxID());
-                    tx.timestamp = timestamp;
-                    tx.senderPk = currentUser.publicKey;
-                    tx.nonce = nonce;
-                    txRepo.addTransaction(tx);
-                    logger.debug("adding transaction txID::{}", tx.txID);
-                    // 如果是WiringTransaction交易
-                    addUserInfo(tx);
-                    addMemberInfo(tx);
-                    settingsRepo.lastTxFee(tx.chainID, String.valueOf(tx.fee));
-                }else{
-                    result = getApplication().getString(R.string.tx_error_type);
-                }
-            }catch (Exception e){
-                result = e.getMessage();
-                logger.debug("Error adding transaction::{}", result);
-            }
-
+            String result = createTransaction(tx);
             emitter.onNext(result);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -201,6 +156,61 @@ public class TxViewModel extends AndroidViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(state -> addState.postValue(state));
         disposables.add(disposable);
+    }
+
+    public String createTransaction(Tx tx) {
+        // 获取当前用户的Seed, 获取公私钥
+        User currentUser = userRepo.getCurrentUser();
+        byte[] senderSeed = ByteUtil.toByte(currentUser.seed);
+        byte[] senderPk = ByteUtil.toByte(currentUser.publicKey);
+        String result = "";
+        try {
+            TxData txData = buildChainTxData(tx);
+            if(txData != null){
+                // 获取当前用户在社区中链上nonce值
+                long nonce = daemon.getUserPower(tx.chainID, currentUser.publicKey);
+                // 获取最早过期的交易，并且其nonce后来未被使用
+                Tx earliestExpireTx = txRepo.getEarliestExpireTx(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
+                if(earliestExpireTx != null){
+                    logger.debug("chain nonce::{}, earliestExpireTx.nonce::{}", nonce, earliestExpireTx.nonce);
+                    nonce = earliestExpireTx.nonce;
+                }else{
+                    // 获取社区里用户未上链并且未过期的交易数
+                    int pendingTxs = txRepo.getPendingTxsNotExpired(tx.chainID, currentUser.publicKey, Chain.EXPIRE_TIME);
+                    logger.debug("chain nonce::{}, pending txs::{}", nonce, pendingTxs);
+                    nonce = nonce == 0 ? 0 : nonce + 1;
+                    if(pendingTxs > 0){
+                        nonce += pendingTxs;
+                    }
+                }
+                // 交易签名
+                long timestamp = DateUtil.getTime();
+                byte[] chainID = tx.chainID.getBytes();
+                Transaction transaction = new Transaction((byte)1, chainID, timestamp, (int)tx.fee, senderPk, nonce, txData);
+                Pair<byte[], byte[]> keypair = Ed25519.createKeypair(senderSeed);
+                byte[] privateKey = keypair.second;
+                transaction.signTransaction(privateKey);
+                // 把交易数据transaction.getEncoded()提交给链端
+                daemon.submitTransaction(transaction);
+                // 保存交易数据到本地数据库
+                tx.txID = ByteUtil.toHexString(transaction.getTxID());
+                tx.timestamp = timestamp;
+                tx.senderPk = currentUser.publicKey;
+                tx.nonce = nonce;
+                txRepo.addTransaction(tx);
+                logger.debug("adding transaction txID::{}", tx.txID);
+                // 如果是WiringTransaction交易
+                addUserInfo(tx);
+                addMemberInfo(tx);
+                settingsRepo.lastTxFee(tx.chainID, String.valueOf(tx.fee));
+            }else{
+                result = getApplication().getString(R.string.tx_error_type);
+            }
+        }catch (Exception e){
+            result = e.getMessage();
+            logger.debug("Error adding transaction::{}", result);
+        }
+        return result;
     }
 
     /**
@@ -231,7 +241,7 @@ public class TxViewModel extends AndroidViewModel {
         if(null == member){
             member = new Member(tx.chainID, tx.senderPk);
             member.balance = daemon.getUserBalance(tx.chainID, tx.senderPk);
-            member.power = daemon.getUserBalance(tx.chainID, tx.senderPk);
+            member.power = daemon.getUserPower(tx.chainID, tx.senderPk);
             memberRepo.addMember(member);
         }
         if(msgType == MsgType.Wiring && StringUtil.isNotEquals(tx.senderPk, tx.receiverPk)){
@@ -346,10 +356,58 @@ public class TxViewModel extends AndroidViewModel {
     }
 
     /**
+     * 获取中位数交易费
+     * @param chainID 交易所属的社区chainID
+     */
+    public long getMedianFee(String chainID) {
+        List<Long> fees = txRepo.getMedianFee(chainID);
+        return Utils.getMedianData(fees);
+    }
+
+    /**
      * 观察中位数交易费
      * @param chainID 交易所属的社区chainID
      */
     Single<List<Long>> observeMedianFee(String chainID) {
         return txRepo.observeMedianFee(chainID);
+    }
+
+    /**
+     * 空投币给朋友
+     * @param chainID
+     * @param friendPks
+     */
+    public void airdropToFriends(String chainID, List<String> friendPks) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
+            String result = "";
+            try {
+                for (String friendPk : friendPks) {
+                    result = airdropToFriends(chainID, friendPk);
+                    if (StringUtil.isNotEmpty(result)) {
+                        break;
+                    }
+                }
+            }catch (Exception e){
+                result = e.getMessage();
+            }
+            emitter.onNext(result);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> airdropState.postValue(result));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 空投币给朋友
+     * @param chainID
+     * @param friendPk
+     */
+    public String airdropToFriends(String chainID, String friendPk) {
+        long medianFee = getMedianFee(chainID);
+        Tx tx = new Tx(chainID, friendPk, Constants.AIRDROP_COIN.longValue(),
+                medianFee, MsgType.Wiring.getVaLue(), "");
+        return createTransaction(tx);
     }
 }

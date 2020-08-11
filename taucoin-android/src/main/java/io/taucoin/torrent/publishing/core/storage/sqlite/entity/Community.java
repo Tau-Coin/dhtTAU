@@ -33,6 +33,12 @@ public class Community implements Parcelable {
         this.chainID = chainID;
     }
 
+    @Ignore
+    public Community(@NonNull String communityName){
+        this.communityName = communityName;
+    }
+
+    @Ignore
     public Community(@NonNull String communityName, String publicKey, long totalCoin, int blockInAvg){
         this.communityName = communityName;
         this.publicKey = publicKey;

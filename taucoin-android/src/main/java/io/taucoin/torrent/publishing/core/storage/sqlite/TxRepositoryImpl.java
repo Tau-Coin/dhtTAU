@@ -112,4 +112,12 @@ public class TxRepositoryImpl implements TxRepository{
     public Single<List<Long>> observeMedianFee(String chainID){
         return db.txDao().observeMedianFee(chainID);
     }
+
+    /**
+     * 获取中位数交易费
+     * @param chainID 交易所属的社区chainID
+     */
+    public List<Long> getMedianFee(String chainID){
+        return db.txDao().getMedianFee(chainID);
+    }
 }

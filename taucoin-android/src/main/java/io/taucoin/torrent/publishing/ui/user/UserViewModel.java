@@ -18,7 +18,6 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import io.reactivex.BackpressureStrategy;
-import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -49,6 +48,7 @@ public class UserViewModel extends AndroidViewModel {
     private TxRepository txRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
+    private MutableLiveData<Boolean> addContactResult = new MutableLiveData<>();
     private MutableLiveData<List<User>> blackList = new MutableLiveData<>();
     private CommonDialog commonDialog;
     public UserViewModel(@NonNull Application application) {
@@ -180,6 +180,13 @@ public class UserViewModel extends AndroidViewModel {
     }
 
     /**
+     * 获取添加联系人的结果
+     */
+    public MutableLiveData<Boolean> getAddContactResult() {
+        return addContactResult;
+    }
+
+    /**
      * 获取用户黑名单的被观察者
      * @return 被观察者
      */
@@ -261,5 +268,36 @@ public class UserViewModel extends AndroidViewModel {
      */
     public Flowable<List<UserAndMember>> observeUsersNotInBanList() {
         return userRepo.observeUsersNotInBanList();
+    }
+
+    /**
+     * 添加联系人
+     */
+    public void addContact(String publicKey) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            User user = userRepo.getUserByPublicKey(publicKey);
+            boolean isExist;
+            if(null == user){
+                user = new User(publicKey);
+                userRepo.addUser(user);
+                isExist = false;
+            }else{
+                isExist = true;
+            }
+            emitter.onNext(isExist);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(isExist -> addContactResult.postValue(isExist));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 发送社区邀请链接
+     * @param inviteLink 社区邀请链接
+     */
+    public void sendCommunityInvitedLink(String inviteLink) {
+        // TODO: 通过msg channel发送
     }
 }

@@ -1,5 +1,6 @@
 package io.taucoin.torrent.publishing.ui.community;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -13,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.EditTextInhibitInput;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
@@ -22,6 +24,8 @@ import io.taucoin.torrent.publishing.databinding.ActivityCommunityCreateBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 
 /**
@@ -103,6 +107,10 @@ public class CommunityCreateActivity extends BaseActivity {
                 .setPositiveButton(R.string.community_added_members, (dialog, which) -> {
                     dialog.cancel();
                     onBackPressed();
+                    Intent intent = new Intent();
+                    intent.putExtra(IntentExtra.TYPE, ContactsActivity.TYPE_ADD_MEMBERS);
+                    intent.putExtra(IntentExtra.CHAIN_ID, "");
+                    ActivityUtil.startActivity(intent, this, ContactsActivity.class);
                 }).create();
         successDialog.setOnCancelListener(dialog -> {
             dialog.dismiss();
@@ -131,7 +139,7 @@ public class CommunityCreateActivity extends BaseActivity {
             String communityName = ViewUtils.getText(binding.etCommunityName);
             String publicKey = ViewUtils.getText(binding.tvPublicKey);
             Community community = new Community(communityName, publicKey,
-                    Constants.TOTAL_COIN, Constants.BLOCK_IN_AVG);
+                    Constants.TOTAL_COIN.longValue(), Constants.BLOCK_IN_AVG);
             if(viewModel.validateCommunity(community)){
                 viewModel.addCommunity(community);
             }

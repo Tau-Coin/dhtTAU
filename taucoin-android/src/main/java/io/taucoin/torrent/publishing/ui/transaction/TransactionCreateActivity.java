@@ -151,6 +151,8 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
         String amount = ViewUtils.getText(binding.etAmount);
         String fee = ViewUtils.getStringTag(binding.tvFee);
         String memo = ViewUtils.getText(binding.etMemo);
+        amount = FmtMicrometer.fmtTxValue(amount);
+        fee = FmtMicrometer.fmtTxValue(fee);
         return new Tx(chainID, receiverPk, FmtMicrometer.fmtTxLongValue(amount),
                 FmtMicrometer.fmtTxLongValue(fee), txType, memo);
     }
@@ -162,7 +164,9 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
                 txViewModel.showEditFeeDialog(this, binding.tvFee, community);
                 break;
             case R.id.iv_select_pk:
-                ActivityUtil.startActivityForResult(this, ContactsActivity.class, REQUEST_CODE);
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.TYPE, ContactsActivity.TYPE_SELECT_CONTACT);
+                ActivityUtil.startActivityForResult(intent, this, ContactsActivity.class, REQUEST_CODE);
                 break;
         }
     }

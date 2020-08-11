@@ -2,7 +2,11 @@ package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import android.content.Context;
 
+import java.util.List;
+
 import androidx.annotation.NonNull;
+import io.reactivex.Flowable;
+import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**
@@ -51,5 +55,9 @@ public class MemberRepositoryImpl implements MemberRepository{
      */
     public Member getMemberByChainIDAndPk(@NonNull String chainID, @NonNull String publicKey){
         return db.memberDao().getMemberByChainIDAndPk(chainID, publicKey);
+    }
+
+    public Flowable<List<MemberAndUser>> observeCommunityMembers(String chainID){
+        return db.memberDao().observeCommunityMembers(chainID);
     }
 }

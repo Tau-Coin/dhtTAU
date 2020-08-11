@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/color_white">
+
+        <ImageView
+            android:id="@+id/iv_close"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="20dp"
+            android:contentDescription="@null"
+            android:src="@mipmap/icon_close" />
+
+        <TextView
+            android:layout_below="@+id/iv_close"
+            android:id="@+id/tv_title"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="15dp"
+            android:textAppearance="@style/TextAppearanceBody1"/>
+
+        <EditText
+            android:layout_below="@+id/tv_title"
+            android:visibility="gone"
+            android:id="@+id/et_chat_name"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:singleLine="true"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:gravity="center_horizontal|bottom"
+            android:hint="@string/contacts_chat_name_hint"
+            android:inputType="text"
+            android:textAppearance="@style/TextAppearanceBody1"
+            android:autofillHints="@string/user_seed_import_hint" />
+
+        <EditText
+            android:layout_below="@+id/et_chat_name"
+            android:id="@+id/et_public_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="50dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="10dp"
+            android:gravity="center_horizontal|bottom"
+            android:hint="@string/contacts_public_key_hint"
+            android:inputType="textMultiLine"
+            android:textAppearance="@style/TextAppearanceBody1"
+            android:autofillHints="@string/user_nickname" />
+
+        <TextView
+            android:layout_below="@+id/et_public_key"
+            android:id="@+id/tv_submit"
+            android:minWidth="240dp"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_centerHorizontal="true"
+            android:text="@string/common_submit"
+            android:layout_marginTop="35dp"
+            android:textAllCaps="true"
+            android:gravity="center_horizontal|center"
+            android:textColor="@color/color_white"
+            android:textAppearance="@style/TextAppearanceBody1"
+            android:background="@drawable/primary_rect_round_bg" />
+
+        <TextView
+            android:id="@+id/tv_do_not_show"
+            android:visibility="gone"
+            android:layout_below="@+id/tv_submit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:textColor="@color/gray_dark"
+            android:text="@string/common_do_not_show"
+            android:textAppearance="@style/TextAppearanceBody2"/>
+
+    </RelativeLayout>
+</layout>

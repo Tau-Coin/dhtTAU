@@ -65,4 +65,10 @@ public interface TxRepository {
      * @param chainID 交易所属的社区chainID
      */
     Single<List<Long>> observeMedianFee(String chainID);
+
+    /**
+     * 获取中位数交易费
+     * @param chainID 交易所属的社区chainID
+     */
+    List<Long> getMedianFee(String chainID);
 }

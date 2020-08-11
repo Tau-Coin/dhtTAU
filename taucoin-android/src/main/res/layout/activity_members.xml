@@ -48,95 +48,34 @@
         </RelativeLayout>
 
         <LinearLayout
+            android:id="@+id/ll_ban"
             android:orientation="vertical"
             android:background="@color/color_white"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="20dp"
+            android:onClick="@{listener::onClick}"
+            android:paddingTop="15dp"
             android:paddingStart="20dp"
             android:paddingEnd="0dp"
-            android:paddingBottom="0dp">
+            android:paddingBottom="10dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/primary"
+                android:textColor="@color/color_red"
                 android:textStyle="bold"
-                android:text="@string/community_info"
+                android:text="@string/community_blacklist"
                 android:textAppearance="@style/TextAppearanceBody1"/>
 
             <TextView
-                android:id="@+id/tv_invite_link"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:paddingEnd="20dp"
-                android:paddingStart="0dp"
-                android:textAppearance="@style/TextAppearanceBody2"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="0dp"
                 android:paddingEnd="20dp"
                 android:paddingStart="0dp"
                 android:textColor="@color/gray_dark"
-                android:text="@string/community_invite_link"
+                android:text="@string/community_blacklist_tips"
                 android:textAppearance="@style/TextAppearanceBody2"/>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="15dp"
-                android:background="@color/divider"/>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="0dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="15dp"
-                android:paddingBottom="15dp">
-
-                <TextView
-                    android:id="@+id/tv_notifications"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/primary"
-                    android:textStyle="bold"
-                    android:text="@string/community_notifications"
-                    android:textAppearance="@style/TextAppearanceBody1"/>
-
-                <TextView
-                    android:layout_below="@+id/tv_notifications"
-                    android:id="@+id/tv_notifications_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:paddingEnd="20dp"
-                    android:paddingStart="0dp"
-                    android:textColor="@color/gray_dark"
-                    android:text="@string/community_notifications_off"
-                    android:textAppearance="@style/TextAppearanceBody2"/>
-
-                <View
-                    android:layout_toStartOf="@+id/switch_notifications"
-                    android:id="@+id/tab_layout_line"
-                    android:layout_width="1dp"
-                    android:layout_height="30dp"
-                    android:layout_centerVertical="true"
-                    android:background="@color/divider"/>
-
-                <Switch
-                    android:id="@+id/switch_notifications"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_centerVertical="true"
-                    android:layout_alignParentEnd="true"
-                    android:checked="false"/>
-
-            </RelativeLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -145,7 +84,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="10dp"
-            android:paddingTop="20dp"
+            android:paddingTop="10dp"
             android:paddingStart="20dp"
             android:paddingEnd="0dp"
             android:paddingBottom="0dp">
@@ -155,6 +94,7 @@
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:onClick="@{listener::onClick}"
                 tools:ignore="UseCompoundDrawables">
 
                 <ImageView
@@ -166,8 +106,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/primary"
-                    android:textStyle="bold"
+                    android:textColor="@color/primary_light"
                     android:layout_marginStart="20dp"
                     android:text="@string/community_add_member"
                     android:textAppearance="@style/TextAppearanceBody1"/>

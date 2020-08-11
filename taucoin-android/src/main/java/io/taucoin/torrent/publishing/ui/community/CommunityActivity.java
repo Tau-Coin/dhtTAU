@@ -163,7 +163,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         }else if (v.getId() == R.id.toolbar_title) {
             Intent intent = new Intent();
             intent.putExtra(IntentExtra.BEAN, community);
-            ActivityUtil.startActivity(intent, this, MembersActivity.class);
+            ActivityUtil.startActivityForResult(intent, this, MembersActivity.class, REQUEST_CODE);
         }
     }
 

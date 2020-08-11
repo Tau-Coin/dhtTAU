@@ -6,8 +6,10 @@ import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import io.taucoin.torrent.publishing.core.utils.Utils;
+import io.taucoin.torrent.publishing.ui.customviews.ProgressManager;
 
 public abstract class BaseActivity extends AppCompatActivity {
+    private ProgressManager progressManager = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(Utils.getAppTheme(getApplicationContext()));
@@ -26,6 +28,24 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        if(progressManager != null){
+            progressManager.closeProgressDialog();
+        }
         this.finish();
+    }
+
+    public void showProgressDialog(){
+        showProgressDialog(true);
+    }
+
+    public void showProgressDialog(boolean isCanCancel){
+        progressManager = ProgressManager.newInstance();
+        progressManager.showProgressDialog(this, isCanCancel);
+    }
+
+    public void closeProgressDialog(){
+        if(progressManager != null){
+            progressManager.closeProgressDialog();
+        }
     }
 }

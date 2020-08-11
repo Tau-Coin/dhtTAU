@@ -45,11 +45,7 @@ public class UsersUtil {
      * @return 显示名字
      */
     public static String getShowName(@NonNull User user) {
-        if(StringUtil.isNotEmpty(user.localName)){
-            return user.localName;
-        }else{
-            return getDefaultName(user.publicKey);
-        }
+        return getShowName(user.publicKey, user.localName);
     }
 
     /**
@@ -59,9 +55,32 @@ public class UsersUtil {
      */
     public static String getShowName(@NonNull UserAndTx tx) {
         if(tx.sender != null && StringUtil.isNotEmpty(tx.sender.localName)){
-            return tx.sender.localName;
+            return getShowName(tx.senderPk, tx.sender.localName);
         }else{
-            return getDefaultName(tx.senderPk);
+            return getShowName(tx.senderPk, null);
+        }
+    }
+
+    public static String getShowName(String publicKey, String localName) {
+        String showName = UsersUtil.getDefaultName(publicKey);
+        if(StringUtil.isNotEmpty(localName)
+                && StringUtil.isNotEquals(localName, showName)){
+            Context context = MainApplication.getInstance();
+            showName = context.getString(R.string.user_show_name, localName, showName);
+        }
+        return showName;
+    }
+
+    /**
+     * 获取显示当前用户名字
+     * @param user 当前用户
+     * @return 显示名字
+     */
+    public static String getCurrentUserName(@NonNull User user) {
+        if(StringUtil.isNotEmpty(user.localName)){
+            return user.localName;
+        }else{
+            return UsersUtil.getDefaultName(user.publicKey);
         }
     }
 

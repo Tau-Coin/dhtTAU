@@ -2,7 +2,9 @@ package io.taucoin.torrent.publishing.ui.contacts;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 
 import org.slf4j.LoggerFactory;
 
@@ -32,10 +34,13 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
     implements Selectable<UserAndMember> {
     private ClickListener listener;
     private List<UserAndMember> dataList = new ArrayList<>();
+    private List<String> selectedList = new ArrayList<>();
+    private int type;
 
-    ContactListAdapter(ClickListener listener) {
+    ContactListAdapter(ClickListener listener, int type) {
         super(diffCallback);
         this.listener = listener;
+        this.type = type;
     }
 
     @NonNull
@@ -47,7 +52,7 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
                 parent,
                 false);
 
-        return new ViewHolder(binding, listener);
+        return new ViewHolder(binding, listener, type, selectedList);
     }
 
     @Override
@@ -80,21 +85,45 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
         notifyDataSetChanged();
     }
 
+    public List<String> getSelectedList() {
+        return selectedList;
+    }
+
     static class ViewHolder extends RecyclerView.ViewHolder {
         private ItemContactListBinding binding;
         private ClickListener listener;
         private Context context;
+        private int type;
+        private List<String> selectedList;
 
-        ViewHolder(ItemContactListBinding binding, ClickListener listener) {
+        ViewHolder(ItemContactListBinding binding, ClickListener listener, int type, List<String> selectedList) {
             super(binding.getRoot());
             this.binding = binding;
             this.context = binding.getRoot().getContext();
             this.listener = listener;
+            this.type = type;
+            this.selectedList = selectedList;
         }
 
         void bind(ViewHolder holder, UserAndMember user) {
             if(null == holder || null == user){
                 return;
+            }
+            holder.binding.ivShare.setVisibility(type == ContactsActivity.TYPE_SELECT_CONTACT ? View.GONE : View.VISIBLE);
+            int imgRid = type == ContactsActivity.TYPE_ADD_MEMBERS ? R.mipmap.icon_share : R.mipmap.icon_share_community;
+            holder.binding.ivShare.setImageResource(imgRid);
+            holder.binding.cbSelect.setVisibility(type == ContactsActivity.TYPE_ADD_MEMBERS ? View.VISIBLE : View.GONE);
+            if(type == ContactsActivity.TYPE_ADD_MEMBERS){
+                holder.binding.cbSelect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if(isChecked){
+                            selectedList.add(user.publicKey);
+                        }else{
+                            selectedList.remove(user.publicKey);
+                        }
+                    }
+                });
             }
             String showName = UsersUtil.getDefaultName(user.publicKey);
             if(StringUtil.isNotEmpty(user.localName)
@@ -122,7 +151,7 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
 //                        continue;
 //                    }
                     if(communities.length() == 0){
-                        communities.append(context.getResources().getString(R.string.contacts_community));
+                        communities.append(context.getResources().getString(R.string.contacts_community_from));
                     }
                     String communityName = Utils.getCommunityName(member.chainID);
                     LoggerFactory.getLogger("1111").info("communityName::{}, chainID::{}", communityName, member.chainID);
@@ -138,16 +167,24 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
             int bgColor = Utils.getGroupColor(user.publicKey);
             holder.binding.leftView.setBgColor(bgColor);
 
-            holder.binding.getRoot().setOnClickListener(v -> {
+            holder.binding.ivShare.setOnClickListener(v -> {
                 if(listener != null){
-                    listener.onItemClicked(user);
+                    listener.onShareClicked(user);
                 }
             });
+            if(type == ContactsActivity.TYPE_SELECT_CONTACT){
+                holder.binding.getRoot().setOnClickListener(v -> {
+                    if(listener != null){
+                        listener.onItemClicked(user);
+                    }
+                });
+            }
         }
     }
 
     public interface ClickListener {
         void onItemClicked(User item);
+        void onShareClicked(User item);
     }
 
     private static final DiffUtil.ItemCallback<UserAndMember> diffCallback = new DiffUtil.ItemCallback<UserAndMember>() {

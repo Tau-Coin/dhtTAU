@@ -37,7 +37,7 @@ public class WireTransaction {
      * @param receiverPk
      * @param amount
      */
-    public WireTransaction(byte[] receiverPk,long amount,String notes){
+    public WireTransaction(byte[] receiverPk,long amount, String notes){
         this.receiverPk = receiverPk;
         this.amount = amount;
         this.notes = notes;

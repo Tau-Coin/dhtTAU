@@ -1,11 +1,16 @@
 package io.taucoin.torrent.publishing.core.storage.sqlite.dao;
 
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import androidx.room.Update;
+import io.reactivex.Flowable;
+import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**
@@ -14,6 +19,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 @Dao
 public interface MemberDao {
     String QUERY_GET_MEMBER_BY_CHAIN_ID_PK = "SELECT * FROM Members WHERE chainID = :chainID AND publicKey = :publicKey";
+    String QUERY_GET_MEMBERS_BY_CHAIN_ID = "SELECT * FROM Members WHERE chainID = :chainID";
 
     /**
      * 添加新社区成员
@@ -35,4 +41,8 @@ public interface MemberDao {
      */
     @Query(QUERY_GET_MEMBER_BY_CHAIN_ID_PK)
     Member getMemberByChainIDAndPk(@NonNull String chainID, @NonNull String publicKey);
+
+    @Query(QUERY_GET_MEMBERS_BY_CHAIN_ID)
+    @Transaction
+    Flowable<List<MemberAndUser>> observeCommunityMembers(String chainID);
 }

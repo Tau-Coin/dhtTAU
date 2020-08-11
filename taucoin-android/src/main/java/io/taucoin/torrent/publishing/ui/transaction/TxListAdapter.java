@@ -110,11 +110,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
             }
             String time = DateUtil.getWeekTime(tx.timestamp);
             int bgColor = Utils.getGroupColor(tx.senderPk);
-            String showName = UsersUtil.getDefaultName(tx.senderPk);
-            if(tx.sender != null && StringUtil.isNotEmpty(tx.sender.localName)
-                && StringUtil.isNotEquals(tx.sender.localName, showName)){
-                showName = context.getString(R.string.user_show_name, tx.sender.localName, showName);
-            }
+            String showName = UsersUtil.getShowName(tx);
             SpannableStringBuilder memo = Utils.getSpannableStringUrl(tx.memo);
             String firstLettersName = StringUtil.getFirstLettersOfName(showName);
             if(binding instanceof ItemWiringTxBinding){

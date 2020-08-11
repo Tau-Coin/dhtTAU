@@ -383,4 +383,15 @@
         <item name="android:textSize">18dp</item>
     </style>
 
+    <style name="dialog_translucent" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowFrame">@null</item><!-- border -->
+        <item name="android:windowIsFloating">true</item><!-- is over activity-->
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+    </style>
+
 </resources>

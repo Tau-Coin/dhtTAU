@@ -188,9 +188,9 @@ public class MainActivity extends BaseActivity {
         binding.drawer.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
         binding.drawer.tvPublicKey.setTag(user.publicKey);
         binding.drawer.ivPublicKeyCopy.setTag(user.publicKey);
-        String noteName = UsersUtil.getShowName(user);
-        binding.drawer.tvNoteName.setText(UsersUtil.getDefaultName(noteName));
-        binding.drawer.roundButton.setText(StringUtil.getFirstLettersOfName(noteName));
+        String showName = UsersUtil.getCurrentUserName(user);
+        binding.drawer.tvNoteName.setText(showName);
+        binding.drawer.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
     }
 
     @Override

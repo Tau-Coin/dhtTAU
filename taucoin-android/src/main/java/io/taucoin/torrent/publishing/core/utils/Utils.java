@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.receiver.BootReceiver;
 
 import java.io.File;
@@ -410,7 +411,7 @@ public class Utils {
                 return (long) ((total.get(size / 2 - 1) + total.get(size / 2) + 0.0) / 2);
             }
         }
-        return 0;
+        return Constants.MIN_FEE.longValue();
     }
     /**
      * 解析字符串中的link，加下划线和改成蓝色

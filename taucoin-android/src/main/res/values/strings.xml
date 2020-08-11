@@ -13,6 +13,8 @@
     <string name="common_percent">%1$d%%</string>
     <string name="common_on">ON</string>
     <string name="common_off">OFF</string>
+    <string name="common_do_not_show">Do not show this dialog again</string>
+    <string name="common_start">Start</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
     <string name="close_navigation_drawer">Close navigation drawer</string>
@@ -47,9 +49,9 @@
     <string name="menu_community_info">Community Info</string>
 
     <string name="community_settings">Settings</string>
-    <string name="community_blacklist">Blacklist</string>
-    <string name="community_blacklist_tips">Move this community to Blacklist</string>
-    <string name="community_invite_friends">Invite Friends</string>
+    <string name="community_blacklist">Ban</string>
+    <string name="community_blacklist_tips">Move this community to Banlist</string>
+    <string name="community_invite_friends">Invite Friend</string>
     <string name="community_mining_info">Mining Info</string>
     <string name="community_sync_rate">Sync Rate</string>
     <string name="community_miners_online">Miners Online</string>
@@ -60,12 +62,13 @@
     <string name="community_notifications">Notifications</string>
     <string name="community_notifications_on">On</string>
     <string name="community_notifications_off">Off</string>
-    <string name="community_add_member">Add Member</string>
+    <string name="community_add_member">Add Member via Wiring</string>
     <string name="community_invite_link_form">TAUchain:?%1$sdn=%2$s</string>
     <string name="community_invite_link_bs">bs=%1$s&#038;</string>
 
     <string name="community_input_hint">Message</string>
     <string name="community_users_stats">%1$d members,%2$d online</string>
+    <string name="common_loading">loading&#8230;</string>
 
     <string name="community_community_name">e.g.Paris(required)</string>
     <string name="community_coin_name">Coin Name(optional)</string>
@@ -93,7 +96,7 @@
     <string name="error_coin_name_empty">Coin name cannot be empty!</string>
     <string name="error_telegram_id_illegal">Telegram ID is illegal!</string>
     <string name="community_added_successfully">Create Community Successful!</string>
-    <string name="community_added_members">+ Add Members Now</string>
+    <string name="community_added_members">+ Add Member Now</string>
 
     <string name="setting_title">Settings</string>
     <string name="setting_account">PublicKey(Address)</string>
@@ -143,12 +146,13 @@
 
     <string name="copy_seed">Seed copied</string>
     <string name="copy_public_key">Public key copied</string>
-    <string name="copy_invite_link">Invite link copied</string>
+    <string name="copy_share_link">Share link copied</string>
     <string name="copy_message_hash">Message hash copied</string>
     <string name="copy_successfully">Copy successfully</string>
     <string name="copy_link_successfully">Copy link successfully</string>
     <string name="blacklist_successfully">Blacklist successfully</string>
     <string name="favourite_successfully">Added favourite successfully</string>
+    <string name="share_link_successfully">Share link successfully</string>
 
     <!-- Strings used for transactions -->
     <string name="tx_send">Send</string>
@@ -200,9 +204,20 @@
     <!-- Strings used for contacts -->
     <string name="contacts_title">Contacts</string>
     <string name="contacts_empty">No contacts！</string>
-    <string name="contacts_community">From&#160;</string>
+    <string name="contacts_community_from">From&#160;</string>
     <string name="contacts_community_more">,C/%1$s</string>
     <string name="contacts_empty_content">Start adding by tapping the pencil\nbutton in the bottom right corner.</string>
     <string name="contacts_last_seen">Last seen %1$s</string>
+    <string name="contacts_share_link_via">Share link via</string>
+    <string name="contacts_copy_link">Copy Link</string>
+    <string name="contacts_community">Community</string>
+    <string name="contacts_sms">SMS</string>
+    <string name="contacts_chat_name_hint">Chat Name(Optional)</string>
+    <string name="contacts_public_key_hint">Friend\'s Public Key</string>
+    <string name="contacts_chatting" formatted="false"><Data><![CDATA[Chatting with <font color="#f19322">%1$s</font> now]]></Data></string>
+    <string name="contacts_add_successfully">Add successfully!</string>
+    <string name="contacts_friend_already_exists">Friend already exists!</string>
+    <string name="contacts_error_invalid_pk">Invalid friend\'s public key!</string>
+    <string name="contacts_airdrop_successfully">You have send %1$s coins to your friends!</string>
 
 </resources>

@@ -121,4 +121,11 @@ public interface TxDao {
      */
     @Query(QUERY_TX_MEDIAN_FEE)
     Single<List<Long>> observeMedianFee(String chainID);
+
+    /**
+     * 获取中位数交易费
+     * @param chainID 交易所属的社区chainID
+     */
+    @Query(QUERY_TX_MEDIAN_FEE)
+    List<Long> getMedianFee(String chainID);
 }

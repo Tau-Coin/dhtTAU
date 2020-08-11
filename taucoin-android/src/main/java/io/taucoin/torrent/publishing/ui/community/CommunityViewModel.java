@@ -22,14 +22,22 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
+import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
+import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.types.GenesisMsg;
-import io.taucoin.util.ByteUtil;
+import io.taucoin.types.MsgType;
 
 /**
  * Community模块的ViewModel
@@ -38,17 +46,23 @@ public class CommunityViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("CommunityViewModel");
     private CommunityRepository communityRepo;
+    private MemberRepository memberRepo;
+    private UserRepository userRepo;
+    private TxRepository txRepo;
     private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> addCommunityState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setBlacklistState = new MutableLiveData<>();
-    private MutableLiveData<Boolean> setMuteState = new MutableLiveData<>();
+    private MutableLiveData<String> chatState = new MutableLiveData<>();
     private MutableLiveData<List<Community>> blackList = new MutableLiveData<>();
     private MutableLiveData<List<Community>> joinedList = new MutableLiveData<>();
 
     public CommunityViewModel(@NonNull Application application) {
         super(application);
         communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
+        memberRepo = RepositoryHelper.getMemberRepository(getApplication());
+        userRepo = RepositoryHelper.getUserRepository(getApplication());
+        txRepo = RepositoryHelper.getTxRepository(getApplication());
         daemon = TauDaemon.getInstance(getApplication());
     }
 
@@ -76,8 +90,8 @@ public class CommunityViewModel extends AndroidViewModel {
      * 获取设置社区静音状态的被观察者
      * @return 被观察者
      */
-    LiveData<Boolean> getSetMuteState() {
-        return setMuteState;
+    public LiveData<String> getChatState() {
+        return chatState;
     }
 
     /**
@@ -94,26 +108,8 @@ public class CommunityViewModel extends AndroidViewModel {
      */
     void addCommunity(@NonNull Community community){
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
-            String state = "";
-            try {
-                // TauController:创建Community社区
-                GenesisMsg genesisMsg = new GenesisMsg();
-                genesisMsg.setDescription("");
-                BigInteger totalCoin = BigInteger.valueOf(community.totalCoin);
-                GenesisItem item = new GenesisItem(totalCoin);
-                genesisMsg.appendAccount(community.publicKey, item);
-                genesisMsg.getEncoded();
-
-                ChainConfig chainConfig = ChainConfig.NewChainConfig((byte)1, community.communityName, community.blockInAvg,
-                        community.publicKey , "", genesisMsg);
-                daemon.createCommunity(chainConfig);
-                community.chainID = new String(chainConfig.getChainid());
-                communityRepo.addCommunity(community);
-                logger.debug("Add community to database: communityName={}, chainID={}",
-                        community.communityName, community.chainID);
-            }catch (Exception e){
-                state = e.getMessage();
-            }
+            // TauController:创建Community社区
+            String state = createCommunity(community);
             emitter.onNext(state);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -121,6 +117,32 @@ public class CommunityViewModel extends AndroidViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(state -> addCommunityState.postValue(state));
         disposables.add(disposable);
+    }
+
+    /**
+     * 创建Community社区
+     * @param community
+     */
+    private String createCommunity(Community community) {
+        String result = "";
+        try {
+            GenesisMsg genesisMsg = new GenesisMsg();
+            genesisMsg.setDescription("");
+            BigInteger totalCoin = BigInteger.valueOf(community.totalCoin);
+            GenesisItem item = new GenesisItem(totalCoin);
+            genesisMsg.appendAccount(community.publicKey, item);
+
+            ChainConfig chainConfig = ChainConfig.NewChainConfig((byte)1, community.communityName, community.blockInAvg,
+                    community.publicKey , "", genesisMsg);
+            daemon.createCommunity(chainConfig);
+            community.chainID = new String(chainConfig.getChainid());
+            communityRepo.addCommunity(community);
+            logger.debug("Add community to database: communityName={}, chainID={}",
+                    community.communityName, community.chainID);
+        }catch (Exception e){
+            result = e.getMessage();
+        }
+        return result;
     }
 
     @Override
@@ -188,6 +210,53 @@ public class CommunityViewModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(list -> joinedList.postValue(list));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 观察社区成员变化
+     * @param chainID
+     * @return
+     */
+    public Flowable<List<MemberAndUser>> observeCommunityMembers(String chainID) {
+        return memberRepo.observeCommunityMembers(chainID);
+    }
+
+    /**
+     * 和联系人创建Chat
+     * @param chatName chatName
+     * @param friendPk friend's PK
+     */
+    public void createChat(TxViewModel txViewModel, String chatName, String friendPk) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
+            String result = "";
+            try {
+                // 处理社区名，如果为空，取显示名的首位
+                String communityName = chatName;
+                User currentUser = userRepo.getCurrentUser();
+                User friend = userRepo.getUserByPublicKey(friendPk);
+                if(StringUtil.isEmpty(communityName)){
+                    String currentUserName = UsersUtil.getShowName(currentUser);
+                    String friendName = UsersUtil.getShowName(friend);
+                    communityName = currentUserName.substring(0, 1) + friendName.substring(0, 1);
+                }
+                Community community = new Community(communityName, currentUser.publicKey,
+                        Constants.TOTAL_COIN.longValue(), Constants.BLOCK_IN_AVG);
+                // TauController:创建Community社区
+                result = createCommunity(community);
+                if(StringUtil.isEmpty(result)){
+                    // 社区创建完成，直接给要聊天的朋友空投币
+                    result = txViewModel.airdropToFriends(community.chainID, friendPk);
+                }
+            }catch (Exception e){
+                result = e.getMessage();
+            }
+            emitter.onNext(result);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(state -> chatState.postValue(state));
         disposables.add(disposable);
     }
 }
