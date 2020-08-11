@@ -14,14 +14,12 @@ SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
-package io.taucoin.core.utypes;
+package io.taucoin.utypes;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.taucoin.utypes.Comment;
-import io.taucoin.utypes.CommunityAnnouncement;
 import io.taucoin.utypes.MsgType;
 import io.taucoin.utypes.Note;
 import io.taucoin.utypes.TxData;
@@ -30,7 +28,7 @@ import io.taucoin.util.ByteUtil;
 
 
 public class TxDataTest {
-    private static final Logger log = LoggerFactory.getLogger("txDataTest");
+/*    private static final Logger log = LoggerFactory.getLogger("txDataTest");
     private static final String reference = "c5897865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c";
     private static final byte[] chainid = "TAUcoin#300#3938383036366633393364383365393338373434".getBytes();
     private static final byte[] minerpubkey = ByteUtil.toByte("6569a52dd12c3f03ee6dc413ab33795a6597f1671659137bc8c9624abbb05c4a");
@@ -44,10 +42,10 @@ public class TxDataTest {
         String str0 = ByteUtil.toHexString(txData0.getEncoded());
         log.debug(str0);
 
-        Comment comment = new Comment(ByteUtil.toByte(reference),"hello copy!");
-        TxData txData1 = new TxData(MsgType.ForumComment,comment.getEncode());
-        String str1 = ByteUtil.toHexString(txData1.getEncoded());
-        log.debug(str1);
+//        Comment comment = new Comment(ByteUtil.toByte(reference),"hello copy!");
+//        TxData txData1 = new TxData(MsgType.ForumComment,comment.getEncode());
+//        String str1 = ByteUtil.toHexString(txData1.getEncoded());
+//        log.debug(str1);
 
 //        CommunityAnnouncement cua = new CommunityAnnouncement(chainid,minerpubkey,description);
 //        TxData txData2 = new TxData(MsgType.CommunityAnnouncement,cua.getEncode());
@@ -83,6 +81,6 @@ public class TxDataTest {
 //        TxData bootTX = new TxData(ByteUtil.toByte(bootnodetx));
 //        log.debug(bootTX.getMsgType().toString());
 
-    }
+    }*/
 
 }
