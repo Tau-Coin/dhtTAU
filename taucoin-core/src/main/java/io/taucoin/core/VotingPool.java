@@ -8,12 +8,18 @@ import java.util.*;
 public class VotingPool {
     private static final Logger logger = LoggerFactory.getLogger("voting pool");
 
-    private Map<String, Vote> votingPool = new HashMap<>();
+    private final byte[] chainID;
+
+    private final Map<String, Vote> votingPool = new HashMap<>();
     private Vote bestVote = null;
 
 //    public VotingPool(Map<String, Map<String, Vote>> votingPool) {
 //        this.votingPool = votingPool;
 //    }
+
+    public VotingPool(byte[] chainID) {
+        this.chainID = chainID;
+    }
 
     /**
      * put a vote into voting pool
@@ -25,7 +31,7 @@ public class VotingPool {
         Vote vote = votingPool.get(key);
         if (null == vote) {
             vote = new Vote(blockHash, blockNumber);
-            logger.info("The first time the vote appeared:{}", vote.toString());
+            logger.info("Chain ID:{}: The first time the vote appeared:{}", this.chainID.toString(), vote.toString());
         }
         // 唱票
         vote.voteUp();
@@ -37,7 +43,7 @@ public class VotingPool {
         if (null == bestVote || bestVote.getCount() < vote.getCount() ||
                 (bestVote.getCount() == vote.getCount() && bestVote.getBlockNumber() < vote.getBlockNumber())) {
             bestVote = vote;
-            logger.info("Update Best Vote:{}", bestVote);
+            logger.info("Chain ID:{}: Update Best Vote:{}", this.chainID.toString(), bestVote);
         }
 
         // 更新投票池

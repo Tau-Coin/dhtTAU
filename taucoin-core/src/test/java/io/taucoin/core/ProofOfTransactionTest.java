@@ -198,7 +198,7 @@ public class ProofOfTransactionTest {
         logger.info("hash:{}", Hex.toHexString(block4.getBlockHash()));
         logger.info("prehash:{}", Hex.toHexString(block4.getPreviousBlockHash()));
 
-        ProofOfTransaction pot = new ProofOfTransaction(ProofOfTransaction.AverageCommunityChainBlockTime);
+        ProofOfTransaction pot = new ProofOfTransaction("chain1".getBytes());
         BigInteger baseTarget = pot.calculateRequiredBaseTarget(block4, mockDB);
 
         Assert.assertEquals(baseTarget, new BigInteger("8806959207308847", 10));
@@ -227,35 +227,35 @@ public class ProofOfTransactionTest {
 
     @Test
     public void testCalculateGenerationSignature() {
-        ProofOfTransaction pot = new ProofOfTransaction(ProofOfTransaction.AverageCommunityChainBlockTime);
+        ProofOfTransaction pot = new ProofOfTransaction("chain1".getBytes());
         byte[] genSig = pot.calculateGenerationSignature(testGenerationSignature, testPubKey);
         Assert.assertArrayEquals(genSig, Hex.decode("d2803778544375ff7f4eb44644c87a0d5dcf5268b80d0ab8e74ac9fb23dd73bb"));
     }
 
     @Test
     public void testCalculateMinerTargetValue() {
-        ProofOfTransaction pot = new ProofOfTransaction(ProofOfTransaction.AverageCommunityChainBlockTime);
+        ProofOfTransaction pot = new ProofOfTransaction("chain1".getBytes());
         BigInteger target = pot.calculateMinerTargetValue(testBaseTarget, testPower, testTimeInterval);
         Assert.assertEquals(target, testTarget);
     }
 
     @Test
     public void testCalculateCumulativeDifficulty() {
-        ProofOfTransaction pot = new ProofOfTransaction(ProofOfTransaction.AverageCommunityChainBlockTime);
+        ProofOfTransaction pot = new ProofOfTransaction("chain1".getBytes());
         BigInteger difficulty = pot.calculateCumulativeDifficulty(testLastCumulativeDifficulty, testBaseTarget);
         Assert.assertEquals(difficulty, testDifficulty);
     }
 
     @Test
     public void testCalculateRandomHit() {
-        ProofOfTransaction pot = new ProofOfTransaction(ProofOfTransaction.AverageCommunityChainBlockTime);
+        ProofOfTransaction pot = new ProofOfTransaction("chain1".getBytes());
         BigInteger hit = pot.calculateRandomHit(testGenerationSignature);
         Assert.assertEquals(hit, testHit);
     }
 
     @Test
     public void testCalculateMiningTimeInterval() {
-        ProofOfTransaction pot = new ProofOfTransaction(ProofOfTransaction.AverageCommunityChainBlockTime);
+        ProofOfTransaction pot = new ProofOfTransaction("chain1".getBytes());
         long timeInterval = pot.calculateMiningTimeInterval(testHit, testBaseTarget, testPower);
         Assert.assertEquals(timeInterval, ProofOfTransaction.AverageCommunityChainBlockTime / 5);
 

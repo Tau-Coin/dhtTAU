@@ -15,7 +15,7 @@ public class VotingPoolTest {
 
     @Test
     public void testPutIntoVotingPool() {
-        VotingPool votingPool = new VotingPool();
+        VotingPool votingPool = new VotingPool("chain1".getBytes());
         votingPool.putIntoVotingPool("vote1".getBytes(), 100);
         votingPool.putIntoVotingPool("vote2".getBytes(), 101);
         votingPool.putIntoVotingPool("vote3".getBytes(), 102);
@@ -26,7 +26,7 @@ public class VotingPoolTest {
     }
 
 //    public VotingPool makeVotingPool() {
-//        VotingPool votingPool = new VotingPool();
+//        VotingPool votingPool = new VotingPool("chain1".gtByte());
 //        for (int i = 4; i > 0; i--) {
 //            votingPool.putIntoVotingPool("chainID1", "vote1".getBytes(), 100);
 //        }

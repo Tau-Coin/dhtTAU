@@ -43,12 +43,12 @@ public class PeerManager {
      */
     public boolean init(Set<ByteArrayWrapper> allPeers, List<ByteArrayWrapper> priorityPeers) {
         if (null == allPeers || allPeers.isEmpty()) {
-            logger.error("All peers is empty!");
+            logger.error("ChainID:{}: All peers is empty!", this.chainID.toString());
             return false;
         }
 
         if (null == priorityPeers || priorityPeers.isEmpty()) {
-            logger.error("Priority peers is empty!");
+            logger.error("ChainID:{}: Priority peers is empty!", this.chainID.toString());
             return false;
         }
 
@@ -274,6 +274,7 @@ public class PeerManager {
             Random random = new Random(System.currentTimeMillis());
             return priorityPeers.get(random.nextInt(size)).getData();
         } else {
+            logger.info("Chain ID:{}: Cannot get peer in mutable range.", this.chainID.toString());
             return null;
         }
     }

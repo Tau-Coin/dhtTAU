@@ -13,6 +13,8 @@ import static java.lang.Math.*;
 public class ProofOfTransaction {
     private static final Logger logger = LoggerFactory.getLogger("proofoftransaction");
 
+    private final byte[] chainID;
+
     public final static int AverageCommunityChainBlockTime = 300;
     private final static BigInteger CommunityChainGenesisBaseTarget = new BigInteger("21D0369D036978", 16);
     private final static BigInteger DiffAdjustNumerator = new BigInteger("010000000000000000",16);
@@ -29,11 +31,12 @@ public class ProofOfTransaction {
 
     private BigInteger genesisBaseTarget;
 
-    public ProofOfTransaction() {
-        this(AverageCommunityChainBlockTime);
+    public ProofOfTransaction(byte[] chainID) {
+        this(chainID, AverageCommunityChainBlockTime);
     }
 
-    public ProofOfTransaction(int averageBlockTime) {
+    public ProofOfTransaction(byte[] chainID, int averageBlockTime) {
+        this.chainID = chainID;
         this.averageBlockTime = averageBlockTime;
 
         // minRatio = averageBlockTime * (1 - 7 / 60)
@@ -68,21 +71,24 @@ public class ProofOfTransaction {
         try {
             ancestor1 = blockStore.getBlockByHash(previousBlock.getChainID(), previousBlock.getPreviousBlockHash());
             if (null == ancestor1) {
-                logger.error("Cannot find parent, hash:{}", Hex.toHexString(previousBlock.getPreviousBlockHash()));
+                logger.error("Chain ID:{}: Cannot find parent, hash:{}",
+                        this.chainID.toString(), Hex.toHexString(previousBlock.getPreviousBlockHash()));
                 return null;
             }
             ancestor2 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor1.getPreviousBlockHash());
             if (null == ancestor2) {
-                logger.error("Cannot find parent, hash:{}", Hex.toHexString(ancestor1.getPreviousBlockHash()));
+                logger.error("Chain ID:{}: Cannot find parent, hash:{}",
+                        this.chainID.toString(), Hex.toHexString(ancestor1.getPreviousBlockHash()));
                 return null;
             }
             ancestor3 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor2.getPreviousBlockHash());
             if (null == ancestor3) {
-                logger.error("Cannot find parent, hash:{}", Hex.toHexString(ancestor2.getPreviousBlockHash()));
+                logger.error("Chain ID:{}: Cannot find parent, hash:{}",
+                        this.chainID.toString(), Hex.toHexString(ancestor2.getPreviousBlockHash()));
                 return null;
             }
         } catch (Exception e) {
-            logger.info(e.getMessage(), e);
+            logger.info(this.chainID.toString() + ":" + e.getMessage(), e);
             return null;
         }
 
@@ -176,23 +182,23 @@ public class ProofOfTransaction {
         System.arraycopy(generationSignature,0,headBytes,0,8);
 
         BigInteger bhit = new BigInteger(1, headBytes);
-        logger.info("bhit:{}", bhit);
+        logger.info("Chain ID:{}: bhit:{}", this.chainID.toString(), bhit);
 
         BigInteger bhitUzero = bhit.add(BigInteger.ONE);
-        logger.info("bhitUzero:{}", bhitUzero);
+        logger.info("Chain ID:{}: bhitUzero:{}", this.chainID.toString(), bhitUzero);
 
         double logarithm = abs(log(bhitUzero.doubleValue()) - 2 * log(DiffAdjustNumeratorHalf.doubleValue()));
         // Values of logarithm are mostly distributed between (0, 0.1), and int64(logarithm) == 0
         // To make hit smoother, we use logarithm * 1000 instead
         logarithm = logarithm * 1000;
-        logger.info("logarithm:{}", logarithm);
+        logger.info("Chain ID:{}: logarithm:{}", this.chainID.toString(), logarithm);
 
         long ulogarithm = (Double.valueOf(logarithm)).longValue();
-        logger.info("ulogarithm:{}", ulogarithm);
+        logger.info("Chain ID:{}: ulogarithm:{}", this.chainID.toString(), ulogarithm);
 
         // To offset the impact, divide by 1000
         BigInteger adjustHit = DiffAdjustNumeratorCoe.multiply(BigInteger.valueOf(ulogarithm)).divide(BigInteger.valueOf(1000));
-        logger.info("adjustHit:{}", adjustHit);
+        logger.info("Chain ID:{}: adjustHit:{}", this.chainID.toString(), adjustHit);
 
         return adjustHit;
     }
@@ -224,14 +230,14 @@ public class ProofOfTransaction {
 
         // C++ to make sure T > H
         timeInterval++;
-        logger.info("Time interval:{}", timeInterval);
+        logger.info("Chain ID:{}: Time interval:{}", this.chainID.toString(), timeInterval);
 
         if (timeInterval < this.minBlockTime) {
             timeInterval = this.minBlockTime;
         } else if (timeInterval > this.maxBlockTime) {
             timeInterval = this.maxBlockTime;
         }
-        logger.info("Final time interval:{}", timeInterval);
+        logger.info("Chain ID:{}: Final time interval:{}", this.chainID.toString(), timeInterval);
 
         return timeInterval;
     }
@@ -244,17 +250,17 @@ public class ProofOfTransaction {
      * @param timeInterval
      * @return
      */
-    public boolean verifyHit(BigInteger hit, BigInteger baseTarget, BigInteger power, int timeInterval) {
+    public boolean verifyHit(BigInteger hit, BigInteger baseTarget, BigInteger power, long timeInterval) {
         if (timeInterval < this.minBlockTime) {
-            logger.error("Time interval is less than MinBlockTime[{}]", this.minBlockTime);
+            logger.error("Chain ID:{}: Time interval is less than MinBlockTime[{}]", this.chainID.toString(), this.minBlockTime);
             return false;
         } else if (timeInterval >= this.maxBlockTime) {
-            logger.info("OK. Time interval is greater than MaxBlockTime[{}]", this.maxBlockTime);
+            logger.info("Chain ID:{}: OK. Time interval is greater than MaxBlockTime[{}]", this.chainID.toString(), this.maxBlockTime);
             return true;
         } else {
             BigInteger target = this.calculateMinerTargetValue(baseTarget, power, timeInterval);
             if (target.compareTo(hit) <= 0) {
-                logger.error("Invalid POT: target[{}] <= hit[{}]", target, hit);
+                logger.error("Chain ID:{}: Invalid POT: target[{}] <= hit[{}]", this.chainID.toString(), target, hit);
                 return false;
             }
         }
