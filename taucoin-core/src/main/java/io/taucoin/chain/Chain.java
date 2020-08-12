@@ -1242,10 +1242,11 @@ public class Chain {
                 block.setSenderNonce(senderState.getNonce().longValue());
 
                 if (MsgType.Wiring == block.getTxMsg().getTxData().getMsgType()) {
+
                     AccountState receiverState = miningTrack.getAccount(this.chainID,
                             block.getTxMsg().getTxData().getReceiver());
-                    block.setSenderBalance(receiverState.getBalance().longValue());
-                    block.setSenderNonce(receiverState.getNonce().longValue());
+
+                    block.setReceiverBalance(receiverState.getBalance().longValue());
                 }
             }
 

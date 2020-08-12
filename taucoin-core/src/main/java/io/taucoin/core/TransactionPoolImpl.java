@@ -50,6 +50,9 @@ public class TransactionPoolImpl implements TransactionPool {
 
     @Override
     public void updatePubKey(byte[] pubKey) {
+        logger.debug("Chain ID[{}]: update public key[{}]",
+                new String(this.chainID), Hex.toHexString(pubKey));
+
         // update key
         this.userPubKey = pubKey;
 

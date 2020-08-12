@@ -430,91 +430,92 @@ public class Block {
         return minerPubkey;
     }
 
-    /**
-     * set block version
-     * @param version
-     */
-    public void setVersion(byte version) {
-        this.version = version;
-    }
-
-    /**
-     * set block chainID.
-     * @param chainID
-     */
-    public void setChainID(byte[] chainID) {
-        this.chainID = chainID;
-    }
-
-    /**
-     * set block time stamp.
-     * @param timestamp
-     */
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    /**
-     * set block number.
-     * @param blockNum
-     */
-    public void setBlockNum(long blockNum) {
-        this.blockNum = blockNum;
-    }
-
-    /**
-     * set previous block hash.
-     * @param previousBlockHash
-     */
-    public void setPreviousBlockHash(byte[] previousBlockHash) {
-        this.previousBlockHash = previousBlockHash;
-    }
-
-    /**
-     * set immutable block hash.
-     * @param immutableBlockHash
-     */
-    public void setImmutableBlockHash(byte[] immutableBlockHash) {
-        this.immutableBlockHash = immutableBlockHash;
-    }
-
-    /**
-     * set block baseTarget.
-     * @param baseTarget
-     */
-    public void setBaseTarget(BigInteger baseTarget) {
-        this.baseTarget = baseTarget;
-    }
-
-    /**
-     * set block cummulative difficulty.
-     * @param cumulativeDifficulty
-     */
-    public void setCumulativeDifficulty(BigInteger cumulativeDifficulty) {
-        this.cumulativeDifficulty = cumulativeDifficulty;
-    }
-
-    /**
-     * set block generation signature.
-     * @param generationSignature
-     */
-    public void setGenerationSignature(byte[] generationSignature) {
-        this.generationSignature = generationSignature;
-    }
-
-    /**
-     * set block tx Message.
-     * @param txMsg
-     */
-    public void setTxMsg(Transaction txMsg) {
-        this.txMsg = txMsg;
-    }
+//    /**
+//     * set block version
+//     * @param version
+//     */
+//    public void setVersion(byte version) {
+//        this.version = version;
+//    }
+//
+//    /**
+//     * set block chainID.
+//     * @param chainID
+//     */
+//    public void setChainID(byte[] chainID) {
+//        this.chainID = chainID;
+//    }
+//
+//    /**
+//     * set block time stamp.
+//     * @param timestamp
+//     */
+//    public void setTimestamp(long timestamp) {
+//        this.timestamp = timestamp;
+//    }
+//
+//    /**
+//     * set block number.
+//     * @param blockNum
+//     */
+//    public void setBlockNum(long blockNum) {
+//        this.blockNum = blockNum;
+//    }
+//
+//    /**
+//     * set previous block hash.
+//     * @param previousBlockHash
+//     */
+//    public void setPreviousBlockHash(byte[] previousBlockHash) {
+//        this.previousBlockHash = previousBlockHash;
+//    }
+//
+//    /**
+//     * set immutable block hash.
+//     * @param immutableBlockHash
+//     */
+//    public void setImmutableBlockHash(byte[] immutableBlockHash) {
+//        this.immutableBlockHash = immutableBlockHash;
+//    }
+//
+//    /**
+//     * set block baseTarget.
+//     * @param baseTarget
+//     */
+//    public void setBaseTarget(BigInteger baseTarget) {
+//        this.baseTarget = baseTarget;
+//    }
+//
+//    /**
+//     * set block cummulative difficulty.
+//     * @param cumulativeDifficulty
+//     */
+//    public void setCumulativeDifficulty(BigInteger cumulativeDifficulty) {
+//        this.cumulativeDifficulty = cumulativeDifficulty;
+//    }
+//
+//    /**
+//     * set block generation signature.
+//     * @param generationSignature
+//     */
+//    public void setGenerationSignature(byte[] generationSignature) {
+//        this.generationSignature = generationSignature;
+//    }
+//
+//    /**
+//     * set block tx Message.
+//     * @param txMsg
+//     */
+//    public void setTxMsg(Transaction txMsg) {
+//        this.txMsg = txMsg;
+//    }
 
     /**
      * set miner balance.
      * @param minerBalance
      */
     public void setMinerBalance(long minerBalance) {
+        this.rlpEncoded = null;
         this.minerBalance = minerBalance;
     }
 
@@ -523,6 +524,7 @@ public class Block {
      * @param senderBalance
      */
     public void setSenderBalance(long senderBalance) {
+        this.rlpEncoded = null;
         this.senderBalance = senderBalance;
     }
 
@@ -531,6 +533,7 @@ public class Block {
      * @param receiverBalance
      */
     public void setReceiverBalance(long receiverBalance) {
+        this.rlpEncoded = null;
         this.receiverBalance = receiverBalance;
     }
 
@@ -539,6 +542,7 @@ public class Block {
      * @param senderNonce
      */
     public void setSenderNonce(long senderNonce) {
+        this.rlpEncoded = null;
         this.senderNonce = senderNonce;
     }
 
@@ -547,6 +551,7 @@ public class Block {
      * @param minerPubkey
      */
     public void setMinerPubkey(byte[] minerPubkey) {
+        this.rlpEncoded = null;
         this.minerPubkey = minerPubkey;
     }
 
@@ -555,6 +560,7 @@ public class Block {
      * @param signature
      */
     public void setSignature(byte[] signature){
+        this.rlpEncoded = null;
         this.signature = signature;
     }
 
@@ -589,9 +595,9 @@ public class Block {
      * @return
      */
     public byte[] signBlock(byte[] prikey){
-        if(this.txMsg.getTxData().getMsgType() == MsgType.GenesisMsg){
-            this.txMsg.signTransaction(prikey);
-        }
+//        if(this.txMsg.getTxData().getMsgType() == MsgType.GenesisMsg){
+//            this.txMsg.signTransaction(prikey);
+//        }
         byte[] sig = Ed25519.sign(this.getBlockSigMsg(), this.minerPubkey, prikey);
         this.signature = sig;
         return this.signature;
