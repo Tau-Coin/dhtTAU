@@ -16,6 +16,12 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.utypes;
 
+import io.taucoin.config.ChainConfig;
+import io.taucoin.param.ChainParam;
+import io.taucoin.util.ByteUtil;
+import io.taucoin.util.RLP;
+import io.taucoin.util.RLPList;
+
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Entry;
 
@@ -23,44 +29,59 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-
-import io.taucoin.config.ChainConfig;
-import io.taucoin.param.ChainParam;
-import io.taucoin.util.ByteUtil;
-import io.taucoin.util.RLP;
-import io.taucoin.util.RLPList;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Transaction {
+
     private long version;
     private String chainID;
     private long timestamp;
     private long txFee;
+    private long txType;
     private ArrayList<Long> senderPubkey;
     private long nonce;
-    private TxData txData;
     private ArrayList<Long> signature;
+    private HashMap<ArrayList<Long>, ArrayList<Long>> genesisMsg; // genesis msg tx
+    private String forumNote;    // forum note tx
+    private ArrayList<Long> receiverPubkey;     // wiring coins tx
+    private long amount;      // wiring coins tx
 
+    private byte[] encodedBytes;
+    private byte[] sigEncodedBytes;
+    private byte[] txHash;
     private boolean isParsed;
-    private byte[] bEncoded;
-    private byte[] bSigEncoded;
-    private byte[] txID;
 
+    private static enum TxIndex {
+        Version, 
+        ChainID, 
+        Timestamp, 
+        TxFee, 
+        TxType, 
+        Sender,
+        Nonce,
+        Signature,
+        TxData,
+    }
     /**
      * construct complete tx with signature.
      * @param version
      * @param chainID
      * @param timestamp
      * @param txFee
+     * @param txType
      * @param sender
      * @param nonce
-     * @param txData
+     * @param genesisMsg
+     * @param forumNote
+     * @param receiver
+     * @param amount
      * @param signature
      */
-    public Transaction(long version,byte[] chainID,long timestamp,int txFee,byte[] sender
-           ,long nonce,TxData txData,byte[] signature){
+    public Transaction(long version, byte[] chainID, long timestamp, int txFee, int txType, byte[] sender, 
+            long nonce, byte[] genesisMsg, byte[] forumNote, byte[] receiver, long amount, byte[] signature){
             if(chainID.length > ChainParam.ChainIDlength) {
                 throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
             }
@@ -71,67 +92,72 @@ public class Transaction {
                 throw new IllegalArgumentException("signature length should =: " + ChainParam.SignatureLength);
             }
             this.version = version;
-            this.chainID = new String(chainID,UTF_8);
+            this.chainID = new String(chainID, UTF_8);
             this.timestamp = timestamp;
             this.txFee = txFee;
-            this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender,4);
+            this.txType = txType;
+            this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
             this.nonce = nonce;
-            this.txData = txData;
-            this.signature = ByteUtil.byteArrayToSignLongArray(signature,8);
+            this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
+            if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+                //Todo
+
+            } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+                this.forumNote = new String(forumNote, UTF_8);
+            } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+                this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
+                this.amount = amount;
+            }
             isParsed = true;
     }
 
     /**
-     * construct temporary transaction without signature.
-     * @param version: transaction version in current chain.
-     * @param chainID: chain id this transaction referenced to.
-     * @param timeStamp: transaction unix timestamp.
-     * @param txFee: transaction fee allowed to negative.
-     * @param sender:transaction sender.
-     * @param nonce: sender transaction counter.
-     * @param txData:transaction message.
+     * construct complete tx without signature.
+     * @param version
+     * @param chainID
+     * @param timestamp
+     * @param txFee
+     * @param txType
+     * @param sender
+     * @param nonce
+     * @param genesisMsg
+     * @param forumNote
+     * @param receiver
+     * @param amount
      */
-    public Transaction(long version,byte[] chainID,long timeStamp,int txFee,byte[] sender
-            ,long nonce,TxData txData){
-        if(chainID.length > ChainParam.ChainIDlength) {
-            throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
-        }
-        if(sender.length != ChainParam.SenderLength) {
-            throw new IllegalArgumentException("sender address length should =: "+ChainParam.SenderLength);
-        }
-        this.version = version;
-        this.chainID = new String(chainID,UTF_8);
-        this.timestamp = timeStamp;
-        this.txFee = txFee;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender,4);
-        this.nonce = nonce;
-        this.txData = txData;
-        isParsed = true;
-    }
+    public Transaction(long version, byte[] chainID, long timestamp, int txFee, int txType, byte[] sender, 
+            long nonce, byte[] genesisMsg, byte[] forumNote, byte[] receiver, long amount){
+            if(chainID.length > ChainParam.ChainIDlength) {
+                throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
+            }
+            if(sender.length != ChainParam.SenderLength) {
+                throw new IllegalArgumentException("sender address length should =: "+ChainParam.SenderLength);
+            }
+            this.version = version;
+            this.chainID = new String(chainID, UTF_8);
+            this.timestamp = timestamp;
+            this.txFee = txFee;
+            this.txType = txType;
+            this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
+            this.nonce = nonce;
+            if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+                //Todo
 
-    /**
-     * construct genesis transaction
-     */
-    public Transaction(long version,String communityName,int blockTimeInterval,long genesisTimeStamp,String genesisMinerPk,TxData txData){
-        this.version = version;
-        String str = genesisMinerPk + genesisTimeStamp;
-        String hash = ByteUtil.toHexString(HashUtil.sha1hash(str.getBytes()));
-        String ID = communityName + ChainParam.ChainidDelimeter + blockTimeInterval + ChainParam.ChainidDelimeter + hash;
-        this.chainID = new String(ID.getBytes(),UTF_8);
-        this.timestamp = genesisTimeStamp;
-        this.txFee = 0;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(ByteUtil.toByte(genesisMinerPk),4);
-        this.nonce = 0;
-        this.txData = txData;
-        isParsed = true;
+            } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+                this.forumNote = new String(forumNote, UTF_8);
+            } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+                this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
+                this.amount = amount;
+            }
+            isParsed = true;
     }
 
     /**
      * construct transaction from complete byte encoding.
-     * @param bEncoded:complete byte encoding.
+     * @param bEncodedBytes:complete byte encoding.
      */
-    public Transaction(byte[] bEncoded) {
-        this.bEncoded = bEncoded;
+    public Transaction(byte[] encodedBytes) {
+        this.encodedBytes = encodedBytes;
         this.isParsed = false;
     }
 
@@ -139,8 +165,8 @@ public class Transaction {
      * encoding transaction to bytes.
      * @return
      */
-    public byte[] getEncoded() {
-        if(bEncoded == null) {
+    public byte[] getEncodedBytes() {
+        if(encodedBytes == null) {
             List list = new ArrayList();
             list.add(this.version);
             list.add(this.chainID);
@@ -148,21 +174,27 @@ public class Transaction {
             list.add(this.txFee);
             list.add(this.senderPubkey);
             list.add(this.nonce);
-            List txdata = Entry.bdecode(this.txData.getEncoded()).list();
-            list.add(txdata);
             list.add(this.signature);
+            if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+                list.add(this.genesisMsg);
+            } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+                list.add(this.forumNote);
+            } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+                list.add(this.receiverPubkey);
+                list.add(this.amount);
+            }
             Entry entry = Entry.fromList(list);
-            this.bEncoded = entry.bencode();
+            this.encodedBytes = entry.bencode();
         }
-        return this.bEncoded;
+        return this.encodedBytes;
     }
 
     /**
      * encoding transaction signature parts which is under protection of cryptographic signature.
      * @return
      */
-    public byte[] getSigEncoded() {
-        if(bSigEncoded == null) {
+    public byte[] getSigEncodedBytes() {
+        if(sigEncodedBytes == null) {
             List list = new ArrayList();
             list.add(this.version);
             list.add(this.chainID);
@@ -170,31 +202,70 @@ public class Transaction {
             list.add(this.txFee);
             list.add(this.senderPubkey);
             list.add(this.nonce);
-            List txdata = Entry.bdecode(this.txData.getEncoded()).list();
-            list.add(txdata);
+            if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+                list.add(this.genesisMsg);
+            } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+                list.add(this.forumNote);
+            } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+                list.add(this.receiverPubkey);
+                list.add(this.amount);
+            }
             Entry entry = Entry.fromList(list);
-            this.bSigEncoded = entry.bencode();
+            this.sigEncodedBytes = entry.bencode();
         }
-        return bSigEncoded;
+        return sigEncodedBytes;
     }
+
+    /**
+     * encoding transaction to long[].
+     * @return
+     */
+    public List getLongArray() {
+        List list = new ArrayList();
+        list.add(this.version);
+        list.add(this.chainID);
+        list.add(this.timestamp);
+        list.add(this.txFee);
+        list.add(this.senderPubkey);
+        list.add(this.nonce);
+        list.add(this.signature);
+        if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+            list.add(this.genesisMsg);
+        } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+            list.add(this.forumNote);
+        } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+            list.add(this.receiverPubkey);
+            list.add(this.amount);
+        }
+        return list;
+    }
+
 
     /**
      * parse transaction bytes field to flat block field.
      */
-    private void parseRLP(){
+    private void parseEncodedBytes(){
         if(isParsed){
             return;
         }else{
-            Entry entry = Entry.bdecode(this.bEncoded);
+            Entry entry = Entry.bdecode(this.encodedBytes);
             List entrylist = entry.list();
-            this.version = ByteUtil.stringToLong(entrylist.get(0).toString());
-            this.chainID = entrylist.get(1).toString();
-            this.timestamp = ByteUtil.stringToLong(entrylist.get(2).toString());
-            this.txFee = ByteUtil.stringToLong(entrylist.get(3).toString());
-            this.senderPubkey = ByteUtil.stringToArrayList(entrylist.get(4).toString());
-            this.nonce = ByteUtil.stringToLong(entrylist.get(5).toString());
-            this.txData = new TxData(((Entry)entrylist.get(6)).bencode());
-            this.signature = ByteUtil.stringToArrayList(entrylist.get(7).toString());
+            this.version = ByteUtil.stringToLong(entrylist.get(TxIndex.Version.ordinal()).toString());
+            this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString();
+            this.timestamp = ByteUtil.stringToLong(entrylist.get(TxIndex.Timestamp.ordinal()).toString());
+            this.txFee = ByteUtil.stringToLong(entrylist.get(TxIndex.TxFee.ordinal()).toString());
+            this.txType = ByteUtil.stringToLong(entrylist.get(TxIndex.TxType.ordinal()).toString());
+            this.senderPubkey = ByteUtil.stringToArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
+            this.nonce = ByteUtil.stringToLong(entrylist.get(TxIndex.Nonce.ordinal()).toString());
+            this.signature = ByteUtil.stringToArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
+            if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+                //Todo
+            } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+                this.forumNote= entrylist.get(TxIndex.TxData.ordinal()).toString();
+            } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+                this.receiverPubkey = ByteUtil.stringToArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
+                this.amount = ByteUtil.stringToLong(entrylist.get(TxIndex.TxData.ordinal()+ 1).toString());
+            }
             isParsed = true;
         }
     }
@@ -204,7 +275,7 @@ public class Transaction {
      * @return
      */
     public long getVersion() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         return version;
     }
 
@@ -213,7 +284,7 @@ public class Transaction {
      * @return
      */
     public byte[] getChainID() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         return chainID.getBytes(UTF_8);
     }
 
@@ -222,7 +293,7 @@ public class Transaction {
      * @return
      */
     public long getTimeStamp() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         return timestamp;
     }
 
@@ -231,7 +302,7 @@ public class Transaction {
      * @return
      */
     public long getTxFee() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         return txFee;
     }
 
@@ -240,17 +311,17 @@ public class Transaction {
      * @return
      */
     public byte[] getSenderPubkey() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         byte[] longbyte0 = ByteUtil.longToBytes(senderPubkey.get(0));
         byte[] longbyte1 = ByteUtil.longToBytes(senderPubkey.get(1));
         byte[] longbyte2 = ByteUtil.longToBytes(senderPubkey.get(2));
         byte[] longbyte3 = ByteUtil.longToBytes(senderPubkey.get(3));
 
-        byte[] pubkeybytes = new byte[32];
-        System.arraycopy(longbyte0,0,pubkeybytes,0,8);
-        System.arraycopy(longbyte1,0,pubkeybytes,8,8);
-        System.arraycopy(longbyte2,0,pubkeybytes,16,8);
-        System.arraycopy(longbyte3,0,pubkeybytes,24,8);
+        byte[] pubkeybytes = new byte[ChainParam.PubkeyLength];
+        System.arraycopy(longbyte0, 0, pubkeybytes, 0, 8);
+        System.arraycopy(longbyte1, 0, pubkeybytes, 8, 8);
+        System.arraycopy(longbyte2, 0, pubkeybytes, 16, 8);
+        System.arraycopy(longbyte3, 0, pubkeybytes, 24, 8);
         return pubkeybytes;
     }
 
@@ -259,17 +330,8 @@ public class Transaction {
      * @return
      */
     public long getNonce() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         return nonce;
-    }
-
-    /**
-     * get tx data msg.
-     * @return
-     */
-    public TxData getTxData() {
-        if(!isParsed) parseRLP();
-        return txData;
     }
 
     /**
@@ -277,7 +339,7 @@ public class Transaction {
      * @return
      */
     public byte[] getSignature() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         byte[] longbyte0 = ByteUtil.longToBytes(signature.get(0));
         byte[] longbyte1 = ByteUtil.longToBytes(signature.get(1));
         byte[] longbyte2 = ByteUtil.longToBytes(signature.get(2));
@@ -286,15 +348,15 @@ public class Transaction {
         byte[] longbyte5 = ByteUtil.longToBytes(signature.get(5));
         byte[] longbyte6 = ByteUtil.longToBytes(signature.get(6));
         byte[] longbyte7 = ByteUtil.longToBytes(signature.get(7));
-        byte[] sigbytes = new byte[64];
-        System.arraycopy(longbyte0,0,sigbytes,0,8);
-        System.arraycopy(longbyte1,0,sigbytes,8,8);
-        System.arraycopy(longbyte2,0,sigbytes,16,8);
-        System.arraycopy(longbyte3,0,sigbytes,24,8);
-        System.arraycopy(longbyte4,0,sigbytes,32,8);
-        System.arraycopy(longbyte5,0,sigbytes,40,8);
-        System.arraycopy(longbyte6,0,sigbytes,48,8);
-        System.arraycopy(longbyte7,0,sigbytes,56,8);
+        byte[] sigbytes = new byte[ChainParam.SignatureLength];
+        System.arraycopy(longbyte0, 0, sigbytes, 0, 8);
+        System.arraycopy(longbyte1, 0, sigbytes, 8, 8);
+        System.arraycopy(longbyte2, 0, sigbytes, 16, 8);
+        System.arraycopy(longbyte3, 0, sigbytes, 24, 8);
+        System.arraycopy(longbyte4, 0, sigbytes, 32, 8);
+        System.arraycopy(longbyte5, 0, sigbytes, 40, 8);
+        System.arraycopy(longbyte6, 0, sigbytes, 48, 8);
+        System.arraycopy(longbyte7, 0, sigbytes, 56, 8);
         return sigbytes;
     }
 
@@ -317,7 +379,7 @@ public class Transaction {
         }catch (NoSuchAlgorithmException e){
             return null;
         }
-        return digest.digest(this.getSigEncoded());
+        return digest.digest(this.getSigEncodedBytes());
     }
 
     /**
@@ -327,12 +389,9 @@ public class Transaction {
      * @return
      */
     public boolean isTxParamValidate(){
-        if(!isParsed) parseRLP();
-        //if(chainID.length > ChainParam.ChainIDlength) return false;
+        if(!isParsed) parseEncodedBytes();
         if(timestamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
-//        if(senderPubkey != null && senderPubkey.length != ChainParam.PubkeyLength) return false;
         if(nonce < 0) return false;
-//        if(signature != null && signature.length != ChainParam.SignatureLength) return false;
         return true;
     }
 
@@ -343,7 +402,7 @@ public class Transaction {
      */
     public byte[] signTransaction(byte[] prikey){
         byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.getSenderPubkey(), prikey);
-        this.signature = ByteUtil.byteArrayToSignLongArray(sig,8);
+        this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
         return getSignature();
     }
 
@@ -362,10 +421,10 @@ public class Transaction {
      * @return
      */
     public byte[] getTxID(){
-        if(txID == null){
-           Entry entry = Entry.bdecode(this.getEncoded());
-           txID = HashUtil.sha1hash(entry.bencode());
+        if(txHash == null){
+           Entry entry = Entry.bdecode(this.getEncodedBytes());
+           txHash = HashUtil.sha1hash(entry.bencode());
         }
-        return txID;
+        return txHash;
     }
 }

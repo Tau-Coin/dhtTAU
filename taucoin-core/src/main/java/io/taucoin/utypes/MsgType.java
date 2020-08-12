@@ -27,54 +27,40 @@ package io.taucoin.utypes;
  * 6:bootstrap node Announcement.
  */
 public enum MsgType {
-    GenesisMsg(0),
-    RegularForum(1),
-    ForumComment(2),
-    CommunityAnnouncement(3),
-    Wiring(4),
-    IdentityAnnouncement(5),
-    DHTBootStrapNodeAnnouncement(6);
+
+    GenesisMsgTx(0), //genesis transaction
+    ForumNoteTx(1),       //forum note transaction
+    WiringTx(2);     //wiring transaction
+
     int index;
+
     MsgType(int value){
         this.index = value;
     }
+
     public byte getVaLue(){
        return (byte)index;
     }
+
     public static MsgType setValue(byte value){
+    
         if (value == 0){
-            return GenesisMsg;
+            return GenesisMsgTx;
         }else if (value == 1){
-            return RegularForum;
+            return ForumNoteTx;
         }else if (value == 2){
-            return ForumComment;
-        }else if (value == 3){
-            return CommunityAnnouncement;
-        }else if (value == 4){
-            return Wiring;
-        }else if (value == 5){
-            return IdentityAnnouncement;
-        }else if (value == 6){
-            return DHTBootStrapNodeAnnouncement;
+            return WiringTx;
         }
         return null;
     }
 
     public static MsgType setValue(long value){
         if (value == '0'){
-            return GenesisMsg;
+            return GenesisMsgTx;
         }else if (value == '1'){
-            return RegularForum;
+            return ForumNoteTx;
         }else if (value == '2'){
-            return ForumComment;
-        }else if (value == '3'){
-            return CommunityAnnouncement;
-        }else if (value == '4'){
-            return Wiring;
-        }else if (value == '5'){
-            return IdentityAnnouncement;
-        }else if (value == '6'){
-            return DHTBootStrapNodeAnnouncement;
+            return WiringTx;
         }
         return null;
     }

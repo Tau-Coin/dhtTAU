@@ -26,9 +26,8 @@ import io.taucoin.param.ChainParam;
 import io.taucoin.util.*;
 
 public class GenesisMsg {
-    private String description;
     private HashMap<String, GenesisItem> accountKV;
-    private byte[] rlpEncoded;
+    private byte[] bEncodedBytes;
     private boolean isParsed;
 
     /**
@@ -41,7 +40,7 @@ public class GenesisMsg {
 
     public GenesisMsg(byte[] bytes){
         accountKV = new HashMap<>();
-        this.rlpEncoded = bytes;
+        this.bEncodedBytes = bytes;
         this.isParsed = false;
     }
 
@@ -59,35 +58,24 @@ public class GenesisMsg {
     }
 
     /**
-     * set community description and vision.
-     * @param vision
-     */
-    public void setDescription(String vision){
-        this.description = vision;
-    }
-
-    /**
      * get genesis msg encoded.
      * @return
      */
     public byte[] getEncoded(){
-        if(rlpEncoded == null){
-            byte[][] genesisMsg = new byte[this.accountKV.size() + 1][];
-            byte[] description = RLP.encodeElement(this.description.getBytes());
-            genesisMsg[0]= description;
+        if(bEncodedBytes == null){
+            byte[][] genesisMsg = new byte[this.accountKV.size()][];
             Iterator<Map.Entry<String,GenesisItem>> it = this.accountKV.entrySet().iterator();
             int i= 1;
             while (it.hasNext()){
                 Map.Entry<String,GenesisItem> entry = it.next();
-                //String state = entry.getKey() + ":" +ByteUtil.toHexString(entry.getValue().getEncoded());
                 byte[] addr = RLP.encodeElement(entry.getKey().getBytes());
                 byte[] value = RLP.encodeElement(entry.getValue().getEncoded());
                 genesisMsg[i] = RLP.encodeList(addr,value);
                 i++;
             }
-            this.rlpEncoded = RLP.encodeList(genesisMsg);
+            this.bEncodedBytes = RLP.encodeList(genesisMsg);
         }
-        return rlpEncoded;
+        return bEncodedBytes;
     }
 
     /**
@@ -97,13 +85,10 @@ public class GenesisMsg {
         if(isParsed){
            return;
         }else{
-            RLPList msg =RLP.decode2(this.rlpEncoded);
+            RLPList msg = RLP.decode2(this.bEncodedBytes);
             RLPList list = (RLPList) msg.get(0);
             //byte[] descByte = RLP.decode2(list.get(0).getRLPData()).get(0).getRLPData();
-            byte[] descByte = list.get(0).getRLPData();
-            this.description = new String(descByte);
-
-            for(int i=1;i<list.size();i++){
+            for(int i= 0; i< list.size(); i++){
                 RLPList state = (RLPList) list.get(i);
                 String addr = new String(state.get(0).getRLPData());
                 GenesisItem item = new GenesisItem(state.get(1).getRLPData());
@@ -111,15 +96,6 @@ public class GenesisMsg {
             }
             isParsed = true;
         }
-    }
-
-    /**
-     * get genesis msg description.
-     * @return
-     */
-    public String getDescription(){
-        if(!isParsed) parseRLP();
-        return description;
     }
 
     /**
@@ -137,9 +113,6 @@ public class GenesisMsg {
      */
     public CheckInfo validateGenesisMsg(){
         if(!isParsed) parseRLP();
-        if(this.description.getBytes().length >= ChainParam.DescriptionLength){
-            return CheckInfo.TooLongDescription;
-        }
         if(this.accountKV.size() >= ChainParam.MaxGenesisMsgItems) {
             return CheckInfo.TooMuchKVitem;
         }

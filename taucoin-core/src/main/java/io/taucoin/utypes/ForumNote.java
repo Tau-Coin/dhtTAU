@@ -21,7 +21,7 @@ import io.taucoin.param.ChainParam;
 /**
  * transaction code about regular forum.
  */
-public class Note {
+public class ForumNote {
     private String forumMsg;
     private byte[] byteMsg;
     private boolean isParsed;
@@ -30,7 +30,7 @@ public class Note {
      * construct forum msg from user device.
      * @param forumMsg
      */
-    public Note(String forumMsg){
+    public ForumNote(String forumMsg){
         this.forumMsg = forumMsg;
         isParsed = true;
     }
@@ -40,7 +40,7 @@ public class Note {
      * in TxData this is contract code.
      * @param forumMsg
      */
-    public Note(byte[] forumMsg){
+    public ForumNote(byte[] forumMsg){
        this.byteMsg = forumMsg;
     }
 
