@@ -187,6 +187,16 @@ public class ChainManager {
     }
 
     /**
+     * update public key
+     * @param pubKey
+     */
+    public void updateKey(byte[] pubKey) {
+        for (Map.Entry<ByteArrayWrapper, Chain> entry: this.chains.entrySet()) {
+            entry.getValue().getTransactionPool().updatePubKey(pubKey);
+        }
+    }
+
+    /**
      * get chain by chain ID
      * @param chainID chain ID
      * @return chain or null if not found
@@ -320,7 +330,7 @@ public class ChainManager {
 		ByteArrayWrapper chainid= new ByteArrayWrapper(tx.getChainID());
 
 		// get chain and then add tx into the txpool
-		chains.get(chainid).getTransactionPool().addRemote(tx);
+		chains.get(chainid).getTransactionPool().addTx(tx);
     }
 
     /**

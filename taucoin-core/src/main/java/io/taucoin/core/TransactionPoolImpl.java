@@ -48,6 +48,28 @@ public class TransactionPoolImpl implements TransactionPool {
         getSelfTxsFromDB();
     }
 
+    @Override
+    public void updatePubKey(byte[] pubKey) {
+        // update key
+        this.userPubKey = pubKey;
+
+        PriorityQueue<LocalTxEntry> localTemp = new PriorityQueue<>(this.locals.size(), new LocalTxPolicy());
+        localTemp.addAll(this.locals);
+        this.locals.clear();
+
+        for (LocalTxEntry entry: localTemp) {
+            // remove tx from pool
+            Transaction tx = getTransactionByTxid(entry.txid);
+            removeTransactionFromPool(tx);
+
+            // try to add remote
+            addTx(tx);
+        }
+
+        // try to get self tx from db
+        getSelfTxsFromDB();
+    }
+
     /**
      * get nonce by pubKey
      * @param pubKey
@@ -112,8 +134,9 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     @Override
     public void addLocal(Transaction tx) {
+        // check if null
         if (null == tx) {
-            logger.error("Chain ID[{}]: Tx is null.", new String(this.chainID));
+            logger.error("ChainID[{}]-Add remote null!", new String(this.chainID));
             return;
         }
 
@@ -246,6 +269,28 @@ public class TransactionPoolImpl implements TransactionPool {
     }
 
     /**
+     * add transaction into pool
+     *
+     * @param tx
+     */
+    @Override
+    public void addTx(Transaction tx) {
+        // check if null
+        if (null == tx) {
+            logger.error("ChainID[{}]-Add remote null!", new String(this.chainID));
+            return;
+        }
+
+        // check if local
+        byte[] pubKey = tx.getSenderPubkey();
+        if (Arrays.equals(userPubKey, pubKey)) {
+            addLocal(tx);
+        } else {
+            addRemote(tx);
+        }
+    }
+
+    /**
      * add a transaction from the remote
      *
      * @param tx
@@ -255,13 +300,10 @@ public class TransactionPoolImpl implements TransactionPool {
         // check if null
         if (null == tx) {
             logger.error("ChainID[{}]-Add remote null!", new String(this.chainID));
+            return;
         }
 
-        // check if local
         byte[] pubKey = tx.getSenderPubkey();
-        if (Arrays.equals(userPubKey, pubKey)) {
-            addLocal(tx);
-        }
 
         if (!tx.isTxParamValidate()) {
             logger.error("Chain ID[{}]: Tx[{}] param is invalid.",
@@ -501,6 +543,12 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     @Override
     public void removeTransactionFromPool(Transaction tx) {
+        // check if null
+        if (null == tx) {
+            logger.error("ChainID[{}]-Tx to be removed is null!", new String(this.chainID));
+            return;
+        }
+
         if (Arrays.equals(tx.getSenderPubkey(), userPubKey)) {
             removeLocal(tx);
         } else {

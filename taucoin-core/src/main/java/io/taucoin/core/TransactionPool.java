@@ -24,6 +24,19 @@ public interface TransactionPool {
     void clearPool();
 
     /**
+     * update user public key
+     * @param pubKey
+     */
+    void updatePubKey(byte[] pubKey);
+
+    /**
+     * add transaction into pool
+     *
+     * @param tx
+     */
+    void addTx(Transaction tx);
+
+    /**
      * add local transaction into pool
      * @param tx
      */

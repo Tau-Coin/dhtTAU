@@ -264,9 +264,13 @@ public class Chain {
                 }
 
                 byte[] pubKey = this.peerManager.getBlockPeerRandomly();
+                logger.debug("Chain ID[{}]: peer public key:{}",
+                        new String(this.chainID), Hex.toHexString(pubKey));
 
                 // if last visiting time is letter default block time, jump to mine
                 long lastVisitTime = this.peerManager.getPeerVisitTime(pubKey);
+                logger.debug("Chain ID[{}]: last visiting time:{}",
+                        new String(this.chainID), lastVisitTime);
                 if ((System.currentTimeMillis() / 1000 - lastVisitTime) < ChainParam.DefaultBlockTimeInterval) {
                     miningFlag = true;
                     break;
@@ -285,7 +289,7 @@ public class Chain {
                 // if a less difficult chain, jump to mine
                 if (tip.getCumulativeDifficulty().compareTo(this.bestBlock.getCumulativeDifficulty()) < 0) {
                     if (null != tip.getTxMsg()) {
-                        txPool.addRemote(tip.getTxMsg());
+                        txPool.addTx(tip.getTxMsg());
                     }
                     miningFlag = true;
                     break;
@@ -1233,7 +1237,7 @@ public class Chain {
             byte[] peer = this.peerManager.popUpOptimalTxPeer();
             Transaction tx = getTxFromPeer(peer);
             if (null != tx) {
-                this.txPool.addRemote(tx);
+                this.txPool.addTx(tx);
             }
 
             // publish myself tx
@@ -1285,17 +1289,17 @@ public class Chain {
      */
     public void stop() {
         if (null != votingThread) {
-            logger.info("Stop voting thread.");
+            logger.info("Chain ID[{}]: Stop voting thread.", new String(this.chainID));
             votingThread.interrupt();
         }
 
         if (null != txThread) {
-            logger.info("Stop tx thread.");
+            logger.info("Chain ID[{}]: Stop tx thread.", new String(this.chainID));
             txThread.interrupt();
         }
 
         if (null != timer) {
-            logger.info("Stop publish thread.");
+            logger.info("Chain ID[{}]: Stop publish thread.", new String(this.chainID));
             timer.cancel();
         }
     }
