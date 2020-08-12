@@ -337,11 +337,11 @@ public class ByteUtil {
      * @return
      */
     public static ArrayList<Long> unAlignByteArrayToSignLongArray(byte[] b, int piece){
-        byte[] temp = new byte[8*piece];
+        byte[] temp = new byte[8 * piece];
         int alignCount = piece - 1;
-        byte[] zero = new byte[8*piece - b.length];
+        byte[] zero = new byte[8 * piece - b.length];
 
-        for(int i = 0;i< zero.length;i++){
+        for(int i = 0; i< zero.length; i++){
             zero[i] = 0x00;
         }
         System.arraycopy(b,0,temp,0,alignCount*8);

@@ -70,4 +70,15 @@ public class ChainParam {
 
     // mutable item salt suffix: tx
     public static final byte[] TX_CHANNEL = "#tx".getBytes();
+
+    public static final int HashLongArrayLength = 3;
+
+    public static final int PubkeyLongArrayLength = 4;
+
+    public static final int SignLongArrayLength = 8;
+
+    public static enum TxType {
+        GMsgType, FNoteType, WCoinsType
+    }
+
 }
