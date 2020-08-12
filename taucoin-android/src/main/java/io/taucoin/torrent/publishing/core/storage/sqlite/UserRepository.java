@@ -80,4 +80,9 @@ public interface UserRepository {
      * 观察不在黑名单的列表中
      */
     Flowable<List<UserAndMember>> observeUsersNotInBanList();
+
+    /**
+     * 获取用户和用户所在的社区信息
+     */
+    UserAndMember getUserAndMember(String publicKey);
 }

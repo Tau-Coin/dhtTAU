@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.transaction;
 
 import android.app.Application;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.widget.TextView;
 
@@ -62,6 +63,7 @@ import io.taucoin.util.ByteUtil;
 public class TxViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("TxViewModel");
+    private Context application;
     private TxRepository txRepo;
     private UserRepository userRepo;
     private MemberRepository memberRepo;
@@ -74,6 +76,7 @@ public class TxViewModel extends AndroidViewModel {
     private CommonDialog editFeeDialog;
     public TxViewModel(@NonNull Application application) {
         super(application);
+        this.application = application;
         txRepo = RepositoryHelper.getTxRepository(application);
         userRepo = RepositoryHelper.getUserRepository(application);
         daemon  = TauDaemon.getInstance(application);
@@ -126,16 +129,8 @@ public class TxViewModel extends AndroidViewModel {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public Flowable<List<UserAndTx>> observeTxsByChainID(String chainID, int txType){
-        return txRepo.observeTxsByChainID(chainID, txType);
-    }
-
-    /**
-     * 根据chainID获取社区的交易的被被观察者
-     * @param chainID 社区链id
-     */
     public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType){
-        return txRepo.queryCommunityTxs(chainID, txType);
+        return txRepo.queryCommunityTxs(chainID, txType, txType == -1 ? 0 : 1);
     }
 
     public MutableLiveData<String> getAirdropState(){
@@ -381,10 +376,19 @@ public class TxViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String result = "";
             try {
-                for (String friendPk : friendPks) {
-                    result = airdropToFriends(chainID, friendPk);
-                    if (StringUtil.isNotEmpty(result)) {
-                        break;
+                String senderPk = MainApplication.getInstance().getPublicKey();
+                long balance = daemon.getUserBalance(chainID, senderPk);
+                long airdropCoin = Constants.AIRDROP_COIN.longValue();
+                long medianFee = getMedianFee(chainID);
+                long totalPay = (airdropCoin + medianFee) * friendPks.size();
+                if(totalPay > balance){
+                    result = application.getString(R.string.tx_error_no_enough_coins_for_airdrop);
+                }else{
+                    for (String friendPk : friendPks) {
+                        result = airdropToFriends(chainID, friendPk);
+                        if (StringUtil.isNotEmpty(result)) {
+                            break;
+                        }
                     }
                 }
             }catch (Exception e){

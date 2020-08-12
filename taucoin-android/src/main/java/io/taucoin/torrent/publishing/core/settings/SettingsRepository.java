@@ -105,4 +105,14 @@ public interface SettingsRepository {
      * 设置社区发送的最后一次交易费
      */
     void lastTxFee(String chainID, String fee);
+
+    /**
+     * 设置不显示ban对话框
+     */
+    void doNotShowBanDialog(boolean b);
+
+    /**
+     * 获取不显示ban对话框
+     */
+    boolean doNotShowBanDialog();
 }

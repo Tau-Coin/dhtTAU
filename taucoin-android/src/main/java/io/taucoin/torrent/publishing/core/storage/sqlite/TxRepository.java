@@ -29,13 +29,7 @@ public interface TxRepository {
      */
     List<UserAndTx> getTxsByChainID(String chainID);
 
-    /**
-     * 根据chainID获取社区的交易的被被观察者
-     * @param chainID 社区链ID
-     */
-    Flowable<List<UserAndTx>> observeTxsByChainID(String chainID, int txType);
-
-    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType);
+    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType, int txStatus);
 
     /**
      * 获取社区里用户未上链并且未过期的交易数

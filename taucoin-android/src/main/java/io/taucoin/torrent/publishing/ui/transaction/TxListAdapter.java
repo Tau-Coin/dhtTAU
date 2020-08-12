@@ -24,7 +24,9 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemNoteBinding;
 import io.taucoin.torrent.publishing.databinding.ItemWiringTxBinding;
+import io.taucoin.torrent.publishing.databinding.MsgLeftViewBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;
+import io.taucoin.torrent.publishing.ui.customviews.RoundButton;
 import io.taucoin.types.MsgType;
 
 /**
@@ -113,10 +115,12 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
             String showName = UsersUtil.getShowName(tx);
             SpannableStringBuilder memo = Utils.getSpannableStringUrl(tx.memo);
             String firstLettersName = StringUtil.getFirstLettersOfName(showName);
+            String userName = UsersUtil.getUserName(tx);
             if(binding instanceof ItemWiringTxBinding){
                 ItemWiringTxBinding txBinding = (ItemWiringTxBinding) holder.binding;
                 txBinding.leftView.roundButton.setBgColor(bgColor);
                 txBinding.leftView.roundButton.setText(firstLettersName);
+                txBinding.leftView.tvEditName.setText(userName);
                 if(tx.txStatus == 1){
                     txBinding.tvResult.setText(R.string.tx_result_successfully);
                     txBinding.tvResult.setTextColor(context.getResources().getColor(R.color.color_black));
@@ -139,10 +143,12 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
                     txBinding.leftView.tvBlacklist.setVisibility(View.GONE);
                 }
                 setOnLongClickListener(txBinding.middleView, tx, tx.memo);
+                setLeftViewClickListener(txBinding.leftView, tx);
             }else{
                 ItemNoteBinding noteBinding = (ItemNoteBinding) holder.binding;
                 noteBinding.leftView.roundButton.setBgColor(bgColor);
                 noteBinding.leftView.roundButton.setText(firstLettersName);
+                noteBinding.leftView.tvEditName.setText(userName);
                 noteBinding.tvName.setText(showName);
                 noteBinding.tvMsg.setText(memo);
                 noteBinding.tvTime.setText(time);
@@ -152,11 +158,24 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
                     noteBinding.leftView.tvBlacklist.setVisibility(View.GONE);
                 }
                 setOnLongClickListener(noteBinding.middleView, tx, tx.memo);
+                setLeftViewClickListener(noteBinding.leftView, tx);
             }
-            View root = binding.getRoot();
-            root.setOnClickListener(v -> {
+        }
+
+        private void setLeftViewClickListener(MsgLeftViewBinding binding, UserAndTx tx) {
+            binding.roundButton.setOnClickListener(view ->{
                 if(listener != null){
-                    listener.onItemClicked(tx);
+                    listener.onUserClicked(tx.senderPk);
+                }
+            });
+            binding.tvEditName.setOnClickListener(view ->{
+                if(listener != null){
+                    listener.onEditNameClicked(tx);
+                }
+            });
+            binding.tvBlacklist.setOnClickListener(view ->{
+                if(listener != null){
+                    listener.onBanClicked(tx);
                 }
             });
         }
@@ -172,7 +191,9 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
     }
 
     public interface ClickListener {
-        void onItemClicked(UserAndTx tx);
+        void onUserClicked(String publicKey);
+        void onEditNameClicked(UserAndTx tx);
+        void onBanClicked(UserAndTx tx);
         void onItemLongClicked(UserAndTx tx, String msg);
     }
 
@@ -181,7 +202,6 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
         public boolean areContentsTheSame(@NonNull UserAndTx oldItem, @NonNull UserAndTx newItem) {
             return oldItem.equals(newItem);
         }
-
         @Override
         public boolean areItemsTheSame(@NonNull UserAndTx oldItem, @NonNull UserAndTx newItem) {
             return oldItem.equals(newItem);

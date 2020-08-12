@@ -69,6 +69,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         activity = (BaseActivity) getActivity();
+        assert activity != null;
         ViewModelProvider provider = new ViewModelProvider(activity);
         txViewModel = provider.get(TxViewModel.class);
         userViewModel = provider.get(UserViewModel.class);
@@ -83,7 +84,10 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     private void initParameter() {
         if(getArguments() != null){
             community = getArguments().getParcelable(IntentExtra.BEAN);
-            txType = getArguments().getInt(IntentExtra.TYPE, MsgType.RegularForum.getVaLue());
+            txType = getArguments().getInt(IntentExtra.TYPE, -1);
+            if(txType == -1){
+                binding.fabButton.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -152,18 +156,22 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         disposables.clear();
     }
 
-    /**
-     * TxListItem点击事件
-     */
-
-    @Override
-    public void onItemClicked(UserAndTx tx) {
-
-    }
-
     @Override
     public void onItemLongClicked(UserAndTx tx, String msg) {
         showItemOperationDialog(tx, msg);
+    }
+
+    @Override
+    public void onUserClicked(String senderPk) {
+       userViewModel.showUserInfoDialog(activity, senderPk);
+    }
+    @Override
+    public void onEditNameClicked(UserAndTx tx){
+        userViewModel.showEditNameDialog(activity, tx.senderPk);
+    }
+    @Override
+    public void onBanClicked(UserAndTx tx){
+        userViewModel.showBanDialog(activity, tx);
     }
 
     /**
@@ -211,12 +219,12 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
             operationsDialog.closeDialog();
         }
         switch (v.getId()){
-            case R.id.replay:
-                UserAndTx tx = (UserAndTx) v.getTag();
-                Intent intent = new Intent();
-                intent.putExtra(IntentExtra.BEAN, community);
-                ActivityUtil.startActivity(intent, this, MessageActivity.class);
-                break;
+//            case R.id.replay:
+//                UserAndTx tx = (UserAndTx) v.getTag();
+//                Intent intent = new Intent();
+//                intent.putExtra(IntentExtra.BEAN, community);
+//                ActivityUtil.startActivity(intent, this, MessageActivity.class);
+//                break;
             case R.id.copy:
                 String msg = ViewUtils.getStringTag(v);
                 CopyManager.copyText(msg);

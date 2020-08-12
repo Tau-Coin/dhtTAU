@@ -114,14 +114,11 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
             holder.binding.ivShare.setImageResource(imgRid);
             holder.binding.cbSelect.setVisibility(type == ContactsActivity.TYPE_ADD_MEMBERS ? View.VISIBLE : View.GONE);
             if(type == ContactsActivity.TYPE_ADD_MEMBERS){
-                holder.binding.cbSelect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if(isChecked){
-                            selectedList.add(user.publicKey);
-                        }else{
-                            selectedList.remove(user.publicKey);
-                        }
+                holder.binding.cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if(isChecked){
+                        selectedList.add(user.publicKey);
+                    }else{
+                        selectedList.remove(user.publicKey);
                     }
                 });
             }
@@ -172,6 +169,12 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
                     listener.onShareClicked(user);
                 }
             });
+
+            holder.binding.leftView.setOnClickListener(v -> {
+                if(listener != null){
+                    listener.onUserClicked(user);
+                }
+            });
             if(type == ContactsActivity.TYPE_SELECT_CONTACT){
                 holder.binding.getRoot().setOnClickListener(v -> {
                     if(listener != null){
@@ -185,6 +188,7 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
     public interface ClickListener {
         void onItemClicked(User item);
         void onShareClicked(User item);
+        void onUserClicked(UserAndMember item);
     }
 
     private static final DiffUtil.ItemCallback<UserAndMember> diffCallback = new DiffUtil.ItemCallback<UserAndMember>() {

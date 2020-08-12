@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.annotation.SuppressLint;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.format.Formatter;
 import android.view.LayoutInflater;
@@ -26,6 +27,7 @@ import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
@@ -242,6 +244,7 @@ public class MainActivity extends BaseActivity {
                 ActivityUtil.startActivity(this, SettingActivity.class);
                 break;
             case R.id.item_share:
+                ActivityUtil.openUri(this, Constants.APP_SHARE_URL);
                 break;
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START);

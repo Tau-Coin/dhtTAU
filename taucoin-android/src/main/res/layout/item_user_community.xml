@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:ellipsize="middle"
+            android:textColor="@color/gray_dark"
+            android:textAppearance="@style/TextAppearanceHeadline6" />
+
+        <TextView
+            android:id="@+id/tv_balance_power"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textColor="@color/gray_dark"
+            android:textAppearance="@style/TextAppearanceBody2" />
+    </LinearLayout>
+</layout>

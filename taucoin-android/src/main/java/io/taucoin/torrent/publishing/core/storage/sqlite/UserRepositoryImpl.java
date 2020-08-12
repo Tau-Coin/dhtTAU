@@ -119,6 +119,7 @@ public class UserRepositoryImpl implements UserRepository{
     /**
      * 添加新的多个User
      */
+    @Override
     public long[] addUsers(User... user){
         return db.userDao().addUsers(user);
     }
@@ -126,7 +127,16 @@ public class UserRepositoryImpl implements UserRepository{
     /**
      * 观察不在黑名单的列表中
      */
+    @Override
     public Flowable<List<UserAndMember>> observeUsersNotInBanList(){
         return db.userDao().observeUsersNotInBanList();
+    }
+
+    /**
+     * 获取用户和用户所在的社区信息
+     */
+    @Override
+    public UserAndMember getUserAndMember(String publicKey){
+        return db.userDao().getUserAndMember(publicKey);
     }
 }

@@ -29,7 +29,6 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:gravity="center"
-            android:textAllCaps="true"
             android:textColor="@color/color_white"
             android:textAppearance="@style/TextAppearanceBody1"
             app:borderColor="@color/primary_light"

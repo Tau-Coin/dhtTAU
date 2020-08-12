@@ -19,4 +19,6 @@ public class Constants {
     public static final int BLOCK_IN_AVG = 300;
     // 社区简介长度限制
     public static final int LENGTH_LIMIT = 200;
+    // APP分享URL
+    public static final String APP_SHARE_URL = "https://play.google.com/store";
 }

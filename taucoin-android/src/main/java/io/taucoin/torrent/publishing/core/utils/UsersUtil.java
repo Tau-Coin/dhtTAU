@@ -84,6 +84,15 @@ public class UsersUtil {
         }
     }
 
+    public static String getUserName(@NonNull UserAndTx tx) {
+        if(tx.sender != null && StringUtil.isNotEmpty(tx.sender.localName)){
+            return tx.sender.localName;
+        }else{
+            return UsersUtil.getDefaultName(tx.senderPk);
+        }
+    }
+
+
     /**
      * 获取显示coin name
      * @param community 当前社区

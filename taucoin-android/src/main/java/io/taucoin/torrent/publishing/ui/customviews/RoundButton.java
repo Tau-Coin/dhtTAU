@@ -3,9 +3,9 @@ package io.taucoin.torrent.publishing.ui.customviews;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-
-import com.minminaya.library.LGMRoundButton;
 import com.minminaya.library.LGMRoundButtonDrawable;
+
+import androidx.annotation.Nullable;
 
 public class RoundButton extends LGMRoundButton {
 
@@ -26,5 +26,10 @@ public class RoundButton extends LGMRoundButton {
         if(background instanceof LGMRoundButtonDrawable){
             ((LGMRoundButtonDrawable) background).setColor(bgColor);
         }
+    }
+
+    @Override
+    public void setOnClickListener(@Nullable OnClickListener l) {
+        super.setOnClickListener(l);
     }
 }

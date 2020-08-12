@@ -101,8 +101,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
             return;
         }
         binding.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
-        String userName = UsersUtil.getShowName(user);
-        userName = UsersUtil.getDefaultName(userName);
+        String userName = UsersUtil.getCurrentUserName(user);
         binding.etUsername.setText(userName);
         binding.etUsername.setTag(userName);
         disposables.clear();

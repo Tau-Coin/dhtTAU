@@ -40,7 +40,8 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private CompositeDisposable disposables = new CompositeDisposable();
     private Community community;
     private List<Fragment> fragmentList = new ArrayList<>();
-    private int[] titles = new int[]{R.string.community_instant_chat, R.string.community_chain_note, R.string.community_wiring};
+    private int[] titles = new int[]{R.string.community_instant_chat, R.string.community_chain_note,
+            R.string.community_wired, R.string.community_queue};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,13 +95,20 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         chainNoteTab.setArguments(noteBundle);
         fragmentList.add(chainNoteTab);
 
-        // 添加Wiring页面
+        // 添加Wired页面
         Fragment wiringTab = new TxsTabFragment();
         Bundle wiringBundle = new Bundle();
         wiringBundle.putParcelable(IntentExtra.BEAN, community);
         wiringBundle.putInt(IntentExtra.TYPE, MsgType.Wiring.getVaLue());
         wiringTab.setArguments(wiringBundle);
         fragmentList.add(wiringTab);
+
+        // 添加Queue页面
+        Fragment queueTab = new TxsTabFragment();
+        Bundle queueBundle = new Bundle();
+        queueBundle.putParcelable(IntentExtra.BEAN, community);
+        queueTab.setArguments(queueBundle);
+        fragmentList.add(queueTab);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         MyAdapter fragmentAdapter = new MyAdapter(fragmentManager);

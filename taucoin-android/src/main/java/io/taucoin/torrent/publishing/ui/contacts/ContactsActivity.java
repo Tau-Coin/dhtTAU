@@ -216,20 +216,25 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     }
 
     @Override
-    public void onItemClicked(@NonNull User item) {
+    public void onItemClicked(@NonNull User user) {
         Intent intent = new Intent();
-        intent.putExtra(IntentExtra.PUBLIC_KEY, item.publicKey);
+        intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
         setResult(RESULT_OK, intent);
         onBackPressed();
     }
 
     @Override
-    public void onShareClicked(@NonNull User item) {
+    public void onShareClicked(@NonNull User user) {
         if (type == TYPE_ADD_MEMBERS) {
             showShareDialog();
         } else {
-            showChattingDialog(item);
+            showChattingDialog(user);
         }
+    }
+
+    @Override
+    public void onUserClicked(@NonNull UserAndMember user) {
+        userViewModel.showUserInfoDialog(this, user);
     }
 
     /**
@@ -267,7 +272,6 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         binding.tvTitle.setText(Html.fromHtml(getString(R.string.contacts_chatting, showName)));
         binding.tvTitle.setVisibility(View.VISIBLE);
         binding.etChatName.setVisibility(View.VISIBLE);
-        binding.tvDoNotShow.setVisibility(View.VISIBLE);
         binding.etPublicKey.setVisibility(View.GONE);
         binding.tvSubmit.setText(R.string.common_start);
         binding.ivClose.setOnClickListener(v -> {

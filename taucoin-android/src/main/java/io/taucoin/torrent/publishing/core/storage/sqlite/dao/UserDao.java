@@ -99,4 +99,11 @@ public interface UserDao {
     @Transaction
     @Query(QUERY_GET_USERS_NOT_IN_BAN_LIST)
     Flowable<List<UserAndMember>> observeUsersNotInBanList();
+
+    /**
+     * 获取用户和用户所在的社区信息
+     */
+    @Transaction
+    @Query(QUERY_USER_BY_PUBLIC_KEY)
+    UserAndMember getUserAndMember(String publicKey);
 }

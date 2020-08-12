@@ -21,6 +21,7 @@ public class SettingsRepositoryImpl implements SettingsRepository {
         static final boolean chargingState = false;
         static final boolean internetState = false;
         static final boolean wakeLock = false;
+        static final boolean isShowBanDialog = false;
     }
 
     private Context appContext;
@@ -147,5 +148,18 @@ public class SettingsRepositoryImpl implements SettingsRepository {
         String key = appContext.getString(R.string.pref_key_last_tx_fee) + chainID;
         pref.edit().putString(key, fee)
                 .apply();
+    }
+
+    @Override
+    public void doNotShowBanDialog(boolean isShow) {
+        String key = appContext.getString(R.string.pref_key_do_not_show_ban_dialog);
+        pref.edit().putBoolean(key, isShow)
+                .apply();
+    }
+
+    @Override
+    public boolean doNotShowBanDialog() {
+        String key = appContext.getString(R.string.pref_key_do_not_show_ban_dialog);
+        return pref.getBoolean(key, Default.isShowBanDialog);
     }
 }

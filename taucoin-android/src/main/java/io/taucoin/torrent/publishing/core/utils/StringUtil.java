@@ -264,7 +264,13 @@ public class StringUtil {
                     break;
                 }
                 if(isNotEmpty(split)){
-                    firstLetters.append(split.substring(0, 1));
+                    String firstLetter = split.substring(0, 1);
+                    if(firstLetters.length() == 0){
+                        firstLetter = firstLetter.toUpperCase();
+                    }else{
+                        firstLetter = firstLetter.toLowerCase();
+                    }
+                    firstLetters.append(firstLetter);
                 }
             }
         }

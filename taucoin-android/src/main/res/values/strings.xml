@@ -90,7 +90,8 @@
     <string name="community_today_mining_income">Today Mining Income(%1$s)</string>
     <string name="community_chain_note">Chain Note</string>
     <string name="community_instant_chat">Chat</string>
-    <string name="community_wiring">Wiring</string>
+    <string name="community_wired">Wired</string>
+    <string name="community_queue">Queue</string>
 
     <string name="error_community_name_empty">Community name cannot be empty!</string>
     <string name="error_coin_name_empty">Coin name cannot be empty!</string>
@@ -143,6 +144,13 @@
     <string name="user_show_name">%1$s(%2$s)</string>
     <string name="user_ban">Ban</string>
     <string name="user_ban_list">Banlist</string>
+    <string name="user_edit_name">Edit Name</string>
+    <string name="user_mutual_communities">Mutual Communities:</string>
+    <string name="user_community_name">C/%1$s</string>
+    <string name="user_new_name_hint">New Name</string>
+    <string name="user_invalid_new_name">Invalid New Name</string>
+    <string name="user_no_messages_from">No messages from</string>
+    <string name="user_until_removed">until removed from the ban list.</string>
 
     <string name="copy_seed">Seed copied</string>
     <string name="copy_public_key">Public key copied</string>
@@ -182,6 +190,7 @@
     <string name="tx_error_invalid_amount">Invalid Transaction amount</string>
     <string name="tx_error_no_enough_coins">Insufficient Balance :\nAmount + Transaction Fee > Balance</string>
     <string name="tx_error_no_enough_coins_for_fee">Insufficient Balance :\nTransaction Fee > Balance</string>
+    <string name="tx_error_no_enough_coins_for_airdrop">Insufficient Balance</string>
     <string name="tx_error_invalid_name">Invalid Name</string>
     <string name="tx_error_invalid_message">Invalid Message</string>
     <string name="tx_error_invalid_comment">Invalid Comment</string>
@@ -210,7 +219,7 @@
     <string name="contacts_last_seen">Last seen %1$s</string>
     <string name="contacts_share_link_via">Share link via</string>
     <string name="contacts_copy_link">Copy Link</string>
-    <string name="contacts_community">Community</string>
+    <string name="contacts_community">TAU</string>
     <string name="contacts_sms">SMS</string>
     <string name="contacts_chat_name_hint">Chat Name(Optional)</string>
     <string name="contacts_public_key_hint">Friend\'s Public Key</string>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:paddingStart="30dp"
+        android:paddingEnd="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/color_white">
+
+            <ImageView
+                android:id="@+id/iv_close"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp"
+                android:contentDescription="@null"
+                android:src="@mipmap/icon_close" />
+
+            <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+                android:layout_below="@+id/iv_close"
+                android:id="@+id/left_view"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginEnd="7dp"
+                android:layout_centerVertical="true"
+                android:gravity="center"
+                android:textAllCaps="true"
+                android:textColor="@color/color_white"
+                android:textAppearance="@style/TextAppearanceHeadline6"
+                app:borderColor="@color/primary_light"
+                app:borderWidth="0dp"
+                app:radius="10dp"
+                app:isRadiusAutoHalf="true"
+                app:bgColor="@color/primary_light"
+                app:textColorForPressed="@color/color_white" />
+
+            <LinearLayout
+                android:layout_toEndOf="@+id/left_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="30dp"
+                android:paddingEnd="30dp"
+                android:paddingStart="0dp"
+                android:layout_centerVertical="true"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:gravity="center_vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/tv_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:maxWidth="200dp"
+                        android:textAppearance="@style/TextAppearanceHeadline6" />
+
+                    <TextView
+                        android:id="@+id/tv_edit_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:singleLine="true"
+                        android:ellipsize="middle"
+                        android:textColor="@color/color_blue"
+                        android:layout_marginStart="10dp"
+                        android:text="@string/user_edit_name"
+                        android:textAppearance="@style/TextAppearanceBody2" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:textColor="@color/gray_dark"
+                    android:textAppearance="@style/TextAppearanceBody2" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_public_key"
+            android:layout_marginTop="5dp"
+            android:paddingEnd="30dp"
+            android:paddingStart="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tv_public_key"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textAppearance="@style/TextAppearanceBody1" />
+
+            <ImageView
+                android:id="@+id/iv_public_key_copy"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:onClick="onClick"
+                android:layout_marginTop="2dp"
+                android:contentDescription="@null"
+                android:layout_marginStart="5dp"
+                android:src="@mipmap/icon_copy"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_marginTop="20dp"
+            android:paddingEnd="30dp"
+            android:paddingStart="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:text="@string/user_mutual_communities"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearanceBody2" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:background="@color/color_white"
+                android:id="@+id/recycler_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
+                android:clipToPadding="false"
+                android:scrollbars="vertical"
+                android:focusable="true"
+                android:scrollbarStyle="outsideOverlay" />
+
+        </LinearLayout>
+    </LinearLayout>
+</layout>

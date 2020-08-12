@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.ui.user;
 
 import android.app.Application;
 import android.content.Context;
+import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -17,6 +18,9 @@ import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -26,15 +30,25 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
+import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
+import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
+import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
+import io.taucoin.torrent.publishing.databinding.UserInfoDialogBinding;
+import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.util.ByteUtil;
 
@@ -46,6 +60,7 @@ public class UserViewModel extends AndroidViewModel {
     private static final Logger logger = LoggerFactory.getLogger("UserViewModel");
     private UserRepository userRepo;
     private TxRepository txRepo;
+    private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
     private MutableLiveData<Boolean> addContactResult = new MutableLiveData<>();
@@ -55,6 +70,7 @@ public class UserViewModel extends AndroidViewModel {
         super(application);
         userRepo = RepositoryHelper.getUserRepository(getApplication());
         txRepo = RepositoryHelper.getTxRepository(getApplication());
+        settingsRepo = RepositoryHelper.getSettingsRepository(getApplication());
     }
 
     @Override
@@ -248,8 +264,20 @@ public class UserViewModel extends AndroidViewModel {
      * 保存用户名
      */
     public void saveUserName(String name) {
+        saveUserName(null, name);
+    }
+
+    /**
+     * 保存用户名
+     */
+    private void saveUserName(String publicKey, String name) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
-            User user = userRepo.getCurrentUser();
+            User user;
+            if(StringUtil.isNotEmpty(publicKey)){
+                user = userRepo.getUserByPublicKey(publicKey);
+            }else{
+                user = userRepo.getCurrentUser();
+            }
             if(user != null){
                 user.localName = name;
                 userRepo.updateUser(user);
@@ -299,5 +327,153 @@ public class UserViewModel extends AndroidViewModel {
      */
     public void sendCommunityInvitedLink(String inviteLink) {
         // TODO: 通过msg channel发送
+    }
+
+    /**
+     * 显示用户信息的对话框
+     * @param publicKey 用户公钥
+     */
+    public void showUserInfoDialog(BaseActivity activity, String publicKey) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<UserAndMember>) emitter -> {
+            UserAndMember user = userRepo.getUserAndMember(publicKey);
+            emitter.onNext(user);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(user -> {
+                    if(user != null){
+                        showUserInfoDialog(activity, user);
+                    }
+                });
+        disposables.add(disposable);
+    }
+
+    /**
+     * 显示用户信息的对话框
+     * @param user 用户对象
+     */
+    public void showUserInfoDialog(BaseActivity activity, UserAndMember user) {
+        UserInfoDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity), R.layout.user_info_dialog, null, false);
+        binding.ivClose.setOnClickListener(v -> {
+            if (commonDialog != null) {
+                commonDialog.closeDialog();
+            }
+        });
+        SpannableStringBuilder editName = new SpanUtils()
+                .append(activity.getString(R.string.user_edit_name))
+                .setUnderline()
+                .create();
+        binding.tvEditName.setText(editName);
+        String showName = UsersUtil.getCurrentUserName(user);
+        binding.tvName.setText(showName);
+        binding.leftView.setText(StringUtil.getFirstLettersOfName(showName));
+        binding.leftView.setBgColor(Utils.getGroupColor(user.publicKey));
+        binding.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
+        binding.ivPublicKeyCopy.setOnClickListener(v -> {
+            CopyManager.copyText(user.publicKey);
+            ToastUtils.showShortToast(R.string.copy_public_key);
+        });
+        binding.tvEditName.setOnClickListener(v -> {
+            if (commonDialog != null) {
+                commonDialog.closeDialog();
+            }
+            showEditNameDialog(activity, user.publicKey);
+        });
+        if(user.lastUpdateTime > 0){
+            String time = DateUtil.format(user.lastUpdateTime, DateUtil.pattern5);
+            time = activity.getString(R.string.contacts_last_seen, time);
+            binding.tvTime.setText(time);
+        }
+
+        UserCommunityListAdapter adapter = new UserCommunityListAdapter();
+        if(user.members != null){
+            adapter.setDataList(user.members);
+        }
+//        /*
+//         * A RecyclerView by default creates another copy of the ViewHolder in order to
+//         * fade the views into each other. This causes the problem because the old ViewHolder gets
+//         * the payload but then the new one doesn't. So needs to explicitly tell it to reuse the old one.
+//         */
+        DefaultItemAnimator animator = new DefaultItemAnimator() {
+            @Override
+            public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {
+                return true;
+            }
+        };
+        LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
+        binding.recyclerList.setLayoutManager(layoutManager);
+        binding.recyclerList.setItemAnimator(animator);
+        binding.recyclerList.setAdapter(adapter);
+
+        commonDialog = new CommonDialog.Builder(activity)
+                .setContentView(binding.getRoot())
+                .create();
+        commonDialog.show();
+    }
+
+    /**
+     * 显示编辑名字的对话框
+     */
+    public void showEditNameDialog(BaseActivity activity, String publicKey) {
+        ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity), R.layout.contacts_dialog, null, false);
+        binding.etPublicKey.setHint(R.string.user_new_name_hint);
+        binding.ivClose.setOnClickListener(v -> {
+            if (commonDialog != null) {
+                commonDialog.closeDialog();
+            }
+        });
+        binding.tvSubmit.setOnClickListener(v -> {
+            String newName = StringUtil.getText(binding.etPublicKey);
+            if(StringUtil.isNotEmpty(newName)){
+                saveUserName(publicKey, newName);
+                if (commonDialog != null) {
+                    commonDialog.closeDialog();
+                }
+            }else{
+                ToastUtils.showShortToast(R.string.user_invalid_new_name);
+            }
+        });
+        commonDialog = new CommonDialog.Builder(activity)
+                .setContentView(binding.getRoot())
+                .setButtonWidth(240)
+                .create();
+        commonDialog.show();
+    }
+
+    /**
+     * 显示Ban User的对话框
+     */
+    public void showBanDialog(BaseActivity activity, UserAndTx tx) {
+        String publicKey = tx.senderPk;
+        if(settingsRepo.doNotShowBanDialog()){
+            setUserBlacklist(publicKey, true);
+            return;
+        }
+        BanDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
+                R.layout.ban_dialog, null, false);
+        String showName = UsersUtil.getShowName(tx);
+        binding.tvName.setText(showName);
+        binding.ivClose.setOnClickListener(v -> {
+            if (commonDialog != null) {
+                commonDialog.closeDialog();
+            }
+        });
+        binding.tvDoNotShow.setOnClickListener(v -> {
+            if (commonDialog != null) {
+                commonDialog.closeDialog();
+            }
+            settingsRepo.doNotShowBanDialog(true);
+        });
+        binding.tvSubmit.setOnClickListener(v -> {
+            if (commonDialog != null) {
+                commonDialog.closeDialog();
+            }
+            setUserBlacklist(publicKey, true);
+        });
+        commonDialog = new CommonDialog.Builder(activity)
+                .setContentView(binding.getRoot())
+                .create();
+        commonDialog.show();
     }
 }

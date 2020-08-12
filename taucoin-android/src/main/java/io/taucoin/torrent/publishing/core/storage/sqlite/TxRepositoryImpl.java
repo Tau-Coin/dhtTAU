@@ -62,13 +62,12 @@ public class TxRepositoryImpl implements TxRepository{
      * @param chainID 社区链id
      */
     @Override
-    public Flowable<List<UserAndTx>> observeTxsByChainID(String chainID, int txType){
-        return db.txDao().observeTxsByChainID(chainID, txType);
-    }
-
-    @Override
-    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType){
-        return db.txDao().queryCommunityTxs(chainID, txType);
+    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType, int txStatus){
+        if(txType == -1){
+            return db.txDao().queryCommunityTxsNotOnChain(chainID);
+        }else{
+            return db.txDao().queryCommunityTxsOnChain(chainID, txType);
+        }
     }
 
     /**
@@ -120,4 +119,5 @@ public class TxRepositoryImpl implements TxRepository{
     public List<Long> getMedianFee(String chainID){
         return db.txDao().getMedianFee(chainID);
     }
+
 }

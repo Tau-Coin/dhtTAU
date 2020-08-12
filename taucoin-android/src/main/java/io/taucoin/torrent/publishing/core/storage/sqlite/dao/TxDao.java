@@ -19,9 +19,14 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
  */
 @Dao
 public interface TxDao {
-    // SQL:查询社区里的交易
-    String QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE = "SELECT * FROM Txs" +
-            " WHERE chainID = :chainID AND txType = :txType" +
+    // SQL:查询社区里的交易(上链，区分交易类型)
+    String QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE_ON_CHAIN = "SELECT * FROM Txs" +
+            " WHERE chainID = :chainID AND txStatus = 1 AND txType = :txType" +
+            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
+
+    // SQL:查询社区里的交易(未上链，不区分交易类型)
+    String QUERY_GET_TXS_BY_CHAIN_ID_NOT_ON_CHAIN = "SELECT * FROM Txs" +
+            " WHERE chainID = :chainID AND txStatus = 0" +
             " and senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
 
     // SQL:查询社区里的交易
@@ -72,20 +77,16 @@ public interface TxDao {
     List<UserAndTx> getTxsByChainID(String chainID);
 
     /**
-     * 根据chainID获取社区的交易的被观察者
-     * @param chainID 社区链id
-     */
-    @Transaction
-    @Query(QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE)
-    Flowable<List<UserAndTx>> observeTxsByChainID(String chainID, int txType);
-
-    /**
      * 根据chainID获取社区中的交易的被观察者
      * @param chainID 社区链id
      */
     @Transaction
-    @Query(QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE)
-    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType);
+    @Query(QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE_ON_CHAIN)
+    DataSource.Factory<Integer, UserAndTx> queryCommunityTxsOnChain(String chainID, int txType);
+
+    @Transaction
+    @Query(QUERY_GET_TXS_BY_CHAIN_ID_NOT_ON_CHAIN)
+    DataSource.Factory<Integer, UserAndTx> queryCommunityTxsNotOnChain(String chainID);
 
     /**
      * 获取社区里用户未上链并且未过期的交易数
