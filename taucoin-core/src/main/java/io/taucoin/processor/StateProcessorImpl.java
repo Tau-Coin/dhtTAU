@@ -44,12 +44,12 @@ public class StateProcessorImpl implements StateProcessor {
             if (null != tx) {
                 if (!tx.isTxParamValidate()) {
                     logger.error("Tx validate fail!");
-                    return INVALID_BLOCK;
+                    return INVALID_TX;
                 }
 
                 if (!tx.verifyTransactionSig()) {
                     logger.error("Bad Signature.");
-                    return INVALID_BLOCK;
+                    return INVALID_TX;
                 }
 
                 byte[] sender = tx.getSenderPubkey();
@@ -68,7 +68,7 @@ public class StateProcessorImpl implements StateProcessor {
                 // check nonce
                 if (sendState.getNonce().longValue() + 1 != tx.getNonce()) {
                     logger.error("Account:{} nonce mismatch!", Hex.toHexString(sender));
-                    return INVALID_BLOCK;
+                    return INVALID_TX;
                 }
 
                 long fee = tx.getTxFee();
@@ -80,8 +80,8 @@ public class StateProcessorImpl implements StateProcessor {
                         long cost = amount + fee;
                         if (sendState.getBalance().longValue() < cost) {
                             logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-                                    cost, sendState.getBalance(), Hex.toHexString(sender));
-                            return INVALID_BLOCK;
+                                    cost, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
+                            return INVALID_TX;
                         }
 
                         //Execute the transaction
@@ -124,8 +124,8 @@ public class StateProcessorImpl implements StateProcessor {
                         // check balance
                         if (sendState.getBalance().longValue() < fee) {
                             logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-                                    fee, sendState.getBalance(), Hex.toHexString(sender));
-                            return INVALID_BLOCK;
+                                    fee, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
+                            return INVALID_TX;
                         }
 
                         //Execute the transaction
@@ -144,8 +144,8 @@ public class StateProcessorImpl implements StateProcessor {
                         // check balance
                         if (sendState.getBalance().longValue() < fee) {
                             logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-                                    fee, sendState.getBalance(), Hex.toHexString(sender));
-                            return INVALID_BLOCK;
+                                    fee, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
+                            return INVALID_TX;
                         }
 
                         //Execute the transaction
@@ -183,7 +183,7 @@ public class StateProcessorImpl implements StateProcessor {
     //                }
                     default: {
                         logger.error("Transaction type not supported");
-                        return INVALID_BLOCK;
+                        return INVALID_TX;
                     }
                 }
             }

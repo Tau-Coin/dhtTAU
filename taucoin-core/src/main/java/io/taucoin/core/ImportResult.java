@@ -8,6 +8,7 @@ public enum ImportResult {
     NO_PARENT,
     NO_ACCOUNT_INFO,
     INVALID_BLOCK,
+    INVALID_TX,
     CONSENSUS_BREAK,
     EXCEPTION;
 

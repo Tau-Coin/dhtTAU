@@ -362,13 +362,10 @@ public class ChainManager {
 
 		ArrayList<Block> blocks= new ArrayList<Block>();
 
-        Iterator<ByteArrayWrapper> chainsItor = this.chains.keySet().iterator();
-        while(chainsItor.hasNext()) {
-			String chainid= new String(chainsItor.next().getData());
-			logger.info("ChainManager chanid string: {}", chainid);
-			logger.info("ChainManager block string: {}", chains.get(chainsItor.next()).getBestBlock().toString());
-			blocks.add(chains.get(chainsItor.next()).getBestBlock());	
-		}
+		for (Map.Entry<ByteArrayWrapper, Chain> entry: this.chains.entrySet()) {
+		    logger.debug("Chain ID: {}", new String(entry.getKey().getData()));
+		    blocks.add(entry.getValue().getBestBlock());
+        }
 
 		return blocks;
     }

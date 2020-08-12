@@ -244,6 +244,12 @@ public class Chain {
      * main chain loop
      */
     private void chainLoop() {
+        long startMiningTime = 0;
+        long lastMiningTime;
+
+        long startVotingTime = 0;
+        long lastVotingTime;
+
         while (!Thread.interrupted()) {
             boolean votingFlag = false;
             boolean miningFlag = false;
@@ -369,6 +375,17 @@ public class Chain {
 
             // vote for new chain
             if (votingFlag) {
+                lastVotingTime = startVotingTime;
+                startVotingTime = System.currentTimeMillis() / 1000;
+                if (startVotingTime - lastVotingTime < 1) {
+                    logger.info("Chain ID[{}]: Voting Sleep 1 s", new String(this.chainID));
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                        logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+                    }
+                }
+
                 Vote bestVote = vote();
                 tryChangeToBestVote(bestVote);
                 continue;
@@ -376,6 +393,17 @@ public class Chain {
 
             // mine
             if (miningFlag) {
+                lastMiningTime = startMiningTime;
+                startMiningTime = System.currentTimeMillis() / 1000;
+                if (startMiningTime - lastMiningTime < 1) {
+                    logger.info("Chain ID[{}]: Mining Sleep 1 s", new String(this.chainID));
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                        logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+                    }
+                }
+
                 if (minable()) {
                     Block block = mineBlock();
                     // the best block is parent block of the tip
@@ -823,6 +851,8 @@ public class Chain {
      * @return transaction
      */
     private Transaction getTxFromPeer(byte[] peer) {
+        logger.debug("Chain ID[{}]: get tx from peer[{}]",
+                new String(this.chainID), Hex.toHexString(peer));
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalt, TIMEOUT);
         byte[] data = TorrentDHTEngine.getInstance().dhtGet(spec);
         if (null != data) {
@@ -830,6 +860,7 @@ public class Chain {
             if (null != value.getPeer()) {
                 this.peerManager.addTxPeer(value.getPeer());
             }
+
             if (null != value.getHash()) {
                 return getTxFromDHTByHash(value.getHash());
             }
@@ -1158,7 +1189,6 @@ public class Chain {
      * @return
      */
     private Block mineBlock() {
-        Transaction tx = txPool.getBestTransaction();
 
         BigInteger baseTarget = pot.calculateRequiredBaseTarget(this.bestBlock, this.blockStore);
         byte[] generationSignature = pot.calculateGenerationSignature(this.bestBlock.getGenerationSignature(),
@@ -1188,6 +1218,8 @@ public class Chain {
 
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
+        Transaction tx = txPool.getBestTransaction();
+
         Block block = new Block((byte)1, this.chainID, System.currentTimeMillis() / 1000,
                 this.bestBlock.getBlockNum() + 1, this.bestBlock.getBlockHash(),
                 immutableBlockHash, baseTarget, cumulativeDifficulty, generationSignature, tx,
@@ -1203,17 +1235,18 @@ public class Chain {
                     AccountManager.getInstance().getKeyPair().first);
             block.setMinerBalance(minerState.getBalance().longValue());
 
-            AccountState senderState = miningTrack.getAccount(this.chainID,
-                    block.getTxMsg().getSenderPubkey());
-            block.setSenderBalance(senderState.getBalance().longValue());
-            block.setSenderNonce(senderState.getNonce().longValue());
+            if (null != block.getTxMsg()) {
+                AccountState senderState = miningTrack.getAccount(this.chainID,
+                        block.getTxMsg().getSenderPubkey());
+                block.setSenderBalance(senderState.getBalance().longValue());
+                block.setSenderNonce(senderState.getNonce().longValue());
 
-            if (null != block.getTxMsg() &&
-                    MsgType.Wiring == block.getTxMsg().getTxData().getMsgType()) {
-                AccountState receiverState = miningTrack.getAccount(this.chainID,
-                        block.getTxMsg().getTxData().getReceiver());
-                block.setSenderBalance(receiverState.getBalance().longValue());
-                block.setSenderNonce(receiverState.getNonce().longValue());
+                if (MsgType.Wiring == block.getTxMsg().getTxData().getMsgType()) {
+                    AccountState receiverState = miningTrack.getAccount(this.chainID,
+                            block.getTxMsg().getTxData().getReceiver());
+                    block.setSenderBalance(receiverState.getBalance().longValue());
+                    block.setSenderNonce(receiverState.getNonce().longValue());
+                }
             }
 
             // sign
@@ -1279,7 +1312,7 @@ public class Chain {
 
         timer = new Timer();
         TimerTask timerTask = new PublishTask();
-        timer.schedule(timerTask, 30, ChainParam.DefaultBlockTimeInterval);
+        timer.schedule(timerTask, 0, ChainParam.DefaultBlockTimeInterval);
 
         return true;
     }
@@ -1350,13 +1383,13 @@ public class Chain {
                 DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
                 TorrentDHTEngine.getInstance().dhtPut(immutableItem);
             }
-            List<Transaction> list = txPool.getLocals();
-            if (null != list && list.size() > 1) {
-                Random random = new Random(System.currentTimeMillis());
-                int i = random.nextInt(list.size());
-                DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(list.get(i).getEncoded());
-                TorrentDHTEngine.getInstance().dhtPut(immutableItem);
-            }
+//            List<Transaction> list = txPool.getLocals();
+//            if (null != list && list.size() > 1) {
+//                Random random = new Random(System.currentTimeMillis());
+//                int i = random.nextInt(list.size());
+//                DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(list.get(i).getEncoded());
+//                TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+//            }
         }
     }
 
