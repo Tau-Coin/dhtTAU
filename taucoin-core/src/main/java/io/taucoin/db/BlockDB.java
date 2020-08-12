@@ -111,14 +111,20 @@ public class BlockDB implements BlockStore {
             logger.info("ChainID[{}]:There is no block in this height:{}", chainID.toString(), number);
             return null;
         }
+
         BlockInfos blockInfos = new BlockInfos(rlp);
         List<BlockInfo> list = blockInfos.getBlockInfoList();
+        logger.debug("Chain ID[{}]: Block infos in height[{}] size: {}",
+                new String(chainID), number, list.size());
         for (BlockInfo blockInfo: list) {
+            logger.debug("Chain ID[{}]: block info in height {}: {}",
+                    new String(chainID), number, blockInfo.toString());
             if (blockInfo.isMainChain()) {
-                getBlockByHash(chainID, blockInfo.getHash());
+                return getBlockByHash(chainID, blockInfo.getHash());
             }
         }
-        logger.info("ChainID[{}]:There is no main chain block in this height:{}", chainID.toString(), number);
+        logger.info("ChainID[{}]:There is no main chain block in this height:{}",
+                new String(chainID), number);
         return null;
     }
 
@@ -134,17 +140,23 @@ public class BlockDB implements BlockStore {
     public byte[] getMainChainBlockHashByNumber(byte[] chainID, long number) throws Exception {
         byte[] rlp = db.get(PrefixKey.blockInfoKey(chainID, number));
         if (null == rlp) {
-            logger.info("ChainID[{}]:There is no block in this height:{}", chainID.toString(), number);
+            logger.info("ChainID[{}]:There is no block in this height:{}",
+                    new String(chainID), number);
             return null;
         }
         BlockInfos blockInfos = new BlockInfos(rlp);
         List<BlockInfo> list = blockInfos.getBlockInfoList();
+        logger.debug("Chain ID[{}]: Block infos in height[{}] size: {}",
+                new String(chainID), number, list.size());
         for (BlockInfo blockInfo: list) {
+            logger.debug("Chain ID[{}]: block info in height {}: {}",
+                    new String(chainID), number, blockInfo.toString());
             if (blockInfo.isMainChain()) {
                 return blockInfo.getHash();
             }
         }
-        logger.info("ChainID[{}]:There is no main chain block in this height:{}", chainID.toString(), number);
+        logger.info("ChainID[{}]:There is no main chain block in this height:{}",
+                new String(chainID), number);
         return null;
     }
 

@@ -31,7 +31,7 @@ public class VotingPool {
         Vote vote = votingPool.get(key);
         if (null == vote) {
             vote = new Vote(blockHash, blockNumber);
-            logger.info("Chain ID:{}: The first time the vote appeared:{}", this.chainID.toString(), vote.toString());
+            logger.info("Chain ID:{}: The first time the vote appeared:{}", new String(this.chainID), vote.toString());
         }
         // 唱票
         vote.voteUp();
@@ -43,7 +43,7 @@ public class VotingPool {
         if (null == bestVote || bestVote.getCount() < vote.getCount() ||
                 (bestVote.getCount() == vote.getCount() && bestVote.getBlockNumber() < vote.getBlockNumber())) {
             bestVote = vote;
-            logger.info("Chain ID:{}: Update Best Vote:{}", this.chainID.toString(), bestVote);
+            logger.info("Chain ID:{}: Update Best Vote:{}", new String(this.chainID), bestVote);
         }
 
         // 更新投票池

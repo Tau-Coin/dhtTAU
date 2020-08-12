@@ -125,6 +125,7 @@ public class ChainManager {
                 byte[] chainid = chainsItor.next();
                 ByteArrayWrapper wrapperChainID = new ByteArrayWrapper(chainid);
 
+                logger.info("Follow chain ID: {}", new String(chainid));
                 Chain chain = new Chain(chainid, this.blockDB, this.stateDB, this.listener);
 
                 // Add chain
@@ -238,6 +239,8 @@ public class ChainManager {
 
 		if(ret) {
         	try {
+        	    logger.info("Save genesis block in block store. Chain ID:{}",
+                        new String(genesis.getChainID()));
             	blockDB.saveBlock(genesis,true);
         	} catch (Exception e) {
             	logger.error(e.getMessage(), e);

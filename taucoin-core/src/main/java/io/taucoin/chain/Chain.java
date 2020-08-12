@@ -142,15 +142,19 @@ public class Chain {
         try {
             byte[] bestBlockHash = this.stateDB.getBestBlockHash(this.chainID);
             if (null != bestBlockHash) {
+                logger.info("Chain ID[{}]: Best block hash[{}]",
+                        new String(this.chainID), Hex.toHexString(bestBlockHash));
                 this.bestBlock = this.blockStore.getBlockByHash(this.chainID, bestBlockHash);
             }
 
             byte[] syncBlockHash = this.stateDB.getSyncBlockHash(this.chainID);
             if (null != syncBlockHash) {
+                logger.info("Chain ID[{}]: Sync block hash[{}]",
+                        new String(this.chainID), Hex.toHexString(syncBlockHash));
                 this.syncBlock = this.blockStore.getBlockByHash(this.chainID, syncBlockHash);
             }
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
         }
 
@@ -199,7 +203,7 @@ public class Chain {
 
             this.peerManager.init(allPeers, priorityPeers);
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
         }
 
@@ -219,7 +223,7 @@ public class Chain {
         if (null == this.bestBlock || null == this.syncBlock) {
             Vote bestVote = vote();
             if (!initialSync(bestVote)) {
-                logger.error("Chain ID[{}]: Initial sync fail!", this.chainID.toString());
+                logger.error("Chain ID[{}]: Initial sync fail!", new String(this.chainID));
             }
         }
 
@@ -229,7 +233,7 @@ public class Chain {
                         ChainParam.WARNING_RANGE * ChainParam.DefaultBlockTimeInterval) {
             Vote bestVote = vote();
             if (!initialSync(bestVote)) {
-                logger.error("Chain ID[{}]: Initial sync fail!", this.chainID.toString());
+                logger.error("Chain ID[{}]: Initial sync fail!", new String(this.chainID));
             }
         }
 
@@ -251,11 +255,11 @@ public class Chain {
                 lastTime = startTime;
                 startTime = System.currentTimeMillis() / 1000;
                 if (startTime - lastTime < 1) {
-                    logger.info("Chain ID[{}]: Sleep 1 s", this.chainID.toString());
+                    logger.info("Chain ID[{}]: Sleep 1 s", new String(this.chainID));
                     try {
                         Thread.sleep(1000);
                     } catch (Exception e) {
-                        logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+                        logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
                     }
                 }
 
@@ -333,7 +337,7 @@ public class Chain {
                     Block forkPointBlock = this.blockStore.getForkPointBlock(this.bestBlock, tip);
                     if (null == forkPointBlock) {
                         // cannot find fork point, maybe a attack that fork point is beyond warning range
-                        logger.info("Chain ID[{}]: Cannot find fork point.", this.chainID.toString());
+                        logger.info("Chain ID[{}]: Cannot find fork point.", new String(this.chainID));
                         continue;
                     }
 
@@ -355,7 +359,7 @@ public class Chain {
                     }
 
                 } catch (Exception e) {
-                    logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+                    logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
                 }
             }
 
@@ -390,7 +394,7 @@ public class Chain {
                                 setBestBlock(block);
                                 this.peerManager.addNewBlockPeer(block.getMinerPubkey());
                             } catch (Exception e) {
-                                logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+                                logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
                             }
 
                             Set<ByteArrayWrapper> accounts = extractAccountFromBlock(block);
@@ -439,7 +443,7 @@ public class Chain {
                         this.peerManager.addOldBlockPeer(block.getMinerPubkey());
                     }
                 } catch (Exception e) {
-                    logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+                    logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
                 }
             }
         }
@@ -458,7 +462,7 @@ public class Chain {
             List<Block> newBlocks = new ArrayList<>();
             if (!blockStore.getForkBlocksInfo(targetBlock, this.bestBlock, undoBlocks, newBlocks)) {
                 logger.error("Chain ID[{}]: Cannot get fork block, best block[{}], target block[{}]",
-                        this.chainID.toString(),
+                        new String(this.chainID),
                         Hex.toHexString(this.bestBlock.getBlockHash()),
                         Hex.toHexString(targetBlock.getBlockHash()));
                 return false;
@@ -467,7 +471,7 @@ public class Chain {
             for (Block undoBlock : undoBlocks) {
                 if (!this.stateProcessor.rollback(undoBlock, track)) {
                     logger.error("Chain ID[{}]: Roll back fail, block hash:{}",
-                            this.chainID.toString(), Hex.toHexString(undoBlock.getBlockHash()));
+                            new String(this.chainID), Hex.toHexString(undoBlock.getBlockHash()));
                     return false;
                 }
             }
@@ -484,7 +488,7 @@ public class Chain {
 
                 if (result != ImportResult.IMPORTED_BEST) {
                     logger.error("Chain ID[{}]: Import block fail, block hash:{}",
-                            this.chainID.toString(),
+                            new String(this.chainID),
                             Hex.toHexString(newBlocks.get(i).getBlockHash()));
                     return false;
                 }
@@ -515,7 +519,7 @@ public class Chain {
 
             publishBestBlock();
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
         }
 
@@ -565,7 +569,7 @@ public class Chain {
      */
     private boolean initialSync(Vote bestVote) {
         if (null == bestVote) {
-            logger.error("Chain ID[{}]: Best vote is null.", this.chainID.toString());
+            logger.error("Chain ID[{}]: Best vote is null.", new String(this.chainID));
             return false;
         }
 
@@ -576,7 +580,7 @@ public class Chain {
             Block bestVoteBlock = getBlockFromDHTByHash(bestVote.getBlockHash());
 
             if (null == bestVoteBlock) {
-                logger.error("Chain ID[{}]: Best vote block is null.", this.chainID.toString());
+                logger.error("Chain ID[{}]: Best vote block is null.", new String(this.chainID));
                 return false;
             }
 
@@ -591,7 +595,7 @@ public class Chain {
             StateDB track = this.stateDB.startTracking(this.chainID);
             if (!this.stateProcessor.backwardProcess(bestVoteBlock, track)) {
                 logger.error("Chain ID[{}]: Process block[{}] fail!",
-                        this.chainID.toString(), Hex.toHexString(bestVoteBlock.getBlockHash()));
+                        new String(this.chainID), Hex.toHexString(bestVoteBlock.getBlockHash()));
                 return false;
             }
 
@@ -615,7 +619,7 @@ public class Chain {
 
                 if (!this.stateProcessor.backwardProcess(block, track)) {
                     logger.error("Chain ID[{}]: Process block[{}] fail!",
-                            this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                            new String(this.chainID), Hex.toHexString(block.getBlockHash()));
                     return false;
                 }
 
@@ -645,13 +649,13 @@ public class Chain {
 //                    this.blockStore.removeChain(this.chainID);
 //                }
 //            } catch (Exception e) {
-//                logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+//                logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
 //            }
 //        }
 
             track.commit();
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
         }
 
@@ -700,7 +704,7 @@ public class Chain {
             Block forkPointBlock = this.blockStore.getForkPointBlock(this.bestBlock, bestVoteBlock);
             if (null == forkPointBlock) {
                 // cannot find fork point, maybe fork point is beyond warning range
-                logger.info("Chain ID[{}]: Cannot find fork point.", this.chainID.toString());
+                logger.info("Chain ID[{}]: Cannot find fork point.", new String(this.chainID));
                 return false;
             }
 
@@ -722,7 +726,7 @@ public class Chain {
 
 //            reBranch(this.bestBlock, bestVoteBlock);
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
         }
 
@@ -888,7 +892,7 @@ public class Chain {
             Block block = this.blockStore.getMainChainBlockByNumber(this.chainID, random.nextInt(currentNumber + 1));
             return block;
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
         }
         return null;
     }
@@ -919,11 +923,11 @@ public class Chain {
 //            try {
 //                Block parent = this.blockStore.getBlockByHash(this.chainID, block.getPreviousBlockHash());
 //                if (null == parent) {
-//                    logger.error("ChainID[{}]: Cannot find parent!", this.chainID.toString());
+//                    logger.error("ChainID[{}]: Cannot find parent!", new String(this.chainID));
 //                    return false;
 //                }
 //            } catch (Exception e) {
-//                logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+//                logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
 //                return false;
 //            }
         }
@@ -971,28 +975,28 @@ public class Chain {
     private boolean isValidBlock(Block block, StateDB stateDB) {
         // 是否本链
         if (!Arrays.equals(this.chainID, block.getChainID())) {
-            logger.error("ChainID[{}]: ChainID mismatch!", this.chainID.toString());
+            logger.error("ChainID[{}]: ChainID mismatch!", new String(this.chainID));
             return false;
         }
 
         // 时间戳检查
         if (block.getTimeStamp() > System.currentTimeMillis() / 1000) {
             logger.error("ChainID[{}]: Block[{}] Time is in the future!",
-                    this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                    new String(this.chainID), Hex.toHexString(block.getBlockHash()));
             return false;
         }
 
         // 区块内部自检
         if (!block.isBlockParamValidate()) {
             logger.error("ChainID[{}]: Block[{}] Validate block param error!",
-                    this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                    new String(this.chainID), Hex.toHexString(block.getBlockHash()));
             return false;
         }
 
         // 区块签名检查
         if (!block.verifyBlockSig()) {
             logger.error("ChainID[{}]: Block[{}] Bad Signature!",
-                    this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                    new String(this.chainID), Hex.toHexString(block.getBlockHash()));
             return false;
         }
 
@@ -1000,18 +1004,18 @@ public class Chain {
         try {
             if (null == this.blockStore.getBlockByHash(block.getChainID(), block.getPreviousBlockHash())) {
                 logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
-                        this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                        new String(this.chainID), Hex.toHexString(block.getBlockHash()));
                 return false;
             }
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
         }
 
         // POT共识验证
         if (!verifyPOT(block, stateDB)) {
             logger.error("ChainID[{}]: Block[{}] Validate block param error!",
-                    this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                    new String(this.chainID), Hex.toHexString(block.getBlockHash()));
             return false;
         }
 
@@ -1031,16 +1035,16 @@ public class Chain {
             BigInteger power = stateDB.getNonce(this.chainID, pubKey);
             if (null == power) {
                 logger.error("ChainID[{}]: Miner[{}] has no power!",
-                        this.chainID.toString(), Hex.toHexString(pubKey));
+                        new String(this.chainID), Hex.toHexString(pubKey));
                 return false;
             }
             logger.info("Chain ID[{}]: Address: {}, mining power: {}",
-                    this.chainID.toString(), Hex.toHexString(pubKey), power);
+                    new String(this.chainID), Hex.toHexString(pubKey), power);
 
             Block parentBlock = this.blockStore.getBlockByHash(this.chainID, block.getPreviousBlockHash());
             if (null == parentBlock) {
                 logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
-                        this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                        new String(this.chainID), Hex.toHexString(block.getBlockHash()));
                 return false;
             }
 
@@ -1048,7 +1052,7 @@ public class Chain {
             BigInteger baseTarget = this.pot.calculateRequiredBaseTarget(parentBlock, this.blockStore);
             if (0 != baseTarget.compareTo(block.getBaseTarget())) {
                 logger.error("ChainID[{}]: Block[{}] base target error!",
-                        this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                        new String(this.chainID), Hex.toHexString(block.getBlockHash()));
                 return false;
             }
 
@@ -1056,7 +1060,7 @@ public class Chain {
             byte[] genSig = this.pot.calculateGenerationSignature(parentBlock.getGenerationSignature(), pubKey);
             if (!Arrays.equals(genSig, block.getGenerationSignature())) {
                 logger.error("ChainID[{}]: Block[{}] generation signature error!",
-                        this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                        new String(this.chainID), Hex.toHexString(block.getBlockHash()));
                 return false;
             }
 
@@ -1065,7 +1069,7 @@ public class Chain {
                     parentBlock.getCumulativeDifficulty(), baseTarget);
             if (0 != culDifficulty.compareTo(block.getCumulativeDifficulty())) {
                 logger.error("ChainID[{}]: Block[{}] Cumulative difficulty error!",
-                        this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                        new String(this.chainID), Hex.toHexString(block.getBlockHash()));
                 return false;
             }
 
@@ -1079,12 +1083,12 @@ public class Chain {
             // verify hit
             if (!this.pot.verifyHit(hit, baseTarget, power, timeInterval)) {
                 logger.error("ChainID[{}]: The block[{}] does not meet the pot consensus!!",
-                        this.chainID.toString(), Hex.toHexString(block.getBlockHash()));
+                        new String(this.chainID), Hex.toHexString(block.getBlockHash()));
                 return false;
             }
 
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
         }
 
@@ -1100,19 +1104,19 @@ public class Chain {
             byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
             if (null == pubKey) {
-                logger.info("Chain ID[{}]: PubKey is null.", this.chainID.toString());
+                logger.info("Chain ID[{}]: PubKey is null.", new String(this.chainID));
                 return false;
             }
 
             BigInteger power = this.stateDB.getNonce(this.chainID, pubKey);
             if (null == power || power.longValue() <= 0) {
                 logger.info("Chain ID[{}]: PubKey[{}]-No mining power.",
-                        this.chainID.toString(), Hex.toHexString(pubKey));
+                        new String(this.chainID), Hex.toHexString(pubKey));
                 return false;
             }
 
             logger.info("ChainID[{}]: PubKey[{}] mining power: {}",
-                    this.chainID.toString(), Hex.toHexString(pubKey), power);
+                    new String(this.chainID), Hex.toHexString(pubKey), power);
 
             // check base target
             BigInteger baseTarget = this.pot.calculateRequiredBaseTarget(this.bestBlock, this.blockStore);
@@ -1128,17 +1132,17 @@ public class Chain {
 
             long timeInterval = this.pot.calculateMiningTimeInterval(hit, baseTarget, power);
             if ((System.currentTimeMillis() / 1000 - this.bestBlock.getTimeStamp()) < timeInterval) {
-                logger.info("Chain ID[{}]: It's not time for the block.", this.chainID.toString());
+                logger.info("Chain ID[{}]: It's not time for the block.", new String(this.chainID));
                 return false;
             }
 
 //            if (target.compareTo(hit) < 0) {
 //                logger.info("ChainID[{}]: Target[{}] value is smaller than hit[{}]!!",
-//                        this.chainID.toString(), target, hit);
+//                        new String(this.chainID), target, hit);
 //                return false;
 //            }
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
         }
 
@@ -1169,12 +1173,12 @@ public class Chain {
 //                immutableBlockHash = new byte[ChainParam.HashLength];
             }
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return null;
         }
 
         if (null == immutableBlockHash) {
-            logger.error("ChainID[{}]-Get immutable block hash error!", this.chainID.toString());
+            logger.error("ChainID[{}]-Get immutable block hash error!", new String(this.chainID));
             return null;
         }
 
@@ -1211,7 +1215,7 @@ public class Chain {
             // sign
             block.signBlock(keyPair.second);
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return null;
         }
 
@@ -1252,13 +1256,13 @@ public class Chain {
             return false;
         }
 
-        logger.info("Chain ID[{}]: Start voting and tx thread...", this.chainID.toString());
+        logger.info("Chain ID[{}]: Start voting and tx thread...", new String(this.chainID));
         votingThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 blockChainProcess();
             }
-        }, this.chainID.toString() + "BlockThread");
+        }, new String(this.chainID) + "BlockThread");
         votingThread.start();
 
         txThread = new Thread(new Runnable() {
@@ -1266,7 +1270,7 @@ public class Chain {
             public void run() {
                 txProcess();
             }
-        }, this.chainID.toString() + "TxThread");
+        }, new String(this.chainID) + "TxThread");
         txThread.start();
 
         timer = new Timer();

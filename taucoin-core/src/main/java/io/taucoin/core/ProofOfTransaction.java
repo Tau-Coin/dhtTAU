@@ -72,23 +72,23 @@ public class ProofOfTransaction {
             ancestor1 = blockStore.getBlockByHash(previousBlock.getChainID(), previousBlock.getPreviousBlockHash());
             if (null == ancestor1) {
                 logger.error("Chain ID:{}: Cannot find parent, hash:{}",
-                        this.chainID.toString(), Hex.toHexString(previousBlock.getPreviousBlockHash()));
+                        new String(this.chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
                 return null;
             }
             ancestor2 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor1.getPreviousBlockHash());
             if (null == ancestor2) {
                 logger.error("Chain ID:{}: Cannot find parent, hash:{}",
-                        this.chainID.toString(), Hex.toHexString(ancestor1.getPreviousBlockHash()));
+                        new String(this.chainID), Hex.toHexString(ancestor1.getPreviousBlockHash()));
                 return null;
             }
             ancestor3 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor2.getPreviousBlockHash());
             if (null == ancestor3) {
                 logger.error("Chain ID:{}: Cannot find parent, hash:{}",
-                        this.chainID.toString(), Hex.toHexString(ancestor2.getPreviousBlockHash()));
+                        new String(this.chainID), Hex.toHexString(ancestor2.getPreviousBlockHash()));
                 return null;
             }
         } catch (Exception e) {
-            logger.info(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.info(new String(this.chainID) + ":" + e.getMessage(), e);
             return null;
         }
 
@@ -182,23 +182,23 @@ public class ProofOfTransaction {
         System.arraycopy(generationSignature,0,headBytes,0,8);
 
         BigInteger bhit = new BigInteger(1, headBytes);
-        logger.info("Chain ID:{}: bhit:{}", this.chainID.toString(), bhit);
+        logger.info("Chain ID:{}: bhit:{}", new String(this.chainID), bhit);
 
         BigInteger bhitUzero = bhit.add(BigInteger.ONE);
-        logger.info("Chain ID:{}: bhitUzero:{}", this.chainID.toString(), bhitUzero);
+        logger.info("Chain ID:{}: bhitUzero:{}", new String(this.chainID), bhitUzero);
 
         double logarithm = abs(log(bhitUzero.doubleValue()) - 2 * log(DiffAdjustNumeratorHalf.doubleValue()));
         // Values of logarithm are mostly distributed between (0, 0.1), and int64(logarithm) == 0
         // To make hit smoother, we use logarithm * 1000 instead
         logarithm = logarithm * 1000;
-        logger.info("Chain ID:{}: logarithm:{}", this.chainID.toString(), logarithm);
+        logger.info("Chain ID:{}: logarithm:{}", new String(this.chainID), logarithm);
 
         long ulogarithm = (Double.valueOf(logarithm)).longValue();
-        logger.info("Chain ID:{}: ulogarithm:{}", this.chainID.toString(), ulogarithm);
+        logger.info("Chain ID:{}: ulogarithm:{}", new String(this.chainID), ulogarithm);
 
         // To offset the impact, divide by 1000
         BigInteger adjustHit = DiffAdjustNumeratorCoe.multiply(BigInteger.valueOf(ulogarithm)).divide(BigInteger.valueOf(1000));
-        logger.info("Chain ID:{}: adjustHit:{}", this.chainID.toString(), adjustHit);
+        logger.info("Chain ID:{}: adjustHit:{}", new String(this.chainID), adjustHit);
 
         return adjustHit;
     }
@@ -230,14 +230,14 @@ public class ProofOfTransaction {
 
         // C++ to make sure T > H
         timeInterval++;
-        logger.info("Chain ID:{}: Time interval:{}", this.chainID.toString(), timeInterval);
+        logger.info("Chain ID:{}: Time interval:{}", new String(this.chainID), timeInterval);
 
         if (timeInterval < this.minBlockTime) {
             timeInterval = this.minBlockTime;
         } else if (timeInterval > this.maxBlockTime) {
             timeInterval = this.maxBlockTime;
         }
-        logger.info("Chain ID:{}: Final time interval:{}", this.chainID.toString(), timeInterval);
+        logger.info("Chain ID:{}: Final time interval:{}", new String(this.chainID), timeInterval);
 
         return timeInterval;
     }
@@ -252,15 +252,15 @@ public class ProofOfTransaction {
      */
     public boolean verifyHit(BigInteger hit, BigInteger baseTarget, BigInteger power, long timeInterval) {
         if (timeInterval < this.minBlockTime) {
-            logger.error("Chain ID:{}: Time interval is less than MinBlockTime[{}]", this.chainID.toString(), this.minBlockTime);
+            logger.error("Chain ID:{}: Time interval is less than MinBlockTime[{}]", new String(this.chainID), this.minBlockTime);
             return false;
         } else if (timeInterval >= this.maxBlockTime) {
-            logger.info("Chain ID:{}: OK. Time interval is greater than MaxBlockTime[{}]", this.chainID.toString(), this.maxBlockTime);
+            logger.info("Chain ID:{}: OK. Time interval is greater than MaxBlockTime[{}]", new String(this.chainID), this.maxBlockTime);
             return true;
         } else {
             BigInteger target = this.calculateMinerTargetValue(baseTarget, power, timeInterval);
             if (target.compareTo(hit) <= 0) {
-                logger.error("Chain ID:{}: Invalid POT: target[{}] <= hit[{}]", this.chainID.toString(), target, hit);
+                logger.error("Chain ID:{}: Invalid POT: target[{}] <= hit[{}]", new String(this.chainID), target, hit);
                 return false;
             }
         }

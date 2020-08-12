@@ -113,19 +113,19 @@ public class TransactionPoolImpl implements TransactionPool {
     @Override
     public void addLocal(Transaction tx) {
         if (null == tx) {
-            logger.error("Chain ID[{}]: Tx is null.", this.chainID.toString());
+            logger.error("Chain ID[{}]: Tx is null.", new String(this.chainID));
             return;
         }
 
         if (!tx.isTxParamValidate()) {
             logger.error("Chain ID[{}]: Tx[{}] param is invalid.",
-                    this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
             return;
         }
 
         if (!tx.verifyTransactionSig()) {
             logger.error("Chain ID[{}]: Tx[{}] bad signature.",
-                    this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
             return;
         }
 
@@ -138,7 +138,7 @@ public class TransactionPoolImpl implements TransactionPool {
         try {
             this.stateDB.putTxIntoSelfTxPool(chainID, tx);
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
         }
 
         long currentNonce = getNonce(this.userPubKey);
@@ -151,7 +151,7 @@ public class TransactionPoolImpl implements TransactionPool {
             locals.offer(LocalTxEntry.with(tx));
         } else {
             logger.info("Chain ID[{}]: tx[{}] nonce is not bigger than current nonce.",
-                    this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
         }
     }
 
@@ -202,7 +202,7 @@ public class TransactionPoolImpl implements TransactionPool {
                 try {
                     this.stateDB.putTxIntoSelfTxPool(chainID, tx);
                 } catch (Exception e) {
-                    logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+                    logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
                 }
             } else {
                 // if not found in all, remove it from local
@@ -231,7 +231,7 @@ public class TransactionPoolImpl implements TransactionPool {
                 locals.poll();
             }
         }
-        logger.info("Chain ID[{}]: Cannot find local best transaction.", this.chainID.toString());
+        logger.info("Chain ID[{}]: Cannot find local best transaction.", new String(this.chainID));
         return null;
     }
 
@@ -254,7 +254,7 @@ public class TransactionPoolImpl implements TransactionPool {
     public void addRemote(Transaction tx) {
         // check if null
         if (null == tx) {
-            logger.error("ChainID[{}]-Add remote null!", this.chainID.toString());
+            logger.error("ChainID[{}]-Add remote null!", new String(this.chainID));
         }
 
         // check if local
@@ -265,13 +265,13 @@ public class TransactionPoolImpl implements TransactionPool {
 
         if (!tx.isTxParamValidate()) {
             logger.error("Chain ID[{}]: Tx[{}] param is invalid.",
-                    this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
             return;
         }
 
         if (!tx.verifyTransactionSig()) {
             logger.error("Chain ID[{}]: Tx[{}] bad signature.",
-                    this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
             return;
         }
 
@@ -332,7 +332,7 @@ public class TransactionPoolImpl implements TransactionPool {
                     AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
                     if (accountState.getBalance().longValue() < cost) {
                         logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
-                                this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                                new String(this.chainID), Hex.toHexString(tx.getTxID()));
                         return false;
                     }
                     break;
@@ -343,19 +343,19 @@ public class TransactionPoolImpl implements TransactionPool {
                     AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
                     if (accountState.getBalance().longValue() < cost) {
                         logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
-                                this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                                new String(this.chainID), Hex.toHexString(tx.getTxID()));
                         return false;
                     }
                     break;
                 }
                 default: {
                     logger.error("Chain ID[{}]: tx[{}] Type is not supported!.",
-                            this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                            new String(this.chainID), Hex.toHexString(tx.getTxID()));
                     return false;
                 }
             }
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
         }
 
@@ -639,7 +639,7 @@ public class TransactionPoolImpl implements TransactionPool {
                     AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
                     if (accountState.getNonce().longValue() + 1 != tx.getNonce()) {
                         logger.error("Chain ID[{}]: tx[{}] Nonce is discontinuity.",
-                                this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                                new String(this.chainID), Hex.toHexString(tx.getTxID()));
                         removeRemote(tx);
                     }
 
@@ -650,7 +650,7 @@ public class TransactionPoolImpl implements TransactionPool {
 
                             if (accountState.getBalance().longValue() < cost) {
                                 logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
-                                        this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                                        new String(this.chainID), Hex.toHexString(tx.getTxID()));
                                 removeRemote(tx);
                             }
                             break;
@@ -660,21 +660,21 @@ public class TransactionPoolImpl implements TransactionPool {
                             long cost = tx.getTxFee();
                             if (accountState.getBalance().longValue() < cost) {
                                 logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
-                                        this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                                        new String(this.chainID), Hex.toHexString(tx.getTxID()));
                                 removeRemote(tx);
                             }
                             break;
                         }
                         default: {
                             logger.error("Chain ID[{}]: tx[{}] Type is not supported!",
-                                    this.chainID.toString(), Hex.toHexString(tx.getTxID()));
+                                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
                             removeRemote(tx);
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            logger.error(this.chainID.toString() + ":" + e.getMessage(), e);
+            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
         }
     }
 
