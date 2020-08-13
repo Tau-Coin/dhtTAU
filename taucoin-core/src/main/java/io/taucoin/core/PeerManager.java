@@ -230,11 +230,35 @@ public class PeerManager {
                 this.txPeers.add(priorityPeers.get(random.nextInt(size)));
             }
         }
+
         // get first peer, then remove it
         Iterator<ByteArrayWrapper> iterator = this.txPeers.iterator();
         byte[] peer = iterator.next().getData();
         iterator.remove();
+
         return peer;
+    }
+
+    /**
+     * get optimal tx peer
+     *
+     * @return
+     */
+    public byte[] getOptimalTxPeer() {
+        // if empty, fill it up
+        if (this.txPeers.isEmpty()) {
+            int size = this.priorityPeers.size();
+            Random random = new Random(System.currentTimeMillis());
+
+            for (int i = 0; i < PEER_NUMBER; i++) {
+                // add a peer to tx peers randomly from priority peers
+                this.txPeers.add(priorityPeers.get(random.nextInt(size)));
+            }
+        }
+
+        // get first peer
+        Iterator<ByteArrayWrapper> iterator = this.txPeers.iterator();
+        return iterator.next().getData();
     }
 
     /**

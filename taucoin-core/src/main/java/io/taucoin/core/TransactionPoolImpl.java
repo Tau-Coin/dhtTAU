@@ -635,9 +635,9 @@ public class TransactionPoolImpl implements TransactionPool {
     }
 
     /**
-     * get a peer that has latest timestamp
+     * get a peer that has most fee
      *
-     * @return myself pubKey when there is no tx in pool
+     * @return peer or null
      */
     @Override
     public byte[] getOptimalPeer() {
@@ -653,7 +653,7 @@ public class TransactionPoolImpl implements TransactionPool {
             }
         }
 
-        return AccountManager.getInstance().getKeyPair().first;
+        return null;
     }
 
     /**

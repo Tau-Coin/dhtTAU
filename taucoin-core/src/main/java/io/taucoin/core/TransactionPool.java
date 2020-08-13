@@ -156,8 +156,8 @@ public interface TransactionPool {
     void trySlimDownPool();
 
     /**
-     * get a peer that has latest timestamp
-     * @return myself pubKey when there is no tx in pool
+     * get a peer that has most fee
+     * @return peer or null
      */
     byte[] getOptimalPeer();
 

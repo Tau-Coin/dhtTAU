@@ -898,6 +898,17 @@ public class Chain {
     }
 
     /**
+     * publish tip block on main chain to dht
+     */
+    private void publishBestTx() {
+        Transaction tx = this.txPool.getBestTransaction();
+        if (null != tx) {
+            // put mutable tx
+            publishTransaction(tx);
+        }
+    }
+
+    /**
      * put a tx in mutable item
      * @param tx
      */
@@ -908,9 +919,20 @@ public class Chain {
             TorrentDHTEngine.getInstance().dhtPut(immutableItem);
 
             // put mutable item
+            // get max fee peer
             byte[] peer = this.txPool.getOptimalPeer();
+            if (null == peer) {
+                // get active peer from other peer
+                peer = this.peerManager.getOptimalTxPeer();
+            }
+            if (null == peer) {
+                // get myself
+                peer = AccountManager.getInstance().getKeyPair().first;
+            }
+
             MutableItemValue value = new MutableItemValue(tx.getTxID(), peer);
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second, value.getEncoded(), txSalt);
             TorrentDHTEngine.getInstance().dhtPut(mutableItem);
         }
@@ -1266,17 +1288,34 @@ public class Chain {
      */
     private void txProcess() {
         Transaction lastTx = null;
+        long startTime = 0;
+        long lastTime;
+
         while (!Thread.interrupted()) {
+            lastTime = startTime;
+            startTime = System.currentTimeMillis() / 1000;
+            if (startTime - lastTime < 1) {
+                logger.debug("Chain ID[{}]: Tx Thread Sleep 1 s", new String(this.chainID));
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+                }
+            }
+
             // get tx
             byte[] peer = this.peerManager.popUpOptimalTxPeer();
             Transaction tx = getTxFromPeer(peer);
             if (null != tx) {
+                logger.debug("Chain ID[{}]: Get new transaction.", new String(this.chainID));
                 this.txPool.addTx(tx);
             }
 
             // publish myself tx
             Transaction myselfTx = this.txPool.getLocalBestTransaction();
             if (null != myselfTx && myselfTx != lastTx) {
+                logger.debug("Chain ID[{}]: Publish new transaction[{}].",
+                        new String(this.chainID), myselfTx.getTxID());
                 publishTransaction(myselfTx);
                 lastTx = myselfTx;
             }
@@ -1371,6 +1410,13 @@ public class Chain {
          */
         @Override
         public void run() {
+            // publish mutable item
+            // publish best block
+            publishBestBlock();
+            // publish best tx
+            publishBestTx();
+
+            // publish immutable item
             // publish block randomly
             Block block = getBlockRandomlyFromDB();
             if (null != block) {
