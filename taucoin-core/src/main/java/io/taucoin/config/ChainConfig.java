@@ -25,10 +25,9 @@ import io.taucoin.util.ByteUtil;
 
 import com.frostwire.jlibtorrent.swig.byte_vector;
 import com.frostwire.jlibtorrent.swig.sha1_hash;
+import java.math.BigInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigInteger;
 
 /**
  * configure every new chain parameter.
@@ -39,15 +38,15 @@ public class ChainConfig {
 
     private byte version;
     private String CommunityName;
-    private int BlockTimeInterval=600;
-    private String GenesisMinerPubkey="";
+    private int BlockTimeInterval = 600;
+    private String GenesisMinerPubkey = "";
     private long GenesisTimeStamp;
-    private int BlockNum=0;
-    private BigInteger BaseTarget= new BigInteger("21D0369D036978",16);
+    private int BlockNum = 0;
+    private BigInteger BaseTarget = new BigInteger("21D0369D036978", 16);
     private BigInteger CummulativeDifficulty = BigInteger.ZERO;
     private String GenerationSignature;
     private Transaction Msg;
-    private String Signature="";
+    private String Signature = "";
 
     /**
      * construct chain config without signature.
@@ -63,7 +62,7 @@ public class ChainConfig {
         this.CommunityName = communityName;
         this.BlockTimeInterval = blockTimeInterval;
         this.GenesisMinerPubkey = genesisMinerPubkey;
-        this.GenesisTimeStamp = System.currentTimeMillis()/1000;
+        this.GenesisTimeStamp = System.currentTimeMillis() / 1000;
 
         //TAU is a special status.
         if(genesisMinerPubkey == ChainParam.TauGenesisMinerPubkey){
