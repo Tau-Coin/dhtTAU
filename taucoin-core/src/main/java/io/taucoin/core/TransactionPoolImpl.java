@@ -56,11 +56,7 @@ public class TransactionPoolImpl implements TransactionPool {
         // update key
         this.userPubKey = pubKey;
 
-        PriorityQueue<LocalTxEntry> localTemp = new PriorityQueue<>(this.locals.size(), new LocalTxPolicy());
-        localTemp.addAll(this.locals);
-        this.locals.clear();
-
-        for (LocalTxEntry entry: localTemp) {
+        for (LocalTxEntry entry : this.locals) {
             // remove tx from pool
             Transaction tx = getTransactionByTxid(entry.txid);
             removeTransactionFromPool(tx);
@@ -68,6 +64,8 @@ public class TransactionPoolImpl implements TransactionPool {
             // try to add remote
             addTx(tx);
         }
+
+        this.locals.clear();
 
         // try to get self tx from db
         getSelfTxsFromDB();

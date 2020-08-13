@@ -33,7 +33,7 @@ public class chain_updateKey extends JsonRpcServerMethod {
         } else {
             // get seed
             byte[] seed = jsToBytes((String)(params.get(0)));
-            logger.info("----------------Seed:{}", Hex.toHexString(seed));
+
             tauController.updateKey(seed);
 
             // make response
