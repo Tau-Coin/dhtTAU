@@ -16,7 +16,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.utypes;
 
-
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Entry;
 
@@ -36,6 +35,7 @@ import io.taucoin.util.RLPList;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Block {
+    // Block字段
     private long version;
     private long timestamp;
     private long blockNum;
@@ -52,6 +52,7 @@ public class Block {
     private ArrayList<Long> signature;
     private ArrayList<Long> minerPubkey;
 
+    // 中间结果，暂存内存，不上链
     private byte[] encodedBytes;
     private byte[] sigEncodedBytes;
     private byte[] blockHash;
@@ -76,24 +77,37 @@ public class Block {
     }
 
     /**
-    *construct a complete block.
-    *use BigInteger to express unsigned long.
-    */
+     * construct a complete block.
+     * @param version: current block version.
+     * @param timestamp: unix timestamp block was created.
+     * @param blockNum: block index number start with 0.
+     * @param previousBlockHash: current block father hash reference.
+     * @param immutableBlockHash: the chain immutable point block hash.
+     * @param baseTarget:block mining base target(pot).
+     * @param cumulativeDifficulty:chain difficulty.
+     * @param generationSignature:block mining random number.
+     * @param txHash:block transaction hash.
+     * @param minerBalance:block miner coin balance.
+     * @param senderBalance:transaction sender balance.
+     * @param receiverBalance:transaction receiver balance.
+     * @param senderNonce:transaction sender nonce(power).
+     * @param signature:block signature.
+     */
     public Block(long version, long timestamp, long blockNum, byte[] previousBlockHash,
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, byte[] txHash, long minerBalance, long senderBalance,
                  long receiverBalance, long senderNonce, byte[] signature,byte[] minerPubkey){
-        if (previousBlockHash.length > ChainParam.HashLength) {
-            throw new IllegalArgumentException("pervious block hash need less than: " + ChainParam.HashLength);
+        if (previousBlockHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Previous block hash should be : " + ChainParam.HashLength + " bytes");
         }
-        if (immutableBlockHash.length > ChainParam.HashLength) {
-            throw new IllegalArgumentException("immutable block hash need less than: " + ChainParam.HashLength);
+        if (immutableBlockHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Immutable block hash should be : " + ChainParam.HashLength + " bytes");
         }
         if (signature.length != ChainParam.SignatureLength) {
-            throw new IllegalArgumentException("signature length should =: " + ChainParam.SignatureLength);
+            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
         }
         if (minerPubkey.length != ChainParam.PubkeyLength) {
-            throw new IllegalArgumentException("miner pubkey length should =: " + ChainParam.PubkeyLength);
+            throw new IllegalArgumentException("Miner pubkey should be : " + ChainParam.PubkeyLength + " bytes");
         }
         this.version = version;
         this.timestamp = timestamp;
@@ -110,6 +124,7 @@ public class Block {
         this.senderNonce = senderNonce;
         this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
         this.minerPubkey = ByteUtil.byteArrayToSignLongArray(minerPubkey, ChainParam.PubkeyLongArrayLength);
+
         isParsed = true;
     }
 
@@ -133,15 +148,17 @@ public class Block {
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, byte[] txHash, long minerBalance, long senderBalance,
                  long receiverBalance, long senderNonce,byte[] minerPubkey){
-        if(previousBlockHash.length > ChainParam.HashLength){
-            throw new IllegalArgumentException("pervious block hash need less than: "+ ChainParam.HashLength);
+
+        if (previousBlockHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Previous block hash should be : " + ChainParam.HashLength + " bytes");
         }
-        if(immutableBlockHash.length > ChainParam.HashLength){
-            throw new IllegalArgumentException("immutable block hash need less than: "+ ChainParam.HashLength);
+        if (immutableBlockHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Immutable block hash should be : " + ChainParam.HashLength + " bytes");
         }
-        if(minerPubkey.length != ChainParam.PubkeyLength){
-            throw new IllegalArgumentException("miner pubkey length should =: " + ChainParam.PubkeyLength);
+        if (minerPubkey.length != ChainParam.PubkeyLength) {
+            throw new IllegalArgumentException("Miner pubkey should be : " + ChainParam.PubkeyLength + " bytes");
         }
+
         this.version = version;
         this.timestamp = timestamp;
         this.blockNum = blockNum;
@@ -156,6 +173,7 @@ public class Block {
         this.receiverBalance = receiverBalance;
         this.senderNonce = senderNonce;
         this.minerPubkey = ByteUtil.byteArrayToSignLongArray(minerPubkey, ChainParam.PubkeyLongArrayLength);
+
         isParsed = true;
     }
 
@@ -178,6 +196,7 @@ public class Block {
         this.receiverBalance = 0;
         this.senderNonce = 0 ;
         this.minerPubkey = ByteUtil.byteArrayToSignLongArray(cf.getGenesisMinerPubkey(), ChainParam.PubkeyLongArrayLength);
+
         isParsed = true;
     }
 
@@ -195,7 +214,7 @@ public class Block {
      * @return
      */
     public byte[] getEncodedBytes(){
-        if(encodedBytes == null) {
+        if (encodedBytes == null) {
            List list = new ArrayList();
            list.add(this.version);
            list.add(this.timestamp);
@@ -223,7 +242,7 @@ public class Block {
      * @return
      */
     public byte[] getSigEncodedBytes(){
-        if(sigEncodedBytes == null) {
+        if (sigEncodedBytes == null) {
             List list = new ArrayList();
             list.add(this.version);
             list.add(this.timestamp);
@@ -249,9 +268,9 @@ public class Block {
      * parse block bytes field to flat block field.
      */
     private void parseEncodedBytes(){
-        if(isParsed){
+        if (isParsed) {
             return;
-        }else{
+        } else {
             Entry entry = Entry.bdecode(this.encodedBytes);
             List entrylist = entry.list();
 
@@ -264,7 +283,7 @@ public class Block {
             this.cumulativeDifficulty = ByteUtil.stringToLong(entrylist.get(BlockIndex.CDifficulty.ordinal()).toString());
             this.generationSignature = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.GSignature.ordinal()).toString());
 
-            if(entrylist.size() == (BlockIndex.MPubkey.ordinal()+ 1)){
+            if (entrylist.size() == (BlockIndex.MPubkey.ordinal() + 1)){
                 this.txHash = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.TxHash.ordinal()).toString());
                 this.minerBalance = ByteUtil.stringToLong(entrylist.get(BlockIndex.MBalance.ordinal()).toString());
                 this.senderBalance = ByteUtil.stringToLong(entrylist.get(BlockIndex.SBalance.ordinal()).toString());
@@ -513,9 +532,9 @@ public class Block {
             this.txMsg.signTransaction(prikey);
         }
         */
-        byte[] sig = Ed25519.sign(this.getBlockSigMsg(),getMinerPubkey(), prikey);
+        byte[] sig = Ed25519.sign(this.getBlockSigMsg(), getMinerPubkey(), prikey);
         this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
-        return getSignature();
+        return sig;
     }
 
     /**
@@ -526,7 +545,7 @@ public class Block {
      */
     public boolean isBlockParamValidate(){
         if(!isParsed) parseEncodedBytes();
-        if((timestamp > (System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift)) || timestamp < 0) return false;
+        if((timestamp > (System.currentTimeMillis() / 1000 + ChainParam.BlockTimeDrift)) || timestamp < 0) return false;
         if(blockNum < 0) return false;
         if(minerBalance < 0) return false;
         if(senderBalance < 0) return false;
@@ -542,7 +561,7 @@ public class Block {
     public boolean verifyBlockSig(){
         byte[] signature = this.getSignature();
         byte[] sigmsg = this.getBlockSigMsg();
-        return Ed25519.verify(signature,sigmsg,getMinerPubkey());
+        return Ed25519.verify(signature, sigmsg, getMinerPubkey());
     }
 
     /**
