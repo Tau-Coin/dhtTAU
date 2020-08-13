@@ -28,10 +28,31 @@ public class Repo {
 
     public static final String KEY_FILE_NAME = "key";
 
+    private static volatile Repo INSTANCE;
+
+    private Config config;
+
+    /**
+     * Get Repo instance.
+     *
+     * @return Repo instance.
+     */
+    public static Repo getInstance() {
+        if (INSTANCE == null) {
+            synchronized (Repo.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new Repo();
+                }
+            }
+        }
+
+        return INSTANCE;
+    }
+
     /**
      * Repo constructor.
      */
-    public Repo() {
+    private Repo() {
     }
 
     public void init(Config config) throws RepoException {
@@ -39,6 +60,8 @@ public class Repo {
         if (config == null) {
             throw new RepoException("null config object");
         }
+
+        this.config = config;
 
         // init root directory.
         String dir = config.getDataDir();
@@ -77,6 +100,26 @@ public class Repo {
                 }
             }
         }
+    }
+
+    public void updateKeySeed(byte[] seed) throws RepoException {
+
+        if (this.config == null) {
+            throw new RepoException("null config object");
+        }
+
+        File keyFile = new File(config.getDataDir() + File.separator + KEY_FILE_NAME);
+        String hexStr = Hex.toHexString(seed);
+
+        try {
+            Files.write(Paths.get(keyFile.getAbsolutePath()), hexStr.getBytes(),
+                    StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            throw new RepoException(e.getMessage());
+        }
+
+        logger.info("update key seed successfully:" + hexStr);
+        this.config.setKeySeed(seed);
     }
 
     public static String getDefaultDataDir() {

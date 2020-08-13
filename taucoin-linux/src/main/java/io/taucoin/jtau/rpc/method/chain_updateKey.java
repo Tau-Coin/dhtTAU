@@ -17,6 +17,9 @@ import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
+import io.taucoin.jtau.util.Repo;
+
+import static io.taucoin.jtau.util.Repo.RepoException;
 
 public class chain_updateKey extends JsonRpcServerMethod {
     private static final Logger logger = LoggerFactory.getLogger("rpc");
@@ -35,6 +38,13 @@ public class chain_updateKey extends JsonRpcServerMethod {
             byte[] seed = jsToBytes((String)(params.get(0)));
 
             tauController.updateKey(seed);
+
+            // update key seed into wallet
+            try {
+                Repo.getInstance().updateKeySeed(seed);
+            } catch (RepoException e) {
+                e.printStackTrace();
+            }
 
             // make response
             ArrayList<String> result = new ArrayList<>();

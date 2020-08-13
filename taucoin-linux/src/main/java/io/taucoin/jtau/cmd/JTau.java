@@ -17,7 +17,7 @@ public class JTau {
     public static void main(String[] args) {
 
         Config config = new Config();
-        Repo repo = new Repo();
+        Repo repo = Repo.getInstance();
         boolean isNormalExit = false;
 
         // parse commandline arguments.
