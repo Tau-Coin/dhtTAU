@@ -16,41 +16,45 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.utypes;
 
-import com.frostwire.jlibtorrent.Ed25519;
-import com.frostwire.jlibtorrent.Entry;
-
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import io.taucoin.config.ChainConfig;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
+import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Entry;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Block {
+        
+    private static final Logger logger = LoggerFactory.getLogger("Block");
+
     // Block字段
     private long version;
     private long timestamp;
     private long blockNum;
-    private ArrayList<Long> previousBlockHash;
-    private ArrayList<Long> immutableBlockHash;
+    private ArrayList<Long> previousBlockHash;    //Hash - 20 Bytes
+    private ArrayList<Long> immutableBlockHash;   //Hash - 20 Bytes
     private long baseTarget;
     private long cumulativeDifficulty;
-    private ArrayList<Long> generationSignature;
-    private ArrayList<Long> txHash;
+    private ArrayList<Long> generationSignature;  //Hash - 20 Bytes
+    private ArrayList<Long> txHash;     //Hash - 20 Bytes
     private long minerBalance;
     private long senderBalance;
     private long receiverBalance;
     private long senderNonce;
-    private ArrayList<Long> signature;
-    private ArrayList<Long> minerPubkey;
+    private ArrayList<Long> signature;     //Signature - 64 Bytes
+    private ArrayList<Long> minerPubkey;   //Pubkey - 32 Bytes
 
     // 中间结果，暂存内存，不上链
     private byte[] encodedBytes;
@@ -272,30 +276,30 @@ public class Block {
             return;
         } else {
             Entry entry = Entry.bdecode(this.encodedBytes);
-            List entrylist = entry.list();
+            List<Entry> entrylist = entry.list();
 
-            this.version = ByteUtil.stringToLong(entrylist.get(BlockIndex.Version.ordinal()).toString());
-            this.timestamp = ByteUtil.stringToLong(entrylist.get(BlockIndex.Timestamp.ordinal()).toString());
-            this.blockNum = ByteUtil.stringToLong(entrylist.get(BlockIndex.BlockNum.ordinal()).toString());
+            this.version = entrylist.get(BlockIndex.Version.ordinal()).integer();
+            this.timestamp = entrylist.get(BlockIndex.Timestamp.ordinal()).integer();
+            this.blockNum = entrylist.get(BlockIndex.BlockNum.ordinal()).integer();
             this.previousBlockHash = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.PBHash.ordinal()).toString());
             this.immutableBlockHash = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.IBHash.ordinal()).toString());
-            this.baseTarget = ByteUtil.stringToLong(entrylist.get(BlockIndex.BaseTarget.ordinal()).toString());
-            this.cumulativeDifficulty = ByteUtil.stringToLong(entrylist.get(BlockIndex.CDifficulty.ordinal()).toString());
+            this.baseTarget = entrylist.get(BlockIndex.BaseTarget.ordinal()).integer();
+            this.cumulativeDifficulty = entrylist.get(BlockIndex.CDifficulty.ordinal()).integer();
             this.generationSignature = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.GSignature.ordinal()).toString());
 
             if (entrylist.size() == (BlockIndex.MPubkey.ordinal() + 1)){
                 this.txHash = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.TxHash.ordinal()).toString());
-                this.minerBalance = ByteUtil.stringToLong(entrylist.get(BlockIndex.MBalance.ordinal()).toString());
-                this.senderBalance = ByteUtil.stringToLong(entrylist.get(BlockIndex.SBalance.ordinal()).toString());
-                this.receiverBalance = ByteUtil.stringToLong(entrylist.get(BlockIndex.RBalance.ordinal()).toString());
-                this.senderNonce = ByteUtil.stringToLong(entrylist.get(BlockIndex.SNonce.ordinal()).toString());
+                this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
+                this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
+                this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
+                this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
                 this.signature = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
                 this.minerPubkey = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
             }else {
-                this.minerBalance = ByteUtil.stringToLong(entrylist.get(BlockIndex.MBalance.ordinal()).toString());
-                this.senderBalance = ByteUtil.stringToLong(entrylist.get(BlockIndex.SBalance.ordinal()).toString());
-                this.receiverBalance = ByteUtil.stringToLong(entrylist.get(BlockIndex.RBalance.ordinal()).toString());
-                this.senderNonce = ByteUtil.stringToLong(entrylist.get(BlockIndex.SNonce.ordinal()).toString());
+                this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
+                this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
+                this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
+                this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
                 this.signature = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
                 this.minerPubkey = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
             }
@@ -404,14 +408,18 @@ public class Block {
      * @return
      */
     public byte[] getTxHash() {
+
         if(!isParsed) parseEncodedBytes();
+
         byte[] longbyte0 = ByteUtil.longToBytes(generationSignature.get(0));
         byte[] longbyte1 = ByteUtil.longToBytes(generationSignature.get(1));
         byte[] longbyte2 = ByteUtil.longToBytes(generationSignature.get(2));
         byte[] txHashBytes = new byte[ChainParam.HashLength];
+
         System.arraycopy(longbyte0, 0, txHashBytes, 0, 8);
         System.arraycopy(longbyte1, 0, txHashBytes, 8, 8);
         System.arraycopy(longbyte2, 0, txHashBytes, 16, 4);
+
         return txHashBytes;
     }
 
@@ -527,11 +535,6 @@ public class Block {
      * @return
      */
     public byte[] signBlock(byte[] prikey){
-        /*
-        if(this.txMsg.getTxData().getMsgType() == MsgType.GenesisMsgTx){
-            this.txMsg.signTransaction(prikey);
-        }
-        */
         byte[] sig = Ed25519.sign(this.getBlockSigMsg(), getMinerPubkey(), prikey);
         this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
         return sig;

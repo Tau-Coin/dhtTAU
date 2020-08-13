@@ -30,14 +30,13 @@ import java.security.NoSuchAlgorithmException;
  */
 public class HashUtil {
     public static byte[] sha1hash(byte[] bytes){
-//       MessageDigest digest;
-//       try{
-//           digest = MessageDigest.getInstance("SHA-1");
-//       }catch (NoSuchAlgorithmException e){
-//           return null;
-//       }
-//       byte_vector bvs = Vectors.bytes2byte_vector(digest.digest(bytes));
-       byte_vector bvs = Vectors.bytes2byte_vector(bytes);
+       MessageDigest digest;
+       try {
+           digest = MessageDigest.getInstance("SHA-1");
+       } catch (NoSuchAlgorithmException e) {
+           return null;
+       }
+       byte_vector bvs = Vectors.bytes2byte_vector(digest.digest(bytes));
        sha1_hash hash = new sha1_hash(bvs);
        return  Vectors.byte_vector2bytes(hash.to_bytes());
     }
