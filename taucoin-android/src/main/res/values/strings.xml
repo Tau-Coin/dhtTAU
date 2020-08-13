@@ -15,6 +15,8 @@
     <string name="common_off">OFF</string>
     <string name="common_do_not_show">Do not show this dialog again</string>
     <string name="common_start">Start</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
     <string name="close_navigation_drawer">Close navigation drawer</string>
@@ -229,4 +231,16 @@
     <string name="contacts_error_invalid_pk">Invalid friend\'s public key!</string>
     <string name="contacts_airdrop_successfully">You have send %1$s coins to your friends!</string>
 
+    <!--permission tip-->
+    <string name="permission_tip_upgrade_denied">
+         Please enable storage rights for TAU, it is disabled.
+    </string>
+
+    <string name="permission_tip_upgrade_never_ask_again">
+        Please enable storage rights for TAU, it is forbidden now.
+    </string>
+
+    <string name="permission_install_unknown_apk_note">
+        Please allow installation of TAU.
+    </string>
 </resources>

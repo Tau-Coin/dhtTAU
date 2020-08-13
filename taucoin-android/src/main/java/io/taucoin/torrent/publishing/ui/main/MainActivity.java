@@ -326,6 +326,7 @@ public class MainActivity extends BaseActivity {
      */
     private void appExit(){
         this.finish();
+        ToastUtils.cancleToast();
         TauDaemon.getInstance(this).forceStop();
     }
 }

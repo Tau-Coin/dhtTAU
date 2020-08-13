@@ -153,7 +153,7 @@ public class TxViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
-    public String createTransaction(Tx tx) {
+    private String createTransaction(Tx tx) {
         // 获取当前用户的Seed, 获取公私钥
         User currentUser = userRepo.getCurrentUser();
         byte[] senderSeed = ByteUtil.toByte(currentUser.seed);

@@ -234,9 +234,13 @@
 <!--    </style>-->
 
     <style name="BaseTheme.Launcher" parent="BaseTheme">
-        <item name="android:windowBackground">@drawable/splash_screen</item>
-
-        <item name="statusBarColor">@color/primary_dark</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
     <style name="BaseTheme.TabLayout.Dark" parent="Widget.MaterialComponents.TabLayout">
