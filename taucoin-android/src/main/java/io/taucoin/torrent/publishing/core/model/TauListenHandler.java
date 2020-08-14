@@ -23,7 +23,9 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.types.Block;
+import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
@@ -163,19 +165,21 @@ class TauListenHandler {
             logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
         } else if (txType == ChainParam.TxType.WCoinsType.ordinal()){
             // 保存用户信息
+            WiringCoinsTx wiringTx = (WiringCoinsTx) txMsg;
             saveUserInfo(txMsg.getSenderPubkey(), txMsg.getTimeStamp());
-            saveUserInfo(txMsg.getReceiver(), 0);
+            saveUserInfo(wiringTx.getReceiver(), 0);
             // 添加社区成员
             addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), isSync);
-            addMemberInfo(txMsg.getChainID(), txMsg.getReceiver(), isSync);
+            addMemberInfo(txMsg.getChainID(), wiringTx.getReceiver(), isSync);
 
             // 添加交易
-            tx.receiverPk = ByteUtil.toHexString(txMsg.getReceiver());
-            tx.amount = txMsg.getAmount();
+            tx.receiverPk = ByteUtil.toHexString(wiringTx.getReceiver());
+            tx.amount = wiringTx.getAmount();
             txRepo.addTransaction(tx);
             logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
         } else if (txType == ChainParam.TxType.GMsgType.ordinal()){
-            Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = txMsg.getGenesisAccounts();
+            GenesisTx genesisTx = (GenesisTx) txMsg;
+            Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = genesisTx.getGenesisAccounts();
             if(genesisMsgKV != null){
                 for (ByteArrayWrapper key: genesisMsgKV.keySet()) {
                     String publicKey = ByteUtil.toHexString(key.getData());
@@ -196,10 +200,12 @@ class TauListenHandler {
         if (txType == ChainParam.TxType.FNoteType.ordinal()){
             addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), false);
         } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+            WiringCoinsTx tx = (WiringCoinsTx) txMsg;
             addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), false);
-            addMemberInfo(txMsg.getChainID(), txMsg.getReceiver(), false);
+            addMemberInfo(txMsg.getChainID(), tx.getReceiver(), false);
         }else if (txType == ChainParam.TxType.GMsgType.ordinal()){
-            Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = txMsg.getGenesisAccounts();
+            GenesisTx genesisTx = (GenesisTx) txMsg;
+            Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = genesisTx.getGenesisAccounts();
             if(genesisMsgKV != null){
                 for (ByteArrayWrapper key: genesisMsgKV.keySet()) {
                     String publicKey = ByteUtil.toHexString(key.getData());

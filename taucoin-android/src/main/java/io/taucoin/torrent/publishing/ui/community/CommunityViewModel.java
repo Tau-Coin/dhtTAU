@@ -37,6 +37,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
+import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
@@ -135,6 +136,7 @@ public class CommunityViewModel extends AndroidViewModel {
             HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
             GenesisItem item = new GenesisItem(totalCoin);
             genesisMsg.put(new ByteArrayWrapper(publicKey), item);
+//            GenesisTx genesisTx = new GenesisTx();
             // TODO:
             ChainConfig chainConfig = ChainConfig.NewChainConfig((byte) 1, community.communityName, community.blockInAvg,
                     community.publicKey , "", null);

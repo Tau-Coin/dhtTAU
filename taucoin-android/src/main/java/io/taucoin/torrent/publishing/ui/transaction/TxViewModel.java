@@ -50,7 +50,9 @@ import io.taucoin.torrent.publishing.databinding.EditFeeDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.Chain;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.types.ForumNoteTx;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -190,16 +192,14 @@ public class TxViewModel extends AndroidViewModel {
             byte[] chainID = tx.chainID.getBytes();
             Transaction transaction;
             if(tx.txType == ChainParam.TxType.WCoinsType.ordinal()){
-                transaction = new Transaction(1, chainID, timestamp, tx.fee, tx.txType, senderPk, nonce,
-                        null, null, null, 0);
+                transaction = new ForumNoteTx(1, chainID, timestamp, tx.fee, tx.txType,
+                        senderPk, nonce, null);
             }else{
                 byte[] receiverPk = ByteUtil.toByte(tx.receiverPk);
-                transaction = new Transaction(1, chainID, timestamp, tx.fee, tx.txType, senderPk, nonce,
-                        null, null, receiverPk, tx.amount);
+                transaction = new WiringCoinsTx(1, chainID, timestamp, tx.fee, tx.txType, senderPk,
+                        nonce, receiverPk, tx.amount);
             }
-            Pair<byte[], byte[]> keypair = Ed25519.createKeypair(senderSeed);
-            byte[] privateKey = keypair.second;
-            transaction.signTransaction(privateKey);
+            transaction.signTransactionWithSeed(senderSeed);
             // 把交易数据transaction.getEncoded()提交给链端
             daemon.submitTransaction(transaction);
             // 保存交易数据到本地数据库
