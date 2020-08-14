@@ -14,7 +14,7 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.taucoin.utypes;
+package io.taucoin.types;
 
 import com.frostwire.jlibtorrent.swig.sha1_hash;
 import com.frostwire.jlibtorrent.Vectors;
