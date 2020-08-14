@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -36,8 +37,9 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
-import io.taucoin.types.GenesisMsg;
-import io.taucoin.types.MsgType;
+import io.taucoin.types.Transaction;
+import io.taucoin.util.ByteArrayWrapper;
+import io.taucoin.util.ByteUtil;
 
 /**
  * Community模块的ViewModel
@@ -126,14 +128,16 @@ public class CommunityViewModel extends AndroidViewModel {
     private String createCommunity(Community community) {
         String result = "";
         try {
-            GenesisMsg genesisMsg = new GenesisMsg();
-            genesisMsg.setDescription("");
+            User user = userRepo.getCurrentUser();
+            byte[] seed = ByteUtil.toByte(user.seed);
             BigInteger totalCoin = BigInteger.valueOf(community.totalCoin);
+            byte[] publicKey = ByteUtil.toByte(community.publicKey);
+            HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
             GenesisItem item = new GenesisItem(totalCoin);
-            genesisMsg.appendAccount(community.publicKey, item);
-
-            ChainConfig chainConfig = ChainConfig.NewChainConfig((byte)1, community.communityName, community.blockInAvg,
-                    community.publicKey , "", genesisMsg);
+            genesisMsg.put(new ByteArrayWrapper(publicKey), item);
+            // TODO:
+            ChainConfig chainConfig = ChainConfig.NewChainConfig((byte) 1, community.communityName, community.blockInAvg,
+                    community.publicKey , "", null);
             daemon.createCommunity(chainConfig);
             community.chainID = new String(chainConfig.getChainid());
             communityRepo.addCommunity(community);

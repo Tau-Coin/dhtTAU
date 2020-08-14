@@ -43,19 +43,28 @@ public abstract class TauDaemonListener implements TauListener {
      * 新的区块
      * @param block 区块
      */
+    @Override
     public void onNewBlock(Block block) {}
+
+    public void onNewBlock(String chainID, Block block) {}
 
     /**
      * 区块回滚
      * @param block 区块
      */
+    @Override
     public void onRollBack(Block block) {}
+
+    public void onRollBack(String chainID, Block block) {}
 
     /**
      * 同步区块
      * @param block 区块
      */
+    @Override
     public void onSyncBlock(Block block) {}
+
+    public void onSyncBlock(String chainID, Block block) {}
 
     @Override
     public void onDHTStarted(boolean success, String errMsg) {
