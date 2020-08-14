@@ -35,7 +35,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class GenesisTx extends Transaction {
 
-    private static final Logger logger = LoggerFactory.getLogger("Transaction");
+    private static final Logger logger = LoggerFactory.getLogger("GenesisTx");
 
     /*
      * 1. jlibtorrent, libtorrent仅支持:String, Long, List, Map结构

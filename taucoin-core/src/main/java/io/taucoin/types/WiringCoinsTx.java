@@ -30,7 +30,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class WiringCoinsTx extends Transaction {
 
-    private static final Logger logger = LoggerFactory.getLogger("Transaction");
+    private static final Logger logger = LoggerFactory.getLogger("WiringCoinsTx");
 
     private ArrayList<Long> receiverPubkey;   // wiring coins tx, pubkey - 32 bytes, 4 longs
     private long amount;      // Wiring coins tx

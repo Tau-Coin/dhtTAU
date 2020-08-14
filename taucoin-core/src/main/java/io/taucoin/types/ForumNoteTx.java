@@ -33,7 +33,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ForumNoteTx extends Transaction {
 
-    private static final Logger logger = LoggerFactory.getLogger("Transaction");
+    private static final Logger logger = LoggerFactory.getLogger("ForumNoteTx");
 
     private ArrayList<Long> forumNoteHash;    // Forum note tx - 20 bytes, 3 longs
 
