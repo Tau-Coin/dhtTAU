@@ -19,8 +19,7 @@ package io.taucoin.types;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
-import io.taucoin.util.RLP;
-import io.taucoin.util.RLPList;
+import io.taucoin.util.HashUtil;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Entry;

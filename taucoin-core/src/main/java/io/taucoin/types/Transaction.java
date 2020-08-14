@@ -20,6 +20,7 @@ import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.HashUtil;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Entry;
