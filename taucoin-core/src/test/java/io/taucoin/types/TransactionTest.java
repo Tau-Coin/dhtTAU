@@ -14,42 +14,93 @@ SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
-package io.taucoin.types;
-import org.junit.Assert;
+package io.taucoin.utypes;
+
+import io.taucoin.genesis.GenesisItem;
+import io.taucoin.param.ChainParam;
+import io.taucoin.utypes.Transaction;
+import io.taucoin.util.ByteArrayWrapper;
+import io.taucoin.util.ByteUtil;
+
+import java.math.BigInteger;
+import java.util.HashMap;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.taucoin.util.ByteUtil;
-import io.taucoin.util.RLP;
-
 public class TransactionTest {
-    private static final Logger log = LoggerFactory.getLogger("transactionTest");
-    private static final String txdata = "f104afeea0c5897865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c88000000003b9aca0083627579";
+    private static final Logger log = LoggerFactory.getLogger("txTest");
+    private static final long version = 1;
     private static final byte[] chainid = "TAUcoin#300#3938383036366633393364383365393338373434".getBytes();
-    private static final byte[] sender = ByteUtil.toByte("c5897865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c");
+    private static final long timestamp = 1597071234L;
+    private static final long txFee = 800000000000000L;
+    private static final byte[] sender = ByteUtil.toByte("ae20f5f96e89b8945a1194749456f74357864d5902ee8a5c19c3e75d0cef91ea");
+    private static final long nonce = 8000L;
     private static final byte[] signature = ByteUtil.toByte("281f3c2fe309683c74762f965f38bd8f8910d8dbeca1da904d6821e8101075776243379a4efdfdc8c10ae34be767a825f770e6a62b5430c030f179b74057e747");
-    private static final String transaction = "f8e201b4544155636f696e233330302333393338333833303336333636363333333933333634333833333635333933333338333733343334880000000008f0d18084ffffffc4a0c5897865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c880000000000000000f104afeea0c5897865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c88000000003b9aca0083627579b840281f3c2fe309683c74762f965f38bd8f8910d8dbeca1da904d6821e8101075776243379a4efdfdc8c10ae34be767a825f770e6a62b5430c030f179b74057e747";
-    private static final byte version = 1;
 
     @Test
-    public void createTransaction(){
-        TxData txData = new TxData(ByteUtil.toByte(txdata));
-        Transaction tx = new Transaction(version,chainid,150000000,700,sender,0,txData,signature);
-        log.debug(ByteUtil.toHexString(tx.getEncoded()));
-        log.debug("size of tx: "+transaction.length()/2);
-        log.debug("hash is: "+ ByteUtil.toHexString(tx.getTxID()));
-        byte[] hashbyte = RLP.encodeElement(ByteUtil.toByte("f8e201b4544155636f696e233330302333393338"));
-        Assert.assertArrayEquals(hashbyte,ByteUtil.toByte("94f8e201b4544155636f696e233330302333393338"));
-        log.debug("encode size is: "+hashbyte.length);
+    public void createGenesisMsg() {
+
+        long txType = ChainParam.TxType.GMsgType.ordinal();
+
+        BigInteger balance = new BigInteger("fffff", 16);
+        BigInteger power = new BigInteger("ff", 16);
+
+        GenesisItem gItem= new GenesisItem(balance, power);
+        ByteArrayWrapper account = new ByteArrayWrapper(ByteUtil.toByte("ae20f5f96e89b8945a1194749456f74357864d5902ee8a5c19c3e75d0cef91ea"));
+        HashMap<ByteArrayWrapper, GenesisItem> gMsg = new HashMap();
+        gMsg.put(account, gItem);
+
+        Transaction tx = new Transaction(version, chainid, timestamp, txFee, txType,
+                    sender, nonce, gMsg, null, null, 0, signature);
+
+        System.out.println(tx.getVersion());
+        byte[] bencoded= tx.getEncodedBytes();
+        String str = new String(bencoded);
+        System.out.println(str);
+        System.out.println(str.length());
+        System.out.println(ByteUtil.toHexString(tx.getTxID()));
+        boolean ret1 = tx.isTxParamValidate();
+
+        System.out.println("param validate ?: "+ret1);
     }
 
     @Test
-    public void decodeTransaction(){
-        Transaction tx = new Transaction(ByteUtil.toByte(transaction));
-        log.debug("fee: "+tx.getTxFee());
-        String chainid = new String(tx.getChainID());
-        log.debug("chainid: "+ chainid);
-        log.debug("amount: "+tx.getTxData().getAmount());
+    public void createForumNoteTx() {
+        long txType = ChainParam.TxType.FNoteType.ordinal();
+        byte[] forumNote = "Hello, Taucoin".getBytes();
+
+        Transaction tx = new Transaction(version, chainid, timestamp, txFee, txType,
+                    sender, nonce, null, forumNote, null, 0, signature);
+
+        System.out.println(tx.getVersion());
+        byte[] bencoded= tx.getEncodedBytes();
+        String str = new String(bencoded);
+        System.out.println(str);
+        System.out.println(str.length());
+        System.out.println(tx.getForumNote());
+        System.out.println(ByteUtil.toHexString(tx.getTxID()));
+        boolean ret1 = tx.isTxParamValidate();
+        System.out.println("param validate ?: "+ret1);
     }
+
+    @Test
+    public void createWiringCoinsTx() {
+        long txType = ChainParam.TxType.WCoinsType.ordinal();
+        byte[] receiver = ByteUtil.toByte("fe20f5f96e89b8945a1194749456f74357864d5902ee8a5c19c3e75d0cef91ea");
+        long amount = 600000000000000L;
+
+        Transaction tx = new Transaction(version, chainid, timestamp, txFee, txType,
+                    sender, nonce, null, null, receiver, amount, signature);
+
+        System.out.println(tx.getVersion());
+        byte[] bencoded= tx.getEncodedBytes();
+        String str = new String(bencoded);
+        System.out.println(str);
+        System.out.println(str.length());
+        System.out.println(ByteUtil.toHexString(tx.getTxID()));
+        boolean ret1 = tx.isTxParamValidate();
+        System.out.println("param validate ?: "+ret1);
+    }
+
 }
