@@ -16,7 +16,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
-import io.taucoin.types.Block;
 import io.taucoin.util.ByteUtil;
 
 import java.math.BigInteger;
@@ -46,7 +45,7 @@ public class BlockTest {
                     rBalance, 1345, signature, pubkey);
         System.out.println(block.getVersion());
         System.out.println(ByteUtil.toHexString(block.getPreviousBlockHash()));
-        byte[] bencoded= block.getEncodedBytes();
+        byte[] bencoded= block.getEncoded();
         String str = new String(bencoded);
         System.out.println(str);
         System.out.println(str.length());

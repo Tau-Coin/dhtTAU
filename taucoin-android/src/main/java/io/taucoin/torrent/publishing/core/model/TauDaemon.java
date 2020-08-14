@@ -198,18 +198,18 @@ public class TauDaemon {
         }
 
         @Override
-        public void onNewBlock(Block block) {
-            tauListenHandler.handleBlockData(block, false, false);
+        public void onNewBlock(String chainID, Block block) {
+            tauListenHandler.handleNewBlock(chainID, block);
         }
 
         @Override
-        public void onRollBack(Block block) {
-            tauListenHandler.handleBlockData(block, true, false);
+        public void onRollBack(String chainID, Block block) {
+            tauListenHandler.handleRollBack(chainID, block);
         }
 
         @Override
-        public void onSyncBlock(Block block) {
-            tauListenHandler.handleBlockData(block, false, true);
+        public void onSyncBlock(String chainID, Block block) {
+            tauListenHandler.handleSyncBlock(chainID, block);
         }
     };
 

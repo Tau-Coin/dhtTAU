@@ -204,7 +204,7 @@ public class Transaction {
      * encoding transaction to bytes.
      * @return
      */
-    public byte[] getEncodedBytes() {
+    public byte[] getEncoded() {
         if(encodedBytes == null) {
             List list = new ArrayList();
             list.add(this.version);
@@ -663,7 +663,7 @@ public class Transaction {
      */
     public byte[] getTxID(){
         if(txHash == null){
-           txHash = HashUtil.sha1hash(this.getEncodedBytes());
+           txHash = HashUtil.sha1hash(this.getEncoded());
         }
         return txHash;
     }

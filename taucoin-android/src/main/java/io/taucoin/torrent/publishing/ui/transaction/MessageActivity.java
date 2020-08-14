@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
@@ -23,7 +24,6 @@ import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityMessageBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.types.MsgType;
 
 /**
  * Chain note页面
@@ -139,7 +139,7 @@ public class MessageActivity extends BaseActivity implements View.OnClickListene
      */
     private Tx buildTx() {
         String chainID = community.chainID;
-        int txType = MsgType.RegularForum.getVaLue();
+        long txType = ChainParam.TxType.FNoteType.ordinal();
         String fee = ViewUtils.getStringTag(binding.tvFee);
         String memo = ViewUtils.getText(binding.etInput);
         return new Tx(chainID, FmtMicrometer.fmtTxLongValue(fee), txType, memo);

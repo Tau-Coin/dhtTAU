@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.genesis.GenesisItem;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -22,10 +23,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.types.Block;
-import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
-import io.taucoin.types.TxData;
-import io.taucoin.types.WireTransaction;
+import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -52,14 +51,13 @@ class TauListenHandler {
      * 保存社区：查询本地是否有此社区，没有则添加到本地
      * @param block 链上区块
      */
-    private void saveCommunityInfo(Block block, boolean isSync) {
-        String chainID = ByteUtil.toHexString(block.getChainID());
+    private void saveCommunityInfo(String chainID, Block block, boolean isSync) {
         disposables.add(communityRepo.getCommunityByChainIDSingle(chainID)
                 .subscribeOn(Schedulers.io())
                 .subscribe(community -> {
                     if(null == community){
                         community = new Community();
-                        community.chainID = ByteUtil.toHexString(block.getChainID());
+                        community.chainID = chainID;
                         community.communityName = Utils.getCommunityName(community.chainID);
                         community.totalBlocks = block.getBlockNum();
                         community.syncBlock = block.getBlockNum();
@@ -78,31 +76,33 @@ class TauListenHandler {
                     }
                 }));
     }
-
-
     /**
      * 处理Block数据：解析Block数据，处理社区、交易、用户、社区成员数据
      * 0、更新社区信息
      * 1、处理矿工用户数据
      * 2、本地不存在该交易，添加交易数据、用户数据、社区成员数据
      * 3、本地存在该交易，更新交易状态、以及成员的balance和power值
+     * @param chainID 链上ID
      * @param block 链上区块
+     * @param isRollback 区块回滚
+     * @param isSync 区块向前同步
      */
-    void handleBlockData(Block block, boolean isRollback, boolean isSync) {
+    private void handleBlockData(String chainID, Block block, boolean isRollback, boolean isSync) {
         if(block != null){
             // 更新社区信息
-            saveCommunityInfo(block, isSync);
-            Transaction txMsg = block.getTxMsg();
+            saveCommunityInfo(chainID, block, isSync);
+            // TODO: 根据交易hash获取Transaction
+            Transaction txMsg = null;
             // 更新矿工的信息
             saveUserInfo(block.getMinerPubkey(), block.getTimeStamp());
-            if(txMsg != null && txMsg.getTxData() != null){
+            if(txMsg != null){
                 String txID = ByteUtil.toHexString(txMsg.getTxID());
                 disposables.add(txRepo.getTxByTxIDSingle(txID)
                         .subscribeOn(Schedulers.io())
                         .subscribe(tx -> {
                             // 本地不存在此交易
                             if(null == tx){
-                                handleTransactionData(block, isRollback, isSync);
+                                handleTransactionData(txMsg, isRollback, isSync);
                             }else{
                                 tx.txStatus = isRollback ? 0 : 1;
                                 txRepo.updateTransaction(tx);
@@ -114,55 +114,75 @@ class TauListenHandler {
     }
 
     /**
-     * 处理Block数据：解析Block数据，更新用户、社区成员、交易数据
+     * 处理上报新的区块
+     * @param chainID chainID
      * @param block Block
      */
-    private void handleTransactionData(@NonNull Block block, boolean isRollback, boolean isSync) {
-        Transaction txMsg = block.getTxMsg();
+    void handleNewBlock(String chainID, Block block) {
+        handleBlockData(chainID, block, false, false);
+    }
+    /**
+     * 处理上报被回滚的区块
+     * @param chainID chainID
+     * @param block Block
+     */
+    void handleRollBack(String chainID, Block block) {
+        handleBlockData(chainID, block, true, false);
+    }
+    /**
+     * 处理上报向前同步的区块
+     * @param chainID chainID
+     * @param block Block
+     */
+    void handleSyncBlock(String chainID, Block block) {
+        handleBlockData(chainID, block, false, true);
+    }
+
+    /**
+     * 处理Block数据：解析Block数据，更新用户、社区成员、交易数据
+     * @param txMsg Transaction
+     */
+    private void handleTransactionData(@NonNull Transaction txMsg, boolean isRollback, boolean isSync) {
+        // TODO: 根据hash获取交易Transaction
         String txID = ByteUtil.toHexString(txMsg.getTxID());
         String chainID = ByteUtil.toHexString(txMsg.getChainID());
         long fee = txMsg.getTxFee();
-        TxData txData = txMsg.getTxData();
-        MsgType msgType = txData.getMsgType();
-        Tx tx = new Tx(txID, chainID, fee, msgType.getVaLue());
+        final long txType = txMsg.getTxType();
+        Tx tx = new Tx(txID, chainID, fee, txType);
         tx.senderPk = ByteUtil.toHexString(txMsg.getSenderPubkey());
         tx.txStatus = isRollback ? 0 : 1;
-        switch (msgType){
-            case RegularForum:
-                // 保存用户信息
-                saveUserInfo(txMsg.getSenderPubkey(), txMsg.getTimeStamp());
-                // 添加社区成员
-                addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), isSync);
-                // 添加交易
-                tx.memo = txData.getNoteMsg();
-                txRepo.addTransaction(tx);
-                logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
-                break;
-            case Wiring:
-                // 保存用户信息
-                saveUserInfo(txMsg.getSenderPubkey(), txMsg.getTimeStamp());
-                saveUserInfo(txData.getReceiver(), 0);
-                // 添加社区成员
-                addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), isSync);
-                addMemberInfo(txMsg.getChainID(), txData.getReceiver(), isSync);
+        if (txType == ChainParam.TxType.FNoteType.ordinal()){
+            // 保存用户信息
+            saveUserInfo(txMsg.getSenderPubkey(), txMsg.getTimeStamp());
+            // 添加社区成员
+            addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), isSync);
+            // 添加交易
+            // TODO: 处理note hash
+            tx.memo = "";
+            txRepo.addTransaction(tx);
+            logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
+        } else if (txType == ChainParam.TxType.WCoinsType.ordinal()){
+            // 保存用户信息
+            saveUserInfo(txMsg.getSenderPubkey(), txMsg.getTimeStamp());
+            saveUserInfo(txMsg.getReceiver(), 0);
+            // 添加社区成员
+            addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), isSync);
+            addMemberInfo(txMsg.getChainID(), txMsg.getReceiver(), isSync);
 
-                // 添加交易
-                WireTransaction wtx = new WireTransaction(txData.getTxCode());
-                tx.receiverPk = ByteUtil.toHexString(txData.getReceiver());
-                tx.amount = txData.getAmount();
-                tx.memo = wtx.getNotes();
-                txRepo.addTransaction(tx);
-                logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
-                break;
-            case GenesisMsg:
-                Map<String, GenesisItem> genesisMsgKV = txData.getGenesisMsgKV();
-                if(genesisMsgKV != null){
-                    for (String key: genesisMsgKV.keySet()) {
-                        saveUserInfo(key, 0);
-                        addMemberInfo(chainID, key, isSync);
-                    }
+            // 添加交易
+            tx.receiverPk = ByteUtil.toHexString(txMsg.getReceiver());
+            tx.amount = txMsg.getAmount();
+            txRepo.addTransaction(tx);
+            logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
+        } else if (txType == ChainParam.TxType.GMsgType.ordinal()){
+            Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = txMsg.getGenesisAccounts();
+            if(genesisMsgKV != null){
+                for (ByteArrayWrapper key: genesisMsgKV.keySet()) {
+                    String publicKey = ByteUtil.toHexString(key.getData());
+                    saveUserInfo(publicKey, 0);
+                    addMemberInfo(chainID, publicKey, isSync);
                 }
-                break;
+            }
         }
     }
 
@@ -172,24 +192,20 @@ class TauListenHandler {
      */
     private void handleMemberInfo(@NonNull Transaction txMsg) {
         String chainID = ByteUtil.toHexString(txMsg.getChainID());
-        TxData txData = txMsg.getTxData();
-        MsgType msgType = txData.getMsgType();
-        switch (msgType){
-            case RegularForum:
-                addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), false);
-                break;
-            case Wiring:
-                addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), false);
-                addMemberInfo(txMsg.getChainID(), txData.getReceiver(), false);
-                break;
-            case GenesisMsg:
-                Map<String, GenesisItem> genesisMsgKV = txData.getGenesisMsgKV();
-                if(genesisMsgKV != null){
-                    for (String key: genesisMsgKV.keySet()) {
-                        addMemberInfo(chainID, key, false);
-                    }
+        long txType = txMsg.getTxType();
+        if (txType == ChainParam.TxType.FNoteType.ordinal()){
+            addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), false);
+        } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+            addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), false);
+            addMemberInfo(txMsg.getChainID(), txMsg.getReceiver(), false);
+        }else if (txType == ChainParam.TxType.GMsgType.ordinal()){
+            Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = txMsg.getGenesisAccounts();
+            if(genesisMsgKV != null){
+                for (ByteArrayWrapper key: genesisMsgKV.keySet()) {
+                    String publicKey = ByteUtil.toHexString(key.getData());
+                    addMemberInfo(chainID, publicKey, false);
                 }
-                break;
+            }
         }
     }
 
