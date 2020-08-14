@@ -609,4 +609,27 @@ public class Transaction {
         return txHash;
     }
 
+    @Override
+    public String toString(){
+        StringBuilder strTx = new StringBuilder();
+        strTx.append("transaction: [\n");
+        strTx.append("version: ").append(this.getVersion()).append("\n");
+        strTx.append("chainID: ").append(new String(this.getChainID())).append("\n");
+        strTx.append("timestamp: ").append(this.getTimeStamp()).append("\n");
+        strTx.append("txFee: ").append(this.getTxFee()).append("\n");
+        strTx.append("txType: ").append(this.getTxType()).append("\n");
+        strTx.append("senderpubkey: ").append(ByteUtil.toHexString(this.getSenderPubkey())    ).append("\n");
+        strTx.append("nonce: ").append(this.getNonce()).append("\n");
+        if(this.txType == ChainParam.TxType.GMsgType.ordinal()) {
+            //TODO
+        } else if (this.txType == ChainParam.TxType.FNoteType.ordinal()) {
+            //TODO
+        } else if (this.txType == ChainParam.TxType.WCoinsType.ordinal()) {
+            //TODO
+        }
+        strTx.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
+        strTx.append("]\n");
+        return strTx.toString();
+    }
+
 }
