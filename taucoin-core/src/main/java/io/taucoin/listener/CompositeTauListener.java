@@ -1,7 +1,7 @@
 package io.taucoin.listener;
 
 import io.taucoin.torrent.SessionStats;
-import io.taucoin.utypes.Block;
+import io.taucoin.types.Block;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

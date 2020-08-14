@@ -2,7 +2,7 @@ package io.taucoin.controller;
 
 import io.taucoin.listener.TauListener;
 import io.taucoin.torrent.SessionStats;
-import io.taucoin.utypes.Block;
+import io.taucoin.types.Block;
 
 public abstract class StartstopListener implements TauListener {
 

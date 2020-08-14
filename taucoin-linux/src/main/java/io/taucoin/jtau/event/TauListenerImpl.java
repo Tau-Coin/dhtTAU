@@ -3,7 +3,7 @@ package io.taucoin.jtau.event;
 import io.taucoin.controller.TauController;
 import io.taucoin.listener.TauListener;
 import io.taucoin.torrent.SessionStats;
-import io.taucoin.utypes.Block;
+import io.taucoin.types.Block;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
