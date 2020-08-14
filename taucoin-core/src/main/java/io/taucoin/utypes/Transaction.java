@@ -42,17 +42,24 @@ public class Transaction {
 
     // Transaction字段
     private long version;
-    private String chainID;
+    private String chainID;    //String encoding: UTF-8
     private long timestamp;
     private long txFee;
     private long txType;
-    private ArrayList<Long> senderPubkey;   //Pubkey - 32 bytes
+    private ArrayList<Long> senderPubkey; //Pubkey - 32 bytes, 4 longs
     private long nonce;
-    private ArrayList<Long> signature;   //Signature - 64 bytes
-    private ArrayList<ArrayList<Long>> genesisMsg; // genesis msg tx -> Tau QA
-    private String forumNote;    // forum note tx
-    private ArrayList<Long> receiverPubkey;     // wiring coins tx, pubkey - 32 bytes
-    private long amount;      // wiring coins tx
+    private ArrayList<Long> signature;    //Signature - 64 bytes, 8 longs
+    /*
+     * 1. jlibtorrent, libtorrent仅支持:String, Long, List, Map结构
+     * 2. genesisMsg本质上需要记录多个账户(pubkey, item: balance + power)
+     * 3. pubkey本质上是long list，但是jlibtorrent和libtorrent的map仅支持String类型
+     * 4. 为了保证pubkey的本质，还是采用list来处理,一个账户共6个long
+     * 5. 前4个long代表一个账户的pubkey，最后两个long代表一个账户的状态
+     */
+    private ArrayList<ArrayList<Long>> genesisMsg; // Genesis msg tx -> Tau QA
+    private ArrayList<Long> forumNoteHash;    // Forum note tx - 20 bytes, 3 longs
+    private ArrayList<Long> receiverPubkey;   // wiring coins tx, pubkey - 32 bytes, 4 longs
+    private long amount;      // Wiring coins tx
 
     // 中间结果，暂存内存，不上链
     private byte[] encodedBytes;
@@ -81,13 +88,13 @@ public class Transaction {
      * @param sender
      * @param nonce
      * @param genesisMsg
-     * @param forumNote
+     * @param forumNoteHash
      * @param receiver
      * @param amount
      * @param signature
      */
     public Transaction(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
-            long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] forumNote, byte[] receiver, long amount, byte[] signature){
+            long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] forumNoteHash, byte[] receiver, long amount, byte[] signature){
         if(sender.length != ChainParam.SenderLength) {
             throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
         }
@@ -95,7 +102,7 @@ public class Transaction {
             throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
         }
         this.version = version;
-        this.chainID = new String(chainID);
+        this.chainID = new String(chainID, UTF_8);
         this.timestamp = timestamp;
         this.txFee = txFee;
         this.txType = txType;
@@ -105,7 +112,7 @@ public class Transaction {
         if(txType == ChainParam.TxType.GMsgType.ordinal()) {
             this.genesisMsg = genesisMapTrans(genesisMsg);
         } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
-            this.forumNote = new String(forumNote, UTF_8);
+            this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
         } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
             this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
             this.amount = amount;
@@ -124,12 +131,12 @@ public class Transaction {
      * @param sender
      * @param nonce
      * @param genesisMsg
-     * @param forumNote
+     * @param forumNoteHash
      * @param receiver
      * @param amount
      */
     public Transaction(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
-            long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] forumNote, byte[] receiver, long amount){
+            long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] forumNoteHash, byte[] receiver, long amount){
         if(sender.length != ChainParam.SenderLength) {
             throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
         }
@@ -143,7 +150,7 @@ public class Transaction {
         if(txType == ChainParam.TxType.GMsgType.ordinal()) {
             this.genesisMsg = genesisMapTrans(genesisMsg);
         } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
-            this.forumNote = new String(forumNote, UTF_8);
+            this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
         } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
             this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
             this.amount = amount;
@@ -178,7 +185,7 @@ public class Transaction {
             if(txType == ChainParam.TxType.GMsgType.ordinal()) {
                 list.add(this.genesisMsg);
             } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
-                list.add(this.forumNote);
+                list.add(this.forumNoteHash);
             } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
                 list.add(this.receiverPubkey);
                 list.add(this.amount);
@@ -205,7 +212,7 @@ public class Transaction {
             if(txType == ChainParam.TxType.GMsgType.ordinal()) {
                 list.add(this.genesisMsg);
             } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
-                list.add(this.forumNote);
+                list.add(this.forumNoteHash);
             } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
                 list.add(this.receiverPubkey);
                 list.add(this.amount);
@@ -232,7 +239,7 @@ public class Transaction {
         if(txType == ChainParam.TxType.GMsgType.ordinal()) {
             list.add(this.genesisMsg);
         } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
-            list.add(this.forumNote);
+            list.add(this.forumNoteHash);
         } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
             list.add(this.receiverPubkey);
             list.add(this.amount);
@@ -260,7 +267,7 @@ public class Transaction {
             if(txType == ChainParam.TxType.GMsgType.ordinal()) {
                 //Todo, string -> HashMap
             } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
-                this.forumNote= entrylist.get(TxIndex.TxData.ordinal()).toString();
+                this.forumNoteHash = ByteUtil.stringToArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
             } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
                 this.receiverPubkey = ByteUtil.stringToArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
                 this.amount = entrylist.get(TxIndex.TxData.ordinal()+ 1).integer();
@@ -502,11 +509,11 @@ public class Transaction {
      * set forum note.
      * @return
      */
-    public void setForumNote(String forumNote){
+    public void setForumNoteHash(byte[] forumNoteHash){
         if(txType != ChainParam.TxType.FNoteType.ordinal()) {
             logger.error("Forum note transaction set note error, tx type is {}", txType);
         } 
-        this.forumNote = forumNote;
+        this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
         encodedBytes = null;
         sigEncodedBytes = null;
     }
@@ -515,12 +522,19 @@ public class Transaction {
      * get forum message.
      * @return
      */
-    public String getForumNote(){
+    public byte[] getForumNoteHash(){
         if(txType != ChainParam.TxType.FNoteType.ordinal()) {
             logger.error("Forum note transaction get note error, tx type is {}", txType);
         } 
         if(!isParsed) parseEncodedBytes();
-        return this.forumNote;
+        byte[] longbyte0 = ByteUtil.longToBytes(forumNoteHash.get(0));
+        byte[] longbyte1 = ByteUtil.longToBytes(forumNoteHash.get(1));
+        byte[] longbyte2 = ByteUtil.keep4bytesOfLong(forumNoteHash.get(2));
+        byte[] fnHash = new byte[ChainParam.HashLength];
+        System.arraycopy(longbyte0, 0, fnHash, 0, 8);
+        System.arraycopy(longbyte1, 0, fnHash, 8, 8);
+        System.arraycopy(longbyte2, 0, fnHash, 16, 4);
+        return fnHash;
     }
 
     /**

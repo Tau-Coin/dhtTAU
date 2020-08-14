@@ -43,18 +43,18 @@ public class Block {
     private long version;
     private long timestamp;
     private long blockNum;
-    private ArrayList<Long> previousBlockHash;    //Hash - 20 Bytes
-    private ArrayList<Long> immutableBlockHash;   //Hash - 20 Bytes
+    private ArrayList<Long> previousBlockHash;    //Hash - 20 Bytes, 3 longs
+    private ArrayList<Long> immutableBlockHash;   //Hash - 20 Bytes, 3 longs
     private long baseTarget;
     private long cumulativeDifficulty;
-    private ArrayList<Long> generationSignature;  //Hash - 20 Bytes
-    private ArrayList<Long> txHash;     //Hash - 20 Bytes
+    private ArrayList<Long> generationSignature;  //Hash - 20 Bytes, 3 longs
+    private ArrayList<Long> txHash;     //Hash - 20 Bytes, 3 longs
     private long minerBalance;
     private long senderBalance;
     private long receiverBalance;
     private long senderNonce;
-    private ArrayList<Long> signature;     //Signature - 64 Bytes
-    private ArrayList<Long> minerPubkey;   //Pubkey - 32 Bytes
+    private ArrayList<Long> signature;     //Signature - 64 Bytes, 8 longs
+    private ArrayList<Long> minerPubkey;   //Pubkey - 32 Bytes, 4 longs
 
     // 中间结果，暂存内存，不上链
     private byte[] encodedBytes;
@@ -611,7 +611,7 @@ public class Block {
      * @param previousBlockHash
      */
     public void setPreviousBlockHash(byte[] previousBlockHash) {
-        this.previousBlockHash = ByteUtil.byteArrayToSignLongArray(previousBlockHash,3);
+        this.previousBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(previousBlockHash, ChainParam.HashLongArrayLength);
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
     }
@@ -621,7 +621,7 @@ public class Block {
      * @param immutableBlockHash
      */
     public void setImmutableBlockHash(byte[] immutableBlockHash) {
-        this.immutableBlockHash = ByteUtil.byteArrayToSignLongArray(immutableBlockHash,3);
+        this.immutableBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(immutableBlockHash, ChainParam.HashLongArrayLength);
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
     }
