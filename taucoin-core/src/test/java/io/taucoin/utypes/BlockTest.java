@@ -14,19 +14,15 @@ SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
-package io.taucoin.core.utypes;
+package io.taucoin.utypes;
 
+import io.taucoin.utypes.Block;
+import io.taucoin.util.ByteUtil;
+
+import java.math.BigInteger;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigInteger;
-
-import io.taucoin.param.ChainParam;
-import io.taucoin.utypes.TxData;
-import io.taucoin.utypes.Block;
-import io.taucoin.utypes.Transaction;
-import io.taucoin.util.ByteUtil;
 
 public class BlockTest {
     private static final Logger log = LoggerFactory.getLogger("blockTest");
@@ -35,14 +31,13 @@ public class BlockTest {
     private static final byte[] imblockhash = ByteUtil.toByte("b7516c32e5ff8144bb919a141ce051de00b09b01");
     private static final BigInteger basetarget = new BigInteger("21D0369D036978",16);
     private static final BigInteger cummulativediff = BigInteger.ZERO;
-    private static final byte[] generationSig = ByteUtil.toByte("c178f0713ef498e88def4156a9425e8469cdb0b7138a21e20d4be7e4836a8d66");
+    private static final byte[] generationSig = ByteUtil.toByte("178f0713ef498e88def4156a9425e8469cdb0bf1");
     private static final byte[] tx = ByteUtil.toByte("f7516c32e5ff8144bb919a141ce051de00b09b02");
     private static final byte[] signature = ByteUtil.toByte("281f3c2fe309683c74762f965f38bd8f8910d8dbeca1da904d6821e8101075776243379a4efdfdc8c10ae34be767a825f770e6a62b5430c030f179b74057e747");
     private static final byte[] pubkey = ByteUtil.toByte("ae20f5f96e89b8945a1194749456f74357864d5902ee8a5c19c3e75d0cef91ea");
 
     @Test
-    public void createBlock(){
-        Transaction tx = createTx();
+    public void createBlock() {
         long mBalance = 100000000000000L;
         long sBalance = 300300000000000L;
         long rBalance = 800000000000000L;
@@ -50,23 +45,13 @@ public class BlockTest {
                     basetarget, cummulativediff, generationSig, tx, mBalance, sBalance,
                     rBalance, 1345, signature, pubkey);
         System.out.println(block.getVersion());
+        System.out.println(ByteUtil.toHexString(block.getPreviousBlockHash()));
         byte[] bencoded= block.getEncodedBytes();
         String str = new String(bencoded);
         System.out.println(str);
         System.out.println(str.length());
+        System.out.println(ByteUtil.toHexString(block.getBlockHash()));
         boolean ret1 = block.isBlockParamValidate();
         System.out.println("param validate ?: "+ret1);
-    }
-
-    @Test
-    public void print(){
-       log.debug(System.getProperty("java.library.path"));
-       long var = 0x7fffffffffffffffL;
-       log.debug("max basetarget: "+ ChainParam.MaxBaseTarget.toString());
-
-       log.debug("equal ? : "+ (Long.MAX_VALUE == var));
-       log.debug("max balance: "+ Long.MAX_VALUE);
-       log.debug("bytes are: "+ BigInteger.valueOf(Long.MAX_VALUE).longValue());
-       log.debug("-1 bytes are: "+ByteUtil.toHexString(ByteUtil.longToBytes(-1)));
     }
 }

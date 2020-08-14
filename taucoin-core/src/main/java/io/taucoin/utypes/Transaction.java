@@ -16,13 +16,10 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.utypes;
 
-import io.taucoin.config.ChainConfig;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
-import io.taucoin.util.RLP;
-import io.taucoin.util.RLPList;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Entry;
@@ -31,7 +28,6 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +49,7 @@ public class Transaction {
     private ArrayList<Long> senderPubkey;   //Pubkey - 32 bytes
     private long nonce;
     private ArrayList<Long> signature;   //Signature - 64 bytes
-    private HashMap<ArrayList<Long>, ArrayList<Long>> genesisMsg; // genesis msg tx
+    private ArrayList<ArrayList<Long>> genesisMsg; // genesis msg tx -> Tau QA
     private String forumNote;    // forum note tx
     private ArrayList<Long> receiverPubkey;     // wiring coins tx, pubkey - 32 bytes
     private long amount;      // wiring coins tx
@@ -99,7 +95,7 @@ public class Transaction {
             throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
         }
         this.version = version;
-        this.chainID = new String(chainID, UTF_8);
+        this.chainID = new String(chainID);
         this.timestamp = timestamp;
         this.txFee = txFee;
         this.txType = txType;
@@ -116,36 +112,6 @@ public class Transaction {
         }
 
         isParsed = true;
-    }
-
-    /**
-     * genesis Msg transform 
-     * @param genesisMsg
-     */
-    private HashMap<ArrayList<Long>, ArrayList<Long>> genesisMapTrans(HashMap<ByteArrayWrapper, GenesisItem> genesisMsg) {
-
-        HashMap<ArrayList<Long>, ArrayList<Long>> internalGenesisMap = new HashMap();
-
-        Iterator<ByteArrayWrapper> accountItor = genesisMsg.keySet().iterator();
-
-        while(accountItor.hasNext()) {
-            ArrayList<Long> keys = new ArrayList<Long>();
-            ArrayList<Long> values = new ArrayList<Long>();
-
-            ByteArrayWrapper key = accountItor.next();
-            GenesisItem value = genesisMsg.get(key);
-
-            // key -> arraylist
-            keys = ByteUtil.byteArrayToSignLongArray(key.getData(), ChainParam.PubkeyLongArrayLength);
-
-            // value -> arraylist
-            values.add(value.getBalance().longValue());
-            values.add(value.getPower().longValue());
-
-            internalGenesisMap.put(keys, values);
-		}
-
-        return internalGenesisMap;
     }
 
     /**
@@ -168,7 +134,7 @@ public class Transaction {
             throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
         }
         this.version = version;
-        this.chainID = new String(chainID, UTF_8);
+        this.chainID = new String(chainID);
         this.timestamp = timestamp;
         this.txFee = txFee;
         this.txType = txType;
@@ -188,7 +154,7 @@ public class Transaction {
 
     /**
      * construct transaction from complete byte encoding.
-     * @param bEncodedBytes:complete byte encoding.
+     * @param encodedBytes:complete byte encoding.
      */
     public Transaction(byte[] encodedBytes) {
         this.encodedBytes = encodedBytes;
@@ -302,6 +268,33 @@ public class Transaction {
 
             isParsed = true;
         }
+    }
+
+    /**
+     * genesis Msg transform 
+     * @param genesisMsg
+     */
+    private ArrayList<ArrayList<Long>> genesisMapTrans(HashMap<ByteArrayWrapper, GenesisItem> genesisMsg) {
+
+        ArrayList<ArrayList<Long>> accounts = new ArrayList<>();
+        Iterator<ByteArrayWrapper> accountItor = genesisMsg.keySet().iterator();
+
+        while(accountItor.hasNext()) {
+
+            ByteArrayWrapper key = accountItor.next();
+            GenesisItem value = genesisMsg.get(key);
+
+            // key -> arraylist
+            ArrayList<Long> account = ByteUtil.byteArrayToSignLongArray(key.getData(), ChainParam.PubkeyLongArrayLength);
+
+            account.add(value.getBalance().longValue());
+            account.add(value.getPower().longValue());
+            System.out.println(account);
+
+            accounts.add(account);
+		}
+
+        return accounts;
     }
 
     /**
@@ -457,14 +450,17 @@ public class Transaction {
      * @param item
      * @return
      */
-    public void appendAccount(String ed25519pub, GenesisItem item) {
+    public void appendGenesisAccount(ByteArrayWrapper pubkey, GenesisItem item) {
+
         if(txType != ChainParam.TxType.GMsgType.ordinal()) {
             logger.error("Genesis msg transaction append error, tx type is {}", txType);
         } 
-        /*
-        if(!accountKV.containsKey(ed25519pub)){
-            accountKV.put(ed25519pub,item);
-        */
+
+        ArrayList<Long> account = ByteUtil.byteArrayToSignLongArray(pubkey.getData(), ChainParam.PubkeyLongArrayLength);
+        account.add(item.getBalance().longValue());
+        account.add(item.getPower().longValue());
+        this.genesisMsg.add(account);
+
         encodedBytes = null;
         sigEncodedBytes = null;
     }
@@ -473,22 +469,17 @@ public class Transaction {
      * get genesis msg K-V state.
      * @return
      */
-    public HashMap<ByteArrayWrapper, GenesisItem> getAccountKV() {
+    public HashMap<ByteArrayWrapper, GenesisItem> getGenesisAccounts() {
 
-        HashMap<ByteArrayWrapper, GenesisItem> accountKV = new HashMap<ByteArrayWrapper, GenesisItem>();
+        HashMap<ByteArrayWrapper, GenesisItem> accounts = new HashMap<ByteArrayWrapper, GenesisItem>();
 
-        Iterator<ArrayList<Long>> accountItor = this.genesisMsg.keySet().iterator();
-
-        while(accountItor.hasNext()) {
-
-            ArrayList<Long> keys = accountItor.next();
-            ArrayList<Long> values = genesisMsg.get(keys);
+        for(ArrayList<Long> account: this.genesisMsg) {
 
             // key -> ByteArrayWrapper
-            byte[] longbyte0 = ByteUtil.longToBytes(keys.get(0));
-            byte[] longbyte1 = ByteUtil.longToBytes(keys.get(1));
-            byte[] longbyte2 = ByteUtil.longToBytes(keys.get(2));
-            byte[] longbyte3 = ByteUtil.longToBytes(keys.get(3));
+            byte[] longbyte0 = ByteUtil.longToBytes(account.get(0));
+            byte[] longbyte1 = ByteUtil.longToBytes(account.get(1));
+            byte[] longbyte2 = ByteUtil.longToBytes(account.get(2));
+            byte[] longbyte3 = ByteUtil.longToBytes(account.get(3));
             byte[] keybytes = new byte[ChainParam.PubkeyLength];
             System.arraycopy(longbyte0, 0, keybytes, 0, 8);
             System.arraycopy(longbyte1, 0, keybytes, 8, 8);
@@ -497,14 +488,14 @@ public class Transaction {
             ByteArrayWrapper key = new ByteArrayWrapper(keybytes);
 
             // value -> GenesisItem
-            BigInteger balance = new BigInteger(values.get(0).toString());
-            BigInteger power = new BigInteger(values.get(1).toString());
+            BigInteger balance = new BigInteger(account.get(4).toString());
+            BigInteger power = new BigInteger(account.get(5).toString());
             GenesisItem value = new GenesisItem(balance, power);
 
-            accountKV.put(key, value);
+            accounts.put(key, value);
 		}
 
-        return accountKV;
+        return accounts;
     }
 
     /**
