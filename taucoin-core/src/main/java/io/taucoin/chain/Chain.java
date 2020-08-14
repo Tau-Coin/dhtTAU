@@ -3,7 +3,6 @@ package io.taucoin.chain;
 import com.frostwire.jlibtorrent.Pair;
 import io.taucoin.account.AccountManager;
 import io.taucoin.core.*;
-import io.taucoin.db.BlockInfo;
 import io.taucoin.db.BlockStore;
 import io.taucoin.db.StateDB;
 import io.taucoin.listener.TauListener;
@@ -13,7 +12,6 @@ import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.types.Block;
-import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -255,12 +253,12 @@ public class Chain {
             boolean miningFlag = false;
 
             // keep looking for more difficult chain
-            long startTime = 0;
-            long lastTime;
+            long startLookingTime = 0;
+            long lastLookingTime;
             while (!Thread.interrupted()) {
-                lastTime = startTime;
-                startTime = System.currentTimeMillis() / 1000;
-                if (startTime - lastTime < 1) {
+                lastLookingTime = startLookingTime;
+                startLookingTime = System.currentTimeMillis() / 1000;
+                if (startLookingTime - lastLookingTime < 1) {
                     logger.info("Chain ID[{}]: Sleep 1 s", new String(this.chainID));
                     try {
                         Thread.sleep(1000);
@@ -641,33 +639,33 @@ public class Chain {
 
             this.peerManager.addOldBlockPeer(bestVoteBlock.getMinerPubkey());
 
-            Block block = bestVoteBlock;
-            int counter = 0;
-            while (!Thread.interrupted() && block.getBlockNum() > 0 && counter < ChainParam.MUTABLE_RANGE) {
-                block = getBlockFromDHTByHash(this.syncBlock.getPreviousBlockHash());
-                if (null == block) {
-                    return false;
-                }
-
-                if (!this.stateProcessor.backwardProcess(block, track)) {
-                    logger.error("Chain ID[{}]: Process block[{}] fail!",
-                            new String(this.chainID), Hex.toHexString(block.getBlockHash()));
-                    return false;
-                }
-
-                // after sync
-                // 1. save block
-                // 2. save sync block hash
-                // 3. commit new state
-                // 4. set sync block
-                // 5. add old block peer to peer pool
-                this.blockStore.saveBlock(block, true);
-                track.setSyncBlockHash(this.chainID, block.getBlockHash());
-                this.syncBlock = block;
-                this.peerManager.addOldBlockPeer(block.getMinerPubkey());
-
-                counter++;
-            }
+//            Block block = bestVoteBlock;
+//            int counter = 0;
+//            while (!Thread.interrupted() && block.getBlockNum() > 0 && counter < ChainParam.MUTABLE_RANGE) {
+//                block = getBlockFromDHTByHash(this.syncBlock.getPreviousBlockHash());
+//                if (null == block) {
+//                    return false;
+//                }
+//
+//                if (!this.stateProcessor.backwardProcess(block, track)) {
+//                    logger.error("Chain ID[{}]: Process block[{}] fail!",
+//                            new String(this.chainID), Hex.toHexString(block.getBlockHash()));
+//                    return false;
+//                }
+//
+//                // after sync
+//                // 1. save block
+//                // 2. save sync block hash
+//                // 3. commit new state
+//                // 4. set sync block
+//                // 5. add old block peer to peer pool
+//                this.blockStore.saveBlock(block, true);
+//                track.setSyncBlockHash(this.chainID, block.getBlockHash());
+//                this.syncBlock = block;
+//                this.peerManager.addOldBlockPeer(block.getMinerPubkey());
+//
+//                counter++;
+//            }
 
 //        if (null != bestVoteBlock) {
 //            try {
@@ -1231,6 +1229,11 @@ public class Chain {
         } catch (Exception e) {
             logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return null;
+        }
+
+        // if block is too less, sync more
+        while (null == immutableBlockHash && !isSyncComplete()) {
+            syncBlockForMoreState();
         }
 
         if (null == immutableBlockHash) {

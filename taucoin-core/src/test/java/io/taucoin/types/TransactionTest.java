@@ -18,7 +18,6 @@ package io.taucoin.types;
 
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
-import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
@@ -55,7 +54,7 @@ public class TransactionTest {
                     sender, nonce, gMsg, null, null, 0, signature);
 
         System.out.println(tx.getVersion());
-        byte[] bencoded= tx.getEncodedBytes();
+        byte[] bencoded= tx.getEncoded();
         String str = new String(bencoded);
         System.out.println(str);
         System.out.println(str.length());
@@ -74,7 +73,7 @@ public class TransactionTest {
                     sender, nonce, null, forumNote, null, 0, signature);
 
         System.out.println(tx.getVersion());
-        byte[] bencoded= tx.getEncodedBytes();
+        byte[] bencoded= tx.getEncoded();
         String str = new String(bencoded);
         System.out.println(str);
         System.out.println(str.length());
@@ -94,7 +93,7 @@ public class TransactionTest {
                     sender, nonce, null, null, receiver, amount, signature);
 
         System.out.println(tx.getVersion());
-        byte[] bencoded= tx.getEncodedBytes();
+        byte[] bencoded= tx.getEncoded();
         String str = new String(bencoded);
         System.out.println(str);
         System.out.println(str.length());

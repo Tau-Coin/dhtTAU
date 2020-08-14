@@ -211,11 +211,10 @@ public class ChainManager {
      * @return true/false.
      */
     public boolean createNewCommunity(ChainConfig cf){
+        byte[] chainID = cf.getChainid();
 		
         Block genesis = new Block(cf);
-        boolean ret = followChain(genesis.getChainID());
-
-        byte[] chainID = cf.getChainid();
+        boolean ret = followChain(chainID);
 
         // load genesis state
         if (!loadGenesisState(chainID, genesis)) {
@@ -250,7 +249,7 @@ public class ChainManager {
 		if(ret) {
         	try {
         	    logger.info("Save genesis block in block store. Chain ID:{}",
-                        new String(genesis.getChainID()));
+                        new String(chainID));
             	blockDB.saveBlock(genesis,true);
         	} catch (Exception e) {
             	logger.error(e.getMessage(), e);
