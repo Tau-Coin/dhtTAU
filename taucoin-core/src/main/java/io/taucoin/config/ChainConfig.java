@@ -217,11 +217,4 @@ public class ChainConfig {
         return Msg;
     }
 
-    /**
-     * get genesis utypes tx message.
-     * @return
-     */
-    public io.taucoin.utypes.Transaction getUmsg(){
-        return null;
-    }
 }
