@@ -27,12 +27,9 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Block {
         
@@ -216,7 +213,7 @@ public class Block {
      * bencoding block to bytes
      * @return
      */
-    public byte[] getEncodedBytes(){
+    public byte[] getEncoded(){
         if (encodedBytes == null) {
            List list = new ArrayList();
            list.add(this.version);
@@ -245,7 +242,7 @@ public class Block {
      * @return
      */
     public String getEncodeHexStr(){
-        return ByteUtil.toHexString(getEncodedBytes());
+        return ByteUtil.toHexString(getEncoded());
     }
 
 
@@ -518,7 +515,7 @@ public class Block {
      */
     public byte[] getBlockHash(){
         if(blockHash == null){
-            blockHash = HashUtil.sha1hash(this.getEncodedBytes());
+            blockHash = HashUtil.sha1hash(this.getEncoded());
         }
         return blockHash;
     }
