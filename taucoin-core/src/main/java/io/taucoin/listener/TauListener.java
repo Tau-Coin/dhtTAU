@@ -1,7 +1,7 @@
 package io.taucoin.listener;
 
 import io.taucoin.torrent.SessionStats;
-import io.taucoin.types.Block;
+import io.taucoin.utypes.Block;
 
 /**
  * TauListener is the event listener of the tau blockchain.
