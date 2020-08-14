@@ -161,6 +161,37 @@ public class Transaction {
     }
 
     /**
+     * construct genesis msg tx without signature.
+     * @param version
+     * @param chainID
+     * @param timestamp
+     * @param txFee
+     * @param txType
+     * @param sender
+     * @param nonce
+     * @param genesisMsg
+     */
+    public Transaction(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
+            long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg){
+        if(sender.length != ChainParam.SenderLength) {
+            throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
+        }
+        this.version = version;
+        this.chainID = new String(chainID);
+        this.timestamp = timestamp;
+        this.txFee = txFee;
+        this.txType = txType;
+        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
+        this.nonce = nonce;
+        if(txType != ChainParam.TxType.GMsgType.ordinal()) {
+            logger.error("Genesis Msg tx set error, tx type is {}", txType);
+        }
+        this.genesisMsg = genesisMapTrans(genesisMsg);
+
+        isParsed = true;
+    }
+
+    /**
      * construct transaction from complete byte encoding.
      * @param encodedBytes:complete byte encoding.
      */
@@ -432,11 +463,24 @@ public class Transaction {
     }
 
     /**
+     * sign transaction with seed.
+     * @param prikey
+     * @return
+     */
+    public byte[] signTransactionWithSeed(byte[] seed) {
+        // create private key from seed
+        Pair<byte[], byte[]> keys = Ed25519.createKeypair(seed);
+        byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.getSenderPubkey(), keys.first);
+        this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
+        return sig;
+    }
+
+    /**
      * sign transaction with sender prikey.
      * @param prikey
      * @return
      */
-    public byte[] signTransaction(byte[] prikey) {
+    public byte[] signTransactionWithPriKey(byte[] prikey) {
         byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.getSenderPubkey(), prikey);
         this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
         return sig;
