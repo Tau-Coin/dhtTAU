@@ -242,6 +242,15 @@ public class Block {
     }
 
     /**
+     * get hex string to save in libtorrent.
+     * @return
+     */
+    public String getEncodeHexStr(){
+        return ByteUtil.toHexString(getEncodedBytes());
+    }
+
+
+    /**
      * encoding block signature parts which is under protection of cryptographic signature.
      * @return
      */
@@ -573,8 +582,8 @@ public class Block {
      */
     public void setVersion(byte version) {
         this.version = version;
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -583,8 +592,8 @@ public class Block {
      */
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -593,8 +602,8 @@ public class Block {
      */
     public void setBlockNum(long blockNum) {
         this.blockNum = blockNum;
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -603,8 +612,8 @@ public class Block {
      */
     public void setPreviousBlockHash(byte[] previousBlockHash) {
         this.previousBlockHash = ByteUtil.byteArrayToSignLongArray(previousBlockHash,3);
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -613,8 +622,8 @@ public class Block {
      */
     public void setImmutableBlockHash(byte[] immutableBlockHash) {
         this.immutableBlockHash = ByteUtil.byteArrayToSignLongArray(immutableBlockHash,3);
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -623,8 +632,8 @@ public class Block {
      */
     public void setBaseTarget(BigInteger baseTarget) {
         this.baseTarget = ByteUtil.byteArrayToSignLong(baseTarget.toByteArray());;
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -633,8 +642,8 @@ public class Block {
      */
     public void setCumulativeDifficulty(BigInteger cumulativeDifficulty) {
         this.cumulativeDifficulty = ByteUtil.byteArrayToSignLong(cumulativeDifficulty.toByteArray());
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -643,8 +652,8 @@ public class Block {
      */
     public void setGenerationSignature(byte[] generationSignature) {
         this.generationSignature = ByteUtil.byteArrayToSignLongArray(generationSignature,4);
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -653,8 +662,8 @@ public class Block {
      */
     public void setTxHash(byte[] txHash) {
         this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -663,8 +672,8 @@ public class Block {
      */
     public void setMinerBalance(long minerBalance) {
         this.minerBalance = minerBalance;
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -673,8 +682,8 @@ public class Block {
      */
     public void setSenderBalance(long senderBalance) {
         this.senderBalance = senderBalance;
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -683,8 +692,8 @@ public class Block {
      */
     public void setReceiverBalance(long receiverBalance) {
         this.receiverBalance = receiverBalance;
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -693,8 +702,8 @@ public class Block {
      */
     public void setSenderNonce(long senderNonce) {
         this.senderNonce = senderNonce;
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -703,8 +712,8 @@ public class Block {
      */
     public void setMinerPubkey(byte[] minerPubkey) {
         this.minerPubkey = ByteUtil.byteArrayToSignLongArray(minerPubkey, ChainParam.PubkeyLongArrayLength);
-        encodedBytes = null;
-        sigEncodedBytes = null;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
     }
 
     /**
@@ -713,7 +722,28 @@ public class Block {
      */
     public void setSignature(byte[] signature){
         this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
-        encodedBytes = null;
+        this.encodedBytes = null;
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder strBlock = new StringBuilder();
+        strBlock.append("block: [\n");
+        strBlock.append("version: ").append(this.getVersion()).append("\n");
+        strBlock.append("timestamp: ").append(this.getTimeStamp()).append("\n");
+        strBlock.append("blocknum: ").append(this.getBlockNum()).append("\n");
+        strBlock.append("previousblockhash: ").append(ByteUtil.toHexString(this.getPreviousBlockHash())).append("\n");
+        strBlock.append("immutableblockhash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash())).append("\n");
+        strBlock.append("generationsignature: ").append(ByteUtil.toHexString(this.getGenerationSignature())).append("\n");
+        strBlock.append("transaction: ").append(ByteUtil.toHexString(this.getTxHash())).append("\n");
+        strBlock.append("minerbalance: ").append(this.getMinerBalance()).append("\n");
+        strBlock.append("senderbalance: ").append(this.getSenderBalance()).append("\n");
+        strBlock.append("receiverbalance: ").append(this.getReceiverBalance()).append("\n");
+        strBlock.append("sendernonce: ").append(this.getSenderNonce()).append("\n");
+        strBlock.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
+        strBlock.append("minerpubkey: ").append(ByteUtil.toHexString(this.getMinerPubkey())).append("\n");
+        strBlock.append("]\n");
+        return strBlock.toString();
     }
 
 }
