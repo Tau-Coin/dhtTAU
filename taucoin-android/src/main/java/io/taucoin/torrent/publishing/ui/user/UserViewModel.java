@@ -335,8 +335,13 @@ public class UserViewModel extends AndroidViewModel {
      */
     public void showUserInfoDialog(BaseActivity activity, String publicKey) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<UserAndMember>) emitter -> {
-            UserAndMember user = userRepo.getUserAndMember(publicKey);
-            emitter.onNext(user);
+            UserAndMember userAndMember = userRepo.getUserAndMember(publicKey);
+            if(null == userAndMember){
+                User user = new User(publicKey);
+                userRepo.addUser(user);
+            }
+            userAndMember = userRepo.getUserAndMember(publicKey);
+            emitter.onNext(userAndMember);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())

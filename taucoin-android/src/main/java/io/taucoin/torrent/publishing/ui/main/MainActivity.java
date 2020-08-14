@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.format.Formatter;
@@ -42,9 +43,12 @@ import io.taucoin.torrent.publishing.databinding.UserDialogBinding;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
+import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
+import io.taucoin.torrent.publishing.ui.user.ScanQRCodeActivity;
+import io.taucoin.torrent.publishing.ui.user.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
@@ -221,8 +225,17 @@ public class MainActivity extends BaseActivity {
      * 左侧抽屉布局点击事件
      */
     public void onClick(View view) {
+        if(null == user){
+            return;
+        }
         switch (view.getId()) {
+            case R.id.iv_user_qr_code:
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.BEAN, user);
+                ActivityUtil.startActivity(intent, this, UserQRCodeActivity.class);
+                break;
             case R.id.round_button:
+                userViewModel.showUserInfoDialog(this, user.publicKey);
                 break;
             case R.id.tv_public_key:
             case R.id.tv_public_key_title:
@@ -293,6 +306,11 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_alert) {
+
+        }else if (item.getItemId() == R.id.menu_scan) {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.BEAN, user);
+            ActivityUtil.startActivity(intent,this, ScanQRCodeActivity.class);
         }
         return true;
     }

@@ -45,6 +45,7 @@
     <string name="drawer_telecom">Tele\ncom</string>
 
     <!-- Strings used for menu -->
+    <string name="menu_scan">Scan</string>
     <string name="menu_alert">Alert</string>
     <string name="menu_search">Search</string>
     <string name="menu_done">Done</string>
@@ -230,6 +231,14 @@
     <string name="contacts_friend_already_exists">Friend already exists!</string>
     <string name="contacts_error_invalid_pk">Invalid friend\'s public key!</string>
     <string name="contacts_airdrop_successfully">You have send %1$s coins to your friends!</string>
+
+    <!-- Strings used for QRCode -->
+    <string name="qr_code_title">My Public Key QR Code</string>
+    <string name="qr_code_scan_friend_qr">Scan Friend\'s QR Code</string>
+    <string name="qr_code_scan_qr">Scan QR</string>
+    <string name="qr_code_scan_cancelled">Cancelled</string>
+    <string name="qr_code_not_found">No QR code found</string>
+    <string name="qr_code_not_found_continue">Tap the screen to continue scanning</string>
 
     <!--permission tip-->
     <string name="permission_tip_upgrade_denied">
