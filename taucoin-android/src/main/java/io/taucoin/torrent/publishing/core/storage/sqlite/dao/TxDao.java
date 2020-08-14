@@ -82,7 +82,7 @@ public interface TxDao {
      */
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE_ON_CHAIN)
-    DataSource.Factory<Integer, UserAndTx> queryCommunityTxsOnChain(String chainID, int txType);
+    DataSource.Factory<Integer, UserAndTx> queryCommunityTxsOnChain(String chainID, long txType);
 
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID_NOT_ON_CHAIN)

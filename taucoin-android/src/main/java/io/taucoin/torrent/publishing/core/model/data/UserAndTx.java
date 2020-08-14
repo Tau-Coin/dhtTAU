@@ -15,12 +15,12 @@ public class UserAndTx extends Tx{
             entityColumn = "publicKey")
     public User sender;                     // 交易发送者对应的用户信息
 
-    public UserAndTx(@NonNull String chainID, String receiverPk, long amount, long fee, int txType, String memo) {
+    public UserAndTx(@NonNull String chainID, String receiverPk, long amount, long fee, long txType, String memo) {
         super(chainID, receiverPk, amount, fee, txType, memo);
     }
 
     @Ignore
-    public UserAndTx(@NonNull String chainID, long fee, int txType, String memo) {
+    public UserAndTx(@NonNull String chainID, long fee, long txType, String memo) {
         super(chainID, fee, txType, memo);
     }
 

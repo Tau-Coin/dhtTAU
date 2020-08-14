@@ -18,6 +18,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityCommunityBinding;
@@ -27,7 +28,6 @@ import io.taucoin.torrent.publishing.ui.chat.ChatsTabFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.search.SearchActivity;
 import io.taucoin.torrent.publishing.ui.transaction.TxsTabFragment;
-import io.taucoin.types.MsgType;
 
 /**
  * 单个群组页面
@@ -91,7 +91,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         Fragment chainNoteTab = new TxsTabFragment();
         Bundle noteBundle = new Bundle();
         noteBundle.putParcelable(IntentExtra.BEAN, community);
-        noteBundle.putInt(IntentExtra.TYPE, MsgType.RegularForum.getVaLue());
+        noteBundle.putInt(IntentExtra.TYPE, ChainParam.TxType.FNoteType.ordinal());
         chainNoteTab.setArguments(noteBundle);
         fragmentList.add(chainNoteTab);
 
@@ -99,7 +99,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         Fragment wiringTab = new TxsTabFragment();
         Bundle wiringBundle = new Bundle();
         wiringBundle.putParcelable(IntentExtra.BEAN, community);
-        wiringBundle.putInt(IntentExtra.TYPE, MsgType.Wiring.getVaLue());
+        wiringBundle.putLong(IntentExtra.TYPE, ChainParam.TxType.WCoinsType.ordinal());
         wiringTab.setArguments(wiringBundle);
         fragmentList.add(wiringTab);
 

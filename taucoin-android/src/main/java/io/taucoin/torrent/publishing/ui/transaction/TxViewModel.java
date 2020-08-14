@@ -127,7 +127,7 @@ public class TxViewModel extends AndroidViewModel {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType){
+    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, long txType){
         return txRepo.queryCommunityTxs(chainID, txType, txType == -1 ? 0 : 1);
     }
 

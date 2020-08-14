@@ -62,7 +62,7 @@ public class TxRepositoryImpl implements TxRepository{
      * @param chainID 社区链id
      */
     @Override
-    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, int txType, int txStatus){
+    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, long txType, int txStatus){
         if(txType == -1){
             return db.txDao().queryCommunityTxsNotOnChain(chainID);
         }else{

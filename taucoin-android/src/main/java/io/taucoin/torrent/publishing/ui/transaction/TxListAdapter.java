@@ -12,13 +12,13 @@ import androidx.databinding.ViewDataBinding;
 import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
-import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -26,8 +26,6 @@ import io.taucoin.torrent.publishing.databinding.ItemNoteBinding;
 import io.taucoin.torrent.publishing.databinding.ItemWiringTxBinding;
 import io.taucoin.torrent.publishing.databinding.MsgLeftViewBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;
-import io.taucoin.torrent.publishing.ui.customviews.RoundButton;
-import io.taucoin.types.MsgType;
 
 /**
  * 消息/交易列表显示的Adapter
@@ -48,7 +46,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         ViewDataBinding binding;
-        if(viewType == MsgType.Wiring.getVaLue()){
+        if(viewType == ChainParam.TxType.WCoinsType.ordinal()){
             binding = DataBindingUtil.inflate(inflater,
                     R.layout.item_wiring_tx,
                     parent,
@@ -87,7 +85,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
     public int getItemViewType(int position) {
         UserAndTx tx = getItemKey(position);
         if(tx != null){
-            return tx.txType;
+            return (int) tx.txType;
         }
         return -1;
     }

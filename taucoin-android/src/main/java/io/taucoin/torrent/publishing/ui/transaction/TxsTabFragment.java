@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
@@ -39,7 +40,6 @@ import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
-import io.taucoin.types.MsgType;
 
 /**
  * 交易Tab页
@@ -130,7 +130,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         binding.fabButton.getMainFab().setOnClickListener(v ->{
                     Intent intent = new Intent();
                     intent.putExtra(IntentExtra.BEAN, community);
-                    if(txType == MsgType.Wiring.getVaLue()){
+                    if(txType == ChainParam.TxType.WCoinsType.ordinal()){
                         ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
                     }else{
                         ActivityUtil.startActivity(intent, this, MessageActivity.class);
