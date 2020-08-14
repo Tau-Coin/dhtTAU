@@ -14,7 +14,7 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.taucoin.types;
+package io.taucoin.utypes;
 
 import com.frostwire.jlibtorrent.swig.sha1_hash;
 import com.frostwire.jlibtorrent.Vectors;
@@ -31,9 +31,9 @@ import java.security.NoSuchAlgorithmException;
 public class HashUtil {
     public static byte[] sha1hash(byte[] bytes){
        MessageDigest digest;
-       try{
+       try {
            digest = MessageDigest.getInstance("SHA-1");
-       }catch (NoSuchAlgorithmException e){
+       } catch (NoSuchAlgorithmException e) {
            return null;
        }
        byte_vector bvs = Vectors.bytes2byte_vector(digest.digest(bytes));

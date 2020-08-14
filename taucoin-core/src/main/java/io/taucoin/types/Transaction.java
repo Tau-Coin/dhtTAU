@@ -14,118 +14,157 @@ SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
-package io.taucoin.types;
+package io.taucoin.utypes;
+
+import io.taucoin.genesis.GenesisItem;
+import io.taucoin.param.ChainParam;
+import io.taucoin.util.ByteArrayWrapper;
+import io.taucoin.util.ByteUtil;
 
 import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Entry;
 
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.HashMap;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import io.taucoin.config.ChainConfig;
-import io.taucoin.param.ChainParam;
-import io.taucoin.util.ByteUtil;
-import io.taucoin.util.RLP;
-import io.taucoin.util.RLPList;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Transaction {
-    private byte version;
-    private byte[] chainID;
+
+    private static final Logger logger = LoggerFactory.getLogger("Transaction");
+
+    // Transaction字段
+    private long version;
+    private String chainID;    //String encoding: UTF-8
     private long timestamp;
     private long txFee;
-    private byte[] senderPubkey;
+    private long txType;
+    private ArrayList<Long> senderPubkey; //Pubkey - 32 bytes, 4 longs
     private long nonce;
-    private TxData txData;
-    private byte[] signature;
+    private ArrayList<Long> signature;    //Signature - 64 bytes, 8 longs
+    /*
+     * 1. jlibtorrent, libtorrent仅支持:String, Long, List, Map结构
+     * 2. genesisMsg本质上需要记录多个账户(pubkey, item: balance + power)
+     * 3. pubkey本质上是long list，但是jlibtorrent和libtorrent的map仅支持String类型
+     * 4. 为了保证pubkey的本质，还是采用list来处理,一个账户共6个long
+     * 5. 前4个long代表一个账户的pubkey，最后两个long代表一个账户的状态
+     */
+    private ArrayList<ArrayList<Long>> genesisMsg; // Genesis msg tx -> Tau QA
+    private ArrayList<Long> forumNoteHash;    // Forum note tx - 20 bytes, 3 longs
+    private ArrayList<Long> receiverPubkey;   // wiring coins tx, pubkey - 32 bytes, 4 longs
+    private long amount;      // Wiring coins tx
 
+    // 中间结果，暂存内存，不上链
+    private byte[] encodedBytes;
+    private byte[] sigEncodedBytes;
+    private byte[] txHash;
     private boolean isParsed;
-    private byte[] rlpEncoded;
-    private byte[] rlpSigEncoded;
-    private byte[] txID;
 
+    private static enum TxIndex {
+        Version, 
+        ChainID, 
+        Timestamp, 
+        TxFee, 
+        TxType, 
+        Sender,
+        Nonce,
+        Signature,
+        TxData,
+    }
     /**
      * construct complete tx with signature.
      * @param version
      * @param chainID
      * @param timestamp
      * @param txFee
+     * @param txType
      * @param sender
      * @param nonce
-     * @param txData
+     * @param genesisMsg
+     * @param forumNoteHash
+     * @param receiver
+     * @param amount
      * @param signature
      */
-    public Transaction(byte version,byte[] chainID,long timestamp,int txFee,byte[] sender
-           ,long nonce,TxData txData,byte[] signature){
-            if(chainID.length > ChainParam.ChainIDlength) {
-                throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
-            }
-            if(sender.length != ChainParam.SenderLength) {
-                throw new IllegalArgumentException("sender address length should =: "+ChainParam.SenderLength);
-            }
-            if(signature.length != ChainParam.SignatureLength) {
-                throw new IllegalArgumentException("signature length should =: " + ChainParam.SignatureLength);
-            }
-            this.version = version;
-            this.chainID = chainID;
-            this.timestamp = timestamp;
-            this.txFee = txFee;
-            this.senderPubkey = sender;
-            this.nonce = nonce;
-            this.txData = txData;
-            this.signature = signature;
-            isParsed = true;
-    }
-
-    /**
-     * construct temporary transaction without signature.
-     * @param version: transaction version in current chain.
-     * @param chainID: chain id this transaction referenced to.
-     * @param timeStamp: transaction unix timestamp.
-     * @param txFee: transaction fee allowed to negative.
-     * @param sender:transaction sender.
-     * @param nonce: sender transaction counter.
-     * @param txData:transaction message.
-     */
-    public Transaction(byte version,byte[] chainID,long timeStamp,int txFee,byte[] sender
-            ,long nonce,TxData txData){
-        if(chainID.length > ChainParam.ChainIDlength) {
-            throw new IllegalArgumentException("chainid need less than: "+ ChainParam.ChainIDlength);
-        }
+    public Transaction(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
+            long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] forumNoteHash, byte[] receiver, long amount, byte[] signature){
         if(sender.length != ChainParam.SenderLength) {
-            throw new IllegalArgumentException("sender address length should =: "+ChainParam.SenderLength);
+            throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
+        }
+        if(signature.length != ChainParam.SignatureLength) {
+            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
         }
         this.version = version;
-        this.chainID = chainID;
-        this.timestamp = timeStamp;
+        this.chainID = new String(chainID, UTF_8);
+        this.timestamp = timestamp;
         this.txFee = txFee;
-        this.senderPubkey = sender;
+        this.txType = txType;
+        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
         this.nonce = nonce;
-        this.txData = txData;
+        this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
+        if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+            this.genesisMsg = genesisMapTrans(genesisMsg);
+        } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+            this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
+        } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+            this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
+            this.amount = amount;
+        }
+
         isParsed = true;
     }
 
     /**
-     * construct genesis transaction
+     * construct complete tx without signature.
+     * @param version
+     * @param chainID
+     * @param timestamp
+     * @param txFee
+     * @param txType
+     * @param sender
+     * @param nonce
+     * @param genesisMsg
+     * @param forumNoteHash
+     * @param receiver
+     * @param amount
      */
-    public Transaction(byte version,String communityName,int blockTimeInterval,long genesisTimeStamp,String genesisMinerPk,TxData txData){
+    public Transaction(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
+            long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] forumNoteHash, byte[] receiver, long amount){
+        if(sender.length != ChainParam.SenderLength) {
+            throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
+        }
         this.version = version;
-        String str = genesisMinerPk + genesisTimeStamp;
-        String hash = ByteUtil.toHexString(HashUtil.sha1hash(str.getBytes()));
-        String ID = communityName + ChainParam.ChainidDelimeter + blockTimeInterval + ChainParam.ChainidDelimeter + hash;
-        this.chainID = ID.getBytes();
-        this.timestamp = genesisTimeStamp;
-        this.txFee = 0;
-        this.senderPubkey = ByteUtil.toByte(genesisMinerPk);
-        this.nonce = 0;
-        this.txData = txData;
+        this.chainID = new String(chainID);
+        this.timestamp = timestamp;
+        this.txFee = txFee;
+        this.txType = txType;
+        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
+        this.nonce = nonce;
+        if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+            this.genesisMsg = genesisMapTrans(genesisMsg);
+        } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+            this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
+        } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+            this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
+            this.amount = amount;
+        }
+
         isParsed = true;
     }
 
     /**
      * construct transaction from complete byte encoding.
-     * @param rlpEncoded:complete byte encoding.
+     * @param encodedBytes:complete byte encoding.
      */
-    public Transaction(byte[] rlpEncoded) {
-        this.rlpEncoded = rlpEncoded;
+    public Transaction(byte[] encodedBytes) {
+        this.encodedBytes = encodedBytes;
         this.isParsed = false;
     }
 
@@ -133,66 +172,144 @@ public class Transaction {
      * encoding transaction to bytes.
      * @return
      */
-    public byte[] getEncoded() {
-        if(rlpEncoded == null) {
-            byte[] version = RLP.encodeByte(this.version);
-            byte[] chainid = RLP.encodeElement(this.chainID);
-            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
-            byte[] txfee = RLP.encodeElement(ByteUtil.longToBytes(this.txFee));
-            byte[] sender = RLP.encodeElement(this.senderPubkey);
-            byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
-            byte[] txdata = this.txData.getEncoded();
-            byte[] signature = RLP.encodeElement(this.signature);
-            this.rlpEncoded = RLP.encodeList(version,chainid,timestamp,txfee,sender,nonce,txdata,signature);
+    public byte[] getEncodedBytes() {
+        if(encodedBytes == null) {
+            List list = new ArrayList();
+            list.add(this.version);
+            list.add(this.chainID);
+            list.add(this.timestamp);
+            list.add(this.txFee);
+            list.add(this.senderPubkey);
+            list.add(this.nonce);
+            list.add(this.signature);
+            if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+                list.add(this.genesisMsg);
+            } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+                list.add(this.forumNoteHash);
+            } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+                list.add(this.receiverPubkey);
+                list.add(this.amount);
+            }
+            Entry entry = Entry.fromList(list);
+            this.encodedBytes = entry.bencode();
         }
-        return rlpEncoded;
+        return this.encodedBytes;
     }
 
     /**
      * encoding transaction signature parts which is under protection of cryptographic signature.
      * @return
      */
-    public byte[] getSigEncoded() {
-        if(rlpSigEncoded == null) {
-            byte[] version = RLP.encodeByte(this.version);
-            byte[] chainid = RLP.encodeElement(this.chainID);
-            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
-            byte[] txfee = RLP.encodeElement(ByteUtil.longToBytes(this.txFee));
-            byte[] sender = RLP.encodeElement(this.senderPubkey);
-            byte[] nonce = RLP.encodeElement(ByteUtil.longToBytes(this.nonce));
-            byte[] txdata = this.txData.getEncoded();
-            this.rlpSigEncoded = RLP.encodeList(version,chainid,timestamp,txfee,sender,nonce,txdata);
+    public byte[] getSigEncodedBytes() {
+        if(sigEncodedBytes == null) {
+            List list = new ArrayList();
+            list.add(this.version);
+            list.add(this.chainID);
+            list.add(this.timestamp);
+            list.add(this.txFee);
+            list.add(this.senderPubkey);
+            list.add(this.nonce);
+            if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+                list.add(this.genesisMsg);
+            } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+                list.add(this.forumNoteHash);
+            } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+                list.add(this.receiverPubkey);
+                list.add(this.amount);
+            }
+            Entry entry = Entry.fromList(list);
+            this.sigEncodedBytes = entry.bencode();
         }
-        return rlpSigEncoded;
+        return sigEncodedBytes;
+    }
+
+    /**
+     * encoding transaction to long[].
+     * @return
+     */
+    public List getTxLongArray() {
+        List list = new ArrayList();
+        list.add(this.version);
+        list.add(this.chainID);
+        list.add(this.timestamp);
+        list.add(this.txFee);
+        list.add(this.senderPubkey);
+        list.add(this.nonce);
+        list.add(this.signature);
+        if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+            list.add(this.genesisMsg);
+        } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+            list.add(this.forumNoteHash);
+        } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+            list.add(this.receiverPubkey);
+            list.add(this.amount);
+        }
+        return list;
     }
 
     /**
      * parse transaction bytes field to flat block field.
      */
-    private void parseRLP(){
-        if(isParsed){
+    private void parseEncodedBytes(){
+        if(isParsed) {
             return;
-        }else{
-            RLPList list = RLP.decode2(this.rlpEncoded);
-            RLPList tx = (RLPList) list.get(0);
-            this.version = tx.get(0).getRLPData()[0];
-            this.chainID = tx.get(1).getRLPData();
-            this.timestamp = ByteUtil.byteArrayToLong(tx.get(2).getRLPData());
-            this.txFee = ByteUtil.byteArrayToLong(tx.get(3).getRLPData());
-            this.senderPubkey = tx.get(4).getRLPData();
-            this.nonce = ByteUtil.byteArrayToLong(tx.get(5).getRLPData());
-            this.txData = new TxData(tx.get(6).getRLPData());
-            this.signature = tx.get(7).getRLPData();
+        } else {
+            Entry entry = Entry.bdecode(this.encodedBytes);
+            List<Entry> entrylist = entry.list();
+            this.version = entrylist.get(TxIndex.Version.ordinal()).integer();
+            this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString();
+            this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
+            this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
+            this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();
+            this.senderPubkey = ByteUtil.stringToArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
+            this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
+            this.signature = ByteUtil.stringToArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
+            if(txType == ChainParam.TxType.GMsgType.ordinal()) {
+                //Todo, string -> HashMap
+            } else if (txType == ChainParam.TxType.FNoteType.ordinal()) {
+                this.forumNoteHash = ByteUtil.stringToArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
+            } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+                this.receiverPubkey = ByteUtil.stringToArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
+                this.amount = entrylist.get(TxIndex.TxData.ordinal()+ 1).integer();
+            }
+
             isParsed = true;
         }
+    }
+
+    /**
+     * genesis Msg transform 
+     * @param genesisMsg
+     */
+    private ArrayList<ArrayList<Long>> genesisMapTrans(HashMap<ByteArrayWrapper, GenesisItem> genesisMsg) {
+
+        ArrayList<ArrayList<Long>> accounts = new ArrayList<>();
+        Iterator<ByteArrayWrapper> accountItor = genesisMsg.keySet().iterator();
+
+        while(accountItor.hasNext()) {
+
+            ByteArrayWrapper key = accountItor.next();
+            GenesisItem value = genesisMsg.get(key);
+
+            // key -> arraylist
+            ArrayList<Long> account = ByteUtil.byteArrayToSignLongArray(key.getData(), ChainParam.PubkeyLongArrayLength);
+
+            account.add(value.getBalance().longValue());
+            account.add(value.getPower().longValue());
+            System.out.println(account);
+
+            accounts.add(account);
+		}
+
+        return accounts;
     }
 
     /**
      * get tx version.
      * @return
      */
-    public byte getVersion() {
-        if(!isParsed) parseRLP();
+    public long getVersion() {
+        if(!isParsed) parseEncodedBytes();
         return version;
     }
 
@@ -201,8 +318,8 @@ public class Transaction {
      * @return
      */
     public byte[] getChainID() {
-        if(!isParsed) parseRLP();
-        return chainID;
+        if(!isParsed) parseEncodedBytes();
+        return chainID.getBytes(UTF_8);
     }
 
     /**
@@ -210,17 +327,26 @@ public class Transaction {
      * @return
      */
     public long getTimeStamp() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         return timestamp;
     }
 
     /**
-     * get tx fee maybe negative.
+     * get tx fee, > 0 in 1st version
      * @return
      */
     public long getTxFee() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         return txFee;
+    }
+
+    /**
+     * get tx type, 0-genesis tx, 1-forumNote tx, 2-wiring coins
+     * @return
+     */
+    public long getTxType() {
+        if(!isParsed) parseEncodedBytes();
+        return txType;
     }
 
     /**
@@ -228,8 +354,20 @@ public class Transaction {
      * @return
      */
     public byte[] getSenderPubkey() {
-        if(!isParsed) parseRLP();
-        return senderPubkey;
+        if(!isParsed) parseEncodedBytes();
+
+        byte[] longbyte0 = ByteUtil.longToBytes(senderPubkey.get(0));
+        byte[] longbyte1 = ByteUtil.longToBytes(senderPubkey.get(1));
+        byte[] longbyte2 = ByteUtil.longToBytes(senderPubkey.get(2));
+        byte[] longbyte3 = ByteUtil.longToBytes(senderPubkey.get(3));
+        byte[] pubkeybytes = new byte[ChainParam.PubkeyLength];
+
+        System.arraycopy(longbyte0, 0, pubkeybytes, 0, 8);
+        System.arraycopy(longbyte1, 0, pubkeybytes, 8, 8);
+        System.arraycopy(longbyte2, 0, pubkeybytes, 16, 8);
+        System.arraycopy(longbyte3, 0, pubkeybytes, 24, 8);
+
+        return pubkeybytes;
     }
 
     /**
@@ -237,17 +375,8 @@ public class Transaction {
      * @return
      */
     public long getNonce() {
-        if(!isParsed) parseRLP();
+        if(!isParsed) parseEncodedBytes();
         return nonce;
-    }
-
-    /**
-     * get tx data msg.
-     * @return
-     */
-    public TxData getTxData() {
-        if(!isParsed) parseRLP();
-        return txData;
     }
 
     /**
@@ -255,30 +384,219 @@ public class Transaction {
      * @return
      */
     public byte[] getSignature() {
-        if(!isParsed) parseRLP();
-        return signature;
+        if(!isParsed) parseEncodedBytes();
+
+        byte[] longbyte0 = ByteUtil.longToBytes(signature.get(0));
+        byte[] longbyte1 = ByteUtil.longToBytes(signature.get(1));
+        byte[] longbyte2 = ByteUtil.longToBytes(signature.get(2));
+        byte[] longbyte3 = ByteUtil.longToBytes(signature.get(3));
+        byte[] longbyte4 = ByteUtil.longToBytes(signature.get(4));
+        byte[] longbyte5 = ByteUtil.longToBytes(signature.get(5));
+        byte[] longbyte6 = ByteUtil.longToBytes(signature.get(6));
+        byte[] longbyte7 = ByteUtil.longToBytes(signature.get(7));
+        byte[] sigBytes = new byte[ChainParam.SignatureLength];
+
+        System.arraycopy(longbyte0, 0, sigBytes, 0, 8);
+        System.arraycopy(longbyte1, 0, sigBytes, 8, 8);
+        System.arraycopy(longbyte2, 0, sigBytes, 16, 8);
+        System.arraycopy(longbyte3, 0, sigBytes, 24, 8);
+        System.arraycopy(longbyte4, 0, sigBytes, 32, 8);
+        System.arraycopy(longbyte5, 0, sigBytes, 40, 8);
+        System.arraycopy(longbyte6, 0, sigBytes, 48, 8);
+        System.arraycopy(longbyte7, 0, sigBytes, 56, 8);
+
+        return sigBytes;
     }
 
     /**
      * set tx signature signed with prikey.
      * @param signature
      */
-    public void setSignature(byte[] signature){
-        this.signature = signature;
+    public void setSignature(byte[] signature) {
+        this.signature = ByteUtil.byteArrayToSignLongArray(signature,8);
     }
 
     /**
      * get tx sign parts bytes.
      * @return
      */
-    public byte[] getTransactionSigMsg(){
+    public byte[] getTransactionSigMsg() {
         MessageDigest digest;
-        try{
+        try {
             digest = MessageDigest.getInstance("SHA-256");
-        }catch (NoSuchAlgorithmException e){
+        } catch (NoSuchAlgorithmException e) {
             return null;
         }
-        return digest.digest(this.getSigEncoded());
+        return digest.digest(this.getSigEncodedBytes());
+    }
+
+    /**
+     * sign transaction with sender prikey.
+     * @param prikey
+     * @return
+     */
+    public byte[] signTransaction(byte[] prikey) {
+        byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.getSenderPubkey(), prikey);
+        this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
+        return sig;
+    }
+
+    /**
+     * verify transaction signature.
+     * @return
+     */
+    public boolean verifyTransactionSig() {
+        byte[] signature = this.getSignature();
+        byte[] sigmsg = this.getTransactionSigMsg();
+        return Ed25519.verify(signature, sigmsg, this.getSenderPubkey());
+    }
+
+    /**
+     * construct genesis msg K-V
+     * @param ed25519pub
+     * @param item
+     * @return
+     */
+    public void appendGenesisAccount(ByteArrayWrapper pubkey, GenesisItem item) {
+
+        if(txType != ChainParam.TxType.GMsgType.ordinal()) {
+            logger.error("Genesis msg transaction append error, tx type is {}", txType);
+        } 
+
+        ArrayList<Long> account = ByteUtil.byteArrayToSignLongArray(pubkey.getData(), ChainParam.PubkeyLongArrayLength);
+        account.add(item.getBalance().longValue());
+        account.add(item.getPower().longValue());
+        this.genesisMsg.add(account);
+
+        encodedBytes = null;
+        sigEncodedBytes = null;
+    }
+
+    /**
+     * get genesis msg K-V state.
+     * @return
+     */
+    public HashMap<ByteArrayWrapper, GenesisItem> getGenesisAccounts() {
+
+        HashMap<ByteArrayWrapper, GenesisItem> accounts = new HashMap<ByteArrayWrapper, GenesisItem>();
+
+        for(ArrayList<Long> account: this.genesisMsg) {
+
+            // key -> ByteArrayWrapper
+            byte[] longbyte0 = ByteUtil.longToBytes(account.get(0));
+            byte[] longbyte1 = ByteUtil.longToBytes(account.get(1));
+            byte[] longbyte2 = ByteUtil.longToBytes(account.get(2));
+            byte[] longbyte3 = ByteUtil.longToBytes(account.get(3));
+            byte[] keybytes = new byte[ChainParam.PubkeyLength];
+            System.arraycopy(longbyte0, 0, keybytes, 0, 8);
+            System.arraycopy(longbyte1, 0, keybytes, 8, 8);
+            System.arraycopy(longbyte2, 0, keybytes, 16, 8);
+            System.arraycopy(longbyte3, 0, keybytes, 24, 8);
+            ByteArrayWrapper key = new ByteArrayWrapper(keybytes);
+
+            // value -> GenesisItem
+            BigInteger balance = new BigInteger(account.get(4).toString());
+            BigInteger power = new BigInteger(account.get(5).toString());
+            GenesisItem value = new GenesisItem(balance, power);
+
+            accounts.put(key, value);
+		}
+
+        return accounts;
+    }
+
+    /**
+     * set forum note.
+     * @return
+     */
+    public void setForumNoteHash(byte[] forumNoteHash){
+        if(txType != ChainParam.TxType.FNoteType.ordinal()) {
+            logger.error("Forum note transaction set note error, tx type is {}", txType);
+        } 
+        this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
+        encodedBytes = null;
+        sigEncodedBytes = null;
+    }
+
+    /**
+     * get forum message.
+     * @return
+     */
+    public byte[] getForumNoteHash(){
+        if(txType != ChainParam.TxType.FNoteType.ordinal()) {
+            logger.error("Forum note transaction get note error, tx type is {}", txType);
+        } 
+        if(!isParsed) parseEncodedBytes();
+        byte[] longbyte0 = ByteUtil.longToBytes(forumNoteHash.get(0));
+        byte[] longbyte1 = ByteUtil.longToBytes(forumNoteHash.get(1));
+        byte[] longbyte2 = ByteUtil.keep4bytesOfLong(forumNoteHash.get(2));
+        byte[] fnHash = new byte[ChainParam.HashLength];
+        System.arraycopy(longbyte0, 0, fnHash, 0, 8);
+        System.arraycopy(longbyte1, 0, fnHash, 8, 8);
+        System.arraycopy(longbyte2, 0, fnHash, 16, 4);
+        return fnHash;
+    }
+
+    /**
+     * set receiver pubkey.
+     * @return
+     */
+    public void setReceiver(byte[] receiver){
+        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+            logger.error("Forum note transaction set receiver error, tx type is {}", txType);
+        } 
+        this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
+        encodedBytes = null;
+        sigEncodedBytes = null;
+    }
+
+    /**
+     * set wiring amount.
+     * @return
+     */
+    public void setAmount(long amount){
+        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+            logger.error("Forum note transaction set amount error, tx type is {}", txType);
+        } 
+        this.amount = amount;
+        encodedBytes = null;
+        sigEncodedBytes = null;
+    }
+
+    /**
+     * get receiver pubkey in transaction.
+     * @return
+     */
+    public byte[] getReceiver(){
+        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+            logger.error("Wiring transaction get pubkey error, tx type is {}", txType);
+        } 
+        if(!isParsed) parseEncodedBytes();
+
+        byte[] longbyte0 = ByteUtil.longToBytes(receiverPubkey.get(0));
+        byte[] longbyte1 = ByteUtil.longToBytes(receiverPubkey.get(1));
+        byte[] longbyte2 = ByteUtil.longToBytes(receiverPubkey.get(2));
+        byte[] longbyte3 = ByteUtil.longToBytes(receiverPubkey.get(3));
+
+        byte[] receiver = new byte[ChainParam.PubkeyLength];
+        System.arraycopy(longbyte0, 0, receiver, 0, 8);
+        System.arraycopy(longbyte1, 0, receiver, 8, 8);
+        System.arraycopy(longbyte2, 0, receiver, 16, 8);
+        System.arraycopy(longbyte3, 0, receiver, 24, 8);
+
+        return receiver;
+    }
+
+    /**
+     * get wire amount.
+     * @return
+     */
+    public long getAmount(){
+        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+            logger.error("Wiring transaction get amount error, tx type is {}", txType);
+        } 
+        if(!isParsed) parseEncodedBytes();
+        return this.amount;
     }
 
     /**
@@ -288,34 +606,10 @@ public class Transaction {
      * @return
      */
     public boolean isTxParamValidate(){
-        if(!isParsed) parseRLP();
-        if(chainID.length > ChainParam.ChainIDlength) return false;
-        if(timestamp > System.currentTimeMillis()/1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
-        if(senderPubkey != null && senderPubkey.length != ChainParam.PubkeyLength) return false;
+        if(!isParsed) parseEncodedBytes();
+        if(timestamp > System.currentTimeMillis() / 1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
         if(nonce < 0) return false;
-        if(signature != null && signature.length != ChainParam.SignatureLength) return false;
         return true;
-    }
-
-    /**
-     * sign transaction with sender prikey.
-     * @param prikey
-     * @return
-     */
-    public byte[] signTransaction(byte[] prikey){
-        byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.senderPubkey, prikey);
-        this.signature = sig;
-        return this.signature;
-    }
-
-    /**
-     * verify transaction signature.
-     * @return
-     */
-    public boolean verifyTransactionSig(){
-        byte[] signature = this.getSignature();
-        byte[] sigmsg = this.getTransactionSigMsg();
-        return Ed25519.verify(signature,sigmsg,this.senderPubkey);
     }
 
     /**
@@ -323,25 +617,33 @@ public class Transaction {
      * @return
      */
     public byte[] getTxID(){
-        if(txID == null){
-           txID = HashUtil.sha1hash(this.getEncoded());
+        if(txHash == null){
+           txHash = HashUtil.sha1hash(this.getEncodedBytes());
         }
-        return txID;
+        return txHash;
     }
 
     @Override
     public String toString(){
-        StringBuilder sb = new StringBuilder();
-        sb.append("transaction: [\n");
-        sb.append("version: ").append(this.getVersion()).append("\n");
-        sb.append("chainID: ").append(new String(this.getChainID())).append("\n");
-        sb.append("timestamp: ").append(this.getTimeStamp()).append("\n");
-        sb.append("txFee: ").append(this.getTxFee()).append("\n");
-        sb.append("senderpubkey: ").append(ByteUtil.toHexString(this.getSenderPubkey())).append("\n");
-        sb.append("nonce: ").append(this.getNonce()).append("\n");
-        sb.append("txData: ").append(this.getTxData().toString()).append("\n");
-        sb.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
-        sb.append("]\n");
-        return sb.toString();
+        StringBuilder strTx = new StringBuilder();
+        strTx.append("transaction: [\n");
+        strTx.append("version: ").append(this.getVersion()).append("\n");
+        strTx.append("chainID: ").append(new String(this.getChainID())).append("\n");
+        strTx.append("timestamp: ").append(this.getTimeStamp()).append("\n");
+        strTx.append("txFee: ").append(this.getTxFee()).append("\n");
+        strTx.append("txType: ").append(this.getTxType()).append("\n");
+        strTx.append("senderpubkey: ").append(ByteUtil.toHexString(this.getSenderPubkey())    ).append("\n");
+        strTx.append("nonce: ").append(this.getNonce()).append("\n");
+        if(this.txType == ChainParam.TxType.GMsgType.ordinal()) {
+            //TODO
+        } else if (this.txType == ChainParam.TxType.FNoteType.ordinal()) {
+            //TODO
+        } else if (this.txType == ChainParam.TxType.WCoinsType.ordinal()) {
+            //TODO
+        }
+        strTx.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
+        strTx.append("]\n");
+        return strTx.toString();
     }
+
 }
