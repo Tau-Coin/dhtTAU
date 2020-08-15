@@ -4,7 +4,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 
 import org.slf4j.LoggerFactory;
 
@@ -35,12 +34,12 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
     private ClickListener listener;
     private List<UserAndMember> dataList = new ArrayList<>();
     private List<String> selectedList = new ArrayList<>();
-    private int type;
+    private int page;
 
     ContactListAdapter(ClickListener listener, int type) {
         super(diffCallback);
         this.listener = listener;
-        this.type = type;
+        this.page = type;
     }
 
     @NonNull
@@ -52,7 +51,7 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
                 parent,
                 false);
 
-        return new ViewHolder(binding, listener, type, selectedList);
+        return new ViewHolder(binding, listener, page, selectedList);
     }
 
     @Override
@@ -109,11 +108,11 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
             if(null == holder || null == user){
                 return;
             }
-            holder.binding.ivShare.setVisibility(type == ContactsActivity.TYPE_SELECT_CONTACT ? View.GONE : View.VISIBLE);
-            int imgRid = type == ContactsActivity.TYPE_ADD_MEMBERS ? R.mipmap.icon_share : R.mipmap.icon_share_community;
+            holder.binding.ivShare.setVisibility(type == ContactsActivity.PAGE_SELECT_CONTACT ? View.GONE : View.VISIBLE);
+            int imgRid = type == ContactsActivity.PAGE_ADD_MEMBERS ? R.mipmap.icon_share : R.mipmap.icon_share_community;
             holder.binding.ivShare.setImageResource(imgRid);
-            holder.binding.cbSelect.setVisibility(type == ContactsActivity.TYPE_ADD_MEMBERS ? View.VISIBLE : View.GONE);
-            if(type == ContactsActivity.TYPE_ADD_MEMBERS){
+            holder.binding.cbSelect.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS ? View.VISIBLE : View.GONE);
+            if(type == ContactsActivity.PAGE_ADD_MEMBERS){
                 holder.binding.cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
                     if(isChecked){
                         selectedList.add(user.publicKey);
@@ -175,7 +174,7 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
                     listener.onUserClicked(user);
                 }
             });
-            if(type == ContactsActivity.TYPE_SELECT_CONTACT){
+            if(type == ContactsActivity.PAGE_SELECT_CONTACT){
                 holder.binding.getRoot().setOnClickListener(v -> {
                     if(listener != null){
                         listener.onItemClicked(user);

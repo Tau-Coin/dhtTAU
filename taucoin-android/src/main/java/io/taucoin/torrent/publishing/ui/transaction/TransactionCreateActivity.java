@@ -165,7 +165,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
                 break;
             case R.id.iv_select_pk:
                 Intent intent = new Intent();
-                intent.putExtra(IntentExtra.TYPE, ContactsActivity.TYPE_SELECT_CONTACT);
+                intent.putExtra(IntentExtra.TYPE, ContactsActivity.PAGE_SELECT_CONTACT);
                 ActivityUtil.startActivityForResult(intent, this, ContactsActivity.class, REQUEST_CODE);
                 break;
         }

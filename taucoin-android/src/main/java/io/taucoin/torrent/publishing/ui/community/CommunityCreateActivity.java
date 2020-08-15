@@ -108,7 +108,7 @@ public class CommunityCreateActivity extends BaseActivity {
                     dialog.cancel();
                     onBackPressed();
                     Intent intent = new Intent();
-                    intent.putExtra(IntentExtra.TYPE, ContactsActivity.TYPE_ADD_MEMBERS);
+                    intent.putExtra(IntentExtra.TYPE, ContactsActivity.PAGE_ADD_MEMBERS);
                     intent.putExtra(IntentExtra.CHAIN_ID, "");
                     ActivityUtil.startActivity(intent, this, ContactsActivity.class);
                 }).create();

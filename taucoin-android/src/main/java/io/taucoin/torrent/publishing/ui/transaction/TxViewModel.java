@@ -369,7 +369,7 @@ public class TxViewModel extends AndroidViewModel {
                     result = application.getString(R.string.tx_error_no_enough_coins_for_airdrop);
                 }else{
                     for (String friendPk : friendPks) {
-                        result = airdropToFriends(chainID, friendPk);
+                        result = airdropToFriend(chainID, friendPk);
                         if (StringUtil.isNotEmpty(result)) {
                             break;
                         }
@@ -392,7 +392,7 @@ public class TxViewModel extends AndroidViewModel {
      * @param chainID
      * @param friendPk
      */
-    public String airdropToFriends(String chainID, String friendPk) {
+    public String airdropToFriend(String chainID, String friendPk) {
         long medianFee = getMedianFee(chainID);
         Tx tx = new Tx(chainID, friendPk, Constants.AIRDROP_COIN.longValue(),
                 medianFee, ChainParam.TxType.WCoinsType.ordinal(), "");

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.ui.customviews.ProgressManager;
 
@@ -13,6 +14,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(Utils.getAppTheme(getApplicationContext()));
+        ActivityUtil.setRequestedOrientation(this);
+//        ActivityUtil.lockOrientation(this);
 //        setAndroidNativeLightStatusBar(this, true);
         super.onCreate(savedInstanceState);
     }

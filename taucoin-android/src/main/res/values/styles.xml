@@ -239,7 +239,7 @@
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowDisablePreview">true</item>
         <item name="android:windowFullscreen">true</item>
-        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowIsTranslucent">false</item>
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 

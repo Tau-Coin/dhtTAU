@@ -30,6 +30,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
@@ -138,8 +139,8 @@ public class CommunityViewModel extends AndroidViewModel {
             genesisMsg.put(new ByteArrayWrapper(publicKey), item);
 //            GenesisTx genesisTx = new GenesisTx();
             // TODO:
-            ChainConfig chainConfig = ChainConfig.NewChainConfig((byte) 1, community.communityName, community.blockInAvg,
-                    community.publicKey , "", null);
+            ChainConfig chainConfig = new ChainConfig(1, community.communityName, community.blockInAvg,
+                    publicKey, DateUtil.getTime(), null, null);
             daemon.createCommunity(chainConfig);
             community.chainID = new String(chainConfig.getChainid());
             communityRepo.addCommunity(community);
@@ -252,7 +253,7 @@ public class CommunityViewModel extends AndroidViewModel {
                 result = createCommunity(community);
                 if(StringUtil.isEmpty(result)){
                     // 社区创建完成，直接给要聊天的朋友空投币
-                    result = txViewModel.airdropToFriends(community.chainID, friendPk);
+                    result = txViewModel.airdropToFriend(community.chainID, friendPk);
                 }
             }catch (Exception e){
                 result = e.getMessage();

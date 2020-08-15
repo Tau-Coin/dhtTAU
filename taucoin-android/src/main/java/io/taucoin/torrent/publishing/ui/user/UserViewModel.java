@@ -305,13 +305,11 @@ public class UserViewModel extends AndroidViewModel {
     public void addContact(String publicKey) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             User user = userRepo.getUserByPublicKey(publicKey);
-            boolean isExist;
+            boolean isExist = true;
             if(null == user){
                 user = new User(publicKey);
                 userRepo.addUser(user);
                 isExist = false;
-            }else{
-                isExist = true;
             }
             emitter.onNext(isExist);
             emitter.onComplete();
@@ -323,10 +321,10 @@ public class UserViewModel extends AndroidViewModel {
     }
 
     /**
-     * 发送社区邀请链接
+     * 发送社区邀请链接给朋友
      * @param inviteLink 社区邀请链接
      */
-    public void sendCommunityInvitedLink(String inviteLink) {
+    public void shareInvitedLinkToFriend(String inviteLink, String friendPk) {
         // TODO: 通过msg channel发送
     }
 

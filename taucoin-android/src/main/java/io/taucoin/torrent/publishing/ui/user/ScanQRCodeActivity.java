@@ -59,6 +59,8 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ActivityUtil.fullScreenAll(this);
+        ActivityUtil.setRequestedOrientation(this);
+//        ActivityUtil.lockOrientation(this);
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);

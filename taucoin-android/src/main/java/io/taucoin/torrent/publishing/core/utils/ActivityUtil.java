@@ -15,14 +15,19 @@
  */
 package io.taucoin.torrent.publishing.core.utils;
 
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.view.Display;
+import android.view.Surface;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -164,5 +169,45 @@ public class ActivityUtil {
                 window.setAttributes(attributes);
             }
         }
+    }
+
+    @SuppressLint("SourceLockedOrientationActivity")
+    public static void setRequestedOrientation(AppCompatActivity activity){
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+    }
+
+    /**
+     * Lock display to current orientation.
+     */
+    public static void lockOrientation(AppCompatActivity activity) {
+        if(!isFullScreen(activity)){
+            return;
+        }
+        // Only get the orientation if it's not locked to one yet.
+        // Adapted from http://stackoverflow.com/a/14565436
+        Display display = activity.getWindowManager().getDefaultDisplay();
+        int rotation = display.getRotation();
+        int baseOrientation = activity.getResources().getConfiguration().orientation;
+        int orientation = 0;
+        if (baseOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+            if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_90) {
+                orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+            } else {
+                orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+            }
+        } else if (baseOrientation == Configuration.ORIENTATION_PORTRAIT) {
+            if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_270) {
+                orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+            } else {
+                orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+            }
+        }
+        //noinspection ResourceType
+        activity.setRequestedOrientation(orientation);
+    }
+
+    public static boolean isFullScreen(AppCompatActivity activity) {
+        return (activity.getWindow().getAttributes().flags &
+                WindowManager.LayoutParams.FLAG_FULLSCREEN) == WindowManager.LayoutParams.FLAG_FULLSCREEN;
     }
 }

@@ -129,7 +129,7 @@ public class MembersActivity extends BaseActivity implements View.OnClickListene
                 break;
             case R.id.ll_add_member:
                 Intent intent = new Intent();
-                intent.putExtra(IntentExtra.TYPE, ContactsActivity.TYPE_ADD_MEMBERS);
+                intent.putExtra(IntentExtra.TYPE, ContactsActivity.PAGE_ADD_MEMBERS);
                 intent.putExtra(IntentExtra.CHAIN_ID, community.chainID);
                 ActivityUtil.startActivity(intent, this, ContactsActivity.class);
                 break;

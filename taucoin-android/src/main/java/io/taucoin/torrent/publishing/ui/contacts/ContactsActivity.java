@@ -47,9 +47,9 @@ import io.taucoin.util.ByteUtil;
  * 联系人页面
  */
 public class ContactsActivity extends BaseActivity implements ContactListAdapter.ClickListener {
-    private static final int TYPE_CONTACT_LIST = 0;
-    public static final int TYPE_SELECT_CONTACT = 1;
-    public static final int TYPE_ADD_MEMBERS = 2;
+    private static final int PAGE_CONTACT_LIST = 0;
+    public static final int PAGE_SELECT_CONTACT = 1;
+    public static final int PAGE_ADD_MEMBERS = 2;
     private ActivityContactsBinding binding;
     private UserViewModel userViewModel;
     private CommunityViewModel communityViewModel;
@@ -59,7 +59,8 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     private CommonDialog commonDialog;
     private CompositeDisposable disposables = new CompositeDisposable();
     private String chainID;
-    private int type;
+    // 代表不同的入口页面
+    private int page;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +80,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
      */
     private void initParameter() {
         chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
-        type = getIntent().getIntExtra(IntentExtra.TYPE, TYPE_CONTACT_LIST);
+        page = getIntent().getIntExtra(IntentExtra.TYPE, PAGE_CONTACT_LIST);
     }
 
     /**
@@ -91,7 +92,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        adapter = new ContactListAdapter(this, type);
+        adapter = new ContactListAdapter(this, page);
 //        /*
 //         * A RecyclerView by default creates another copy of the ViewHolder in order to
 //         * fade the views into each other. This causes the problem because the old ViewHolder gets
@@ -127,6 +128,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         disposables.add(userViewModel.observeUsersNotInBanList()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::showUserList));
+
         userViewModel.getAddContactResult().observe(this, isExist -> {
             closeProgressDialog();
             if (isExist) {
@@ -199,7 +201,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem menuItem = menu.findItem(R.id.menu_done);
-        menuItem.setVisible(type == TYPE_ADD_MEMBERS);
+        menuItem.setVisible(page == PAGE_ADD_MEMBERS);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -225,10 +227,10 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
 
     @Override
     public void onShareClicked(@NonNull User user) {
-        if (type == TYPE_ADD_MEMBERS) {
-            showShareDialog();
+        if (page == PAGE_ADD_MEMBERS) {
+            showShareDialog(user);
         } else {
-            showChattingDialog(user);
+            showChatDialog(user);
         }
     }
 
@@ -240,7 +242,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     /**
      * 显示联系平台的对话框
      */
-    private void showShareDialog() {
+    private void showShareDialog(User user) {
         ShareDialog.Builder builder = new ShareDialog.Builder(this);
         builder.setOnItemClickListener((dialog, imgRid, titleRid) -> {
             dialog.dismiss();
@@ -250,7 +252,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
                 CopyManager.copyText(communityInviteLink);
                 ToastUtils.showShortToast(R.string.copy_share_link);
             } else if (imgRid == R.mipmap.ic_launcher_round) {
-                userViewModel.sendCommunityInvitedLink(communityInviteLink);
+                userViewModel.shareInvitedLinkToFriend(communityInviteLink, user.publicKey);
                 ToastUtils.showShortToast(R.string.share_link_successfully);
             } else if (imgRid == R.mipmap.icon_share_sms) {
                 doSendSMSTo(communityInviteLink);
@@ -266,7 +268,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     /**
      * 显示和朋友Chatting的对话框
      */
-    private void showChattingDialog(User user) {
+    private void showChatDialog(User user) {
         ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this), R.layout.contacts_dialog, null, false);
         String showName = UsersUtil.getShowName(user);
         binding.tvTitle.setText(Html.fromHtml(getString(R.string.contacts_chatting, showName)));
