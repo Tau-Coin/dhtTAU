@@ -1,5 +1,6 @@
 package io.taucoin.db;
 
+import io.taucoin.core.BlockContainer;
 import io.taucoin.types.Block;
 
 import java.util.List;
@@ -58,10 +59,19 @@ public interface BlockStore {
 
     /**
      * save block
-     * @param block
+     * @param chainID chain ID
+     * @param block block to save
      * @throws Exception
      */
-    void saveBlock(Block block, boolean isMainChain) throws Exception;
+    void saveBlock(byte[] chainID, Block block, boolean isMainChain) throws Exception;
+
+    /**
+     * save block container
+     * @param chainID chain ID
+     * @param blockContainer block container to save
+     * @throws Exception
+     */
+    void saveBlockContainer(byte[] chainID, BlockContainer blockContainer, boolean isMainChain) throws Exception;
 
     /**
      * get all blocks of a chain, whether it is a block on the main chain or not
@@ -80,35 +90,39 @@ public interface BlockStore {
 
     /**
      * get fork point block between main chain and fork chain
-     * @param block
+     * @param chainID chain ID
+     * @param block block on chain
      * @return
      * @throws Exception
      */
-    Block getForkPointBlock(Block block) throws Exception;
+    Block getForkPointBlock(byte[] chainID, Block block) throws Exception;
 
     /**
      * get fork point block between chain 1 and chain 2
+     * @param chainID chain ID
      * @param chain1Block block on chain 1
      * @param chain2Block block on chain 2
      * @return
      * @throws Exception
      */
-    Block getForkPointBlock(Block chain1Block, Block chain2Block) throws Exception;
+    Block getForkPointBlock(byte[] chainID, Block chain1Block, Block chain2Block) throws Exception;
 
     /**
      * get fork info
+     * @param chainID chain ID
      * @param forkBlock fork point block
      * @param bestBlock current chain best block
      * @param undoBlocks blocks to roll back from high to low
      * @param newBlocks blocks to connect from high to low
      * @return
      */
-    boolean getForkBlocksInfo(Block forkBlock, Block bestBlock, List<Block> undoBlocks, List<Block> newBlocks) throws Exception;
+    boolean getForkBlocksInfo(byte[] chainID, Block forkBlock, Block bestBlock, List<Block> undoBlocks, List<Block> newBlocks) throws Exception;
 
     /**
      * re-branch blocks
+     * @param chainID chain ID
      * @param undoBlocks move to non-main chain
      * @param newBlocks move to main chain
      */
-    void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks) throws Exception;
+    void reBranchBlocks(byte[] chainID, List<Block> undoBlocks, List<Block> newBlocks) throws Exception;
 }

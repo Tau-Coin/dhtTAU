@@ -1,7 +1,10 @@
 package io.taucoin.db;
 
+import io.taucoin.core.BlockContainer;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
+import io.taucoin.types.Transaction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -162,14 +165,15 @@ public class BlockDB implements BlockStore {
 
     /**
      * save block info in db
-     * @param block
-     * @param isMainChain
+     * @param chainID chain ID
+     * @param block block
+     * @param isMainChain if main chain
      * @throws Exception
      */
-    public void saveBlockInfo(Block block, boolean isMainChain) throws Exception {
+    private void saveBlockInfo(byte[] chainID, Block block, boolean isMainChain) throws Exception {
         BlockInfos blockInfos;
         // if saved in the same height
-        byte[] rlp = db.get(PrefixKey.blockInfoKey(block.getChainID(), block.getBlockNum()));
+        byte[] rlp = db.get(PrefixKey.blockInfoKey(chainID, block.getBlockNum()));
         if (null == rlp) {
             blockInfos = new BlockInfos();
         } else {
@@ -177,33 +181,64 @@ public class BlockDB implements BlockStore {
         }
         blockInfos.putBlock(block, isMainChain);
 
-        db.put(PrefixKey.blockInfoKey(block.getChainID(), block.getBlockNum()), blockInfos.getEncoded());
+        db.put(PrefixKey.blockInfoKey(chainID, block.getBlockNum()), blockInfos.getEncoded());
     }
 
     /**
      * save block
+     *
+     * @param chainID
      * @param block
      * @throws Exception
      */
     @Override
-    public void saveBlock(Block block, boolean isMainChain) throws Exception {
+    public void saveBlock(byte[] chainID, Block block, boolean isMainChain) throws Exception {
         // save block
-        db.put(PrefixKey.blockKey(block.getChainID(), block.getBlockHash()), block.getEncoded());
+        db.put(PrefixKey.blockKey(chainID, block.getBlockHash()), block.getEncoded());
         // save block info
-        saveBlockInfo(block, isMainChain);
+        saveBlockInfo(chainID, block, isMainChain);
         // delete fork chain blocks out of 3 * mutable range, when save main chain block
         if (isMainChain && block.getBlockNum() > ChainParam.WARNING_RANGE) {
             long number = block.getBlockNum() - ChainParam.WARNING_RANGE;
             logger.info("ChainID[{}]: Delete fork chain block in height:{}",
-                    block.getChainID().toString(), number);
-            delForkChainBlockByNumber(block.getChainID(), number);
+                    chainID.toString(), number);
+            delForkChainBlockByNumber(chainID, number);
         }
     }
 
     /**
-     * delete fork chain block and block info
-     * @param chainID
-     * @param number
+     * save block container
+     *
+     * @param chainID        chain ID
+     * @param blockContainer block container to save
+     * @param isMainChain
+     * @throws Exception
+     */
+    @Override
+    public void saveBlockContainer(byte[] chainID, BlockContainer blockContainer, boolean isMainChain) throws Exception {
+        Block block = blockContainer.getBlock();
+        // save block
+        db.put(PrefixKey.blockKey(chainID, block.getBlockHash()), block.getEncoded());
+        // save tx
+        Transaction tx = blockContainer.getTx();
+        if (null != tx) {
+            db.put(PrefixKey.txKey(chainID, tx.getTxID()), tx.getEncoded());
+        }
+        // save block info
+        saveBlockInfo(chainID, block, isMainChain);
+        // delete fork chain blocks out of 3 * mutable range, when save main chain block
+        if (isMainChain && block.getBlockNum() > ChainParam.WARNING_RANGE) {
+            long number = block.getBlockNum() - ChainParam.WARNING_RANGE;
+            logger.info("ChainID[{}]: Delete fork chain block in height:{}",
+                    chainID.toString(), number);
+            delForkChainBlockByNumber(chainID, number);
+        }
+    }
+
+    /**
+     * delete fork chain block, tx and block info
+     * @param chainID chain ID
+     * @param number number
      * @throws Exception
      */
     public void delForkChainBlockByNumber(byte[] chainID, long number) throws Exception {
@@ -216,6 +251,11 @@ public class BlockDB implements BlockStore {
         List<BlockInfo> list = blockInfos.getBlockInfoList();
         for (int i = list.size() - 1; i >= 0; i--) {
             if (!list.get(i).isMainChain()) {
+                // delete tx
+                Block block = getBlockByHash(chainID, list.get(i).getHash());
+                if (null != block) {
+                    // TODO:: delete tx
+                }
                 // delete non-main chain block
                 db.delete(PrefixKey.blockKey(chainID, list.get(i).getHash()));
                 list.remove(i);
@@ -257,15 +297,17 @@ public class BlockDB implements BlockStore {
 
     /**
      * get fork point block between main chain and fork chain
-     * @param block
+     *
+     * @param chainID chain ID
+     * @param block block on chain
      * @return
      * @throws Exception
      */
     @Override
-    public Block getForkPointBlock(Block block) throws Exception {
-        byte[] chainID = block.getChainID();
+    public Block getForkPointBlock(byte[] chainID, Block block) throws Exception {
+
         // if on main chain
-        byte[] infoRLP = db.get(PrefixKey.blockInfoKey(block.getChainID(), block.getBlockNum()));
+        byte[] infoRLP = db.get(PrefixKey.blockInfoKey(chainID, block.getBlockNum()));
         if (null != infoRLP) {
             BlockInfos blockInfos = new BlockInfos(infoRLP);
             List<BlockInfo> list = blockInfos.getBlockInfoList();
@@ -334,14 +376,15 @@ public class BlockDB implements BlockStore {
     /**
      * get fork point block between chain 1 and chain 2
      *
+     * @param chainID chain ID
      * @param chain1Block block on chain 1
      * @param chain2Block block on chain 2
      * @return fork point block or null if not found
      * @throws Exception
      */
     @Override
-    public Block getForkPointBlock(Block chain1Block, Block chain2Block) throws Exception {
-        byte[] chainID = chain1Block.getChainID();
+    public Block getForkPointBlock(byte[] chainID, Block chain1Block, Block chain2Block) throws Exception {
+
         long maxLevel = Math.max(chain1Block.getBlockNum(), chain2Block.getBlockNum());
 
         // 1. First ensure that you are one the save level
@@ -387,6 +430,7 @@ public class BlockDB implements BlockStore {
     /**
      * get fork info
      *
+     * @param chainID chain ID
      * @param forkBlock  fork point block
      * @param bestBlock current chain best block
      * @param undoBlocks blocks to roll back from high to low
@@ -394,8 +438,8 @@ public class BlockDB implements BlockStore {
      * @return
      */
     @Override
-    public boolean getForkBlocksInfo(Block forkBlock, Block bestBlock, List<Block> undoBlocks, List<Block> newBlocks) throws Exception{
-        byte[] chainID = bestBlock.getChainID();
+    public boolean getForkBlocksInfo(byte[] chainID, Block forkBlock, Block bestBlock, List<Block> undoBlocks, List<Block> newBlocks) throws Exception{
+
         long maxLevel = Math.max(bestBlock.getBlockNum(), forkBlock.getBlockNum());
 
         // 1. First ensure that you are one the save level
@@ -448,16 +492,16 @@ public class BlockDB implements BlockStore {
      * @param newBlocks  move to main chain
      */
     @Override
-    public void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks) throws Exception {
+    public void reBranchBlocks(byte[] chainID, List<Block> undoBlocks, List<Block> newBlocks) throws Exception {
         if (undoBlocks != null) {
             for (Block block : undoBlocks) {
-                saveBlockInfo(block, false);
+                saveBlockInfo(chainID, block, false);
             }
         }
 
         if (newBlocks != null) {
             for (Block block : newBlocks) {
-                saveBlockInfo(block, true);
+                saveBlockInfo(chainID, block, true);
             }
         }
     }

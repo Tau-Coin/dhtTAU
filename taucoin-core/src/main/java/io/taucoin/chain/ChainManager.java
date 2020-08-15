@@ -16,7 +16,6 @@ import io.taucoin.processor.StateProcessor;
 import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
-import io.taucoin.types.MsgType;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.Repo;
@@ -250,7 +249,7 @@ public class ChainManager {
         	try {
         	    logger.info("Save genesis block in block store. Chain ID:{}",
                         new String(chainID));
-            	blockDB.saveBlock(genesis,true);
+            	blockDB.saveBlock(chainID, genesis,true);
         	} catch (Exception e) {
             	logger.error(e.getMessage(), e);
 				return false;

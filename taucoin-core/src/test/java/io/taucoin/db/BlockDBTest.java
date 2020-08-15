@@ -2,7 +2,6 @@ package io.taucoin.db;
 
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
-import io.taucoin.types.TxData;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 import org.junit.Assert;
@@ -44,42 +43,42 @@ public class BlockDBTest {
                     BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
                     new byte[64], new byte[32]);
             logger.info("number:{}, hash:{}", block0.getBlockNum(), Hex.toHexString(block0.getBlockHash()));
-            blockDB.saveBlock(block0, true);
+            blockDB.saveBlock("chain1".getBytes(), block0, true);
 
             // number: 1, fork point
             Block block1 = new Block((byte) 1, "chain1".getBytes(), time1, 1, block0.getBlockHash(), new byte[2],
                     BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
                     new byte[64], new byte[32]);
             logger.info("number:{}, hash:{}", block1.getBlockNum(), Hex.toHexString(block1.getBlockHash()));
-            blockDB.saveBlock(block1, true);
+            blockDB.saveBlock("chain1".getBytes(), block1, true);
 
             // number: 2
             Block block2 = new Block((byte) 1, "chain1".getBytes(), time2, 2, block1.getBlockHash(), new byte[2],
                     BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
                     new byte[64], new byte[32]);
             logger.info("number:{}, hash:{}", block2.getBlockNum(), Hex.toHexString(block2.getBlockHash()));
-            blockDB.saveBlock(block2, true);
+            blockDB.saveBlock("chain1".getBytes(), block2, true);
 
             Block block21 = new Block((byte) 1, "chain1".getBytes(), time2 + 1, 2, block1.getBlockHash(), new byte[2],
                     BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
                     new byte[64], new byte[32]);
             logger.info("number:{}, hash:{}, previous:{}", block21.getBlockNum(),
                     Hex.toHexString(block21.getBlockHash()), Hex.toHexString(block21.getPreviousBlockHash()));
-            blockDB.saveBlock(block21, false);
+            blockDB.saveBlock("chain1".getBytes(), block21, false);
 
             // number: 3
             Block block3 = new Block((byte) 1, "chain1".getBytes(), time3, 3, block2.getBlockHash(), new byte[2],
                     BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
                     new byte[64], new byte[32]);
             logger.info("number:{}, hash:{}", block3.getBlockNum(), Hex.toHexString(block3.getBlockHash()));
-            blockDB.saveBlock(block3, true);
+            blockDB.saveBlock("chain1".getBytes(), block3, true);
 
             Block block31 = new Block((byte) 1, "chain1".getBytes(), time3 + 1, 3, block21.getBlockHash(), new byte[2],
                     BigInteger.ONE, BigInteger.ONE, new byte[2], tx, 1, 1, 1, 1,
                     new byte[64], new byte[32]);
             logger.info("number:{}, hash:{}, previous:{}", block31.getBlockNum(),
                     Hex.toHexString(block31.getBlockHash()), Hex.toHexString(block31.getPreviousBlockHash()));
-            blockDB.saveBlock(block31, false);
+            blockDB.saveBlock("chain1".getBytes(), block31, false);
 
             // number: 4
             Block nonChainBlock = new Block((byte) 1, "chain1".getBytes(), time3 + time1, 4, block31.getBlockHash(), new byte[2],

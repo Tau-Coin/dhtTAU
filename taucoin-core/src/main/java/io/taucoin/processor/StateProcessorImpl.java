@@ -1,11 +1,15 @@
 package io.taucoin.processor;
 
 import io.taucoin.core.AccountState;
+import io.taucoin.core.BlockContainer;
 import io.taucoin.core.ImportResult;
 import io.taucoin.db.StateDB;
 import io.taucoin.genesis.GenesisItem;
+import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.WiringCoinsTx;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.Arrays;
@@ -29,18 +33,19 @@ public class StateProcessorImpl implements StateProcessor {
     /**
      * forward process block, when sync new block
      *
-     * @param block      to be processed
+     * @param blockContainer      to be processed
      * @param stateDB : state db
      * @return
      */
     @Override
-    public ImportResult forwardProcess(Block block, StateDB stateDB) {
+    public ImportResult forwardProcess(BlockContainer blockContainer, StateDB stateDB) {
         // check balance and nonce, then update state
         try {
+            Block block = blockContainer.getBlock();
             // collect new peer
             stateDB.addPeer(this.chainID, block.getMinerPubkey());
 
-            Transaction tx = block.getTxMsg();
+            Transaction tx = blockContainer.getTx();
             if (null != tx) {
                 if (!tx.isTxParamValidate()) {
                     logger.error("Tx validate fail!");
@@ -73,10 +78,10 @@ public class StateProcessorImpl implements StateProcessor {
 
                 long fee = tx.getTxFee();
 
-                switch (tx.getTxData().getMsgType()) {
-                    case Wiring: {
+                switch (tx.getTxType()) {
+                    case ChainParam.TxType.WCoinsType.ordinal(): {
                         // check balance
-                        long amount = tx.getTxData().getAmount();
+                        long amount = tx.getAmount();
                         long cost = amount + fee;
                         if (sendState.getBalance().longValue() < cost) {
                             logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
@@ -94,32 +99,12 @@ public class StateProcessorImpl implements StateProcessor {
                         sendState.increaseNonce();
                         stateDB.updateAccount(chainID, sender, sendState);
                         // receiver
-                        byte[] receiver = tx.getTxData().getReceiver();
+                        byte[] receiver = tx.getReceiver();
                         AccountState receiverState = stateDB.getAccount(chainID, receiver);
                         receiverState.addBalance(BigInteger.valueOf(amount));
                         stateDB.updateAccount(chainID, receiver, receiverState);
                         break;
                     }
-    //                case CommunityAnnouncement: {
-    //                    // check balance
-    //                    if (sendState.getBalance().longValue() < fee) {
-    //                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-    //                                fee, sendState.getBalance(), Hex.toHexString(sender));
-    //                        return INVALID_BLOCK;
-    //                    }
-    //
-    //                    //Execute the transaction
-    //                    // miner
-    //                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-    //                    minerState.addBalance(BigInteger.valueOf(fee));
-    //                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-    //                    // sender
-    //                    sendState.subBalance(BigInteger.valueOf(fee));
-    //                    sendState.increaseNonce();
-    //                    stateDB.updateAccount(chainID, sender, sendState);
-    //                    // TODO: announce app
-    //                    break;
-    //                }
                     case ForumComment: {
                         // check balance
                         if (sendState.getBalance().longValue() < fee) {
@@ -160,27 +145,6 @@ public class StateProcessorImpl implements StateProcessor {
                         // TODO: announce app
                         break;
                     }
-    //                case IdentityAnnouncement: {
-    //                    // check balance
-    //                    if (sendState.getBalance().longValue() < fee) {
-    //                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-    //                                fee, sendState.getBalance(), Hex.toHexString(sender));
-    //                        return false;
-    //                    }
-    //
-    //                    //Execute the transaction
-    //                    // miner
-    //                    AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
-    //                    minerState.addBalance(BigInteger.valueOf(fee));
-    //                    stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
-    //                    // sender
-    //                    sendState.subBalance(BigInteger.valueOf(fee));
-    //                    sendState.increaseNonce();
-    //                    sendState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
-    //                    stateDB.updateAccount(this.chainID, sender, sendState);
-    //                    // TODO: announce app
-    //                    break;
-    //                }
                     default: {
                         logger.error("Transaction type not supported");
                         return INVALID_TX;
@@ -198,12 +162,12 @@ public class StateProcessorImpl implements StateProcessor {
     /**
      * sync genesis block
      *
-     * @param block   genesis block
+     * @param blockContainer   genesis block
      * @param stateDB state db
      * @return
      */
     @Override
-    public boolean backwardProcessGenesisBlock(Block block, StateDB stateDB) {
+    public boolean backwardProcessGenesisBlock(BlockContainer blockContainer, StateDB stateDB) {
         try {
             Transaction tx = block.getTxMsg();
             if (null == tx) {
@@ -260,16 +224,17 @@ public class StateProcessorImpl implements StateProcessor {
     /**
      * backward process block, when sync old block
      *
-     * @param block   block to be processed
+     * @param blockContainer   block to be processed
      * @param stateDB state db
      * @return
      */
     @Override
-    public boolean backwardProcess(Block block, StateDB stateDB) {
+    public boolean backwardProcess(BlockContainer blockContainer, StateDB stateDB) {
 
+        Block block = blockContainer.getBlock();
         // if genesis block
         if (block.getBlockNum() == 0) {
-            return backwardProcessGenesisBlock(block, stateDB);
+            return backwardProcessGenesisBlock(blockContainer, stateDB);
         }
 
         // check balance and nonce, then update state
@@ -277,7 +242,7 @@ public class StateProcessorImpl implements StateProcessor {
             // collect new peer
             stateDB.addPeer(this.chainID, block.getMinerPubkey());
 
-            Transaction tx = block.getTxMsg();
+            Transaction tx = blockContainer.getTx();
 
             if (null != tx) {
                 if (!tx.isTxParamValidate()) {
@@ -292,7 +257,7 @@ public class StateProcessorImpl implements StateProcessor {
 
                 // if genesis block
                 if (block.getBlockNum() == 0) {
-                    return backwardProcessGenesisBlock(block, stateDB);
+                    return backwardProcessGenesisBlock(blockContainer, stateDB);
                 }
 
                 byte[] sender = tx.getSenderPubkey();
@@ -361,15 +326,15 @@ public class StateProcessorImpl implements StateProcessor {
     /**
      * roll back a block
      *
-     * @param block
-     * @param stateDB
+     * @param blockContainer block container
+     * @param stateDB state db
      * @return
      */
     @Override
-    public boolean rollback(Block block, StateDB stateDB) {
+    public boolean rollback(BlockContainer blockContainer, StateDB stateDB) {
         // check balance and nonce, then update state
         try {
-            Transaction tx = block.getTxMsg();
+            Transaction tx = blockContainer.getTx();
 
             if (null != tx) {
 

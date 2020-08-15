@@ -14,6 +14,7 @@ public class PrefixKey {
     private static final byte[] peer = "P-".getBytes();
     private static final byte[] syncBlockHash = "s-".getBytes();
     private static final byte[] txPool = "T-".getBytes();
+    private static final byte[] tx = "t-".getBytes();
     private static final byte[] votesCountingPointBlockHash = "V-".getBytes();
 
     /**
@@ -192,6 +193,32 @@ public class PrefixKey {
         System.arraycopy(chainID, 0, key, 0, chainID.length);
         System.arraycopy(block, 0, key, chainID.length, block.length);
         System.arraycopy(hash, 0, key, chainID.length + block.length, hash.length);
+        return key;
+    }
+
+    /**
+     * tx prefix: chainID + 'tx'
+     * @param chainID chain ID
+     * @return
+     */
+    public static byte[] txPrefix(byte[] chainID) {
+        byte[] prefix = new byte[chainID.length + tx.length];
+        System.arraycopy(chainID, 0, prefix, 0, chainID.length);
+        System.arraycopy(tx, 0, prefix, chainID.length, tx.length);
+        return prefix;
+    }
+
+    /**
+     * tx key: chainID + 'tx' + hash
+     * @param chainID chain ID
+     * @param txid txid
+     * @return
+     */
+    public static byte[] txKey(byte[] chainID, byte[] txid) {
+        byte[] key = new byte[chainID.length + tx.length + txid.length];
+        System.arraycopy(chainID, 0, key, 0, chainID.length);
+        System.arraycopy(tx, 0, key, chainID.length, tx.length);
+        System.arraycopy(txid, 0, key, chainID.length + tx.length, txid.length);
         return key;
     }
 

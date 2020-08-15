@@ -21,15 +21,15 @@ public class ProofOfTransaction {
     private final static BigInteger DiffAdjustNumeratorHalf = new BigInteger("0100000000",16);
     private final static BigInteger DiffAdjustNumeratorCoe = new BigInteger("800000000000000",16); //2^59
 
-    private int averageBlockTime;
+    private final int averageBlockTime;
 
-    private int minRatio;
-    private int maxRatio;
+    private final int minRatio;
+    private final int maxRatio;
 
-    private int minBlockTime;
-    private int maxBlockTime;
+    private final int minBlockTime;
+    private final int maxBlockTime;
 
-    private BigInteger genesisBaseTarget;
+    private final BigInteger genesisBaseTarget;
 
     public ProofOfTransaction(byte[] chainID) {
         this(chainID, AverageCommunityChainBlockTime);
@@ -57,11 +57,13 @@ public class ProofOfTransaction {
 
     /**
      * get required base target
-     * @param previousBlock
-     * @param blockStore
+     *
+     * @param chainID chain ID
+     * @param previousBlock previous block
+     * @param blockStore block store
      * @return
      */
-    public BigInteger calculateRequiredBaseTarget(Block previousBlock, BlockStore blockStore) {
+    public BigInteger calculateRequiredBaseTarget(byte[] chainID, Block previousBlock, BlockStore blockStore) {
         long blockNumber = previousBlock.getBlockNum();
         if (blockNumber <= 3) {
             return this.genesisBaseTarget;
@@ -69,19 +71,19 @@ public class ProofOfTransaction {
 
         Block ancestor1, ancestor2, ancestor3;
         try {
-            ancestor1 = blockStore.getBlockByHash(previousBlock.getChainID(), previousBlock.getPreviousBlockHash());
+            ancestor1 = blockStore.getBlockByHash(chainID, previousBlock.getPreviousBlockHash());
             if (null == ancestor1) {
                 logger.error("Chain ID:{}: Cannot find parent, hash:{}",
                         new String(this.chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
                 return null;
             }
-            ancestor2 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor1.getPreviousBlockHash());
+            ancestor2 = blockStore.getBlockByHash(chainID, ancestor1.getPreviousBlockHash());
             if (null == ancestor2) {
                 logger.error("Chain ID:{}: Cannot find parent, hash:{}",
                         new String(this.chainID), Hex.toHexString(ancestor1.getPreviousBlockHash()));
                 return null;
             }
-            ancestor3 = blockStore.getBlockByHash(previousBlock.getChainID(), ancestor2.getPreviousBlockHash());
+            ancestor3 = blockStore.getBlockByHash(chainID, ancestor2.getPreviousBlockHash());
             if (null == ancestor3) {
                 logger.error("Chain ID:{}: Cannot find parent, hash:{}",
                         new String(this.chainID), Hex.toHexString(ancestor2.getPreviousBlockHash()));

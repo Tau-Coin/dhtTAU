@@ -1,54 +1,73 @@
 package io.taucoin.core;
 
-import io.taucoin.util.RLP;
-import io.taucoin.util.RLPList;
+import com.frostwire.jlibtorrent.Entry;
+
+import io.taucoin.param.ChainParam;
+import io.taucoin.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MutableItemValue {
     // content including tx/message hash
-    byte[] hash;
+    ArrayList<Long> hash;
     // hash link or pubKey for optimization
-    byte[] peer;
+    ArrayList<Long> peer;
 
     public MutableItemValue(byte[] hash, byte[] peer) {
-        this.hash = hash;
-        this.peer = peer;
+        this.hash = ByteUtil.unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
+        this.peer = ByteUtil.byteArrayToSignLongArray(peer, ChainParam.PubkeyLongArrayLength);
     }
 
-    public MutableItemValue(byte[] rlp) {
-        RLPList decodedTxList = RLP.decode2(rlp);
-        RLPList item = (RLPList) decodedTxList.get(0);
-        this.hash = item.get(0).getRLPData();
-        this.peer = item.get(1).getRLPData();
+    public MutableItemValue(byte[] encode) {
+        Entry entry = Entry.bdecode(encode);
+        List<Entry> entryList = entry.list();
+
+        this.hash = ByteUtil.stringToLongArrayList(entryList.get(0).toString());
+        this.peer = ByteUtil.stringToLongArrayList(entryList.get(1).toString());
     }
 
     public byte[] getHash() {
+        byte[] longByte0 = ByteUtil.longToBytes(this.hash.get(0));
+        byte[] longByte1 = ByteUtil.longToBytes(this.hash.get(1));
+        byte[] longByte2 = ByteUtil.keep4bytesOfLong(this.hash.get(2));
+        byte[] hash = new byte[ChainParam.HashLength];
+        System.arraycopy(longByte0, 0, hash, 0, 8);
+        System.arraycopy(longByte1, 0, hash, 8, 8);
+        System.arraycopy(longByte2, 0, hash, 16, 4);
         return hash;
     }
 
-    public void setHash(byte[] hash) {
-        this.hash = hash;
-    }
-
     public byte[] getPeer() {
-        return peer;
+        byte[] longByte0 = ByteUtil.longToBytes(this.peer.get(0));
+        byte[] longByte1 = ByteUtil.longToBytes(this.peer.get(1));
+        byte[] longByte2 = ByteUtil.longToBytes(this.peer.get(2));
+        byte[] longByte3 = ByteUtil.longToBytes(this.peer.get(3));
+
+        byte[] pubKey = new byte[ChainParam.PubkeyLength];
+        System.arraycopy(longByte0, 0, pubKey, 0, 8);
+        System.arraycopy(longByte1, 0, pubKey, 8, 8);
+        System.arraycopy(longByte2, 0, pubKey, 16, 8);
+        System.arraycopy(longByte3, 0, pubKey, 24, 8);
+
+        return pubKey;
     }
 
-    public void setPeer(byte[] peer) {
-        this.peer = peer;
-    }
+    public byte[] getEncoded(){
+        List list = new ArrayList();
+        list.add(this.hash);
+        list.add(this.peer);
+        Entry entry = Entry.fromList(list);
 
-    public byte[] getEncoded() {
-        byte[] hash = RLP.encodeElement(this.hash);
-        byte[] peer = RLP.encodeElement(this.peer);
-        return RLP.encodeList(hash, peer);
+        return entry.bencode();
     }
 
     @Override
     public String toString() {
         return "MutableItemValue{" +
-                "hash=" + Hex.toHexString(hash) +
-                ", peer=" + Hex.toHexString(peer) +
+                "hash=" + Hex.toHexString(getHash()) +
+                ", peer=" + Hex.toHexString(getPeer()) +
                 '}';
     }
 }
