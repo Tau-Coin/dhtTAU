@@ -209,6 +209,18 @@ public class ForumNoteTx extends Transaction {
      * get forum message.
      * @return
      */
+    public byte[] getForumNoteHashCowTC(){
+        if(txType != ChainParam.TxType.FNoteType.ordinal()) {
+            logger.error("Forum note transaction get note error, tx type is {}", txType);
+        } 
+        if(!isParsed) parseEncodedBytes();
+        return ByteUtil.longArrayToBytes(forumNoteHash, ChainParam.HashLength);
+    }
+
+    /**
+     * get forum message.
+     * @return
+     */
     public byte[] getForumNoteHash(){
         if(txType != ChainParam.TxType.FNoteType.ordinal()) {
             logger.error("Forum note transaction get note error, tx type is {}", txType);

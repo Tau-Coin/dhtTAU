@@ -1,7 +1,5 @@
 package io.taucoin.util;
 
-import org.spongycastle.util.encoders.Hex;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -11,10 +9,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.spongycastle.util.encoders.Hex;
+
 public class ByteUtil {
 
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-    public static final byte[][] EMPTY_BYTE_ARRAY_ARRAY = new byte[0][0];
     public static final byte[] ZERO_BYTE_ARRAY = new byte[]{0};
 
     /**
@@ -123,6 +122,59 @@ public class ByteUtil {
     }
 
     /**
+     * Converts a long array list into a byte array.
+     *
+     * @param array - long arraylist to convert
+     * @param byteLength - return length of bytes
+     * @return decimal value with leading byte that are zeroes striped
+     */
+    public static byte[] longArrayToBytes(ArrayList<Long> longArray, int byteLength) {
+        if (null == longArray) {
+            return null;            
+        }
+        byte[] byteArray = new byte[byteLength];
+
+        int count = 0;
+        int mod = Constants.LongTypeLength;
+
+        if (0 == byteLength % Constants.LongTypeLength) {
+            count = byteLength / Constants.LongTypeLength;
+        } else {
+            count = byteLength / Constants.LongTypeLength + 1;
+            mod = byteLength - (count - 1)* Constants.LongTypeLength;
+        }
+
+        for(int i = 0; i < count; i++) {
+
+            byte[] bTemp = null;
+
+            if (i == (count - 1)) {
+                bTemp =  ByteUtil.keepNBytesOfLong(longArray.get(i), mod);
+                System.arraycopy(bTemp, 0, byteArray, i * Constants.LongTypeLength, mod);
+            } else {
+                bTemp =  ByteUtil.longToBytes(longArray.get(i));
+                System.arraycopy(bTemp, 0, byteArray, i * Constants.LongTypeLength, Constants.LongTypeLength);
+            }
+
+        }
+
+        return byteArray;
+    }
+
+    /**
+     * padding n bytes long to hash.
+     * @param val
+     * @param n
+     * @return
+     */
+    public static byte[] keepNBytesOfLong(long val, int n){
+        byte[] data = ByteBuffer.allocate(Constants.LongTypeLength).putLong(val).array();
+        byte[] retval = new byte[n];
+        System.arraycopy(data, Constants.LongTypeLength - n, retval, 0, n);
+        return retval;
+    }
+
+    /**
      * padding 4 bytes to hash.
      * @param val
      * @return
@@ -130,7 +182,7 @@ public class ByteUtil {
     public static byte[] keep4bytesOfLong(long val){
         byte[] data = ByteBuffer.allocate(8).putLong(val).array();
         byte[] retval = new byte[4];
-        System.arraycopy(data,4,retval,0,4);
+        System.arraycopy(data, 4, retval, 0, 4);
         return retval;
     }
 

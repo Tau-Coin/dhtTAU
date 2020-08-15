@@ -227,6 +227,19 @@ public class WiringCoinsTx extends Transaction {
      * get receiver pubkey in transaction.
      * @return
      */
+    public byte[] getReceiverCowTC(){
+        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+            logger.error("Wiring transaction get pubkey error, tx type is {}", txType);
+        } 
+        if(!isParsed) parseEncodedBytes();
+
+        return ByteUtil.longArrayToBytes(receiverPubkey, ChainParam.PubkeyLength);
+    }
+
+    /**
+     * get receiver pubkey in transaction.
+     * @return
+     */
     public byte[] getReceiver(){
         if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
             logger.error("Wiring transaction get pubkey error, tx type is {}", txType);

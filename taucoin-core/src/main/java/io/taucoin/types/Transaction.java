@@ -24,6 +24,7 @@ import io.taucoin.util.HashUtil;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Entry;
+import com.frostwire.jlibtorrent.Pair;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -32,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,6 +119,15 @@ public abstract class Transaction {
      * get tx sender pubkey.
      * @return
      */
+    public byte[] getSenderPubkeyCowTC() {
+        if(!isParsed) parseEncodedBytes();
+        return ByteUtil.longArrayToBytes(senderPubkey, ChainParam.PubkeyLength);
+    }
+
+    /**
+     * get tx sender pubkey.
+     * @return
+     */
     public byte[] getSenderPubkey() {
         if(!isParsed) parseEncodedBytes();
 
@@ -143,6 +152,15 @@ public abstract class Transaction {
     public long getNonce() {
         if(!isParsed) parseEncodedBytes();
         return nonce;
+    }
+
+    /**
+     * get transaction signature.
+     * @return
+     */
+    public byte[] getSignatureCowTC() {
+        if(!isParsed) parseEncodedBytes();
+        return ByteUtil.longArrayToBytes(signature, ChainParam.SignatureLength);
     }
 
     /**

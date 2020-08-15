@@ -250,6 +250,31 @@ public class GenesisTx extends Transaction {
      * get genesis msg K-V state.
      * @return
      */
+    public HashMap<ByteArrayWrapper, GenesisItem> getGenesisAccountsCowTC() {
+
+        HashMap<ByteArrayWrapper, GenesisItem> accounts = new HashMap<ByteArrayWrapper, GenesisItem>();
+
+        for(ArrayList<Long> account: this.genesisMsg) {
+
+            // key -> ByteArrayWrapper
+            byte[] keybytes = ByteUtil.longArrayToBytes(account, ChainParam.PubkeyLength);
+            ByteArrayWrapper key = new ByteArrayWrapper(keybytes);
+
+            // value -> GenesisItem
+            BigInteger balance = new BigInteger(account.get(4).toString());
+            BigInteger power = new BigInteger(account.get(5).toString());
+            GenesisItem value = new GenesisItem(balance, power);
+
+            accounts.put(key, value);
+		}
+
+        return accounts;
+    }
+
+    /**
+     * get genesis msg K-V state.
+     * @return
+     */
     public HashMap<ByteArrayWrapper, GenesisItem> getGenesisAccounts() {
 
         HashMap<ByteArrayWrapper, GenesisItem> accounts = new HashMap<ByteArrayWrapper, GenesisItem>();
