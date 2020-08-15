@@ -188,10 +188,10 @@ public class WiringCoinsTx extends Transaction {
             this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
             this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
             this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();
-            this.senderPubkey = ByteUtil.stringToArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
+            this.senderPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
             this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
-            this.signature = ByteUtil.stringToArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
-            this.receiverPubkey = ByteUtil.stringToArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
+            this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
+            this.receiverPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
             this.amount = entrylist.get(TxIndex.TxData.ordinal()+ 1).integer();
             isParsed = true;
         }
@@ -283,7 +283,8 @@ public class WiringCoinsTx extends Transaction {
         strTx.append("txType: ").append(this.getTxType()).append("\n");
         strTx.append("sender: ").append(ByteUtil.toHexString(this.getSenderPubkey())).append("\n");
         strTx.append("nonce: ").append(this.getNonce()).append("\n");
-        //TODO receiver and amout -> String
+        strTx.append("receiver: ").append(ByteUtil.toHexString(this.getReceiver())).append("\n");
+        strTx.append("amount: ").append(this.getAmount()).append("\n");
         strTx.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
         strTx.append("]\n");
         return strTx.toString();

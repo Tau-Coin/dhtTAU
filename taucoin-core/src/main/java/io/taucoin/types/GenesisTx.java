@@ -192,9 +192,9 @@ public class GenesisTx extends Transaction {
             this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
             this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
             this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();
-            this.senderPubkey = ByteUtil.stringToArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
+            this.senderPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
             this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
-            this.signature = ByteUtil.stringToArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
+            this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
             //TODO, string -> ArrayList<ArrayList<Long>>
             isParsed = true;
         }
@@ -315,8 +315,15 @@ public class GenesisTx extends Transaction {
         strTx.append("txType: ").append(this.getTxType()).append("\n");
         strTx.append("sender: ").append(ByteUtil.toHexString(this.getSenderPubkey())).append("\n");
         strTx.append("nonce: ").append(this.getNonce()).append("\n");
-        //TODO ArrayList<ArrayList<Long>> -> String
-        
+        HashMap<ByteArrayWrapper, GenesisItem> accounts = getGenesisAccounts();
+        Iterator<ByteArrayWrapper> accountItor = accounts.keySet().iterator();
+        while(accountItor.hasNext()) {
+            ByteArrayWrapper key = accountItor.next();
+            GenesisItem value = accounts.get(key);
+            strTx.append("account: ").append(ByteUtil.toHexString(key.getData())).append("\n");
+            strTx.append("balance: ").append(value.getBalance().longValue());
+            strTx.append("power: ").append(value.getPower().longValue()).append("\n");
+		}
         strTx.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
         strTx.append("]\n");
         return strTx.toString();

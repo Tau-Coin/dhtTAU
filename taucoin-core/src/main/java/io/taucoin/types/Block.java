@@ -286,27 +286,27 @@ public class Block {
             this.version = entrylist.get(BlockIndex.Version.ordinal()).integer();
             this.timestamp = entrylist.get(BlockIndex.Timestamp.ordinal()).integer();
             this.blockNum = entrylist.get(BlockIndex.BlockNum.ordinal()).integer();
-            this.previousBlockHash = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.PBHash.ordinal()).toString());
-            this.immutableBlockHash = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.IBHash.ordinal()).toString());
+            this.previousBlockHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.PBHash.ordinal()).toString());
+            this.immutableBlockHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.IBHash.ordinal()).toString());
             this.baseTarget = entrylist.get(BlockIndex.BaseTarget.ordinal()).integer();
             this.cumulativeDifficulty = entrylist.get(BlockIndex.CDifficulty.ordinal()).integer();
-            this.generationSignature = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.GSignature.ordinal()).toString());
+            this.generationSignature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.GSignature.ordinal()).toString());
 
             if (entrylist.size() == (BlockIndex.MPubkey.ordinal() + 1)){
-                this.txHash = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.TxHash.ordinal()).toString());
+                this.txHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.TxHash.ordinal()).toString());
                 this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
                 this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
                 this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
                 this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
-                this.signature = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
-                this.minerPubkey = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
+                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
+                this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
             }else {
                 this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
                 this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
                 this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
                 this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
-                this.signature = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
-                this.minerPubkey = ByteUtil.stringToArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
+                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
+                this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
             }
             isParsed = true;
         }

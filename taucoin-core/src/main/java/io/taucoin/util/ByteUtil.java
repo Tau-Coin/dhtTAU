@@ -402,30 +402,16 @@ public class ByteUtil {
         return byteArrayToSignLongArray(temp,piece);
     }
 
-    public static ArrayList<Long> stringToArrayList(String str){
+    public static ArrayList<Long> stringToLongArrayList(String str){
         int start = str.indexOf("'");
         int end  = str.lastIndexOf("'");
-        String newStr = str.substring(start,end+1);
+        String newStr = str.substring(start, end + 1);
         String[] strArr = newStr.split(",");
         ArrayList<Long> ret = new ArrayList<>();
-        for(int i=0; i < strArr.length;i++){
+        for(int i = 0; i < strArr.length; i++) {
             ret.add(Long.valueOf(strArr[i].trim().replace("'","")));
         }
         return ret;
-    }
-
-    public static byte stringToByte(String str){
-        int start = str.indexOf("'");
-        int end  = str.lastIndexOf("'");
-        String newStr = str.substring(start+1,end);
-        return Byte.valueOf(newStr);
-    }
-
-    public static Long stringToLong(String str){
-        int start = str.indexOf("'");
-        int end  = str.lastIndexOf("'");
-        String newStr = str.substring(start+1,end);
-        return Long.valueOf(newStr);
     }
 
     /**
