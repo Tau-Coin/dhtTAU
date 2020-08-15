@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
@@ -333,7 +334,7 @@ public class UserViewModel extends AndroidViewModel {
      * 显示用户信息的对话框
      * @param publicKey 用户公钥
      */
-    public void showUserInfoDialog(BaseActivity activity, String publicKey) {
+    public void showUserInfoDialog(AppCompatActivity activity, String publicKey) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<UserAndMember>) emitter -> {
             UserAndMember userAndMember = userRepo.getUserAndMember(publicKey);
             if(null == userAndMember){
@@ -358,7 +359,7 @@ public class UserViewModel extends AndroidViewModel {
      * 显示用户信息的对话框
      * @param user 用户对象
      */
-    public void showUserInfoDialog(BaseActivity activity, UserAndMember user) {
+    public void showUserInfoDialog(AppCompatActivity activity, UserAndMember user) {
         UserInfoDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity), R.layout.user_info_dialog, null, false);
         binding.ivClose.setOnClickListener(v -> {
             if (commonDialog != null) {
@@ -420,7 +421,7 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 显示编辑名字的对话框
      */
-    public void showEditNameDialog(BaseActivity activity, String publicKey) {
+    public void showEditNameDialog(AppCompatActivity activity, String publicKey) {
         ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity), R.layout.contacts_dialog, null, false);
         binding.etPublicKey.setHint(R.string.user_new_name_hint);
         binding.ivClose.setOnClickListener(v -> {

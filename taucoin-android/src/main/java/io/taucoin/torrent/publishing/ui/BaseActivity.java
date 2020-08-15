@@ -27,6 +27,17 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        closeProgressDialog();
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+
+    @Override
     public void onBackPressed() {
         if(progressManager != null){
             progressManager.closeProgressDialog();

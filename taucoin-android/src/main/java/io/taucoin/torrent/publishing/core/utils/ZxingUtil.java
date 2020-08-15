@@ -98,8 +98,9 @@ public class ZxingUtil {
 
         int sampleSize = (int) (options.outHeight / (float) 200);
 
-        if (sampleSize <= 0)
+        if (sampleSize <= 0){
             sampleSize = 1;
+        }
         options.inSampleSize = sampleSize;
         Bitmap scanBitmap = BitmapFactory.decodeFile(imgPath, options);
 

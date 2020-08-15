@@ -6,8 +6,7 @@ import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.view.View;
 
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
+import com.king.zxing.util.CodeUtils;
 
 import androidx.databinding.DataBindingUtil;
 import io.taucoin.torrent.publishing.R;
@@ -17,7 +16,6 @@ import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.core.utils.ZxingUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityQrCodeBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
@@ -52,12 +50,8 @@ public class UserQRCodeActivity extends BaseActivity implements View.OnClickList
         binding.toolbarInclude.toolbar.setTitle(R.string.qr_code_title);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
         binding.tvPublicKey.setText(user.publicKey);
-        try {
-            BitMatrix encode = ZxingUtil.encode(user.publicKey);
-            Bitmap bitmap = ZxingUtil.bitMatrixToBitmap(encode);
-            binding.ivQrCode.setImageBitmap(bitmap);
-        } catch (WriterException ignore) {
-        }
+        Bitmap bitmap = CodeUtils.createQRCode(user.publicKey, 480);
+        binding.ivQrCode.setImageBitmap(bitmap);
 
         SpannableStringBuilder scanQrCode = new SpanUtils()
                 .append(getString(R.string.qr_code_scan_friend_qr))

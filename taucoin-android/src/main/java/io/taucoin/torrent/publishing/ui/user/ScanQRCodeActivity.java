@@ -2,17 +2,16 @@ package io.taucoin.torrent.publishing.ui.user;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Looper;
-import android.view.KeyEvent;
 import android.view.View;
-import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.google.zxing.Result;
-import com.journeyapps.barcodescanner.BarcodeResult;
-import com.journeyapps.barcodescanner.CaptureManager;
+import com.king.zxing.CaptureActivity;
+import com.king.zxing.DecodeFormatManager;
+import com.king.zxing.camera.FrontLightMode;
+import com.king.zxing.util.CodeUtils;
 import com.luck.picture.lib.PictureSelector;
 import com.luck.picture.lib.config.PictureConfig;
 import com.luck.picture.lib.config.PictureMimeType;
@@ -21,9 +20,7 @@ import com.luck.picture.lib.language.LanguageConfig;
 
 import java.util.List;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -34,89 +31,90 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.GlideEngine;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.ZxingUtil;
-import io.taucoin.torrent.publishing.databinding.ActivityScanQrCodeBinding;
-import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.util.ByteUtil;
 
 /**
- * 用户QR Code页面
+ * 用户QR Code扫描页面
  */
-public class ScanQRCodeActivity extends BaseActivity implements View.OnClickListener {
+public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickListener {
 
-    private ActivityScanQrCodeBinding binding;
-    private CaptureManager capture;
     private UserViewModel userViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
-    // 打开相册返回后，是否恢复扫描
-    private boolean isResume = true;
+    // 是否连续扫码
+    private boolean isContinuousScan = true;
+    private boolean isParseImage = false;
+    private ImageView ivQrCode;
+    private ImageView ivGallery;
+    private TextView tvNoQrCode;
+    private TextView tvContinue;
+
+    @Override
+    public int getLayoutId() {
+        return R.layout.activity_scan_qr_code;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ActivityUtil.fullScreenAll(this);
         super.onCreate(savedInstanceState);
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//                getWindow().setStatusBarColor(getResources().getColor(R.color.primary_dark));
-//                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-//        }
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_scan_qr_code);
-        binding.setListener(this);
-        initCapture(savedInstanceState);
         initView();
-    }
-
-    /**
-     * 初始化捕捉
-     */
-    private void initCapture(Bundle savedInstanceState){
-        if(capture != null){
-            capture.onDestroy();
-            capture = null;
-        }
-        capture = new CaptureManager(this, binding.bvBarcode){
-            @Override
-            protected void returnResult(BarcodeResult rawResult) {
-                handleScanResult(rawResult.toString(), savedInstanceState);
-            }
-        };
-        capture.initializeFromIntent(getIntent(), savedInstanceState);
-        capture.decode();
-    }
-
-    /**
-     * 处理扫描结果
-     */
-    private void handleScanResult(String publicKey, Bundle savedInstanceState) {
-        if(StringUtil.isNotEmpty(publicKey) &&
-                ByteUtil.toByte(publicKey).length == Ed25519.PUBLIC_KEY_SIZE){
-            userViewModel.showUserInfoDialog(ScanQRCodeActivity.this, publicKey);
-        }else{
-            if(savedInstanceState != null){
-                initCapture(savedInstanceState);
-            }
-            capture.onResume();
-            ToastUtils.showShortToast(R.string.contacts_error_invalid_pk);
-        }
+        //获取CaptureHelper，里面有扫码相关的配置设置
+        getCaptureHelper().playBeep(false)// 播放音效
+                .vibrate(false)//震动
+                .supportVerticalCode(true)// 支持扫垂直条码，建议有此需求时才使用。
+                .decodeFormats(DecodeFormatManager.QR_CODE_FORMATS)// 设置只识别二维码会提升速度
+                .frontLightMode(FrontLightMode.OFF)// 设置闪光灯模式
+                .tooDarkLux(45f)// 设置光线太暗时，自动触发开启闪光灯的照度值
+                .brightEnoughLux(100f)// 设置光线足够明亮时，自动触发关闭闪光灯的照度值
+                .continuousScan(isContinuousScan)// 是否连扫
+                .supportLuminanceInvert(true);// 是否支持识别反色码（黑白反色的码），增加识别率
     }
 
     /**
      * 初始化布局
      */
     private void initView() {
-        TextView statusView = binding.bvBarcode.getStatusView();
-        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) statusView.getLayoutParams();
-        layoutParams.bottomMargin = DimensionsUtil.dip2px(this, 20);
-        statusView.setLayoutParams(layoutParams);
-        statusView.setText(R.string.qr_code_scan_qr);
+        ivQrCode = findViewById(R.id.iv_qr_code);
+        ivGallery = findViewById(R.id.iv_gallery);
+        tvNoQrCode = findViewById(R.id.tv_no_qr_code);
+        tvContinue = findViewById(R.id.tv_continue);
     }
 
     /**
-     * import seed和generate seed点击事件
+     * 扫码结果回调
+     * @param result 扫码结果
+     * @return
+     */
+    @Override
+    public boolean onResultCallback(String result) {
+        if(isContinuousScan && !isParseImage){
+            super.onPause();
+            handleScanResult(result);
+        }
+        return super.onResultCallback(result);
+    }
+
+    /**
+     * 处理扫描结果
+     */
+    private void handleScanResult(String publicKey) {
+        try {
+            if(StringUtil.isNotEmpty(publicKey) &&
+                    ByteUtil.toByte(publicKey).length == Ed25519.PUBLIC_KEY_SIZE){
+                userViewModel.showUserInfoDialog(this, publicKey);
+                return;
+            }
+        }catch (Exception ignore){ }
+        showNoQrCodeView(true, false);
+    }
+
+    /**
+     * 视图点击事件
      */
     @Override
     public void onClick(View v) {
@@ -132,16 +130,14 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
                 }
                 break;
             case R.id.iv_gallery:
-                isResume = false;
                 openGallery();
                 break;
-            case R.id.ll_no_qr_code:
-                isResume = true;
-                capture.onResume();
+            case R.id.surfaceView:
+                isParseImage = false;
+                super.onResume();
                 showNoQrCodeView(false);
                 break;
         }
-
     }
 
     /**
@@ -159,41 +155,54 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
                 .forResult(PictureConfig.CHOOSE_REQUEST);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if(isResume){
-            capture.onResume();
+    /**
+     * 显示或隐藏没有QR Code视图
+     * @param isError
+     * @param noQrCode
+     */
+    private void showNoQrCodeView(boolean isError, boolean noQrCode) {
+        tvNoQrCode.setText(noQrCode ? R.string.qr_code_not_found : R.string.contacts_error_invalid_pk);
+        tvContinue.setVisibility(View.VISIBLE);
+        showNoQrCodeView(isError);
+    }
+
+    /**
+     * 显示或隐藏没有QR Code视图
+     * @param isError
+     */
+    private void showNoQrCodeView(boolean isError) {
+        if(!isError){
+            tvNoQrCode.setText(R.string.qr_code_scan_qr);
+            tvContinue.setVisibility(View.GONE);
         }
+        ivQrCode.setVisibility(isError ? View.INVISIBLE : View.VISIBLE);
+        ivGallery.setVisibility(isError ? View.INVISIBLE : View.VISIBLE);
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        capture.onPause();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        capture.onDestroy();
-        disposables.clear();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        capture.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        capture.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return binding.bvBarcode.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event);
+    /**
+     * 处理选择的照片
+     * @param imgPath
+     * */
+    private void handleSelectedImage(String imgPath) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
+            String result = CodeUtils.parseQRCode(imgPath);
+            String publicKey = "";
+            if(StringUtil.isNotEmpty(result)){
+                publicKey = result;
+            }
+            emitter.onNext(publicKey);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(publicKey -> {
+                    if (StringUtil.isEmpty(publicKey)) {
+                        showNoQrCodeView(true, true);
+                    } else {
+                        handleScanResult(publicKey);
+                    }
+                });
+        disposables.add(disposable);
     }
 
     @Override
@@ -207,7 +216,8 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
                     if(selectList != null && selectList.size() == 1){
                         LocalMedia localMedia = selectList.get(0);
                         if(PictureMimeType.eqImage(localMedia.getMimeType())){
-                            handleSelectedImage(localMedia.getOriginalPath());
+                            isParseImage = true;
+                            handleSelectedImage(localMedia.getPath());
                             return;
                         }
                     }
@@ -216,38 +226,5 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
                     break;
             }
         }
-        capture.onResume();
-    }
-
-    /**
-     * 处理选择的照片
-     * @param originalPath
-     */
-    private void handleSelectedImage(String originalPath) {
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
-            Result result = ZxingUtil.scanningImage(originalPath);
-            emitter.onNext(result);
-            emitter.onComplete();
-        }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(result -> {
-                    if (null == result) {
-                        showNoQrCodeView(true);
-                    } else {
-                        handleScanResult(result.toString(), null);
-                    }
-                });
-        disposables.add(disposable);
-    }
-
-    /**
-     * 显示或隐藏没有QR Code视图
-     * @param noQrCode
-     */
-    private void showNoQrCodeView(boolean noQrCode) {
-        binding.llNoQrCode.setVisibility(noQrCode ? View.VISIBLE : View.GONE);
-        binding.ivQrCode.setVisibility(noQrCode ? View.INVISIBLE : View.VISIBLE);
-        binding.ivGallery.setVisibility(noQrCode ? View.INVISIBLE : View.VISIBLE);
     }
 }

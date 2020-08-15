@@ -44,6 +44,7 @@ public class SplashActivity extends BaseActivity {
                 }
             }
         } else {
+            ActivityUtil.fullScreenAll(this);
             logger.info("SplashActivity show");
             // Open for the first time
             setContentView(R.layout.activity_splash);
