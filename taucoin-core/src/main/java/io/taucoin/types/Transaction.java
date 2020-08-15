@@ -216,13 +216,13 @@ public abstract class Transaction {
 
     /**
      * sign transaction with seed.
-     * @param prikey
+     * @param seed
      * @return
      */
     public byte[] signTransactionWithSeed(byte[] seed) {
         // create private key from seed
         Pair<byte[], byte[]> keys = Ed25519.createKeypair(seed);
-        byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.getSenderPubkey(), keys.first);
+        byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.getSenderPubkey(), keys.second);
         this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
         return sig;
     }
