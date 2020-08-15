@@ -26,8 +26,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 public class WiringCoinsTx extends Transaction {
 
     private static final Logger logger = LoggerFactory.getLogger("WiringCoinsTx");
@@ -50,20 +48,10 @@ public class WiringCoinsTx extends Transaction {
      */
     public WiringCoinsTx(long version, byte[] chainID, long timestamp, long txFee, long txType,
                         byte[] sender, long nonce, byte[] receiver, long amount, byte[] signature) {
-        if(sender.length != ChainParam.SenderLength) {
-            throw new IllegalArgumentException("Sender should be : " + ChainParam.SenderLength + " bytes");
-        }
-        if(signature.length != ChainParam.SignatureLength) {
-            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
-        }
-        this.version = version;
-        this.chainID = new String(chainID, UTF_8);
-        this.timestamp = timestamp;
-        this.txFee = txFee;
-        this.txType = txType;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
-        this.nonce = nonce;
-        this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
+
+        //父类构造函数
+        super(version, chainID, timestamp, txFee, txType, sender, nonce, signature);
+
         this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
         this.amount = amount;
 
@@ -84,16 +72,10 @@ public class WiringCoinsTx extends Transaction {
      */
     public WiringCoinsTx(long version, byte[] chainID, long timestamp, long txFee, long txType,
                          byte[] sender, long nonce, byte[] receiver, long amount) {
-        if(sender.length != ChainParam.SenderLength) {
-            throw new IllegalArgumentException("Sender address should be : " + ChainParam.SenderLength + " bytes");
-        }
-        this.version = version;
-        this.chainID = new String(chainID);
-        this.timestamp = timestamp;
-        this.txFee = txFee;
-        this.txType = txType;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
-        this.nonce = nonce;
+
+        //父类构造函数
+        super(version, chainID, timestamp, txFee, txType, sender, nonce);
+
         this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
         this.amount = amount;
 

@@ -16,22 +16,16 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
-import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
-import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 
 import com.frostwire.jlibtorrent.Ed25519;
-import com.frostwire.jlibtorrent.Entry;
 import com.frostwire.jlibtorrent.Pair;
 
-import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.HashMap;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +52,7 @@ public abstract class Transaction {
     protected byte[] txHash;
     protected boolean isParsed;
 
-    protected static enum TxIndex {
+    public static enum TxIndex {
         Version, 
         ChainID, 
         Timestamp, 
@@ -69,6 +63,59 @@ public abstract class Transaction {
         Signature,
         TxData,
     }
+
+    /**
+     * construct complete tx with signature.
+     * @param version
+     * @param chainID
+     * @param timestamp
+     * @param txFee
+     * @param txType
+     * @param sender
+     * @param nonce
+     * @param signature
+     */
+    public Transaction(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
+            long nonce, byte[] signature){
+        if(sender.length != ChainParam.SenderLength) {
+            throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
+        }
+        if(signature.length != ChainParam.SignatureLength) {
+            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
+        }
+        this.version = version;
+        this.chainID = new String(chainID, UTF_8);
+        this.timestamp = timestamp;
+        this.txFee = txFee;
+        this.txType = txType;
+        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
+        this.nonce = nonce;
+        this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
+    }
+
+    /**
+     * construct complete tx without signature.
+     * @param version
+     * @param chainID
+     * @param timestamp
+     * @param txFee
+     * @param txType
+     * @param sender
+     * @param nonce
+     */
+    public Transaction(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, long nonce){
+        if(sender.length != ChainParam.SenderLength) {
+            throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
+        }
+        this.version = version;
+        this.chainID = new String(chainID);
+        this.timestamp = timestamp;
+        this.txFee = txFee;
+        this.txType = txType;
+        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
+        this.nonce = nonce;
+    }
+
 
     /**
      * get tx version.

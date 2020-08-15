@@ -60,23 +60,14 @@ public class GenesisTx extends Transaction {
      */
     public GenesisTx(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
             long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] signature){
-        if(sender.length != ChainParam.SenderLength) {
-            throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
-        }
-        if(signature.length != ChainParam.SignatureLength) {
-            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
-        }
-        this.version = version;
-        this.chainID = new String(chainID, UTF_8);
-        this.timestamp = timestamp;
-        this.txFee = txFee;
-        this.txType = txType;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
-        this.nonce = nonce;
-        this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
+
+        //父类构造函数
+        super(version, chainID, timestamp, txFee, txType, sender, nonce, signature);
+
         this.genesisMsg = genesisMapTrans(genesisMsg);
 
         isParsed = true;
+
     }
 
     /**
@@ -92,16 +83,10 @@ public class GenesisTx extends Transaction {
      */
     public GenesisTx(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
             long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg){
-        if(sender.length != ChainParam.SenderLength) {
-            throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
-        }
-        this.version = version;
-        this.chainID = new String(chainID);
-        this.timestamp = timestamp;
-        this.txFee = txFee;
-        this.txType = txType;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
-        this.nonce = nonce;
+
+        //父类构造函数
+        super(version, chainID, timestamp, txFee, txType, sender, nonce);
+
         this.genesisMsg = genesisMapTrans(genesisMsg);
 
         isParsed = true;

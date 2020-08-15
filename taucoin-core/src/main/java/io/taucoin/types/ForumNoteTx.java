@@ -51,20 +51,10 @@ public class ForumNoteTx extends Transaction {
      */
     public ForumNoteTx(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
             long nonce, byte[] forumNoteHash, byte[] signature){
-        if(sender.length != ChainParam.SenderLength) {
-            throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
-        }
-        if(signature.length != ChainParam.SignatureLength) {
-            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
-        }
-        this.version = version;
-        this.chainID = new String(chainID, UTF_8);
-        this.timestamp = timestamp;
-        this.txFee = txFee;
-        this.txType = txType;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
-        this.nonce = nonce;
-        this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
+
+        //父类构造函数
+        super(version, chainID, timestamp, txFee, txType, sender, nonce, signature);
+
         this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
 
         isParsed = true;
@@ -84,17 +74,9 @@ public class ForumNoteTx extends Transaction {
     public ForumNoteTx(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender,
             long nonce, byte[] forumNoteHash){
 
-        if(sender.length != ChainParam.SenderLength) {
-            throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
-        }
+        //父类构造函数
+        super(version, chainID, timestamp, txFee, txType, sender, nonce);
 
-        this.version = version;
-        this.chainID = new String(chainID);
-        this.timestamp = timestamp;
-        this.txFee = txFee;
-        this.txType = txType;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
-        this.nonce = nonce;
         this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
 
         isParsed = true;
@@ -106,8 +88,7 @@ public class ForumNoteTx extends Transaction {
      */
     public ForumNoteTx(byte[] encodedBytes) {
         this.encodedBytes = encodedBytes;
-        this.isParsed = false;
-    }
+        this.isParsed = false; }
 
     /**
      * encoding transaction to bytes.
