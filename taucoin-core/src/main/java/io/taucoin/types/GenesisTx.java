@@ -180,7 +180,7 @@ public class GenesisTx extends Transaction {
             this.senderPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
             this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
             this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
-            //TODO, string -> ArrayList<ArrayList<Long>>
+            this.genesisMsg = ByteUtil.stringToLong2ArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
             isParsed = true;
         }
     }

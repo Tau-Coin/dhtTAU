@@ -396,10 +396,10 @@ public class ByteUtil {
         for(int i = 0; i< zero.length; i++){
             zero[i] = 0x00;
         }
-        System.arraycopy(b,0,temp,0,alignCount*8);
-        System.arraycopy(zero,0,temp,alignCount*8,zero.length);
-        System.arraycopy(b,alignCount*8,temp,alignCount*8 + zero.length,b.length-alignCount*8);
-        return byteArrayToSignLongArray(temp,piece);
+        System.arraycopy(b, 0, temp, 0, alignCount * 8);
+        System.arraycopy(zero, 0, temp, alignCount * 8, zero.length);
+        System.arraycopy(b, alignCount * 8, temp, alignCount * 8 + zero.length, b.length - alignCount * 8);
+        return byteArrayToSignLongArray(temp, piece);
     }
 
     public static ArrayList<Long> stringToLongArrayList(String str){
@@ -413,6 +413,17 @@ public class ByteUtil {
         }
         return ret;
     }
+
+    public static ArrayList<ArrayList<Long>> stringToLong2ArrayList(String str) {
+        //],
+        ArrayList<ArrayList<Long>> aTemp = new ArrayList<>();
+        String[] strArr = str.split("],");
+        for(int i = 0; i < strArr.length; i++) {
+           ArrayList<Long> bTemp =  stringToLongArrayList(strArr[i]);
+           aTemp.add(bTemp);
+        }
+        return aTemp;
+    } 
 
     /**
      * Turn nibbles to a pretty looking output string
