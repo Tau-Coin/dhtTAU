@@ -28,7 +28,7 @@ public class TransactionFactory {
 
     private static final Logger logger = LoggerFactory.getLogger("ParseTransactionFactory");
 
-    public Transaction parseTransaction(byte[] encodedTx) {
+    public static Transaction parseTransaction(byte[] encodedTx) {
 
         Entry entry = Entry.bdecode(encodedTx);
         List<Entry> entrylist = entry.list();
