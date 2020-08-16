@@ -78,7 +78,7 @@ public class ChainParam {
     public static final int SignLongArrayLength = 8;
 
     public static enum TxType {
-        GMsgType, FNoteType, WCoinsType
+        GMsgType, FNoteType, WCoinsType, GenesisType
     }
 
 }

@@ -31,6 +31,15 @@ public interface BlockStore {
     Block getBlockByHash(byte[] chainID, byte[] hash) throws Exception;
 
     /**
+     * get block container by hash
+     * @param chainID chain ID
+     * @param hash block hash
+     * @return block container
+     * @throws Exception
+     */
+    BlockContainer getBlockContainerByHash(byte[] chainID, byte[] hash) throws Exception;
+
+    /**
      * get block info by hash
      * @param chainID
      * @param hash
@@ -41,12 +50,21 @@ public interface BlockStore {
 
     /**
      * get main chain block by number
-     * @param chainID
-     * @param number
-     * @return
+     * @param chainID chain id
+     * @param number block number
+     * @return block or null
      * @throws Exception
      */
     Block getMainChainBlockByNumber(byte[] chainID, long number) throws Exception;
+
+    /**
+     * get main chain block container by number
+     * @param chainID chain id
+     * @param number block number
+     * @return block container or null
+     * @throws Exception
+     */
+    BlockContainer getMainChainBlockContainerByNumber(byte[] chainID, long number) throws Exception;
 
     /**
      * get main chain block hash by number
@@ -116,7 +134,26 @@ public interface BlockStore {
      * @param newBlocks blocks to connect from high to low
      * @return
      */
-    boolean getForkBlocksInfo(byte[] chainID, Block forkBlock, Block bestBlock, List<Block> undoBlocks, List<Block> newBlocks) throws Exception;
+    boolean getForkBlocksInfo(byte[] chainID,
+                              Block forkBlock,
+                              Block bestBlock,
+                              List<Block> undoBlocks,
+                              List<Block> newBlocks) throws Exception;
+
+    /**
+     * get fork info
+     * @param chainID chain ID
+     * @param forkBlockContainer fork point block container
+     * @param bestBlockContainer current chain best block container
+     * @param undoBlockContainers block containers to roll back from high to low
+     * @param newBlockContainers block containers to connect from high to low
+     * @return true/false
+     */
+    boolean getForkBlockContainersInfo(byte[] chainID,
+                                       BlockContainer forkBlockContainer,
+                                       BlockContainer bestBlockContainer,
+                                       List<BlockContainer> undoBlockContainers,
+                                       List<BlockContainer> newBlockContainers) throws Exception;
 
     /**
      * re-branch blocks
@@ -125,4 +162,14 @@ public interface BlockStore {
      * @param newBlocks move to main chain
      */
     void reBranchBlocks(byte[] chainID, List<Block> undoBlocks, List<Block> newBlocks) throws Exception;
+
+    /**
+     * re-branch blocks with block containers
+     * @param chainID chain ID
+     * @param undoBlockContainers move to non-main chain
+     * @param newBlockContainers move to main chain
+     */
+    void reBranchBlocksWithContainers(byte[] chainID,
+                                 List<BlockContainer> undoBlockContainers,
+                                 List<BlockContainer> newBlockContainers) throws Exception;
 }

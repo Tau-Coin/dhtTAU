@@ -94,7 +94,7 @@ public class ForumNoteTx extends Transaction {
      * encoding transaction to bytes.
      * @return
      */
-    public byte[] getEncodedBytes() {
+    public byte[] getEncoded() {
         if(encodedBytes == null) {
             List list = new ArrayList();
             list.add(this.version);
@@ -228,7 +228,7 @@ public class ForumNoteTx extends Transaction {
         strTx.append("txType: ").append(this.getTxType()).append("\n");
         strTx.append("sender: ").append(ByteUtil.toHexString(this.getSenderPubkey())).append("\n");
         strTx.append("nonce: ").append(this.getNonce()).append("\n");
-        strTx.append("forumNoteHash: ").append(ByteUtil.toHexString(this.getNonce())).append("\n");
+        strTx.append("forumNoteHash: ").append(this.getNonce()).append("\n");
         strTx.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
         strTx.append("]\n");
         return strTx.toString();

@@ -4,6 +4,7 @@ import com.frostwire.jlibtorrent.Pair;
 import io.taucoin.account.AccountManager;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.core.AccountState;
+import io.taucoin.core.BlockContainer;
 import io.taucoin.core.MutableItemValue;
 import io.taucoin.db.BlockDB;
 import io.taucoin.db.KeyValueDataBaseFactory;
@@ -16,6 +17,7 @@ import io.taucoin.processor.StateProcessor;
 import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.Repo;
@@ -213,27 +215,36 @@ public class ChainManager {
         byte[] chainID = cf.getChainid();
 		
         Block genesis = new Block(cf);
+        BlockContainer genesisContainer;
+
         boolean ret = followChain(chainID);
 
         // load genesis state
-        if (!loadGenesisState(chainID, genesis)) {
+        if (!loadGenesisState(chainID, genesisContainer)) {
             return false;
         }
 
-        if (genesis.getTxMsg().getTxData().getMsgType() != MsgType.GenesisMsg) {
+        Transaction tx = genesisContainer.getTx();
+
+        if (null == tx) {
+            logger.error("Genesis tx is null!");
+            return false;
+        }
+
+        if (tx.getTxType() != ChainParam.TxType.GenesisType.ordinal()) {
             logger.error("Genesis type mismatch!");
             return false;
         }
 
-        Map<String, GenesisItem> map = genesis.getTxMsg().getTxData().getGenesisMsgKV();
+        HashMap<ByteArrayWrapper, GenesisItem> map = ((GenesisTx) tx).getGenesisAccounts();
         if (null == map || map.size() <= 0) {
             logger.error("Genesis account is empty.");
             return false;
         }
 
         // add peer and put block to dht
-        for (Map.Entry<String, GenesisItem> entry : map.entrySet()) {
-            byte[] pubKey = Hex.decode(entry.getKey());
+        for (Map.Entry<ByteArrayWrapper, GenesisItem> entry : map.entrySet()) {
+            byte[] pubKey = entry.getKey().getData();
 			logger.info("create new community pubkey: {}", Hex.toHexString(pubKey));
             try {
                 this.stateDB.addPeer(chainID, pubKey);
@@ -241,7 +252,7 @@ public class ChainManager {
                 logger.error(e.getMessage(), e);
                 return false;
             }
-            putBlockToDHT(chainID, genesis, pubKey);
+            putBlockToDHT(chainID, genesisContainer, pubKey);
         }
 
 
@@ -262,16 +273,16 @@ public class ChainManager {
     /**
      * load genesis state to db
      * @param chainID chain id
-     * @param genesis genesis block
+     * @param genesisContainer genesis block container
      * @return
      */
-    private boolean loadGenesisState(byte[] chainID, Block genesis) {
+    private boolean loadGenesisState(byte[] chainID, BlockContainer genesisContainer) {
         try {
             StateProcessor stateProcessor = new StateProcessorImpl(chainID);
             StateDB track = stateDB.startTracking(chainID);
-            if (stateProcessor.backwardProcessGenesisBlock(genesis, track)) {
-                track.setBestBlockHash(chainID, genesis.getBlockHash());
-                track.setSyncBlockHash(chainID, genesis.getBlockHash());
+            if (stateProcessor.backwardProcessGenesisBlock(genesisContainer, track)) {
+                track.setBestBlockHash(chainID, genesisContainer.getBlock().getBlockHash());
+                track.setSyncBlockHash(chainID, genesisContainer.getBlock().getBlockHash());
                 track.commit();
             }
         } catch (Exception e) {
@@ -285,16 +296,23 @@ public class ChainManager {
     /**
      * put block to dht
      * @param chainID chain id
-     * @param block block to put
+     * @param blockContainer block to put
      * @param peer hash link
      */
-    private void putBlockToDHT(byte[] chainID, Block block, byte[] peer) {
-        if (null != block) {
+    private void putBlockToDHT(byte[] chainID, BlockContainer blockContainer, byte[] peer) {
+        if (null != blockContainer) {
+            if (null != blockContainer.getTx()) {
+                // put immutable block
+                DHT.ImmutableItem immutableItem =
+                        new DHT.ImmutableItem(blockContainer.getTx().getEncoded());
+                TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+            }
+
             // put immutable block first
-            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(block.getEncoded());
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(blockContainer.getBlock().getEncoded());
             TorrentDHTEngine.getInstance().dhtPut(immutableItem);
 
-            MutableItemValue mutableItemValue = new MutableItemValue(block.getBlockHash(), peer);
+            MutableItemValue mutableItemValue = new MutableItemValue(blockContainer.getBlock().getBlockHash(), peer);
 
             // put mutable item
             byte[] blockSalt = makeBlockSalt(chainID);
@@ -362,7 +380,7 @@ public class ChainManager {
 
 		for (Map.Entry<ByteArrayWrapper, Chain> entry: this.chains.entrySet()) {
 		    logger.debug("Chain ID: {}", new String(entry.getKey().getData()));
-		    blocks.add(entry.getValue().getBestBlock());
+		    blocks.add(entry.getValue().getBestBlockContainer().getBlock());
         }
 
 		return blocks;

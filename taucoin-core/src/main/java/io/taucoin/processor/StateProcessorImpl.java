@@ -7,8 +7,10 @@ import io.taucoin.db.StateDB;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
+import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.WiringCoinsTx;
+import io.taucoin.util.ByteArrayWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.Map;
 
 import static io.taucoin.core.ImportResult.*;
@@ -24,7 +27,7 @@ public class StateProcessorImpl implements StateProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger("StateProcessor");
 
-    private byte[] chainID;
+    private final byte[] chainID;
 
     public StateProcessorImpl(byte[] chainID) {
         this.chainID = chainID;
@@ -78,78 +81,69 @@ public class StateProcessorImpl implements StateProcessor {
 
                 long fee = tx.getTxFee();
 
-                switch (tx.getTxType()) {
-                    case ChainParam.TxType.WCoinsType.ordinal(): {
-                        // check balance
-                        long amount = tx.getAmount();
-                        long cost = amount + fee;
-                        if (sendState.getBalance().longValue() < cost) {
-                            logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-                                    cost, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
-                            return INVALID_TX;
-                        }
-
-                        //Execute the transaction
-                        // miner
-                        AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-                        minerState.addBalance(BigInteger.valueOf(fee));
-                        stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-                        // sender
-                        sendState.subBalance(BigInteger.valueOf(cost));
-                        sendState.increaseNonce();
-                        stateDB.updateAccount(chainID, sender, sendState);
-                        // receiver
-                        byte[] receiver = tx.getReceiver();
-                        AccountState receiverState = stateDB.getAccount(chainID, receiver);
-                        receiverState.addBalance(BigInteger.valueOf(amount));
-                        stateDB.updateAccount(chainID, receiver, receiverState);
-                        break;
-                    }
-                    case ForumComment: {
-                        // check balance
-                        if (sendState.getBalance().longValue() < fee) {
-                            logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-                                    fee, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
-                            return INVALID_TX;
-                        }
-
-                        //Execute the transaction
-                        // miner
-                        AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-                        minerState.addBalance(BigInteger.valueOf(fee));
-                        stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-                        // sender
-                        sendState.subBalance(BigInteger.valueOf(fee));
-                        sendState.increaseNonce();
-                        stateDB.updateAccount(chainID, sender, sendState);
-                        // TODO: announce app
-                        break;
-                    }
-                    case RegularForum: {
-                        // check balance
-                        if (sendState.getBalance().longValue() < fee) {
-                            logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-                                    fee, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
-                            return INVALID_TX;
-                        }
-
-                        //Execute the transaction
-                        // miner
-                        AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
-                        minerState.addBalance(BigInteger.valueOf(fee));
-                        stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
-                        // sender
-                        sendState.subBalance(BigInteger.valueOf(fee));
-                        sendState.increaseNonce();
-                        stateDB.updateAccount(this.chainID, sender, sendState);
-                        // TODO: announce app
-                        break;
-                    }
-                    default: {
-                        logger.error("Transaction type not supported");
+                if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                    // check balance
+                    long amount = ((WiringCoinsTx)tx).getAmount();
+                    long cost = amount + fee;
+                    if (sendState.getBalance().longValue() < cost) {
+                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
+                                cost, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
                         return INVALID_TX;
                     }
+
+                    //Execute the transaction
+                    // miner
+                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
+                    minerState.addBalance(BigInteger.valueOf(fee));
+                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
+                    // sender
+                    sendState.subBalance(BigInteger.valueOf(cost));
+                    sendState.increaseNonce();
+                    stateDB.updateAccount(chainID, sender, sendState);
+                    // receiver
+                    byte[] receiver = ((WiringCoinsTx)tx).getReceiver();
+                    AccountState receiverState = stateDB.getAccount(chainID, receiver);
+                    receiverState.addBalance(BigInteger.valueOf(amount));
+                    stateDB.updateAccount(chainID, receiver, receiverState);
+                } else if (ChainParam.TxType.FNoteType.ordinal() == tx.getTxType()) {
+                    // check balance
+                    if (sendState.getBalance().longValue() < fee) {
+                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
+                                fee, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
+                        return INVALID_TX;
+                    }
+
+                    //Execute the transaction
+                    // miner
+                    AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
+                    minerState.addBalance(BigInteger.valueOf(fee));
+                    stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
+                    // sender
+                    sendState.subBalance(BigInteger.valueOf(fee));
+                    sendState.increaseNonce();
+                    stateDB.updateAccount(this.chainID, sender, sendState);
+                } else if (ChainParam.TxType.GMsgType.ordinal() == tx.getTxType()) {
+                    // check balance
+                    if (sendState.getBalance().longValue() < fee) {
+                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
+                                fee, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
+                        return INVALID_TX;
+                    }
+
+                    //Execute the transaction
+                    // miner
+                    AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
+                    minerState.addBalance(BigInteger.valueOf(fee));
+                    stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
+                    // sender
+                    sendState.subBalance(BigInteger.valueOf(fee));
+                    sendState.increaseNonce();
+                    stateDB.updateAccount(this.chainID, sender, sendState);
+                } else {
+                    logger.error("Transaction type not supported");
+                    return INVALID_TX;
                 }
+
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -162,14 +156,14 @@ public class StateProcessorImpl implements StateProcessor {
     /**
      * sync genesis block
      *
-     * @param blockContainer   genesis block
+     * @param blockContainer genesis block container
      * @param stateDB state db
      * @return
      */
     @Override
     public boolean backwardProcessGenesisBlock(BlockContainer blockContainer, StateDB stateDB) {
         try {
-            Transaction tx = block.getTxMsg();
+            Transaction tx = blockContainer.getTx();
             if (null == tx) {
                 logger.error("Tx is null!");
                 return false;
@@ -193,10 +187,10 @@ public class StateProcessorImpl implements StateProcessor {
             */
 
 
-            Map<String, GenesisItem> map = tx.getTxData().getGenesisMsgKV();
+            HashMap<ByteArrayWrapper, GenesisItem> map = ((GenesisTx)tx).getGenesisAccounts();
             if (null != map) {
-                for (Map.Entry<String, GenesisItem> entry : map.entrySet()) {
-                    byte[] pubKey = Hex.decode(entry.getKey());
+                for (HashMap.Entry<ByteArrayWrapper, GenesisItem> entry : map.entrySet()) {
+                    byte[] pubKey = entry.getKey().getData();
                     AccountState accountState = stateDB.getAccount(this.chainID, pubKey);
                     if (null == accountState) {
                         accountState = new AccountState(entry.getValue().getBalance(),
@@ -284,24 +278,15 @@ public class StateProcessorImpl implements StateProcessor {
                         senderState.setNonce(BigInteger.valueOf(senderNonce));
                     }
 
-                    switch (tx.getTxData().getMsgType()) {
-                        case Wiring: {
-                            AccountState receiverState = stateDB.getAccount(this.chainID, tx.getTxData().getReceiver());
-                            // receiver账户状态不存在与receiver == sender，两种情况不会同时发生
-                            if (null == receiverState) {
-                                // 执行到这里，说明receiver != sender
-                                receiverState = new AccountState(BigInteger.valueOf(receiverBalance), BigInteger.ZERO);
-                                stateDB.updateAccount(this.chainID, tx.getTxData().getReceiver(), receiverState);
-                            }
-                            break;
-                        }
-//                    case IdentityAnnouncement: {
-//                        if (null == senderState.getIdentity()) {
-//                            senderState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
-//                        }
-//                        break;
-//                    }
-                        default: {
+                    if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                        AccountState receiverState = stateDB.getAccount(this.chainID,
+                                ((WiringCoinsTx)tx).getReceiver());
+
+                        // receiver账户状态不存在与receiver == sender，两种情况不会同时发生
+                        if (null == receiverState) {
+                            // 执行到这里，说明receiver != sender
+                            receiverState = new AccountState(BigInteger.valueOf(receiverBalance), BigInteger.ZERO);
+                            stateDB.updateAccount(this.chainID, ((WiringCoinsTx)tx).getReceiver(), receiverState);
                         }
                     }
                 }
@@ -346,86 +331,37 @@ public class StateProcessorImpl implements StateProcessor {
                     return false;
                 }
 
+                Block block = blockContainer.getBlock();
                 long fee = tx.getTxFee();
 
-                switch (tx.getTxData().getMsgType()) {
-                    case Wiring: {
-                        long amount = tx.getTxData().getAmount();
-                        long cost = amount + fee;
+                if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                    long amount = ((WiringCoinsTx)tx).getAmount();
+                    long cost = amount + fee;
 
-                        // roll back the transaction
-                        // miner
-                        AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
-                        minerState.subBalance(BigInteger.valueOf(fee));
-                        stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
-                        // sender
-                        sendState.addBalance(BigInteger.valueOf(cost));
-                        sendState.reduceNonce();
-                        stateDB.updateAccount(this.chainID, sender, sendState);
-                        // receiver
-                        byte[] receiver = tx.getTxData().getReceiver();
-                        AccountState receiverState = stateDB.getAccount(this.chainID, receiver);
-                        receiverState.subBalance(BigInteger.valueOf(amount));
-                        stateDB.updateAccount(this.chainID, receiver, receiverState);
-                        break;
-                    }
-//                case CommunityAnnouncement: {
-//                    // roll back the transaction
-//                    // miner
-//                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-//                    minerState.subBalance(BigInteger.valueOf(fee));
-//                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-//                    // sender
-//                    sendState.addBalance(BigInteger.valueOf(fee));
-//                    sendState.reduceNonce();
-//                    stateDB.updateAccount(chainID, sender, sendState);
-//                    // TODO:: announcement app
-//                    break;
-//                }
-                    case ForumComment: {
-                        // roll back the transaction
-                        // miner
-                        AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-                        minerState.subBalance(BigInteger.valueOf(fee));
-                        stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-                        // sender
-                        sendState.addBalance(BigInteger.valueOf(fee));
-                        sendState.reduceNonce();
-                        stateDB.updateAccount(chainID, sender, sendState);
-                        // TODO: announce app
-                        break;
-                    }
-                    case RegularForum: {
-                        // roll back the transaction
-                        // miner
-                        AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-                        minerState.subBalance(BigInteger.valueOf(fee));
-                        stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-                        // sender
-                        sendState.addBalance(BigInteger.valueOf(fee));
-                        sendState.reduceNonce();
-                        stateDB.updateAccount(chainID, sender, sendState);
-                        // TODO: announce app
-                        break;
-                    }
-//                case IdentityAnnouncement: {
-//                    // roll back the transaction
-//                    // miner
-//                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-//                    minerState.subBalance(BigInteger.valueOf(fee));
-//                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
-//                    // sender
-//                    // note: don't need to roll back identity
-//                    sendState.addBalance(BigInteger.valueOf(fee));
-//                    sendState.reduceNonce();
-//                    stateDB.updateAccount(chainID, sender, sendState);
-//                    // TODO: announce app
-//                    break;
-//                }
-                    default: {
-                        logger.error("Transaction type not supported");
-                        return false;
-                    }
+                    // roll back the transaction
+                    // miner
+                    AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
+                    minerState.subBalance(BigInteger.valueOf(fee));
+                    stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
+                    // sender
+                    sendState.addBalance(BigInteger.valueOf(cost));
+                    sendState.reduceNonce();
+                    stateDB.updateAccount(this.chainID, sender, sendState);
+                    // receiver
+                    byte[] receiver = ((WiringCoinsTx)tx).getReceiver();
+                    AccountState receiverState = stateDB.getAccount(this.chainID, receiver);
+                    receiverState.subBalance(BigInteger.valueOf(amount));
+                    stateDB.updateAccount(this.chainID, receiver, receiverState);
+                } else {
+                    // roll back the transaction
+                    // miner
+                    AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
+                    minerState.subBalance(BigInteger.valueOf(fee));
+                    stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
+                    // sender
+                    sendState.addBalance(BigInteger.valueOf(fee));
+                    sendState.reduceNonce();
+                    stateDB.updateAccount(chainID, sender, sendState);
                 }
             }
         } catch (Exception e) {

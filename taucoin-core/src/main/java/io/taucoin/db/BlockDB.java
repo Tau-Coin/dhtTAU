@@ -4,6 +4,7 @@ import io.taucoin.core.BlockContainer;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.TransactionFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,29 @@ public class BlockDB implements BlockStore {
     }
 
     /**
+     * save tx in db
+     * @param chainID chain ID
+     * @param tx transaction
+     */
+    private void saveTransaction(byte[] chainID, Transaction tx) throws Exception {
+        if (null != tx) {
+            db.put(PrefixKey.txKey(chainID, tx.getTxID()), tx.getEncoded());
+        }
+    }
+
+    /**
+     * get tx by hash
+     * @param chainID chain ID
+     * @param hash txid
+     * @return transaction or null
+     * @throws Exception
+     */
+    private Transaction getTransactionByHash(byte[] chainID, byte[] hash) throws Exception {
+        byte[] encode = db.get(PrefixKey.txKey(chainID, hash));
+        return TransactionFactory.parseTransaction(encode);
+    }
+
+    /**
      * get block by hash
      * @param chainID
      * @param hash
@@ -53,6 +77,32 @@ public class BlockDB implements BlockStore {
             return new Block(rlp);
         }
         logger.info("ChainID[{}]:Cannot find block by hash:{}", chainID.toString(), Hex.toHexString(hash));
+        return null;
+    }
+
+    /**
+     * get block container by hash
+     *
+     * @param chainID chain ID
+     * @param hash    block hash
+     * @return block container
+     * @throws Exception
+     */
+    @Override
+    public BlockContainer getBlockContainerByHash(byte[] chainID, byte[] hash) throws Exception {
+        Block block = getBlockByHash(chainID, hash);
+        if (null != block) {
+            BlockContainer blockContainer = new BlockContainer(block);
+            if (null != block.getTxHash()) {
+                Transaction tx = getTransactionByHash(chainID, block.getBlockHash());
+                if (null != tx) {
+                    blockContainer.setTx(tx);
+                }
+            }
+
+            return blockContainer;
+        }
+
         return null;
     }
 
@@ -129,6 +179,38 @@ public class BlockDB implements BlockStore {
         logger.info("ChainID[{}]:There is no main chain block in this height:{}",
                 new String(chainID), number);
         return null;
+    }
+
+    /**
+     * get main chain block container by number
+     *
+     * @param chainID chain id
+     * @param number  block number
+     * @return block container or null
+     * @throws Exception
+     */
+    @Override
+    public BlockContainer getMainChainBlockContainerByNumber(byte[] chainID, long number) throws Exception {
+        Block block = getMainChainBlockByNumber(chainID, number);
+
+        if (null == block) {
+            return null;
+        }
+
+        BlockContainer blockContainer = new BlockContainer(block);
+        if (null != block.getTxHash()) {
+            Transaction tx = getTransactionByHash(chainID, block.getTxHash());
+
+            if (null == tx) {
+                return null;
+            }
+
+            blockContainer.setTx(tx);
+        }
+
+        logger.info("ChainID[{}]:There is no main chain block in this height:{}",
+                new String(chainID), number);
+        return blockContainer;
     }
 
     /**
@@ -217,15 +299,17 @@ public class BlockDB implements BlockStore {
     @Override
     public void saveBlockContainer(byte[] chainID, BlockContainer blockContainer, boolean isMainChain) throws Exception {
         Block block = blockContainer.getBlock();
+
         // save block
         db.put(PrefixKey.blockKey(chainID, block.getBlockHash()), block.getEncoded());
+
         // save tx
         Transaction tx = blockContainer.getTx();
-        if (null != tx) {
-            db.put(PrefixKey.txKey(chainID, tx.getTxID()), tx.getEncoded());
-        }
+        saveTransaction(chainID, tx);
+
         // save block info
         saveBlockInfo(chainID, block, isMainChain);
+
         // delete fork chain blocks out of 3 * mutable range, when save main chain block
         if (isMainChain && block.getBlockNum() > ChainParam.WARNING_RANGE) {
             long number = block.getBlockNum() - ChainParam.WARNING_RANGE;
@@ -486,6 +570,69 @@ public class BlockDB implements BlockStore {
     }
 
     /**
+     * get fork info
+     *
+     * @param chainID             chain ID
+     * @param forkBlockContainer  fork point block container
+     * @param bestBlockContainer  current chain best block container
+     * @param undoBlockContainers block containers to roll back from high to low
+     * @param newBlockContainers  block containers to connect from high to low
+     * @return true/false
+     */
+    @Override
+    public boolean getForkBlockContainersInfo(byte[] chainID,
+                                              BlockContainer forkBlockContainer,
+                                              BlockContainer bestBlockContainer,
+                                              List<BlockContainer> undoBlockContainers,
+                                              List<BlockContainer> newBlockContainers) throws Exception {
+
+        long maxLevel = Math.max(bestBlockContainer.getBlock().getBlockNum(),
+                forkBlockContainer.getBlock().getBlockNum());
+
+        // 1. First ensure that you are one the save level
+        long currentLevel = maxLevel;
+        BlockContainer forkLine = forkBlockContainer;
+        if (forkBlockContainer.getBlock().getBlockNum() > bestBlockContainer.getBlock().getBlockNum()) {
+
+            while (currentLevel > bestBlockContainer.getBlock().getBlockNum()) {
+                newBlockContainers.add(forkLine);
+
+                forkLine = getBlockContainerByHash(chainID, forkLine.getBlock().getPreviousBlockHash());
+                if (forkLine == null)
+                    return false;
+                --currentLevel;
+            }
+        }
+
+        BlockContainer bestLine = bestBlockContainer;
+        if (bestBlockContainer.getBlock().getBlockNum() > forkBlockContainer.getBlock().getBlockNum()) {
+
+            while (currentLevel > forkBlockContainer.getBlock().getBlockNum()) {
+                undoBlockContainers.add(bestLine);
+
+                bestLine = getBlockContainerByHash(chainID, bestLine.getBlock().getPreviousBlockHash());
+                --currentLevel;
+            }
+        }
+
+        // 2. Loop back on each level until common block
+        while (!Arrays.equals(bestLine.getBlock().getBlockHash(), forkLine.getBlock().getBlockHash())) {
+            newBlockContainers.add(forkLine);
+            undoBlockContainers.add(bestLine);
+
+            bestLine = getBlockContainerByHash(chainID, bestLine.getBlock().getPreviousBlockHash());
+            forkLine = getBlockContainerByHash(chainID, forkLine.getBlock().getPreviousBlockHash());
+
+            if (forkLine == null)
+                return false;
+
+            --currentLevel;
+        }
+
+        return true;
+    }
+
+    /**
      * re-branch blocks
      *
      * @param undoBlocks move to non-main chain
@@ -506,6 +653,26 @@ public class BlockDB implements BlockStore {
         }
     }
 
+    /**
+     * re-branch blocks with block containers
+     *
+     * @param chainID             chain ID
+     * @param undoBlockContainers move to non-main chain
+     * @param newBlockContainers  move to main chain
+     */
+    @Override
+    public void reBranchBlocksWithContainers(byte[] chainID, List<BlockContainer> undoBlockContainers, List<BlockContainer> newBlockContainers) throws Exception {
+        if (undoBlockContainers != null) {
+            for (BlockContainer blockContainer : undoBlockContainers) {
+                saveBlockInfo(chainID, blockContainer.getBlock(), false);
+            }
+        }
 
+        if (newBlockContainers != null) {
+            for (BlockContainer blockContainer : newBlockContainers) {
+                saveBlockInfo(chainID, blockContainer.getBlock(), true);
+            }
+        }
+    }
 }
 

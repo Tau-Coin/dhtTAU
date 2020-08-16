@@ -322,7 +322,7 @@ public abstract class Transaction {
      */
     public byte[] getTxID(){
         if(txHash == null){
-           txHash = HashUtil.sha1hash(this.getEncodedBytes());
+           txHash = HashUtil.sha1hash(this.getEncoded());
         }
         return txHash;
     }
@@ -331,7 +331,7 @@ public abstract class Transaction {
      * encoding transaction to bytes.
      * @return
      */
-    public abstract byte[] getEncodedBytes();
+    public abstract byte[] getEncoded();
 
     /**
      * encoding transaction signature parts which is under protection of cryptographic signature.

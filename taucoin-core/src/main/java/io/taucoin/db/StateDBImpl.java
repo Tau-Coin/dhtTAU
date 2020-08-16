@@ -2,6 +2,7 @@ package io.taucoin.db;
 
 import io.taucoin.core.AccountState;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.TransactionFactory;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
@@ -266,8 +267,8 @@ public class StateDBImpl implements StateDB {
         if (null != keys) {
             Set<Transaction> txs = new HashSet<>();
             for (byte[] key: keys) {
-                byte[] rlp = db.get(key);
-                txs.add(new Transaction(rlp));
+                byte[] txEncode = db.get(key);
+                txs.add(TransactionFactory.parseTransaction(txEncode));
             }
             return txs;
         }

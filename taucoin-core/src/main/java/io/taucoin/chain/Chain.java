@@ -13,6 +13,8 @@ import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.TransactionFactory;
+import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.util.ByteArrayWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,9 +76,6 @@ public class Chain {
 
     // state processor: process and roll back block
     private StateProcessor stateProcessor;
-
-    // the best block of current chain
-    private Block bestBlock;
 
     // the best block container of current chain
     private BlockContainer bestBlockContainer;
@@ -145,7 +144,7 @@ public class Chain {
             if (null != bestBlockHash) {
                 logger.info("Chain ID[{}]: Best block hash[{}]",
                         new String(this.chainID), Hex.toHexString(bestBlockHash));
-                this.bestBlock = this.blockStore.getBlockByHash(this.chainID, bestBlockHash);
+                this.bestBlockContainer = this.blockStore.getBlockContainerByHash(this.chainID, bestBlockHash);
             }
 
             byte[] syncBlockHash = this.stateDB.getSyncBlockHash(this.chainID);
@@ -297,7 +296,7 @@ public class Chain {
 
                 // if a less difficult chain, jump to mine
                 if (tip.getBlock().getCumulativeDifficulty().
-                        compareTo(this.bestBlock.getCumulativeDifficulty()) < 0) {
+                        compareTo(this.bestBlockContainer.getBlock().getCumulativeDifficulty()) < 0) {
                     if (null != tip.getTx()) {
                         txPool.addTx(tip.getTx());
                     }
@@ -348,7 +347,8 @@ public class Chain {
 //                    }
 
                     // find fork point
-                    Block forkPointBlock = this.blockStore.getForkPointBlock(this.chainID, this.bestBlock, tip.getBlock());
+                    Block forkPointBlock = this.blockStore.getForkPointBlock(this.chainID,
+                            this.bestBlockContainer.getBlock(), tip.getBlock());
                     if (null == forkPointBlock) {
                         // cannot find fork point, maybe a attack that fork point is beyond warning range
                         logger.info("Chain ID[{}]: Cannot find fork point.", new String(this.chainID));
@@ -356,7 +356,7 @@ public class Chain {
                     }
 
                     // calc fork range
-                    long forkRange = this.bestBlock.getBlockNum() - forkPointBlock.getBlockNum();
+                    long forkRange = this.bestBlockContainer.getBlock().getBlockNum() - forkPointBlock.getBlockNum();
 
                     if (forkRange > ChainParam.WARNING_RANGE) {
                         // an attack chain, ignore it
@@ -409,12 +409,12 @@ public class Chain {
                 }
 
                 if (minable()) {
-                    Block block = mineBlock();
+                    BlockContainer blockContainer = mineBlock();
                     // the best block is parent block of the tip
-                    if (null != block) {
+                    if (null != blockContainer) {
                         StateDB track = this.stateDB.startTracking(this.chainID);
 
-                        if (tryToConnect(block, track)) {
+                        if (tryToConnect(blockContainer, track)) {
                             try {
                                 // after chain change
                                 // 1. save block
@@ -424,16 +424,16 @@ public class Chain {
                                 // 5. add new block peer to peer pool
                                 // 6. update tx pool
                                 // 7. publish new block
-                                this.blockStore.saveBlock(this.chainID, block, true);
-                                track.setBestBlockHash(this.chainID, block.getBlockHash());
+                                this.blockStore.saveBlockContainer(this.chainID, blockContainer, true);
+                                track.setBestBlockHash(this.chainID, blockContainer.getBlock().getBlockHash());
                                 track.commit();
-                                setBestBlock(block);
-                                this.peerManager.addNewBlockPeer(block.getMinerPubkey());
+                                setBestBlockContainer(blockContainer);
+                                this.peerManager.addNewBlockPeer(blockContainer.getBlock().getMinerPubkey());
                             } catch (Exception e) {
                                 logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
                             }
 
-                            Set<ByteArrayWrapper> accounts = extractAccountFromBlock(block);
+                            Set<ByteArrayWrapper> accounts = extractAccountFromBlockContainer(blockContainer);
                             this.txPool.recheckAccoutTx(accounts);
 
                             publishBestBlock();
@@ -460,11 +460,11 @@ public class Chain {
      */
     private void syncBlockForMoreState() {
         if (null != this.syncBlock && this.syncBlock.getBlockNum() >0) {
-            Block block = getBlockFromDHTByHash(this.syncBlock.getPreviousBlockHash());
-            if (null != block) {
+            BlockContainer blockContainer = getBlockContainerFromDHTByHash(this.syncBlock.getPreviousBlockHash());
+            if (null != blockContainer) {
                 try {
                     StateDB track = this.stateDB.startTracking(this.chainID);
-                    if (this.stateProcessor.backwardProcess(block, track)) {
+                    if (this.stateProcessor.backwardProcess(blockContainer, track)) {
                         // after sync
                         // 1. save block
                         // 2. save sync block hash
@@ -472,11 +472,11 @@ public class Chain {
                         // 4. set sync block
                         // 5. add old block peer to peer pool
 
-                        this.blockStore.saveBlock(this.chainID, block, true);
-                        track.setSyncBlockHash(this.chainID, block.getBlockHash());
+                        this.blockStore.saveBlockContainer(this.chainID, blockContainer, true);
+                        track.setSyncBlockHash(this.chainID, blockContainer.getBlock().getBlockHash());
                         track.commit();
-                        this.syncBlock = block;
-                        this.peerManager.addOldBlockPeer(block.getMinerPubkey());
+                        this.syncBlock = blockContainer.getBlock();
+                        this.peerManager.addOldBlockPeer(blockContainer.getBlock().getMinerPubkey());
                     }
                 } catch (Exception e) {
                     logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
@@ -496,18 +496,21 @@ public class Chain {
 
             List<BlockContainer> undoBlockContainers = new ArrayList<>();
             List<BlockContainer> newBlockContainers = new ArrayList<>();
-            if (!blockStore.getForkBlocksInfo(this.chainID, targetBlockContainer, this.bestBlock, undoBlockContainers, newBlockContainers)) {
+            if (!blockStore.getForkBlockContainersInfo(this.chainID, targetBlockContainer,
+                    this.bestBlockContainer, undoBlockContainers, newBlockContainers)) {
                 logger.error("Chain ID[{}]: Cannot get fork block, best block[{}], target block[{}]",
                         new String(this.chainID),
-                        Hex.toHexString(this.bestBlock.getBlockHash()),
-                        Hex.toHexString(targetBlockContainer.getBlockHash()));
+                        Hex.toHexString(this.bestBlockContainer.getBlock().getBlockHash()),
+                        Hex.toHexString(targetBlockContainer.getBlock().getBlockHash()));
+
                 return false;
             }
 
-            for (Block undoBlock : undoBlockContainers) {
-                if (!this.stateProcessor.rollback(undoBlock, track)) {
+            for (BlockContainer undoBlockContainer : undoBlockContainers) {
+                if (!this.stateProcessor.rollback(undoBlockContainer, track)) {
                     logger.error("Chain ID[{}]: Roll back fail, block hash:{}",
-                            new String(this.chainID), Hex.toHexString(undoBlock.getBlockHash()));
+                            new String(this.chainID),
+                            Hex.toHexString(undoBlockContainer.getBlock().getBlockHash()));
                     return false;
                 }
             }
@@ -525,11 +528,11 @@ public class Chain {
                 if (result != ImportResult.IMPORTED_BEST) {
                     logger.error("Chain ID[{}]: Import block fail, block hash:{}",
                             new String(this.chainID),
-                            Hex.toHexString(newBlockContainers.get(i).getBlockHash()));
+                            Hex.toHexString(newBlockContainers.get(i).getBlock().getBlockHash()));
                     return false;
                 }
 
-                this.peerManager.addNewBlockPeer(newBlockContainers.get(i).getMinerPubkey());
+                this.peerManager.addNewBlockPeer(newBlockContainers.get(i).getBlock().getMinerPubkey());
             }
 
             // after chain change
@@ -541,16 +544,16 @@ public class Chain {
             // 6. update tx pool
             // 7. publish new block
 
-            this.blockStore.reBranchBlocks(this.chainID, undoBlockContainers, newBlockContainers);
+            this.blockStore.reBranchBlocksWithContainers(this.chainID, undoBlockContainers, newBlockContainers);
 
-            track.setBestBlockHash(this.chainID, targetBlockContainer.getBlockHash());
+            track.setBestBlockHash(this.chainID, targetBlockContainer.getBlock().getBlockHash());
 
             track.commit();
 
-            setBestBlock(targetBlockContainer);
+            setBestBlockContainer(targetBlockContainer);
 
-            Set<ByteArrayWrapper> accounts = extractAccountFromBlock(undoBlockContainers);
-            accounts.addAll(extractAccountFromBlock(newBlockContainers));
+            Set<ByteArrayWrapper> accounts = extractAccountFromBlockContainer(undoBlockContainers);
+            accounts.addAll(extractAccountFromBlockContainer(newBlockContainers));
             this.txPool.recheckAccoutTx(accounts);
 
             publishBestBlock();
@@ -635,7 +638,7 @@ public class Chain {
                 return false;
             }
 
-            this.blockStore.saveBlock(this.chainID, bestVoteBlockContainer, true);
+            this.blockStore.saveBlockContainer(this.chainID, bestVoteBlockContainer, true);
 
             track.setBestBlockHash(this.chainID, bestVoteBlockContainer.getBlock().getBlockHash());
             track.setSyncBlockHash(this.chainID, bestVoteBlockContainer.getBlock().getBlockHash());
@@ -721,23 +724,25 @@ public class Chain {
                     break;
                 }
                 // get from dht
-                Block dhtBlock = getBlockFromDHTByHash(previousHash);
-                if (null != dhtBlock) {
-                    previousHash = dhtBlock.getPreviousBlockHash();
-                    this.blockStore.saveBlock(this.chainID, dhtBlock, false);
+                BlockContainer dhtBlockContainer = getBlockContainerFromDHTByHash(previousHash);
+                if (null != dhtBlockContainer) {
+                    previousHash = dhtBlockContainer.getBlock().getPreviousBlockHash();
+                    this.blockStore.saveBlockContainer(this.chainID, dhtBlockContainer, false);
                 }
 
-                if (dhtBlock.getBlockNum() <= 0) {
+                if (dhtBlockContainer.getBlock().getBlockNum() <= 0) {
                     break;
                 }
                 counter++;
             }
 
             // get best vote block
-            Block bestVoteBlock = this.blockStore.getBlockByHash(this.chainID, bestVote.getBlockHash());
+            BlockContainer bestVoteBlockContainer = this.blockStore.
+                    getBlockContainerByHash(this.chainID, bestVote.getBlockHash());
 
             // find fork point
-            Block forkPointBlock = this.blockStore.getForkPointBlock(this.chainID, this.bestBlock, bestVoteBlock);
+            Block forkPointBlock = this.blockStore.
+                    getForkPointBlock(this.chainID, this.bestBlockContainer.getBlock(), bestVoteBlockContainer.getBlock());
             if (null == forkPointBlock) {
                 // cannot find fork point, maybe fork point is beyond warning range
                 logger.info("Chain ID[{}]: Cannot find fork point.", new String(this.chainID));
@@ -746,13 +751,13 @@ public class Chain {
 
             // calc fork range
             // fork point block number must be less than best block, so fork range >= 0
-            long forkRange = this.bestBlock.getBlockNum() - forkPointBlock.getBlockNum();
+            long forkRange = this.bestBlockContainer.getBlock().getBlockNum() - forkPointBlock.getBlockNum();
 
             if (forkRange > ChainParam.WARNING_RANGE) {
                 // an attack chain, ignore it
             } else if (forkRange < ChainParam.MUTABLE_RANGE){
                 // change to more difficult chain
-                reBranch(bestVoteBlock);
+                reBranch(bestVoteBlockContainer);
             } else {
                 // be as a new chain when fork point between mutable range and warning range
                 // re-init tx pool and chain
@@ -823,13 +828,20 @@ public class Chain {
      * publish tip block on main chain to dht
      */
     private void publishBestBlock() {
-        if (null != this.bestBlock) {
-            // put immutable block first
-            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(this.bestBlock.getEncoded());
+        if (null != this.bestBlockContainer) {
+            if (null != this.bestBlockContainer.getTx()) {
+                // put immutable block
+                DHT.ImmutableItem immutableItem =
+                        new DHT.ImmutableItem(this.bestBlockContainer.getTx().getEncoded());
+                TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+            }
+
+            // put immutable block
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(this.bestBlockContainer.getBlock().getEncoded());
             TorrentDHTEngine.getInstance().dhtPut(immutableItem);
 
             byte[] peer = this.peerManager.getMutableRangePeerRandomly();
-            MutableItemValue mutableItemValue = new MutableItemValue(this.bestBlock.getBlockHash(), peer);
+            MutableItemValue mutableItemValue = new MutableItemValue(this.bestBlockContainer.getBlock().getBlockHash(), peer);
 
             // put mutable item
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
@@ -877,7 +889,27 @@ public class Chain {
      * @return
      */
     private BlockContainer getBlockContainerFromDHTByHash(byte[] blockHash) {
-        return null;
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash, TIMEOUT);
+
+        byte[] blockEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
+
+        if (null == blockEncode) {
+            return null;
+        }
+
+        Block block = new Block(blockEncode);
+        BlockContainer blockContainer = new BlockContainer(block);
+
+        if (null != block.getTxHash()) {
+            spec = new DHT.GetImmutableItemSpec(block.getTxHash(), TIMEOUT);
+
+            byte[] txEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
+            Transaction tx = TransactionFactory.parseTransaction(txEncode);
+
+            blockContainer.setTx(tx);
+        }
+
+        return blockContainer;
     }
 
     /**
@@ -923,10 +955,10 @@ public class Chain {
 //            result = TorrentDHTEngine.getInstance().dhtTauGet(immutableItemSpec, null);
 //        }
 
-        byte[] result = TorrentDHTEngine.getInstance().dhtGet(spec);
+        byte[] txEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
 
-        if (null != result) {
-            return new Transaction(result);
+        if (null != txEncode) {
+            return TransactionFactory.parseTransaction(txEncode);
         }
 
         return null;
@@ -974,15 +1006,16 @@ public class Chain {
     }
 
     /**
-     * get block randomly from block store
+     * get block container randomly from block store
      * @return
      */
-    private Block getBlockRandomlyFromDB() {
-        int currentNumber = (int) this.bestBlock.getBlockNum();
+    private BlockContainer getBlockContainerRandomlyFromDB() {
+        int currentNumber = (int) this.bestBlockContainer.getBlock().getBlockNum();
         Random random = new Random(System.currentTimeMillis());
         try {
-            Block block = this.blockStore.getMainChainBlockByNumber(this.chainID, random.nextInt(currentNumber + 1));
-            return block;
+            BlockContainer blockContainer = this.blockStore.
+                    getMainChainBlockContainerByNumber(this.chainID, random.nextInt(currentNumber + 1));
+            return blockContainer;
         } catch (Exception e) {
             logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
         }
@@ -991,19 +1024,20 @@ public class Chain {
 
     /**
      * connect a block
-     * @param block
-     * @param stateDB
+     * @param blockContainer block container
+     * @param stateDB state db
      * @return
      */
-    private boolean tryToConnect(final Block block, StateDB stateDB) {
+    private boolean tryToConnect(final BlockContainer blockContainer, StateDB stateDB) {
         // if main chain
-        if (Arrays.equals(bestBlock.getBlockHash(), block.getPreviousBlockHash())) {
+        if (Arrays.equals(this.bestBlockContainer.getBlock().getBlockHash(),
+                blockContainer.getBlock().getPreviousBlockHash())) {
             // main chain
-            if (!isValidBlock(block, stateDB)) {
+            if (!isValidBlockContainer(blockContainer, stateDB)) {
                 return false;
             }
 
-            ImportResult result = this.stateProcessor.forwardProcess(block, stateDB);
+            ImportResult result = this.stateProcessor.forwardProcess(blockContainer, stateDB);
             if (!result.isSuccessful()) {
                 return false;
             }
@@ -1028,18 +1062,18 @@ public class Chain {
 
     /**
      * set best block of this chain
-     * @param block best block
+     * @param blockContainer best block container
      */
-    public void setBestBlock(Block block) {
-        this.bestBlock = block;
+    public void setBestBlockContainer(BlockContainer blockContainer) {
+        this.bestBlockContainer = blockContainer;
     }
 
     /**
      * get best block of this chain
      * @return
      */
-    public Block getBestBlock() {
-        return this.bestBlock;
+    public BlockContainer getBestBlockContainer() {
+        return this.bestBlockContainer;
     }
 
     /**
@@ -1108,6 +1142,20 @@ public class Chain {
         if (!verifyPOT(block, stateDB)) {
             logger.error("ChainID[{}]: Block[{}] Validate block param error!",
                     new String(this.chainID), Hex.toHexString(block.getBlockHash()));
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * check if a block valid
+     * @param blockContainer block container
+     * @param stateDB state db
+     * @return
+     */
+    private boolean isValidBlockContainer(BlockContainer blockContainer, StateDB stateDB) {
+        if (!isValidBlock(bestBlockContainer.getBlock(), stateDB)) {
             return false;
         }
 
@@ -1211,19 +1259,21 @@ public class Chain {
                     new String(this.chainID), Hex.toHexString(pubKey), power);
 
             // check base target
-            BigInteger baseTarget = this.pot.calculateRequiredBaseTarget(this.chainID, this.bestBlock, this.blockStore);
+            BigInteger baseTarget = this.pot.calculateRequiredBaseTarget(this.chainID,
+                    this.bestBlockContainer.getBlock(), this.blockStore);
 
             // check generation signature
-            byte[] genSig = this.pot.calculateGenerationSignature(this.bestBlock.getGenerationSignature(), pubKey);
+            byte[] genSig = this.pot.calculateGenerationSignature(this.bestBlockContainer.
+                    getBlock().getGenerationSignature(), pubKey);
 
             // check if target >= hit
             BigInteger target = this.pot.calculateMinerTargetValue(baseTarget, power,
-                    System.currentTimeMillis() / 1000 - this.bestBlock.getTimeStamp());
+                    System.currentTimeMillis() / 1000 - this.bestBlockContainer.getBlock().getTimeStamp());
 
             BigInteger hit = this.pot.calculateRandomHit(genSig);
 
             long timeInterval = this.pot.calculateMiningTimeInterval(hit, baseTarget, power);
-            if ((System.currentTimeMillis() / 1000 - this.bestBlock.getTimeStamp()) < timeInterval) {
+            if ((System.currentTimeMillis() / 1000 - this.bestBlockContainer.getBlock().getTimeStamp()) < timeInterval) {
                 logger.info("Chain ID[{}]: It's not time for the block.", new String(this.chainID));
                 return false;
             }
@@ -1245,20 +1295,23 @@ public class Chain {
      * mine a block
      * @return
      */
-    private Block mineBlock() {
+    private BlockContainer mineBlock() {
 
-        BigInteger baseTarget = pot.calculateRequiredBaseTarget(this.chainID, this.bestBlock, this.blockStore);
-        byte[] generationSignature = pot.calculateGenerationSignature(this.bestBlock.getGenerationSignature(),
+        BigInteger baseTarget = pot.calculateRequiredBaseTarget(this.chainID,
+                this.bestBlockContainer.getBlock(), this.blockStore);
+        byte[] generationSignature = pot.calculateGenerationSignature(
+                this.bestBlockContainer.getBlock().getGenerationSignature(),
                 AccountManager.getInstance().getKeyPair().first);
-        BigInteger cumulativeDifficulty = pot.calculateCumulativeDifficulty(this.bestBlock.getCumulativeDifficulty(),
+        BigInteger cumulativeDifficulty = pot.calculateCumulativeDifficulty(
+                this.bestBlockContainer.getBlock().getCumulativeDifficulty(),
                 baseTarget);
 
         byte[] immutableBlockHash;
         try {
             // if current block number is larger than mutable range
-            if (this.bestBlock.getBlockNum() + 1 >= ChainParam.MUTABLE_RANGE) {
+            if (this.bestBlockContainer.getBlock().getBlockNum() + 1 >= ChainParam.MUTABLE_RANGE) {
                 immutableBlockHash = this.blockStore.getMainChainBlockHashByNumber(this.chainID,
-                        this.bestBlock.getBlockNum() + 1 - ChainParam.MUTABLE_RANGE);
+                        this.bestBlockContainer.getBlock().getBlockNum() + 1 - ChainParam.MUTABLE_RANGE);
             } else {
                 immutableBlockHash = this.blockStore.getMainChainBlockHashByNumber(this.chainID, 0);
 //                immutableBlockHash = new byte[ChainParam.HashLength];
@@ -1282,14 +1335,26 @@ public class Chain {
 
         Transaction tx = txPool.getBestTransaction();
 
-        Block block = new Block((byte)1, System.currentTimeMillis() / 1000,
-                this.bestBlock.getBlockNum() + 1, this.bestBlock.getBlockHash(),
-                immutableBlockHash, baseTarget, cumulativeDifficulty, generationSignature, tx,
-                0, 0, 0, 0, keyPair.first);
+        Block block;
+        if (null != tx) {
+            block = new Block((byte) 1, System.currentTimeMillis() / 1000,
+                    this.bestBlockContainer.getBlock().getBlockNum() + 1,
+                    this.bestBlockContainer.getBlock().getBlockHash(), immutableBlockHash,
+                    baseTarget, cumulativeDifficulty, generationSignature, tx.getTxID(),
+                    0, 0, 0, 0, keyPair.first);
+        } else {
+            block = new Block((byte) 1, System.currentTimeMillis() / 1000,
+                    this.bestBlockContainer.getBlock().getBlockNum() + 1,
+                    this.bestBlockContainer.getBlock().getBlockHash(), immutableBlockHash,
+                    baseTarget, cumulativeDifficulty, generationSignature, null,
+                    0, 0, 0, 0, keyPair.first);
+        }
+
+        BlockContainer blockContainer = new BlockContainer(block, tx);
 
         // set state
         StateDB miningTrack = this.stateDB.startTracking(this.chainID);
-        this.stateProcessor.forwardProcess(block, miningTrack);
+        this.stateProcessor.forwardProcess(blockContainer, miningTrack);
 
         try {
             // set state
@@ -1297,16 +1362,16 @@ public class Chain {
                     AccountManager.getInstance().getKeyPair().first);
             block.setMinerBalance(minerState.getBalance().longValue());
 
-            if (null != block.getTxMsg()) {
+            if (null != tx) {
                 AccountState senderState = miningTrack.getAccount(this.chainID,
-                        block.getTxMsg().getSenderPubkey());
+                        tx.getSenderPubkey());
                 block.setSenderBalance(senderState.getBalance().longValue());
                 block.setSenderNonce(senderState.getNonce().longValue());
 
-                if (MsgType.Wiring == block.getTxMsg().getTxData().getMsgType()) {
+                if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
 
                     AccountState receiverState = miningTrack.getAccount(this.chainID,
-                            block.getTxMsg().getTxData().getReceiver());
+                            ((WiringCoinsTx)tx).getReceiver());
 
                     block.setReceiverBalance(receiverState.getBalance().longValue());
                 }
@@ -1319,7 +1384,7 @@ public class Chain {
             return null;
         }
 
-        return block;
+        return blockContainer;
     }
 
     /**
@@ -1458,9 +1523,16 @@ public class Chain {
 
             // publish immutable item
             // publish block randomly
-            Block block = getBlockRandomlyFromDB();
-            if (null != block) {
-                DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(block.getEncoded());
+            BlockContainer blockContainer = getBlockContainerRandomlyFromDB();
+            if (null != blockContainer) {
+                if (null != blockContainer.getTx()) {
+                    // put tx
+                    DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(blockContainer.getTx().getEncoded());
+                    TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+                }
+
+                // put block
+                DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(blockContainer.getBlock().getEncoded());
                 TorrentDHTEngine.getInstance().dhtPut(immutableItem);
             }
 
@@ -1481,19 +1553,19 @@ public class Chain {
     }
 
     /**
-     * extract accounts from block
-     * @param block block to be extracted
+     * extract accounts from block container
+     * @param blockContainer block container to be extracted
      * @return account set
      */
-    private Set<ByteArrayWrapper> extractAccountFromBlock(Block block) {
+    private Set<ByteArrayWrapper> extractAccountFromBlockContainer(BlockContainer blockContainer) {
         Set<ByteArrayWrapper> set = new HashSet<>();
-        if (null != block && block.getBlockNum() > 0) {
-            set.add(new ByteArrayWrapper(block.getMinerPubkey()));
-            Transaction tx = block.getTxMsg();
+        if (null != blockContainer && blockContainer.getBlock().getBlockNum() > 0) {
+            set.add(new ByteArrayWrapper(blockContainer.getBlock().getMinerPubkey()));
+            Transaction tx = blockContainer.getTx();
             if (null != tx) {
                 set.add(new ByteArrayWrapper(tx.getSenderPubkey()));
-                if (MsgType.Wiring == tx.getTxData().getMsgType()) {
-                    set.add(new ByteArrayWrapper(tx.getTxData().getReceiver()));
+                if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                    set.add(new ByteArrayWrapper(((WiringCoinsTx)tx).getReceiver()));
                 }
             }
         }
@@ -1501,15 +1573,15 @@ public class Chain {
     }
 
     /**
-     * extract accounts from block list
-     * @param list block list
+     * extract accounts from block container list
+     * @param list block container list
      * @return account set
      */
-    private Set<ByteArrayWrapper> extractAccountFromBlock(List<Block> list) {
+    private Set<ByteArrayWrapper> extractAccountFromBlockContainer(List<BlockContainer> list) {
         Set<ByteArrayWrapper> set = new HashSet<>();
         if (null != list) {
-            for (Block block: list) {
-                Set<ByteArrayWrapper> accountSet = extractAccountFromBlock(block);
+            for (BlockContainer blockContainer: list) {
+                Set<ByteArrayWrapper> accountSet = extractAccountFromBlockContainer(blockContainer);
                 set.addAll(accountSet);
             }
         }

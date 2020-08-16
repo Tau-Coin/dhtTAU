@@ -105,7 +105,7 @@ public class GenesisTx extends Transaction {
      * @return
      */
     @Override
-    public byte[] getEncodedBytes() {
+    public byte[] getEncoded() {
         if(encodedBytes == null) {
             List list = new ArrayList();
             list.add(this.version);
