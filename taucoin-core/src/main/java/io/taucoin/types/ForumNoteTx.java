@@ -87,8 +87,8 @@ public class ForumNoteTx extends Transaction {
      * @param encodedBytes:complete byte encoding.
      */
     public ForumNoteTx(byte[] encodedBytes) {
-        this.encodedBytes = encodedBytes;
-        this.isParsed = false; }
+        super(encodedBytes);
+    }
 
     /**
      * encoding transaction to bytes.

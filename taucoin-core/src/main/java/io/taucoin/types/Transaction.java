@@ -116,6 +116,14 @@ public abstract class Transaction {
         this.nonce = nonce;
     }
 
+    /**
+     * construct transaction from complete byte encoding.
+     * @param encodedBytes:complete byte encoding.
+     */
+    public Transaction(byte[] encodedBytes) {
+        this.encodedBytes = encodedBytes;
+        this.isParsed = false;
+    }
 
     /**
      * get tx version.

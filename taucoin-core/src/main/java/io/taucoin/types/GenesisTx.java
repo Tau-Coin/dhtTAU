@@ -97,8 +97,7 @@ public class GenesisTx extends Transaction {
      * @param encodedBytes:complete byte encoding.
      */
     public GenesisTx(byte[] encodedBytes) {
-        this.encodedBytes = encodedBytes;
-        this.isParsed = false;
+        super(encodedBytes);
     }
 
     /**

@@ -87,8 +87,7 @@ public class WiringCoinsTx extends Transaction {
      * @param encodedBytes:complete byte encoding.
      */
     public WiringCoinsTx(byte[] encodedBytes) {
-        this.encodedBytes = encodedBytes;
-        this.isParsed = false;
+        super(encodedBytes);
     }
 
     /**
