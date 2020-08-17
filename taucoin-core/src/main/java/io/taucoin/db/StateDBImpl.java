@@ -12,7 +12,7 @@ import java.util.*;
 // 公钥发布的mutable message也会放在stateDB
 public class StateDBImpl implements StateDB {
 
-    private KeyValueDataBase db;
+    private final KeyValueDataBase db;
 
     public StateDBImpl(KeyValueDataBase db) {
         this.db = db;

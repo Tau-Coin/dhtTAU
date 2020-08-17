@@ -328,7 +328,7 @@ public class TransactionPoolImpl implements TransactionPool {
         long currentNonce = getNonce(pubKey);
         if (tx.getNonce() != currentNonce + 1) {
             logger.error("ChainID:[{}]-[{}] Nonce mismatch.",
-                    chainID.toString(), Hex.toHexString(tx.getTxID()));
+                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
             return;
         }
 
@@ -339,7 +339,7 @@ public class TransactionPoolImpl implements TransactionPool {
         if (null != txid) {
             if (Arrays.equals(txid, tx.getTxID())) {
                 logger.info("ChainID:[{}]-Tx[{}] is already in pool.",
-                        chainID.toString(), Hex.toHexString(tx.getTxID()));
+                        new String(this.chainID), Hex.toHexString(tx.getTxID()));
                 return;
             } else {
                 //
@@ -347,7 +347,7 @@ public class TransactionPoolImpl implements TransactionPool {
                 if (null != transaction) {
                     if (transaction.getTxFee() >= tx.getTxFee()) {
                         logger.info("ChainID:[{}]-Tx[{}] fee is too little.",
-                                chainID.toString(), Hex.toHexString(tx.getTxID()));
+                                new String(this.chainID), Hex.toHexString(tx.getTxID()));
                         return;
                     } else {
                         // replace the old tx with the new one: remove the old one, then add the new one later

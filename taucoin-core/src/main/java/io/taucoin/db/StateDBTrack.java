@@ -17,18 +17,18 @@ public class StateDBTrack implements StateDB {
 
     private static final Logger logger = LoggerFactory.getLogger("StateTrack");
 
-    private byte[] chainID;
+    private final byte[] chainID;
 
     // cache changed account only
     // key: chainID + pubKey
     // value: account state
-    private Map<ByteArrayWrapper, AccountState> cacheAccounts = new HashMap<>();
+    private final Map<ByteArrayWrapper, AccountState> cacheAccounts = new HashMap<>();
 
     private byte[] bestBlockHash;
 
     private byte[] syncBlockHash;
 
-    private StateDB stateDB;
+    private final StateDB stateDB;
 
     public StateDBTrack(StateDB stateDB, byte[] chainID) {
         this.stateDB = stateDB;

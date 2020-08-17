@@ -268,8 +268,9 @@ public class Chain {
                     logger.info("Chain ID[{}]: Sleep 1 s", new String(this.chainID));
                     try {
                         Thread.sleep(1000);
-                    } catch (Exception e) {
-                        logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+                    } catch (InterruptedException e) {
+                        logger.info(new String(this.chainID) + ":" + e.getMessage(), e);
+                        Thread.currentThread().interrupt();
                     }
                 }
 
@@ -387,8 +388,9 @@ public class Chain {
                     logger.info("Chain ID[{}]: Voting Sleep 1 s", new String(this.chainID));
                     try {
                         Thread.sleep(1000);
-                    } catch (Exception e) {
-                        logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+                    } catch (InterruptedException e) {
+                        logger.info(new String(this.chainID) + ":" + e.getMessage(), e);
+                        Thread.currentThread().interrupt();
                     }
                 }
 
@@ -405,8 +407,9 @@ public class Chain {
                     logger.info("Chain ID[{}]: Mining Sleep 1 s", new String(this.chainID));
                     try {
                         Thread.sleep(1000);
-                    } catch (Exception e) {
-                        logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+                    } catch (InterruptedException e) {
+                        logger.info(new String(this.chainID) + ":" + e.getMessage(), e);
+                        Thread.currentThread().interrupt();
                     }
                 }
 
@@ -1405,8 +1408,9 @@ public class Chain {
                 logger.debug("Chain ID[{}]: Tx Thread Sleep 1 s", new String(this.chainID));
                 try {
                     Thread.sleep(1000);
-                } catch (Exception e) {
+                } catch (InterruptedException e) {
                     logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+                    Thread.currentThread().interrupt();
                 }
             }
 

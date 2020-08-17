@@ -60,7 +60,12 @@ public class BlockDB implements BlockStore {
      */
     private Transaction getTransactionByHash(byte[] chainID, byte[] hash) throws Exception {
         byte[] encode = db.get(PrefixKey.txKey(chainID, hash));
-        return TransactionFactory.parseTransaction(encode);
+        if (null != encode) {
+            return TransactionFactory.parseTransaction(encode);
+        }
+
+        logger.info("ChainID[{}]:Cannot find block by hash:{}", new String(chainID), Hex.toHexString(hash));
+        return null;
     }
 
     /**
@@ -72,11 +77,11 @@ public class BlockDB implements BlockStore {
      */
     @Override
     public Block getBlockByHash(byte[] chainID, byte[] hash) throws Exception {
-        byte[] rlp = db.get(PrefixKey.blockKey(chainID, hash));
-        if (null != rlp) {
-            return new Block(rlp);
+        byte[] blockEncode = db.get(PrefixKey.blockKey(chainID, hash));
+        if (null != blockEncode) {
+            return new Block(blockEncode);
         }
-        logger.info("ChainID[{}]:Cannot find block by hash:{}", chainID.toString(), Hex.toHexString(hash));
+        logger.info("ChainID[{}]:Cannot find block by hash:{}", new String(chainID), Hex.toHexString(hash));
         return null;
     }
 
@@ -117,7 +122,7 @@ public class BlockDB implements BlockStore {
     private BlockInfo getBlockInfo(byte[] chainID, long number, byte[] hash) throws Exception {
         byte[] rlp = db.get(PrefixKey.blockInfoKey(chainID, number));
         if (null == rlp) {
-            logger.info("ChainID[{}]:There is no block in this height:{}", chainID.toString(), number);
+            logger.info("ChainID[{}]:There is no block in this height:{}", new String(chainID), number);
             return null;
         }
         BlockInfos blockInfos = new BlockInfos(rlp);
@@ -147,7 +152,7 @@ public class BlockDB implements BlockStore {
             return getBlockInfo(chainID, block.getBlockNum(), hash);
         }
 
-        logger.info("ChainID[{}]:Cannot find block info by hash:{}", chainID.toString(), Hex.toHexString(hash));
+        logger.info("ChainID[{}]:Cannot find block info by hash:{}", new String(chainID), Hex.toHexString(hash));
         return null;
     }
 
@@ -161,7 +166,7 @@ public class BlockDB implements BlockStore {
     public Block getMainChainBlockByNumber(byte[] chainID, long number) throws Exception {
         byte[] rlp = db.get(PrefixKey.blockInfoKey(chainID, number));
         if (null == rlp) {
-            logger.info("ChainID[{}]:There is no block in this height:{}", chainID.toString(), number);
+            logger.info("ChainID[{}]:There is no block in this height:{}", new String(chainID), number);
             return null;
         }
 
@@ -283,7 +288,7 @@ public class BlockDB implements BlockStore {
         if (isMainChain && block.getBlockNum() > ChainParam.WARNING_RANGE) {
             long number = block.getBlockNum() - ChainParam.WARNING_RANGE;
             logger.info("ChainID[{}]: Delete fork chain block in height:{}",
-                    chainID.toString(), number);
+                    new String(chainID), number);
             delForkChainBlockByNumber(chainID, number);
         }
     }
@@ -314,7 +319,7 @@ public class BlockDB implements BlockStore {
         if (isMainChain && block.getBlockNum() > ChainParam.WARNING_RANGE) {
             long number = block.getBlockNum() - ChainParam.WARNING_RANGE;
             logger.info("ChainID[{}]: Delete fork chain block in height:{}",
-                    chainID.toString(), number);
+                    new String(chainID), number);
             delForkChainBlockByNumber(chainID, number);
         }
     }
@@ -328,7 +333,7 @@ public class BlockDB implements BlockStore {
     public void delForkChainBlockByNumber(byte[] chainID, long number) throws Exception {
         byte[] rlp = db.get(PrefixKey.blockInfoKey(chainID, number));
         if (null == rlp) {
-            logger.info("ChainID[{}]: There is no block in this height:{}", chainID.toString(), number);
+            logger.info("ChainID[{}]: There is no block in this height:{}", new String(chainID), number);
             return;
         }
         BlockInfos blockInfos = new BlockInfos(rlp);
@@ -338,7 +343,9 @@ public class BlockDB implements BlockStore {
                 // delete tx
                 Block block = getBlockByHash(chainID, list.get(i).getHash());
                 if (null != block) {
-                    // TODO:: delete tx
+                    if (null != block.getTxHash()) {
+                        db.delete(PrefixKey.txKey(chainID, block.getTxHash()));
+                    }
                 }
                 // delete non-main chain block
                 db.delete(PrefixKey.blockKey(chainID, list.get(i).getHash()));
@@ -359,7 +366,7 @@ public class BlockDB implements BlockStore {
     public Set<Block> getChainAllBlocks(byte[] chainID) throws Exception {
         Set<byte[]> blocks = db.retrieveKeysWithPrefix(PrefixKey.blockPrefix(chainID));
         if (null == blocks) {
-            logger.info("ChainID[{}]: Cannot find any block", chainID.toString());
+            logger.info("ChainID[{}]: Cannot find any block", new String(chainID));
             return null;
         }
         Set<Block> set = new HashSet<>();
@@ -403,14 +410,14 @@ public class BlockDB implements BlockStore {
                 }
             }
         } else {
-            logger.info("ChainID[{}]: Cannot find block info with current block.", chainID.toString());
+            logger.info("ChainID[{}]: Cannot find block info with current block.", new String(chainID));
         }
 
         byte[] rlp = db.get(PrefixKey.blockKey(chainID, block.getPreviousBlockHash()));
         // if previous is null, return
         if (null == rlp) {
             logger.error("ChainID[{}]: Cannot find previous block, hash[{}]",
-                    chainID.toString(), Hex.toHexString(block.getPreviousBlockHash()));
+                    new String(chainID), Hex.toHexString(block.getPreviousBlockHash()));
             return null;
         }
         Block previousBlock = new Block(rlp);
@@ -419,7 +426,7 @@ public class BlockDB implements BlockStore {
             infoRLP = db.get(PrefixKey.blockInfoKey(chainID, previousBlock.getBlockNum()));
             if (null == infoRLP) {
                 logger.error("ChainID[{}]: Cannot find block info with this block number:{}",
-                        chainID.toString(), previousBlock.getBlockNum());
+                        new String(chainID), previousBlock.getBlockNum());
                 return null;
             }
             BlockInfos blockInfos = new BlockInfos(infoRLP);
@@ -438,11 +445,11 @@ public class BlockDB implements BlockStore {
                         // if previous is null, return
                         if (null == rlp) {
                             logger.error("ChainID[{}]: Cannot find previous block, hash[{}].",
-                                    chainID.toString(), Hex.toHexString(previousBlock.getPreviousBlockHash()));
+                                    new String(chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
                             return null;
                         }
                         logger.info("ChainID[{}]: Seek previous block hash[{}].",
-                                chainID.toString(), Hex.toHexString(previousBlock.getPreviousBlockHash()));
+                                new String(chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
                         previousBlock = new Block(rlp);
                         break;
                     }
@@ -451,7 +458,7 @@ public class BlockDB implements BlockStore {
             // if not found this block info in this height
             if (!found) {
                 logger.error("ChainID[{}]: Cannot find block info, hash[{}]",
-                        chainID.toString(), Hex.toHexString(previousBlock.getBlockHash()));
+                        new String(chainID), Hex.toHexString(previousBlock.getBlockHash()));
                 return null;
             }
         }
