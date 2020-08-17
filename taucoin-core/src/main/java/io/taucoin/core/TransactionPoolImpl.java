@@ -4,6 +4,8 @@ import io.taucoin.account.AccountManager;
 import io.taucoin.db.StateDB;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.TypesConfig;
+import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.util.ByteArrayWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -369,33 +371,26 @@ public class TransactionPoolImpl implements TransactionPool {
      */
     private boolean checkTypeAndBalance(Transaction tx) {
         try {
-            switch (tx.getTxData().getMsgType()) {
-                case Wiring: {
-                    long cost = tx.getTxData().getAmount() + tx.getTxFee();
-                    AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
-                    if (accountState.getBalance().longValue() < cost) {
-                        logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
-                                new String(this.chainID), Hex.toHexString(tx.getTxID()));
-                        return false;
-                    }
-                    break;
-                }
-                case RegularForum:
-                case ForumComment: {
-                    long cost = tx.getTxFee();
-                    AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
-                    if (accountState.getBalance().longValue() < cost) {
-                        logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
-                                new String(this.chainID), Hex.toHexString(tx.getTxID()));
-                        return false;
-                    }
-                    break;
-                }
-                default: {
-                    logger.error("Chain ID[{}]: tx[{}] Type is not supported!.",
+            if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                long cost = ((WiringCoinsTx)tx).getAmount() + tx.getTxFee();
+                AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
+                if (accountState.getBalance().longValue() < cost) {
+                    logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
                             new String(this.chainID), Hex.toHexString(tx.getTxID()));
                     return false;
                 }
+            } else if (TypesConfig.TxType.FNoteType.ordinal() == tx.getTxType()) {
+                long cost = tx.getTxFee();
+                AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
+                if (accountState.getBalance().longValue() < cost) {
+                    logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
+                            new String(this.chainID), Hex.toHexString(tx.getTxID()));
+                    return false;
+                }
+            } else {
+                logger.error("Chain ID[{}]: tx[{}] Type is not supported!.",
+                        new String(this.chainID), Hex.toHexString(tx.getTxID()));
+                return false;
             }
         } catch (Exception e) {
             logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
@@ -693,32 +688,25 @@ public class TransactionPoolImpl implements TransactionPool {
                     }
 
                     // check type and balance
-                    switch (tx.getTxData().getMsgType()) {
-                        case Wiring: {
-                            long cost = tx.getTxData().getAmount() + tx.getTxFee();
+                    if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                        long cost = ((WiringCoinsTx)tx).getAmount() + tx.getTxFee();
 
-                            if (accountState.getBalance().longValue() < cost) {
-                                logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
-                                        new String(this.chainID), Hex.toHexString(tx.getTxID()));
-                                removeRemote(tx);
-                            }
-                            break;
-                        }
-                        case RegularForum:
-                        case ForumComment: {
-                            long cost = tx.getTxFee();
-                            if (accountState.getBalance().longValue() < cost) {
-                                logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
-                                        new String(this.chainID), Hex.toHexString(tx.getTxID()));
-                                removeRemote(tx);
-                            }
-                            break;
-                        }
-                        default: {
-                            logger.error("Chain ID[{}]: tx[{}] Type is not supported!",
+                        if (accountState.getBalance().longValue() < cost) {
+                            logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
                                     new String(this.chainID), Hex.toHexString(tx.getTxID()));
                             removeRemote(tx);
                         }
+                    } else if (TypesConfig.TxType.FNoteType.ordinal() == tx.getTxType()) {
+                        long cost = tx.getTxFee();
+                        if (accountState.getBalance().longValue() < cost) {
+                            logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
+                                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
+                            removeRemote(tx);
+                        }
+                    } else {
+                        logger.error("Chain ID[{}]: tx[{}] Type is not supported!",
+                                new String(this.chainID), Hex.toHexString(tx.getTxID()));
+                        removeRemote(tx);
                     }
                 }
             }

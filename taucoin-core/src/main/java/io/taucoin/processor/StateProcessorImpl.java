@@ -121,23 +121,6 @@ public class StateProcessorImpl implements StateProcessor {
                     sendState.subBalance(BigInteger.valueOf(fee));
                     sendState.increaseNonce();
                     stateDB.updateAccount(this.chainID, sender, sendState);
-                } else if (TypesConfig.TxType.GenesisType.ordinal() == tx.getTxType()) {
-                    // check balance
-                    if (sendState.getBalance().longValue() < fee) {
-                        logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
-                                fee, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
-                        return INVALID_TX;
-                    }
-
-                    //Execute the transaction
-                    // miner
-                    AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
-                    minerState.addBalance(BigInteger.valueOf(fee));
-                    stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
-                    // sender
-                    sendState.subBalance(BigInteger.valueOf(fee));
-                    sendState.increaseNonce();
-                    stateDB.updateAccount(this.chainID, sender, sendState);
                 } else {
                     logger.error("Transaction type not supported");
                     return INVALID_TX;
