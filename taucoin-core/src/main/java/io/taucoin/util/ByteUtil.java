@@ -26,68 +26,6 @@ public class ByteUtil {
     }
 
     /**
-     * The regular {@link BigInteger#toByteArray()} method isn't quite what we often need:
-     * it appends a leading zero to indicate that the number is positive and may need padding.
-     *
-     * @param b the integer to format into a byte array
-     * @param numBytes the desired size of the resulting byte array
-     * @return numBytes byte long array.
-     */
-    public static byte[] bigIntegerToBytes(BigInteger b, int numBytes) {
-        if (b == null)
-            return null;
-        byte[] bytes = new byte[numBytes];
-        byte[] biBytes = b.toByteArray();
-        int start = (biBytes.length == numBytes + 1) ? 1 : 0;
-        int length = Math.min(biBytes.length, numBytes);
-        System.arraycopy(biBytes, start, bytes, numBytes - length, length);
-        return bytes;
-    }
-
-    /**
-     * Omitting sign indication byte.
-     * <br><br>
-     * Instead of {org.spongycastle.util.BigIntegers#asUnsignedByteArray(BigInteger)}
-     * <br>we use this custom method to avoid an empty array in case of BigInteger.ZERO
-     *
-     * @param value - any big integer number. A <code>null</code>-value will return <code>null</code>
-     * @return A byte array without a leading zero byte if present in the signed encoding.
-     *      BigInteger.ZERO will return an array with length 1 and byte-value 0.
-     */
-    public static byte[] bigIntegerToBytes(BigInteger value) {
-        if (value == null)
-            return null;
-
-        byte[] data = value.toByteArray();
-
-        if (data.length != 1 && data[0] == 0) {
-            byte[] tmp = new byte[data.length - 1];
-            System.arraycopy(data, 1, tmp, 0, tmp.length);
-            data = tmp;
-        }
-        return data;
-    }
-
-    /**
-     * Returns the amount of nibbles that match each other from 0 ...
-     * amount will never be larger than smallest input
-     *
-     * @param a - first input
-     * @param b - second input
-     * @return Number of bytes that match
-     */
-    public static int matchingNibbleLength(byte[] a, byte[] b) {
-        int i = 0;
-        int length = a.length < b.length ? a.length : b.length;
-        while (i < length) {
-            if (a[i] != b[i])
-                return i;
-            i++;
-        }
-        return i;
-    }
-
-    /**
      * Converts a long value into a byte array.
      *
      * @param val - long value to convert
@@ -95,16 +33,6 @@ public class ByteUtil {
      */
     public static byte[] longToBytes(long val) {
         return ByteBuffer.allocate(8).putLong(val).array();
-    }
-
-    /**
-     * Converts a short value into a byte array.
-     *
-     * @param val - short value to convert
-     * @return <code>byte[]</code> of length 2, representing the short value
-     */
-    public static byte[] shortToBytes(short val) {
-        return ByteBuffer.allocate(2).putShort(val).array();
     }
 
     /**
@@ -126,7 +54,7 @@ public class ByteUtil {
      *
      * @param array - long arraylist to convert
      * @param byteLength - return length of bytes
-     * @return decimal value with leading byte that are zeroes striped
+     * @return transaformed bytes array
      */
     public static byte[] longArrayToBytes(ArrayList<Long> longArray, int byteLength) {
         if (null == longArray) {
@@ -186,6 +114,12 @@ public class ByteUtil {
         return retval;
     }
 
+    /**
+     * Converts a int into a byte array.
+     *
+     * @param val - int to convert
+     * @return transaformed bytes array
+     */
     public static byte[] intToBytes(int val){
 
         if (val == 0) return EMPTY_BYTE_ARRAY;
@@ -262,26 +196,6 @@ public class ByteUtil {
     public static byte[] toByte(String str){
         return Hex.decode(str);
     }
-    /**
-     * Calculate packet length
-     *
-     * @param msg byte[]
-     * @return byte-array with 4 elements
-     */
-    public static byte[] calcPacketLength(byte[] msg) {
-        int msgLen = msg.length;
-        return new byte[]{
-                (byte) ((msgLen >> 24) & 0xFF),
-                (byte) ((msgLen >> 16) & 0xFF),
-                (byte) ((msgLen >> 8) & 0xFF),
-                (byte) ((msgLen) & 0xFF)};
-    }
-
-    public static short byteArrayToShort(byte[] b) {
-        if (b == null || b.length == 0)
-            return 0;
-        return new BigInteger(1, b).shortValue();
-    }
 
     /**
      * Cast hex encoded value from byte[] to int
@@ -334,25 +248,9 @@ public class ByteUtil {
         return 0;
     }
 
-    public static int byteArrayToSignInt(byte[] b){
-        if (b.length != 4){
-            throw new IllegalArgumentException("this function only accept 4 bytes argument");
-        }
-        if(b[0] == b[1] && b[1] == b[2] && b[2] == b[3] && b[3] == 0x00){
-            return new BigInteger(0,b).intValue();
-        }
-        if(b[0] <= 0x7f){
-            return new BigInteger(1,b).intValue();
-        }
-        if(b[0] > 0x7f){
-            return new BigInteger(-1,b).intValue();
-        }
-        return 0;
-    }
-
     /**
      * slice bytes array into array consisting of long number.
-     * @param b: byte array will be cut into piece num elements long array.
+     * @param b: byte array will be cut into piece num elements long arry.
      * @param piece: element num of long array.
      * @return long array that express this bytes array b
      */
@@ -369,23 +267,10 @@ public class ByteUtil {
         return retval;
     }
 
-    public static int[] byteArrayToSignIntArray(byte[] b,int piece){
-        if(b.length != 4*piece){
-            throw new IllegalArgumentException("bytes array length must == "+4*piece);
-        }
-        int[] retval = new int[piece];
-        byte[] slice = new byte[4];
-        for(int i = 0;i <piece;++i){
-            System.arraycopy(b,4*i,slice,0,4);
-            retval[i] = byteArrayToSignInt(slice);
-        }
-        return retval;
-    }
-
     /**
      * the last bytes piece in temp should be padding 0 before head byte.
-     * @param b:[byte,byte,......,byte]
-     * @param piece: b.length/8 +1
+     * @param b: [byte, byte, ......, byte]
+     * @param piece: b.length / 8 +1
      * @return
      */
     public static ArrayList<Long> unAlignByteArrayToSignLongArray(byte[] b, int piece){
@@ -402,6 +287,11 @@ public class ByteUtil {
         return byteArrayToSignLongArray(temp, piece);
     }
 
+    /**
+     * Transform  string into ArrayList<Long>
+     * @param str: string data
+     * @return transformed ArrayList<Long></>
+     */
     public static ArrayList<Long> stringToLongArrayList(String str){
         int start = str.indexOf("'");
         int end  = str.lastIndexOf("'");
@@ -414,6 +304,11 @@ public class ByteUtil {
         return ret;
     }
 
+    /**
+     * Transform  string into ArrayList<ArrayList<Long>>
+     * @param str: string data
+     * @return transformed ArrayList<ArrayList<Long>></>
+     */
     public static ArrayList<ArrayList<Long>> stringToLong2ArrayList(String str) {
         //],
         ArrayList<ArrayList<Long>> aTemp = new ArrayList<>();
@@ -450,26 +345,6 @@ public class ByteUtil {
     }
 
     /**
-     * Calculate the number of bytes need
-     * to encode the number
-     *
-     * @param val - number
-     * @return number of min bytes used to encode the number
-     */
-    public static int numBytes(String val) {
-
-        BigInteger bInt = new BigInteger(val);
-        int bytes = 0;
-
-        while (!bInt.equals(BigInteger.ZERO)) {
-            bInt = bInt.shiftRight(8);
-            ++bytes;
-        }
-        if (bytes == 0) ++bytes;
-        return bytes;
-    }
-
-    /**
      * @param arg - not more that 32 bits
      * @return - bytes of the value pad with complete to 32 zeroes
      */
@@ -498,25 +373,6 @@ public class ByteUtil {
             ++j;
         }
         return val;
-    }
-
-    /**
-     * encode the values and concatenate together
-     *
-     * @param args Object
-     * @return byte[]
-     */
-    public static byte[] encodeDataList(Object... args) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        for (Object arg : args) {
-            byte[] val = encodeValFor32Bits(arg);
-            try {
-                baos.write(val);
-            } catch (IOException e) {
-                throw new Error("Happen something that should never happen ", e);
-            }
-        }
-        return baos.toByteArray();
     }
 
     public static int firstNonZeroByte(byte[] data) {
@@ -549,72 +405,8 @@ public class ByteUtil {
         }
     }
 
-    /**
-     * increment byte array as a number until max is reached
-     *
-     * @param bytes byte[]
-     * @return boolean
-     */
-    public static boolean increment(byte[] bytes) {
-        final int startIndex = 0;
-        int i;
-        for (i = bytes.length - 1; i >= startIndex; i--) {
-            bytes[i]++;
-            if (bytes[i] != 0)
-                break;
-        }
-        // we return false when all bytes are 0 again
-        return (i >= startIndex || bytes[startIndex] != 0);
-    }
-
-    /**
-     * Utility function to copy a byte array into a new byte array with given size.
-     * If the src length is smaller than the given size, the result will be left-padded
-     * with zeros.
-     *
-     * @param value - a BigInteger with a maximum value of 2^256-1
-     * @return Byte array of given size with a copy of the <code>src</code>
-     */
-    public static byte[] copyToArray(BigInteger value) {
-        byte[] src = ByteUtil.bigIntegerToBytes(value);
-        byte[] dest = ByteBuffer.allocate(32).array();
-        System.arraycopy(src, 0, dest, dest.length - src.length, src.length);
-        return dest;
-    }
-
-
     public static ByteArrayWrapper wrap(byte[] data) {
         return new ByteArrayWrapper(data);
-    }
-
-    public static byte[] setBit(byte[] data, int pos, int val) {
-
-        if ((data.length * 8) - 1 < pos)
-            throw new Error("outside byte array limit, pos: " + pos);
-
-        int posByte = data.length - 1 - (pos) / 8;
-        int posBit = (pos) % 8;
-        byte setter = (byte) (1 << (posBit));
-        byte toBeSet = data[posByte];
-        byte result;
-        if (val == 1)
-            result = (byte) (toBeSet | setter);
-        else
-            result = (byte) (toBeSet & ~setter);
-
-        data[posByte] = result;
-        return data;
-    }
-
-    public static int getBit(byte[] data, int pos) {
-
-        if ((data.length * 8) - 1 < pos)
-            throw new Error("outside byte array limit, pos: " + pos);
-
-        int posByte = data.length - 1 - pos / 8;
-        int posBit = pos % 8;
-        byte dataByte = data[posByte];
-        return Math.min(1, (dataByte & (1 << (posBit))));
     }
 
     public static byte[] and(byte[] b1, byte[] b2) {
@@ -676,88 +468,12 @@ public class ByteUtil {
         return (array.length == 1 && array[0] == 0);
     }
 
-
-    public static Set<byte[]> difference(Set<byte[]> setA, Set<byte[]> setB){
-
-        Set<byte[]> result = new HashSet<>();
-
-        for (byte[] elementA : setA){
-            boolean found = false;
-            for (byte[] elementB : setB){
-
-                if (Arrays.equals(elementA, elementB)){
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) result.add(elementA);
-        }
-
-        return result;
-    }
-
     public static int length(byte[]... bytes) {
         int result = 0;
         for (byte[] array : bytes) {
             result += (array == null) ? 0 : array.length;
         }
         return result;
-    }
-
-    public static byte[] intsToBytes(int[] arr, boolean bigEndian) {
-        byte[] ret = new byte[arr.length * 4];
-        intsToBytes(arr,ret, bigEndian);
-        return ret;
-    }
-
-    public static int[] bytesToInts(byte[] arr, boolean bigEndian) {
-        int[] ret = new int[arr.length / 4];
-        bytesToInts(arr, ret, bigEndian);
-        return ret;
-    }
-
-    public static void bytesToInts(byte[] b, int[] arr, boolean bigEndian) {
-        if (!bigEndian) {
-            int off = 0;
-            for (int i = 0; i < arr.length; i++) {
-                int ii = b[off++] & 0x000000FF;
-                ii |= (b[off++] << 8) & 0x0000FF00;
-                ii |= (b[off++] << 16) & 0x00FF0000;
-                ii |= (b[off++] << 24);
-                arr[i] = ii;
-            }
-        } else {
-            int off = 0;
-            for (int i = 0; i < arr.length; i++) {
-                int ii = b[off++] << 24;
-                ii |= (b[off++] << 16) & 0x00FF0000;
-                ii |= (b[off++] << 8) & 0x0000FF00;
-                ii |= b[off++] & 0x000000FF;
-                arr[i] = ii;
-            }
-        }
-    }
-
-    public static void intsToBytes(int[] arr, byte[] b, boolean bigEndian) {
-        if (!bigEndian) {
-            int off = 0;
-            for (int i = 0; i < arr.length; i++) {
-                int ii = arr[i];
-                b[off++] = (byte) (ii & 0xFF);
-                b[off++] = (byte) ((ii >> 8) & 0xFF);
-                b[off++] = (byte) ((ii >> 16) & 0xFF);
-                b[off++] = (byte) ((ii >> 24) & 0xFF);
-            }
-        } else {
-            int off = 0;
-            for (int i = 0; i < arr.length; i++) {
-                int ii = arr[i];
-                b[off++] = (byte) ((ii >> 24) & 0xFF);
-                b[off++] = (byte) ((ii >> 16) & 0xFF);
-                b[off++] = (byte) ((ii >> 8) & 0xFF);
-                b[off++] = (byte) (ii & 0xFF);
-            }
-        }
     }
 
     /**
