@@ -1269,8 +1269,8 @@ public class Chain {
                     getBlock().getGenerationSignature(), pubKey);
 
             // check if target >= hit
-            BigInteger target = this.pot.calculateMinerTargetValue(baseTarget, power,
-                    System.currentTimeMillis() / 1000 - this.bestBlockContainer.getBlock().getTimeStamp());
+//            BigInteger target = this.pot.calculateMinerTargetValue(baseTarget, power,
+//                    System.currentTimeMillis() / 1000 - this.bestBlockContainer.getBlock().getTimeStamp());
 
             BigInteger hit = this.pot.calculateRandomHit(genSig);
 

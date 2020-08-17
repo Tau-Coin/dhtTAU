@@ -2,6 +2,8 @@ package io.taucoin.core;
 
 import io.taucoin.db.BlockStore;
 import io.taucoin.types.Block;
+import io.taucoin.util.HashUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -27,7 +29,7 @@ public class ProofOfTransaction {
     private final int maxRatio;
 
     private final int minBlockTime;
-    private final int maxBlockTime;
+//    private final int maxBlockTime;
 
     private final BigInteger genesisBaseTarget;
 
@@ -46,7 +48,7 @@ public class ProofOfTransaction {
 
         // minBlockTime : aAverageBlockTime : maxBlockTime = 1 : 5 : 9
         this.minBlockTime = this.averageBlockTime / 5;
-        this.maxBlockTime = this.averageBlockTime * 9 / 5;
+//        this.maxBlockTime = this.averageBlockTime * 9 / 5;
 
         // BaseTarget and Time are in inverse proportion
         // genesisBaseTarget = CommunityChainGenesisBaseTarget * AverageCommunityChainBlockTime / averageBlockTime
@@ -153,7 +155,7 @@ public class ProofOfTransaction {
         System.arraycopy(preGenerationSignature, 0, data, 0, preGenerationSignature.length);
         System.arraycopy(pubkey, 0, data, preGenerationSignature.length, pubkey.length);
 
-        return Sha256Hash.hash(data);
+        return HashUtil.sha1hash(data);
     }
 
 
@@ -236,9 +238,9 @@ public class ProofOfTransaction {
 
         if (timeInterval < this.minBlockTime) {
             timeInterval = this.minBlockTime;
-        } else if (timeInterval > this.maxBlockTime) {
+        }/* else if (timeInterval > this.maxBlockTime) {
             timeInterval = this.maxBlockTime;
-        }
+        }*/
         logger.info("Chain ID:{}: Final time interval:{}", new String(this.chainID), timeInterval);
 
         return timeInterval;
@@ -246,20 +248,20 @@ public class ProofOfTransaction {
 
     /**
      * verifyHit verifies that target is greater than hit or the time meets the requirements
-     * @param hit
-     * @param baseTarget
-     * @param power
-     * @param timeInterval
-     * @return
+     * @param hit hit
+     * @param baseTarget base target
+     * @param power power
+     * @param timeInterval time interval
+     * @return true/false
      */
     public boolean verifyHit(BigInteger hit, BigInteger baseTarget, BigInteger power, long timeInterval) {
         if (timeInterval < this.minBlockTime) {
             logger.error("Chain ID:{}: Time interval is less than MinBlockTime[{}]", new String(this.chainID), this.minBlockTime);
             return false;
-        } else if (timeInterval >= this.maxBlockTime) {
+        } /*else if (timeInterval >= this.maxBlockTime) {
             logger.info("Chain ID:{}: OK. Time interval is greater than MaxBlockTime[{}]", new String(this.chainID), this.maxBlockTime);
             return true;
-        } else {
+        } */else {
             BigInteger target = this.calculateMinerTargetValue(baseTarget, power, timeInterval);
             if (target.compareTo(hit) <= 0) {
                 logger.error("Chain ID:{}: Invalid POT: target[{}] <= hit[{}]", new String(this.chainID), target, hit);
