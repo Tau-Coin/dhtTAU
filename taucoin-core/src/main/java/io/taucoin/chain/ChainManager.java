@@ -17,6 +17,7 @@ import io.taucoin.processor.StateProcessor;
 import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.types.TypesConfig;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
@@ -231,7 +232,7 @@ public class ChainManager {
             return false;
         }
 
-        if (tx.getTxType() != ChainParam.TxType.GenesisType.ordinal()) {
+        if (tx.getTxType() != TypesConfig.TxType.GenesisType.ordinal()) {
             logger.error("Genesis type mismatch!");
             return false;
         }

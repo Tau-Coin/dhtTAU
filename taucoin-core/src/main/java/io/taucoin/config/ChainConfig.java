@@ -21,7 +21,6 @@ import io.taucoin.param.ChainParam;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
-import io.taucoin.util.ByteUtil;
 
 import com.frostwire.jlibtorrent.swig.byte_vector;
 import com.frostwire.jlibtorrent.swig.sha1_hash;
@@ -31,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.util.HashMap;
 
-import static io.taucoin.param.ChainParam.TxType;
+import static io.taucoin.types.TypesConfig.TxType;
 
 /**
  * configuration for new chain.

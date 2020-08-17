@@ -183,7 +183,7 @@ public class WiringCoinsTx extends Transaction {
      * @return
      */
     public void setReceiver(byte[] receiver){
-        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+        if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Forum note transaction set receiver error, tx type is {}", txType);
         } 
         this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
@@ -196,7 +196,7 @@ public class WiringCoinsTx extends Transaction {
      * @return
      */
     public void setAmount(long amount){
-        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+        if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Forum note transaction set amount error, tx type is {}", txType);
         } 
         this.amount = amount;
@@ -209,7 +209,7 @@ public class WiringCoinsTx extends Transaction {
      * @return
      */
     public byte[] getReceiverCowTC(){
-        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+        if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Wiring transaction get pubkey error, tx type is {}", txType);
         } 
         if(!isParsed) parseEncodedBytes();
@@ -222,7 +222,7 @@ public class WiringCoinsTx extends Transaction {
      * @return
      */
     public byte[] getReceiver(){
-        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+        if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Wiring transaction get pubkey error, tx type is {}", txType);
         } 
         if(!isParsed) parseEncodedBytes();
@@ -246,7 +246,7 @@ public class WiringCoinsTx extends Transaction {
      * @return
      */
     public long getAmount(){
-        if(txType != ChainParam.TxType.WCoinsType.ordinal()) {
+        if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Wiring transaction get amount error, tx type is {}", txType);
         } 
         if(!isParsed) parseEncodedBytes();

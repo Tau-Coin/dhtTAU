@@ -1,6 +1,5 @@
 package io.taucoin.chain;
 
-import com.frostwire.jlibtorrent.Pair;
 import io.taucoin.account.AccountManager;
 import io.taucoin.core.*;
 import io.taucoin.db.BlockStore;
@@ -11,11 +10,14 @@ import io.taucoin.processor.StateProcessor;
 import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.types.TypesConfig;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TransactionFactory;
 import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.util.ByteArrayWrapper;
+
+import com.frostwire.jlibtorrent.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -1368,7 +1370,7 @@ public class Chain {
                 block.setSenderBalance(senderState.getBalance().longValue());
                 block.setSenderNonce(senderState.getNonce().longValue());
 
-                if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
 
                     AccountState receiverState = miningTrack.getAccount(this.chainID,
                             ((WiringCoinsTx)tx).getReceiver());
@@ -1564,7 +1566,7 @@ public class Chain {
             Transaction tx = blockContainer.getTx();
             if (null != tx) {
                 set.add(new ByteArrayWrapper(tx.getSenderPubkey()));
-                if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
                     set.add(new ByteArrayWrapper(((WiringCoinsTx)tx).getReceiver()));
                 }
             }

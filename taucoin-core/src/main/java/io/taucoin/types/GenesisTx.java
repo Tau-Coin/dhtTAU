@@ -217,7 +217,7 @@ public class GenesisTx extends Transaction {
      */
     public void appendGenesisAccount(ByteArrayWrapper pubkey, GenesisItem item) {
 
-        if(txType != ChainParam.TxType.GMsgType.ordinal()) {
+        if(txType != TypesConfig.TxType.GenesisType.ordinal()) {
             logger.error("Genesis msg transaction append error, tx type is {}", txType);
         } 
 

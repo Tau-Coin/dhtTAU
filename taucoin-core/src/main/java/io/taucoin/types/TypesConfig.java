@@ -16,31 +16,13 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
-import io.taucoin.param.ChainParam;
+import java.math.BigInteger;
 
-import com.frostwire.jlibtorrent.Entry;
-
-import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class TransactionFactory {
-
-    private static final Logger logger = LoggerFactory.getLogger("ParseTransactionFactory");
-
-    public static Transaction parseTransaction(byte[] encodedTx) {
-
-        Entry entry = Entry.bdecode(encodedTx);
-        List<Entry> entrylist = entry.list();
-        long txType = entrylist.get(Transaction.TxIndex.TxType.ordinal()).integer();
-
-        if (txType == TypesConfig.TxType.GenesisType.ordinal()) {
-            return new GenesisTx(encodedTx);
-        } else if (txType == TypesConfig.TxType.FNoteType.ordinal()) {
-            return new ForumNoteTx(encodedTx);
-        }
-
-        return new WiringCoinsTx(encodedTx);
-
+/**
+ * types config parameters.
+ */
+public class TypesConfig {
+    public static enum TxType {
+        GenesisType, FNoteType, WCoinsType
     }
 }

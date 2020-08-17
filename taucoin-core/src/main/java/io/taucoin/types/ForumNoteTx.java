@@ -178,7 +178,7 @@ public class ForumNoteTx extends Transaction {
      * @return
      */
     public void setForumNoteHash(byte[] forumNoteHash){
-        if(txType != ChainParam.TxType.FNoteType.ordinal()) {
+        if(txType != TypesConfig.TxType.FNoteType.ordinal()) {
             logger.error("Forum note transaction set note error, tx type is {}", txType);
         } 
         this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
@@ -191,7 +191,7 @@ public class ForumNoteTx extends Transaction {
      * @return
      */
     public byte[] getForumNoteHashCowTC(){
-        if(txType != ChainParam.TxType.FNoteType.ordinal()) {
+        if(txType != TypesConfig.TxType.FNoteType.ordinal()) {
             logger.error("Forum note transaction get note error, tx type is {}", txType);
         } 
         if(!isParsed) parseEncodedBytes();
@@ -203,7 +203,7 @@ public class ForumNoteTx extends Transaction {
      * @return
      */
     public byte[] getForumNoteHash(){
-        if(txType != ChainParam.TxType.FNoteType.ordinal()) {
+        if(txType != TypesConfig.TxType.FNoteType.ordinal()) {
             logger.error("Forum note transaction get note error, tx type is {}", txType);
         } 
         if(!isParsed) parseEncodedBytes();

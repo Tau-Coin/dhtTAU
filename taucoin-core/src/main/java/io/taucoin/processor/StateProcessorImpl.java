@@ -5,7 +5,7 @@ import io.taucoin.core.BlockContainer;
 import io.taucoin.core.ImportResult;
 import io.taucoin.db.StateDB;
 import io.taucoin.genesis.GenesisItem;
-import io.taucoin.param.ChainParam;
+import io.taucoin.types.TypesConfig;
 import io.taucoin.types.Block;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
@@ -19,7 +19,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.HashMap;
-import java.util.Map;
 
 import static io.taucoin.core.ImportResult.*;
 
@@ -81,7 +80,7 @@ public class StateProcessorImpl implements StateProcessor {
 
                 long fee = tx.getTxFee();
 
-                if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
                     // check balance
                     long amount = ((WiringCoinsTx)tx).getAmount();
                     long cost = amount + fee;
@@ -105,7 +104,7 @@ public class StateProcessorImpl implements StateProcessor {
                     AccountState receiverState = stateDB.getAccount(chainID, receiver);
                     receiverState.addBalance(BigInteger.valueOf(amount));
                     stateDB.updateAccount(chainID, receiver, receiverState);
-                } else if (ChainParam.TxType.FNoteType.ordinal() == tx.getTxType()) {
+                } else if (TypesConfig.TxType.FNoteType.ordinal() == tx.getTxType()) {
                     // check balance
                     if (sendState.getBalance().longValue() < fee) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
@@ -122,7 +121,7 @@ public class StateProcessorImpl implements StateProcessor {
                     sendState.subBalance(BigInteger.valueOf(fee));
                     sendState.increaseNonce();
                     stateDB.updateAccount(this.chainID, sender, sendState);
-                } else if (ChainParam.TxType.GMsgType.ordinal() == tx.getTxType()) {
+                } else if (TypesConfig.TxType.GenesisType.ordinal() == tx.getTxType()) {
                     // check balance
                     if (sendState.getBalance().longValue() < fee) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
@@ -278,7 +277,7 @@ public class StateProcessorImpl implements StateProcessor {
                         senderState.setNonce(BigInteger.valueOf(senderNonce));
                     }
 
-                    if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                    if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
                         AccountState receiverState = stateDB.getAccount(this.chainID,
                                 ((WiringCoinsTx)tx).getReceiver());
 
@@ -334,7 +333,7 @@ public class StateProcessorImpl implements StateProcessor {
                 Block block = blockContainer.getBlock();
                 long fee = tx.getTxFee();
 
-                if (ChainParam.TxType.WCoinsType.ordinal() == tx.getTxType()) {
+                if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
                     long amount = ((WiringCoinsTx)tx).getAmount();
                     long cost = amount + fee;
 
