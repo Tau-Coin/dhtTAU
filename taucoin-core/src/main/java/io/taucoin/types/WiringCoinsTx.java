@@ -33,6 +33,8 @@ public class WiringCoinsTx extends Transaction {
     private ArrayList<Long> receiverPubkey;   // wiring coins tx, pubkey - 32 bytes, 4 longs
     private long amount;      // Wiring coins tx
 
+    private String memo;      // Wiring coins tx
+
     /**
      * construct complete tx with signature.
      * @param version
@@ -44,16 +46,18 @@ public class WiringCoinsTx extends Transaction {
      * @param nonce
      * @param receiver
      * @param amount
+     * @param memo
      * @param signature
      */
     public WiringCoinsTx(long version, byte[] chainID, long timestamp, long txFee, long txType,
-                        byte[] sender, long nonce, byte[] receiver, long amount, byte[] signature) {
+                        byte[] sender, long nonce, byte[] receiver, long amount, String memo, byte[] signature) {
 
         //父类构造函数
         super(version, chainID, timestamp, txFee, txType, sender, nonce, signature);
 
         this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
         this.amount = amount;
+        this.memo = memo;
 
         isParsed = true;
     }
@@ -69,15 +73,17 @@ public class WiringCoinsTx extends Transaction {
      * @param nonce
      * @param receiver
      * @param amount
+     * @param memo
      */
     public WiringCoinsTx(long version, byte[] chainID, long timestamp, long txFee, long txType,
-                         byte[] sender, long nonce, byte[] receiver, long amount) {
+                         byte[] sender, long nonce, byte[] receiver, long amount, String memo) {
 
         //父类构造函数
         super(version, chainID, timestamp, txFee, txType, sender, nonce);
 
         this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
         this.amount = amount;
+        this.memo = memo;
 
         isParsed = true;
     }
@@ -108,6 +114,7 @@ public class WiringCoinsTx extends Transaction {
             list.add(this.signature);
             list.add(this.receiverPubkey);
             list.add(this.amount);
+            list.add(this.memo);
             Entry entry = Entry.fromList(list);
             this.encodedBytes = entry.bencode();
         }
@@ -130,6 +137,7 @@ public class WiringCoinsTx extends Transaction {
             list.add(this.nonce);
             list.add(this.receiverPubkey);
             list.add(this.amount);
+            list.add(this.memo);
             Entry entry = Entry.fromList(list);
             this.sigEncodedBytes = entry.bencode();
         }
@@ -137,7 +145,7 @@ public class WiringCoinsTx extends Transaction {
     }
 
     /**
-     * encoding transaction to long[].
+     * encoding transaction to long.
      * @return
      */
     @Override
@@ -152,6 +160,7 @@ public class WiringCoinsTx extends Transaction {
         list.add(this.signature);
         list.add(this.receiverPubkey);
         list.add(this.amount);
+        list.add(this.memo);
         return list;
     }
 
@@ -174,7 +183,8 @@ public class WiringCoinsTx extends Transaction {
             this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
             this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
             this.receiverPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
-            this.amount = entrylist.get(TxIndex.TxData.ordinal()+ 1).integer();
+            this.amount = entrylist.get(TxIndex.TxData.ordinal() + 1).integer();
+            this.memo = entrylist.get(TxIndex.TxData.ordinal() + 2).toString();
             isParsed = true;
         }
     }
@@ -230,6 +240,18 @@ public class WiringCoinsTx extends Transaction {
         return this.amount;
     }
 
+    /**
+     * get wire memo.
+     * @return
+     */
+    public String getMemo(){
+        if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
+            logger.error("Wiring transaction get memo error, tx type is {}", txType);
+        } 
+        if(!isParsed) parseEncodedBytes();
+        return this.memo;
+    }
+
     @Override
     public String toString(){
         StringBuilder strTx = new StringBuilder();
@@ -243,6 +265,7 @@ public class WiringCoinsTx extends Transaction {
         strTx.append("nonce: ").append(this.getNonce()).append("\n");
         strTx.append("receiver: ").append(ByteUtil.toHexString(this.getReceiver())).append("\n");
         strTx.append("amount: ").append(this.getAmount()).append("\n");
+        strTx.append("memo: ").append(this.getMemo()).append("\n");
         strTx.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
         strTx.append("]\n");
         return strTx.toString();
