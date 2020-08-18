@@ -2,7 +2,6 @@ package io.taucoin.chain;
 
 import com.frostwire.jlibtorrent.Pair;
 import io.taucoin.account.AccountManager;
-import io.taucoin.config.ChainConfig;
 import io.taucoin.core.AccountState;
 import io.taucoin.core.BlockContainer;
 import io.taucoin.core.MutableItemValue;
@@ -10,7 +9,10 @@ import io.taucoin.db.BlockDB;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.db.StateDB;
 import io.taucoin.db.StateDBImpl;
+import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.genesis.GenesisItem;
+import io.taucoin.genesis.TauGenesisConfig;
+import io.taucoin.genesis.TauGenesisTransaction;
 import io.taucoin.listener.TauListener;
 import io.taucoin.param.ChainParam;
 import io.taucoin.processor.StateProcessor;
@@ -85,8 +87,8 @@ public class ChainManager {
 
     public boolean initTauChain() throws Exception {
 		// New TauConfig
-		ChainConfig tauConfig= ChainConfig.NewTauChainConfig();
-		byte[] chainid= tauConfig.getChainid();
+		GenesisConfig tauConfig = TauGenesisConfig.getInstance();
+		byte[] chainid = TauGenesisTransaction.ChainID;
 		logger.info("Initial tau chain chainid: {}", new String(chainid));
 
 		if(!this.stateDB.isChainFollowed(chainid)) {
@@ -212,10 +214,10 @@ public class ChainManager {
      * @param cf
      * @return true/false.
      */
-    public boolean createNewCommunity(ChainConfig cf){
-        byte[] chainID = cf.getChainid();
+    public boolean createNewCommunity(GenesisConfig cf){
+        byte[] chainID = cf.getChainID();
 		
-        Block genesis = new Block(cf);
+        Block genesis = cf.getBlock();
         BlockContainer genesisContainer = null;
 
         boolean ret = followChain(chainID);

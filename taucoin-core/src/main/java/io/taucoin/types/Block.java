@@ -16,7 +16,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
-import io.taucoin.config.ChainConfig;
+import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
@@ -181,21 +181,31 @@ public class Block {
      * construct genesis block respecting user intention.
      * @param cf
      */
-    public Block(ChainConfig cf){
+    public Block(GenesisConfig cf){
         this.version = cf.getVersion();
-        this.timestamp = cf.getGenesisTimeStamp();
-        this.blockNum = cf.getBlockNum();
+        this.timestamp = cf.getTimeStamp();
+        this.blockNum = 0L;
         this.previousBlockHash = null;
         this.immutableBlockHash = null;
         this.baseTarget = ByteUtil.byteArrayToSignLong(cf.getBaseTarget().toByteArray());
         this.cumulativeDifficulty = ByteUtil.byteArrayToSignLong(cf.getCummulativeDifficulty().toByteArray());
         this.generationSignature = ByteUtil.byteArrayToSignLongArray(cf.getGenerationSignature(), ChainParam.HashLongArrayLength);
-        //this.txHash = cf.getMsgHash();
+
+        // handle tx hash
+        byte[] genesisTxHash = cf.getTransaction().getTxID();
+        this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(
+                genesisTxHash, ChainParam.HashLongArrayLength);
+
         this.minerBalance = 0;
         this.senderBalance = 0;
         this.receiverBalance = 0;
         this.senderNonce = 0 ;
-        this.minerPubkey = ByteUtil.byteArrayToSignLongArray(cf.getGenesisMinerPubkey(), ChainParam.PubkeyLongArrayLength);
+        this.minerPubkey = ByteUtil.byteArrayToSignLongArray(cf.getPubkey(), ChainParam.PubkeyLongArrayLength);
+
+        if (cf.getSignature() != null) {
+            this.signature = ByteUtil.byteArrayToSignLongArray(
+                    cf.getSignature(), ChainParam.SignLongArrayLength);
+        }
 
         isParsed = true;
     }
