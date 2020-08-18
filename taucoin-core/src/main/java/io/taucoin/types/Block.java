@@ -187,9 +187,11 @@ public class Block {
         this.blockNum = 0L;
         this.previousBlockHash = null;
         this.immutableBlockHash = null;
-        this.baseTarget = ByteUtil.byteArrayToSignLong(cf.getBaseTarget().toByteArray());
-        this.cumulativeDifficulty = ByteUtil.byteArrayToSignLong(cf.getCummulativeDifficulty().toByteArray());
-        this.generationSignature = ByteUtil.byteArrayToSignLongArray(cf.getGenerationSignature(), ChainParam.HashLongArrayLength);
+        this.baseTarget = ByteUtil.byteArrayToLong(cf.getBaseTarget().toByteArray());
+        this.cumulativeDifficulty = ByteUtil.byteArrayToLong(
+                cf.getCummulativeDifficulty().toByteArray());
+        this.generationSignature = ByteUtil.byteArrayToSignLongArray(
+                cf.getGenerationSignature(), ChainParam.SignLongArrayLength);
 
         // handle tx hash
         byte[] genesisTxHash = cf.getTransaction().getTxID();
