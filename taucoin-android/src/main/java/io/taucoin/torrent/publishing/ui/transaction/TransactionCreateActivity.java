@@ -15,7 +15,6 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
@@ -39,7 +38,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
 
     private TxViewModel txViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private Community community;
+    private String chainID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +56,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      */
     private void initParameter() {
         if(getIntent() != null){
-            community = getIntent().getParcelableExtra(IntentExtra.BEAN);
+            chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
         }
     }
 
@@ -70,10 +69,10 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        if(community != null){
+        if(StringUtil.isNotEmpty(chainID)){
             String fee = "0";
             binding.tvFee.setTag(R.id.median_fee, fee);
-            String lastTxFee = txViewModel.getLastTxFee(community.chainID);
+            String lastTxFee = txViewModel.getLastTxFee(chainID);
             if(StringUtil.isNotEmpty(lastTxFee)){
                 fee = FmtMicrometer.fmtFeeValue(lastTxFee);
             }
@@ -82,7 +81,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
     }
 
     private void showFeeView(TextView tvFee, String fee) {
-        tvFee.setText(getString(R.string.tx_median_fee, fee, UsersUtil.getCoinName(community)));
+        tvFee.setText(getString(R.string.tx_median_fee, fee, UsersUtil.getCoinName(chainID)));
         tvFee.setTag(fee);
     }
 
@@ -96,14 +95,14 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
                 onBackPressed();
             }
         });
-        if(community != null){
-            disposables.add(txViewModel.observeMedianFee(community.chainID)
+        if(StringUtil.isNotEmpty(chainID)){
+            disposables.add(txViewModel.observeMedianFee(chainID)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(fees -> {
                         String medianFee = FmtMicrometer.fmtFeeValue(Utils.getMedianData(fees));
                         binding.tvFee.setTag(R.id.median_fee, medianFee);
-                        if(StringUtil.isEmpty(txViewModel.getLastTxFee(community.chainID))){
+                        if(StringUtil.isEmpty(txViewModel.getLastTxFee(chainID))){
                             showFeeView(binding.tvFee, medianFee);
                         }
                     }));
@@ -145,7 +144,6 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      * @return Tx
      */
     private Tx buildTx() {
-        String chainID = community.chainID;
         long txType = TypesConfig.TxType.WCoinsType.ordinal();
         String receiverPk = ViewUtils.getText(binding.etPublicKey);
         String amount = ViewUtils.getText(binding.etAmount);
@@ -161,7 +159,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.tv_fee:
-                txViewModel.showEditFeeDialog(this, binding.tvFee, community);
+                txViewModel.showEditFeeDialog(this, binding.tvFee, chainID);
                 break;
             case R.id.iv_select_pk:
                 Intent intent = new Intent();

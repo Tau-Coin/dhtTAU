@@ -3,10 +3,10 @@ package io.taucoin.torrent.publishing.core.utils;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
 /**
@@ -95,11 +95,12 @@ public class UsersUtil {
 
     /**
      * 获取显示coin name
-     * @param community 当前社区
+     * @param chainID 当前社区ID
      * @return 显示名字
      */
-    public static String getCoinName(Community community) {
-        String firstLetters = StringUtil.getFirstLettersOfName(community.communityName);
+    public static String getCoinName(String chainID) {
+        String communityName = getCommunityName(chainID);
+        String firstLetters = StringUtil.getFirstLettersOfName(communityName);
         return firstLetters + "coin";
     }
 
@@ -116,5 +117,20 @@ public class UsersUtil {
             bs.append(context.getString(R.string.community_invite_link_bs, publicKey));
         }
         return context.getString(R.string.community_invite_link_form, bs.toString(), chainID);
+    }
+
+    /**
+     * 获取社区名
+     * @param chainID 链的chainID
+     * @return 社区名
+     */
+    public static String getCommunityName(@NonNull String chainID) {
+       if(StringUtil.isNotEmpty(chainID)){
+           String[] splits = chainID.split(ChainParam.ChainidDelimeter);
+           if(splits.length > 1){
+               return splits[0];
+           }
+       }
+       return null;
     }
 }

@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
@@ -55,7 +56,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     private TxListAdapter adapter;
     private CommonDialog operationsDialog;
 
-    private Community community;
+    private String chainID;
     private int txType;
 
     @Nullable
@@ -83,7 +84,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
      */
     private void initParameter() {
         if(getArguments() != null){
-            community = getArguments().getParcelable(IntentExtra.BEAN);
+            chainID = getArguments().getString(IntentExtra.CHAIN_ID);
             txType = getArguments().getInt(IntentExtra.TYPE, -1);
             if(txType == -1){
                 binding.fabButton.setVisibility(View.GONE);
@@ -95,7 +96,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
      * 初始化视图
      */
     private void initView() {
-        adapter = new TxListAdapter(this, community);
+        adapter = new TxListAdapter(this, chainID);
         DefaultItemAnimator animator = new DefaultItemAnimator() {
             @Override
             public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {
@@ -114,7 +115,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 .setInitialLoadSizeHint(Page.PAGE_SIZE)
                 .build();
         LiveData<PagedList<UserAndTx>> postList = new LivePagedListBuilder<>(
-                txViewModel.queryCommunityTxs(community.chainID, txType), pagedListConfig).build();
+                txViewModel.queryCommunityTxs(chainID, txType), pagedListConfig).build();
         postList.observe(activity, replyAndAllTxs -> {
             adapter.submitList(replyAndAllTxs);
             logger.debug("adapter.size::{}, newSize::{}", adapter.getItemCount(), replyAndAllTxs.size());
@@ -129,7 +130,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         // 自定义点击事件
         binding.fabButton.getMainFab().setOnClickListener(v ->{
                     Intent intent = new Intent();
-                    intent.putExtra(IntentExtra.BEAN, community);
+                    intent.putExtra(IntentExtra.CHAIN_ID, chainID);
                     if(txType == TypesConfig.TxType.WCoinsType.ordinal()){
                         ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
                     }else{
@@ -163,7 +164,9 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
 
     @Override
     public void onUserClicked(String senderPk) {
-       userViewModel.showUserInfoDialog(activity, senderPk);
+        Intent intent = new Intent();
+        intent.putExtra(IntentExtra.PUBLIC_KEY, senderPk);
+        ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
     }
     @Override
     public void onEditNameClicked(UserAndTx tx){

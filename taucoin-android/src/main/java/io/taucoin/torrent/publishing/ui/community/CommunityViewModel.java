@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.paging.DataSource;
+import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -27,6 +29,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
@@ -265,5 +268,15 @@ public class CommunityViewModel extends AndroidViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(state -> chatState.postValue(state));
         disposables.add(disposable);
+    }
+
+    /**
+     * 查询社区成员
+     * @param chainID
+     * @param onChain
+     * @return DataSource.Factory
+     */
+    public DataSource.Factory<Integer, MemberAndUser> queryCommunityMembers(String chainID, boolean onChain) {
+        return memberRepo.queryCommunityMembers(chainID, onChain);
     }
 }

@@ -5,8 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -108,9 +106,6 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
             if(null == holder || null == user){
                 return;
             }
-            holder.binding.ivShare.setVisibility((type == ContactsActivity.PAGE_SELECT_CONTACT) ? View.GONE : View.VISIBLE);
-            int imgRid = type == ContactsActivity.PAGE_ADD_MEMBERS ? R.mipmap.icon_share : R.mipmap.icon_share_community;
-            holder.binding.ivShare.setImageResource(imgRid);
             holder.binding.cbSelect.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS ? View.VISIBLE : View.GONE);
             if(type == ContactsActivity.PAGE_ADD_MEMBERS){
                 holder.binding.cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -150,7 +145,6 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
                         communities.append(context.getResources().getString(R.string.contacts_community_from));
                     }
                     String communityName = Utils.getCommunityName(member.chainID);
-                    LoggerFactory.getLogger("1111").info("communityName::{}, chainID::{}", communityName, member.chainID);
                     String community = context.getResources().getString(R.string.contacts_community_more, communityName);
                     if(i == 0){
                         community = community.substring(1);
@@ -163,31 +157,16 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
             int bgColor = Utils.getGroupColor(user.publicKey);
             holder.binding.leftView.setBgColor(bgColor);
 
-            holder.binding.ivShare.setOnClickListener(v -> {
+            holder.binding.getRoot().setOnClickListener(v -> {
                 if(listener != null){
-                    listener.onShareClicked(user);
+                    listener.onItemClicked(user);
                 }
             });
-
-            holder.binding.leftView.setOnClickListener(v -> {
-                if(listener != null){
-                    listener.onUserClicked(user);
-                }
-            });
-            if(type == ContactsActivity.PAGE_SELECT_CONTACT){
-                holder.binding.getRoot().setOnClickListener(v -> {
-                    if(listener != null){
-                        listener.onItemClicked(user);
-                    }
-                });
-            }
         }
     }
 
     public interface ClickListener {
-        void onItemClicked(User item);
-        void onShareClicked(User item);
-        void onUserClicked(UserAndMember item);
+        void onItemClicked(UserAndMember item);
     }
 
     private static final DiffUtil.ItemCallback<UserAndMember> diffCallback = new DiffUtil.ItemCallback<UserAndMember>() {

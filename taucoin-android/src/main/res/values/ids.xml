@@ -7,6 +7,8 @@
     <item name="community_message" type="id" />
     <item name="community_bootstrap_node" type="id" />
     <item name="community_search" type="id" />
+    <item name="member_ban" type="id" />
+    <item name="member_add" type="id" />
 
     <item name="median_fee" type="id" />
 </resources>

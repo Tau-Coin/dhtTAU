@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
         <variable
@@ -12,112 +13,43 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background_grey"
+        android:background="@color/color_white"
         android:fitsSystemWindows="true">
 
         <include
             android:id="@+id/toolbar_include"
-            layout="@layout/toolbar" />
+            layout="@layout/toolbar_group_left" />
 
-        <RelativeLayout
-            android:background="@color/primary"
-            android:onClick="@{listener::onClick}"
-            android:paddingTop="0dp"
-            android:paddingBottom="40dp"
+        <com.google.android.material.tabs.TabLayout
+            android:layout_below="@+id/ll_today_income_tips"
+            android:id="@+id/tab_layout"
+            android:layout_height="40dp"
+            android:layout_width="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            app:tabMinWidth="65dp"
+            app:tabMode="scrollable"
+            app:tabTextAppearance="@style/TabLayout"
+            app:tabIndicatorHeight="3dp"
+            app:tabIndicatorColor="@color/primary"
+            app:tabSelectedTextColor="@color/primary"
+            app:tabTextColor="@color/gray_dark"
+            app:tabBackground="@color/color_transparent"
+            app:tabRippleColor="@color/color_transparent"/>
+
+        <View
+            android:id="@+id/tab_layout_line"
+            android:layout_below="@+id/tab_layout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="1dp"
+            android:background="@color/divider"/>
 
-            <TextView
-                android:id="@+id/tv_group_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:textColor="@color/color_white"
-                android:textSize="@dimen/font_big_size"
-                android:textAppearance="@style/TextAppearanceHeadline6"/>
-
-            <TextView
-                android:layout_below="@+id/tv_group_name"
-                android:id="@+id/tv_users_stats"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:textColor="@color/color_white"
-                android:textAppearance="@style/TextAppearanceBody2"/>
-
-        </RelativeLayout>
-
-        <LinearLayout
-            android:id="@+id/ll_ban"
-            android:orientation="vertical"
-            android:background="@color/color_white"
+        <androidx.viewpager.widget.ViewPager
+            android:layout_below="@+id/tab_layout_line"
+            android:background="@color/color_bg"
+            android:id="@+id/view_pager"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="@{listener::onClick}"
-            android:paddingTop="15dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="0dp"
-            android:paddingBottom="10dp">
+            android:layout_height="match_parent" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/color_red"
-                android:textStyle="bold"
-                android:text="@string/community_blacklist"
-                android:textAppearance="@style/TextAppearanceBody1"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="0dp"
-                android:paddingEnd="20dp"
-                android:paddingStart="0dp"
-                android:textColor="@color/gray_dark"
-                android:text="@string/community_blacklist_tips"
-                android:textAppearance="@style/TextAppearanceBody2"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="vertical"
-            android:background="@color/color_white"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="10dp"
-            android:paddingTop="10dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="0dp"
-            android:paddingBottom="0dp">
-
-            <LinearLayout
-                android:id="@+id/ll_add_member"
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="@{listener::onClick}"
-                tools:ignore="UseCompoundDrawables">
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:contentDescription="@null"
-                    android:src="@mipmap/icon_add_member"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/primary_light"
-                    android:layout_marginStart="20dp"
-                    android:text="@string/community_add_member"
-                    android:textAppearance="@style/TextAppearanceBody1"/>
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/member_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp"/>
-
-        </LinearLayout>
     </LinearLayout>
 </layout>

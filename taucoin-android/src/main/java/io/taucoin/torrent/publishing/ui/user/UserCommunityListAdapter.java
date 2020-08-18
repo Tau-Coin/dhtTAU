@@ -2,10 +2,7 @@ package io.taucoin.torrent.publishing.ui.user;
 
 import android.content.Context;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,18 +13,11 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
-import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.databinding.ItemContactListBinding;
 import io.taucoin.torrent.publishing.databinding.ItemUserCommunityBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;
-import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 
 /**
  * 用户加入社区的列表的Adapter
@@ -35,9 +25,11 @@ import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 public class UserCommunityListAdapter extends ListAdapter<Member, UserCommunityListAdapter.ViewHolder>
     implements Selectable<Member> {
     private List<Member> dataList = new ArrayList<>();
+    private ClickListener clickListener;
 
-    UserCommunityListAdapter() {
+    UserCommunityListAdapter(ClickListener clickListener) {
         super(diffCallback);
+        this.clickListener = clickListener;
     }
 
     @NonNull
@@ -49,7 +41,7 @@ public class UserCommunityListAdapter extends ListAdapter<Member, UserCommunityL
                 parent,
                 false);
 
-        return new ViewHolder(binding);
+        return new ViewHolder(binding, clickListener);
     }
 
     @Override
@@ -85,11 +77,13 @@ public class UserCommunityListAdapter extends ListAdapter<Member, UserCommunityL
     static class ViewHolder extends RecyclerView.ViewHolder {
         private ItemUserCommunityBinding binding;
         private Context context;
+        private ClickListener listener;
 
-        ViewHolder(ItemUserCommunityBinding binding) {
+        ViewHolder(ItemUserCommunityBinding binding, ClickListener listener) {
             super(binding.getRoot());
             this.binding = binding;
             this.context = binding.getRoot().getContext();
+            this.listener = listener;
         }
 
         void bind(ViewHolder holder, Member member) {
@@ -104,7 +98,17 @@ public class UserCommunityListAdapter extends ListAdapter<Member, UserCommunityL
             String power = FmtMicrometer.fmtLong(member.power);
             String balancePower = context.getString(R.string.main_balance_power, balance, power);
             holder.binding.tvBalancePower.setText(balancePower);
+
+            holder.binding.getRoot().setOnClickListener(v -> {
+                if(listener != null){
+                    listener.onItemClicked(member);
+                }
+            });
         }
+    }
+
+    public interface ClickListener {
+        void onItemClicked(Member member);
     }
 
     private static final DiffUtil.ItemCallback<Member> diffCallback = new DiffUtil.ItemCallback<Member>() {

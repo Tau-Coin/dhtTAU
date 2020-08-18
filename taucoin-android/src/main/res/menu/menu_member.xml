@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/member_add"
+        app:showAsAction="always"
+        android:icon="@mipmap/ic_search_white_24dp"
+        android:title="@string/community_add_member" />
+
+    <item android:id="@+id/member_ban"
+        app:showAsAction="always"
+        android:icon="@mipmap/ic_search_white_24dp"
+        android:title="@string/community_blacklist" />
+
+</menu>

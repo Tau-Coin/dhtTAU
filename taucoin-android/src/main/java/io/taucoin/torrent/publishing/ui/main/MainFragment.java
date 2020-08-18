@@ -112,7 +112,7 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
     @Override
     public void onItemClicked(@NonNull Community item) {
         Intent intent = new Intent();
-        intent.putExtra(IntentExtra.BEAN, item);
+        intent.putExtra(IntentExtra.CHAIN_ID, item.chainID);
         ActivityUtil.startActivity(intent, this, CommunityActivity.class);
     }
 }

@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.widget.TextView;
 
 import com.frostwire.jlibtorrent.Ed25519;
-import com.frostwire.jlibtorrent.Pair;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
@@ -181,7 +179,7 @@ public class TxViewModel extends AndroidViewModel {
             if(tx.txType == TypesConfig.TxType.WCoinsType.ordinal()){
                 byte[] receiverPk = ByteUtil.toByte(tx.receiverPk);
                 transaction = new WiringCoinsTx(1, chainID, timestamp, tx.fee, tx.txType, senderPk,
-                        nonce, receiverPk, tx.amount);
+                        nonce, receiverPk, tx.amount, tx.memo);
             } else {
                 byte[] forumNoteHash = new byte[24];
                 transaction = new ForumNoteTx(1, chainID, timestamp, tx.fee, tx.txType,
@@ -298,8 +296,8 @@ public class TxViewModel extends AndroidViewModel {
     /**
      * 显示编辑交易费的对话框
      */
-    void showEditFeeDialog(BaseActivity activity, TextView tvFee, Community community) {
-        if(null == community){
+    void showEditFeeDialog(BaseActivity activity, TextView tvFee, String chainID) {
+        if(StringUtil.isNotEmpty(chainID)){
             return;
         }
         EditFeeDialogBinding editFeeBinding = DataBindingUtil.inflate(LayoutInflater.from(activity),
@@ -314,7 +312,7 @@ public class TxViewModel extends AndroidViewModel {
                     dialog.cancel();
                     String etFee = editFeeBinding.etFee.getText().toString();
                     if(StringUtil.isNotEmpty(etFee)){
-                        tvFee.setText(activity.getString(R.string.tx_median_fee, etFee, UsersUtil.getCoinName(community)));
+                        tvFee.setText(activity.getString(R.string.tx_median_fee, etFee, UsersUtil.getCoinName(chainID)));
                         tvFee.setTag(etFee);
                     }
                 })

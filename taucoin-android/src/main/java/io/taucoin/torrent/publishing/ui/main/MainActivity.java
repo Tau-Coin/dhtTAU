@@ -2,7 +2,6 @@ package io.taucoin.torrent.publishing.ui.main;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.format.Formatter;
 import android.view.LayoutInflater;
@@ -48,6 +47,7 @@ import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.user.ScanQRCodeActivity;
+import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.user.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
@@ -235,7 +235,9 @@ public class MainActivity extends BaseActivity {
                 ActivityUtil.startActivity(intent, this, UserQRCodeActivity.class);
                 break;
             case R.id.round_button:
-                userViewModel.showUserInfoDialog(this, user.publicKey);
+                intent = new Intent();
+                intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
+                ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
                 break;
             case R.id.tv_public_key:
             case R.id.tv_public_key_title:

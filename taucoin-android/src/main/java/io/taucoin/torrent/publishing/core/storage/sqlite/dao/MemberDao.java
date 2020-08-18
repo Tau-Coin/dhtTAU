@@ -3,6 +3,9 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.dao;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
+import androidx.paging.DataSource;
+import androidx.paging.PagedList;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -20,6 +23,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 public interface MemberDao {
     String QUERY_GET_MEMBER_BY_CHAIN_ID_PK = "SELECT * FROM Members WHERE chainID = :chainID AND publicKey = :publicKey";
     String QUERY_GET_MEMBERS_BY_CHAIN_ID = "SELECT * FROM Members WHERE chainID = :chainID";
+    String QUERY_GET_MEMBERS_ON_CHAIN = "SELECT * FROM Members WHERE chainID = :chainID AND (balance > 0 OR power > 0)";
+    String QUERY_GET_MEMBERS_NOT_ON_CHAIN = "SELECT * FROM Members WHERE chainID = :chainID AND balance <= 0 AND power <= 0";
 
     /**
      * 添加新社区成员
@@ -45,4 +50,22 @@ public interface MemberDao {
     @Query(QUERY_GET_MEMBERS_BY_CHAIN_ID)
     @Transaction
     Flowable<List<MemberAndUser>> observeCommunityMembers(String chainID);
+
+    /**
+     * 查询社区上链的成员
+     * @param chainID 社区链ID
+     * @return DataSource.Factory
+     */
+    @Query(QUERY_GET_MEMBERS_ON_CHAIN)
+    @Transaction
+    DataSource.Factory<Integer, MemberAndUser> queryCommunityMembersOnChain(String chainID);
+
+    /**
+     * 查询社区未上链的成员
+     * @param chainID 社区链ID
+     * @return DataSource.Factory
+     */
+    @Query(QUERY_GET_MEMBERS_NOT_ON_CHAIN)
+    @Transaction
+    DataSource.Factory<Integer, MemberAndUser> queryCommunityMembersNotOnChain(String chainID);
 }

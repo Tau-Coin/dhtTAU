@@ -5,6 +5,9 @@ import android.content.Context;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
+import androidx.paging.DataSource;
+import androidx.paging.PagedList;
 import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
@@ -59,5 +62,19 @@ public class MemberRepositoryImpl implements MemberRepository{
 
     public Flowable<List<MemberAndUser>> observeCommunityMembers(String chainID){
         return db.memberDao().observeCommunityMembers(chainID);
+    }
+
+    /**
+     * 查询社区成员
+     * @param chainID 社区链ID
+     * @param onChain 是否上链
+     * @return DataSource.Factory
+     */
+    public DataSource.Factory<Integer, MemberAndUser> queryCommunityMembers(String chainID, boolean onChain){
+        if(onChain){
+            return db.memberDao().queryCommunityMembersOnChain(chainID);
+        }else{
+            return db.memberDao().queryCommunityMembersNotOnChain(chainID);
+        }
     }
 }

@@ -154,6 +154,11 @@
             android:name=".ui.user.ScanQRCodeActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
+        <activity
+            android:name=".ui.user.UserDetailActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+
     </application>
 
 </manifest>

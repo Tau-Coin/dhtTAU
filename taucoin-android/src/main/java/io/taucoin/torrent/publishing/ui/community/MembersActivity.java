@@ -1,24 +1,27 @@
 package io.taucoin.torrent.publishing.ui.community;
 
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
-import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityMembersBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
@@ -27,13 +30,14 @@ import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 /**
  * 群组成员页面
  */
-public class MembersActivity extends BaseActivity implements View.OnClickListener, MemberListAdapter.ClickListener {
+public class MembersActivity extends BaseActivity implements MemberListAdapter.ClickListener {
 
     private ActivityMembersBinding binding;
     private CommunityViewModel communityViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private MemberListAdapter adapter;
-    private Community community;
+    private String chainID;
+    private List<Fragment> fragmentList = new ArrayList<>();
+    private int[] titles = new int[]{R.string.community_on_chain, R.string.community_queue};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +45,6 @@ public class MembersActivity extends BaseActivity implements View.OnClickListene
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_members);
-        binding.setListener(this);
         initParameter();
         initLayout();
     }
@@ -51,7 +54,7 @@ public class MembersActivity extends BaseActivity implements View.OnClickListene
      */
     private void initParameter() {
         if(getIntent() != null){
-            community = getIntent().getParcelableExtra(IntentExtra.BEAN);
+            chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
         }
     }
 
@@ -59,37 +62,64 @@ public class MembersActivity extends BaseActivity implements View.OnClickListene
      * 初始化布局
      */
     private void initLayout() {
-        if(community != null){
-            String communityName = community.communityName;
-            binding.tvGroupName.setText(Html.fromHtml(communityName));
-            binding.tvUsersStats.setText(getString(R.string.community_users_stats, 0, 0));
+        if(StringUtil.isNotEmpty(chainID)){
+            String communityName = UsersUtil.getCommunityName(chainID);
+            binding.toolbarInclude.tvGroupName.setText(Html.fromHtml(communityName));
+            binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats, 0, 0));
         }
-        binding.toolbarInclude.toolbar.setTitle("");
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            binding.toolbarInclude.toolbar.setElevation(0);
-        }
-
+        setSupportActionBar(binding.toolbarInclude.toolbar);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        adapter = new MemberListAdapter(this);
-//        /*
-//         * A RecyclerView by default creates another copy of the ViewHolder in order to
-//         * fade the views into each other. This causes the problem because the old ViewHolder gets
-//         * the payload but then the new one doesn't. So needs to explicitly tell it to reuse the old one.
-//         */
-        DefaultItemAnimator animator = new DefaultItemAnimator() {
-            @Override
-            public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {
-                return true;
-            }
-        };
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        binding.memberList.setLayoutManager(layoutManager);
-        binding.memberList.setItemAnimator(animator);
-        binding.memberList.setAdapter(adapter);
+        // 添加OnChain页面
+        Fragment chainTab = new MemberFragment();
+        Bundle chainBundle = new Bundle();
+        chainBundle.putString(IntentExtra.CHAIN_ID, chainID);
+        chainBundle.putBoolean(IntentExtra.ON_CHAIN, true);
+        chainTab.setArguments(chainBundle);
+        fragmentList.add(chainTab);
+
+        // 添加Queue页面
+        Fragment queueTab = new MemberFragment();
+        Bundle queueBundle = new Bundle();
+        queueBundle.putString(IntentExtra.CHAIN_ID, chainID);
+        queueBundle.putBoolean(IntentExtra.ON_CHAIN, false);
+        queueTab.setArguments(queueBundle);
+        fragmentList.add(queueTab);
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        MyAdapter fragmentAdapter = new MyAdapter(fragmentManager);
+        binding.viewPager.setAdapter(fragmentAdapter);
+        binding.tabLayout.setupWithViewPager(binding.viewPager);
+        binding.viewPager.setOffscreenPageLimit(fragmentList.size());
+    }
+
+    /**
+     *  创建右上角Menu
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_member, menu);
+        return true;
+    }
+    /**
+     * 右上角Menu选项选择事件
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(StringUtil.isEmpty(chainID)){
+            return false;
+        }
+        if (item.getItemId() == R.id.member_add) {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.TYPE, ContactsActivity.PAGE_ADD_MEMBERS);
+            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+            ActivityUtil.startActivity(intent, this, ContactsActivity.class);
+        } else if (item.getItemId() == R.id.member_ban) {
+            communityViewModel.setCommunityBlacklist(chainID, true);
+        }
+        return true;
     }
 
     @Override
@@ -101,15 +131,6 @@ public class MembersActivity extends BaseActivity implements View.OnClickListene
                 this.finish();
             }
         });
-        if(null == community){
-            return;
-        }
-        disposables.add(communityViewModel.observeCommunityMembers(community.chainID)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(members -> {
-                adapter.setDataList(members);
-            }));
     }
 
     @Override
@@ -119,25 +140,30 @@ public class MembersActivity extends BaseActivity implements View.OnClickListene
     }
 
     @Override
-    public void onClick(View v) {
-        if(null == community){
-            return;
-        }
-        switch (v.getId()){
-            case R.id.ll_ban:
-                communityViewModel.setCommunityBlacklist(community.chainID, true);
-                break;
-            case R.id.ll_add_member:
-                Intent intent = new Intent();
-                intent.putExtra(IntentExtra.TYPE, ContactsActivity.PAGE_ADD_MEMBERS);
-                intent.putExtra(IntentExtra.CHAIN_ID, community.chainID);
-                ActivityUtil.startActivity(intent, this, ContactsActivity.class);
-                break;
-        }
-    }
-
-    @Override
     public void onItemClicked(MemberAndUser item) {
 
+    }
+
+    public class MyAdapter extends FragmentPagerAdapter {
+        MyAdapter(FragmentManager fm) {
+            super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+        }
+
+        @Override
+        public int getCount() {
+            return fragmentList.size();
+        }
+
+        @NonNull
+        @Override
+        public Fragment getItem(int position) {
+            return fragmentList.get(position);
+        }
+
+        @Nullable
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return getResources().getText(titles[position]);
+        }
     }
 }

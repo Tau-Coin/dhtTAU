@@ -18,11 +18,12 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityCommunityBinding;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.chat.ChatsTabFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
@@ -38,7 +39,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private ActivityCommunityBinding binding;
     private CommunityViewModel communityViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private Community community;
+    private String chainID;
     private List<Fragment> fragmentList = new ArrayList<>();
     private int[] titles = new int[]{R.string.community_instant_chat, R.string.community_chain_note,
             R.string.community_wired, R.string.community_queue};
@@ -60,7 +61,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
      */
     private void initParameter() {
         if(getIntent() != null){
-            community = getIntent().getParcelableExtra(IntentExtra.BEAN);
+            chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
         }
     }
 
@@ -68,8 +69,8 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
      * 初始化布局
      */
     private void initLayout() {
-        if(community != null){
-            String communityName = community.communityName;
+        if(StringUtil.isNotEmpty(chainID)){
+            String communityName = UsersUtil.getCommunityName(chainID);
             binding.toolbarInclude.tvGroupName.setText(Html.fromHtml(communityName));
             binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats, 0, 0));
         }
@@ -83,14 +84,14 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         // 添加Chat页面
         Fragment chatTab = new ChatsTabFragment();
         Bundle chatBundle = new Bundle();
-        chatBundle.putParcelable(IntentExtra.BEAN, community);
+        chatBundle.putString(IntentExtra.CHAIN_ID, chainID);
         chatTab.setArguments(chatBundle);
         fragmentList.add(chatTab);
 
         // 添加Chain Note页面
         Fragment chainNoteTab = new TxsTabFragment();
         Bundle noteBundle = new Bundle();
-        noteBundle.putParcelable(IntentExtra.BEAN, community);
+        noteBundle.putString(IntentExtra.CHAIN_ID, chainID);
         noteBundle.putInt(IntentExtra.TYPE, TypesConfig.TxType.FNoteType.ordinal());
         chainNoteTab.setArguments(noteBundle);
         fragmentList.add(chainNoteTab);
@@ -98,15 +99,15 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         // 添加Wired页面
         Fragment wiringTab = new TxsTabFragment();
         Bundle wiringBundle = new Bundle();
-        wiringBundle.putParcelable(IntentExtra.BEAN, community);
-        wiringBundle.putLong(IntentExtra.TYPE, TypesConfig.TxType.WCoinsType.ordinal());
+        wiringBundle.putString(IntentExtra.CHAIN_ID, chainID);
+        wiringBundle.putInt(IntentExtra.TYPE, TypesConfig.TxType.WCoinsType.ordinal());
         wiringTab.setArguments(wiringBundle);
         fragmentList.add(wiringTab);
 
         // 添加Queue页面
         Fragment queueTab = new TxsTabFragment();
         Bundle queueBundle = new Bundle();
-        queueBundle.putParcelable(IntentExtra.BEAN, community);
+        queueBundle.putString(IntentExtra.CHAIN_ID, chainID);
         queueTab.setArguments(queueBundle);
         fragmentList.add(queueTab);
 
@@ -153,12 +154,12 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if( null == community){
+        if(StringUtil.isEmpty(chainID)){
             return false;
         }
         if (item.getItemId() == R.id.community_search) {
             Intent intent = new Intent();
-            intent.putExtra(IntentExtra.BEAN, community);
+            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
             ActivityUtil.startActivity(intent, this, SearchActivity.class);
         }
         return true;
@@ -170,7 +171,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
             binding.llTodayIncomeTips.setVisibility(View.GONE);
         }else if (v.getId() == R.id.toolbar_title) {
             Intent intent = new Intent();
-            intent.putExtra(IntentExtra.BEAN, community);
+            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
             ActivityUtil.startActivityForResult(intent, this, MembersActivity.class, REQUEST_CODE);
         }
     }

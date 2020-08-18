@@ -3,11 +3,9 @@ package io.taucoin.torrent.publishing.ui.contacts;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import com.frostwire.jlibtorrent.Ed25519;
 
@@ -26,6 +24,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -40,6 +39,7 @@ import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.customviews.ShareDialog;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
+import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 import io.taucoin.util.ByteUtil;
 
@@ -47,12 +47,11 @@ import io.taucoin.util.ByteUtil;
  * 联系人页面
  */
 public class ContactsActivity extends BaseActivity implements ContactListAdapter.ClickListener {
-    private static final int PAGE_CONTACT_LIST = 0;
+    public static final int PAGE_CONTACT_LIST = 0;
     public static final int PAGE_SELECT_CONTACT = 1;
     public static final int PAGE_ADD_MEMBERS = 2;
     private ActivityContactsBinding binding;
     private UserViewModel userViewModel;
-    private CommunityViewModel communityViewModel;
     private TxViewModel txViewModel;
     private ContactListAdapter adapter;
     private ShareDialog shareDialog;
@@ -68,7 +67,6 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         binding = DataBindingUtil.setContentView(this, R.layout.activity_contacts);
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
-        communityViewModel = provider.get(CommunityViewModel.class);
         txViewModel = provider.get(TxViewModel.class);
         initParameter();
         initView();
@@ -155,20 +153,6 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
                 commonDialog.closeDialog();
             }
         });
-        communityViewModel.getChatState().observe(this, state -> {
-            closeProgressDialog();
-            if (StringUtil.isNotEmpty(state)) {
-                ToastUtils.showShortToast(state);
-            } else {
-                String airdropResult = getString(R.string.contacts_airdrop_successfully,
-                        FmtMicrometer.fmtFeeValue(Constants.AIRDROP_COIN.longValue()));
-                ToastUtils.showShortToast(airdropResult);
-                onBackPressed();
-            }
-            if (commonDialog != null) {
-                commonDialog.closeDialog();
-            }
-        });
     }
 
     private void showUserList(List<UserAndMember> users) {
@@ -218,25 +202,17 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     }
 
     @Override
-    public void onItemClicked(@NonNull User user) {
-        Intent intent = new Intent();
-        intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
-        setResult(RESULT_OK, intent);
-        onBackPressed();
-    }
-
-    @Override
-    public void onShareClicked(@NonNull User user) {
-        if (page == PAGE_ADD_MEMBERS) {
-            showShareDialog(user);
-        } else {
-            showChatDialog(user);
+    public void onItemClicked(@NonNull UserAndMember user) {
+        if(page == PAGE_SELECT_CONTACT){
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
+            setResult(RESULT_OK, intent);
+            onBackPressed();
+        }else{
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
+            ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
         }
-    }
-
-    @Override
-    public void onUserClicked(@NonNull UserAndMember user) {
-        userViewModel.showUserInfoDialog(this, user);
     }
 
     /**
@@ -263,36 +239,6 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         builder.addItems(R.mipmap.icon_share_sms, R.string.contacts_sms);
         shareDialog = builder.create();
         shareDialog.show();
-    }
-
-    /**
-     * 显示和朋友Chatting的对话框
-     */
-    private void showChatDialog(User user) {
-        ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this),
-                R.layout.contacts_dialog, null, false);
-        String showName = UsersUtil.getShowName(user);
-        binding.tvTitle.setText(Html.fromHtml(getString(R.string.contacts_chatting, showName)));
-        binding.tvTitle.setVisibility(View.VISIBLE);
-        binding.etChatName.setVisibility(View.VISIBLE);
-        binding.etPublicKey.setVisibility(View.GONE);
-        binding.tvSubmit.setText(R.string.common_start);
-        binding.ivClose.setOnClickListener(v -> {
-            if (commonDialog != null) {
-                commonDialog.closeDialog();
-            }
-        });
-        binding.tvSubmit.setOnClickListener(v -> {
-            String chatName = ViewUtils.getText(binding.etChatName);
-            showProgressDialog();
-            communityViewModel.createChat(txViewModel, chatName, user.publicKey);
-        });
-
-        commonDialog = new CommonDialog.Builder(this)
-                .setContentView(binding.getRoot())
-                .setButtonWidth(240)
-                .create();
-        commonDialog.show();
     }
 
     /**
@@ -347,6 +293,9 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         super.onDestroy();
         if (shareDialog != null) {
             shareDialog.closeDialog();
+        }
+        if (commonDialog != null) {
+            commonDialog.closeDialog();
         }
     }
 }

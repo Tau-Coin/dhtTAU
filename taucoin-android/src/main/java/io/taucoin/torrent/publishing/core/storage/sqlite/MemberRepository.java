@@ -4,6 +4,7 @@ package io.taucoin.torrent.publishing.core.storage.sqlite;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.paging.DataSource;
 import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
@@ -36,4 +37,6 @@ public interface MemberRepository {
     Member getMemberByChainIDAndPk(@NonNull String chainID, @NonNull String publicKey);
 
     Flowable<List<MemberAndUser>> observeCommunityMembers(String chainID);
+
+    DataSource.Factory<Integer, MemberAndUser> queryCommunityMembers(String chainID, boolean onChain);
 }

@@ -16,7 +16,6 @@ import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -33,12 +32,12 @@ import io.taucoin.torrent.publishing.ui.Selectable;
 public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.ViewHolder>
     implements Selectable<UserAndTx> {
     private ClickListener listener;
-    private Community community;
+    private String chainID;
 
-    TxListAdapter(ClickListener listener, Community community) {
+    TxListAdapter(ClickListener listener, String chainID) {
         super(diffCallback);
         this.listener = listener;
-        this.community = community;
+        this.chainID = chainID;
     }
 
     @NonNull
@@ -57,7 +56,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
                     parent,
                     false);
         }
-        return new ViewHolder(binding, listener, community);
+        return new ViewHolder(binding, listener, chainID);
     }
 
     @Override
@@ -94,18 +93,18 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
         private ViewDataBinding binding;
         private ClickListener listener;
         private Context context;
-        private Community community;
+        private String chainID;
 
-        ViewHolder(ViewDataBinding binding, ClickListener listener, Community community) {
+        ViewHolder(ViewDataBinding binding, ClickListener listener, String chainID) {
             super(binding.getRoot());
             this.context = binding.getRoot().getContext();
             this.binding = binding;
             this.listener = listener;
-            this.community = community;
+            this.chainID = chainID;
         }
 
         void bind(ViewHolder holder, UserAndTx tx) {
-            if(null == binding || null == holder || null == tx || null == community){
+            if(null == binding || null == holder || null == tx || StringUtil.isEmpty(chainID)){
                 return;
             }
             String time = DateUtil.getWeekTime(tx.timestamp);
@@ -128,7 +127,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
                     txBinding.tvResult.setTextColor(context.getResources().getColor(R.color.color_blue));
                     txBinding.tvAmount.setTextColor(context.getResources().getColor(R.color.color_blue));
                 }
-                String amount = FmtMicrometer.fmtBalance(tx.amount) + " " + UsersUtil.getCoinName(community);
+                String amount = FmtMicrometer.fmtBalance(tx.amount) + " " + UsersUtil.getCoinName(chainID);
                 txBinding.tvAmount.setText(amount);
                 txBinding.tvReceiver.setText(tx.receiverPk);
                 txBinding.tvFee.setText(FmtMicrometer.fmtFeeValue(tx.fee));

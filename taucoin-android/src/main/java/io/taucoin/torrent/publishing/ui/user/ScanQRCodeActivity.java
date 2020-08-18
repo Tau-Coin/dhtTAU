@@ -34,6 +34,7 @@ import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.GlideEngine;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ZxingUtil;
+import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -41,7 +42,6 @@ import io.taucoin.util.ByteUtil;
  */
 public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickListener {
 
-    private UserViewModel userViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     // 是否连续扫码
     private boolean isContinuousScan = true;
@@ -62,8 +62,6 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
         ActivityUtil.setRequestedOrientation(this);
 //        ActivityUtil.lockOrientation(this);
         super.onCreate(savedInstanceState);
-        ViewModelProvider provider = new ViewModelProvider(this);
-        userViewModel = provider.get(UserViewModel.class);
         initView();
         //获取CaptureHelper，里面有扫码相关的配置设置
         getCaptureHelper().playBeep(false)// 播放音效
@@ -108,7 +106,10 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
         try {
             if(StringUtil.isNotEmpty(publicKey) &&
                     ByteUtil.toByte(publicKey).length == Ed25519.PUBLIC_KEY_SIZE){
-                userViewModel.showUserInfoDialog(this, publicKey);
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.PUBLIC_KEY, publicKey);
+                ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
+                onBackPressed();
                 return;
             }
         }catch (Exception ignore){ }
