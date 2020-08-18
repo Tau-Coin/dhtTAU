@@ -60,11 +60,11 @@ public class GenesisConfig {
     private byte[] pubkey;
     private byte[] signature;
 
-    private Block genesisBlock;
+    protected Block genesisBlock;
 
     // genesis transaction hash
     private String communityName;
-    private GenesisTx genesisTx;
+    protected GenesisTx genesisTx;
 
     /**
      * GenesisConfig constructor.
@@ -80,19 +80,21 @@ public class GenesisConfig {
         this.timeStamp = timeStamp;
         this.baseTarget = baseTarget;
         this.cummulativeDifficulty = cummulativeDifficulty;
+        this.pubkey = pubkey;
 
-        this.pubkey = new byte[pubkey.length];
-        System.arraycopy(pubkey, 0, this.pubkey, 0, pubkey.length);
         // According to POT consensus,
         // generationSignature = hash(previous block generationSignature + pubkey)
         // here previous block generationSignature is null.
         this.generationSignature = HashUtil.sha1hash(this.pubkey);
+        logger.info("sha1 hash bits:" + this.generationSignature.length);
+
         this.signature = signature;
 
         this.genesisTx = genesisTx;
-        this.communityName = "TAU";
+        this.communityName = TauGenesisTransaction.CommunityName;
 
-        // TODO: construct genesis block
+        // construct genesis block
+        this.genesisBlock = new Block(this);
     }
 
     /**
@@ -104,7 +106,7 @@ public class GenesisConfig {
             HashMap<ByteArrayWrapper, GenesisItem> genesisItems) {
 
         // First of all, get account state from TAU blockchain.
-        byte[] tauChainID = null;
+        byte[] tauChainID = TauGenesisTransaction.ChainID;
         Pair<byte[], byte[]> senderKey = AccountManager.getInstance().getKeyPair();
         long senderNonce = 0;
 
@@ -138,7 +140,10 @@ public class GenesisConfig {
         this.generationSignature = HashUtil.sha1hash(this.pubkey);
         this.signature = null;
 
-        // TODO: construct genesis block
+        // construct genesis block
+        this.genesisBlock = new Block(this);
+        this.genesisBlock.signBlock(senderKey.second);
+        this.signature = this.genesisBlock.getSignature();
     }
 
     /**

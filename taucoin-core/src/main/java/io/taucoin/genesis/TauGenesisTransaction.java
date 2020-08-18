@@ -19,7 +19,7 @@ public final class TauGenesisTransaction extends GenesisTx {
             = "3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124";
 
     // TAU genesis tx timestamp
-    public static final long TimeStamp = 1596554530;
+    public static final long TimeStamp = 1597735687;
 
     public static final String CommunityName = "TAUcoin";
 
@@ -29,12 +29,13 @@ public final class TauGenesisTransaction extends GenesisTx {
         ChainID = GenesisConfig.chainID(CommunityName, Hex.decode(Sender), TimeStamp);
     }
 
-    private static final String seed
-            = "95cd9f12598163a604c01f746bb6f80235c0a1938d70d50c72b7eef3fc158e0c";
-
     // TAU genesis tx signature
     public static final String Signature
-            = "9f0c546cceb1932f01d3fe99029038663fe75f2e65377f88093ae2c30ee31f27";
+            = "4272575b5a8c0be52c4afa5a802dd7202fcbf25996a10448832c349b3d6b94c101c44c39367738d631e2b17e24aaba4f004d4da28d009b8de3de8d24bcfeab0a";
+
+    // This private key is just for test to generate signature.
+    private static final String sPrivKey
+            = "f008065e3ff567d4471231a4a0609e118b28f0639f9768d3f8bb123f8f0b38706ade0527cb0dd1e57ad0003fbf8e5af51c0bf0471e639b4920ab49ac17ff88f1";
 
     private static final HashMap<ByteArrayWrapper, GenesisItem> sGensisItems
             = new HashMap<ByteArrayWrapper, GenesisItem>();
@@ -43,25 +44,25 @@ public final class TauGenesisTransaction extends GenesisTx {
         sGensisItems.put(
             new ByteArrayWrapper(
                     Hex.decode("63ec42130442c91e23d56dc73708e06eb164883ab74c9813764c3fd0e2042dc4")),
-            new GenesisItem(new BigInteger("100000", 10), new BigInteger("100", 10))
+            new GenesisItem(new BigInteger("10000000", 10), new BigInteger("100", 10))
         );
 
         sGensisItems.put(
             new ByteArrayWrapper(
                     Hex.decode("809df518ee450ded0a659aeb4bc5bec636e2cff012fc88d343b7419af974bb81")),
-            new GenesisItem(new BigInteger("100000", 10), new BigInteger("100", 10))
+            new GenesisItem(new BigInteger("10000000", 10), new BigInteger("100", 10))
         );
 
         sGensisItems.put(
             new ByteArrayWrapper(
                     Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9")),
-            new GenesisItem(new BigInteger("100000", 10), new BigInteger("100", 10))
+            new GenesisItem(new BigInteger("10000000", 10), new BigInteger("100", 10))
         );
 
         sGensisItems.put(
             new ByteArrayWrapper(
                     Hex.decode("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124")),
-            new GenesisItem(new BigInteger("100000", 10), new BigInteger("100", 10))
+            new GenesisItem(new BigInteger("10000000", 10), new BigInteger("100", 10))
         );
     }
 
@@ -86,9 +87,15 @@ public final class TauGenesisTransaction extends GenesisTx {
 
     private TauGenesisTransaction() {
 
-        super(1L, ChainID, TimeStamp, 0L, 0L, Hex.decode(Sender), 1L, sGensisItems, null);
+        /**
+        super(1L, ChainID, TimeStamp, 0L, 0L, Hex.decode(Sender), 1L,
+                sGensisItems, Hex.decode(Signature));
+         */
 
-        signTransactionWithSeed(Hex.decode(seed));
+        // The following code is used to generate tx signature
+        super(1L, ChainID, TimeStamp, 0L, 0L, Hex.decode(Sender), 1L, sGensisItems);
+        signTransactionWithPriKey(Hex.decode(sPrivKey));
         logger.info("signature:" + Hex.toHexString(getSignature()));
+        logger.info("verify signature result:" + verifyTransactionSig());
     }
 }
