@@ -94,9 +94,8 @@ public class MemberListAdapter extends ListAdapter<MemberAndUser, MemberListAdap
                 return;
             }
             String showName = UsersUtil.getDefaultName(member.publicKey);
-            if(member.user != null && StringUtil.isNotEmpty(member.user.localName)
-                    && StringUtil.isNotEquals(member.user.localName, showName)){
-                showName = context.getString(R.string.user_show_name, member.user.localName, showName);
+            if(member.user != null){
+                showName = UsersUtil.getShowName(member.user);
             }
             holder.binding.tvName.setText(showName);
             String firstLetters = StringUtil.getFirstLettersOfName(showName);

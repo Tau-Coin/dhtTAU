@@ -108,7 +108,7 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
             if(null == holder || null == user){
                 return;
             }
-            holder.binding.ivShare.setVisibility(type == ContactsActivity.PAGE_SELECT_CONTACT ? View.GONE : View.VISIBLE);
+            holder.binding.ivShare.setVisibility((type == ContactsActivity.PAGE_SELECT_CONTACT) ? View.GONE : View.VISIBLE);
             int imgRid = type == ContactsActivity.PAGE_ADD_MEMBERS ? R.mipmap.icon_share : R.mipmap.icon_share_community;
             holder.binding.ivShare.setImageResource(imgRid);
             holder.binding.cbSelect.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS ? View.VISIBLE : View.GONE);

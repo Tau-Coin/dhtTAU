@@ -269,7 +269,8 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
      * 显示和朋友Chatting的对话框
      */
     private void showChatDialog(User user) {
-        ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this), R.layout.contacts_dialog, null, false);
+        ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this),
+                R.layout.contacts_dialog, null, false);
         String showName = UsersUtil.getShowName(user);
         binding.tvTitle.setText(Html.fromHtml(getString(R.string.contacts_chatting, showName)));
         binding.tvTitle.setVisibility(View.VISIBLE);
@@ -298,7 +299,8 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
      * 显示新增朋友公钥的对话框
      */
     private void showAddPublicKeyDialog() {
-        ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this), R.layout.contacts_dialog, null, false);
+        ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this),
+                R.layout.contacts_dialog, null, false);
         binding.ivClose.setOnClickListener(v -> {
             if (commonDialog != null) {
                 commonDialog.closeDialog();
@@ -306,8 +308,16 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         });
         binding.tvSubmit.setOnClickListener(v -> {
             String publicKey = ViewUtils.getText(binding.etPublicKey);
-            if (StringUtil.isEmpty(publicKey) ||
-                    ByteUtil.toByte(publicKey).length != Ed25519.PUBLIC_KEY_SIZE) {
+            boolean isValid = true;
+            try {
+                if (StringUtil.isEmpty(publicKey) ||
+                        ByteUtil.toByte(publicKey).length != Ed25519.PUBLIC_KEY_SIZE) {
+                    isValid = false;
+                }
+            } catch(Exception e) {
+                isValid = false;
+            }
+            if (!isValid){
                 ToastUtils.showShortToast(R.string.contacts_error_invalid_pk);
                 return;
             }
