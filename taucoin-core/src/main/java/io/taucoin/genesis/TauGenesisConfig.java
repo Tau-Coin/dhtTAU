@@ -17,7 +17,7 @@ public final class TauGenesisConfig extends GenesisConfig {
 
     // TAU genesis tx signature
     public static final String Signature
-            = "9f0c546cceb1932f01d3fe99029038663fe75f2e65377f88093ae2c30ee31f27";
+            = "1aca528132e42591aff7e3bdd00e3dd4a5bfd7f5e0e0fbde84c245feb5c874268b2cd58b2c555f3899b603ff85f3e80f095840356515221b4b97729fc6e00f08";
 
    // This private key is just for test to generate signature.
     private static final String sPrivKey
@@ -44,20 +44,20 @@ public final class TauGenesisConfig extends GenesisConfig {
 
     private TauGenesisConfig() {
 
-        /**
         super(1L, TimeStamp, GenesisConfig.DefaultBaseTarget,
                 GenesisConfig.DefaultCummulativeDifficulty,
                 Hex.decode(PubKey), Hex.decode(Signature),
                 TauGenesisTransaction.getInstance());
-         */
 
         // The following code is used to generate block signature
+        /*
         super(1L, TimeStamp, GenesisConfig.DefaultBaseTarget,
                 GenesisConfig.DefaultCummulativeDifficulty,
                 Hex.decode(PubKey), null,
                 TauGenesisTransaction.getInstance());
         this.genesisBlock.signBlock(Hex.decode(sPrivKey));
         logger.info("blk signature:" + Hex.toHexString(this.genesisBlock.getSignature()));
+        */
         logger.info("verify signature result:" + this.genesisBlock.verifyBlockSig());
     }
 }

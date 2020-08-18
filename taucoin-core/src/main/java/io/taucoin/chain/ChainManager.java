@@ -218,7 +218,7 @@ public class ChainManager {
         byte[] chainID = cf.getChainID();
 		
         Block genesis = cf.getBlock();
-        BlockContainer genesisContainer = null;
+        BlockContainer genesisContainer = new BlockContainer(genesis, cf.getTransaction());
 
         boolean ret = followChain(chainID);
 

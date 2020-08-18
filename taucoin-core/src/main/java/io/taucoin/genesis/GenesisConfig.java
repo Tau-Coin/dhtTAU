@@ -86,7 +86,6 @@ public class GenesisConfig {
         // generationSignature = hash(previous block generationSignature + pubkey)
         // here previous block generationSignature is null.
         this.generationSignature = HashUtil.sha1hash(this.pubkey);
-        logger.info("sha1 hash bits:" + this.generationSignature.length);
 
         this.signature = signature;
 

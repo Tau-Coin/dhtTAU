@@ -31,7 +31,7 @@ public final class TauGenesisTransaction extends GenesisTx {
 
     // TAU genesis tx signature
     public static final String Signature
-            = "4272575b5a8c0be52c4afa5a802dd7202fcbf25996a10448832c349b3d6b94c101c44c39367738d631e2b17e24aaba4f004d4da28d009b8de3de8d24bcfeab0a";
+            = "f5dfac335aecc50b9b49d2fb5422add6348bbd6efdc0c9047f913dc53652eb1b1a125344c91d7efe62b9e1f9e4a5babafdca210d18502425855790f191991009";
 
     // This private key is just for test to generate signature.
     private static final String sPrivKey
@@ -87,15 +87,15 @@ public final class TauGenesisTransaction extends GenesisTx {
 
     private TauGenesisTransaction() {
 
-        /**
         super(1L, ChainID, TimeStamp, 0L, 0L, Hex.decode(Sender), 1L,
                 sGensisItems, Hex.decode(Signature));
-         */
 
         // The following code is used to generate tx signature
+        /*
         super(1L, ChainID, TimeStamp, 0L, 0L, Hex.decode(Sender), 1L, sGensisItems);
         signTransactionWithPriKey(Hex.decode(sPrivKey));
         logger.info("signature:" + Hex.toHexString(getSignature()));
+         */
         logger.info("verify signature result:" + verifyTransactionSig());
     }
 }
