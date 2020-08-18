@@ -93,7 +93,7 @@ public class Block {
      * @param senderNonce:transaction sender nonce(power).
      * @param signature:block signature.
      */
-    public Block(long version, long timestamp, long blockNum, byte[] previousBlockHash,
+    public  Block(long version, long timestamp, long blockNum, byte[] previousBlockHash,
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, byte[] txHash, long minerBalance, long senderBalance,
                  long receiverBalance, long senderNonce, byte[] signature,byte[] minerPubkey){
@@ -116,7 +116,7 @@ public class Block {
         this.immutableBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(immutableBlockHash, ChainParam.HashLongArrayLength);
         this.baseTarget = ByteUtil.byteArrayToLong(baseTarget.toByteArray());
         this.cumulativeDifficulty = ByteUtil.byteArrayToLong(cumulativeDifficulty.toByteArray());
-        this.generationSignature = ByteUtil.byteArrayToSignLongArray(generationSignature, ChainParam.HashLongArrayLength);
+        this.generationSignature = ByteUtil.unAlignByteArrayToSignLongArray(generationSignature, ChainParam.HashLongArrayLength);
         this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
         this.minerBalance = minerBalance;
         this.senderBalance = senderBalance;
@@ -343,34 +343,9 @@ public class Block {
      * get previous block hash.
      * @return
      */
-    public byte[] getPreviousBlockHashCowTC() {
-        if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(previousBlockHash, ChainParam.HashLength);
-    }
-
-    /**
-     * get previous block hash.
-     * @return
-     */
     public byte[] getPreviousBlockHash() {
         if(!isParsed) parseEncodedBytes();
-        byte[] longbyte0 = ByteUtil.longToBytes(previousBlockHash.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(previousBlockHash.get(1));
-        byte[] longbyte2 = ByteUtil.keep4bytesOfLong(previousBlockHash.get(2));
-        byte[] hash = new byte[ChainParam.HashLength];
-        System.arraycopy(longbyte0, 0, hash, 0, 8);
-        System.arraycopy(longbyte1, 0, hash, 8, 8);
-        System.arraycopy(longbyte2, 0, hash, 16, 4);
-        return hash;
-    }
-
-    /**
-     * get immutable block hash.
-     * @return
-     */
-    public byte[] getImmutableBlockHashCowTC() {
-        if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(immutableBlockHash, ChainParam.HashLength);
+        return ByteUtil.longArrayToBytes(previousBlockHash, ChainParam.HashLength);
     }
 
     /**
@@ -379,14 +354,7 @@ public class Block {
      */
     public byte[] getImmutableBlockHash() {
         if(!isParsed) parseEncodedBytes();
-        byte[] longbyte0 = ByteUtil.longToBytes(immutableBlockHash.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(immutableBlockHash.get(1));
-        byte[] longbyte2 = ByteUtil.keep4bytesOfLong(immutableBlockHash.get(2));
-        byte[] hash = new byte[ChainParam.HashLength];
-        System.arraycopy(longbyte0, 0, hash, 0, 8);
-        System.arraycopy(longbyte1, 0, hash, 8, 8);
-        System.arraycopy(longbyte2, 0, hash, 16, 4);
-        return hash;
+        return ByteUtil.longArrayToBytes(immutableBlockHash, ChainParam.HashLength);
     }
 
     /**
@@ -414,54 +382,18 @@ public class Block {
      * get current block generation signature.
      * @return
      */
-    public byte[] getGenerationSignatureCowTC() {
-        if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(generationSignature, ChainParam.HashLength);
-    }
-
-    /**
-     * get current block generation signature.
-     * @return
-     */
     public byte[] getGenerationSignature() {
         if(!isParsed) parseEncodedBytes();
-        byte[] longbyte0 = ByteUtil.longToBytes(generationSignature.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(generationSignature.get(1));
-        byte[] longbyte2 = ByteUtil.longToBytes(generationSignature.get(2));
-        byte[] geneSigbytes = new byte[ChainParam.HashLength];
-        System.arraycopy(longbyte0, 0, geneSigbytes, 0, 8);
-        System.arraycopy(longbyte1, 0, geneSigbytes, 8, 8);
-        System.arraycopy(longbyte2, 0, geneSigbytes, 16, 4);
-        return geneSigbytes;
+        return ByteUtil.longArrayToBytes(generationSignature, ChainParam.HashLength);
     }
 
     /**
      * get transaction hash
      * @return
      */
-    public byte[] getTxHashCowTC() {
+    public byte[] getTxHash() {
         if(!isParsed) parseEncodedBytes();
         return ByteUtil.longArrayToBytes(txHash, ChainParam.HashLength);
-    }
-
-    /**
-     * get current block transaction maybe empty block.
-     * @return
-     */
-    public byte[] getTxHash() {
-
-        if(!isParsed) parseEncodedBytes();
-
-        byte[] longbyte0 = ByteUtil.longToBytes(txHash.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(txHash.get(1));
-        byte[] longbyte2 = ByteUtil.longToBytes(txHash.get(2));
-        byte[] txHashBytes = new byte[ChainParam.HashLength];
-
-        System.arraycopy(longbyte0, 0, txHashBytes, 0, 8);
-        System.arraycopy(longbyte1, 0, txHashBytes, 8, 8);
-        System.arraycopy(longbyte2, 0, txHashBytes, 16, 4);
-
-        return txHashBytes;
     }
 
     /**
@@ -504,65 +436,20 @@ public class Block {
      * get block signature hash
      * @return
      */
-    public byte[] getSignatureCowTC() {
-        if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(signature, ChainParam.SignatureLength);
-    }
-
-    /**
-     * watch out for temporary block without signature ,return is null.
-     * @return
-     */
     public byte[] getSignature() {
         if(!isParsed) parseEncodedBytes();
-        byte[] longbyte0 = ByteUtil.longToBytes(signature.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(signature.get(1));
-        byte[] longbyte2 = ByteUtil.longToBytes(signature.get(2));
-        byte[] longbyte3 = ByteUtil.longToBytes(signature.get(3));
-        byte[] longbyte4 = ByteUtil.longToBytes(signature.get(4));
-        byte[] longbyte5 = ByteUtil.longToBytes(signature.get(5));
-        byte[] longbyte6 = ByteUtil.longToBytes(signature.get(6));
-        byte[] longbyte7 = ByteUtil.longToBytes(signature.get(7));
-        byte[] sigbytes = new byte[ChainParam.SignatureLength];
-        System.arraycopy(longbyte0, 0, sigbytes, 0, 8);
-        System.arraycopy(longbyte1, 0, sigbytes, 8, 8);
-        System.arraycopy(longbyte2, 0, sigbytes, 16, 8);
-        System.arraycopy(longbyte3, 0, sigbytes, 24, 8);
-        System.arraycopy(longbyte4, 0, sigbytes, 32, 8);
-        System.arraycopy(longbyte5, 0, sigbytes, 40, 8);
-        System.arraycopy(longbyte6, 0, sigbytes, 48, 8);
-        System.arraycopy(longbyte7, 0, sigbytes, 56, 8);
-        return sigbytes;
+        return ByteUtil.longArrayToBytes(signature, ChainParam.SignatureLength);
     }
 
     /**
      * get miner pubkey
      * @return
      */
-    public byte[] getMinerPubkeyCowTC() {
+    public byte[] getMinerPubkey() {
         if(!isParsed) parseEncodedBytes();
         return ByteUtil.longArrayToBytes(minerPubkey, ChainParam.PubkeyLength);
     }
 
-    /**
-     * get miner pubkey.
-     * @return
-     */
-    public byte[] getMinerPubkey(){
-        if(!isParsed) parseEncodedBytes();
-        byte[] longbyte0 = ByteUtil.longToBytes(minerPubkey.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(minerPubkey.get(1));
-        byte[] longbyte2 = ByteUtil.longToBytes(minerPubkey.get(2));
-        byte[] longbyte3 = ByteUtil.longToBytes(minerPubkey.get(3));
-
-        byte[] pubkeybytes = new byte[ChainParam.PubkeyLength];
-        System.arraycopy(longbyte0, 0, pubkeybytes, 0, 8);
-        System.arraycopy(longbyte1, 0, pubkeybytes, 8, 8);
-        System.arraycopy(longbyte2, 0, pubkeybytes, 16, 8);
-        System.arraycopy(longbyte3, 0, pubkeybytes, 24, 8);
-
-        return pubkeybytes;
-    }
     /**
      * get block hash
      * @return

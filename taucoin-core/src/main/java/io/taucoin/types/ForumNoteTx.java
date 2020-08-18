@@ -19,11 +19,7 @@ package io.taucoin.types;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
 
-import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Entry;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -190,31 +186,12 @@ public class ForumNoteTx extends Transaction {
      * get forum message.
      * @return
      */
-    public byte[] getForumNoteHashCowTC(){
-        if(txType != TypesConfig.TxType.FNoteType.ordinal()) {
-            logger.error("Forum note transaction get note error, tx type is {}", txType);
-        } 
-        if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(forumNoteHash, ChainParam.HashLength);
-    }
-
-    /**
-     * get forum message.
-     * @return
-     */
     public byte[] getForumNoteHash(){
         if(txType != TypesConfig.TxType.FNoteType.ordinal()) {
             logger.error("Forum note transaction get note error, tx type is {}", txType);
         } 
         if(!isParsed) parseEncodedBytes();
-        byte[] longbyte0 = ByteUtil.longToBytes(forumNoteHash.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(forumNoteHash.get(1));
-        byte[] longbyte2 = ByteUtil.keep4bytesOfLong(forumNoteHash.get(2));
-        byte[] fnHash = new byte[ChainParam.HashLength];
-        System.arraycopy(longbyte0, 0, fnHash, 0, 8);
-        System.arraycopy(longbyte1, 0, fnHash, 8, 8);
-        System.arraycopy(longbyte2, 0, fnHash, 16, 4);
-        return fnHash;
+        return ByteUtil.longArrayToBytes(forumNoteHash, ChainParam.HashLength);
     }
 
     @Override

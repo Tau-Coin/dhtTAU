@@ -87,6 +87,7 @@ public class WiringCoinsTx extends Transaction {
      * @param encodedBytes:complete byte encoding.
      */
     public WiringCoinsTx(byte[] encodedBytes) {
+        //父类构造函数
         super(encodedBytes);
     }
 
@@ -208,37 +209,13 @@ public class WiringCoinsTx extends Transaction {
      * get receiver pubkey in transaction.
      * @return
      */
-    public byte[] getReceiverCowTC(){
-        if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
-            logger.error("Wiring transaction get pubkey error, tx type is {}", txType);
-        } 
-        if(!isParsed) parseEncodedBytes();
-
-        return ByteUtil.longArrayToBytes(receiverPubkey, ChainParam.PubkeyLength);
-    }
-
-    /**
-     * get receiver pubkey in transaction.
-     * @return
-     */
     public byte[] getReceiver(){
         if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Wiring transaction get pubkey error, tx type is {}", txType);
         } 
         if(!isParsed) parseEncodedBytes();
 
-        byte[] longbyte0 = ByteUtil.longToBytes(receiverPubkey.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(receiverPubkey.get(1));
-        byte[] longbyte2 = ByteUtil.longToBytes(receiverPubkey.get(2));
-        byte[] longbyte3 = ByteUtil.longToBytes(receiverPubkey.get(3));
-
-        byte[] receiver = new byte[ChainParam.PubkeyLength];
-        System.arraycopy(longbyte0, 0, receiver, 0, 8);
-        System.arraycopy(longbyte1, 0, receiver, 8, 8);
-        System.arraycopy(longbyte2, 0, receiver, 16, 8);
-        System.arraycopy(longbyte3, 0, receiver, 24, 8);
-
-        return receiver;
+        return ByteUtil.longArrayToBytes(receiverPubkey, ChainParam.PubkeyLength);
     }
 
     /**

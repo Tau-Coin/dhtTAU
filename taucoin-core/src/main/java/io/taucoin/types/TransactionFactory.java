@@ -16,8 +16,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
-import io.taucoin.param.ChainParam;
-
 import com.frostwire.jlibtorrent.Entry;
 
 import java.util.List;

@@ -174,30 +174,9 @@ public abstract class Transaction {
      * get tx sender pubkey.
      * @return
      */
-    public byte[] getSenderPubkeyCowTC() {
-        if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(senderPubkey, ChainParam.PubkeyLength);
-    }
-
-    /**
-     * get tx sender pubkey.
-     * @return
-     */
     public byte[] getSenderPubkey() {
         if(!isParsed) parseEncodedBytes();
-
-        byte[] longbyte0 = ByteUtil.longToBytes(senderPubkey.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(senderPubkey.get(1));
-        byte[] longbyte2 = ByteUtil.longToBytes(senderPubkey.get(2));
-        byte[] longbyte3 = ByteUtil.longToBytes(senderPubkey.get(3));
-        byte[] pubkeybytes = new byte[ChainParam.PubkeyLength];
-
-        System.arraycopy(longbyte0, 0, pubkeybytes, 0, 8);
-        System.arraycopy(longbyte1, 0, pubkeybytes, 8, 8);
-        System.arraycopy(longbyte2, 0, pubkeybytes, 16, 8);
-        System.arraycopy(longbyte3, 0, pubkeybytes, 24, 8);
-
-        return pubkeybytes;
+        return ByteUtil.longArrayToBytes(senderPubkey, ChainParam.PubkeyLength);
     }
 
     /**
@@ -213,38 +192,9 @@ public abstract class Transaction {
      * get transaction signature.
      * @return
      */
-    public byte[] getSignatureCowTC() {
-        if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(signature, ChainParam.SignatureLength);
-    }
-
-    /**
-     * get transaction signature.
-     * @return
-     */
     public byte[] getSignature() {
         if(!isParsed) parseEncodedBytes();
-
-        byte[] longbyte0 = ByteUtil.longToBytes(signature.get(0));
-        byte[] longbyte1 = ByteUtil.longToBytes(signature.get(1));
-        byte[] longbyte2 = ByteUtil.longToBytes(signature.get(2));
-        byte[] longbyte3 = ByteUtil.longToBytes(signature.get(3));
-        byte[] longbyte4 = ByteUtil.longToBytes(signature.get(4));
-        byte[] longbyte5 = ByteUtil.longToBytes(signature.get(5));
-        byte[] longbyte6 = ByteUtil.longToBytes(signature.get(6));
-        byte[] longbyte7 = ByteUtil.longToBytes(signature.get(7));
-        byte[] sigBytes = new byte[ChainParam.SignatureLength];
-
-        System.arraycopy(longbyte0, 0, sigBytes, 0, 8);
-        System.arraycopy(longbyte1, 0, sigBytes, 8, 8);
-        System.arraycopy(longbyte2, 0, sigBytes, 16, 8);
-        System.arraycopy(longbyte3, 0, sigBytes, 24, 8);
-        System.arraycopy(longbyte4, 0, sigBytes, 32, 8);
-        System.arraycopy(longbyte5, 0, sigBytes, 40, 8);
-        System.arraycopy(longbyte6, 0, sigBytes, 48, 8);
-        System.arraycopy(longbyte7, 0, sigBytes, 56, 8);
-
-        return sigBytes;
+        return ByteUtil.longArrayToBytes(signature, ChainParam.SignatureLength);
     }
 
     /**
