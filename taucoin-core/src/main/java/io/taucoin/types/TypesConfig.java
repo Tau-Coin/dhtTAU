@@ -16,8 +16,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 
-import java.math.BigInteger;
-
 /**
  * types config parameters.
  */

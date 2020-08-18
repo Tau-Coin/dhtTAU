@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.genesis.GenesisItem;
-import io.taucoin.param.ChainParam;
+import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -153,7 +153,7 @@ class TauListenHandler {
         Tx tx = new Tx(txID, chainID, fee, txType);
         tx.senderPk = ByteUtil.toHexString(txMsg.getSenderPubkey());
         tx.txStatus = isRollback ? 0 : 1;
-        if (txType == ChainParam.TxType.FNoteType.ordinal()){
+        if (txType == TypesConfig.TxType.FNoteType.ordinal()){
             // 保存用户信息
             saveUserInfo(txMsg.getSenderPubkey(), txMsg.getTimeStamp());
             // 添加社区成员
@@ -163,7 +163,7 @@ class TauListenHandler {
             tx.memo = "";
             txRepo.addTransaction(tx);
             logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
-        } else if (txType == ChainParam.TxType.WCoinsType.ordinal()){
+        } else if (txType == TypesConfig.TxType.WCoinsType.ordinal()){
             // 保存用户信息
             WiringCoinsTx wiringTx = (WiringCoinsTx) txMsg;
             saveUserInfo(txMsg.getSenderPubkey(), txMsg.getTimeStamp());
@@ -177,7 +177,7 @@ class TauListenHandler {
             tx.amount = wiringTx.getAmount();
             txRepo.addTransaction(tx);
             logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
-        } else if (txType == ChainParam.TxType.GMsgType.ordinal()){
+        } else if (txType == TypesConfig.TxType.GenesisType.ordinal()){
             GenesisTx genesisTx = (GenesisTx) txMsg;
             Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = genesisTx.getGenesisAccounts();
             if(genesisMsgKV != null){
@@ -197,13 +197,13 @@ class TauListenHandler {
     private void handleMemberInfo(@NonNull Transaction txMsg) {
         String chainID = ByteUtil.toHexString(txMsg.getChainID());
         long txType = txMsg.getTxType();
-        if (txType == ChainParam.TxType.FNoteType.ordinal()){
+        if (txType == TypesConfig.TxType.FNoteType.ordinal()){
             addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), false);
-        } else if (txType == ChainParam.TxType.WCoinsType.ordinal()) {
+        } else if (txType == TypesConfig.TxType.WCoinsType.ordinal()) {
             WiringCoinsTx tx = (WiringCoinsTx) txMsg;
             addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), false);
             addMemberInfo(txMsg.getChainID(), tx.getReceiver(), false);
-        }else if (txType == ChainParam.TxType.GMsgType.ordinal()){
+        }else if (txType == TypesConfig.TxType.GenesisType.ordinal()){
             GenesisTx genesisTx = (GenesisTx) txMsg;
             Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = genesisTx.getGenesisAccounts();
             if(genesisMsgKV != null){

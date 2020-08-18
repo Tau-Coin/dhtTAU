@@ -13,6 +13,8 @@ import org.spongycastle.util.encoders.Hex;
 
 public class ByteUtil {
 
+    public static final long EMPTY_STRING_TO_ALL = 0;
+    public static final ArrayList<Long> EMPTY_STRING_TO_ALLALL = new ArrayList<Long>(0);
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
     public static final byte[] ZERO_BYTE_ARRAY = new byte[]{0};
 
@@ -270,7 +272,7 @@ public class ByteUtil {
     /**
      * the last bytes piece in temp should be padding 0 before head byte.
      * @param b: [byte, byte, ......, byte]
-     * @param piece: b.length / 8 +1
+     * @param piece: b.length / 8 + 1
      * @return
      */
     public static ArrayList<Long> unAlignByteArrayToSignLongArray(byte[] b, int piece){
@@ -278,7 +280,7 @@ public class ByteUtil {
         int alignCount = piece - 1;
         byte[] zero = new byte[8 * piece - b.length];
 
-        for(int i = 0; i< zero.length; i++){
+        for(int i = 0; i < zero.length; i++){
             zero[i] = 0x00;
         }
         System.arraycopy(b, 0, temp, 0, alignCount * 8);
@@ -293,11 +295,15 @@ public class ByteUtil {
      * @return transformed ArrayList<Long></>
      */
     public static ArrayList<Long> stringToLongArrayList(String str){
+        ArrayList<Long> ret = new ArrayList<>();
+        if (null == str) {
+            ret.add(EMPTY_STRING_TO_ALL);
+            return ret;
+        }
         int start = str.indexOf("'");
         int end  = str.lastIndexOf("'");
         String newStr = str.substring(start, end + 1);
         String[] strArr = newStr.split(",");
-        ArrayList<Long> ret = new ArrayList<>();
         for(int i = 0; i < strArr.length; i++) {
             ret.add(Long.valueOf(strArr[i].trim().replace("'","")));
         }
@@ -311,14 +317,18 @@ public class ByteUtil {
      */
     public static ArrayList<ArrayList<Long>> stringToLong2ArrayList(String str) {
         //],
-        ArrayList<ArrayList<Long>> aTemp = new ArrayList<>();
+        ArrayList<ArrayList<Long>> ret = new ArrayList<>();
+        if (null == str) {
+            ret.add(EMPTY_STRING_TO_ALLALL);
+            return ret;
+        }
         String[] strArr = str.split("],");
         for(int i = 0; i < strArr.length; i++) {
-           ArrayList<Long> bTemp =  stringToLongArrayList(strArr[i]);
-           aTemp.add(bTemp);
+            ArrayList<Long> bTemp =  stringToLongArrayList(strArr[i]);
+            ret.add(bTemp);
         }
-        return aTemp;
-    } 
+        return ret;
+    }
 
     /**
      * Turn nibbles to a pretty looking output string

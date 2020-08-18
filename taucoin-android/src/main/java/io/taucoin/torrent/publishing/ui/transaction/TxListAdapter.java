@@ -12,7 +12,7 @@ import androidx.databinding.ViewDataBinding;
 import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
-import io.taucoin.param.ChainParam;
+import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
@@ -46,7 +46,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         ViewDataBinding binding;
-        if(viewType == ChainParam.TxType.WCoinsType.ordinal()){
+        if(viewType == TypesConfig.TxType.WCoinsType.ordinal()){
             binding = DataBindingUtil.inflate(inflater,
                     R.layout.item_wiring_tx,
                     parent,

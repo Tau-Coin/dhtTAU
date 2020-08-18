@@ -190,7 +190,7 @@ public class Block {
         this.baseTarget = ByteUtil.byteArrayToSignLong(cf.getBaseTarget().toByteArray());
         this.cumulativeDifficulty = ByteUtil.byteArrayToSignLong(cf.getCummulativeDifficulty().toByteArray());
         this.generationSignature = ByteUtil.byteArrayToSignLongArray(cf.getGenerationSignature(), ChainParam.HashLongArrayLength);
-        //this.txMsg = cf.getUmsg();
+        //this.txHash = cf.getMsgHash();
         this.minerBalance = 0;
         this.senderBalance = 0;
         this.receiverBalance = 0;

@@ -135,10 +135,10 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
         /**
          * todo:create transaction by chain.
          */
-		Transaction tx = null;
+		//Transaction tx = null;
 		//tx =chain.createTransaction();
 
-        tx.signTransaction(senderPrivkey);
-        return tx;
+        //tx.signTransaction(senderPrivkey);
+        return null;
     }
 }

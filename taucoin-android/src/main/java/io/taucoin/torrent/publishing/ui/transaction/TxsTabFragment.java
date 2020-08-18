@@ -21,7 +21,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.disposables.CompositeDisposable;
-import io.taucoin.param.ChainParam;
+import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
@@ -130,7 +130,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         binding.fabButton.getMainFab().setOnClickListener(v ->{
                     Intent intent = new Intent();
                     intent.putExtra(IntentExtra.BEAN, community);
-                    if(txType == ChainParam.TxType.WCoinsType.ordinal()){
+                    if(txType == TypesConfig.TxType.WCoinsType.ordinal()){
                         ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
                     }else{
                         ActivityUtil.startActivity(intent, this, MessageActivity.class);

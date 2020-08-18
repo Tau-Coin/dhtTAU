@@ -26,7 +26,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.param.ChainParam;
+import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
@@ -191,7 +191,7 @@ public class TxViewModel extends AndroidViewModel {
             long timestamp = DateUtil.getTime();
             byte[] chainID = tx.chainID.getBytes();
             Transaction transaction;
-            if(tx.txType == ChainParam.TxType.WCoinsType.ordinal()){
+            if(tx.txType == TypesConfig.TxType.WCoinsType.ordinal()){
                 transaction = new ForumNoteTx(1, chainID, timestamp, tx.fee, tx.txType,
                         senderPk, nonce, null);
             }else{
@@ -226,7 +226,7 @@ public class TxViewModel extends AndroidViewModel {
      */
     private void addUserInfo(Tx tx) {
         long txType = tx.txType;
-        if(txType == ChainParam.TxType.WCoinsType.ordinal()){
+        if(txType == TypesConfig.TxType.WCoinsType.ordinal()){
             User user = userRepo.getUserByPublicKey(tx.receiverPk);
             if(null == user){
                 user = new User(tx.receiverPk);
@@ -251,7 +251,7 @@ public class TxViewModel extends AndroidViewModel {
             member.power = daemon.getUserPower(tx.chainID, tx.senderPk);
             memberRepo.addMember(member);
         }
-        if(txType == ChainParam.TxType.WCoinsType.ordinal() && StringUtil.isNotEquals(tx.senderPk, tx.receiverPk)){
+        if(txType == TypesConfig.TxType.WCoinsType.ordinal() && StringUtil.isNotEquals(tx.senderPk, tx.receiverPk)){
             Member receiverMember = memberRepo.getMemberByChainIDAndPk(tx.chainID, tx.receiverPk);
             if(null == receiverMember){
                 receiverMember = new Member(tx.chainID, tx.receiverPk);
@@ -273,7 +273,7 @@ public class TxViewModel extends AndroidViewModel {
             return false;
         }
         long msgType = tx.txType;
-        if(msgType == ChainParam.TxType.FNoteType.ordinal()){
+        if(msgType == TypesConfig.TxType.FNoteType.ordinal()){
             if(StringUtil.isEmpty(tx.memo)){
                 ToastUtils.showShortToast(R.string.tx_error_invalid_message);
                 return false;
@@ -284,7 +284,7 @@ public class TxViewModel extends AndroidViewModel {
                 ToastUtils.showShortToast(R.string.tx_error_no_enough_coins_for_fee);
                 return false;
             }
-        }else if(msgType == ChainParam.TxType.WCoinsType.ordinal()){
+        }else if(msgType == TypesConfig.TxType.WCoinsType.ordinal()){
             // 获取当前用户的余额
             String senderPk = MainApplication.getInstance().getPublicKey();
             long balance = daemon.getUserBalance(tx.chainID, senderPk);
@@ -395,7 +395,7 @@ public class TxViewModel extends AndroidViewModel {
     public String airdropToFriend(String chainID, String friendPk) {
         long medianFee = getMedianFee(chainID);
         Tx tx = new Tx(chainID, friendPk, Constants.AIRDROP_COIN.longValue(),
-                medianFee, ChainParam.TxType.WCoinsType.ordinal(), "");
+                medianFee, TypesConfig.TxType.WCoinsType.ordinal(), "");
         return createTransaction(tx);
     }
 }

@@ -13,7 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.param.ChainParam;
+import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
@@ -146,7 +146,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
      */
     private Tx buildTx() {
         String chainID = community.chainID;
-        long txType = ChainParam.TxType.WCoinsType.ordinal();
+        long txType = TypesConfig.TxType.WCoinsType.ordinal();
         String receiverPk = ViewUtils.getText(binding.etPublicKey);
         String amount = ViewUtils.getText(binding.etAmount);
         String fee = ViewUtils.getStringTag(binding.tvFee);
