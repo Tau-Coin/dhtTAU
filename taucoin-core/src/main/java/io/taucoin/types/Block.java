@@ -190,7 +190,7 @@ public class Block {
         this.baseTarget = ByteUtil.byteArrayToLong(cf.getBaseTarget().toByteArray());
         this.cumulativeDifficulty = ByteUtil.byteArrayToLong(
                 cf.getCummulativeDifficulty().toByteArray());
-        this.generationSignature = ByteUtil.byteArrayToSignLongArray(
+        this.generationSignature = ByteUtil.unAlignByteArrayToSignLongArray(
                 cf.getGenerationSignature(), ChainParam.SignLongArrayLength);
 
         // handle tx hash
