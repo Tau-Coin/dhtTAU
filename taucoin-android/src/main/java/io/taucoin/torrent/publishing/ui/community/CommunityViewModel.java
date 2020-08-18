@@ -22,6 +22,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.genesis.GenesisItem;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
@@ -29,6 +30,7 @@ import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -38,8 +40,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
-import io.taucoin.types.GenesisTx;
-import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
@@ -130,22 +130,22 @@ public class CommunityViewModel extends AndroidViewModel {
     private String createCommunity(Community community) {
         String result = "";
         try {
-            User user = userRepo.getCurrentUser();
-            byte[] seed = ByteUtil.toByte(user.seed);
             BigInteger totalCoin = BigInteger.valueOf(community.totalCoin);
             byte[] publicKey = ByteUtil.toByte(community.publicKey);
             HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
             GenesisItem item = new GenesisItem(totalCoin);
             genesisMsg.put(new ByteArrayWrapper(publicKey), item);
-//            GenesisTx genesisTx = new GenesisTx();
-            // TODO:
             ChainConfig chainConfig = new ChainConfig(1, community.communityName, community.blockInAvg,
-                    publicKey, DateUtil.getTime(), null, null);
+                    publicKey, DateUtil.getTime(), null, genesisMsg);
             daemon.createCommunity(chainConfig);
             community.chainID = new String(chainConfig.getChainid());
             communityRepo.addCommunity(community);
             logger.debug("Add community to database: communityName={}, chainID={}",
                     community.communityName, community.chainID);
+            // 把社区创建者添加为社区成员
+            Member member = new Member(community.chainID, community.publicKey,
+                    community.totalCoin, item.getPower().longValue());
+            memberRepo.addMember(member);
         }catch (Exception e){
             result = e.getMessage();
         }

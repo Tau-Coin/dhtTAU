@@ -64,7 +64,7 @@ public class UsersUtil {
     public static String getShowName(String publicKey, String localName) {
         String showName = UsersUtil.getDefaultName(publicKey);
         if(StringUtil.isNotEmpty(localName)
-                && StringUtil.isNotEquals(localName, showName)){
+                && StringUtil.isNotEquals(localName.trim(), showName.trim())){
             Context context = MainApplication.getInstance();
             showName = context.getString(R.string.user_show_name, localName, showName);
         }

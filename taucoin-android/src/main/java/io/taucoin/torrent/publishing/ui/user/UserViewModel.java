@@ -33,7 +33,6 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
@@ -60,7 +59,6 @@ public class UserViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("UserViewModel");
     private UserRepository userRepo;
-    private TxRepository txRepo;
     private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
@@ -70,7 +68,6 @@ public class UserViewModel extends AndroidViewModel {
     public UserViewModel(@NonNull Application application) {
         super(application);
         userRepo = RepositoryHelper.getUserRepository(getApplication());
-        txRepo = RepositoryHelper.getTxRepository(getApplication());
         settingsRepo = RepositoryHelper.getSettingsRepository(getApplication());
     }
 
@@ -89,7 +86,8 @@ public class UserViewModel extends AndroidViewModel {
      * @param generate：false导入; true:生成新的seed
      */
     void showSaveSeedDialog(Context context, boolean generate){
-        SeedDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.seed_dialog, null, false);
+        SeedDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(context),
+                R.layout.seed_dialog, null, false);
         if(generate){
             binding.etSeed.setVisibility(View.GONE);
         }
@@ -358,7 +356,8 @@ public class UserViewModel extends AndroidViewModel {
      * @param user 用户对象
      */
     public void showUserInfoDialog(AppCompatActivity activity, UserAndMember user) {
-        UserInfoDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity), R.layout.user_info_dialog, null, false);
+        UserInfoDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
+                R.layout.user_info_dialog, null, false);
         binding.ivClose.setOnClickListener(v -> {
             if (commonDialog != null) {
                 commonDialog.closeDialog();
@@ -420,7 +419,8 @@ public class UserViewModel extends AndroidViewModel {
      * 显示编辑名字的对话框
      */
     public void showEditNameDialog(AppCompatActivity activity, String publicKey) {
-        ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity), R.layout.contacts_dialog, null, false);
+        ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
+                R.layout.contacts_dialog, null, false);
         binding.etPublicKey.setHint(R.string.user_new_name_hint);
         binding.ivClose.setOnClickListener(v -> {
             if (commonDialog != null) {

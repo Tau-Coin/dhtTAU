@@ -158,19 +158,6 @@ public class TxViewModel extends AndroidViewModel {
         byte[] senderPk = ByteUtil.toByte(currentUser.publicKey);
         String result = "";
         try {
-//            TxData txData = buildChainTxData(tx);
-//            switch (msgType){
-//                case RegularForum:
-//                    Note note = new Note(tx.memo);
-//                    txData = new TxData(msgType, note.getTxCode());
-//                    break;
-//                case Wiring:
-//                    byte[] receiverPk = ByteUtil.toByte(tx.receiverPk);
-//                    WireTransaction wireTx = new WireTransaction(receiverPk, tx.amount, tx.memo);
-//                    txData = new TxData(msgType, wireTx.getEncode());
-//                    break;
-//            }
-
             // 获取当前用户在社区中链上nonce值
             long nonce = daemon.getUserPower(tx.chainID, currentUser.publicKey);
             // 获取最早过期的交易，并且其nonce后来未被使用
@@ -192,12 +179,13 @@ public class TxViewModel extends AndroidViewModel {
             byte[] chainID = tx.chainID.getBytes();
             Transaction transaction;
             if(tx.txType == TypesConfig.TxType.WCoinsType.ordinal()){
-                transaction = new ForumNoteTx(1, chainID, timestamp, tx.fee, tx.txType,
-                        senderPk, nonce, null);
-            }else{
                 byte[] receiverPk = ByteUtil.toByte(tx.receiverPk);
                 transaction = new WiringCoinsTx(1, chainID, timestamp, tx.fee, tx.txType, senderPk,
                         nonce, receiverPk, tx.amount);
+            } else {
+                byte[] forumNoteHash = new byte[24];
+                transaction = new ForumNoteTx(1, chainID, timestamp, tx.fee, tx.txType,
+                        senderPk, nonce, forumNoteHash);
             }
             transaction.signTransactionWithSeed(senderSeed);
             // 把交易数据transaction.getEncoded()提交给链端
