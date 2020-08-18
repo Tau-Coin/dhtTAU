@@ -1,9 +1,4 @@
-package io.taucoin.core;
-
-import javax.annotation.Nonnull;
-
-import io.taucoin.types.Block;
-import io.taucoin.types.Transaction;
+package io.taucoin.types;
 
 public class BlockContainer {
     private Block block;

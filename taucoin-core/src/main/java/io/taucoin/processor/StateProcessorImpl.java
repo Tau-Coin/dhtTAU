@@ -1,7 +1,7 @@
 package io.taucoin.processor;
 
 import io.taucoin.core.AccountState;
-import io.taucoin.core.BlockContainer;
+import io.taucoin.types.BlockContainer;
 import io.taucoin.core.ImportResult;
 import io.taucoin.db.StateDB;
 import io.taucoin.genesis.GenesisItem;

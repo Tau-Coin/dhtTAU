@@ -1,6 +1,6 @@
 package io.taucoin.db;
 
-import io.taucoin.core.BlockContainer;
+import io.taucoin.types.BlockContainer;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;

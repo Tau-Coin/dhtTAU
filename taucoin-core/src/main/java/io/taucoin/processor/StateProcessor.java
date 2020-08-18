@@ -1,9 +1,8 @@
 package io.taucoin.processor;
 
-import io.taucoin.core.BlockContainer;
+import io.taucoin.types.BlockContainer;
 import io.taucoin.core.ImportResult;
 import io.taucoin.db.StateDB;
-import io.taucoin.types.Block;
 
 public interface StateProcessor {
     /**

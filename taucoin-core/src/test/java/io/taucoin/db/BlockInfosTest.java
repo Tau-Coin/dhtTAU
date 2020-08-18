@@ -1,3 +1,4 @@
+/*
 package io.taucoin.db;
 
 import io.taucoin.types.Block;
@@ -125,3 +126,4 @@ public class BlockInfosTest {
     }
 }
 
+*/

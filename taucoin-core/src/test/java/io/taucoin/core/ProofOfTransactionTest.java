@@ -1,3 +1,4 @@
+/*
 package io.taucoin.core;
 
 import io.taucoin.db.BlockInfo;
@@ -62,33 +63,38 @@ public class ProofOfTransactionTest {
             }
         }
 
-        /**
+        */
+/**
          * get block info by hash
          *
          * @param chainID
          * @param hash
          * @return
          * @throws Exception
-         */
+         *//*
+
         @Override
         public BlockInfo getBlockInfoByHash(byte[] chainID, byte[] hash) throws Exception {
             return null;
         }
 
-        /**
+        */
+/**
          * get fork point block which on main chain
          *
          * @param chain1Block block on chain 1
          * @param chain2Block block on chain 2
          * @return
          * @throws Exception
-         */
+         *//*
+
         @Override
         public Block getForkPointBlock(Block chain1Block, Block chain2Block) throws Exception {
             return null;
         }
 
-        /**
+        */
+/**
          * get fork info
          *
          * @param forkBlock  fork point block
@@ -96,18 +102,21 @@ public class ProofOfTransactionTest {
          * @param undoBlocks blocks to roll back from high to low
          * @param newBlocks  blocks to connect from high to low
          * @return
-         */
+         *//*
+
         @Override
         public boolean getForkBlocksInfo(Block forkBlock, Block bestBlock, List<Block> undoBlocks, List<Block> newBlocks) {
             return false;
         }
 
-        /**
+        */
+/**
          * re-branch blocks
          *
          * @param undoBlocks move to non-main chain
          * @param newBlocks  move to main chain
-         */
+         *//*
+
         @Override
         public void reBranchBlocks(List<Block> undoBlocks, List<Block> newBlocks) {
 
@@ -123,14 +132,16 @@ public class ProofOfTransactionTest {
             return null;
         }
 
-        /**
+        */
+/**
          * get main chain block hash by number
          *
          * @param chainID chain ID
          * @param number  block number
          * @return block hash
          * @throws Exception
-         */
+         *//*
+
         @Override
         public byte[] getMainChainBlockHashByNumber(byte[] chainID, long number) throws Exception {
             return new byte[0];
@@ -270,3 +281,4 @@ public class ProofOfTransactionTest {
 
 }
 
+*/

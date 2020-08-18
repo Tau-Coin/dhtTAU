@@ -1,4 +1,4 @@
-package io.taucoin.core;
+package io.taucoin.types;
 
 import com.frostwire.jlibtorrent.Entry;
 
@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MutableItemValue {
-    // content including tx/message hash
+    // content including tx/message hash, 原本哈希是20个字节，这里用3个long存储，最后一个long是补齐的，高位补齐
     ArrayList<Long> hash;
-    // hash link or pubKey for optimization
+    // hash link or pubKey for optimization, 正好32个字节，4个long存储
     ArrayList<Long> peer;
 
     public MutableItemValue(byte[] hash, byte[] peer) {

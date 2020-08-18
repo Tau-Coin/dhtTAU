@@ -10,6 +10,8 @@ import io.taucoin.processor.StateProcessor;
 import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.types.BlockContainer;
+import io.taucoin.types.MutableItemValue;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
@@ -835,7 +837,7 @@ public class Chain {
     private void publishBestBlock() {
         if (null != this.bestBlockContainer) {
             if (null != this.bestBlockContainer.getTx()) {
-                // put immutable block
+                // put immutable tx
                 DHT.ImmutableItem immutableItem =
                         new DHT.ImmutableItem(this.bestBlockContainer.getTx().getEncoded());
                 TorrentDHTEngine.getInstance().dhtPut(immutableItem);
