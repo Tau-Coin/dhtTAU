@@ -191,7 +191,7 @@ public class Block {
         this.cumulativeDifficulty = ByteUtil.byteArrayToLong(
                 cf.getCummulativeDifficulty().toByteArray());
         this.generationSignature = ByteUtil.unAlignByteArrayToSignLongArray(
-                cf.getGenerationSignature(), ChainParam.SignLongArrayLength);
+                cf.getGenerationSignature(), ChainParam.HashLongArrayLength);
 
         // handle tx hash
         byte[] genesisTxHash = cf.getTransaction().getTxID();
