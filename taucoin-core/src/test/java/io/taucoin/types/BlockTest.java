@@ -43,13 +43,26 @@ public class BlockTest {
         Block block = new Block(version, 1597062314, 1, pblockhash, imblockhash,
                     basetarget, cummulativediff, generationSig, tx, mBalance, sBalance,
                     rBalance, 1345, signature, pubkey);
-        System.out.println(block.getVersion());
-        System.out.println(ByteUtil.toHexString(block.getPreviousBlockHash()));
         byte[] bencoded= block.getEncoded();
         String str = new String(bencoded);
         System.out.println(str);
         System.out.println(str.length());
-        System.out.println(ByteUtil.toHexString(block.getBlockHash()));
+        System.out.println("Version: " + block.getVersion());
+        System.out.println("Timestamp: " + block.getTimeStamp());
+        System.out.println("Previous block hash get: " + ByteUtil.toHexString(block.getPreviousBlockHash()));
+        System.out.println("Immutable block hash get: " + ByteUtil.toHexString(block.getImmutableBlockHash()));
+        System.out.println("Block hash get: " + ByteUtil.toHexString(block.getBlockHash()));
+        System.out.println("Basetarget: " + block.getBaseTarget());
+        System.out.println("Cummulativediff: " + block.getCumulativeDifficulty());
+        System.out.println("Genersation signature: " + ByteUtil.toHexString(block.getGenerationSignature()));
+        System.out.println("Tx hash: " + ByteUtil.toHexString(block.getTxHash()));
+        System.out.println("Miner Balance: " + block.getMinerBalance());
+        System.out.println("Sender Balance: " + block.getSenderBalance());
+        System.out.println("Receiver Balance: " + block.getReceiverBalance());
+        System.out.println("Sender nonce: " + block.getSenderNonce());
+        System.out.println("Signature: " + ByteUtil.toHexString(block.getSignature()));
+        System.out.println("Pubkey: " + ByteUtil.toHexString(block.getMinerPubkey()));
+
         boolean ret1 = block.isBlockParamValidate();
         System.out.println("param validate ?: "+ret1);
     }
