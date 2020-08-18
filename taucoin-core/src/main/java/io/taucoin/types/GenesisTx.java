@@ -234,31 +234,6 @@ public class GenesisTx extends Transaction {
      * get genesis msg K-V state.
      * @return
      */
-    public HashMap<ByteArrayWrapper, GenesisItem> getGenesisAccountsCowTC() {
-
-        HashMap<ByteArrayWrapper, GenesisItem> accounts = new HashMap<ByteArrayWrapper, GenesisItem>();
-
-        for(ArrayList<Long> account: this.genesisMsg) {
-
-            // key -> ByteArrayWrapper
-            byte[] keybytes = ByteUtil.longArrayToBytes(account, ChainParam.PubkeyLength);
-            ByteArrayWrapper key = new ByteArrayWrapper(keybytes);
-
-            // value -> GenesisItem
-            BigInteger balance = new BigInteger(account.get(4).toString());
-            BigInteger power = new BigInteger(account.get(5).toString());
-            GenesisItem value = new GenesisItem(balance, power);
-
-            accounts.put(key, value);
-		}
-
-        return accounts;
-    }
-
-    /**
-     * get genesis msg K-V state.
-     * @return
-     */
     public HashMap<ByteArrayWrapper, GenesisItem> getGenesisAccounts() {
 
         HashMap<ByteArrayWrapper, GenesisItem> accounts = new HashMap<ByteArrayWrapper, GenesisItem>();
@@ -266,15 +241,7 @@ public class GenesisTx extends Transaction {
         for(ArrayList<Long> account: this.genesisMsg) {
 
             // key -> ByteArrayWrapper
-            byte[] longbyte0 = ByteUtil.longToBytes(account.get(0));
-            byte[] longbyte1 = ByteUtil.longToBytes(account.get(1));
-            byte[] longbyte2 = ByteUtil.longToBytes(account.get(2));
-            byte[] longbyte3 = ByteUtil.longToBytes(account.get(3));
-            byte[] keybytes = new byte[ChainParam.PubkeyLength];
-            System.arraycopy(longbyte0, 0, keybytes, 0, 8);
-            System.arraycopy(longbyte1, 0, keybytes, 8, 8);
-            System.arraycopy(longbyte2, 0, keybytes, 16, 8);
-            System.arraycopy(longbyte3, 0, keybytes, 24, 8);
+            byte[] keybytes = ByteUtil.longArrayToBytes(account, ChainParam.PubkeyLength);
             ByteArrayWrapper key = new ByteArrayWrapper(keybytes);
 
             // value -> GenesisItem
