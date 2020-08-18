@@ -185,8 +185,8 @@ public class Block {
         this.version = cf.getVersion();
         this.timestamp = cf.getTimeStamp();
         this.blockNum = 0L;
-        this.previousBlockHash = null;
-        this.immutableBlockHash = null;
+        this.previousBlockHash = new ArrayList<Long>();
+        this.immutableBlockHash = new ArrayList<Long>();
         this.baseTarget = ByteUtil.byteArrayToLong(cf.getBaseTarget().toByteArray());
         this.cumulativeDifficulty = ByteUtil.byteArrayToLong(
                 cf.getCummulativeDifficulty().toByteArray());
