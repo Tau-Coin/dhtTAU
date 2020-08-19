@@ -487,7 +487,7 @@ public class Block {
     public byte[] getBlockSigMsg(){
         MessageDigest digest;
         try{
-            digest = MessageDigest.getInstance("SHA-256");
+            digest = MessageDigest.getInstance("SHA-1");
         }catch (NoSuchAlgorithmException e){
             return null;
         }
