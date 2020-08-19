@@ -166,7 +166,7 @@ public class Block {
         this.immutableBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(immutableBlockHash, ChainParam.HashLongArrayLength);
         this.baseTarget = ByteUtil.byteArrayToLong(baseTarget.toByteArray());
         this.cumulativeDifficulty = ByteUtil.byteArrayToLong(cumulativeDifficulty.toByteArray());
-        this.generationSignature = ByteUtil.byteArrayToSignLongArray(generationSignature, ChainParam.SignLongArrayLength);
+        this.generationSignature = ByteUtil.unAlignByteArrayToSignLongArray(generationSignature, ChainParam.SignLongArrayLength);
         this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
         this.minerBalance = minerBalance;
         this.senderBalance = senderBalance;
