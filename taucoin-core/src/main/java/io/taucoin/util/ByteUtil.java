@@ -1,13 +1,9 @@
 package io.taucoin.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.spongycastle.util.encoders.Hex;
 
@@ -276,6 +272,11 @@ public class ByteUtil {
      * @return
      */
     public static ArrayList<Long> unAlignByteArrayToSignLongArray(byte[] b, int piece){
+        ArrayList<Long> ret = new ArrayList<>();
+        if ((null == b) || (b.length < (8 * piece))) {
+            ret.add(EMPTY_STRING_TO_ALL);
+            return ret;
+        }
         byte[] temp = new byte[8 * piece];
         int alignCount = piece - 1;
         byte[] zero = new byte[8 * piece - b.length];
