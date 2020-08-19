@@ -108,12 +108,13 @@ public class GenesisTx extends Transaction {
     public byte[] getEncoded() {
         if(encodedBytes == null) {
             List list = new ArrayList();
-            list.add(this.version);
+            list.add(new Entry(this.version));
             list.add(this.chainID);
-            list.add(this.timestamp);
-            list.add(this.txFee);
+            list.add(new Entry(this.timestamp));
+            list.add(new Entry(this.txFee));
+            list.add(new Entry(this.txType));
             list.add(this.senderPubkey);
-            list.add(this.nonce);
+            list.add(new Entry(this.nonce));
             list.add(this.signature);
             list.add(this.genesisMsg);
             Entry entry = Entry.fromList(list);
