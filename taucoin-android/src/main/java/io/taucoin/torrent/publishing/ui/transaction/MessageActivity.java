@@ -50,7 +50,7 @@ public class MessageActivity extends BaseActivity implements View.OnClickListene
      */
     private void initParameter() {
         if(getIntent() != null){
-            chainID = getIntent().getParcelableExtra(IntentExtra.BEAN);
+            chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
         }
     }
 

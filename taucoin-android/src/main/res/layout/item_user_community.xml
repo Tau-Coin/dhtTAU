@@ -21,7 +21,6 @@
             android:includeFontPadding="false"
             android:singleLine="true"
             android:ellipsize="middle"
-            android:textColor="@color/gray_dark"
             android:textAppearance="@style/TextAppearanceHeadline6" />
 
         <TextView

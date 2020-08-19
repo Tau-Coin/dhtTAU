@@ -13,6 +13,7 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Flowable;
+import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
@@ -25,6 +26,14 @@ public interface MemberDao {
     String QUERY_GET_MEMBERS_BY_CHAIN_ID = "SELECT * FROM Members WHERE chainID = :chainID";
     String QUERY_GET_MEMBERS_ON_CHAIN = "SELECT * FROM Members WHERE chainID = :chainID AND (balance > 0 OR power > 0)";
     String QUERY_GET_MEMBERS_NOT_ON_CHAIN = "SELECT * FROM Members WHERE chainID = :chainID AND balance <= 0 AND power <= 0";
+    String QUERY_COMMUNITY_NUM_IN_COMMON = "SELECT chainID FROM " +
+            " (Select count(*) AS num, chainID FROM Members" +
+            " where (publicKey =:currentUserPk OR publicKey =:memberPk) AND (balance > 0 OR power > 0)" +
+            " GROUP BY chainID)" +
+            " WHERE num >= 2";
+    String QUERY_COMMUNITY_MEMBERS_LIMIT = "SELECT publicKey FROM Members" +
+            " WHERE chainID = :chainID AND (balance > 0 OR power > 0)" +
+            " ORDER BY power limit :limit";
 
     /**
      * 添加新社区成员
@@ -68,4 +77,20 @@ public interface MemberDao {
     @Query(QUERY_GET_MEMBERS_NOT_ON_CHAIN)
     @Transaction
     DataSource.Factory<Integer, MemberAndUser> queryCommunityMembersNotOnChain(String chainID);
+
+    /**
+     * 获取和社区成员共在的社区数
+     * @param currentUserPk
+     * @param memberPk
+     */
+    @Query(QUERY_COMMUNITY_NUM_IN_COMMON)
+    Single<List<String>> getCommunityNumInCommon(String currentUserPk, String memberPk);
+
+    /**
+     * 获取社区limit个成员
+     * @param chainID
+     * @param limit
+     */
+    @Query(QUERY_COMMUNITY_MEMBERS_LIMIT)
+    Single<List<String>> getCommunityMembersLimit(String chainID, int limit);
 }

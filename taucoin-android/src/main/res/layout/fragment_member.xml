@@ -7,19 +7,13 @@
             type="android.view.View.OnClickListener" />
     </data>
 
-    <RelativeLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:scrollbars="vertical"
+        android:focusable="true"
+        android:scrollbarStyle="outsideOverlay" />
 
-        <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
-            android:background="@color/color_bg"
-            android:id="@+id/recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:scrollbars="vertical"
-            android:focusable="true"
-            android:scrollbarStyle="outsideOverlay" />
-
-    </RelativeLayout>
 </layout>

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,8 +17,10 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.paging.DataSource;
 import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -278,5 +281,22 @@ public class CommunityViewModel extends AndroidViewModel {
      */
     public DataSource.Factory<Integer, MemberAndUser> queryCommunityMembers(String chainID, boolean onChain) {
         return memberRepo.queryCommunityMembers(chainID, onChain);
+    }
+
+    /**
+     * 获取和社区成员共在的社区数
+     * @param currentUserPk
+     * @param memberPk
+     */
+    public Single<List<String>> getCommunityNumInCommon(String currentUserPk, String memberPk) {
+        return memberRepo.getCommunityNumInCommon(currentUserPk, memberPk);
+    }
+    /**
+     * 获取社区limit个成员
+     * @param chainID
+     * @param limit
+     */
+    public Single<List<String>> getCommunityMembersLimit(String chainID, int limit) {
+        return memberRepo.getCommunityMembersLimit(chainID, limit);
     }
 }

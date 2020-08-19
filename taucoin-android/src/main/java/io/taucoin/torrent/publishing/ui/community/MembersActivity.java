@@ -18,7 +18,6 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -30,7 +29,7 @@ import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 /**
  * 群组成员页面
  */
-public class MembersActivity extends BaseActivity implements MemberListAdapter.ClickListener {
+public class MembersActivity extends BaseActivity {
 
     private ActivityMembersBinding binding;
     private CommunityViewModel communityViewModel;
@@ -68,7 +67,6 @@ public class MembersActivity extends BaseActivity implements MemberListAdapter.C
             binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats, 0, 0));
         }
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        setSupportActionBar(binding.toolbarInclude.toolbar);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
@@ -137,11 +135,6 @@ public class MembersActivity extends BaseActivity implements MemberListAdapter.C
     protected void onStop() {
         super.onStop();
         disposables.clear();
-    }
-
-    @Override
-    public void onItemClicked(MemberAndUser item) {
-
     }
 
     public class MyAdapter extends FragmentPagerAdapter {

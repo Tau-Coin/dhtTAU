@@ -54,7 +54,6 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     private UserViewModel userViewModel;
     private TxViewModel txViewModel;
     private ContactListAdapter adapter;
-    private ShareDialog shareDialog;
     private CommonDialog commonDialog;
     private CompositeDisposable disposables = new CompositeDisposable();
     private String chainID;
@@ -216,32 +215,6 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     }
 
     /**
-     * 显示联系平台的对话框
-     */
-    private void showShareDialog(User user) {
-        ShareDialog.Builder builder = new ShareDialog.Builder(this);
-        builder.setOnItemClickListener((dialog, imgRid, titleRid) -> {
-            dialog.dismiss();
-            String currentUserPk = MainApplication.getInstance().getPublicKey();
-            String communityInviteLink = UsersUtil.getCommunityInviteLink(chainID, currentUserPk);
-            if (imgRid == R.mipmap.icon_share_copy_link) {
-                CopyManager.copyText(communityInviteLink);
-                ToastUtils.showShortToast(R.string.copy_share_link);
-            } else if (imgRid == R.mipmap.ic_launcher_round) {
-                userViewModel.shareInvitedLinkToFriend(communityInviteLink, user.publicKey);
-                ToastUtils.showShortToast(R.string.share_link_successfully);
-            } else if (imgRid == R.mipmap.icon_share_sms) {
-                doSendSMSTo(communityInviteLink);
-            }
-        });
-        builder.addItems(R.mipmap.icon_share_copy_link, R.string.contacts_copy_link);
-        builder.addItems(R.mipmap.ic_launcher_round, R.string.contacts_community);
-        builder.addItems(R.mipmap.icon_share_sms, R.string.contacts_sms);
-        shareDialog = builder.create();
-        shareDialog.show();
-    }
-
-    /**
      * 显示新增朋友公钥的对话框
      */
     private void showAddPublicKeyDialog() {
@@ -277,23 +250,9 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         commonDialog.show();
     }
 
-    /**
-     * 调起系统功能发短信
-     *
-     * @param message 消息内容
-     */
-    public void doSendSMSTo(String message) {
-        Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"));
-        intent.putExtra("sms_body", message);
-        startActivity(intent);
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (shareDialog != null) {
-            shareDialog.closeDialog();
-        }
         if (commonDialog != null) {
             commonDialog.closeDialog();
         }

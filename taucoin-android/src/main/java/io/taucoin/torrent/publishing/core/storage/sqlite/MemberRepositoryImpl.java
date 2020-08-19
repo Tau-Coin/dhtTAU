@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData;
 import androidx.paging.DataSource;
 import androidx.paging.PagedList;
 import io.reactivex.Flowable;
+import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
@@ -76,5 +77,23 @@ public class MemberRepositoryImpl implements MemberRepository{
         }else{
             return db.memberDao().queryCommunityMembersNotOnChain(chainID);
         }
+    }
+
+    /**
+     * 获取和社区成员共在的社区数
+     * @param currentUserPk
+     * @param memberPk
+     */
+    public Single<List<String>> getCommunityNumInCommon(String currentUserPk, String memberPk){
+        return db.memberDao().getCommunityNumInCommon(currentUserPk, memberPk);
+    }
+
+    /**
+     * 获取社区limit个成员
+     * @param chainID
+     * @param limit
+     */
+    public Single<List<String>> getCommunityMembersLimit(String chainID, int limit){
+        return db.memberDao().getCommunityMembersLimit(chainID, limit);
     }
 }

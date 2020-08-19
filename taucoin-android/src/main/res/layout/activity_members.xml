@@ -21,7 +21,6 @@
             layout="@layout/toolbar_group_left" />
 
         <com.google.android.material.tabs.TabLayout
-            android:layout_below="@+id/ll_today_income_tips"
             android:id="@+id/tab_layout"
             android:layout_height="40dp"
             android:layout_width="wrap_content"
@@ -39,14 +38,11 @@
 
         <View
             android:id="@+id/tab_layout_line"
-            android:layout_below="@+id/tab_layout"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/divider"/>
 
         <androidx.viewpager.widget.ViewPager
-            android:layout_below="@+id/tab_layout_line"
-            android:background="@color/color_bg"
             android:id="@+id/view_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

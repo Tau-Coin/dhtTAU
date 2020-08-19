@@ -2,6 +2,8 @@ package io.taucoin.torrent.publishing.core.utils;
 
 import android.content.Context;
 
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.MainApplication;
@@ -110,7 +112,7 @@ public class UsersUtil {
      * @param publicKeys 社区成员的公钥
      * @return 显示名字
      */
-    public static String getCommunityInviteLink(@NonNull String chainID, @NonNull String... publicKeys) {
+    public static String getCommunityInviteLink(@NonNull String chainID, @NonNull List<String> publicKeys) {
         Context context = MainApplication.getInstance();
         StringBuilder bs = new StringBuilder();
         for(String publicKey : publicKeys){

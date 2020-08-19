@@ -6,6 +6,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import io.reactivex.Flowable;
+import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
@@ -39,4 +40,18 @@ public interface MemberRepository {
     Flowable<List<MemberAndUser>> observeCommunityMembers(String chainID);
 
     DataSource.Factory<Integer, MemberAndUser> queryCommunityMembers(String chainID, boolean onChain);
+
+    /**
+     * 获取和社区成员共在的社区数
+     * @param currentUserPk
+     * @param memberPk
+     */
+    Single<List<String>> getCommunityNumInCommon(String currentUserPk, String memberPk);
+
+    /**
+     * 获取社区limit个成员
+     * @param chainID
+     * @param limit
+     */
+    Single<List<String>> getCommunityMembersLimit(String chainID, int limit);
 }

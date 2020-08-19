@@ -5,13 +5,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
+import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
@@ -25,10 +22,9 @@ import io.taucoin.torrent.publishing.ui.Selectable;
 /**
  * 显示的联系人列表的Adapter
  */
-public class MemberListAdapter extends ListAdapter<MemberAndUser, MemberListAdapter.ViewHolder>
+public class MemberListAdapter extends PagedListAdapter<MemberAndUser, MemberListAdapter.ViewHolder>
     implements Selectable<MemberAndUser> {
     private ClickListener listener;
-    private List<MemberAndUser> dataList = new ArrayList<>();
 
     MemberListAdapter(ClickListener listener) {
         super(diffCallback);
@@ -53,28 +49,19 @@ public class MemberListAdapter extends ListAdapter<MemberAndUser, MemberListAdap
     }
 
     @Override
-    public int getItemCount() {
-        return dataList.size();
-    }
-
-    @Override
     public MemberAndUser getItemKey(int position) {
-        return dataList.get(position);
+        if(getCurrentList() != null){
+            return getCurrentList().get(position);
+        }
+        return null;
     }
 
     @Override
     public int getItemPosition(MemberAndUser key) {
-        return getCurrentList().indexOf(key);
-    }
-
-    /**
-     * 设置联系人展示数据
-     * @param members 用户数据
-     */
-    void setDataList(List<MemberAndUser> members) {
-        dataList.clear();
-        dataList.addAll(members);
-        notifyDataSetChanged();
+        if(getCurrentList() != null){
+            return getCurrentList().indexOf(key);
+        }
+        return 0;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -108,10 +95,16 @@ public class MemberListAdapter extends ListAdapter<MemberAndUser, MemberListAdap
             }
             holder.binding.tvTime.setText(time);
             holder.binding.tvCommunities.setVisibility(View.GONE);
-            holder.binding.ivShare.setVisibility(View.GONE);
+            holder.binding.ivShare.setVisibility(View.VISIBLE);
 
             int bgColor = Utils.getGroupColor(member.publicKey);
             holder.binding.leftView.setBgColor(bgColor);
+
+            holder.binding.ivShare.setOnClickListener(v ->{
+                if(listener != null){
+                    listener.onShareClicked(member);
+                }
+            });
 
             holder.binding.getRoot().setOnClickListener(v -> {
                 if(listener != null){
@@ -123,6 +116,7 @@ public class MemberListAdapter extends ListAdapter<MemberAndUser, MemberListAdap
 
     public interface ClickListener {
         void onItemClicked(MemberAndUser item);
+        void onShareClicked(MemberAndUser item);
     }
 
     private static final DiffUtil.ItemCallback<MemberAndUser> diffCallback = new DiffUtil.ItemCallback<MemberAndUser>() {
