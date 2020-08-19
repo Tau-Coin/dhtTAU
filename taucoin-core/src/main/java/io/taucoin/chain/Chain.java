@@ -1037,6 +1037,9 @@ public class Chain {
      */
     private boolean tryToConnect(final BlockContainer blockContainer, StateDB stateDB) {
         // if main chain
+        logger.debug("best hash:{}, previous hash:{}",
+                Hex.toHexString(this.bestBlockContainer.getBlock().getBlockHash()),
+                Hex.toHexString(blockContainer.getBlock().getPreviousBlockHash()));
         if (Arrays.equals(this.bestBlockContainer.getBlock().getBlockHash(),
                 blockContainer.getBlock().getPreviousBlockHash())) {
             // main chain
@@ -1051,6 +1054,7 @@ public class Chain {
 
             return true;
         } else {
+            logger.info("Chain ID[{}]: previous hash mis-match", new String(this.chainID));
             return false;
 //            // if has parent
 //            try {
@@ -1162,7 +1166,7 @@ public class Chain {
      * @return
      */
     private boolean isValidBlockContainer(BlockContainer blockContainer, StateDB stateDB) {
-        if (!isValidBlock(bestBlockContainer.getBlock(), stateDB)) {
+        if (!isValidBlock(blockContainer.getBlock(), stateDB)) {
             return false;
         }
 
@@ -1330,6 +1334,7 @@ public class Chain {
 
         // if block is too less, sync more
         while (null == immutableBlockHash && !isSyncComplete()) {
+            logger.info("ChainID[{}]-Sync for more state!", new String(this.chainID));
             syncBlockForMoreState();
         }
 
@@ -1343,6 +1348,7 @@ public class Chain {
         Transaction tx = txPool.getBestTransaction();
 
         Block block;
+        logger.debug("-------------Previous hash:{}", Hex.toHexString(this.bestBlockContainer.getBlock().getBlockHash()));
         if (null != tx) {
             block = new Block((byte) 1, System.currentTimeMillis() / 1000,
                     this.bestBlockContainer.getBlock().getBlockNum() + 1,
@@ -1455,17 +1461,17 @@ public class Chain {
         }, new String(this.chainID) + "BlockThread");
         votingThread.start();
 
-        txThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                txProcess();
-            }
-        }, new String(this.chainID) + "TxThread");
-        txThread.start();
-
-        timer = new Timer();
-        TimerTask timerTask = new PublishTask();
-        timer.schedule(timerTask, 0, ChainParam.DefaultBlockTimeInterval);
+//        txThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                txProcess();
+//            }
+//        }, new String(this.chainID) + "TxThread");
+//        txThread.start();
+//
+//        timer = new Timer();
+//        TimerTask timerTask = new PublishTask();
+//        timer.schedule(timerTask, 0, ChainParam.DefaultBlockTimeInterval);
 
         return true;
     }
