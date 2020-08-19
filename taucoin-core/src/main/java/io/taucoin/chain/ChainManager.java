@@ -210,6 +210,20 @@ public class ChainManager {
     }
 
     /**
+     * Create new community.
+     *
+     * @param communityName community name
+     * @param genesisItems airdrop accounts balance and power
+     * @return boolean true indicates creating successfully, or else false.
+     */
+    public boolean createNewCommunity(String communityName,
+            HashMap<ByteArrayWrapper, GenesisItem> genesisItems) {
+
+        GenesisConfig config = new GenesisConfig(this, communityName, genesisItems);
+        return createNewCommunity(config);
+    }
+
+    /**
      * create new community.
      * @param cf
      * @return true/false.
@@ -263,7 +277,7 @@ public class ChainManager {
         	try {
         	    logger.info("Save genesis block in block store. Chain ID:{}",
                         new String(chainID));
-            	blockDB.saveBlock(chainID, genesis,true);
+            	blockDB.saveBlockContainer(chainID, genesisContainer,true);
         	} catch (Exception e) {
             	logger.error(e.getMessage(), e);
 				return false;
