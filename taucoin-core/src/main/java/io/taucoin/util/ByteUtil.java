@@ -253,10 +253,13 @@ public class ByteUtil {
      * @return long array that express this bytes array b
      */
     public static ArrayList<Long> byteArrayToSignLongArray(byte[] b, int piece){
-        if(b.length != 8*piece){
-            throw new IllegalArgumentException("bytes array length must == "+8*piece);
-        }
         ArrayList<Long> retval = new ArrayList<>();
+        if ((null == b) || (b.length < (8 * piece))) {
+            for(int i = 0; i < piece; i++) {
+                retval.add(EMPTY_STRING_TO_ALL);
+            }
+            return retval;
+        }
         byte[] slice = new byte[8];
         for(int i = 0;i <piece;++i){
            System.arraycopy(b,8*i,slice,0,8);
@@ -272,10 +275,12 @@ public class ByteUtil {
      * @return
      */
     public static ArrayList<Long> unAlignByteArrayToSignLongArray(byte[] b, int piece){
-        ArrayList<Long> ret = new ArrayList<>();
+        ArrayList<Long> retval = new ArrayList<>();
         if ((null == b) || (b.length < (8 * piece))) {
-            ret.add(EMPTY_STRING_TO_ALL);
-            return ret;
+            for(int i = 0; i < piece; i++) {
+                retval.add(EMPTY_STRING_TO_ALL);
+            }
+            return retval;
         }
         byte[] temp = new byte[8 * piece];
         int alignCount = piece - 1;
