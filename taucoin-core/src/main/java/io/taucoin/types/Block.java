@@ -58,7 +58,7 @@ public class Block {
     private byte[] blockHash;
     private boolean isParsed;
 
-    private static enum BlockIndex {
+    private enum BlockIndex {
         Version, 
         Timestamp, 
         BlockNum, 
@@ -67,13 +67,13 @@ public class Block {
         BaseTarget,
         CDifficulty,
         GSignature,
+        TxHash,
         MBalance,
         SBalance,
         RBalance,
         SNonce,
         Signature,
-        MPubkey,
-        TxHash
+        MPubkey
     }
 
     /**
@@ -198,10 +198,10 @@ public class Block {
         this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(
                 genesisTxHash, ChainParam.HashLongArrayLength);
 
-        this.minerBalance = 0;
-        this.senderBalance = 0;
-        this.receiverBalance = 0;
-        this.senderNonce = 0 ;
+        this.minerBalance = 0L;
+        this.senderBalance = 0L;
+        this.receiverBalance = 0L;
+        this.senderNonce = 0L;
         this.minerPubkey = ByteUtil.byteArrayToSignLongArray(cf.getPubkey(), ChainParam.PubkeyLongArrayLength);
 
         if (cf.getSignature() != null) {
@@ -236,15 +236,17 @@ public class Block {
            list.add(new Entry(this.baseTarget));
            list.add(new Entry(this.cumulativeDifficulty));
            list.add(this.generationSignature);
+           if (this.txHash != null) {
+               list.add(this.txHash);
+           } else {
+               list.add(new ArrayList<Long>());
+           }
            list.add(new Entry(this.minerBalance));
            list.add(new Entry(this.senderBalance));
            list.add(new Entry(this.receiverBalance));
            list.add(new Entry(this.senderNonce));
            list.add(this.signature);
            list.add(this.minerPubkey);
-            if( this.txHash != null) {
-                list.add(this.txHash);
-            }
            Entry entry = Entry.fromList(list);
            this.encodedBytes = entry.bencode();
         }
@@ -275,14 +277,16 @@ public class Block {
             list.add(new Entry(this.baseTarget));
             list.add(new Entry(this.cumulativeDifficulty));
             list.add(this.generationSignature);
+            if (this.txHash != null) {
+                list.add(this.txHash);
+            } else {
+                list.add(new ArrayList<Long>());
+            }
             list.add(new Entry(this.minerBalance));
             list.add(new Entry(this.senderBalance));
             list.add(new Entry(this.receiverBalance));
             list.add(new Entry(this.senderNonce));
             list.add(this.minerPubkey);
-            if( this.txHash != null) {
-                list.add(this.txHash);
-            }
             Entry entry = Entry.fromList(list);
             this.sigEncodedBytes = entry.bencode();
         }
@@ -306,26 +310,15 @@ public class Block {
             this.baseTarget = entrylist.get(BlockIndex.BaseTarget.ordinal()).integer();
             this.cumulativeDifficulty = entrylist.get(BlockIndex.CDifficulty.ordinal()).integer();
             this.generationSignature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.GSignature.ordinal()).toString());
-
-            if (entrylist.size() == (BlockIndex.TxHash.ordinal() + 1)){
-                this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
-                this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
-                this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
-                this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
-                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
-                this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
-                this.txHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.TxHash.ordinal()).toString());
-            } else {
-                this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
-                this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
-                this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
-                this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
-                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
-                this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
-                this.txHash = null;
-            }
-            isParsed = true;
+            this.txHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.TxHash.ordinal()).toString());
+            this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
+            this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
+            this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
+            this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
+            this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
+            this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
         }
+            isParsed = true;
     }
 
     /**
@@ -487,7 +480,7 @@ public class Block {
     public byte[] getBlockSigMsg(){
         MessageDigest digest;
         try{
-            digest = MessageDigest.getInstance("SHA-1");
+            digest = MessageDigest.getInstance("SHA-256");
         }catch (NoSuchAlgorithmException e){
             return null;
         }
@@ -614,7 +607,7 @@ public class Block {
 
     /**
      * set block tx Message.
-     * @param txMsg
+     * @param txHash
      */
     public void setTxHash(byte[] txHash) {
         this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);

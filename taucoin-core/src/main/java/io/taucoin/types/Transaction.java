@@ -212,7 +212,7 @@ public abstract class Transaction {
     public byte[] getTransactionSigMsg() {
         MessageDigest digest;
         try {
-            digest = MessageDigest.getInstance("SHA-1");
+            digest = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
             return null;
         }
