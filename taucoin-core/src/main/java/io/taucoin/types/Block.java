@@ -67,13 +67,13 @@ public class Block {
         BaseTarget,
         CDifficulty,
         GSignature,
-        TxHash,
         MBalance,
         SBalance,
         RBalance,
         SNonce,
         Signature,
-        MPubkey
+        MPubkey,
+        TxHash
     }
 
     /**
@@ -236,15 +236,15 @@ public class Block {
            list.add(new Entry(this.baseTarget));
            list.add(new Entry(this.cumulativeDifficulty));
            list.add(this.generationSignature);
-           if( this.txHash != null) {
-               list.add(this.txHash);
-           }
            list.add(new Entry(this.minerBalance));
            list.add(new Entry(this.senderBalance));
            list.add(new Entry(this.receiverBalance));
            list.add(new Entry(this.senderNonce));
            list.add(this.signature);
            list.add(this.minerPubkey);
+            if( this.txHash != null) {
+                list.add(this.txHash);
+            }
            Entry entry = Entry.fromList(list);
            this.encodedBytes = entry.bencode();
         }
@@ -275,14 +275,14 @@ public class Block {
             list.add(new Entry(this.baseTarget));
             list.add(new Entry(this.cumulativeDifficulty));
             list.add(this.generationSignature);
-            if( this.txHash != null) {
-                list.add(this.txHash);
-            }
             list.add(new Entry(this.minerBalance));
             list.add(new Entry(this.senderBalance));
             list.add(new Entry(this.receiverBalance));
             list.add(new Entry(this.senderNonce));
             list.add(this.minerPubkey);
+            if( this.txHash != null) {
+                list.add(this.txHash);
+            }
             Entry entry = Entry.fromList(list);
             this.sigEncodedBytes = entry.bencode();
         }
@@ -307,22 +307,22 @@ public class Block {
             this.cumulativeDifficulty = entrylist.get(BlockIndex.CDifficulty.ordinal()).integer();
             this.generationSignature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.GSignature.ordinal()).toString());
 
-            if (entrylist.size() == (BlockIndex.MPubkey.ordinal() + 1)){
+            if (entrylist.size() == (BlockIndex.TxHash.ordinal() + 1)){
+                this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
+                this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
+                this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
+                this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
+                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
+                this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
                 this.txHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.TxHash.ordinal()).toString());
+            } else {
                 this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
                 this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
                 this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
                 this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
                 this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
                 this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
-            }else {
                 this.txHash = null;
-                this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
-                this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
-                this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
-                this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
-                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
-                this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
             }
             isParsed = true;
         }
