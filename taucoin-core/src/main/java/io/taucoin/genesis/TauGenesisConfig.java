@@ -17,7 +17,7 @@ public final class TauGenesisConfig extends GenesisConfig {
 
     // TAU genesis tx signature
     public static final String Signature
-            = "1aca528132e42591aff7e3bdd00e3dd4a5bfd7f5e0e0fbde84c245feb5c874268b2cd58b2c555f3899b603ff85f3e80f095840356515221b4b97729fc6e00f08";
+            = "50938c31196ba35a8a822a14e2c9887b05b592828cea3263c75e0dd796f78ca086f3501f36420f7ce37e16c336478da2b3b69e903d54d0054182ce257b6c7c0a";
 
    // This private key is just for test to generate signature.
     private static final String sPrivKey
