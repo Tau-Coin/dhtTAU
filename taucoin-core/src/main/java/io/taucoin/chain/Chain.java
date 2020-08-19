@@ -301,7 +301,7 @@ public class Chain {
 
                 // if a less difficult chain, jump to mine
                 if (tip.getBlock().getCumulativeDifficulty().
-                        compareTo(this.bestBlockContainer.getBlock().getCumulativeDifficulty()) < 0) {
+                        compareTo(this.bestBlockContainer.getBlock().getCumulativeDifficulty()) <= 0) {
                     if (null != tip.getTx()) {
                         txPool.addTx(tip.getTx());
                     }
@@ -313,15 +313,6 @@ public class Chain {
                 // if found a more difficult chain
                 // download block first
                 try {
-//                    if (tip.getBlockNum() > ChainParam.MUTABLE_RANGE) {
-//                        byte[] immutableBlockHash = tip.getImmutableBlockHash();
-//                        BlockInfo blockInfo = this.blockStore.getBlockInfoByHash(this.chainID, immutableBlockHash);
-                        // immutable block cannot found in block store, vote
-//                        if (null == blockInfo) {
-//                            votingFlag = true;
-//                            break;
-//                        } else {
-                            // found in block store
                     if (tip.getBlock().getBlockNum() > 0) {
                         int counter = 0;
                         byte[] previousHash = tip.getBlock().getPreviousBlockHash();
@@ -351,8 +342,6 @@ public class Chain {
                         miningFlag = true;
                         break;
                     }
-//                        }
-//                    }
 
                     // find fork point
                     Block forkPointBlock = this.blockStore.getForkPointBlock(this.chainID,

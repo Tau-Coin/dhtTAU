@@ -58,7 +58,8 @@ public class BlockDB implements BlockStore {
      * @return transaction or null
      * @throws Exception
      */
-    private Transaction getTransactionByHash(byte[] chainID, byte[] hash) throws Exception {
+    @Override
+    public Transaction getTransactionByHash(byte[] chainID, byte[] hash) throws Exception {
         byte[] encode = db.get(PrefixKey.txKey(chainID, hash));
         if (null != encode) {
             return TransactionFactory.parseTransaction(encode);

@@ -2,6 +2,7 @@ package io.taucoin.db;
 
 import io.taucoin.types.BlockContainer;
 import io.taucoin.types.Block;
+import io.taucoin.types.Transaction;
 
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,15 @@ public interface BlockStore {
      * Close database.
      */
     void close();
+
+    /**
+     * get tx by hash
+     * @param chainID chain ID
+     * @param hash txid
+     * @return transaction or null
+     * @throws Exception
+     */
+    Transaction getTransactionByHash(byte[] chainID, byte[] hash) throws Exception;
 
     /**
      * get block by hash
