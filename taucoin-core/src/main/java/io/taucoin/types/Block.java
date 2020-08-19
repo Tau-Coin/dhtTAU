@@ -297,8 +297,6 @@ public class Block {
             this.version = entrylist.get(BlockIndex.Version.ordinal()).integer();
             this.timestamp = entrylist.get(BlockIndex.Timestamp.ordinal()).integer();
             this.blockNum = entrylist.get(BlockIndex.BlockNum.ordinal()).integer();
-            logger.info("!!!Block number : {}", this.blockNum);
-            logger.info("!!!Block hash string : {}", entrylist.get(BlockIndex.PBHash.ordinal()).toString());
             this.previousBlockHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.PBHash.ordinal()).toString());
             this.immutableBlockHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.IBHash.ordinal()).toString());
             this.baseTarget = entrylist.get(BlockIndex.BaseTarget.ordinal()).integer();
