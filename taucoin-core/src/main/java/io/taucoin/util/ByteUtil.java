@@ -302,6 +302,10 @@ public class ByteUtil {
         }
         int start = str.indexOf("'");
         int end  = str.lastIndexOf("'");
+        if((-1 == start)||(-1 == end)) {
+            ret.add(EMPTY_STRING_TO_ALL);
+            return ret;
+        }
         String newStr = str.substring(start, end + 1);
         String[] strArr = newStr.split(",");
         for(int i = 0; i < strArr.length; i++) {

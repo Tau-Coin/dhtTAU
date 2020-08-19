@@ -105,15 +105,16 @@ public class WiringCoinsTx extends Transaction {
     public byte[] getEncoded() {
         if(encodedBytes == null) {
             List list = new ArrayList();
-            list.add(this.version);
+            list.add(new Entry(this.version));
             list.add(this.chainID);
-            list.add(this.timestamp);
-            list.add(this.txFee);
+            list.add(new Entry(this.timestamp));
+            list.add(new Entry(this.txFee));
+            list.add(new Entry(this.txType));
             list.add(this.senderPubkey);
-            list.add(this.nonce);
+            list.add(new Entry(this.nonce));
             list.add(this.signature);
             list.add(this.receiverPubkey);
-            list.add(this.amount);
+            list.add(new Entry(this.amount));
             list.add(this.memo);
             Entry entry = Entry.fromList(list);
             this.encodedBytes = entry.bencode();
@@ -129,14 +130,15 @@ public class WiringCoinsTx extends Transaction {
     public byte[] getSigEncodedBytes() {
         if(sigEncodedBytes == null) {
             List list = new ArrayList();
-            list.add(this.version);
+            list.add(new Entry(this.version));
             list.add(this.chainID);
-            list.add(this.timestamp);
-            list.add(this.txFee);
+            list.add(new Entry(this.timestamp));
+            list.add(new Entry(this.txFee));
+            list.add(new Entry(this.txType));
             list.add(this.senderPubkey);
             list.add(this.nonce);
             list.add(this.receiverPubkey);
-            list.add(this.amount);
+            list.add(new Entry(this.amount));
             list.add(this.memo);
             Entry entry = Entry.fromList(list);
             this.sigEncodedBytes = entry.bencode();
@@ -155,6 +157,7 @@ public class WiringCoinsTx extends Transaction {
         list.add(this.chainID);
         list.add(this.timestamp);
         list.add(this.txFee);
+        list.add(this.txType);
         list.add(this.senderPubkey);
         list.add(this.nonce);
         list.add(this.signature);

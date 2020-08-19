@@ -228,19 +228,19 @@ public class Block {
     public byte[] getEncoded(){
         if (encodedBytes == null) {
            List list = new ArrayList();
-           list.add(this.version);
-           list.add(this.timestamp);
-           list.add(this.blockNum);
+           list.add(new Entry(this.version));
+           list.add(new Entry(this.timestamp));
+           list.add(new Entry(this.blockNum));
            list.add(this.previousBlockHash);
            list.add(this.immutableBlockHash);
-           list.add(this.baseTarget);
-           list.add(this.cumulativeDifficulty);
+           list.add(new Entry(this.baseTarget));
+           list.add(new Entry(this.cumulativeDifficulty));
            list.add(this.generationSignature);
            list.add(this.txHash);
-           list.add(this.minerBalance);
-           list.add(this.senderBalance);
-           list.add(this.receiverBalance);
-           list.add(this.senderNonce);
+           list.add(new Entry(this.minerBalance));
+           list.add(new Entry(this.senderBalance));
+           list.add(new Entry(this.receiverBalance));
+           list.add(new Entry(this.senderNonce));
            list.add(this.signature);
            list.add(this.minerPubkey);
            Entry entry = Entry.fromList(list);
@@ -265,19 +265,19 @@ public class Block {
     public byte[] getSigEncodedBytes(){
         if (sigEncodedBytes == null) {
             List list = new ArrayList();
-            list.add(this.version);
-            list.add(this.timestamp);
-            list.add(this.blockNum);
+            list.add(new Entry(this.version));
+            list.add(new Entry(this.timestamp));
+            list.add(new Entry(this.blockNum));
             list.add(this.previousBlockHash);
             list.add(this.immutableBlockHash);
-            list.add(this.baseTarget);
-            list.add(this.cumulativeDifficulty);
+            list.add(new Entry(this.baseTarget));
+            list.add(new Entry(this.cumulativeDifficulty));
             list.add(this.generationSignature);
             list.add(this.txHash);
-            list.add(this.minerBalance);
-            list.add(this.senderBalance);
-            list.add(this.receiverBalance);
-            list.add(this.senderNonce);
+            list.add(new Entry(this.minerBalance));
+            list.add(new Entry(this.senderBalance));
+            list.add(new Entry(this.receiverBalance));
+            list.add(new Entry(this.senderNonce));
             list.add(this.minerPubkey);
             Entry entry = Entry.fromList(list);
             this.sigEncodedBytes = entry.bencode();
@@ -294,10 +294,11 @@ public class Block {
         } else {
             Entry entry = Entry.bdecode(this.encodedBytes);
             List<Entry> entrylist = entry.list();
-
             this.version = entrylist.get(BlockIndex.Version.ordinal()).integer();
             this.timestamp = entrylist.get(BlockIndex.Timestamp.ordinal()).integer();
             this.blockNum = entrylist.get(BlockIndex.BlockNum.ordinal()).integer();
+            logger.info("!!!Block number : {}", this.blockNum);
+            logger.info("!!!Block hash string : {}", entrylist.get(BlockIndex.PBHash.ordinal()).toString());
             this.previousBlockHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.PBHash.ordinal()).toString());
             this.immutableBlockHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.IBHash.ordinal()).toString());
             this.baseTarget = entrylist.get(BlockIndex.BaseTarget.ordinal()).integer();
