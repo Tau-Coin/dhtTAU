@@ -56,11 +56,18 @@ public final class JsonRpcServer {
 
 		// methods about chain
         this.dispatcher.register(new chain_generateNewSeed(this.tauController));
+
         this.dispatcher.register(new chain_getBestBlock(this.tauController));
+        this.dispatcher.register(new chain_getBlockByHash(this.tauController));
+        this.dispatcher.register(new chain_getBlockByNumber(this.tauController));
+
+        this.dispatcher.register(new chain_getTransactionByHash(this.tauController));
+        this.dispatcher.register(new chain_getTransactionsInPool(this.tauController));
+
         this.dispatcher.register(new chain_getAccountState(this.tauController));
         this.dispatcher.register(new chain_updateKey(this.tauController));
 
-        //this.dispatcher.register(new chain_sendTransaction(this.tauController));
+        this.dispatcher.register(new chain_sendTransaction(this.tauController));
         this.dispatcher.register(new chain_sendRawBlock(this.tauController));
     }
 

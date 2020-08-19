@@ -42,7 +42,6 @@ public class TransactionTest {
     private static final long txType = 1;
     private static final byte[] sender = ByteUtil.toByte("c5897865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c");
     private static final long nonce = 1234;
-    private static final byte[] signature = ByteUtil.toByte("281f3c2fe309683c74762f965f38bd8f8910d8dbeca1da904d6821e8101075776243379a4efdfdc8c10ae34be767a825f770e6a62b5430c030f179b74057e747");
     private static final byte[] seed = Ed25519.createSeed();
 
     @Test
@@ -97,7 +96,8 @@ public class TransactionTest {
     public void createWiringCoinsTx(){
         byte[] receiver = ByteUtil.toByte("c5ef7865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c");
         long amount = 100000000000L;
-        WiringCoinsTx tx = new WiringCoinsTx(version, chainid, timestamp, txFee, txType, sender, nonce, receiver, amount);
+        String memo = "Tester";
+        WiringCoinsTx tx = new WiringCoinsTx(version, chainid, timestamp, txFee, txType, sender, nonce, receiver, amount, memo);
         tx.signTransactionWithSeed(seed);
         System.out.println("verison: " + tx.getVersion());
         System.out.println("chainid: " + new String(tx.getChainID()));

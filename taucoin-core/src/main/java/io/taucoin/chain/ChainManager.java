@@ -404,6 +404,68 @@ public class ChainManager {
     }
 
     /**
+     * get block by hash
+     * @param chainid: chain id
+     * @param blockHash: hash of wanted block
+     * @return
+     */
+    public Block getBlockByHash(byte[] chainid, byte[] blockHash) throws Exception {
+
+        Block block = null;
+        try {
+            block = this.blockDB.getBlockByHash(chainid, blockHash);
+        } catch (Exception e) {
+            throw e;
+        }
+        return block;
+    }
+
+    /**
+     * get transaction by hash
+     * @param chainid: chain id
+     * @param txHash: hash of wanted transaction
+     * @return
+     */
+    public Transaction getTransactionByHash(byte[] chainid, byte[] txHash) throws Exception {
+
+        Transaction tx = null;
+        try {
+            tx = this.blockDB.getTransactionByHash(chainid, txHash);
+        } catch (Exception e) {
+            throw e;
+        }
+        return tx;
+    }
+    /**
+     * get transaction pool
+     * @param chainid: chain id
+     * @param txHash: hash of wanted transaction
+     * @return
+     */
+    public List<Transaction> getTransactionsInPool(byte[] chainid) {
+        ByteArrayWrapper chainidWrapper = new ByteArrayWrapper(chainid);
+        Chain chain = this.chains.get(chainidWrapper);
+        return  chain.getTransactionPool().getLocals();
+    }
+
+    /**
+     * get block by num
+     * @param chainid: chain id
+     * @param blockNum: number of wanted block
+     * @return
+     */
+    public Block getBlockByNumber(byte[] chainid, long blockNum) throws Exception {
+
+        Block block = null;
+        try {
+            block = this.blockDB.getMainChainBlockByNumber(chainid, blockNum);
+        } catch (Exception e) {
+            throw e;
+        }
+        return block;
+    }
+
+    /**
      * make all followed chain start mining.
      * @return
      * todo
