@@ -334,10 +334,13 @@ public class Chain {
                             }
                             // get from dht
                             BlockContainer container = getBlockContainerFromDHTByHash(previousHash);
-                            if (null != container) {
-                                previousHash = container.getBlock().getPreviousBlockHash();
-                                this.blockStore.saveBlockContainer(this.chainID, container, false);
+
+                            if (null == container) {
+                                break;
                             }
+
+                            previousHash = container.getBlock().getPreviousBlockHash();
+                            this.blockStore.saveBlockContainer(this.chainID, container, false);
 
                             if (container.getBlock().getBlockNum() <= 0) {
                                 break;
