@@ -213,8 +213,6 @@ public class BlockDB implements BlockStore {
             blockContainer.setTx(tx);
         }
 
-        logger.info("ChainID[{}]:There is no main chain block in this height:{}",
-                new String(chainID), number);
         return blockContainer;
     }
 
@@ -245,7 +243,7 @@ public class BlockDB implements BlockStore {
                 return blockInfo.getHash();
             }
         }
-        logger.info("ChainID[{}]:There is no main chain block in this height:{}",
+        logger.info("ChainID[{}]:There is no main chain block hash in this height:{}",
                 new String(chainID), number);
         return null;
     }

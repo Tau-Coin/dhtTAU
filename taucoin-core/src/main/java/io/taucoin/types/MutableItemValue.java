@@ -29,29 +29,11 @@ public class MutableItemValue {
     }
 
     public byte[] getHash() {
-        byte[] longByte0 = ByteUtil.longToBytes(this.hash.get(0));
-        byte[] longByte1 = ByteUtil.longToBytes(this.hash.get(1));
-        byte[] longByte2 = ByteUtil.keep4bytesOfLong(this.hash.get(2));
-        byte[] hash = new byte[ChainParam.HashLength];
-        System.arraycopy(longByte0, 0, hash, 0, 8);
-        System.arraycopy(longByte1, 0, hash, 8, 8);
-        System.arraycopy(longByte2, 0, hash, 16, 4);
-        return hash;
+        return ByteUtil.longArrayToBytes(this.hash, ChainParam.HashLength);
     }
 
     public byte[] getPeer() {
-        byte[] longByte0 = ByteUtil.longToBytes(this.peer.get(0));
-        byte[] longByte1 = ByteUtil.longToBytes(this.peer.get(1));
-        byte[] longByte2 = ByteUtil.longToBytes(this.peer.get(2));
-        byte[] longByte3 = ByteUtil.longToBytes(this.peer.get(3));
-
-        byte[] pubKey = new byte[ChainParam.PubkeyLength];
-        System.arraycopy(longByte0, 0, pubKey, 0, 8);
-        System.arraycopy(longByte1, 0, pubKey, 8, 8);
-        System.arraycopy(longByte2, 0, pubKey, 16, 8);
-        System.arraycopy(longByte3, 0, pubKey, 24, 8);
-
-        return pubKey;
+        return ByteUtil.longArrayToBytes(this.peer, ChainParam.PubkeyLength);
     }
 
     public byte[] getEncoded(){
