@@ -277,7 +277,7 @@ public class ChainManager {
         	try {
         	    logger.info("Save genesis block in block store. Chain ID:{}",
                         new String(chainID));
-            	blockDB.saveBlock(chainID, genesis,true);
+            	blockDB.saveBlockContainer(chainID, genesisContainer,true);
         	} catch (Exception e) {
             	logger.error(e.getMessage(), e);
 				return false;
