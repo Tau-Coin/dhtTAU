@@ -20,6 +20,8 @@ import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.ForumNoteTx;
+import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.types.TypesConfig;
 
 import com.frostwire.jlibtorrent.Ed25519;
@@ -117,10 +119,10 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 				// msg
 				// tx construct
 				String forumNoteHash = obj.getAsString("fnhash");
-				tx = new ForumNoteTx(version, chainID, timeStamp, txfee, publicKey, nonce, forumNoteHash.getBytes());
-				tx.signTransaction(privateKey);
+				tx = new ForumNoteTx(version, chainID, timeStamp, txfee, 1L, publicKey, nonce, forumNoteHash.getBytes());
+				tx.signTransactionWithPriKey(privateKey);
 
-			} else if(TypesConfig.TxType.WCoinsType == type) {
+			} else if(TypesConfig.TxType.WCoinsType.ordinal() == type) {
 
             	if((fee.longValue()+ obj.getAsNumber("value").longValue()) > balance){
 					String result = "No enough balance pay txfee and amount, current balance is: "+ balance;
@@ -136,20 +138,20 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 				}
 
 				// amount
-        		BigInteger value = BigInteger.ZERO;
+        		long value = 0L;
         		if (obj.containsKey("value") && ((long)obj.get("value")) > 0) {
-            		value = BigInteger.valueOf((long) obj.get("value"));
+            		value = (long) obj.get("value");
         		}
 
 				// memo
         		String memo = "";
-        		if (obj.containsKey("memo") && ((String)obj.get("memo")) > 0) {
+        		if (obj.containsKey("memo") && !((String)obj.get("memo")).equals("")) {
             		memo = (String) obj.get("memo");
         		}
 
 				// tx construct
-				tx = new WiringCoinsTx(version, chainID, timeStamp, txfee, publicKey, nonce, to, value, memo);
-				tx.signTransaction(privateKey);
+				tx = new WiringCoinsTx(version, chainID, timeStamp, txfee, 2L, publicKey, nonce, to, value, memo);
+				tx.signTransactionWithPriKey(privateKey);
         	}
 
 			// get chainmanager and send tx	
