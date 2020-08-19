@@ -276,11 +276,8 @@ public class ByteUtil {
      */
     public static ArrayList<Long> unAlignByteArrayToSignLongArray(byte[] b, int piece){
         ArrayList<Long> retval = new ArrayList<>();
-        if ((null == b) || (b.length < (8 * piece))) {
-            for(int i = 0; i < piece; i++) {
-                retval.add(EMPTY_STRING_TO_ALL);
-            }
-            return retval;
+        if (null == b) {
+            return null;
         }
         byte[] temp = new byte[8 * piece];
         int alignCount = piece - 1;

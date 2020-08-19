@@ -236,7 +236,9 @@ public class Block {
            list.add(new Entry(this.baseTarget));
            list.add(new Entry(this.cumulativeDifficulty));
            list.add(this.generationSignature);
-           list.add(this.txHash);
+           if( this.txHash != null) {
+               list.add(this.txHash);
+           }
            list.add(new Entry(this.minerBalance));
            list.add(new Entry(this.senderBalance));
            list.add(new Entry(this.receiverBalance));
@@ -273,7 +275,9 @@ public class Block {
             list.add(new Entry(this.baseTarget));
             list.add(new Entry(this.cumulativeDifficulty));
             list.add(this.generationSignature);
-            list.add(this.txHash);
+            if( this.txHash != null) {
+                list.add(this.txHash);
+            }
             list.add(new Entry(this.minerBalance));
             list.add(new Entry(this.senderBalance));
             list.add(new Entry(this.receiverBalance));
@@ -312,6 +316,7 @@ public class Block {
                 this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
                 this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
             }else {
+                this.txHash = null;
                 this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
                 this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
                 this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
@@ -404,6 +409,9 @@ public class Block {
      */
     public byte[] getTxHash() {
         if(!isParsed) parseEncodedBytes();
+        if(null == txHash) {
+            return null;
+        }
         return ByteUtil.longArrayToBytes(txHash, ChainParam.HashLength);
     }
 
