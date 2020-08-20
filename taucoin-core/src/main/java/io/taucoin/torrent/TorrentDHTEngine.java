@@ -129,6 +129,8 @@ public class TorrentDHTEngine {
     private static final long START_STATS_DELAY = 2 * 1000;
     private static final long STATS_PERIOD = 10 * 1000;
 
+    private static final String sUndefinedEntry = entry.data_type.undefined_t.toString();
+
     /**
      * Get TorrentDHTEngine instance.
      *
@@ -313,7 +315,10 @@ public class TorrentDHTEngine {
             logger.debug("immutable entry [" + spec.sha1 + "] got:" + entry.toString()
                     + ", type:" + getEntryType(entry));
 
-            data = entry.bencode();
+            if (!isEntryUndefined(entry)) {
+                data = entry.bencode();
+            }
+
             /*
             String str = entry.string();
             try {
@@ -343,7 +348,7 @@ public class TorrentDHTEngine {
                 = sessionManager.dhtGetItem(spec.publicKey,
                         spec.salt, spec.timeout);
 
-        if (result == null || result.item == null) {
+        if (result == null || result.item == null || isEntryUndefined(result.item)) {
             return null;
         }
 
@@ -392,5 +397,9 @@ public class TorrentDHTEngine {
 
         entry eswig = e.swig();
         return eswig.type().toString();
+    }
+
+    private static boolean isEntryUndefined(Entry e) {
+        return sUndefinedEntry.equals(getEntryType(e));
     }
 }
