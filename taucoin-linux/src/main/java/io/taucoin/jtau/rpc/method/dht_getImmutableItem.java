@@ -2,7 +2,12 @@ package io.taucoin.jtau.rpc.method;
 
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.types.Block;
+import io.taucoin.types.Transaction;
+import io.taucoin.types.TransactionFactory;
+import io.taucoin.util.ByteUtil;
 
 import com.frostwire.jlibtorrent.Entry;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
@@ -36,21 +41,24 @@ public class dht_getImmutableItem extends JsonRpcServerMethod {
         } else {
 			// get sha1 hash
             byte[] hash = Hex.decode((String)(params.get(0)));
+            String type = (String)(params.get(1));
 
 			// get immutable item
             byte[] item = TorrentDHTEngine.getInstance().dhtGet(
                     new GetImmutableItemSpec(hash, 20));
 
-			// make response
-			ArrayList<String> result = new ArrayList<String>();
+            // make response
+            String result = "";
 
             if (item == null) {
-                result.add("result: null");
+                result= "Get mutable item, nothing !";
             } else {
-                try {
-			        result.add("result: " + Entry.bdecode(item).toString());
-                } catch (Exception e) {
-                    result.add("result: " + e);
+                if("block" == type) {
+                    Block block = new Block(item);
+                    result = block.toString();
+                } else if ("tx" == type){
+                    Transaction tx = TransactionFactory.parseTransaction(item);
+                    result = tx.toString();
                 }
             }
 
