@@ -142,7 +142,7 @@ public class PeerManager {
 
             // 3. The last time is long enough
             long currentTime = System.currentTimeMillis() / 1000;
-            if (currentTime - time > ChainParam.DefaultBlockTimeInterval) {
+            if (currentTime - time > ChainParam.DEFAULT_BLOCK_TIME) {
                 break;
             }
         }

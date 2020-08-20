@@ -1,6 +1,7 @@
 package io.taucoin.core;
 
 import io.taucoin.db.BlockStore;
+import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import io.taucoin.util.HashUtil;
 
@@ -17,7 +18,6 @@ public class ProofOfTransaction {
 
     private final byte[] chainID;
 
-    public final static int AverageCommunityChainBlockTime = 300;
     private final static BigInteger CommunityChainGenesisBaseTarget = new BigInteger("21D0369D036978", 16);
     private final static BigInteger DiffAdjustNumerator = new BigInteger("010000000000000000",16);
     private final static BigInteger DiffAdjustNumeratorHalf = new BigInteger("0100000000",16);
@@ -34,7 +34,7 @@ public class ProofOfTransaction {
     private final BigInteger genesisBaseTarget;
 
     public ProofOfTransaction(byte[] chainID) {
-        this(chainID, AverageCommunityChainBlockTime);
+        this(chainID, ChainParam.DEFAULT_BLOCK_TIME);
     }
 
     public ProofOfTransaction(byte[] chainID, int averageBlockTime) {
@@ -47,13 +47,13 @@ public class ProofOfTransaction {
         this.maxRatio = this.averageBlockTime + this.averageBlockTime * 7 / 60;
 
         // minBlockTime : aAverageBlockTime : maxBlockTime = 1 : 5 : 9
-        this.minBlockTime = this.averageBlockTime / 5;
+        this.minBlockTime = this.averageBlockTime / (ChainParam.DEFAULT_BLOCK_TIME / ChainParam.DEFAULT_MIN_BLOCK_TIME);
 //        this.maxBlockTime = this.averageBlockTime * 9 / 5;
 
         // BaseTarget and Time are in inverse proportion
         // genesisBaseTarget = CommunityChainGenesisBaseTarget * AverageCommunityChainBlockTime / averageBlockTime
         this.genesisBaseTarget = CommunityChainGenesisBaseTarget.
-                multiply(BigInteger.valueOf(AverageCommunityChainBlockTime)).
+                multiply(BigInteger.valueOf(ChainParam.DEFAULT_BLOCK_TIME)).
                 divide(BigInteger.valueOf(averageBlockTime));
     }
 

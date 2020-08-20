@@ -236,7 +236,7 @@ public class Chain {
         // if offline too long, vote as a new chain
         if (null != this.bestBlockContainer &&
                 (System.currentTimeMillis() / 1000 - this.bestBlockContainer.getBlock().getTimeStamp()) >
-                        ChainParam.WARNING_RANGE * ChainParam.DefaultBlockTimeInterval) {
+                        ChainParam.WARNING_RANGE * ChainParam.DEFAULT_BLOCK_TIME) {
             Vote bestVote = vote();
             if (!initialSync(bestVote)) {
                 logger.error("Chain ID[{}]: Initial sync fail!", new String(this.chainID));
@@ -281,17 +281,17 @@ public class Chain {
                         new String(this.chainID), Hex.toHexString(pubKey));
 
                 // if last visiting time is letter default block time, jump to mine
-//                long lastVisitTime = this.peerManager.getPeerVisitTime(pubKey);
-//                logger.debug("Chain ID[{}]: last visiting time:{}",
-//                        new String(this.chainID), lastVisitTime);
-//                if ((System.currentTimeMillis() / 1000 - lastVisitTime) < ChainParam.DefaultBlockTimeInterval) {
-//                    logger.debug("++ctx-----------------------go to mine.");
-//                    miningFlag = true;
-//                    break;
-//                }
+                long lastVisitTime = this.peerManager.getPeerVisitTime(pubKey);
+                logger.debug("Chain ID[{}]: last visiting time:{}",
+                        new String(this.chainID), lastVisitTime);
+                if ((System.currentTimeMillis() / 1000 - lastVisitTime) < ChainParam.DEFAULT_MIN_BLOCK_TIME) {
+                    logger.debug("++ctx-----------------------go to mine.");
+                    miningFlag = true;
+                    break;
+                }
 
                 BlockContainer tip = getTipBlockContainerFromPeer(pubKey);
-//                this.peerManager.updateVisitTime(pubKey);
+                this.peerManager.updateVisitTime(pubKey);
 
                 // if tip block is null, jump to mine
                 if (null == tip) {

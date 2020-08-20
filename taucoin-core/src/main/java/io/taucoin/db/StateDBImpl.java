@@ -1,5 +1,9 @@
 package io.taucoin.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
+
 import io.taucoin.core.AccountState;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TransactionFactory;
@@ -11,6 +15,8 @@ import java.util.*;
 
 // 公钥发布的mutable message也会放在stateDB
 public class StateDBImpl implements StateDB {
+
+    private static final Logger logger = LoggerFactory.getLogger("StateDBImpl");
 
     private final KeyValueDataBase db;
 
@@ -220,6 +226,8 @@ public class StateDBImpl implements StateDB {
     @Override
     public void addPeer(byte[] chainID, byte[] pubkey) throws Exception {
         db.put(PrefixKey.peerKey(chainID, pubkey), new byte[0]);
+        logger.debug("------peer:{}", Hex.toHexString(pubkey));
+        logger.debug("------prefix:{}", new String(PrefixKey.peerKey(chainID, pubkey)));
     }
 
     /**
@@ -230,7 +238,17 @@ public class StateDBImpl implements StateDB {
      */
     @Override
     public Set<byte[]> getPeers(byte[] chainID) throws Exception {
-        return db.retrieveKeysWithPrefix(PrefixKey.peerKeyPrefix(chainID));
+        Set<byte[]> ret = new HashSet<>();
+        byte[] prefix = PrefixKey.peerKeyPrefix(chainID);
+        logger.debug("=================prefix:{}", new String (prefix));
+        Set<byte[]> set = db.retrieveKeysWithPrefix(prefix);
+        if (null != set) {
+            logger.debug("++++++++++++==========size:{}", set.size());
+            for(byte[] peer: set) {
+                ret.add(Arrays.copyOfRange(peer,prefix.length, peer.length));
+            }
+        }
+        return ret;
     }
 
     /**

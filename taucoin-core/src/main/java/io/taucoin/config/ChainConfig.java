@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.util.HashMap;
 
-import static io.taucoin.types.TypesConfig.TxType;
-
 /**
  * configuration for new chain.
  */
@@ -112,7 +110,7 @@ public class ChainConfig {
 
         ChainConfig cf = new ChainConfig((long)ChainParam.DefaultGenesisVersion,
                 ChainParam.TauCommunityName,
-                ChainParam.DefaultBlockTimeInterval,
+                ChainParam.DEFAULT_BLOCK_TIME,
                 ChainParam.TauGenesisMinerPubkey.getBytes(),
                 System.currentTimeMillis() / 1000,
                 ChainParam.TauGenerationSignature.getBytes(), null);
