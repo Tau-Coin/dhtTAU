@@ -79,18 +79,23 @@ public class ProofOfTransaction {
                         new String(this.chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
                 return null;
             }
+            logger.debug("++++++ctx------------------------1:{}", Hex.toHexString(ancestor1.getEncoded()));
+
             ancestor2 = blockStore.getBlockByHash(chainID, ancestor1.getPreviousBlockHash());
             if (null == ancestor2) {
                 logger.error("Chain ID:{}: Cannot find parent, hash:{}",
                         new String(this.chainID), Hex.toHexString(ancestor1.getPreviousBlockHash()));
                 return null;
             }
+            logger.debug("++++++ctx------------------------2:{}", Hex.toHexString(ancestor2.getEncoded()));
+
             ancestor3 = blockStore.getBlockByHash(chainID, ancestor2.getPreviousBlockHash());
             if (null == ancestor3) {
                 logger.error("Chain ID:{}: Cannot find parent, hash:{}",
                         new String(this.chainID), Hex.toHexString(ancestor2.getPreviousBlockHash()));
                 return null;
             }
+            logger.debug("++++++ctx------------------------3:{}", Hex.toHexString(ancestor3.getEncoded()));
         } catch (Exception e) {
             logger.info(new String(this.chainID) + ":" + e.getMessage(), e);
             return null;

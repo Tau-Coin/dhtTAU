@@ -780,19 +780,19 @@ public class Chain {
      */
     private Block getTipBlockFromPeer(byte[] peer) {
         try {
-            logger.error("+ctx----------------peer: {}", Hex.toHexString(peer));
+            logger.debug("+ctx----------------peer: {}", Hex.toHexString(peer));
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalt, TIMEOUT);
             byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
 
             if (null != encode) {
-                logger.error("+ctx----------------encode: {}", Hex.toHexString(encode));
+                logger.debug("+ctx----------------encode: {}", Hex.toHexString(encode));
                 MutableItemValue value = new MutableItemValue(encode);
                 if (null != value.getPeer()) {
-                    logger.error("-ctx----------------get peer: {}", Hex.toHexString(value.getPeer()));
+                    logger.debug("-ctx----------------get peer: {}", Hex.toHexString(value.getPeer()));
                     this.peerManager.addBlockPeer(value.getPeer());
                 }
                 if (null != value.getHash()) {
-                    logger.error("-ctx----------------get hash: {}", Hex.toHexString(value.getHash()));
+                    logger.debug("-ctx----------------get hash: {}", Hex.toHexString(value.getHash()));
                     return getBlockFromDHTByHash(value.getHash());
                 }
             }
@@ -810,19 +810,19 @@ public class Chain {
      */
     private BlockContainer getTipBlockContainerFromPeer(byte[] peer) {
 
-        logger.error("+ctx----------------peer: {}", Hex.toHexString(peer));
+        logger.debug("++ctx----------------peer: {}", Hex.toHexString(peer));
         try {
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalt, TIMEOUT);
             byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
             if (null != encode) {
-                logger.error("+ctx----------------encode: {}", Hex.toHexString(encode));
+                logger.debug("++ctx----------------encode: {}", Hex.toHexString(encode));
                 MutableItemValue value = new MutableItemValue(encode);
                 if (null != value.getPeer()) {
-                    logger.error("-ctx----------------get peer: {}", Hex.toHexString(value.getPeer()));
+                    logger.debug("++ctx----------------get peer: {}", Hex.toHexString(value.getPeer()));
                     this.peerManager.addBlockPeer(value.getPeer());
                 }
                 if (null != value.getHash()) {
-                    logger.error("-ctx----------------get hash: {}", Hex.toHexString(value.getHash()));
+                    logger.debug("++ctx----------------get hash: {}", Hex.toHexString(value.getHash()));
                     return getBlockContainerFromDHTByHash(value.getHash());
                 }
             }
