@@ -677,21 +677,22 @@ public class Block {
     @Override
     public String toString(){
         StringBuilder strBlock = new StringBuilder();
-        strBlock.append("block: [\n");
-        strBlock.append("version: ").append(this.getVersion()).append("\n");
-        strBlock.append("timestamp: ").append(this.getTimeStamp()).append("\n");
-        strBlock.append("blocknum: ").append(this.getBlockNum()).append("\n");
-        strBlock.append("previousblockhash: ").append(ByteUtil.toHexString(this.getPreviousBlockHash())).append("\n");
-        strBlock.append("immutableblockhash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash())).append("\n");
-        strBlock.append("generationsignature: ").append(ByteUtil.toHexString(this.getGenerationSignature())).append("\n");
-        strBlock.append("transaction: ").append(ByteUtil.toHexString(this.getTxHash())).append("\n");
-        strBlock.append("minerbalance: ").append(this.getMinerBalance()).append("\n");
-        strBlock.append("senderbalance: ").append(this.getSenderBalance()).append("\n");
-        strBlock.append("receiverbalance: ").append(this.getReceiverBalance()).append("\n");
-        strBlock.append("sendernonce: ").append(this.getSenderNonce()).append("\n");
-        strBlock.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
-        strBlock.append("minerpubkey: ").append(ByteUtil.toHexString(this.getMinerPubkey())).append("\n");
-        strBlock.append("]\n");
+        strBlock.append("block: [");
+        strBlock.append(" blockhash: ").append(ByteUtil.toHexString(this.getBlockHash()));
+        strBlock.append(" version: ").append(this.getVersion());
+        strBlock.append(" timestamp: ").append(this.getTimeStamp());
+        strBlock.append(" blocknum: ").append(this.getBlockNum());
+        strBlock.append(" previousblockhash: ").append(ByteUtil.toHexString(this.getPreviousBlockHash()));
+        strBlock.append(" immutableblockhash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash()));
+        strBlock.append(" generationsignature: ").append(ByteUtil.toHexString(this.getGenerationSignature()));
+        strBlock.append(" transaction: ").append(ByteUtil.toHexString(this.getTxHash()));
+        strBlock.append(" minerbalance: ").append(this.getMinerBalance());
+        strBlock.append(" senderbalance: ").append(this.getSenderBalance());
+        strBlock.append(" receiverbalance: ").append(this.getReceiverBalance());
+        strBlock.append(" sendernonce: ").append(this.getSenderNonce());
+        strBlock.append(" signature: ").append(ByteUtil.toHexString(this.getSignature()));
+        strBlock.append(" minerpubkey: ").append(ByteUtil.toHexString(this.getMinerPubkey()));
+        strBlock.append("]");
         return strBlock.toString();
     }
 

@@ -20,6 +20,7 @@ import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.types.Block;
+import io.taucoin.util.ByteUtil;
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
@@ -40,13 +41,13 @@ public class chain_getBlockByHash extends JsonRpcServerMethod {
 
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
         List<Object> params = req.getPositionalParams();
-        if (params.size() != 3) {
+        if (params.size() != 2) {
             return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
         } else {
 
 			// get chainid, block hash
             byte[] chainid = ((String)(params.get(0))).getBytes();
-            byte[] blockHash = ((String)(params.get(1))).getBytes();
+            byte[] blockHash = ByteUtil.toByte((String)(params.get(1)));
 
 		    ChainManager chainmanager = tauController.getChainManager();
 		    String result = "";
@@ -54,7 +55,7 @@ public class chain_getBlockByHash extends JsonRpcServerMethod {
                 Block block = chainmanager.getBlockByHash(chainid, blockHash);
                 result = block.toString();
             } catch (Exception e) {
-                return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
+                return new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, req.getID());
             }
 
 		    JSONRPC2Response response = new JSONRPC2Response(result, req.getID());

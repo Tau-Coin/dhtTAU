@@ -260,25 +260,26 @@ public class GenesisTx extends Transaction {
     @Override
     public String toString(){
         StringBuilder strTx = new StringBuilder();
-        strTx.append("transaction: [\n");
-        strTx.append("version: ").append(this.getVersion()).append("\n");
-        strTx.append("chainID: ").append(new String(this.getChainID())).append("\n");
-        strTx.append("timestamp: ").append(this.getTimeStamp()).append("\n");
-        strTx.append("txFee: ").append(this.getTxFee()).append("\n");
-        strTx.append("txType: ").append(this.getTxType()).append("\n");
-        strTx.append("sender: ").append(ByteUtil.toHexString(this.getSenderPubkey())).append("\n");
-        strTx.append("nonce: ").append(this.getNonce()).append("\n");
+        strTx.append("transaction: [");
+        strTx.append(" txhash: ").append(ByteUtil.toHexString(this.getTxID()));
+        strTx.append(" version: ").append(this.getVersion());
+        strTx.append(" chainID: ").append(new String(this.getChainID()));
+        strTx.append(" timestamp: ").append(this.getTimeStamp());
+        strTx.append(" txFee: ").append(this.getTxFee());
+        strTx.append(" txType: ").append(this.getTxType());
+        strTx.append(" sender: ").append(ByteUtil.toHexString(this.getSenderPubkey()));
+        strTx.append(" nonce: ").append(this.getNonce());
         HashMap<ByteArrayWrapper, GenesisItem> accounts = getGenesisAccounts();
         Iterator<ByteArrayWrapper> accountItor = accounts.keySet().iterator();
         while(accountItor.hasNext()) {
             ByteArrayWrapper key = accountItor.next();
             GenesisItem value = accounts.get(key);
-            strTx.append("account: ").append(ByteUtil.toHexString(key.getData())).append("\n");
-            strTx.append("balance: ").append(value.getBalance().longValue());
-            strTx.append("power: ").append(value.getPower().longValue()).append("\n");
+            strTx.append(" account: ").append(ByteUtil.toHexString(key.getData()));
+            strTx.append(" balance: ").append(value.getBalance().longValue());
+            strTx.append(" power: ").append(value.getPower().longValue());
 		}
-        strTx.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
-        strTx.append("]\n");
+        strTx.append(" signature: ").append(ByteUtil.toHexString(this.getSignature()));
+        strTx.append("]");
         return strTx.toString();
     }
 

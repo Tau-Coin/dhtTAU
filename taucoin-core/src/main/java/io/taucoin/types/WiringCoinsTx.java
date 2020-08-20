@@ -258,19 +258,20 @@ public class WiringCoinsTx extends Transaction {
     @Override
     public String toString(){
         StringBuilder strTx = new StringBuilder();
-        strTx.append("transaction: [\n");
-        strTx.append("version: ").append(this.getVersion()).append("\n");
-        strTx.append("chainID: ").append(new String(this.getChainID())).append("\n");
-        strTx.append("timestamp: ").append(this.getTimeStamp()).append("\n");
-        strTx.append("txFee: ").append(this.getTxFee()).append("\n");
-        strTx.append("txType: ").append(this.getTxType()).append("\n");
-        strTx.append("sender: ").append(ByteUtil.toHexString(this.getSenderPubkey())).append("\n");
-        strTx.append("nonce: ").append(this.getNonce()).append("\n");
-        strTx.append("receiver: ").append(ByteUtil.toHexString(this.getReceiver())).append("\n");
-        strTx.append("amount: ").append(this.getAmount()).append("\n");
-        strTx.append("memo: ").append(this.getMemo()).append("\n");
-        strTx.append("signature: ").append(ByteUtil.toHexString(this.getSignature())).append("\n");
-        strTx.append("]\n");
+        strTx.append("transaction: [");
+        strTx.append(" txhash: ").append(ByteUtil.toHexString(this.getTxID()));
+        strTx.append(" version: ").append(this.getVersion());
+        strTx.append(" chainID: ").append(new String(this.getChainID()));
+        strTx.append(" timestamp: ").append(this.getTimeStamp());
+        strTx.append(" txFee: ").append(this.getTxFee());
+        strTx.append(" txType: ").append(this.getTxType());
+        strTx.append(" sender: ").append(ByteUtil.toHexString(this.getSenderPubkey()));
+        strTx.append(" nonce: ").append(this.getNonce());
+        strTx.append(" receiver: ").append(ByteUtil.toHexString(this.getReceiver()));
+        strTx.append(" amount: ").append(this.getAmount());
+        strTx.append(" memo: ").append(this.getMemo());
+        strTx.append(" signature: ").append(ByteUtil.toHexString(this.getSignature()));
+        strTx.append("]");
         return strTx.toString();
     }
 }

@@ -42,7 +42,7 @@ public class chain_getTransactionsInPool extends JsonRpcServerMethod {
 
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
         List<Object> params = req.getPositionalParams();
-        if (params.size() != 2) {
+        if (params.size() != 1) {
             return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
         } else {
 

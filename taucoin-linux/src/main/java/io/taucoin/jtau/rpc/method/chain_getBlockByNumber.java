@@ -41,7 +41,7 @@ public class chain_getBlockByNumber extends JsonRpcServerMethod {
 
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
         List<Object> params = req.getPositionalParams();
-        if (params.size() != 3) {
+        if (params.size() != 2) {
             return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
         } else {
 
@@ -52,10 +52,11 @@ public class chain_getBlockByNumber extends JsonRpcServerMethod {
 		    ChainManager chainmanager = tauController.getChainManager();
             String result = "";
             try {
+                logger.info("chainid: {}, blockNum: {}", chainid, blockNum);
                 Block block = chainmanager.getBlockByNumber(chainid, blockNum);
                 result = block.toString();
             } catch (Exception e) {
-                return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
+                return new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, req.getID());
             }
 		    JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
 		    return response;
