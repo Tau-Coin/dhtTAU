@@ -31,7 +31,7 @@ public class dht_getMutableItem extends JsonRpcServerMethod {
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
 
         List<Object> params = req.getPositionalParams();
-        if (params.size() != 1) {
+        if (params.size() != 2) {
             return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
         } else {
 			// get pubkey
