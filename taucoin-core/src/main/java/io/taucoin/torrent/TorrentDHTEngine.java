@@ -307,6 +307,8 @@ public class TorrentDHTEngine {
         Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
         byte[] data = null;
         if (entry != null) {
+            logger.debug("entry [" + spec.sha1 + "] got:" + entry.toString());
+
             data = entry.bencode();
             /*
             String str = entry.string();
@@ -340,6 +342,8 @@ public class TorrentDHTEngine {
         if (result == null || result.item == null) {
             return null;
         }
+
+        logger.debug("mutable item got:" + result.toString());
 
         return result.item.bencode();
     }
