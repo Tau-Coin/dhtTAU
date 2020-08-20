@@ -184,6 +184,17 @@ public interface StateDB {
      */
     Set<Transaction> getSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception;
 
+
+    /**
+     * get self transaction pool
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @param nonce tx nonce
+     * @return tx
+     * @throws Exception
+     */
+    Transaction getSelfTx(byte[] chainID, byte[] pubKey, long nonce) throws Exception;
+
     /**
      * put transaction into pool
      * @param chainID

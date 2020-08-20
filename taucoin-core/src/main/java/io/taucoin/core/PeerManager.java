@@ -41,7 +41,7 @@ public class PeerManager {
      * @param priorityPeers not null
      * @return
      */
-    public boolean init(Set<ByteArrayWrapper> allPeers, List<ByteArrayWrapper> priorityPeers) {
+    public synchronized boolean init(Set<ByteArrayWrapper> allPeers, List<ByteArrayWrapper> priorityPeers) {
         if (null == allPeers || allPeers.isEmpty()) {
             logger.error("ChainID:{}: All peers is empty!", new String(this.chainID));
             return false;
@@ -77,7 +77,7 @@ public class PeerManager {
      * add a new peer to all peer set when connect a new block
      * @param peer a peer
      */
-    public void addNewBlockPeer(byte[] peer) {
+    public synchronized void addNewBlockPeer(byte[] peer) {
         this.allPeers.add(new ByteArrayWrapper(peer));
         if (this.priorityPeers.size() >= ChainParam.MUTABLE_RANGE) {
             this.priorityPeers.remove(0);
@@ -89,7 +89,7 @@ public class PeerManager {
      * add a peer to all peer set when sync old block
      * @param peer a peer
      */
-    public void addOldBlockPeer(byte[] peer) {
+    public synchronized void addOldBlockPeer(byte[] peer) {
         this.allPeers.add(new ByteArrayWrapper(peer));
         if (this.priorityPeers.size() <= ChainParam.MUTABLE_RANGE) {
             this.priorityPeers.add(new ByteArrayWrapper(peer));
@@ -100,7 +100,7 @@ public class PeerManager {
      * get optimal block peer, then remove it from set
      * @return
      */
-    public byte[] popUpOptimalBlockPeer() {
+    public synchronized byte[] popUpOptimalBlockPeer() {
         byte[] peer;
 
         while (true) {
@@ -158,7 +158,7 @@ public class PeerManager {
      * get a block peer randomly
      * @return
      */
-    public byte[] getBlockPeerRandomly() {
+    public synchronized byte[] getBlockPeerRandomly() {
         byte[] peer;
 
         // if empty, fill it up
@@ -185,7 +185,7 @@ public class PeerManager {
      * @param pubKey peer public key
      * @return last visiting time, or 0 if first visit
      */
-    public long getPeerVisitTime(byte[] pubKey) {
+    public synchronized long getPeerVisitTime(byte[] pubKey) {
         Long time = this.peerInfo.get(new ByteArrayWrapper(pubKey));
         if (null != time) {
             return time;
@@ -198,7 +198,7 @@ public class PeerManager {
      * update peer the revisit time
      * @param pubKey
      */
-    public void updateVisitTime(byte[] pubKey) {
+    public synchronized void updateVisitTime(byte[] pubKey) {
         // update latest timestamp
         long currentTime = System.currentTimeMillis() / 1000;
         this.peerInfo.put(new ByteArrayWrapper(pubKey), currentTime);
@@ -208,7 +208,7 @@ public class PeerManager {
      * add a peer to block peer set
      * @param peer
      */
-    public void addBlockPeer(byte[] peer) {
+    public synchronized void addBlockPeer(byte[] peer) {
         // if full, throw it away
         if (this.blockPeers.size() < PEER_NUMBER) {
             this.blockPeers.add(new ByteArrayWrapper(peer));
@@ -219,7 +219,7 @@ public class PeerManager {
      * get optimal tx peer, then remove it from set
      * @return
      */
-    public byte[] popUpOptimalTxPeer() {
+    public synchronized byte[] popUpOptimalTxPeer() {
         // if empty, fill it up
         if (this.txPeers.isEmpty()) {
             int size = this.priorityPeers.size();
@@ -244,7 +244,7 @@ public class PeerManager {
      *
      * @return
      */
-    public byte[] getOptimalTxPeer() {
+    public synchronized byte[] getOptimalTxPeer() {
         // if empty, fill it up
         if (this.txPeers.isEmpty()) {
             int size = this.priorityPeers.size();
@@ -265,7 +265,7 @@ public class PeerManager {
      * add a peer to tx peer set
      * @param peer
      */
-    public void addTxPeer(byte[] peer) {
+    public synchronized void addTxPeer(byte[] peer) {
         // if full, throw it away
         if (this.txPeers.size() < PEER_NUMBER) {
             this.txPeers.add(new ByteArrayWrapper(peer));
@@ -276,7 +276,7 @@ public class PeerManager {
      * get all peers
      * @return
      */
-    public Set<ByteArrayWrapper> getAllPeers() {
+    public synchronized Set<ByteArrayWrapper> getAllPeers() {
         return this.allPeers;
     }
 
@@ -284,7 +284,7 @@ public class PeerManager {
      * get all peers number
      * @return
      */
-    public int getPeerNumber() {
+    public synchronized int getPeerNumber() {
         return this.allPeers.size();
     }
 
@@ -292,7 +292,7 @@ public class PeerManager {
      * get a peer in mutable range randomly
      * @return peer or null if empty
      */
-    public byte[] getMutableRangePeerRandomly() {
+    public synchronized byte[] getMutableRangePeerRandomly() {
         int size = this.priorityPeers.size();
         if (size > 0) {
             Random random = new Random(System.currentTimeMillis());

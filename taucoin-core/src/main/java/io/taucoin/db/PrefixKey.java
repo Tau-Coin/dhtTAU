@@ -120,7 +120,7 @@ public class PrefixKey {
      * @param chainID
      * @return
      */
-    public static byte[] txPoolPrefix(byte[] chainID, byte[] pubKey) {
+    public static byte[] txPoolAllTxPrefix(byte[] chainID, byte[] pubKey) {
         byte[] prefix = new byte[chainID.length + txPool.length + pubKey.length];
         System.arraycopy(chainID, 0, prefix, 0, chainID.length);
         System.arraycopy(txPool, 0, prefix, chainID.length, txPool.length);
@@ -129,18 +129,19 @@ public class PrefixKey {
     }
 
     /**
-     * tx pool key: chainID + 'txPool' + pubKey + txid
-     * @param chainID
-     * @param pubKey
-     * @param txid
-     * @return
+     * tx pool key: chainID + 'txPool' + pubKey + nonce
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @param nonce nonce
+     * @return key
      */
-    public static byte[] txPoolKey(byte[] chainID, byte[] pubKey, byte[] txid) {
-        byte[] key = new byte[chainID.length + txPool.length + pubKey.length + txid.length];
+    public static byte[] txPoolTxKey(byte[] chainID, byte[] pubKey, long nonce) {
+        byte[] nonceBytes = ByteUtil.longToBytes(nonce);
+        byte[] key = new byte[chainID.length + txPool.length + pubKey.length + nonceBytes.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
         System.arraycopy(txPool, 0, key, chainID.length, txPool.length);
         System.arraycopy(pubKey, 0, key, chainID.length + txPool.length, pubKey.length);
-        System.arraycopy(txid, 0, key, chainID.length + txPool.length + pubKey.length, txid.length);
+        System.arraycopy(nonceBytes, 0, key, chainID.length + txPool.length + pubKey.length, nonceBytes.length);
         return key;
     }
 

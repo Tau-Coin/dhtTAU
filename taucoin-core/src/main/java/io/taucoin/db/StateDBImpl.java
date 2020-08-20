@@ -263,7 +263,7 @@ public class StateDBImpl implements StateDB {
      */
     @Override
     public Set<Transaction> getSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception {
-        Set<byte[]> keys = db.retrieveKeysWithPrefix(PrefixKey.txPoolPrefix(chainID, pubKey));
+        Set<byte[]> keys = db.retrieveKeysWithPrefix(PrefixKey.txPoolAllTxPrefix(chainID, pubKey));
         if (null != keys) {
             Set<Transaction> txs = new HashSet<>();
             for (byte[] key: keys) {
@@ -283,7 +283,7 @@ public class StateDBImpl implements StateDB {
      */
     @Override
     public void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws Exception {
-        db.put(PrefixKey.txPoolKey(chainID, tx.getSenderPubkey(), tx.getTxID()), tx.getEncoded());
+        db.put(PrefixKey.txPoolTxKey(chainID, tx.getSenderPubkey(), tx.getNonce()), tx.getEncoded());
     }
 
     /**
@@ -294,7 +294,26 @@ public class StateDBImpl implements StateDB {
      */
     @Override
     public void deleteSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception {
-        db.delete(PrefixKey.txPoolPrefix(chainID, pubKey));
+        db.delete(PrefixKey.txPoolAllTxPrefix(chainID, pubKey));
+    }
+
+    /**
+     * get self transaction pool
+     *
+     * @param chainID chain ID
+     * @param pubKey  public key
+     * @param nonce   tx nonce
+     * @return tx
+     * @throws Exception
+     */
+    @Override
+    public Transaction getSelfTx(byte[] chainID, byte[] pubKey, long nonce) throws Exception {
+        byte[] txEncode = db.get(PrefixKey.txPoolTxKey(chainID, pubKey, nonce));
+        if (null != txEncode) {
+            return TransactionFactory.parseTransaction(txEncode);
+        }
+
+        return null;
     }
 
     /**

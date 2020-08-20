@@ -786,14 +786,18 @@ public class Chain {
 //        }
 //        return null;
 
+        logger.error("+ctx----------------peer: {}", Hex.toHexString(peer));
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalt, TIMEOUT);
         byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
+        logger.error("+ctx----------------encode: {}", Hex.toHexString(encode));
         if (null != encode) {
             MutableItemValue value = new MutableItemValue(encode);
             if (null != value.getPeer()) {
+                logger.error("-ctx----------------get peer: {}", Hex.toHexString(value.getPeer()));
                 this.peerManager.addBlockPeer(value.getPeer());
             }
             if (null != value.getHash()) {
+                logger.error("-ctx----------------get hash: {}", Hex.toHexString(value.getHash()));
                 return getBlockFromDHTByHash(value.getHash());
             }
         }

@@ -331,6 +331,20 @@ public class StateDBTrack implements StateDB {
     }
 
     /**
+     * get self transaction pool
+     *
+     * @param chainID chain ID
+     * @param pubKey  public key
+     * @param nonce   tx nonce
+     * @return tx
+     * @throws Exception
+     */
+    @Override
+    public Transaction getSelfTx(byte[] chainID, byte[] pubKey, long nonce) throws Exception {
+        return this.stateDB.getSelfTx(chainID, pubKey, nonce);
+    }
+
+    /**
      * put transaction into pool
      *
      * @param chainID

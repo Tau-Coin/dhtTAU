@@ -62,7 +62,9 @@ public class MutableItemValue {
         }
         Entry entry = Entry.fromList(list);
 
-        return entry.bencode();
+        byte[] encode = entry.bencode();
+        logger.error("------------------encode:{}", Hex.toHexString(encode));
+        return encode;
     }
 
     @Override

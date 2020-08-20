@@ -23,13 +23,13 @@ public class TransactionPoolImpl implements TransactionPool {
 
 //    private TxNoncer pendingNonce;
     // all transaction: txid <-> transaction
-    private Map<ByteArrayWrapper, Transaction> all = new HashMap<>();
+    private final Map<ByteArrayWrapper, Transaction> all = new HashMap<>();
     // local transaction queue
     public PriorityQueue<LocalTxEntry> locals = new PriorityQueue<>(1, new LocalTxPolicy());
     // remote transaction queue
     public PriorityQueue<MemoryPoolEntry> remotes = new PriorityQueue<>(1, new MemoryPoolPolicy());
     // remote account transaction: pubKey <-> txid
-    private Map<ByteArrayWrapper, byte[]> accountTx = new HashMap<>();
+    private final Map<ByteArrayWrapper, byte[]> accountTx = new HashMap<>();
 
 
     private TransactionPoolImpl() {
@@ -46,12 +46,12 @@ public class TransactionPoolImpl implements TransactionPool {
      * init transaction pool
      */
     @Override
-    public void init() {
+    public synchronized void init() {
         getSelfTxsFromDB();
     }
 
     @Override
-    public void updatePubKey(byte[] pubKey) {
+    public synchronized void updatePubKey(byte[] pubKey) {
         logger.debug("Chain ID[{}]: update public key[{}]",
                 new String(this.chainID), Hex.toHexString(pubKey));
 
@@ -78,7 +78,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param pubKey
      * @return current nonce or 0 when null or exception
      */
-    private long getNonce(byte[] pubKey) {
+    private synchronized long getNonce(byte[] pubKey) {
         try {
             BigInteger nonce = this.stateDB.getNonce(this.chainID, pubKey);
             if (null != nonce) {
@@ -93,7 +93,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * get self transaction from db
      */
-    private void getSelfTxsFromDB() {
+    private synchronized void getSelfTxsFromDB() {
         try {
             Set<Transaction> transactionSet = this.stateDB.getSelfTxPool(chainID, userPubKey);
             if (null != transactionSet) {
@@ -114,7 +114,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * re-init tx pool
      */
     @Override
-    public void reinit() {
+    public synchronized void reinit() {
         clearPool();
         getSelfTxsFromDB();
     }
@@ -122,7 +122,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * clear the pool
      */
-    public void clearPool() {
+    public synchronized void clearPool() {
         remotes.clear();
         accountTx.clear();
         locals.clear();
@@ -136,7 +136,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param tx
      */
     @Override
-    public void addLocal(Transaction tx) {
+    public synchronized void addLocal(Transaction tx) {
         // check if null
         if (null == tx) {
             logger.error("ChainID[{}]-Add remote null!", new String(this.chainID));
@@ -187,7 +187,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param list
      */
     @Override
-    public void addLocals(List<Transaction> list) {
+    public synchronized void addLocals(List<Transaction> list) {
         if (null != list) {
             for (Transaction transaction: list) {
                 addLocal(transaction);
@@ -196,12 +196,25 @@ public class TransactionPoolImpl implements TransactionPool {
     }
 
     /**
+     * get all transactions in pool
+     *
+     * @return tx list
+     */
+    @Override
+    public synchronized List<Transaction> getAllTransactions() {
+        List<Transaction> list = new ArrayList<>(this.all.size());
+        list.addAll(this.all.values());
+
+        return list;
+    }
+
+    /**
      * get all local transactions in pool
      *
      * @return
      */
     @Override
-    public List<Transaction> getLocals() {
+    public synchronized List<Transaction> getLocals() {
         List<Transaction> list = new ArrayList<>(locals.size());
         Iterator<LocalTxEntry> iterator = locals.iterator();
         while (iterator.hasNext()) {
@@ -220,7 +233,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * save all local transaction in db
      */
     @Override
-    public void saveLocals() {
+    public synchronized void saveLocals() {
         Iterator<LocalTxEntry> iterator = locals.iterator();
         while (iterator.hasNext()) {
             Transaction tx = getTransactionByTxid(iterator.next().txid);
@@ -243,7 +256,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return best transaction when nonce matches or null
      */
     @Override
-    public Transaction getLocalBestTransaction() {
+    public synchronized Transaction getLocalBestTransaction() {
         LocalTxEntry localTxEntry = locals.peek();
         if (null != localTxEntry) {
             Transaction tx = getTransactionByTxid(localTxEntry.txid);
@@ -267,7 +280,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return local size
      */
     @Override
-    public int localSize() {
+    public synchronized int localSize() {
         return locals.size();
     }
 
@@ -277,7 +290,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param tx
      */
     @Override
-    public void addTx(Transaction tx) {
+    public synchronized void addTx(Transaction tx) {
         // check if null
         if (null == tx) {
             logger.error("ChainID[{}]-Add remote null!", new String(this.chainID));
@@ -299,7 +312,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param tx
      */
     @Override
-    public void addRemote(Transaction tx) {
+    public synchronized void addRemote(Transaction tx) {
         // check if null
         if (null == tx) {
             logger.error("ChainID[{}]-Add remote null!", new String(this.chainID));
@@ -369,7 +382,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param tx
      * @return
      */
-    private boolean checkTypeAndBalance(Transaction tx) {
+    private synchronized boolean checkTypeAndBalance(Transaction tx) {
         try {
             if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
                 long cost = ((WiringCoinsTx)tx).getAmount() + tx.getTxFee();
@@ -406,7 +419,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param list
      */
     @Override
-    public void addRemotes(List<Transaction> list) {
+    public synchronized void addRemotes(List<Transaction> list) {
         if (null != list) {
             for (Transaction tx: list) {
                 addRemote(tx);
@@ -421,7 +434,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return local first, then the maximum fee in remote, or null when poll is empty
      */
     @Override
-    public Transaction getBestTransaction() {
+    public synchronized Transaction getBestTransaction() {
         // local first
         Transaction localBest = getLocalBestTransaction();
         if (null != localBest) {
@@ -449,7 +462,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return
      */
     @Override
-    public int remoteSize() {
+    public synchronized int remoteSize() {
         // accountTx.size() or remotes.size()
         return remotes.size();
     }
@@ -460,7 +473,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return
      */
     @Override
-    public int size() {
+    public synchronized int size() {
         return all.size();
     }
 
@@ -485,7 +498,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return transaction or null when not found
      */
     @Override
-    public Transaction getTransactionByTxid(byte[] txid) {
+    public synchronized Transaction getTransactionByTxid(byte[] txid) {
         return all.get(new ByteArrayWrapper(txid));
     }
 
@@ -495,7 +508,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return
      */
     @Override
-    public long getMaxFee() {
+    public synchronized long getMaxFee() {
         MemoryPoolEntry entry = remotes.peek();
 
         while (null != entry) {
@@ -517,7 +530,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * remove a remote transaction from pool
      * @param tx the transaction to be removed
      */
-    private void removeRemote(Transaction tx) {
+    private synchronized void removeRemote(Transaction tx) {
         accountTx.remove(new ByteArrayWrapper(tx.getSenderPubkey()));
         remotes.remove(MemoryPoolEntry.with(tx));
         all.remove(new ByteArrayWrapper(tx.getTxID()));
@@ -527,7 +540,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * remove a local transaction from pool
      * @param tx the transaction to be removed
      */
-    private void removeLocal(Transaction tx) {
+    private synchronized void removeLocal(Transaction tx) {
         locals.remove(LocalTxEntry.with(tx));
         all.remove(new ByteArrayWrapper(tx.getTxID()));
     }
@@ -538,7 +551,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param tx transaction to be removed
      */
     @Override
-    public void removeTransactionFromPool(Transaction tx) {
+    public synchronized void removeTransactionFromPool(Transaction tx) {
         // check if null
         if (null == tx) {
             logger.error("ChainID[{}]-Tx to be removed is null!", new String(this.chainID));
@@ -579,7 +592,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return
      */
     @Override
-    public boolean isInPool(byte[] txid) {
+    public synchronized boolean isInPool(byte[] txid) {
         return all.containsKey(new ByteArrayWrapper(txid));
     }
 
@@ -588,7 +601,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * when pool size is over 3 * mutable range, keep half of it
      */
     @Override
-    public void trySlimDownPool() {
+    public synchronized void trySlimDownPool() {
         if (remotes.size() > ChainParam.SLIM_DOWN_SIZE) {
             slimDownPool();
         }
@@ -597,7 +610,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * Keep half of the transaction with a relatively large fee
      */
-    public void slimDownPool() {
+    public synchronized void slimDownPool() {
         int size = remotes.size();
 
         PriorityQueue<MemoryPoolEntry> originalRemotes = remotes;
@@ -635,7 +648,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return peer or null
      */
     @Override
-    public byte[] getOptimalPeer() {
+    public synchronized byte[] getOptimalPeer() {
         // get transaction that has the maximum fee
         MemoryPoolEntry entry = remotes.peek();
         if (null != entry) {
@@ -657,23 +670,41 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param pubKey
      */
     @Override
-    public void recheckAccoutTx(byte[] pubKey) {
+    public synchronized void recheckAccoutTx(byte[] pubKey) {
         try {
             if (Arrays.equals(this.userPubKey, pubKey)) {
-                Transaction tx = getLocalBestTransaction();
-                if (null != tx) {
-                    // check nonce
-                    AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
-                    // if local best tx nonce is too little, remove it until big enough
-                    if (accountState.getNonce().longValue() >= tx.getNonce()) {
-                        removeRemote(tx);
-                        recheckAccoutTx(this.userPubKey);
-                    }
+                // check nonce
+                AccountState accountState = this.stateDB.getAccount(this.chainID, this.userPubKey);
+                LocalTxEntry localTxEntry = this.locals.peek();
 
+                if (null != localTxEntry && null != accountState) {
+                    long stateNonce = accountState.getNonce().longValue();
+
+                    if (stateNonce >= localTxEntry.nonce) {
+                        while (null != localTxEntry && accountState.getNonce().longValue() >= localTxEntry.nonce) {
+                            //remove local tx
+                            // 删掉不符合条件的交易
+                            this.locals.poll();
+                            this.all.remove(new ByteArrayWrapper(localTxEntry.txid));
+
+                            localTxEntry = this.locals.peek();
+                        }
+                    } else {
+                        // 将符合条件的交易重新放回交易池
+                        Transaction tx = this.stateDB.getSelfTx(this.chainID, this.userPubKey, stateNonce + 1);
+                        while (null != tx) {
+                            addLocal(tx);
+
+                            stateNonce++;
+                            tx = this.stateDB.getSelfTx(this.chainID, this.userPubKey, stateNonce + 1);
+                        }
+                    }
                 }
             } else {
                 byte[] txid = this.accountTx.get(new ByteArrayWrapper(pubKey));
                 if (null == txid) {
+                    logger.info("Chain ID[{}]: Account[{}] has no tx.",
+                            new String(this.chainID), Hex.toHexString(pubKey));
                     return;
                 }
 
@@ -721,7 +752,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @param accounts public key set
      */
     @Override
-    public void recheckAccoutTx(Set<ByteArrayWrapper> accounts) {
+    public synchronized void recheckAccoutTx(Set<ByteArrayWrapper> accounts) {
         if (null != accounts) {
             for (ByteArrayWrapper account: accounts) {
                 recheckAccoutTx(account.getData());

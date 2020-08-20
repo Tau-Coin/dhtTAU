@@ -445,7 +445,7 @@ public class ChainManager {
     public List<Transaction> getTransactionsInPool(byte[] chainid) {
         ByteArrayWrapper chainidWrapper = new ByteArrayWrapper(chainid);
         Chain chain = this.chains.get(chainidWrapper);
-        return  chain.getTransactionPool().getLocals();
+        return  chain.getTransactionPool().getAllTransactions();
     }
 
     /**

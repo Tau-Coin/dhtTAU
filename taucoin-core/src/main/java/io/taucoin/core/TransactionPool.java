@@ -49,6 +49,12 @@ public interface TransactionPool {
     void addLocals(List<Transaction> list);
 
     /**
+     * get all transactions in pool
+     * @return tx list
+     */
+    List<Transaction> getAllTransactions();
+
+    /**
      * get all local transactions
      * @return
      */
