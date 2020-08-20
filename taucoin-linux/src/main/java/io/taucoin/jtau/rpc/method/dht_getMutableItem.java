@@ -2,7 +2,9 @@ package io.taucoin.jtau.rpc.method;
 
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.util.ByteUtil;
 
 import com.frostwire.jlibtorrent.Entry;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
@@ -44,15 +46,20 @@ public class dht_getMutableItem extends JsonRpcServerMethod {
                     new GetMutableItemSpec(pubkey, salt, 20));
 
 			// make response
-			ArrayList<String> result = new ArrayList<String>();
+			String result = "";
 
             if (item == null) {
-                result.add("result: null");
+                result= "Get mutable item, nothing !";
             } else {
                 try {
-			        result.add("result: " + Entry.bdecode(item).toString());
+                    List <Entry> entryList = Entry.bdecode(item).list();
+                    ArrayList<Long> hashAL = ByteUtil.stringToLongArrayList(entryList.get(0).toString());
+                    ArrayList<Long> peerAL = ByteUtil.stringToLongArrayList(entryList.get(1).toString());
+                    String hashTemp = ByteUtil.toHexString(ByteUtil.longArrayToBytes(hashAL, ChainParam.HashLength));
+                    String peerTemp = ByteUtil.toHexString(ByteUtil.longArrayToBytes(peerAL, ChainParam.PubkeyLength));
+                    result = "Hash: " + hashTemp + " Peer: " + peerTemp;
                 } catch (Exception e) {
-                    result.add("result: " + e);
+                    result = e.toString();
                 }
             }
 
