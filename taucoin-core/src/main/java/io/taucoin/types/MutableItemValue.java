@@ -50,11 +50,13 @@ public class MutableItemValue {
         List list = new ArrayList();
         if (null == this.hash) {
             logger.error("++++++++++++++++++++++:hash is null");
+            list.add(new ArrayList<Long>());
         } else {
             list.add(this.hash);
         }
         if (null == this.peer) {
             logger.error("++++++++++++++++++++++:peer is null");
+            list.add(new ArrayList<Long>());
         } else {
             list.add(this.peer);
         }
