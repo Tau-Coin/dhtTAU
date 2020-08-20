@@ -779,27 +779,25 @@ public class Chain {
      * @return tip block or null
      */
     private Block getTipBlockFromPeer(byte[] peer) {
-//        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey, this.blockSalt, TIMEOUT);
-//        byte[] blockHash = TorrentDHTEngine.getInstance().dhtGet(spec);
-//        if (null != blockHash) {
-//            return getBlockFromDHTByHash(blockHash);
-//        }
-//        return null;
+        try {
+            logger.error("+ctx----------------peer: {}", Hex.toHexString(peer));
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalt, TIMEOUT);
+            byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
 
-        logger.error("+ctx----------------peer: {}", Hex.toHexString(peer));
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalt, TIMEOUT);
-        byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
-        logger.error("+ctx----------------encode: {}", Hex.toHexString(encode));
-        if (null != encode) {
-            MutableItemValue value = new MutableItemValue(encode);
-            if (null != value.getPeer()) {
-                logger.error("-ctx----------------get peer: {}", Hex.toHexString(value.getPeer()));
-                this.peerManager.addBlockPeer(value.getPeer());
+            if (null != encode) {
+                logger.error("+ctx----------------encode: {}", Hex.toHexString(encode));
+                MutableItemValue value = new MutableItemValue(encode);
+                if (null != value.getPeer()) {
+                    logger.error("-ctx----------------get peer: {}", Hex.toHexString(value.getPeer()));
+                    this.peerManager.addBlockPeer(value.getPeer());
+                }
+                if (null != value.getHash()) {
+                    logger.error("-ctx----------------get hash: {}", Hex.toHexString(value.getHash()));
+                    return getBlockFromDHTByHash(value.getHash());
+                }
             }
-            if (null != value.getHash()) {
-                logger.error("-ctx----------------get hash: {}", Hex.toHexString(value.getHash()));
-                return getBlockFromDHTByHash(value.getHash());
-            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
 
         return null;
@@ -812,16 +810,24 @@ public class Chain {
      */
     private BlockContainer getTipBlockContainerFromPeer(byte[] peer) {
 
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalt, TIMEOUT);
-        byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
-        if (null != encode) {
-            MutableItemValue value = new MutableItemValue(encode);
-            if (null != value.getPeer()) {
-                this.peerManager.addBlockPeer(value.getPeer());
+        logger.error("+ctx----------------peer: {}", Hex.toHexString(peer));
+        try {
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalt, TIMEOUT);
+            byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
+            if (null != encode) {
+                logger.error("+ctx----------------encode: {}", Hex.toHexString(encode));
+                MutableItemValue value = new MutableItemValue(encode);
+                if (null != value.getPeer()) {
+                    logger.error("-ctx----------------get peer: {}", Hex.toHexString(value.getPeer()));
+                    this.peerManager.addBlockPeer(value.getPeer());
+                }
+                if (null != value.getHash()) {
+                    logger.error("-ctx----------------get hash: {}", Hex.toHexString(value.getHash()));
+                    return getBlockContainerFromDHTByHash(value.getHash());
+                }
             }
-            if (null != value.getHash()) {
-                return getBlockContainerFromDHTByHash(value.getHash());
-            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
 
         return null;
@@ -921,19 +927,23 @@ public class Chain {
      * @return transaction
      */
     private Transaction getTxFromPeer(byte[] peer) {
-        logger.debug("Chain ID[{}]: get tx from peer[{}]",
-                new String(this.chainID), Hex.toHexString(peer));
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalt, TIMEOUT);
-        byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
-        if (null != encode) {
-            MutableItemValue value = new MutableItemValue(encode);
-            if (null != value.getPeer()) {
-                this.peerManager.addTxPeer(value.getPeer());
-            }
+        try {
+            logger.debug("Chain ID[{}]: get tx from peer[{}]",
+                    new String(this.chainID), Hex.toHexString(peer));
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalt, TIMEOUT);
+            byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
+            if (null != encode) {
+                MutableItemValue value = new MutableItemValue(encode);
+                if (null != value.getPeer()) {
+                    this.peerManager.addTxPeer(value.getPeer());
+                }
 
-            if (null != value.getHash()) {
-                return getTxFromDHTByHash(value.getHash());
+                if (null != value.getHash()) {
+                    return getTxFromDHTByHash(value.getHash());
+                }
             }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
 
         return null;
