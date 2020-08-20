@@ -77,6 +77,7 @@ public class TauDaemon implements Runnable {
         // new torrent session settings
         this.sessionSettings = new SessionSettings.Builder()
                 .setDHTMaxItems(SessionSettings.TauDHTMaxItems)
+                .enablePrivateNetwork(true)
                 .build();
     }
 
