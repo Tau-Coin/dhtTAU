@@ -22,11 +22,26 @@ public final class SessionSettings {
 
     public static int TauDHTMaxItems = 1000;
 
+    private static final boolean EnablePrivateNetwork = false;
+
+    public static final String PN_Listen_Interface = "0.0.0.0:6882";
+
+    public static Set<String> PrivateBootstrapNodes = new HashSet<String>();
+    static {
+        PrivateBootstrapNodes.add("52.74.25.27:6882");
+    }
+
     // DHT bootstrap nodes.
     final Set<String> bootstrapNodes;
 
     // DHT max items.
     final int maxDhtItems;
+
+    // Use private network or not.
+    final boolean privateNetwork;
+
+    // DHT bootstrap nodes for private network.
+    final Set<String> privateBootstrapNodes;
 
     public SessionSettings(Builder builder) {
 
@@ -36,20 +51,41 @@ public final class SessionSettings {
             this.bootstrapNodes = builder.bootstrapNodes;
         }
 
+        if (builder.privateBootstrapNodes == null) {
+            this.privateBootstrapNodes = new HashSet<String>();
+        } else {
+            this.privateBootstrapNodes = builder.privateBootstrapNodes;
+        }
+
         if (builder.maxDhtItems <= 0) {
             this.maxDhtItems = TauDHTMaxItems;
         } else {
             this.maxDhtItems = builder.maxDhtItems;
         }
 
+        this.privateNetwork = builder.privateNetwork;
+
         for (String node: DefaultBootstrapNodes) {
             this.bootstrapNodes.add(node);
+        }
+
+        for (String node: PrivateBootstrapNodes) {
+            this.privateBootstrapNodes.add(node);
         }
     }
 
     public SessionParams getSessionParams() {
         settings_pack sp = new settings_pack();
-        sp.set_str(settings_pack.string_types.dht_bootstrap_nodes.swigValue(), dhtBootstrapNodes());
+
+        if (!this.privateNetwork) {
+            sp.set_str(settings_pack.string_types.dht_bootstrap_nodes.swigValue(),
+                    dhtBootstrapNodes());
+        } else {
+            sp.set_str(settings_pack.string_types.dht_bootstrap_nodes.swigValue(),
+                    privateDhtBootstrapNodes());
+            sp.set_str(settings_pack.string_types.listen_interfaces.swigValue(),
+                    PN_Listen_Interface);
+        }
 
         session_params sparams = new session_params(sp);
         dht_settings ds = new dht_settings();
@@ -72,6 +108,18 @@ public final class SessionSettings {
         return result;
     }
 
+    private String privateDhtBootstrapNodes() {
+        StringBuilder sb = new StringBuilder();
+
+        for (String n : this.privateBootstrapNodes) {
+            sb.append(n).append(",");
+        }
+
+        String s = sb.toString();
+        String result = s.substring(0, s.length() - 1);
+
+        return result;
+    }
 
     public static final class Builder {
 
@@ -79,12 +127,17 @@ public final class SessionSettings {
 
         int maxDhtItems;
 
+        boolean privateNetwork;
+
+        Set<String> privateBootstrapNodes;
+
         /**
          * Builder constructor.
          */
         public Builder() {
             this.bootstrapNodes = null;
             this.maxDhtItems = -1;
+            this.privateNetwork = EnablePrivateNetwork;
         }
 
         /**
@@ -106,6 +159,28 @@ public final class SessionSettings {
          */
         public Builder setDHTMaxItems(int max) {
             this.maxDhtItems = max;
+            return this;
+        }
+
+        /**
+         * Enable private network or not.
+         *
+         * @param enable true or false
+         * @return Builder
+         */
+        public Builder enablePrivateNetwork(boolean enable) {
+            this.privateNetwork = enable;
+            return this;
+        }
+
+        /**
+         * Add dht bootstrap nodes for private network.
+         *
+         * @param nodes dht bootstrap nodes.
+         * @param Builder
+         */
+        public Builder addPrivateBootstrapNodes(Set<String> nodes) {
+            this.privateBootstrapNodes = nodes;
             return this;
         }
 
