@@ -30,7 +30,7 @@ public class MutableItemValue {
     }
 
     public MutableItemValue(byte[] encode) {
-        logger.error("------------encode:{}", Hex.toHexString(encode));
+        logger.error("------------encode:{}", new String(encode));
         Entry entry = Entry.bdecode(encode);
         List<Entry> entryList = entry.list();
 
