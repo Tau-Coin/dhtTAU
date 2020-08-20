@@ -60,6 +60,7 @@ public class dht_getMutableItem extends JsonRpcServerMethod {
                     result = "Hash: " + hashTemp + " Peer: " + peerTemp;
                 } catch (Exception e) {
                     result = e.toString();
+                    e.printStackTrace();
                 }
             }
 

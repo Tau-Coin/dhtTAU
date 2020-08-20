@@ -53,12 +53,17 @@ public class dht_getImmutableItem extends JsonRpcServerMethod {
             if (item == null) {
                 result= "Get mutable item, nothing !";
             } else {
-                if("block" == type) {
-                    Block block = new Block(item);
-                    result = block.toString();
-                } else if ("tx" == type){
-                    Transaction tx = TransactionFactory.parseTransaction(item);
-                    result = tx.toString();
+                try {
+                    if ("block".equals(type)) {
+                        Block block = new Block(item);
+                        result = block.toString();
+                    } else if ("tx".equals(type)){
+                        Transaction tx = TransactionFactory.parseTransaction(item);
+                        result = tx.toString();
+                    }
+                } catch (Exception e) {
+                    result = e.toString();
+                    e.printStackTrace();
                 }
             }
 
