@@ -172,6 +172,8 @@ public class PeerManager {
             }
         }
 
+        logger.debug("++ctx---------peer size:{}", this.blockPeers.size());
+
         // get first peer, then remove it
         Iterator<ByteArrayWrapper> iterator = this.blockPeers.iterator();
         peer = iterator.next().getData();

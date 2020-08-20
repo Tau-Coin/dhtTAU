@@ -249,7 +249,7 @@ public class Chain {
     /**
      * main chain loop
      */
-    private void                chainLoop() {
+    private void chainLoop() {
         long startMiningTime = 0;
         long lastMiningTime;
 
@@ -281,17 +281,17 @@ public class Chain {
                         new String(this.chainID), Hex.toHexString(pubKey));
 
                 // if last visiting time is letter default block time, jump to mine
-                long lastVisitTime = this.peerManager.getPeerVisitTime(pubKey);
-                logger.debug("Chain ID[{}]: last visiting time:{}",
-                        new String(this.chainID), lastVisitTime);
-                if ((System.currentTimeMillis() / 1000 - lastVisitTime) < ChainParam.DefaultBlockTimeInterval) {
-                    logger.debug("++ctx-----------------------go to mine.");
-                    miningFlag = true;
-                    break;
-                }
+//                long lastVisitTime = this.peerManager.getPeerVisitTime(pubKey);
+//                logger.debug("Chain ID[{}]: last visiting time:{}",
+//                        new String(this.chainID), lastVisitTime);
+//                if ((System.currentTimeMillis() / 1000 - lastVisitTime) < ChainParam.DefaultBlockTimeInterval) {
+//                    logger.debug("++ctx-----------------------go to mine.");
+//                    miningFlag = true;
+//                    break;
+//                }
 
                 BlockContainer tip = getTipBlockContainerFromPeer(pubKey);
-                this.peerManager.updateVisitTime(pubKey);
+//                this.peerManager.updateVisitTime(pubKey);
 
                 // if tip block is null, jump to mine
                 if (null == tip) {
