@@ -249,7 +249,7 @@ public class Chain {
     /**
      * main chain loop
      */
-    private void chainLoop() {
+    private void                chainLoop() {
         long startMiningTime = 0;
         long lastMiningTime;
 
@@ -285,6 +285,7 @@ public class Chain {
                 logger.debug("Chain ID[{}]: last visiting time:{}",
                         new String(this.chainID), lastVisitTime);
                 if ((System.currentTimeMillis() / 1000 - lastVisitTime) < ChainParam.DefaultBlockTimeInterval) {
+                    logger.debug("++ctx-----------------------go to mine.");
                     miningFlag = true;
                     break;
                 }
@@ -294,6 +295,7 @@ public class Chain {
 
                 // if tip block is null, jump to mine
                 if (null == tip) {
+                    logger.debug("++ctx-----------------------tip is null, go to mine.");
                     miningFlag = true;
                     break;
 //                    continue;
@@ -318,6 +320,7 @@ public class Chain {
                         byte[] previousHash = tip.getBlock().getPreviousBlockHash();
                         this.blockStore.saveBlockContainer(this.chainID, tip, false);
                         while (!Thread.interrupted() && counter < ChainParam.WARNING_RANGE) {
+                            logger.debug("++ctx---------------downloading......");
                             Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
                             if (null != block) {
                                 // found in local
@@ -352,19 +355,26 @@ public class Chain {
                         continue;
                     }
 
+                    logger.debug("++ctx-----------fork point found.");
+
                     // calc fork range
                     long forkRange = this.bestBlockContainer.getBlock().getBlockNum() - forkPointBlock.getBlockNum();
+                    logger.debug("Chain ID[{}]: fork range:{}",
+                            new String(this.chainID), forkRange);
 
                     if (forkRange > ChainParam.WARNING_RANGE) {
                         // an attack chain, ignore it
+                        logger.debug("++ctx-----------------------attack chain.....");
                         continue;
                     } else if (forkRange < ChainParam.MUTABLE_RANGE){
+                        logger.debug("++ctx-----------------------re-branch.....");
                         // change to more difficult chain
                         reBranch(tip);
                         miningFlag = true;
                         break;
                     } else {
                         // vote when fork point between mutable range and warning range
+                        logger.debug("++ctx-----------------------go to vote.....");
                         votingFlag = true;
                         break;
                     }
@@ -569,6 +579,7 @@ public class Chain {
      * @return
      */
     private Vote vote() {
+        logger.debug("---ctx---------------voting-----------");
         // try to use all peers to vote
         int counter = peerManager.getPeerNumber();
 
@@ -577,6 +588,7 @@ public class Chain {
         while (!Thread.interrupted() && counter > 0) {
             byte[] peer = peerManager.getBlockPeerRandomly();
             if (null != peer) {
+                logger.debug("---ctx---------------voting peer:{}", Hex.toHexString(peer));
                 Block block = getTipBlockFromPeer(peer);
                 if (null != block) {
                     // vote on immutable point
@@ -593,6 +605,8 @@ public class Chain {
         }
 
         Vote bestVote = votingPool.getBestVote();
+
+        logger.error("Chain ID[{}]: Best vote:{}", new String(this.chainID), bestVote.toString());
 
         // clear voting pool for next time when voting end
         votingPool.clearVotingPool();

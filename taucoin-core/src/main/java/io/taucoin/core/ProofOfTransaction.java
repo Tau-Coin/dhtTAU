@@ -79,7 +79,7 @@ public class ProofOfTransaction {
                         new String(this.chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
                 return null;
             }
-            logger.debug("++++++ctx------------------------1:{}", Hex.toHexString(ancestor1.getEncoded()));
+            logger.debug("++++++ctx------------------------1:{}", ancestor1.getEncoded().length);
 
             ancestor2 = blockStore.getBlockByHash(chainID, ancestor1.getPreviousBlockHash());
             if (null == ancestor2) {
@@ -87,7 +87,7 @@ public class ProofOfTransaction {
                         new String(this.chainID), Hex.toHexString(ancestor1.getPreviousBlockHash()));
                 return null;
             }
-            logger.debug("++++++ctx------------------------2:{}", Hex.toHexString(ancestor2.getEncoded()));
+            logger.debug("++++++ctx------------------------2:{}", ancestor2.getEncoded().length);
 
             ancestor3 = blockStore.getBlockByHash(chainID, ancestor2.getPreviousBlockHash());
             if (null == ancestor3) {
@@ -95,7 +95,7 @@ public class ProofOfTransaction {
                         new String(this.chainID), Hex.toHexString(ancestor2.getPreviousBlockHash()));
                 return null;
             }
-            logger.debug("++++++ctx------------------------3:{}", Hex.toHexString(ancestor3.getEncoded()));
+            logger.debug("++++++ctx------------------------3:{}", ancestor3.getEncoded().length);
         } catch (Exception e) {
             logger.info(new String(this.chainID) + ":" + e.getMessage(), e);
             return null;
