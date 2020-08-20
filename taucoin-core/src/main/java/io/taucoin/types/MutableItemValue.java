@@ -4,23 +4,33 @@ import com.frostwire.jlibtorrent.Entry;
 
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MutableItemValue {
+    private static final Logger logger = LoggerFactory.getLogger("MutableItemValue");
+
     // content including tx/message hash, 原本哈希是20个字节，这里用3个long存储，最后一个long是补齐的，高位补齐
     ArrayList<Long> hash;
     // hash link or pubKey for optimization, 正好32个字节，4个long存储
     ArrayList<Long> peer;
 
     public MutableItemValue(byte[] hash, byte[] peer) {
+        logger.error("+++++++++++++++++++++++++++++++++++++++++++++");
+        logger.error("Hash: " + Hex.toHexString(hash));
+        logger.error("Peer: " + Hex.toHexString(peer));
+        logger.error("+++++++++++++++++++++++++++++++++++++++++++++");
         this.hash = ByteUtil.unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
         this.peer = ByteUtil.byteArrayToSignLongArray(peer, ChainParam.PubkeyLongArrayLength);
     }
 
     public MutableItemValue(byte[] encode) {
+        logger.error("------------encode:{}", Hex.toHexString(encode));
         Entry entry = Entry.bdecode(encode);
         List<Entry> entryList = entry.list();
 
@@ -38,8 +48,16 @@ public class MutableItemValue {
 
     public byte[] getEncoded(){
         List list = new ArrayList();
-        list.add(this.hash);
-        list.add(this.peer);
+        if (null == this.hash) {
+            logger.error("++++++++++++++++++++++:hash is null");
+        } else {
+            list.add(this.hash);
+        }
+        if (null == this.peer) {
+            logger.error("++++++++++++++++++++++:peer is null");
+        } else {
+            list.add(this.peer);
+        }
         Entry entry = Entry.fromList(list);
 
         return entry.bencode();
