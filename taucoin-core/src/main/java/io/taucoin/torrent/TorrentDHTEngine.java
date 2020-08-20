@@ -228,6 +228,7 @@ public class TorrentDHTEngine {
             return null;
         }
 
+        logger.debug("put immutable item:" + item.entry.toString());
         return sessionManager.dhtPutItem(item.entry);
     }
 
@@ -241,6 +242,7 @@ public class TorrentDHTEngine {
             return;
         }
 
+        logger.debug("put mutable item:" + item.entry.toString());
         sessionManager.dhtPutItem(item.publicKey, item.privateKey,
                 item.entry, item.salt);
     }
@@ -307,7 +309,7 @@ public class TorrentDHTEngine {
         Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
         byte[] data = null;
         if (entry != null) {
-            logger.debug("entry [" + spec.sha1 + "] got:" + entry.toString());
+            logger.debug("immutable entry [" + spec.sha1 + "] got:" + entry.toString());
 
             data = entry.bencode();
             /*
@@ -343,7 +345,7 @@ public class TorrentDHTEngine {
             return null;
         }
 
-        logger.debug("mutable item got:" + result.toString());
+        logger.debug("mutable item got:" + result.item.toString());
 
         return result.item.bencode();
     }
