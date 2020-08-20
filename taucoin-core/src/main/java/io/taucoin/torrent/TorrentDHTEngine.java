@@ -4,6 +4,7 @@ import io.taucoin.listener.TauListener;
 
 import com.frostwire.jlibtorrent.*;
 import com.frostwire.jlibtorrent.alerts.*;
+import com.frostwire.jlibtorrent.swig.entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -309,7 +310,8 @@ public class TorrentDHTEngine {
         Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
         byte[] data = null;
         if (entry != null) {
-            logger.debug("immutable entry [" + spec.sha1 + "] got:" + entry.toString());
+            logger.debug("immutable entry [" + spec.sha1 + "] got:" + entry.toString()
+                    + ", type:" + getEntryType(entry));
 
             data = entry.bencode();
             /*
@@ -345,7 +347,8 @@ public class TorrentDHTEngine {
             return null;
         }
 
-        logger.debug("mutable item got:" + result.item.toString());
+        logger.debug("mutable item got:" + result.item.toString()
+                + ", type:" + getEntryType(result.item));
 
         return result.item.bencode();
     }
@@ -380,5 +383,14 @@ public class TorrentDHTEngine {
         statsPollerStarted.set(false);
         logger.debug("stopping stats poller");
         statsPoller.cancel();
+    }
+
+    private static String getEntryType(Entry e) {
+        if (e == null || e.swig() == null) {
+            return "";
+        }
+
+        entry eswig = e.swig();
+        return eswig.type().toString();
     }
 }
