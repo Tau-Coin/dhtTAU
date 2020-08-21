@@ -10,6 +10,10 @@ import org.rocksdb.Options;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
+
 import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,6 +22,8 @@ import java.util.Set;
  * RocksDatabase implements key-value database through facebook rocdsdb.
  */
 public class RocksDatabase implements KeyValueDataBase {
+
+    private static final Logger logger = LoggerFactory.getLogger("rocksdb");
 
     // rocksdb instance
     private RocksDB db;
@@ -177,9 +183,12 @@ public class RocksDatabase implements KeyValueDataBase {
         RocksIterator iterator = db.newIterator();
         byte[] key = null;
 
+        logger.debug("retrieveKeysWithPrefix prefix:" + new String(prefix));
+
         iterator.seek(prefix);
         for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
             key = iterator.key();
+            logger.debug("iterator key:" + (key != null ? Hex.toHexString(key) : "null"));
             if (key != null && ByteUtil.startsWith(key, prefix)) {
                 results.add(key);
             } else {
@@ -187,6 +196,7 @@ public class RocksDatabase implements KeyValueDataBase {
             }
         }
 
+        logger.debug("retrieveKeysWithPrefix result size:" + results.size());
         return results;
     }
 
