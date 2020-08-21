@@ -226,8 +226,6 @@ public class StateDBImpl implements StateDB {
     @Override
     public void addPeer(byte[] chainID, byte[] pubkey) throws Exception {
         db.put(PrefixKey.peerKey(chainID, pubkey), new byte[0]);
-        logger.debug("------peer:{}", Hex.toHexString(pubkey));
-        logger.debug("------prefix:{}", new String(PrefixKey.peerKey(chainID, pubkey)));
     }
 
     /**
@@ -240,12 +238,11 @@ public class StateDBImpl implements StateDB {
     public Set<byte[]> getPeers(byte[] chainID) throws Exception {
         Set<byte[]> ret = new HashSet<>();
         byte[] prefix = PrefixKey.peerKeyPrefix(chainID);
-        logger.debug("=================prefix:{}", new String (prefix));
+
         Set<byte[]> set = db.retrieveKeysWithPrefix(prefix);
         if (null != set) {
-            logger.debug("++++++++++++==========size:{}", set.size());
             for(byte[] peer: set) {
-                ret.add(Arrays.copyOfRange(peer,prefix.length, peer.length));
+                ret.add(Arrays.copyOfRange(peer, prefix.length, peer.length));
             }
         }
         return ret;

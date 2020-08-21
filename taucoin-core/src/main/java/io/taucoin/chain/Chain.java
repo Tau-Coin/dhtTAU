@@ -1481,17 +1481,17 @@ public class Chain {
         }, new String(this.chainID) + "BlockThread");
         votingThread.start();
 
-//        txThread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                txProcess();
-//            }
-//        }, new String(this.chainID) + "TxThread");
-//        txThread.start();
-//
-//        timer = new Timer();
-//        TimerTask timerTask = new PublishTask();
-//        timer.schedule(timerTask, 0, ChainParam.DefaultBlockTimeInterval);
+        txThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                txProcess();
+            }
+        }, new String(this.chainID) + "TxThread");
+        txThread.start();
+
+        timer = new Timer();
+        TimerTask timerTask = new PublishTask();
+        timer.schedule(timerTask, 0, ChainParam.DEFAULT_BLOCK_TIME);
 
         return true;
     }
