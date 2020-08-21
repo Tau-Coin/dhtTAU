@@ -163,8 +163,7 @@ public class AndroidLeveldb implements KeyValueDataBase {
         Iterator iterator = db.iterator();
         byte[] key = null;
 
-        iterator.seek(prefix);
-        for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
+        for (iterator.seek(prefix); iterator.isValid(); iterator.next()) {
             key = iterator.key();
             if (key != null && ByteUtil.startsWith(key, prefix)) {
                 results.add(key);
