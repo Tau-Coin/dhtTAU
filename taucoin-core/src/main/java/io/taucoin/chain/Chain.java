@@ -313,13 +313,19 @@ public class Chain {
                 }
 
                 // if found a more difficult chain
-                // download block first
                 try {
-                    if (tip.getBlock().getBlockNum() > 0) {
+                    byte[] immutableBlockHash = tip.getBlock().getImmutableBlockHash();
+                    if (this.blockStore.isMainChainBlock(this.chainID, immutableBlockHash)) {
+                        // 分叉点在mutable range之内
+                        // download block first
                         int counter = 0;
                         byte[] previousHash = tip.getBlock().getPreviousBlockHash();
-                        this.blockStore.saveBlockContainer(this.chainID, tip, false);
-                        while (!Thread.interrupted() && counter < ChainParam.WARNING_RANGE) {
+                        List<BlockContainer> containerList = new ArrayList<>();
+
+                        containerList.add(tip);
+
+                        boolean findAll = true;
+                        while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
                             logger.debug("++ctx---------------downloading......");
                             Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
                             if (null != block) {
@@ -330,55 +336,67 @@ public class Chain {
                             BlockContainer container = getBlockContainerFromDHTByHash(previousHash);
 
                             if (null == container) {
+                                findAll = false;
                                 break;
                             }
 
                             previousHash = container.getBlock().getPreviousBlockHash();
-                            this.blockStore.saveBlockContainer(this.chainID, container, false);
+
+                            logger.debug("----------download block number:{}, hash:{}, previous hash:{}",
+                                    container.getBlock().getBlockNum(), container.getBlock().getBlockHash(), previousHash);
+
+                            containerList.add(container);
 
                             if (container.getBlock().getBlockNum() <= 0) {
                                 break;
                             }
                             counter++;
                         }
+
+                        if (findAll) {
+                            for (BlockContainer container: containerList) {
+                                this.blockStore.saveBlockContainer(this.chainID, container, false);
+                            }
+                            logger.debug("++ctx-----------------------re-branch.....");
+                            // change to more difficult chain
+                            reBranch(tip);
+                            miningFlag = true;
+                            break;
+                        } else {
+                            containerList.clear();
+                        }
                     } else {
-                        miningFlag = true;
-                        break;
+                        // 分叉点在mutable range之外，判断是否在3倍的mutable range之内
+                        // get from dht
+                        BlockContainer immutableContainer1 = getBlockContainerFromDHTByHash(immutableBlockHash);
+
+                        if (null == immutableContainer1) {
+                            logger.info("Chain ID[{}]: Cannot find immutable block container1", new String(this.chainID));
+                            continue;
+                        }
+
+                        byte[] immutableBlockHash1 = immutableContainer1.getBlock().getImmutableBlockHash();
+                        BlockContainer immutableContainer2 = getBlockContainerFromDHTByHash(immutableBlockHash1);
+
+                        if (null == immutableContainer2) {
+                            logger.info("Chain ID[{}]: Cannot find immutable block container1", new String(this.chainID));
+                            continue;
+                        }
+
+                        byte[] warningRangeHash = immutableContainer2.getBlock().getImmutableBlockHash();
+
+                        if (this.blockStore.isMainChainBlock(this.chainID, warningRangeHash)) {
+                            // fork point in warning range
+                            // vote when fork point between mutable range and warning range
+                            logger.debug("++ctx-----------------------go to vote.....");
+                            votingFlag = true;
+                            break;
+                        } else {
+                            // fork point out of warning range, maybe it's an attack chain
+                            logger.debug("++ctx-----------------------an attack chain.....");
+                            continue;
+                        }
                     }
-
-                    // find fork point
-                    Block forkPointBlock = this.blockStore.getForkPointBlock(this.chainID,
-                            this.bestBlockContainer.getBlock(), tip.getBlock());
-                    if (null == forkPointBlock) {
-                        // cannot find fork point, maybe a attack that fork point is beyond warning range
-                        logger.info("Chain ID[{}]: Cannot find fork point.", new String(this.chainID));
-                        continue;
-                    }
-
-                    logger.debug("++ctx-----------fork point found.");
-
-                    // calc fork range
-                    long forkRange = this.bestBlockContainer.getBlock().getBlockNum() - forkPointBlock.getBlockNum();
-                    logger.debug("Chain ID[{}]: fork range:{}",
-                            new String(this.chainID), forkRange);
-
-                    if (forkRange > ChainParam.WARNING_RANGE) {
-                        // an attack chain, ignore it
-                        logger.debug("++ctx-----------------------attack chain.....");
-                        continue;
-                    } else if (forkRange < ChainParam.MUTABLE_RANGE){
-                        logger.debug("++ctx-----------------------re-branch.....");
-                        // change to more difficult chain
-                        reBranch(tip);
-                        miningFlag = true;
-                        break;
-                    } else {
-                        // vote when fork point between mutable range and warning range
-                        logger.debug("++ctx-----------------------go to vote.....");
-                        votingFlag = true;
-                        break;
-                    }
-
                 } catch (Exception e) {
                     logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
                 }
@@ -526,6 +544,14 @@ public class Chain {
 
             int size = newBlockContainers.size();
             for (int i = size - 1; i >= 0; i--) {
+
+                if (!isValidBlockContainer(newBlockContainers.get(i), track)) {
+                    logger.error("Chain ID[{}]: Import block fail, block hash:{}",
+                            new String(this.chainID),
+                            Hex.toHexString(newBlockContainers.get(i).getBlock().getBlockHash()));
+                    return false;
+                }
+
                 ImportResult result = this.stateProcessor.forwardProcess(newBlockContainers.get(i), track);
                 // if need sync more block
                 if (result == ImportResult.NO_ACCOUNT_INFO && !isSyncComplete()) {
@@ -725,60 +751,96 @@ public class Chain {
      */
     private boolean tryChangeToBestVote(Vote bestVote) {
         try {
-            // download block first
-            int counter = 0;
-            byte[] previousHash = bestVote.getBlockHash();
+            BlockContainer bestContainer = getBlockContainerFromDHTByHash(bestVote.getBlockHash());
 
-            // download at most 3 * mutable range blocks
-            while (!Thread.interrupted() && counter < ChainParam.WARNING_RANGE) {
-                Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
-                if (null != block) {
-                    // found in local
-                    break;
-                }
-                // get from dht
-                BlockContainer dhtBlockContainer = getBlockContainerFromDHTByHash(previousHash);
-                if (null != dhtBlockContainer) {
-                    previousHash = dhtBlockContainer.getBlock().getPreviousBlockHash();
-                    this.blockStore.saveBlockContainer(this.chainID, dhtBlockContainer, false);
-                }
-
-                if (dhtBlockContainer.getBlock().getBlockNum() <= 0) {
-                    break;
-                }
-                counter++;
-            }
-
-            // get best vote block
-            BlockContainer bestVoteBlockContainer = this.blockStore.
-                    getBlockContainerByHash(this.chainID, bestVote.getBlockHash());
-
-            // find fork point
-            Block forkPointBlock = this.blockStore.
-                    getForkPointBlock(this.chainID, this.bestBlockContainer.getBlock(), bestVoteBlockContainer.getBlock());
-            if (null == forkPointBlock) {
-                // cannot find fork point, maybe fork point is beyond warning range
-                logger.info("Chain ID[{}]: Cannot find fork point.", new String(this.chainID));
+            if (null == bestContainer) {
+                logger.info("Chain ID[{}]: Cannot find best block container, hash[{}]",
+                        new String(this.chainID), Hex.toHexString(bestVote.getBlockHash()));
                 return false;
             }
 
-            // calc fork range
-            // fork point block number must be less than best block, so fork range >= 0
-            long forkRange = this.bestBlockContainer.getBlock().getBlockNum() - forkPointBlock.getBlockNum();
+            // if best vote is genesis block, immutable hash is not on main chain, also we cannot
+            // get block container by immutable hash from genesis block
 
-            if (forkRange > ChainParam.WARNING_RANGE) {
-                // an attack chain, ignore it
-            } else if (forkRange < ChainParam.MUTABLE_RANGE){
+            byte[] immutableBlockHash = bestContainer.getBlock().getImmutableBlockHash();
+            if (this.blockStore.isMainChainBlock(this.chainID, immutableBlockHash)) {
+                // 分叉点在mutable range之内
+                // download block first
+                int counter = 0;
+                byte[] previousHash = bestContainer.getBlock().getPreviousBlockHash();
+                List<BlockContainer> containerList = new ArrayList<>();
+
+                containerList.add(bestContainer);
+
+                while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
+                    logger.debug("++ctx---------------vote downloading......");
+                    Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
+                    if (null != block) {
+                        // found in local
+                        break;
+                    }
+                    // get from dht
+                    BlockContainer container = getBlockContainerFromDHTByHash(previousHash);
+
+                    if (null == container) {
+                        return false;
+                    }
+
+                    previousHash = container.getBlock().getPreviousBlockHash();
+
+                    logger.debug("----vote---download block number:{}, hash:{}, previous hash:{}",
+                            container.getBlock().getBlockNum(), container.getBlock().getBlockHash(), previousHash);
+
+                    containerList.add(container);
+
+                    if (container.getBlock().getBlockNum() <= 0) {
+                        break;
+                    }
+                    counter++;
+                }
+
+
+                for (BlockContainer container: containerList) {
+                    this.blockStore.saveBlockContainer(this.chainID, container, false);
+                }
+                logger.debug("++ctx----------------------vote---re-branch.....");
                 // change to more difficult chain
-                reBranch(bestVoteBlockContainer);
+                reBranch(bestBlockContainer);
             } else {
-                // be as a new chain when fork point between mutable range and warning range
-                // re-init tx pool and chain
-                this.txPool.reinit();
-                initialSync(bestVote);
-            }
+                // 分叉点在mutable range之外，判断是否在3倍的mutable range之内
+                // get from dht
+                BlockContainer immutableContainer1 = getBlockContainerFromDHTByHash(immutableBlockHash);
 
-//            reBranch(this.bestBlock, bestVoteBlock);
+                if (null == immutableContainer1) {
+                    logger.info("Chain ID[{}]: Cannot find immutable block container1", new String(this.chainID));
+                    return false;
+                }
+
+                byte[] immutableBlockHash1 = immutableContainer1.getBlock().getImmutableBlockHash();
+                BlockContainer immutableContainer2 = getBlockContainerFromDHTByHash(immutableBlockHash1);
+
+                if (null == immutableContainer2) {
+                    logger.info("Chain ID[{}]: Cannot find immutable block container1", new String(this.chainID));
+                    return false;
+                }
+
+                byte[] warningRangeHash = immutableContainer2.getBlock().getImmutableBlockHash();
+
+                if (this.blockStore.isMainChainBlock(this.chainID, warningRangeHash)) {
+                    // fork point in warning range
+                    // vote when fork point between mutable range and warning range
+                    logger.debug("++ctx-----------------------go to vote.....");
+                    // be as a new chain when fork point between mutable range and warning range
+                    // re-init tx pool and chain
+                    this.txPool.reinit();
+                    initialSync(bestVote);
+                    return true;
+                } else {
+                    // fork point out of warning range, maybe it's an attack chain
+                    logger.debug("++ctx-----------------------an attack chain.....");
+                    return false;
+                }
+            }
         } catch (Exception e) {
             logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;

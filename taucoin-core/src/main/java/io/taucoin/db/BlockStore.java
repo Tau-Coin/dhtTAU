@@ -59,6 +59,14 @@ public interface BlockStore {
     BlockInfo getBlockInfoByHash(byte[] chainID, byte[] hash) throws Exception;
 
     /**
+     * if a block hash is main chain block hash
+     * @param chainID chain ID
+     * @param hash block hash
+     * @return true/false
+     */
+    boolean isMainChainBlock(byte[] chainID, byte[] hash) throws Exception;
+
+    /**
      * get main chain block by number
      * @param chainID chain id
      * @param number block number

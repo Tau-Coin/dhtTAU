@@ -158,6 +158,29 @@ public class BlockDB implements BlockStore {
     }
 
     /**
+     * if a block hash is main chain block hash
+     *
+     * @param chainID chain ID
+     * @param hash    block hash
+     * @return true/false
+     */
+    @Override
+    public boolean isMainChainBlock(byte[] chainID, byte[] hash) throws Exception {
+        byte[] encode = db.get(PrefixKey.blockKey(chainID, hash));
+        if (null != encode) {
+            Block block = new Block(encode);
+            BlockInfo blockInfo = getBlockInfo(chainID, block.getBlockNum(), hash);
+            if (null != blockInfo) {
+                return blockInfo.isMainChain();
+            }
+        }
+
+        logger.info("ChainID[{}]:Cannot find block info by hash:{}", new String(chainID), Hex.toHexString(hash));
+
+        return false;
+    }
+
+    /**
      * get main chain block by number
      * @param number
      * @return
