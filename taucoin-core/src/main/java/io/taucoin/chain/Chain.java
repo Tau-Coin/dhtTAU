@@ -1491,7 +1491,7 @@ public class Chain {
 
         timer = new Timer();
         TimerTask timerTask = new PublishTask();
-        timer.schedule(timerTask, 0, ChainParam.DEFAULT_BLOCK_TIME);
+        timer.schedule(timerTask, 0, ChainParam.DEFAULT_BLOCK_TIME * 1000);
 
         return true;
     }
