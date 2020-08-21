@@ -186,8 +186,7 @@ public class RocksDatabase implements KeyValueDataBase {
         logger.debug("retrieveKeysWithPrefix prefix str:" + new String(prefix)
                  + "hex:" + Hex.toHexString(prefix));
 
-        iterator.seek(prefix);
-        for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
+        for (iterator.seek(prefix); iterator.isValid(); iterator.next()) {
             key = iterator.key();
             logger.debug("iterator key:" + (key != null ? Hex.toHexString(key) : "null"));
             if (key != null && ByteUtil.startsWith(key, prefix)) {
