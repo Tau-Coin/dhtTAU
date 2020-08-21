@@ -183,7 +183,8 @@ public class RocksDatabase implements KeyValueDataBase {
         RocksIterator iterator = db.newIterator();
         byte[] key = null;
 
-        logger.debug("retrieveKeysWithPrefix prefix:" + new String(prefix));
+        logger.debug("retrieveKeysWithPrefix prefix str:" + new String(prefix)
+                 + "hex:" + Hex.toHexString(prefix));
 
         iterator.seek(prefix);
         for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
