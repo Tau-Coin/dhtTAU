@@ -326,24 +326,30 @@ public class Chain {
 
                         boolean findAll = true;
                         while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
-                            logger.debug("++ctx---------------downloading......");
+
                             Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
                             if (null != block) {
                                 // found in local
+                                logger.debug("+ctx--------found in local, hash:{}",
+                                        Hex.toHexString(previousHash));
                                 break;
                             }
                             // get from dht
                             BlockContainer container = getBlockContainerFromDHTByHash(previousHash);
 
                             if (null == container) {
+                                logger.debug("+ctx--------Cannot get container from dht, hash:{}",
+                                        Hex.toHexString(previousHash));
                                 findAll = false;
                                 break;
                             }
 
                             previousHash = container.getBlock().getPreviousBlockHash();
 
-                            logger.debug("----------download block number:{}, hash:{}, previous hash:{}",
-                                    container.getBlock().getBlockNum(), container.getBlock().getBlockHash(), previousHash);
+                            logger.debug("+ctx-------download block number:{}, hash:{}, previous hash:{}",
+                                    container.getBlock().getBlockNum(),
+                                    Hex.toHexString(container.getBlock().getBlockHash()),
+                                    Hex.toHexString(previousHash));
 
                             containerList.add(container);
 
@@ -773,23 +779,28 @@ public class Chain {
                 containerList.add(bestContainer);
 
                 while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
-                    logger.debug("++ctx---------------vote downloading......");
                     Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
                     if (null != block) {
                         // found in local
+                        logger.debug("+ctx--------found in local, hash:{}",
+                                Hex.toHexString(previousHash));
                         break;
                     }
                     // get from dht
                     BlockContainer container = getBlockContainerFromDHTByHash(previousHash);
 
                     if (null == container) {
+                        logger.debug("+ctx--------Cannot get container from dht, hash:{}",
+                                Hex.toHexString(previousHash));
                         return false;
                     }
 
                     previousHash = container.getBlock().getPreviousBlockHash();
 
                     logger.debug("----vote---download block number:{}, hash:{}, previous hash:{}",
-                            container.getBlock().getBlockNum(), container.getBlock().getBlockHash(), previousHash);
+                            container.getBlock().getBlockNum(),
+                            Hex.toHexString(container.getBlock().getBlockHash()),
+                            Hex.toHexString(previousHash));
 
                     containerList.add(container);
 
