@@ -174,7 +174,7 @@ public class GenesisTx extends Transaction {
             Entry entry = Entry.bdecode(this.encodedBytes);
             List<Entry> entrylist = entry.list();
             this.version = entrylist.get(TxIndex.Version.ordinal()).integer();
-            this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString();
+            this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString().replace("'","");
             this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
             this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
             this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();

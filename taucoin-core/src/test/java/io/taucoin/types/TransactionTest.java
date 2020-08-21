@@ -36,12 +36,12 @@ import io.taucoin.util.HashUtil;
 public class TransactionTest {
     private static final Logger log = LoggerFactory.getLogger("transactionTest");
     private static final long version = 1;
-    private static final byte[] chainid = "TAUcoin#300#3938383036366633393364383365393338373434".getBytes();
-    private static final long timestamp = 1597062314;
-    private static final long txFee = 3010000000L;
-    private static final long txType = 1;
-    private static final byte[] sender = ByteUtil.toByte("c5897865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c");
-    private static final long nonce = 1234;
+    private static final byte[] chainid = "TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes();
+    private static final long timestamp = 1597998963;
+    private static final long txFee = 200L;
+    private static final long txType = 2;
+    private static final byte[] sender = ByteUtil.toByte("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124");
+    private static final long nonce = 104;
     private static final byte[] seed = Ed25519.createSeed();
 
     @Test
@@ -94,9 +94,9 @@ public class TransactionTest {
 
     @Test
     public void createWiringCoinsTx(){
-        byte[] receiver = ByteUtil.toByte("c5ef7865e8cd75d4aec7fe9583a869c8b962921cc6aef2bf5ed3ff2aed0eb23c");
-        long amount = 100000000000L;
-        String memo = "Tester";
+        byte[] receiver = ByteUtil.toByte("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9");
+        long amount = 10000L;
+        String memo = "test";
         WiringCoinsTx tx = new WiringCoinsTx(version, chainid, timestamp, txFee, txType, sender, nonce, receiver, amount, memo);
         tx.signTransactionWithSeed(seed);
         System.out.println("verison: " + tx.getVersion());
@@ -110,5 +110,8 @@ public class TransactionTest {
         System.out.println("receiver: " + ByteUtil.toHexString(tx.getReceiver()));
         System.out.println("amount: " + tx.getAmount());
         System.out.println("Signature: " + ByteUtil.toHexString(tx.getSignature()));
+        System.out.println("Sigmsg: " + ByteUtil.toHexString(tx.getTransactionSigMsg()));
+        System.out.println("Signature bool: " + tx.verifyTransactionSig());
+
     }
 }

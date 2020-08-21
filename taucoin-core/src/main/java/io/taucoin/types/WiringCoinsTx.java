@@ -178,7 +178,7 @@ public class WiringCoinsTx extends Transaction {
             Entry entry = Entry.bdecode(this.encodedBytes);
             List<Entry> entrylist = entry.list();
             this.version = entrylist.get(TxIndex.Version.ordinal()).integer();
-            this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString();
+            this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString().replace("'","");
             this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
             this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
             this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();
@@ -187,7 +187,7 @@ public class WiringCoinsTx extends Transaction {
             this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
             this.receiverPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
             this.amount = entrylist.get(TxIndex.TxData.ordinal() + 1).integer();
-            this.memo = entrylist.get(TxIndex.TxData.ordinal() + 2).toString();
+            this.memo = entrylist.get(TxIndex.TxData.ordinal() + 2).toString().replace("'","");
             isParsed = true;
         }
     }
