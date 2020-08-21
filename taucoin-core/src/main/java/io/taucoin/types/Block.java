@@ -684,6 +684,8 @@ public class Block {
         strBlock.append(" blocknum: ").append(this.getBlockNum());
         strBlock.append(" previousblockhash: ").append(ByteUtil.toHexString(this.getPreviousBlockHash()));
         strBlock.append(" immutableblockhash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash()));
+        strBlock.append(" baseTarget: ").append(this.getBaseTarget());
+        strBlock.append(" cumulativeDifficulty: ").append(this.getCumulativeDifficulty());
         strBlock.append(" generationsignature: ").append(ByteUtil.toHexString(this.getGenerationSignature()));
         strBlock.append(" transaction: ").append(ByteUtil.toHexString(this.getTxHash()));
         strBlock.append(" minerbalance: ").append(this.getMinerBalance());
