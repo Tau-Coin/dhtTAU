@@ -37,6 +37,8 @@ public class Chain {
 
     private static final int TIMEOUT = 10;
 
+    private static final int LOOP_LIMIT = 3;
+
     // Chain id specified by the transaction of creating new blockchain.
     private final byte[] chainID;
 
@@ -900,7 +902,15 @@ public class Chain {
         logger.debug("++ctx----------------peer: {}", Hex.toHexString(peer));
         try {
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalt, TIMEOUT);
-            byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
+
+            int i = 0;
+            byte[] encode = null;
+            while (null == encode && i < LOOP_LIMIT) {
+                encode = TorrentDHTEngine.getInstance().dhtGet(spec);
+                i++;
+                logger.debug("+ctx--try to get mutable item {} time", i);
+            }
+
             if (null != encode) {
                 logger.debug("++ctx----------------encode: {}", Hex.toHexString(encode));
                 MutableItemValue value = new MutableItemValue(encode);
@@ -955,28 +965,22 @@ public class Chain {
     private Block getBlockFromDHTByHash(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
 
-        // when you get a block, you need to put a block simultaneously
-//        Block block = getBlockRandomlyFromDB();
-//
-//        if (null == block) {
-//            block = this.bestBlock;
-//        }
-//
-//        DHT.ExchangeImmutableItemResult result;
-//        if (null != block) {
-//            DHT.ImmutableItem blockItem = new DHT.ImmutableItem(block.getEncoded());
-//            result = TorrentDHTEngine.getInstance().dhtTauGet(spec, blockItem);
-//        } else {
-//            result = TorrentDHTEngine.getInstance().dhtTauGet(spec, null);
-//        }
-
-        byte[] result = TorrentDHTEngine.getInstance().dhtGet(spec);
-
-        if (null != result) {
-            return new Block(result);
+        int i = 0;
+        byte[] blockEncode = null;
+        while (null == blockEncode && i < LOOP_LIMIT) {
+            blockEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
+            i++;
+            logger.debug("+ctx--try to get block {} time", i);
         }
 
-        return null;
+//        byte[] blockEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
+
+        if (null == blockEncode) {
+            logger.info("Chain ID[{}]: block encode still is null", new String(this.chainID));
+            return null;
+        }
+
+        return new Block(blockEncode);
     }
 
     /**
@@ -985,27 +989,20 @@ public class Chain {
      * @return
      */
     private BlockContainer getBlockContainerFromDHTByHash(byte[] blockHash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash, TIMEOUT);
+        Block block = getBlockFromDHTByHash(blockHash);
 
-        byte[] blockEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
-
-        if (null == blockEncode) {
+        if (null == block) {
             return null;
         }
 
-        Block block = new Block(blockEncode);
         BlockContainer blockContainer = new BlockContainer(block);
 
         if (null != block.getTxHash()) {
-            spec = new DHT.GetImmutableItemSpec(block.getTxHash(), TIMEOUT);
+            Transaction tx = getTxFromDHTByHash(block.getTxHash());
 
-            byte[] txEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
-
-            if (null == txEncode) {
+            if (null == tx) {
                 return null;
             }
-
-            Transaction tx = TransactionFactory.parseTransaction(txEncode);
 
             blockContainer.setTx(tx);
         }
@@ -1051,24 +1048,22 @@ public class Chain {
     private Transaction getTxFromDHTByHash(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
 
-        // when you get a tx, you need to put a tx simultaneously
-//        DHT.GetImmutableItemSpec immutableItemSpec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
-//        Transaction tx = this.txPool.getBestTransaction();
-//        DHT.ExchangeImmutableItemResult result;
-//        if (null != tx) {
-//            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
-//            result = TorrentDHTEngine.getInstance().dhtTauGet(immutableItemSpec, immutableItem);
-//        } else {
-//            result = TorrentDHTEngine.getInstance().dhtTauGet(immutableItemSpec, null);
-//        }
-
-        byte[] txEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
-
-        if (null != txEncode) {
-            return TransactionFactory.parseTransaction(txEncode);
+        int i = 0;
+        byte[] txEncode = null;
+        while (null == txEncode && i < LOOP_LIMIT) {
+            txEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
+            i++;
+            logger.debug("+ctx--try to get tx {} time", i);
         }
 
-        return null;
+//            byte[] txEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
+
+        if (null == txEncode) {
+            logger.info("Chain ID[{}]: tx encode still is null", new String(this.chainID));
+            return null;
+        }
+
+        return TransactionFactory.parseTransaction(txEncode);
     }
 
     /**
