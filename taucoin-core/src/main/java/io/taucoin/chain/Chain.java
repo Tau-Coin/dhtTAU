@@ -1000,6 +1000,11 @@ public class Chain {
             spec = new DHT.GetImmutableItemSpec(block.getTxHash(), TIMEOUT);
 
             byte[] txEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
+
+            if (null == txEncode) {
+                return null;
+            }
+
             Transaction tx = TransactionFactory.parseTransaction(txEncode);
 
             blockContainer.setTx(tx);
@@ -1017,8 +1022,10 @@ public class Chain {
         try {
             logger.debug("Chain ID[{}]: get tx from peer[{}]",
                     new String(this.chainID), Hex.toHexString(peer));
+
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalt, TIMEOUT);
             byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
+
             if (null != encode) {
                 MutableItemValue value = new MutableItemValue(encode);
                 if (null != value.getPeer()) {
