@@ -227,6 +227,9 @@ public class TorrentDHTEngine {
      * @return Sha1Hash sha1 hash of the immutable item
      */
     public Sha1Hash dhtPut(ImmutableItem item) {
+
+        internalSleep();
+
         if (!sessionManager.isRunning()) {
             return null;
         }
@@ -241,6 +244,9 @@ public class TorrentDHTEngine {
      * @param item mutable item
      */
     public void dhtPut(MutableItem item) {
+
+        internalSleep();
+
         if (!sessionManager.isRunning()) {
             return;
         }
@@ -305,6 +311,9 @@ public class TorrentDHTEngine {
      * @return immutable data
      */
     public byte[] dhtGet(GetImmutableItemSpec spec) {
+
+        internalSleep();
+
         if (!sessionManager.isRunning()) {
             return null;
         }
@@ -339,6 +348,8 @@ public class TorrentDHTEngine {
      * @return mutable item
      */
     public byte[] dhtGet(GetMutableItemSpec spec) {
+
+        internalSleep();
 
         if (!sessionManager.isRunning()) {
             return null;
@@ -401,5 +412,13 @@ public class TorrentDHTEngine {
 
     private static boolean isEntryUndefined(Entry e) {
         return sUndefinedEntry.equals(getEntryType(e));
+    }
+
+    private static void internalSleep() {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
