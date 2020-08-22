@@ -5,7 +5,9 @@ import android.content.Context;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.paging.DataSource;
 import io.reactivex.Flowable;
+import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 
 /**
@@ -44,11 +46,11 @@ public class MsgRepositoryImpl implements MsgRepository{
     }
 
     /**
-     * 根据chainID获取社区的消息的被观察者
+     * 根据chainID获取社区的消息
      * @param chainID 社区链id
      */
     @Override
-    public Flowable<List<Message>> observeMessagesByChainID(String chainID){
-        return db.msgDao().observeMessagesByChainID(chainID);
+    public DataSource.Factory<Integer, MsgAndReply> queryMessagesByChainID(String chainID){
+        return db.msgDao().queryMessagesByChainID(chainID);
     }
 }

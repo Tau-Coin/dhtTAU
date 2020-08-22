@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.chat;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -11,42 +12,57 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.paging.LivePagedListBuilder;
+import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
+import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentChatsTabBinding;
 import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
+import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
  * 聊天Tab页
  */
-public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.ClickListener, View.OnClickListener {
+public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.ClickListener,
+        View.OnClickListener {
 
     private BaseActivity activity;
     private FragmentChatsTabBinding binding;
     private MsgViewModel msgViewModel;
+    private UserViewModel userViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MsgListAdapter adapter;
     private CommonDialog operationsDialog;
 
-    private Community community;
+    private String chainID;
+    private String replyID;
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_chats_tab, container, false);
         return binding.getRoot();
     }
@@ -57,6 +73,7 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
         activity = (BaseActivity) getActivity();
         ViewModelProvider provider = new ViewModelProvider(activity);
         msgViewModel = provider.get(MsgViewModel.class);
+        userViewModel = provider.get(UserViewModel.class);
         binding.setListener(this);
         initParameter();
         initView();
@@ -67,7 +84,7 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
      */
     private void initParameter() {
         if(getArguments() != null){
-            community = getArguments().getParcelable(IntentExtra.BEAN);
+            chainID = getArguments().getString(IntentExtra.CHAIN_ID);
         }
     }
 
@@ -111,15 +128,20 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
      * 订阅社区交易列表
      */
     private void subscribeTxViewModel() {
-        if(null == community){
+        if(StringUtil.isEmpty(chainID)){
             return;
         }
-        disposables.add(msgViewModel.observeMessagesByChainID(community.chainID)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(list -> {
-                adapter.setDataList(list);
-                binding.txList.smoothScrollToPosition(adapter.getItemCount());
-            }));
+        PagedList.Config pagedListConfig = new PagedList.Config.Builder()
+                .setEnablePlaceholders(Page.ENABLE_PLACEHOLDERS)
+                .setPageSize(Page.PAGE_SIZE)
+                .setInitialLoadSizeHint(Page.PAGE_SIZE)
+                .build();
+        LiveData<PagedList<MsgAndReply>> postList = new LivePagedListBuilder<>(
+                msgViewModel.queryMessagesByChainID(chainID), pagedListConfig).build();
+        postList.observe(activity, messages -> {
+            adapter.submitList(messages);
+            binding.txList.scrollToPosition(adapter.getItemCount() - 1);
+        });
 
         msgViewModel.getAddState().observe(this, result -> {
             if(isHidden()){
@@ -152,37 +174,57 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
         disposables.clear();
     }
 
-    /**
-     * TxListItem点击事件
-     */
-
     @Override
-    public void onItemClicked(Message msg) {
-
-    }
-
-    @Override
-    public void onItemLongClicked(View view, Message msg) {
-        showItemOperationDialog(view, msg);
+    public void onItemLongClicked(View view, MsgAndReply msg) {
+        showItemOperationDialog(msg);
     }
 
     /**
      * 显示每个item长按操作选项对话框
      */
-    private void showItemOperationDialog(View view, Message msg) {
+    private void showItemOperationDialog(MsgAndReply msg) {
         ItemOperationsBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.item_operations, null, false);
-        binding.replay.setVisibility(View.GONE);
-        binding.copy.setTag(msg);
-        binding.copyLink.setTag(msg);
-        binding.blacklist.setTag(msg.senderPk);
+        binding.replay.setTag(msg);
+        binding.copy.setTag(msg.context);
+        String link = Utils.parseUrlFormStr(msg.context);
+        if(StringUtil.isNotEmpty(link)){
+            binding.copyLink.setTag(link);
+        }else{
+            binding.copyLink.setVisibility(View.GONE);
+        }
+        if(StringUtil.isEquals(msg.senderPk,
+                MainApplication.getInstance().getPublicKey())){
+            binding.blacklist.setVisibility(View.GONE);
+        }else {
+            binding.blacklist.setTag(msg.senderPk);
+        }
         binding.favourite.setTag(msg.msgID);
+        binding.msgHash.setVisibility(View.GONE);
         binding.setListener(this);
         operationsDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
                 .enableWarpWidth(true)
                 .create();
         operationsDialog.show();
+    }
+
+    @Override
+    public void onUserClicked(String senderPk) {
+        Intent intent = new Intent();
+        intent.putExtra(IntentExtra.PUBLIC_KEY, senderPk);
+        ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
+    }
+
+    @Override
+    public void onEditNameClicked(String senderPk){
+        userViewModel.showEditNameDialog(activity, senderPk);
+    }
+
+    @Override
+    public void onBanClicked(MsgAndReply msg){
+        String showName = UsersUtil.getShowName(msg);
+        userViewModel.showBanDialog(activity, msg.senderPk, showName);
     }
 
     @Override
@@ -200,28 +242,59 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
         }
         switch (v.getId()){
             case R.id.replay:
+                Message message = (Message) v.getTag();
+                replyID = message.msgID;
+                showReplyView(message);
                 break;
             case R.id.copy:
+                String msg = ViewUtils.getStringTag(v);
+                CopyManager.copyText(msg);
+                ToastUtils.showShortToast(R.string.copy_successfully);
                 break;
             case R.id.copy_link:
+                String link = ViewUtils.getStringTag(v);
+                CopyManager.copyText(link);
+                ToastUtils.showShortToast(R.string.copy_link_successfully);
                 break;
             case R.id.blacklist:
+                String publicKey = ViewUtils.getStringTag(v);
+                userViewModel.setUserBlacklist(publicKey, true);
+                ToastUtils.showShortToast(R.string.blacklist_successfully);
                 break;
             case R.id.favourite:
                 break;
             case R.id.tv_send:
                 sendMessage();
                 break;
+            case R.id.iv_replay_close:
+                binding.rlReply.setVisibility(View.GONE);
+                replyID = null;
+                break;
         }
+    }
+
+    /**
+     * 显示被回复的信息
+     * @param msg
+     */
+    private void showReplyView(Message msg) {
+        binding.rlReply.setVisibility(View.VISIBLE);
+        String showName = UsersUtil.getDefaultName(msg.senderPk);
+        binding.tvReplyName.setText(showName);
+        binding.tvReplyMsg.setText(msg.context);
     }
 
     /**
      * 发送instant chat消息
      */
     private void sendMessage() {
-        String chainID = community.chainID;
         String content = ViewUtils.getText(binding.etMessage);
         Message msg =  new Message(chainID, content);
+        if(StringUtil.isNotEmpty(replyID)){
+            msg.replyID = replyID;
+            binding.rlReply.setVisibility(View.GONE);
+            replyID = null;
+        }
         msgViewModel.sendMessage(msg);
     }
 }

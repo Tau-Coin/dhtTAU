@@ -435,7 +435,7 @@ public class Utils {
                 spanUtils.append(msg.substring(0, linkStart));
                 spanUtils.append(link);
                 spanUtils.setUnderline();
-                int blueColor = MainApplication.getInstance().getResources().getColor(R.color.color_blue);
+                int blueColor = MainApplication.getInstance().getResources().getColor(R.color.primary_dark);
                 spanUtils.setForegroundColor(blueColor);
                 spanUtils.append(msg.substring(linkEnd));
                 return;

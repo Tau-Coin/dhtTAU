@@ -21,12 +21,12 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -169,12 +169,13 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
     }
     @Override
-    public void onEditNameClicked(UserAndTx tx){
-        userViewModel.showEditNameDialog(activity, tx.senderPk);
+    public void onEditNameClicked(String senderPk){
+        userViewModel.showEditNameDialog(activity, senderPk);
     }
     @Override
     public void onBanClicked(UserAndTx tx){
-        userViewModel.showBanDialog(activity, tx);
+        String showName = UsersUtil.getShowName(tx);
+        userViewModel.showBanDialog(activity, tx.senderPk, showName);
     }
 
     /**

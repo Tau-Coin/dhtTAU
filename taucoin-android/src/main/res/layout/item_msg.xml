@@ -10,7 +10,7 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
+        android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
         android:layout_marginTop="5dp"
         android:gravity="bottom">
@@ -38,26 +38,65 @@
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:ellipsize="middle"
-                android:textSize="@dimen/font_small_size"
                 android:textColor="@color/color_yellow"
-                android:textAppearance="@style/TextAppearanceBody1" />
+                android:textAppearance="@style/TextAppearanceBody2" />
+
+            <LinearLayout
+                android:id="@+id/ll_reply"
+                android:orientation="horizontal"
+                android:layout_marginBottom="2dp"
+                android:layout_marginTop="4dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <View
+                    android:layout_width="2dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/primary"/>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp">
+
+                    <TextView
+                        android:id="@+id/tv_reply_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:ellipsize="middle"
+                        android:includeFontPadding="false"
+                        android:textColor="@color/primary"
+                        android:textAppearance="@style/TextAppearanceBody2" />
+
+                    <TextView
+                        android:id="@+id/tv_reply_msg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:includeFontPadding="false"
+                        android:textAppearance="@style/TextAppearanceBody2" />
+
+                </LinearLayout>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tv_msg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textSize="@dimen/font_small_size"
-                android:textAppearance="@style/TextAppearanceBody1" />
+                android:textAppearance="@style/TextAppearanceBody2" />
 
             <TextView
                 android:id="@+id/tv_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:textSize="@dimen/font_little_small_size"
                 android:textColor="@color/gray_dark"
-                android:textAppearance="@style/TextAppearanceBody2" />
+                android:textAppearance="@style/TextAppearanceBody3" />
 
         </LinearLayout>
 

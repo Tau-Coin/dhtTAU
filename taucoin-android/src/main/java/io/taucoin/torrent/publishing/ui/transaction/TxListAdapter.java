@@ -167,7 +167,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
             });
             binding.tvEditName.setOnClickListener(view ->{
                 if(listener != null){
-                    listener.onEditNameClicked(tx);
+                    listener.onEditNameClicked(tx.senderPk);
                 }
             });
             binding.tvBlacklist.setOnClickListener(view ->{
@@ -189,7 +189,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
 
     public interface ClickListener {
         void onUserClicked(String publicKey);
-        void onEditNameClicked(UserAndTx tx);
+        void onEditNameClicked(String publicKey);
         void onBanClicked(UserAndTx tx);
         void onItemLongClicked(UserAndTx tx, String msg);
     }

@@ -13,12 +13,12 @@
 
         <TextView
             android:id="@+id/tv_edit_name"
-            android:layout_width="wrap_content"
+            android:layout_width="55dp"
             android:layout_height="wrap_content"
-            android:text="@string/user_name"
             android:textColor="@color/color_yellow"
-            android:paddingStart="3dp"
-            android:paddingEnd="3dp"
+            android:gravity="center_horizontal"
+            android:singleLine="true"
+            android:ellipsize="end"
             android:paddingBottom="1dp"
             android:textAllCaps="true"
             android:includeFontPadding="false"

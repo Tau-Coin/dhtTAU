@@ -10,6 +10,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
+import androidx.paging.DataSource;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -17,6 +18,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
@@ -80,11 +83,11 @@ public class MsgViewModel extends AndroidViewModel {
     }
 
     /**
-     * 根据chainID获取社区的消息的被观察者
+     * 根据chainID获取社区的消息
      * @param chainID 社区链id
      */
-    public Flowable<List<Message>> observeMessagesByChainID(String chainID){
-        return msgRepo.observeMessagesByChainID(chainID);
+    public DataSource.Factory<Integer, MsgAndReply> queryMessagesByChainID(String chainID){
+        return msgRepo.queryMessagesByChainID(chainID);
     }
 
     /**

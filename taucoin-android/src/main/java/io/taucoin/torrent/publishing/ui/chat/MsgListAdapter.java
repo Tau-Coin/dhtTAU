@@ -1,33 +1,32 @@
 package io.taucoin.torrent.publishing.ui.chat;
 
+import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
+import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
+import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
+import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemMsgBinding;
+import io.taucoin.torrent.publishing.databinding.MsgLeftViewBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;
 
 /**
  * 消息/交易列表显示的Adapter
  */
-public class MsgListAdapter extends ListAdapter<Message, MsgListAdapter.ViewHolder>
-    implements Selectable<Message> {
+public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter.ViewHolder>
+    implements Selectable<MsgAndReply> {
     private ClickListener listener;
-    private List<Message> dataList = new ArrayList<>();
 
     MsgListAdapter(ClickListener listener) {
         super(diffCallback);
@@ -51,28 +50,19 @@ public class MsgListAdapter extends ListAdapter<Message, MsgListAdapter.ViewHold
     }
 
     @Override
-    public int getItemCount() {
-        return dataList.size();
+    public MsgAndReply getItemKey(int position) {
+        if(getCurrentList() != null){
+            return getCurrentList().get(position);
+        }
+        return null;
     }
 
     @Override
-    public Message getItemKey(int position) {
-        return dataList.get(position);
-    }
-
-    @Override
-    public int getItemPosition(Message key) {
-        return getCurrentList().indexOf(key);
-    }
-
-    /**
-     * 设置列表消息展示数据
-     * @param msgList 消息数据
-     */
-    void setDataList(List<Message> msgList) {
-        dataList.clear();
-        dataList.addAll(msgList);
-        notifyDataSetChanged();
+    public int getItemPosition(MsgAndReply key) {
+        if(getCurrentList() != null){
+            return getCurrentList().indexOf(key);
+        }
+        return 0;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -85,24 +75,37 @@ public class MsgListAdapter extends ListAdapter<Message, MsgListAdapter.ViewHold
             this.listener = listener;
         }
 
-        void bind(ViewHolder holder, Message msg) {
+        void bind(ViewHolder holder, MsgAndReply msg) {
             if(null == binding || null == holder || null == msg){
                 return;
             }
             binding.leftView.roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
-            String showName = UsersUtil.getDefaultName(msg.senderPk);
+            String showName = UsersUtil.getShowName(msg);
             binding.leftView.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
             binding.tvName.setText(showName);
-            binding.tvMsg.setText(msg.context);
+
+            String userName = UsersUtil.getUserName(msg);
+            binding.leftView.tvEditName.setText(userName);
+
             String time = DateUtil.getWeekTime(msg.timestamp);
             binding.tvTime.setText(time);
 
+            SpannableStringBuilder context = Utils.getSpannableStringUrl(msg.context);
+            binding.tvMsg.setText(context);
+
+            if(msg.replyMsg != null){
+                binding.llReply.setVisibility(View.VISIBLE);
+                String replyName = UsersUtil.getShowName(msg.replyMsg.senderPk, msg.replyName);
+                binding.tvReplyName.setText(replyName);
+                SpannableStringBuilder replyMsg = Utils.getSpannableStringUrl(msg.replyMsg.context);
+                binding.tvReplyMsg.setText(replyMsg);
+            }else{
+                binding.llReply.setVisibility(View.GONE);
+            }
+
+            setLeftViewClickListener(binding.leftView, msg);
+
             View root = binding.getRoot();
-            root.setOnClickListener(v -> {
-                if(listener != null){
-                    listener.onItemClicked(msg);
-                }
-            });
             root.setOnLongClickListener(view -> {
                 if(listener != null){
                     listener.onItemLongClicked(view, msg);
@@ -110,21 +113,41 @@ public class MsgListAdapter extends ListAdapter<Message, MsgListAdapter.ViewHold
                 return false;
             });
         }
+
+        private void setLeftViewClickListener(MsgLeftViewBinding leftView, MsgAndReply msg) {
+            leftView.roundButton.setOnClickListener(view ->{
+                if(listener != null){
+                    listener.onUserClicked(msg.senderPk);
+                }
+            });
+            leftView.tvEditName.setOnClickListener(view ->{
+                if(listener != null){
+                    listener.onEditNameClicked(msg.senderPk);
+                }
+            });
+            leftView.tvBlacklist.setOnClickListener(view ->{
+                if(listener != null){
+                    listener.onBanClicked(msg);
+                }
+            });
+        }
     }
 
     public interface ClickListener {
-        void onItemClicked(Message tx);
-        void onItemLongClicked(View view, Message tx);
+        void onUserClicked(String publicKey);
+        void onEditNameClicked(String tx);
+        void onBanClicked(MsgAndReply tx);
+        void onItemLongClicked(View view, MsgAndReply tx);
     }
 
-    private static final DiffUtil.ItemCallback<Message> diffCallback = new DiffUtil.ItemCallback<Message>() {
+    private static final DiffUtil.ItemCallback<MsgAndReply> diffCallback = new DiffUtil.ItemCallback<MsgAndReply>() {
         @Override
-        public boolean areContentsTheSame(@NonNull Message oldItem, @NonNull Message newItem) {
+        public boolean areContentsTheSame(@NonNull MsgAndReply oldItem, @NonNull MsgAndReply newItem) {
             return oldItem.equals(newItem);
         }
 
         @Override
-        public boolean areItemsTheSame(@NonNull Message oldItem, @NonNull Message newItem) {
+        public boolean areItemsTheSame(@NonNull MsgAndReply oldItem, @NonNull MsgAndReply newItem) {
             return oldItem.equals(newItem);
         }
     };

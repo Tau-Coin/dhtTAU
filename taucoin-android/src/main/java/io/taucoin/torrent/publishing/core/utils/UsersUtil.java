@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
@@ -94,6 +95,21 @@ public class UsersUtil {
         }
     }
 
+    public static String getUserName(@NonNull MsgAndReply msg) {
+        if(msg.sender != null && StringUtil.isNotEmpty(msg.sender.localName)){
+            return msg.sender.localName;
+        }else{
+            return UsersUtil.getDefaultName(msg.senderPk);
+        }
+    }
+
+    public static String getShowName(@NonNull MsgAndReply msg) {
+        if(msg.sender != null){
+            return getShowName(msg.sender);
+        }else{
+            return UsersUtil.getDefaultName(msg.senderPk);
+        }
+    }
 
     /**
      * 获取显示coin name

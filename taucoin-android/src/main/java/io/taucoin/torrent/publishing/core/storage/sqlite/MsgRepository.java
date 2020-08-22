@@ -2,7 +2,9 @@ package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import java.util.List;
 
+import androidx.paging.DataSource;
 import io.reactivex.Flowable;
+import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 
 /**
@@ -22,8 +24,8 @@ public interface MsgRepository {
     List<Message> getMessagesByChainID(String chainID);
 
     /**
-     * 根据chainID获取社区的消息的被观察者
+     * 根据chainID获取社区的消息
      * @param chainID 社区链id
      */
-    Flowable<List<Message>> observeMessagesByChainID(String chainID);
+    DataSource.Factory<Integer, MsgAndReply> queryMessagesByChainID(String chainID);
 }

@@ -380,15 +380,13 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 显示Ban User的对话框
      */
-    public void showBanDialog(BaseActivity activity, UserAndTx tx) {
-        String publicKey = tx.senderPk;
+    public void showBanDialog(BaseActivity activity, String publicKey, String showName) {
         if(settingsRepo.doNotShowBanDialog()){
             setUserBlacklist(publicKey, true);
             return;
         }
         BanDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.ban_dialog, null, false);
-        String showName = UsersUtil.getShowName(tx);
         binding.tvName.setText(showName);
         binding.ivClose.setOnClickListener(v -> {
             if (commonDialog != null) {
