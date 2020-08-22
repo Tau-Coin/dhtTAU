@@ -24,4 +24,6 @@ public class Constants {
 
     // Chain link中bs默认数
     public static final int CHAIN_LINK_BS_LIMIT = 10;
+
+    public static final int ONLINE_HOURS = 12;
 }

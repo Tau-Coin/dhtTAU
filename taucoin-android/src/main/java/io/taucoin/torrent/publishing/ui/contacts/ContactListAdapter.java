@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -107,14 +106,18 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
                 return;
             }
             holder.binding.cbSelect.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS ? View.VISIBLE : View.GONE);
+            holder.binding.ivShare.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS ? View.VISIBLE : View.GONE);
             if(type == ContactsActivity.PAGE_ADD_MEMBERS){
                 holder.binding.cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    selectedList.remove(user.publicKey);
                     if(isChecked){
                         selectedList.add(user.publicKey);
-                    }else{
-                        selectedList.remove(user.publicKey);
+                    }
+                    if(listener != null){
+                        listener.onSelectClicked();
                     }
                 });
+                holder.binding.cbSelect.setChecked(selectedList.contains(user.publicKey));
             }
             String showName = UsersUtil.getDefaultName(user.publicKey);
             if(StringUtil.isNotEmpty(user.localName)
@@ -138,9 +141,9 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
                 int size = members.size();
                 for (int i = 0; i < size; i++) {
                     Member member = members.get(i);
-//                    if(member.balance <=0 && member.power <= 0){
-//                        continue;
-//                    }
+                    if(member.balance <=0 && member.power <= 0){
+                        continue;
+                    }
                     if(communities.length() == 0){
                         communities.append(context.getResources().getString(R.string.contacts_community_from));
                     }
@@ -162,11 +165,18 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
                     listener.onItemClicked(user);
                 }
             });
+            holder.binding.ivShare.setOnClickListener(v -> {
+                if(listener != null){
+                    listener.onShareClicked(user);
+                }
+            });
         }
     }
 
     public interface ClickListener {
         void onItemClicked(UserAndMember item);
+        void onSelectClicked();
+        void onShareClicked(UserAndMember item);
     }
 
     private static final DiffUtil.ItemCallback<UserAndMember> diffCallback = new DiffUtil.ItemCallback<UserAndMember>() {

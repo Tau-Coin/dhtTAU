@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,9 +14,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.paging.DataSource;
-import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
-import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.Single;
@@ -25,20 +22,17 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.config.ChainConfig;
 import io.taucoin.genesis.GenesisItem;
-import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
-import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
+import io.taucoin.torrent.publishing.core.model.data.Statistics;
+import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
@@ -58,12 +52,11 @@ public class CommunityViewModel extends AndroidViewModel {
     private CommunityRepository communityRepo;
     private MemberRepository memberRepo;
     private UserRepository userRepo;
-    private TxRepository txRepo;
     private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private MutableLiveData<String> addCommunityState = new MutableLiveData<>();
+    private MutableLiveData<Result> addCommunityState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setBlacklistState = new MutableLiveData<>();
-    private MutableLiveData<String> chatState = new MutableLiveData<>();
+    private MutableLiveData<Result> chatState = new MutableLiveData<>();
     private MutableLiveData<List<Community>> blackList = new MutableLiveData<>();
     private MutableLiveData<List<Community>> joinedList = new MutableLiveData<>();
 
@@ -72,7 +65,6 @@ public class CommunityViewModel extends AndroidViewModel {
         communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
         memberRepo = RepositoryHelper.getMemberRepository(getApplication());
         userRepo = RepositoryHelper.getUserRepository(getApplication());
-        txRepo = RepositoryHelper.getTxRepository(getApplication());
         daemon = TauDaemon.getInstance(getApplication());
     }
 
@@ -84,7 +76,7 @@ public class CommunityViewModel extends AndroidViewModel {
      * 获取添加社区状态的被观察者
      * @return 被观察者
      */
-    LiveData<String> getAddCommunityState() {
+    LiveData<Result> getAddCommunityState() {
         return addCommunityState;
     }
 
@@ -100,7 +92,7 @@ public class CommunityViewModel extends AndroidViewModel {
      * 获取设置社区静音状态的被观察者
      * @return 被观察者
      */
-    public LiveData<String> getChatState() {
+    public LiveData<Result> getChatState() {
         return chatState;
     }
 
@@ -117,10 +109,10 @@ public class CommunityViewModel extends AndroidViewModel {
      * @param community 社区数据
      */
     void addCommunity(@NonNull Community community){
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             // TauController:创建Community社区
-            String state = createCommunity(community);
-            emitter.onNext(state);
+            Result result = createCommunity(community);
+            emitter.onNext(result);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
@@ -133,18 +125,16 @@ public class CommunityViewModel extends AndroidViewModel {
      * 创建Community社区
      * @param community
      */
-    private String createCommunity(Community community) {
-        String result = "";
+    private Result createCommunity(Community community) {
+        Result result = new Result();
         try {
             BigInteger totalCoin = BigInteger.valueOf(community.totalCoin);
             byte[] publicKey = ByteUtil.toByte(community.publicKey);
             HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
             GenesisItem item = new GenesisItem(totalCoin);
             genesisMsg.put(new ByteArrayWrapper(publicKey), item);
-            ChainConfig chainConfig = new ChainConfig(1, community.communityName, community.blockInAvg,
-                    publicKey, DateUtil.getTime(), null, genesisMsg);
-            daemon.createCommunity(chainConfig);
-            community.chainID = new String(chainConfig.getChainid());
+            daemon.createNewCommunity(community.communityName, genesisMsg);
+//            community.chainID = new String(chainConfig.getChainid());
             communityRepo.addCommunity(community);
             logger.debug("Add community to database: communityName={}, chainID={}",
                     community.communityName, community.chainID);
@@ -153,7 +143,7 @@ public class CommunityViewModel extends AndroidViewModel {
                     community.totalCoin, item.getPower().longValue());
             memberRepo.addMember(member);
         }catch (Exception e){
-            result = e.getMessage();
+            result.setFailMsg(e.getMessage());
         }
         return result;
     }
@@ -241,8 +231,8 @@ public class CommunityViewModel extends AndroidViewModel {
      * @param friendPk friend's PK
      */
     public void createChat(TxViewModel txViewModel, String chatName, String friendPk) {
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
-            String result = "";
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
+            Result result = new Result();
             try {
                 // 处理社区名，如果为空，取显示名的首位
                 String communityName = chatName;
@@ -257,12 +247,15 @@ public class CommunityViewModel extends AndroidViewModel {
                         Constants.TOTAL_COIN.longValue(), Constants.BLOCK_IN_AVG);
                 // TauController:创建Community社区
                 result = createCommunity(community);
-                if(StringUtil.isEmpty(result)){
+                if(result.isSuccess()){
                     // 社区创建完成，直接给要聊天的朋友空投币
-                    result = txViewModel.airdropToFriend(community.chainID, friendPk);
+                    String msg = txViewModel.airdropToFriend(community.chainID, friendPk);
+                    if(StringUtil.isNotEmpty(msg)){
+                        result.setFailMsg(msg);
+                    }
                 }
             }catch (Exception e){
-                result = e.getMessage();
+                result.setFailMsg(e.getMessage());
             }
             emitter.onNext(result);
             emitter.onComplete();
@@ -298,5 +291,13 @@ public class CommunityViewModel extends AndroidViewModel {
      */
     public Single<List<String>> getCommunityMembersLimit(String chainID, int limit) {
         return memberRepo.getCommunityMembersLimit(chainID, limit);
+    }
+
+    /**
+     * 获取社区成员统计
+     * @param chainID
+     */
+    public Flowable<Statistics> getMembersStatistics(String chainID) {
+        return memberRepo.getMembersStatistics(chainID);
     }
 }

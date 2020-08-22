@@ -210,4 +210,15 @@ public class ActivityUtil {
         return (activity.getWindow().getAttributes().flags &
                 WindowManager.LayoutParams.FLAG_FULLSCREEN) == WindowManager.LayoutParams.FLAG_FULLSCREEN;
     }
+
+    /**
+     * 调起系统功能发短信
+     * @param activity
+     * @param message 消息内容
+     */
+    public static  void doSendSMSTo(AppCompatActivity activity, String message) {
+        Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"));
+        intent.putExtra("sms_body", message);
+        activity.startActivity(intent);
+    }
 }

@@ -16,7 +16,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -129,6 +131,12 @@ public class MembersActivity extends BaseActivity {
                 this.finish();
             }
         });
+        disposables.add(communityViewModel.getMembersStatistics(chainID)
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(statistics ->
+                binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats,
+                        statistics.getMembers(), statistics.getOnline()))));
     }
 
     @Override

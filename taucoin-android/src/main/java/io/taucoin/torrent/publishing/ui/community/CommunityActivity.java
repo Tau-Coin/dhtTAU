@@ -17,7 +17,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.types.TypesConfig;
@@ -54,6 +56,18 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         binding.toolbarInclude.setListener(this);
         initParameter();
         initLayout();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (0 != (Intent.FLAG_ACTIVITY_CLEAR_TOP & intent.getFlags())) {
+            finish();
+            String chainID = intent.getStringExtra(IntentExtra.CHAIN_ID);
+            intent = new Intent();
+            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+            ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+        }
     }
 
     /**
@@ -122,6 +136,12 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     public void onStart() {
         super.onStart();
         subscribeCommunityViewModel();
+        disposables.add(communityViewModel.getMembersStatistics(chainID)
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(statistics ->
+                binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats,
+                statistics.getMembers(), statistics.getOnline()))));
     }
 
     @Override

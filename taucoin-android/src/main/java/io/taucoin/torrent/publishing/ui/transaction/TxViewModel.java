@@ -212,12 +212,16 @@ public class TxViewModel extends AndroidViewModel {
      */
     private void addUserInfo(Tx tx) {
         long txType = tx.txType;
+        User user = userRepo.getUserByPublicKey(tx.senderPk);
+        if(user != null){
+            user.lastUpdateTime = DateUtil.getTime();
+            userRepo.updateUser(user);
+        }
         if(txType == TypesConfig.TxType.WCoinsType.ordinal()){
-            User user = userRepo.getUserByPublicKey(tx.receiverPk);
-            if(null == user){
-                user = new User(tx.receiverPk);
-                user.lastUpdateTime = DateUtil.getTime();
-                userRepo.addUser(user);
+            User receiverUser = userRepo.getUserByPublicKey(tx.receiverPk);
+            if(null == receiverUser){
+                receiverUser = new User(tx.receiverPk);
+                userRepo.addUser(receiverUser);
                 logger.info("addUserInfo to local, publicKey::{}",
                         tx.receiverPk);
             }
@@ -297,7 +301,7 @@ public class TxViewModel extends AndroidViewModel {
      * 显示编辑交易费的对话框
      */
     void showEditFeeDialog(BaseActivity activity, TextView tvFee, String chainID) {
-        if(StringUtil.isNotEmpty(chainID)){
+        if(StringUtil.isEmpty(chainID)){
             return;
         }
         EditFeeDialogBinding editFeeBinding = DataBindingUtil.inflate(LayoutInflater.from(activity),
@@ -333,7 +337,7 @@ public class TxViewModel extends AndroidViewModel {
      * 观察中位数交易费
      * @param chainID 交易所属的社区chainID
      */
-    Single<List<Long>> observeMedianFee(String chainID) {
+    public Single<List<Long>> observeMedianFee(String chainID) {
         return txRepo.observeMedianFee(chainID);
     }
 
@@ -342,14 +346,13 @@ public class TxViewModel extends AndroidViewModel {
      * @param chainID
      * @param friendPks
      */
-    public void airdropToFriends(String chainID, List<String> friendPks) {
+    public void airdropToFriends(String chainID, List<String> friendPks, long medianFee) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String result = "";
             try {
                 String senderPk = MainApplication.getInstance().getPublicKey();
                 long balance = daemon.getUserBalance(chainID, senderPk);
                 long airdropCoin = Constants.AIRDROP_COIN.longValue();
-                long medianFee = getMedianFee(chainID);
                 long totalPay = (airdropCoin + medianFee) * friendPks.size();
                 if(totalPay > balance){
                     result = application.getString(R.string.tx_error_no_enough_coins_for_airdrop);

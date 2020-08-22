@@ -44,6 +44,7 @@
             </LinearLayout>
 
             <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
+                android:layout_above="@+id/ll_total_pay"
                 android:background="@color/color_white"
                 android:id="@+id/recycler_list"
                 android:layout_below="@+id/ll_invite_friends"
@@ -78,6 +79,30 @@
                     android:lineSpacingExtra="5dp"
                     android:text="@string/contacts_empty_content"
                     style="@style/TextAppearanceBody1" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:visibility="gone"
+                android:id="@+id/ll_total_pay"
+                android:layout_alignParentBottom="true"
+                android:orientation="vertical"
+                android:background="@color/color_pay_bg"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <include layout="@layout/view_line"/>
+
+                <TextView
+                    android:id="@+id/tv_total_pay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="44dp"
+                    android:gravity="center_vertical"
+                    android:layout_gravity="center_vertical"
+                    android:textAppearance="@style/TextAppearanceBody2"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginStart="10dp"/>
 
             </LinearLayout>
 

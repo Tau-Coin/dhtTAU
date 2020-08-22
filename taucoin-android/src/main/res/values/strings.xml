@@ -69,7 +69,7 @@
     <string name="community_invite_link_bs">bs=%1$s&#038;</string>
 
     <string name="community_input_hint">Message</string>
-    <string name="community_users_stats">%1$d members,%2$d online</string>
+    <string name="community_users_stats">%1$d members, %2$d online</string>
     <string name="common_loading">loading&#8230;</string>
 
     <string name="community_community_name">e.g.Paris(required)</string>
@@ -100,7 +100,7 @@
     <string name="error_coin_name_empty">Coin name cannot be empty!</string>
     <string name="error_telegram_id_illegal">Telegram ID is illegal!</string>
     <string name="community_added_successfully">Create Community Successful!</string>
-    <string name="community_added_members">+ Add Member Now</string>
+    <string name="community_added_members">+ Add Members Now</string>
 
     <string name="setting_title">Settings</string>
     <string name="setting_account">PublicKey(Address)</string>
@@ -233,6 +233,8 @@
     <string name="contacts_friend_already_exists">Friend already exists!</string>
     <string name="contacts_error_invalid_pk">Invalid friend\'s public key!</string>
     <string name="contacts_airdrop_successfully">You have send %1$s coins to your friends!</string>
+    <string name="contacts_total_pay" formatted="false"><Data><![CDATA[Invite&nbsp;<font color="#f19322">%1$d</font>&nbsp;friends,&nbsp;total
+    &nbsp;<font color="#f19322">%2$s</font>&nbsp;%3$s&nbsp;(including %4$s fee).]]></Data></string>
 
     <!-- Strings used for QRCode -->
     <string name="qr_code_title">My Public Key QR Code</string>

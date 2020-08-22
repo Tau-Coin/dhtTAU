@@ -112,13 +112,14 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
 
         communityViewModel.getChatState().observe(this, state -> {
             closeProgressDialog();
-            if (StringUtil.isNotEmpty(state)) {
-                ToastUtils.showShortToast(state);
+            if (!state.isSuccess()) {
+                ToastUtils.showShortToast(state.getMsg());
             } else {
                 String airdropResult = getString(R.string.contacts_airdrop_successfully,
                         FmtMicrometer.fmtFeeValue(Constants.AIRDROP_COIN.longValue()));
                 ToastUtils.showShortToast(airdropResult);
                 onBackPressed();
+                openCommunityActivity(state.getMsg());
             }
             if (commonDialog != null) {
                 commonDialog.closeDialog();
@@ -166,8 +167,17 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
 
     @Override
     public void onItemClicked(@NonNull Member member) {
+        openCommunityActivity(member.chainID);
+    }
+
+    /**
+     * 打开社区页面
+     * @param chainID
+     */
+    private void openCommunityActivity(String chainID){
         Intent intent = new Intent();
-        intent.putExtra(IntentExtra.CHAIN_ID, member.chainID);
+        intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         ActivityUtil.startActivity(intent, this, CommunityActivity.class);
     }
 

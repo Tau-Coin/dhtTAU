@@ -187,7 +187,7 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
                             userViewModel.shareInvitedLinkToFriend(communityInviteLink, member.publicKey);
                             ToastUtils.showShortToast(R.string.share_link_successfully);
                         } else if (imgRid == R.mipmap.icon_share_sms) {
-                            doSendSMSTo(communityInviteLink);
+                            ActivityUtil.doSendSMSTo(activity, communityInviteLink);
                         }
                     }));
         });
@@ -198,16 +198,5 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
         builder.addItems(R.mipmap.icon_share_sms, R.string.contacts_sms);
         shareDialog = builder.create();
         shareDialog.show();
-    }
-
-    /**
-     * 调起系统功能发短信
-     *
-     * @param message 消息内容
-     */
-    private void doSendSMSTo(String message) {
-        Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"));
-        intent.putExtra("sms_body", message);
-        startActivity(intent);
     }
 }

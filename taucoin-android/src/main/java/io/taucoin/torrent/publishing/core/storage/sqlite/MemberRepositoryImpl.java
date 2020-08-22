@@ -5,12 +5,11 @@ import android.content.Context;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.LiveData;
 import androidx.paging.DataSource;
-import androidx.paging.PagedList;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
+import io.taucoin.torrent.publishing.core.model.data.Statistics;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**
@@ -57,10 +56,11 @@ public class MemberRepositoryImpl implements MemberRepository{
      * @param publicKey 公钥
      * @return Member
      */
+    @Override
     public Member getMemberByChainIDAndPk(@NonNull String chainID, @NonNull String publicKey){
         return db.memberDao().getMemberByChainIDAndPk(chainID, publicKey);
     }
-
+    @Override
     public Flowable<List<MemberAndUser>> observeCommunityMembers(String chainID){
         return db.memberDao().observeCommunityMembers(chainID);
     }
@@ -71,6 +71,7 @@ public class MemberRepositoryImpl implements MemberRepository{
      * @param onChain 是否上链
      * @return DataSource.Factory
      */
+    @Override
     public DataSource.Factory<Integer, MemberAndUser> queryCommunityMembers(String chainID, boolean onChain){
         if(onChain){
             return db.memberDao().queryCommunityMembersOnChain(chainID);
@@ -84,6 +85,7 @@ public class MemberRepositoryImpl implements MemberRepository{
      * @param currentUserPk
      * @param memberPk
      */
+    @Override
     public Single<List<String>> getCommunityNumInCommon(String currentUserPk, String memberPk){
         return db.memberDao().getCommunityNumInCommon(currentUserPk, memberPk);
     }
@@ -93,7 +95,13 @@ public class MemberRepositoryImpl implements MemberRepository{
      * @param chainID
      * @param limit
      */
+    @Override
     public Single<List<String>> getCommunityMembersLimit(String chainID, int limit){
         return db.memberDao().getCommunityMembersLimit(chainID, limit);
+    }
+
+    @Override
+    public Flowable<Statistics> getMembersStatistics(String chainID){
+        return db.memberDao().getMembersStatistics(chainID);
     }
 }

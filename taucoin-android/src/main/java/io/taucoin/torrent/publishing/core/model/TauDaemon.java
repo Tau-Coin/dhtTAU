@@ -8,6 +8,7 @@ import android.os.PowerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,6 +21,7 @@ import io.reactivex.disposables.Disposables;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.controller.TauController;
+import io.taucoin.genesis.GenesisItem;
 import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
@@ -34,6 +36,7 @@ import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
+import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -417,6 +420,15 @@ public class TauDaemon {
      */
     public void createCommunity(ChainConfig chainConfig) {
 
+    }
+
+    /**
+     * 添加或创建社区
+     * @param communityName community name
+     * @param genesisItems airdrop accounts balance and power
+     */
+    public void createNewCommunity(String communityName, HashMap<ByteArrayWrapper, GenesisItem> genesisItems) {
+        tauController.getChainManager().createNewCommunity(communityName, genesisItems);
     }
 
     /**

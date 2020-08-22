@@ -85,10 +85,10 @@ public class CommunityCreateActivity extends BaseActivity {
      */
     private void observeAddCommunityState() {
         viewModel.getAddCommunityState().observe(this, state -> {
-            if(StringUtil.isEmpty(state)){
-                showSuccessDialog();
+            if(state.isSuccess()){
+                showSuccessDialog(state.getMsg());
             }else{
-                ToastUtils.showShortToast(state);
+                ToastUtils.showShortToast(state.getMsg());
             }
         });
     }
@@ -96,7 +96,7 @@ public class CommunityCreateActivity extends BaseActivity {
     /**
      * 显示添加新社区成功后的对话框
      */
-    private void showSuccessDialog() {
+    private void showSuccessDialog(String chainID) {
         ViewDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this),
                 R.layout.view_dialog, null, false);
         binding.tvMsg.setText(R.string.community_added_successfully);
@@ -109,7 +109,7 @@ public class CommunityCreateActivity extends BaseActivity {
                     onBackPressed();
                     Intent intent = new Intent();
                     intent.putExtra(IntentExtra.TYPE, ContactsActivity.PAGE_ADD_MEMBERS);
-                    intent.putExtra(IntentExtra.CHAIN_ID, "");
+                    intent.putExtra(IntentExtra.CHAIN_ID, chainID);
                     ActivityUtil.startActivity(intent, this, ContactsActivity.class);
                 }).create();
         successDialog.setOnCancelListener(dialog -> {

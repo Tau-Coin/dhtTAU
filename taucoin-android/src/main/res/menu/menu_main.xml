@@ -9,6 +9,7 @@
 
     <item android:id="@+id/menu_alert"
         app:showAsAction="always"
+        app:actionProviderClass="io.taucoin.torrent.publishing.ui.customviews.BadgeActionProvider"
         android:icon="@mipmap/menu_notifications"
         android:title="@string/menu_alert" />
 </menu>

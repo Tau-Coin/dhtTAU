@@ -8,6 +8,7 @@ import androidx.paging.DataSource;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
+import io.taucoin.torrent.publishing.core.model.data.Statistics;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**
@@ -54,4 +55,10 @@ public interface MemberRepository {
      * @param limit
      */
     Single<List<String>> getCommunityMembersLimit(String chainID, int limit);
+
+    /**
+     * 获取社区成员统计
+     * @param chainID
+     */
+    Flowable<Statistics> getMembersStatistics(String chainID);
 }

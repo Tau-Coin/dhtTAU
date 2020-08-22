@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.core.view.MenuItemCompat;
 import io.taucoin.torrent.SessionStats;
 
 import org.slf4j.Logger;
@@ -44,7 +45,9 @@ import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
+import io.taucoin.torrent.publishing.ui.customviews.BadgeActionProvider;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.customviews.ShareDialog;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.user.ScanQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
@@ -65,6 +68,8 @@ public class MainActivity extends BaseActivity {
     private CompositeDisposable disposables = new CompositeDisposable();
     private Subject<Integer> mBackClick = PublishSubject.create();
     private CommonDialog seedDialog;
+    private ShareDialog shareDialog;
+    private BadgeActionProvider actionProvider;
     private User user;
 
     @Override
@@ -219,6 +224,9 @@ public class MainActivity extends BaseActivity {
         if(seedDialog != null){
             seedDialog.closeDialog();
         }
+        if(shareDialog != null){
+            shareDialog.closeDialog();
+        }
     }
 
     /**
@@ -259,12 +267,36 @@ public class MainActivity extends BaseActivity {
                 ActivityUtil.startActivity(this, SettingActivity.class);
                 break;
             case R.id.item_share:
-                ActivityUtil.openUri(this, Constants.APP_SHARE_URL);
+                showShareAppDialog();
                 break;
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START);
     }
 
+    /**
+     * 显示分享APP的对话框
+     */
+    private void showShareAppDialog() {
+        ShareDialog.Builder builder = new ShareDialog.Builder(this);
+        builder.setOnItemClickListener((dialog, imgRid, titleRid) -> {
+            dialog.dismiss();
+            String appShareLink = Constants.APP_SHARE_URL;
+            if (imgRid == R.mipmap.icon_share_copy_link) {
+                CopyManager.copyText(appShareLink);
+                ToastUtils.showShortToast(R.string.copy_share_link);
+            } else if (imgRid == R.mipmap.icon_share_sms) {
+                ActivityUtil.doSendSMSTo(this, appShareLink);
+            }
+        });
+        builder.addItems(R.mipmap.icon_share_copy_link, R.string.contacts_copy_link);
+        builder.addItems(R.mipmap.icon_share_sms, R.string.contacts_sms);
+        shareDialog = builder.create();
+        shareDialog.show();
+    }
+
+    /**
+     * 显示用户Seed的对话框
+     */
     private void showSeedDialog() {
         if(null == user){
             return;
@@ -293,12 +325,23 @@ public class MainActivity extends BaseActivity {
         seedDialog.show();
     }
 
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        actionProvider.setText("9");
+    }
+
     /**
      *  创建右上角Menu
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem menuItem = menu.findItem(R.id.menu_alert);
+        actionProvider = (BadgeActionProvider) MenuItemCompat.getActionProvider(menuItem);
+        actionProvider.setOnClickListener(0, what -> {
+
+        });
         return true;
     }
 
@@ -307,9 +350,7 @@ public class MainActivity extends BaseActivity {
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_alert) {
-
-        }else if (item.getItemId() == R.id.menu_scan) {
+        if (item.getItemId() == R.id.menu_scan) {
             Intent intent = new Intent();
             intent.putExtra(IntentExtra.BEAN, user);
             ActivityUtil.startActivity(intent,this, ScanQRCodeActivity.class);
