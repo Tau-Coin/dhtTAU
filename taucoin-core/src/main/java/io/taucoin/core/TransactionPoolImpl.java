@@ -1,6 +1,5 @@
 package io.taucoin.core;
 
-import io.taucoin.account.AccountManager;
 import io.taucoin.db.StateDB;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Transaction;
@@ -50,6 +49,11 @@ public class TransactionPoolImpl implements TransactionPool {
         getSelfTxsFromDB();
     }
 
+    /**
+     * update user public key
+     *
+     * @param pubKey public key
+     */
     @Override
     public synchronized void updatePubKey(byte[] pubKey) {
         logger.debug("Chain ID[{}]: update public key[{}]",
@@ -75,8 +79,9 @@ public class TransactionPoolImpl implements TransactionPool {
 
     /**
      * get nonce by pubKey
-     * @param pubKey
-     * @return current nonce or 0 when null or exception
+     *
+     * @param pubKey public key
+     * @return current nonce or 0 if not found or exception
      */
     private synchronized long getNonce(byte[] pubKey) {
         try {
@@ -133,7 +138,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * add local transaction into pool
      *
-     * @param tx
+     * @param tx the tx to add into local pool
      */
     @Override
     public synchronized void addLocal(Transaction tx) {
@@ -155,7 +160,9 @@ public class TransactionPoolImpl implements TransactionPool {
             return;
         }
 
-        if (!checkTypeAndBalance(tx)) {
+        if (typeOrBalanceError(tx)) {
+            logger.error("Chain ID[{}]: Tx[{}] type or balance error.",
+                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
             return;
         }
 
@@ -184,7 +191,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * add local transactions into pool
      *
-     * @param list
+     * @param list the tx list to add into local pool
      */
     @Override
     public synchronized void addLocals(List<Transaction> list) {
@@ -198,7 +205,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * get all transactions in pool
      *
-     * @return tx list
+     * @return tx list in pool
      */
     @Override
     public synchronized List<Transaction> getAllTransactions() {
@@ -211,7 +218,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * get all local transactions in pool
      *
-     * @return
+     * @return local tx list
      */
     @Override
     public synchronized List<Transaction> getLocals() {
@@ -253,7 +260,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * get a local transaction that meet the requirement of nonce continuity
      *
-     * @return best transaction when nonce matches or null
+     * @return the local tx that nonce match state, null otherwise
      */
     @Override
     public synchronized Transaction getLocalBestTransaction() {
@@ -277,7 +284,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * return the size of local transactions
      *
-     * @return local size
+     * @return local tx size
      */
     @Override
     public synchronized int localSize() {
@@ -287,7 +294,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * add transaction into pool
      *
-     * @param tx
+     * @param tx the tx to add into pool
      */
     @Override
     public synchronized void addTx(Transaction tx) {
@@ -309,7 +316,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * add a transaction from the remote
      *
-     * @param tx
+     * @param tx remote tx to add
      */
     @Override
     public synchronized void addRemote(Transaction tx) {
@@ -333,7 +340,9 @@ public class TransactionPoolImpl implements TransactionPool {
             return;
         }
 
-        if (!checkTypeAndBalance(tx)) {
+        if (typeOrBalanceError(tx)) {
+            logger.error("Chain ID[{}]: Tx[{}] type or balance error.",
+                    new String(this.chainID), Hex.toHexString(tx.getTxID()));
             return;
         }
 
@@ -378,11 +387,11 @@ public class TransactionPoolImpl implements TransactionPool {
     }
 
     /**
-     * validate tx
-     * @param tx
-     * @return
+     * check tx if there is error in type or balance
+     * @param tx tx to be checked
+     * @return true if error or false if
      */
-    private synchronized boolean checkTypeAndBalance(Transaction tx) {
+    private synchronized boolean typeOrBalanceError(Transaction tx) {
         try {
             if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
                 long cost = ((WiringCoinsTx)tx).getAmount() + tx.getTxFee();
@@ -390,7 +399,7 @@ public class TransactionPoolImpl implements TransactionPool {
                 if (accountState.getBalance().longValue() < cost) {
                     logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
                             new String(this.chainID), Hex.toHexString(tx.getTxID()));
-                    return false;
+                    return true;
                 }
             } else if (TypesConfig.TxType.FNoteType.ordinal() == tx.getTxType()) {
                 long cost = tx.getTxFee();
@@ -398,25 +407,25 @@ public class TransactionPoolImpl implements TransactionPool {
                 if (accountState.getBalance().longValue() < cost) {
                     logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
                             new String(this.chainID), Hex.toHexString(tx.getTxID()));
-                    return false;
+                    return true;
                 }
             } else {
                 logger.error("Chain ID[{}]: tx[{}] Type is not supported!.",
                         new String(this.chainID), Hex.toHexString(tx.getTxID()));
-                return false;
+                return true;
             }
         } catch (Exception e) {
             logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
-            return false;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     /**
      * add transactions from the remote
      *
-     * @param list
+     * @param list remote tx list to add
      */
     @Override
     public synchronized void addRemotes(List<Transaction> list) {
@@ -431,7 +440,9 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * get a transaction that has the maximum fee
      *
-     * @return local first, then the maximum fee in remote, or null when poll is empty
+     * @return local tx that match state,
+     *         or remote tx that has max fee,
+     *        null otherwise
      */
     @Override
     public synchronized Transaction getBestTransaction() {
@@ -459,7 +470,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * return the size of all remote transactions
      *
-     * @return
+     * @return remote tx size
      */
     @Override
     public synchronized int remoteSize() {
@@ -468,9 +479,9 @@ public class TransactionPoolImpl implements TransactionPool {
     }
 
     /**
-     * retrun the size of all transaction, including local and remote ones
+     * return the size of all transaction, including local and remote ones
      *
-     * @return
+     * @return all tx size in pool
      */
     @Override
     public synchronized int size() {
@@ -495,7 +506,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * get a transaction by txid
      *
-     * @return transaction or null when not found
+     * @return transaction or null if not found
      */
     @Override
     public synchronized Transaction getTransactionByTxid(byte[] txid) {
@@ -505,7 +516,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * get remote transactions maximum fee in pool
      *
-     * @return
+     * @return max tx fee in pool
      */
     @Override
     public synchronized long getMaxFee() {
@@ -588,8 +599,8 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * check if a transaction is in pool
      *
-     * @param txid target to check
-     * @return
+     * @param txid tx hash to check
+     * @return true if in pool, false otherwise
      */
     @Override
     public synchronized boolean isInPool(byte[] txid) {
@@ -643,9 +654,9 @@ public class TransactionPoolImpl implements TransactionPool {
     }
 
     /**
-     * get a peer that has most fee
+     * get a peer that has max fee
      *
-     * @return peer or null
+     * @return peer that has max tx fee in remote, or null if no peer
      */
     @Override
     public synchronized byte[] getOptimalPeer() {
@@ -667,7 +678,7 @@ public class TransactionPoolImpl implements TransactionPool {
     /**
      * re-check the legality of the corresponding account transaction
      *
-     * @param pubKey
+     * @param pubKey public key
      */
     @Override
     public synchronized void recheckAccoutTx(byte[] pubKey) {

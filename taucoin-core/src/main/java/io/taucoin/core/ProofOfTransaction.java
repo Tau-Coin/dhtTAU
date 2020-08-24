@@ -63,7 +63,7 @@ public class ProofOfTransaction {
      * @param chainID chain ID
      * @param previousBlock previous block
      * @param blockStore block store
-     * @return
+     * @return base target or null if error
      */
     public BigInteger calculateRequiredBaseTarget(byte[] chainID, Block previousBlock, BlockStore blockStore) {
         long blockNumber = previousBlock.getBlockNum();
@@ -112,7 +112,7 @@ public class ProofOfTransaction {
         BigInteger requiredBaseTarget;
 
         if (timeAver > this.averageBlockTime ) {
-            long min = 0;
+            long min;
 
             if (timeAver < this.maxRatio) {
                 min = timeAver;
@@ -123,7 +123,7 @@ public class ProofOfTransaction {
             requiredBaseTarget = previousBlockBaseTarget.multiply(BigInteger.valueOf(min)).
                     divide(BigInteger.valueOf(this.averageBlockTime));
         } else {
-            long max = 0;
+            long max;
 
             if (timeAver > this.minRatio) {
                 max = timeAver;
@@ -150,9 +150,9 @@ public class ProofOfTransaction {
     /**
      * get next block generation signature
      *     Gn+1 = hash(Gn, pubkey)
-     * @param preGenerationSignature
-     * @param pubkey
-     * @return
+     * @param preGenerationSignature previous generation signature
+     * @param pubkey public key
+     * @return generation signature
      */
     public byte[] calculateGenerationSignature(byte[] preGenerationSignature, byte[] pubkey){
         byte[] data = new byte[preGenerationSignature.length + pubkey.length];
@@ -167,14 +167,14 @@ public class ProofOfTransaction {
     /**
      * get miner target value
      * target = base target * sqrt(power) * time
-     * @param baseTarget
-     * @param power
-     * @param time
-     * @return
+     * @param baseTarget base target
+     * @param power power
+     * @param time time interval
+     * @return target
      */
     public BigInteger calculateMinerTargetValue(BigInteger baseTarget, BigInteger power, long time){
-        Double p = sqrt(power.doubleValue());
-        BigInteger realPower = BigInteger.valueOf(p.longValue());
+        double p = sqrt(power.doubleValue());
+        BigInteger realPower = BigInteger.valueOf(((Double)p).longValue());
         return baseTarget.multiply(realPower).
                 multiply(BigInteger.valueOf(time));
     }
@@ -183,8 +183,8 @@ public class ProofOfTransaction {
     /**
      * calculate hit
      * Hit = pow(2, 59) * |ln(((first eight bytes of Gn+1) + 1) / pow(2, 64))|
-     * @param generationSignature
-     * @return
+     * @param generationSignature generation signature
+     * @return hit
      */
     public BigInteger calculateRandomHit(byte[] generationSignature){
         byte[] headBytes = new byte[8];
@@ -214,9 +214,9 @@ public class ProofOfTransaction {
 
     /**
      * calculate cumulative difficulty
-     * @param lastCumulativeDifficulty
-     * @param baseTarget
-     * @return
+     * @param lastCumulativeDifficulty last cumulative difficulty
+     * @param baseTarget base target
+     * @return cumulative difficulty
      */
     public BigInteger calculateCumulativeDifficulty(BigInteger lastCumulativeDifficulty, BigInteger baseTarget) {
         return DiffAdjustNumerator.divide(baseTarget).add(lastCumulativeDifficulty);
@@ -224,16 +224,16 @@ public class ProofOfTransaction {
 
     /**
      * calculate mining time interval
-     * @param hit
-     * @param baseTarget
-     * @param power
-     * @return
+     * @param hit hit
+     * @param baseTarget base target
+     * @param power power
+     * @return time interval
      */
     public long calculateMiningTimeInterval(BigInteger hit, BigInteger baseTarget, BigInteger power) {
         // we need 𝐻 < 𝑇 = 𝑇(𝑏,𝑛) × sqrt(𝑃𝑒) × C
         // when T = H, calc C
-        Double p = sqrt(power.doubleValue());
-        BigInteger realPower = BigInteger.valueOf(p.longValue());
+        double p = sqrt(power.doubleValue());
+        BigInteger realPower = BigInteger.valueOf(((Double)p).longValue());
         long timeInterval =
                 hit.divide(baseTarget).divide(realPower).longValue();
 
@@ -257,7 +257,7 @@ public class ProofOfTransaction {
      * @param baseTarget base target
      * @param power power
      * @param timeInterval time interval
-     * @return true/false
+     * @return true if validated, false otherwise
      */
     public boolean verifyHit(BigInteger hit, BigInteger baseTarget, BigInteger power, long timeInterval) {
         if (timeInterval < this.minBlockTime) {

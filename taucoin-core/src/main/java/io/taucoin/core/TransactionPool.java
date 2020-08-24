@@ -25,38 +25,38 @@ public interface TransactionPool {
 
     /**
      * update user public key
-     * @param pubKey
+     * @param pubKey public key
      */
     void updatePubKey(byte[] pubKey);
 
     /**
      * add transaction into pool
      *
-     * @param tx
+     * @param tx the tx to add into pool
      */
     void addTx(Transaction tx);
 
     /**
      * add local transaction into pool
-     * @param tx
+     * @param tx the tx to add into local pool
      */
     void addLocal(Transaction tx);
 
     /**
      * add local transactions into pool
-     * @param list
+     * @param list the tx list to add into local pool
      */
     void addLocals(List<Transaction> list);
 
     /**
      * get all transactions in pool
-     * @return tx list
+     * @return tx list in pool
      */
     List<Transaction> getAllTransactions();
 
     /**
      * get all local transactions
-     * @return
+     * @return local tx list
      */
     List<Transaction> getLocals();
 
@@ -67,43 +67,45 @@ public interface TransactionPool {
 
     /**
      * get a local transaction that meet the requirement of nonce continuity
-     * @return
+     * @return the local tx that nonce match state, null otherwise
      */
     Transaction getLocalBestTransaction();
 
     /**
      * return the size of local transactions
-     * @return
+     * @return local tx size
      */
     int localSize();
 
     /**
      * add a transaction from the remote
-     * @param tx
+     * @param tx remote tx to add
      */
     void addRemote(Transaction tx);
 
     /**
      * add transactions from the remote
-     * @param list
+     * @param list remote tx list to add
      */
     void addRemotes(List<Transaction> list);
 
     /**
-     * get a transaction that has the maximum fee
-     * @return
+     * get a best transaction that can be mined
+     * @return local tx that match state,
+     *         or remote tx that has max fee,
+     *         null otherwise
      */
     Transaction getBestTransaction();
 
     /**
      * return the size of all remote transactions
-     * @return
+     * @return remote tx size
      */
     int remoteSize();
 
     /**
-     * retrun the size of all transaction, including local and remote ones
-     * @return
+     * return the size of all transaction, including local and remote ones
+     * @return all tx size in pool
      */
     int size();
 
@@ -120,13 +122,13 @@ public interface TransactionPool {
 
     /**
      * get a transaction by txid
-     * @return
+     * @return transaction or null if not found
      */
     Transaction getTransactionByTxid(byte[] txid);
 
     /**
      * get maximum fee in pool
-     * @return
+     * @return max tx fee in pool
      */
     long getMaxFee();
 
@@ -150,8 +152,8 @@ public interface TransactionPool {
 
     /**
      * check if a transaction is in pool
-     * @param txid target to check
-     * @return
+     * @param txid tx hash to check
+     * @return true if in pool, false otherwise
      */
     boolean isInPool(byte[] txid);
 
@@ -162,8 +164,8 @@ public interface TransactionPool {
     void trySlimDownPool();
 
     /**
-     * get a peer that has most fee
-     * @return peer or null
+     * get a peer that has max fee
+     * @return peer that has max tx fee in remote, or null if no peer
      */
     byte[] getOptimalPeer();
 
