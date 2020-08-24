@@ -149,8 +149,6 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
         String amount = ViewUtils.getText(binding.etAmount);
         String fee = ViewUtils.getStringTag(binding.tvFee);
         String memo = ViewUtils.getText(binding.etMemo);
-        amount = FmtMicrometer.fmtTxValue(amount);
-        fee = FmtMicrometer.fmtTxValue(fee);
         return new Tx(chainID, receiverPk, FmtMicrometer.fmtTxLongValue(amount),
                 FmtMicrometer.fmtTxLongValue(fee), txType, memo);
     }

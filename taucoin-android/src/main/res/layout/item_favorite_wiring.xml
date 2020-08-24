@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/color_white"
+        android:layout_marginBottom="5dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RelativeLayout
+                android:layout_width="55dp"
+                android:layout_gravity="bottom"
+                android:layout_height="wrap_content">
+
+                <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+                    android:id="@+id/round_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:gravity="center_horizontal|center"
+                    android:textColor="@color/color_white"
+                    android:layout_centerHorizontal="true"
+                    android:textAppearance="@style/TextAppearanceBody1"
+                    app:borderColor="@color/primary_light"
+                    app:borderWidth="0dp"
+                    app:radius="10dp"
+                    app:isRadiusAutoHalf="true"
+                    app:bgColor="@color/primary_light"
+                    app:textColorForPressed="@color/color_white" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/tv_amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textAppearance="@style/TextAppearanceHeadline5" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_marginTop="2dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tx_to"
+                        android:textColor="@color/gray_dark"
+                        android:textAppearance="@style/TextAppearanceBody3" />
+
+                    <TextView
+                        android:id="@+id/tv_receiver"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearanceBody3" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_marginTop="2dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tx_fee"
+                        android:textColor="@color/gray_dark"
+                        android:textAppearance="@style/TextAppearanceBody3" />
+
+                    <TextView
+                        android:id="@+id/tv_fee"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearanceBody3" />
+                </LinearLayout>
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_marginTop="2dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tx_hash"
+                        android:textColor="@color/gray_dark"
+                        android:textAppearance="@style/TextAppearanceBody3" />
+
+                    <TextView
+                        android:id="@+id/tv_hash"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/color_yellow"
+                        android:textAppearance="@style/TextAppearanceBody3" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_marginTop="2dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tx_memo"
+                        android:textColor="@color/gray_dark"
+                        android:textAppearance="@style/TextAppearanceBody3" />
+
+                    <TextView
+                        android:id="@+id/tv_memo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearanceBody3" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:paddingTop="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tv_user_name"
+                android:layout_width="55dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:textColor="@color/gray_dark"
+                android:paddingStart="3dp"
+                android:paddingEnd="3dp"
+                android:paddingTop="5dp"
+                android:includeFontPadding="false"
+                android:textAppearance="@style/TextAppearanceBody4" />
+
+            <TextView
+                android:id="@+id/tv_community_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearanceBody4" />
+
+            <TextView
+                android:id="@+id/tv_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:layout_marginStart="15dp"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearanceBody4" />
+
+        </LinearLayout>
+    </LinearLayout>
+</layout>

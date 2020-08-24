@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
@@ -22,6 +23,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
@@ -33,6 +35,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
@@ -134,7 +137,8 @@ public class CommunityViewModel extends AndroidViewModel {
             GenesisItem item = new GenesisItem(totalCoin);
             genesisMsg.put(new ByteArrayWrapper(publicKey), item);
             daemon.createNewCommunity(community.communityName, genesisMsg);
-//            community.chainID = new String(chainConfig.getChainid());
+            community.chainID = new String(GenesisConfig.chainID(community.communityName, publicKey,
+                    DateUtil.getTime()), StandardCharsets.UTF_8);
             communityRepo.addCommunity(community);
             logger.debug("Add community to database: communityName={}, chainID={}",
                     community.communityName, community.chainID);

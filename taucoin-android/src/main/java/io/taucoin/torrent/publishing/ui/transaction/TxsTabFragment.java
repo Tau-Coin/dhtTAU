@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.ui.setting.FavoriteViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.MainApplication;
@@ -52,6 +53,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     private FragmentTxsTabBinding binding;
     private TxViewModel txViewModel;
     private UserViewModel userViewModel;
+    private FavoriteViewModel favoriteViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private TxListAdapter adapter;
     private CommonDialog operationsDialog;
@@ -74,6 +76,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         ViewModelProvider provider = new ViewModelProvider(activity);
         txViewModel = provider.get(TxViewModel.class);
         userViewModel = provider.get(UserViewModel.class);
+        favoriteViewModel = provider.get(FavoriteViewModel.class);
         initParameter();
         initView();
         initFabSpeedDial();
@@ -174,7 +177,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     }
     @Override
     public void onBanClicked(UserAndTx tx){
-        String showName = UsersUtil.getShowName(tx);
+        String showName = UsersUtil.getShowName(tx.sender, tx.senderPk);
         userViewModel.showBanDialog(activity, tx.senderPk, showName);
     }
 
@@ -246,7 +249,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 break;
             case R.id.favourite:
                 String txID = ViewUtils.getStringTag(v);
-//                userViewModel.setFavourite(txID, true);
+                favoriteViewModel.addTxFavorite(txID);
                 ToastUtils.showShortToast(R.string.favourite_successfully);
                 break;
             case R.id.msg_hash:

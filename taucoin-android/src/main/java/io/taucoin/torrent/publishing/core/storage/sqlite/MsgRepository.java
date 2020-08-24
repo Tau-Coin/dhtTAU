@@ -24,6 +24,12 @@ public interface MsgRepository {
     List<Message> getMessagesByChainID(String chainID);
 
     /**
+     * 根据msgID查询社区消息
+     * @param msgID 社区消息id
+     */
+    Message getMessageByID(String msgID);
+
+    /**
      * 根据chainID获取社区的消息
      * @param chainID 社区链id
      */

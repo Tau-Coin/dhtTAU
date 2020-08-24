@@ -117,6 +117,13 @@ public interface TxDao {
     Single<Tx> getTxByTxIDSingle(String txID);
 
     /**
+     * 根据txID查询交易
+     * @param txID 交易ID
+     */
+    @Query(QUERY_GET_TX_BY_TX_ID)
+    Tx getTxByTxID(String txID);
+
+    /**
      * 观察中位数交易费
      * @param chainID 交易所属的社区chainID
      */

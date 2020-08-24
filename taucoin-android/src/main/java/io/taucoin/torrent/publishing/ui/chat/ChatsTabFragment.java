@@ -23,7 +23,6 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
-import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
@@ -39,6 +38,7 @@ import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.setting.FavoriteViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
@@ -52,6 +52,7 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
     private FragmentChatsTabBinding binding;
     private MsgViewModel msgViewModel;
     private UserViewModel userViewModel;
+    private FavoriteViewModel favoriteViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MsgListAdapter adapter;
     private CommonDialog operationsDialog;
@@ -74,6 +75,7 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
         ViewModelProvider provider = new ViewModelProvider(activity);
         msgViewModel = provider.get(MsgViewModel.class);
         userViewModel = provider.get(UserViewModel.class);
+        favoriteViewModel = provider.get(FavoriteViewModel.class);
         binding.setListener(this);
         initParameter();
         initView();
@@ -223,7 +225,7 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
 
     @Override
     public void onBanClicked(MsgAndReply msg){
-        String showName = UsersUtil.getShowName(msg);
+        String showName = UsersUtil.getShowName(msg.sender, msg.senderPk);
         userViewModel.showBanDialog(activity, msg.senderPk, showName);
     }
 
@@ -262,6 +264,9 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
                 ToastUtils.showShortToast(R.string.blacklist_successfully);
                 break;
             case R.id.favourite:
+                String msgID = ViewUtils.getStringTag(v);
+                favoriteViewModel.addMsgFavorite(msgID);
+                ToastUtils.showShortToast(R.string.favourite_successfully);
                 break;
             case R.id.tv_send:
                 sendMessage();

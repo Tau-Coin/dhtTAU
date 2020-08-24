@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
-import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -80,11 +79,11 @@ public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter
                 return;
             }
             binding.leftView.roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
-            String showName = UsersUtil.getShowName(msg);
+            String showName = UsersUtil.getShowName(msg.sender, msg.senderPk);
             binding.leftView.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
             binding.tvName.setText(showName);
 
-            String userName = UsersUtil.getUserName(msg);
+            String userName = UsersUtil.getUserName(msg.sender, msg.senderPk);
             binding.leftView.tvEditName.setText(userName);
 
             String time = DateUtil.getWeekTime(msg.timestamp);
@@ -97,8 +96,7 @@ public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter
                 binding.llReply.setVisibility(View.VISIBLE);
                 String replyName = UsersUtil.getShowName(msg.replyMsg.senderPk, msg.replyName);
                 binding.tvReplyName.setText(replyName);
-                SpannableStringBuilder replyMsg = Utils.getSpannableStringUrl(msg.replyMsg.context);
-                binding.tvReplyMsg.setText(replyMsg);
+                binding.tvReplyMsg.setText(msg.replyMsg.context);
             }else{
                 binding.llReply.setVisibility(View.GONE);
             }

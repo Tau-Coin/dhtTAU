@@ -124,6 +124,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.ll_favorites:
+                ActivityUtil.startActivity(this, FavoritesActivity.class);
                 break;
             case R.id.item_dashboard:
                 ActivityUtil.startActivity(this, DashboardActivity.class);

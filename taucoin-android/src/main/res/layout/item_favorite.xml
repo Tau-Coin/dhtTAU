@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/color_white"
+        android:layout_marginBottom="5dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RelativeLayout
+                android:layout_width="55dp"
+                android:layout_gravity="bottom"
+                android:layout_height="wrap_content">
+
+                <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+                    android:id="@+id/round_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:gravity="center_horizontal|center"
+                    android:textColor="@color/color_white"
+                    android:layout_centerHorizontal="true"
+                    android:textAppearance="@style/TextAppearanceBody1"
+                    app:borderColor="@color/primary_light"
+                    app:borderWidth="0dp"
+                    app:radius="10dp"
+                    app:isRadiusAutoHalf="true"
+                    app:bgColor="@color/primary_light"
+                    app:textColorForPressed="@color/color_white" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:visibility="gone"
+                    android:id="@+id/ll_reply"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="5dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <View
+                        android:layout_width="2dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/primary"/>
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp">
+
+                        <TextView
+                            android:id="@+id/tv_reply_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:ellipsize="middle"
+                            android:includeFontPadding="false"
+                            android:textColor="@color/primary"
+                            android:textAppearance="@style/TextAppearanceBody2" />
+
+                        <TextView
+                            android:id="@+id/tv_reply_msg"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:singleLine="true"
+                            android:ellipsize="end"
+                            android:includeFontPadding="false"
+                            android:textAppearance="@style/TextAppearanceBody2" />
+
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_msg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearanceBody2" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:paddingTop="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tv_user_name"
+                android:layout_width="55dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:textColor="@color/gray_dark"
+                android:paddingStart="3dp"
+                android:paddingEnd="3dp"
+                android:paddingTop="5dp"
+                android:includeFontPadding="false"
+                android:textAppearance="@style/TextAppearanceBody4" />
+
+            <TextView
+                android:id="@+id/tv_community_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearanceBody4" />
+
+            <TextView
+                android:id="@+id/tv_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:layout_marginStart="15dp"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearanceBody4" />
+
+        </LinearLayout>
+    </LinearLayout>
+</layout>

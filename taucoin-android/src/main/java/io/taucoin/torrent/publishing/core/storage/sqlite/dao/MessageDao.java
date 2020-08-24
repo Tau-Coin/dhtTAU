@@ -18,6 +18,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 @Dao
 public interface MessageDao {
     String QUERY_GET_MESSAGES_BY_CHAIN_ID = "SELECT * FROM Messages WHERE chainID = :chainID";
+    String QUERY_GET_MESSAGE_BY_ID = "SELECT * FROM Messages WHERE msgID = :msgID";
 
     String QUERY_REPLY_USERS = " (SELECT u.localName, m.senderPk, m.msgID FROM Users u" +
             " LEFT JOIN Messages m ON u.publicKey = m.senderPk) ";
@@ -37,6 +38,13 @@ public interface MessageDao {
      */
     @Query(QUERY_GET_MESSAGES_BY_CHAIN_ID)
     List<Message> getMessagesByChainID(String chainID);
+
+    /**
+     * 根据msgID查询社区消息
+     * @param msgID 社区消息id
+     */
+    @Query(QUERY_GET_MESSAGE_BY_ID)
+    Message getMessageByID(String msgID);
 
     /**
      * 根据chainID获取社区的消息的被观察者

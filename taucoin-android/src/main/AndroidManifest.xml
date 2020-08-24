@@ -159,6 +159,9 @@
             android:name=".ui.user.UserDetailActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
+        <activity
+            android:name=".ui.setting.FavoritesActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
     </application>
 

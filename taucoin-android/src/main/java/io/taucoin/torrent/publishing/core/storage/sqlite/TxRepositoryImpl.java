@@ -100,14 +100,25 @@ public class TxRepositoryImpl implements TxRepository{
      * 根据txID查询交易
      * @param txID 交易ID
      */
+    @Override
     public Single<Tx> getTxByTxIDSingle(String txID){
         return db.txDao().getTxByTxIDSingle(txID);
+    }
+
+    /**
+     * 根据txID查询交易
+     * @param txID 交易ID
+     */
+    @Override
+    public Tx getTxByTxID(String txID){
+        return db.txDao().getTxByTxID(txID);
     }
 
     /**
      * 观察中位数交易费
      * @param chainID 交易所属的社区chainID
      */
+    @Override
     public Single<List<Long>> observeMedianFee(String chainID){
         return db.txDao().observeMedianFee(chainID);
     }
@@ -116,6 +127,7 @@ public class TxRepositoryImpl implements TxRepository{
      * 获取中位数交易费
      * @param chainID 交易所属的社区chainID
      */
+    @Override
     public List<Long> getMedianFee(String chainID){
         return db.txDao().getMedianFee(chainID);
     }

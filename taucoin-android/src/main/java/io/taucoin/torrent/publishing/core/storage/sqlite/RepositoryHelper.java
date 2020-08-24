@@ -15,6 +15,7 @@ public class RepositoryHelper {
     private static TxRepositoryImpl txRepo;
     private static MsgRepositoryImpl msgRepo;
     private static SettingsRepository settingsRepo;
+    private static FavoriteRepository favoriteRepo;
 
     /**
      * 获取CommunityRepository单例
@@ -90,5 +91,18 @@ public class RepositoryHelper {
             settingsRepo = new SettingsRepositoryImpl(appContext);
 
         return settingsRepo;
+    }
+
+    /**
+     * 获取FavoriteRepository单例
+     * @param appContext 上下文
+     * @return FavoriteRepository
+     */
+    public synchronized static FavoriteRepository getFavoriteRepository(@NonNull Context appContext) {
+        if (favoriteRepo == null)
+            favoriteRepo = new FavoriteRepositoryImpl(appContext,
+                    AppDatabase.getInstance(appContext));
+
+        return favoriteRepo;
     }
 }
