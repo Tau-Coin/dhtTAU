@@ -595,11 +595,18 @@ public class Chain {
 
             setBestBlockContainer(targetBlockContainer);
 
+            publishBestBlock();
+
+            // update tx pool
             Set<ByteArrayWrapper> accounts = extractAccountFromBlockContainer(undoBlockContainers);
             accounts.addAll(extractAccountFromBlockContainer(newBlockContainers));
             this.txPool.recheckAccoutTx(accounts);
 
-            publishBestBlock();
+            for (BlockContainer undoBlockContainer : undoBlockContainers) {
+                if (null != undoBlockContainer.getTx()) {
+                    this.txPool.addTx(undoBlockContainer.getTx());
+                }
+            }
         } catch (Exception e) {
             logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
