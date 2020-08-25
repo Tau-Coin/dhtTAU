@@ -105,7 +105,7 @@ public class Chain {
 
     /**
      * make block salt
-     * @return
+     * @return block salt
      */
     private byte[] makeBlockSalt() {
         byte[] salt = new byte[this.chainID.length + ChainParam.BLOCK_CHANNEL.length];
@@ -117,7 +117,7 @@ public class Chain {
 
     /**
      * make tx salt
-     * @return
+     * @return tx salt
      */
     private byte[] makeTxSalt() {
         byte[] salt = new byte[this.chainID.length + ChainParam.TX_CHANNEL.length];
@@ -129,6 +129,8 @@ public class Chain {
 
     /**
      * init chain
+     *
+     * @return true if succeed, false otherwise
      */
     private boolean init() {
         // init salt
@@ -617,7 +619,7 @@ public class Chain {
 
     /**
      * vote for best chain
-     * @return
+     * @return voting result
      */
     private Vote vote() {
         logger.debug("---ctx---------------voting-----------");
@@ -647,7 +649,9 @@ public class Chain {
 
         Vote bestVote = votingPool.getBestVote();
 
-        logger.error("Chain ID[{}]: Best vote:{}", new String(this.chainID), bestVote.toString());
+        if (null != bestVote) {
+            logger.debug("Chain ID[{}]: Best vote:{}", new String(this.chainID), bestVote.toString());
+        }
 
         // clear voting pool for next time when voting end
         votingPool.clearVotingPool();
@@ -967,7 +971,7 @@ public class Chain {
     /**
      * get a block from dht
      * @param hash block hash
-     * @return
+     * @return block get from dht, null otherwise
      */
     private Block getBlockFromDHTByHash(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
@@ -993,7 +997,7 @@ public class Chain {
     /**
      * get a block container from dht
      * @param blockHash block hash
-     * @return
+     * @return block container get from dht, null otherwise
      */
     private BlockContainer getBlockContainerFromDHTByHash(byte[] blockHash) {
         Block block = getBlockFromDHTByHash(blockHash);
@@ -1049,8 +1053,8 @@ public class Chain {
 
     /**
      * get a tx by hash from dht
-     * @param hash
-     * @return
+     * @param hash tx hash
+     * @return tx get from dht, null otherwise
      */
     private Transaction getTxFromDHTByHash(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
@@ -1086,7 +1090,7 @@ public class Chain {
 
     /**
      * put a tx in mutable item
-     * @param tx
+     * @param tx tx to publish
      */
     private void publishTransaction(Transaction tx) {
         if (null != tx) {
@@ -1116,18 +1120,20 @@ public class Chain {
 
     /**
      * get block container randomly from block store
-     * @return
+     * @return block container, null otherwise
      */
     private BlockContainer getBlockContainerRandomlyFromDB() {
-        int currentNumber = (int) this.bestBlockContainer.getBlock().getBlockNum();
-        Random random = new Random(System.currentTimeMillis());
-        try {
-            BlockContainer blockContainer = this.blockStore.
-                    getMainChainBlockContainerByNumber(this.chainID, random.nextInt(currentNumber + 1));
-            return blockContainer;
-        } catch (Exception e) {
-            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+        if (null != this.bestBlockContainer) {
+            int currentNumber = (int) this.bestBlockContainer.getBlock().getBlockNum();
+            Random random = new Random(System.currentTimeMillis());
+            try {
+                return this.blockStore.getMainChainBlockContainerByNumber(this.chainID,
+                        random.nextInt(currentNumber + 1));
+            } catch (Exception e) {
+                logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+            }
         }
+
         return null;
     }
 
@@ -1135,7 +1141,7 @@ public class Chain {
      * connect a block
      * @param blockContainer block container
      * @param stateDB state db
-     * @return
+     * @return true if connect successfully, false otherwise
      */
     private boolean tryToConnect(final BlockContainer blockContainer, StateDB stateDB) {
         // if main chain
@@ -1150,11 +1156,7 @@ public class Chain {
             }
 
             ImportResult result = this.stateProcessor.forwardProcess(blockContainer, stateDB);
-            if (!result.isSuccessful()) {
-                return false;
-            }
-
-            return true;
+            return result.isSuccessful();
         } else {
             logger.info("Chain ID[{}]: previous hash mis-match", new String(this.chainID));
             return false;
@@ -1183,7 +1185,7 @@ public class Chain {
 
     /**
      * get best block of this chain
-     * @return
+     * @return best block container
      */
     public BlockContainer getBestBlockContainer() {
         return this.bestBlockContainer;
@@ -1199,7 +1201,7 @@ public class Chain {
 
     /**
      * get synced block of this chain
-     * @return
+     * @return sync block
      */
     public Block getSyncBlock() {
         return this.syncBlock;
@@ -1207,9 +1209,9 @@ public class Chain {
 
     /**
      * check if a block valid
-     * @param block
-     * @param stateDB
-     * @return
+     * @param block block to check
+     * @param stateDB state db
+     * @return true if valid, false otherwise
      */
     private boolean isValidBlock(Block block, StateDB stateDB) {
 //        // 是否本链
@@ -1262,24 +1264,20 @@ public class Chain {
     }
 
     /**
-     * check if a block valid
+     * check if a block container valid
      * @param blockContainer block container
      * @param stateDB state db
-     * @return
+     * @return true if valid, false otherwise
      */
     private boolean isValidBlockContainer(BlockContainer blockContainer, StateDB stateDB) {
-        if (!isValidBlock(blockContainer.getBlock(), stateDB)) {
-            return false;
-        }
-
-        return true;
+        return isValidBlock(blockContainer.getBlock(), stateDB);
     }
 
     /**
      * check pot consensus
-     * @param block
-     * @param stateDB
-     * @return
+     * @param block block to check
+     * @param stateDB state db
+     * @return true if ok, false otherwise
      */
     private boolean verifyPOT(Block block, StateDB stateDB) {
         try {
@@ -1350,7 +1348,7 @@ public class Chain {
 
     /**
      * check if be able to mine now
-     * @return
+     * @return true if can mine, false otherwise
      */
     private boolean minable() {
         try {
@@ -1406,7 +1404,7 @@ public class Chain {
 
     /**
      * mine a block
-     * @return
+     * @return block container, or null
      */
     private BlockContainer mineBlock() {
 
@@ -1600,7 +1598,7 @@ public class Chain {
 
     /**
      * get transaction pool
-     * @return
+     * @return tx pool
      */
     public TransactionPool getTransactionPool() {
         return this.txPool;
@@ -1608,7 +1606,7 @@ public class Chain {
 
     /**
      * get state database
-     * @return
+     * @return state db
      */
     public StateDB getStateDB() {
         return this.stateDB;
@@ -1616,7 +1614,7 @@ public class Chain {
 
     /**
      * get block store
-     * @return
+     * @return block store
      */
     public BlockStore getBlockStore() {
         return this.blockStore;
