@@ -28,18 +28,14 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
-import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentMemberBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.constant.Page;
-import io.taucoin.torrent.publishing.ui.customviews.ShareDialog;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
-import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
  * 交易Tab页
@@ -50,10 +46,8 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
     private BaseActivity activity;
     private FragmentMemberBinding binding;
     private CommunityViewModel communityViewModel;
-    private UserViewModel userViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MemberListAdapter adapter;
-    private ShareDialog shareDialog;
 
     private String chainID;
     private boolean onChain;
@@ -73,7 +67,6 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
         assert activity != null;
         ViewModelProvider provider = new ViewModelProvider(activity);
         communityViewModel = provider.get(CommunityViewModel.class);
-        userViewModel = provider.get(UserViewModel.class);
         initParameter();
         initView();
     }
@@ -137,14 +130,6 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (shareDialog != null) {
-            shareDialog.closeDialog();
-        }
-    }
-
-    @Override
     public void onItemClicked(MemberAndUser member) {
         Intent intent = new Intent();
         intent.putExtra(IntentExtra.PUBLIC_KEY, member.publicKey);
@@ -171,31 +156,13 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
      * 显示联系平台的对话框
      */
     private void showShareDialog(MemberAndUser member, boolean isShareTau) {
-        ShareDialog.Builder builder = new ShareDialog.Builder(activity);
-        builder.setOnItemClickListener((dialog, imgRid, titleRid) -> {
-            dialog.dismiss();
-            // 获取10个社区成员的公钥
-            disposables.add(communityViewModel.getCommunityMembersLimit(chainID, Constants.CHAIN_LINK_BS_LIMIT)
-                    .subscribeOn(Schedulers.newThread())
-                    .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
-                        String communityInviteLink = ChainLinkUtil.encode(chainID, list);
-                        if (imgRid == R.mipmap.icon_share_copy_link) {
-                            CopyManager.copyText(communityInviteLink);
-                            ToastUtils.showShortToast(R.string.copy_share_link);
-                        } else if (imgRid == R.mipmap.ic_launcher_round) {
-                            userViewModel.shareInvitedLinkToFriend(communityInviteLink, member.publicKey);
-                            ToastUtils.showShortToast(R.string.share_link_successfully);
-                        } else if (imgRid == R.mipmap.icon_share_sms) {
-                            ActivityUtil.doSendSMSTo(activity, communityInviteLink);
-                        }
-                    }));
-        });
-        builder.addItems(R.mipmap.icon_share_copy_link, R.string.contacts_copy_link);
-        if(isShareTau){
-            builder.addItems(R.mipmap.ic_launcher_round, R.string.contacts_community);
-        }
-        builder.addItems(R.mipmap.icon_share_sms, R.string.contacts_sms);
-        shareDialog = builder.create();
-        shareDialog.show();
+        // 获取10个社区成员的公钥
+        disposables.add(communityViewModel.getCommunityMembersLimit(chainID, Constants.CHAIN_LINK_BS_LIMIT)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
+                    String communityInviteLink = ChainLinkUtil.encode(chainID, list);
+                    ActivityUtil.shareText(activity, getString(R.string.contacts_share_link_via),
+                            communityInviteLink, member.publicKey, isShareTau);
+                }));
     }
 }

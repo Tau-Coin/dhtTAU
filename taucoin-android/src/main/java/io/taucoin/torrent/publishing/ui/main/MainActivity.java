@@ -32,6 +32,7 @@ import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
@@ -39,15 +40,18 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityMainDrawerBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.databinding.ExternalLinkDialogBinding;
 import io.taucoin.torrent.publishing.databinding.UserDialogBinding;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.ExternalLinkActivity;
+import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
+import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.customviews.BadgeActionProvider;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
-import io.taucoin.torrent.publishing.ui.customviews.ShareDialog;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.user.ScanQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
@@ -65,17 +69,19 @@ public class MainActivity extends BaseActivity {
     private UserViewModel userViewModel;
     private MainViewModel mainViewModel;
     private TauInfoProvider infoProvider;
+    private CommunityViewModel communityViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Subject<Integer> mBackClick = PublishSubject.create();
     private CommonDialog seedDialog;
+    private CommonDialog linkDialog;
     private BadgeActionProvider actionProvider;
     private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        String action =  getIntent().getAction();
+        Intent intent = getIntent();
+        String action =  intent.getAction();
         if (StringUtil.isNotEmpty(action) && StringUtil.isEquals(action,
                 NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP)) {
             logger.info("MainActivity finished");
@@ -86,11 +92,21 @@ public class MainActivity extends BaseActivity {
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
         mainViewModel = provider.get(MainViewModel.class);
+        communityViewModel = provider.get(CommunityViewModel.class);
         infoProvider = TauInfoProvider.getInstance(getApplicationContext());
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main_drawer);
         initLayout();
         checkCurrentUser();
         initExitApp();
+
+        if (StringUtil.isNotEmpty(action) && StringUtil.isEquals(action,
+                ExternalLinkActivity.ACTION_CHAIN_LINK_CLICK)) {
+            logger.info("MainActivity::chain link clicked");
+            if (intent.hasExtra(IntentExtra.CHAIN_LINK)) {
+                String chainLink = intent.getStringExtra(IntentExtra.CHAIN_LINK);
+                showOpenExternalLinkDialog(chainLink);
+            }
+        }
     }
 
     /**
@@ -204,12 +220,29 @@ public class MainActivity extends BaseActivity {
         binding.drawer.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
     }
 
+
+
     @Override
     public void onStart() {
         super.onStart();
         subscribeCurrentUser();
         subscribeDHTStatus();
         subscribeNeedStartDaemon();
+    }
+
+    private void handleClipboardContent() {
+        String  content = CopyManager.getClipboardContent(this);
+        if(StringUtil.isNotEmpty(content)){
+            showOpenExternalLinkDialog(content);
+            CopyManager.clearClipboardContent();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // android10中规定, 目前处于焦点的应用, 才能访问到剪贴板数据
+        this.getWindow().getDecorView().post(this::handleClipboardContent);
     }
 
     @Override
@@ -223,6 +256,9 @@ public class MainActivity extends BaseActivity {
         super.onDestroy();
         if(seedDialog != null){
             seedDialog.closeDialog();
+        }
+        if(linkDialog != null){
+            linkDialog.closeDialog();
         }
     }
 
@@ -264,7 +300,7 @@ public class MainActivity extends BaseActivity {
                 ActivityUtil.startActivity(this, SettingActivity.class);
                 break;
             case R.id.item_share:
-                ActivityUtil.shareText(this, Constants.APP_SHARE_URL);
+                ActivityUtil.shareText(this, getString(R.string.app_share), Constants.APP_SHARE_URL);
                 break;
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START);
@@ -299,6 +335,54 @@ public class MainActivity extends BaseActivity {
                 .setCanceledOnTouchOutside(false)
                 .create();
         seedDialog.show();
+    }
+
+    /**
+     * 显示打开外部chain link的对话框（来自剪切板或外部链接）
+     */
+    private void showOpenExternalLinkDialog(String chainLink) {
+        ChainLinkUtil.ChainLink decode = ChainLinkUtil.decode(chainLink);
+        if(decode.isValid()){
+            String chainID = decode.getDn();
+            ExternalLinkDialogBinding dialogBinding = DataBindingUtil.inflate(LayoutInflater.from(this),
+                    R.layout.external_link_dialog, null, false);
+            dialogBinding.tvName.setText(UsersUtil.getCommunityName(chainID));
+            dialogBinding.ivClose.setOnClickListener(v -> {
+                if(linkDialog != null){
+                    linkDialog.closeDialog();
+                }
+            });
+            dialogBinding.tvYes.setOnClickListener(v -> {
+                if(linkDialog != null){
+                    linkDialog.closeDialog();
+                }
+                openExternalLink(chainID);
+            });
+            linkDialog = new CommonDialog.Builder(this)
+                    .setContentView(dialogBinding.getRoot())
+                    .setCanceledOnTouchOutside(false)
+                    .create();
+            linkDialog.show();
+        }
+    }
+
+    /**
+     * 打开外部chain link
+     * @param chainID
+     */
+    private void openExternalLink(String chainID) {
+        disposables.add(communityViewModel.getCommunityByChainIDSingle(chainID)
+        .subscribeOn(Schedulers.newThread())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(community -> {
+            if (null == community) {
+                ToastUtils.showLongToast("developing...");
+            } else {
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+                ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+            }
+        }));
     }
 
     @Override

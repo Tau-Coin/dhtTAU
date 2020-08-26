@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="50dp"
+        android:paddingEnd="0dp"
+        android:paddingBottom="0dp"
+        android:background="@color/color_white">
+
+        <ImageView
+            android:id="@+id/iv_close"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            android:contentDescription="@null"
+            android:src="@mipmap/icon_close" />
+
+        <TextView
+            android:layout_below="@+id/iv_close"
+            android:id="@+id/tv_tips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/gray_dark"
+            android:text="@string/main_open_link"
+            android:textAppearance="@style/TextAppearanceBody1"/>
+
+        <TextView
+            android:layout_below="@+id/tv_tips"
+            android:id="@+id/tv_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="15dp"
+            android:textAppearance="@style/TextAppearanceHeadline5"/>
+
+        <TextView
+            android:layout_below="@+id/tv_name"
+            android:id="@+id/tv_yes"
+            android:layout_width="240dp"
+            android:layout_height="44dp"
+            android:layout_marginTop="20dp"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_horizontal|center"
+            android:background="@drawable/primary_rect_round_bg"
+            android:text="@string/common_yes"
+            android:textColor="@color/color_white"
+            android:textAppearance="@style/TextAppearanceBody1"/>
+
+    </RelativeLayout>
+</layout>

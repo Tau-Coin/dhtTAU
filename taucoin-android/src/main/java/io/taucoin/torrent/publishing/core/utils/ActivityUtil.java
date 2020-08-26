@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -46,6 +47,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.receiver.BootReceiver;
+import io.taucoin.torrent.publishing.ui.SendTextToTau;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 
 /**
@@ -283,19 +286,50 @@ public class ActivityUtil {
         } else {
             intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(path)));
         }
-        activity.startActivity(Intent.createChooser(intent, shareTitle));
+        try {
+            activity.startActivity(Intent.createChooser(intent, shareTitle));
+        } catch (android.content.ActivityNotFoundException ex) {
+            ToastUtils.showShortToast(R.string.app_share_error);
+        }
+
     }
 
     /**
      * 分享文本
      * @param activity
+     * @param title
      * @param text
      */
-    public static void shareText(AppCompatActivity activity, String text) {
+    public static void shareText(AppCompatActivity activity, String title, String text) {
+        shareText(activity, title, text, null, false);
+    }
+
+    public static void shareText(AppCompatActivity activity, String title, String text, boolean isShowTau) {
+        shareText(activity, title, text, null, isShowTau);
+    }
+
+    /**
+     * 分享文本
+     * @param activity
+     * @param title
+     * @param text
+     * @param subject
+     * @param isShowTau
+     */
+    public static void shareText(AppCompatActivity activity, String title,
+                                 String text, String subject, boolean isShowTau) {
+        Utils.enableComponent(activity, SendTextToTau.class, isShowTau);
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, text);
-        activity.startActivity(Intent.createChooser(intent, ""));
+        if(StringUtil.isNotEmpty(subject)){
+            intent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
+        }
+        try {
+            activity.startActivity(Intent.createChooser(intent, title));
+        } catch (android.content.ActivityNotFoundException ex) {
+            ToastUtils.showShortToast(R.string.app_share_error);
+        }
     }
 }

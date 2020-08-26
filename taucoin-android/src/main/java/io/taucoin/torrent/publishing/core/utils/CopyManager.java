@@ -29,12 +29,39 @@ public class CopyManager {
     /**
      * 复制文本到剪切版
      */
-    public static void copyText(String copyText) {
+    public static void copyText(CharSequence copyText) {
         if(StringUtil.isEmpty(copyText)){
-            return;
+            copyText = "";
         }
         Context context = MainApplication.getInstance();
         ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         cm.setPrimaryClip(ClipData.newPlainText(null, copyText));
+    }
+
+    /**
+     * 获取剪切板上的内容
+     */
+    public static String getClipboardContent(Context context) {
+        ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm != null) {
+            ClipData data = cm.getPrimaryClip();
+            if (data != null && data.getItemCount() > 0) {
+                ClipData.Item item = data.getItemAt(0);
+                if (item != null) {
+                    CharSequence sequence = item.coerceToText(context);
+                    if (sequence != null) {
+                        return sequence.toString();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 清除剪切板上的内容
+     */
+    public static void clearClipboardContent() {
+        copyText( "");
     }
 }

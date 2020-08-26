@@ -16,6 +16,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.paging.DataSource;
 import io.reactivex.BackpressureStrategy;
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.Single;
@@ -303,5 +304,10 @@ public class CommunityViewModel extends AndroidViewModel {
      */
     public Flowable<Statistics> getMembersStatistics(String chainID) {
         return memberRepo.getMembersStatistics(chainID);
+    }
+
+
+    public Single<Community> getCommunityByChainIDSingle(String chainID) {
+        return communityRepo.getCommunityByChainIDSingle(chainID);
     }
 }

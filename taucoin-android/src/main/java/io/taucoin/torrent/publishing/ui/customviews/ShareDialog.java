@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.ui.customviews;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +22,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.databinding.ItemShareDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ShareDialogBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;
@@ -50,6 +52,11 @@ public class ShareDialog extends Dialog{
 
         public Builder addItems(int imgRid, int titleRid) {
             this.items.add(new ShareItem(imgRid, titleRid));
+            return this;
+        }
+
+        public Builder addItems(Drawable img, CharSequence title) {
+            this.items.add(new ShareItem(img, title));
             return this;
         }
 
@@ -104,8 +111,12 @@ public class ShareDialog extends Dialog{
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             if(position >= 0 && position < items.size() && holder.binding != null){
                 ShareItem item = items.get(position);
-                holder.binding.tvShareTitle.setText(item.titleRid);
-                holder.binding.ivShareType.setImageResource(item.imgRid);
+                holder.binding.tvShareTitle.setText(item.getTitle(holder.itemView.getContext()));
+                if(null == item.img){
+                    holder.binding.ivShareType.setImageResource(item.imgRid);
+                }else{
+                    holder.binding.ivShareType.setImageDrawable(item.img);
+                }
                 holder.itemView.setOnClickListener(v -> {
                     if(listener != null){
                         listener.onItemClick(popUpDialog, item.imgRid, item.titleRid);
@@ -155,10 +166,29 @@ public class ShareDialog extends Dialog{
 
     static class ShareItem{
         int imgRid;
-        int titleRid;
+        Drawable img;
+        private int titleRid;
+        private CharSequence title;
         ShareItem(int imgRid, int titleRid){
             this.imgRid = imgRid;
             this.titleRid = titleRid;
+        }
+
+        public ShareItem(int imgRid, CharSequence title) {
+            this.imgRid = imgRid;
+            this.title = title;
+        }
+
+        public ShareItem(Drawable img, CharSequence title) {
+            this.img = img;
+            this.title = title;
+        }
+
+        public CharSequence getTitle(Context context) {
+            if(StringUtil.isEmpty(title)){
+                title = context.getString(titleRid);
+            }
+            return title;
         }
 
         @Override
@@ -166,7 +196,6 @@ public class ShareDialog extends Dialog{
             return o instanceof Tx && (o == this || imgRid == ((ShareItem)o).imgRid);
         }
     }
-
 
     public void closeDialog(){
         if(isShowing()){

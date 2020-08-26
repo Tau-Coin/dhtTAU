@@ -244,6 +244,21 @@ public class Utils {
                 .setComponentEnabledSetting(bootReceiver, flag, PackageManager.DONT_KILL_APP);
     }
 
+    /**
+     * 启动/禁止组件（四大组件）
+     * @param context 上下文
+     * @param cls 组件
+     * @param enable 是否启动
+     */
+    public static void enableComponent(@NonNull Context context,  @NonNull Class<?> cls, boolean enable){
+        int flag = !enable ?
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED :
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+        ComponentName componentName = new ComponentName(context, cls);
+        context.getPackageManager()
+                .setComponentEnabledSetting(componentName, flag, PackageManager.DONT_KILL_APP);
+    }
+
 
     /*
      * Without additional information (e.g -DEBUG)
