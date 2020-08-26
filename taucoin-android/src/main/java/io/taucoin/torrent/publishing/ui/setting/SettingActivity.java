@@ -133,6 +133,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 ActivityUtil.startActivity(this, PrivacySecurityActivity.class);
                 break;
             case R.id.item_journal:
+                ActivityUtil.startActivity(this, JournalActivity.class);
                 break;
             case R.id.item_help:
                 break;

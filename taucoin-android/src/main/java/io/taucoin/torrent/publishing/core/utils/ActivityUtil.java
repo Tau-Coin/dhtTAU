@@ -17,6 +17,7 @@ package io.taucoin.torrent.publishing.core.utils;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -26,6 +27,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.DocumentsContract;
 import android.view.Display;
 import android.view.Surface;
 import android.view.View;
@@ -35,9 +37,11 @@ import android.view.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import io.taucoin.torrent.publishing.MainApplication;
@@ -220,5 +224,78 @@ public class ActivityUtil {
         Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"));
         intent.putExtra("sms_body", message);
         activity.startActivity(intent);
+    }
+
+    /**
+     * 打开SDCard文件夹
+     * @param activity
+     * @param path
+     */
+    public static void openSdcardFolder(AppCompatActivity activity, String path){
+        File file = new File(path);
+        if (!file.exists()){
+            return;
+        }
+        Intent intent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Uri uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:" +
+                    "Android%2fdata%2fio.taucoin.torrent.publishing%2flogs");
+            intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("*/*");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri);
+        }else{
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                Uri uri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", file);
+                intent.setDataAndType(uri, "*/*");
+            } else {
+                intent.setDataAndType(Uri.fromFile(file), "*/*");
+            }
+        }
+        try {
+            activity.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            logger.error("openAssignFolder error:: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 分享文件
+     * @param activity
+     * @param path
+     */
+    public static void shareFile(AppCompatActivity activity, String path, String shareTitle) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        intent.setType("application/octet-stream");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Uri uri = FileProvider.getUriForFile(activity,
+                    activity.getPackageName() + ".provider", new File(path));
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
+        } else {
+            intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(path)));
+        }
+        activity.startActivity(Intent.createChooser(intent, shareTitle));
+    }
+
+    /**
+     * 分享文本
+     * @param activity
+     * @param text
+     */
+    public static void shareText(AppCompatActivity activity, String text) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_TEXT, text);
+        activity.startActivity(Intent.createChooser(intent, ""));
     }
 }

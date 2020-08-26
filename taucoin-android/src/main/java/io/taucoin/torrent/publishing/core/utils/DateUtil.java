@@ -46,6 +46,7 @@ public class DateUtil {
     public static final String pattern9 = "yyyy-MM-dd HH:mm:ss.SSS";
     public static final String pattern10 = "HH:mm:ss\nyyyy-MM-dd";
     public static final String pattern11 = "yyyy-MM-dd \'at\' HH:mm";
+    public static final String pattern12 = "yyyyMMdd";
 
     private static String[] weeks = {"Sun", "Mon","Tue","Wed","Thu","Fri","Sat"};
 

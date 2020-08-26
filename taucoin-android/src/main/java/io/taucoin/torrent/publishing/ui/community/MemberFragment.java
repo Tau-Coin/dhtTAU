@@ -2,7 +2,6 @@ package io.taucoin.torrent.publishing.ui.community;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,8 +30,8 @@ import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
-import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.FragmentMemberBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
@@ -179,7 +178,7 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
             disposables.add(communityViewModel.getCommunityMembersLimit(chainID, Constants.CHAIN_LINK_BS_LIMIT)
                     .subscribeOn(Schedulers.newThread())
                     .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
-                        String communityInviteLink = UsersUtil.getCommunityInviteLink(chainID, list);
+                        String communityInviteLink = ChainLinkUtil.encode(chainID, list);
                         if (imgRid == R.mipmap.icon_share_copy_link) {
                             CopyManager.copyText(communityInviteLink);
                             ToastUtils.showShortToast(R.string.copy_share_link);

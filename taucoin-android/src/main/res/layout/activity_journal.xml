@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        android:background="@color/color_bg"
+        android:orientation="vertical">
+
+        <include
+            android:id="@+id/toolbar_include"
+            layout="@layout/toolbar" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/color_white"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:text="@string/setting_journal_path"
+                android:textAppearance="@style/TextAppearanceBody1"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_journal_directory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:layout_marginTop="10dp"
+                android:textColor="@color/primary_light"
+                android:textAppearance="@style/TextAppearanceBody2"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_open_directory"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginStart="50dp"
+            android:layout_marginEnd="50dp"
+            android:layout_marginTop="40dp"
+            android:onClick="@{listener::onClick}"
+            android:gravity="center_horizontal|center"
+            android:textColor="@color/color_white"
+            android:text="@string/setting_share_journal"
+            android:textAppearance="@style/TextAppearanceBody1"
+            android:background="@drawable/primary_rect_round_bg"/>
+    </LinearLayout>
+</layout>
