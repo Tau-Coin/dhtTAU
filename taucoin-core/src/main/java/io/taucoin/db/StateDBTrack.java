@@ -39,10 +39,9 @@ public class StateDBTrack implements StateDB {
      * Open database.
      *
      * @param path database path which can be accessed
-     * @throws Exception
      */
     @Override
-    public void open(String path) throws Exception {
+    public void open(String path) {
         throw new UnsupportedOperationException();
     }
 
@@ -64,17 +63,17 @@ public class StateDBTrack implements StateDB {
     public StateDB startTracking(byte[] chainID) {
         logger.debug("start tracking");
 
-        StateDB stateDB = new StateDBTrack(this, chainID);
-
-        return stateDB;
+        return new StateDBTrack(this, chainID);
     }
 
     /**
      * Store all the temporary changes made
      * to the repository in the actual database
+     *
+     * @throws DBException data base exception
      */
     @Override
-    public void commit() throws Exception {
+    public void commit() throws DBException {
         // update changed accounts
         Map<byte[], byte[]> rows = new HashMap<>();
         if (null != cacheAccounts) {
@@ -116,69 +115,68 @@ public class StateDBTrack implements StateDB {
     /**
      * follow a chain
      *
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
+     * @throws DBException database exception
      */
     @Override
-    public void followChain(byte[] chainID) throws Exception {
+    public void followChain(byte[] chainID) throws DBException {
         this.stateDB.followChain(chainID);
     }
 
     /**
-     * if follow a chain
+     * if a chain has been followed
      *
      * @param chainID chain ID
-     * @return true:followed, false: not followed
-     * @throws Exception
+     * @return true if followed, false otherwise
+     * @throws DBException database exception
      */
     @Override
-    public boolean isChainFollowed(byte[] chainID) throws Exception {
+    public boolean isChainFollowed(byte[] chainID) throws DBException {
         return this.stateDB.isChainFollowed(chainID);
     }
 
     /**
      * get all followed chains
      *
-     * @return
-     * @throws Exception
+     * @return chain ID set
+     * @throws DBException database exception
      */
     @Override
-    public Set<byte[]> getAllFollowedChains() throws Exception {
+    public Set<byte[]> getAllFollowedChains() throws DBException {
         return this.stateDB.getAllFollowedChains();
     }
 
     /**
      * unfollow a chain
      *
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
+     * @throws DBException database exception
      */
     @Override
-    public void unfollowChain(byte[] chainID) throws Exception {
+    public void unfollowChain(byte[] chainID) throws DBException {
         this.stateDB.unfollowChain(chainID);
     }
 
     /**
      * set best block hash
      *
-     * @param chainID
-     * @param hash
-     * @throws Exception
+     * @param chainID chain ID
+     * @param hash best block hash
      */
     @Override
-    public void setBestBlockHash(byte[] chainID, byte[] hash) throws Exception {
+    public void setBestBlockHash(byte[] chainID, byte[] hash) {
         this.bestBlockHash = hash;
     }
 
     /**
      * get best block hash
      *
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return best block hash, null otherwise
+     * @throws DBException database exception
      */
     @Override
-    public byte[] getBestBlockHash(byte[] chainID) throws Exception {
+    public byte[] getBestBlockHash(byte[] chainID) throws DBException {
         if (null != this.bestBlockHash) {
             return this.bestBlockHash;
         } else {
@@ -187,36 +185,25 @@ public class StateDBTrack implements StateDB {
     }
 
     /**
-     * delete best block hash
-     *
-     * @param chainID
-     * @throws Exception
-     */
-//    @Override
-//    public void deleteBestBlockHash(byte[] chainID) throws Exception {
-//    }
-
-    /**
      * set current chain synced block hash
      *
-     * @param chainID
-     * @param hash
-     * @throws Exception
+     * @param chainID chain ID
+     * @param hash block hash
      */
     @Override
-    public void setSyncBlockHash(byte[] chainID, byte[] hash) throws Exception {
+    public void setSyncBlockHash(byte[] chainID, byte[] hash) {
         this.syncBlockHash = hash;
     }
 
     /**
      * get current chain synced block hash
      *
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return block hash
+     * @throws DBException database exception
      */
     @Override
-    public byte[] getSyncBlockHash(byte[] chainID) throws Exception {
+    public byte[] getSyncBlockHash(byte[] chainID) throws DBException {
         if (null != this.syncBlockHash) {
             return this.syncBlockHash;
         } else {
@@ -225,22 +212,10 @@ public class StateDBTrack implements StateDB {
     }
 
     /**
-     * delete current chain synced block hash
-     *
-     * @param chainID
-     * @throws Exception
-     */
-//    @Override
-//    public void deleteSyncBlockHash(byte[] chainID) throws Exception {
-//
-//    }
-
-    /**
      * set mutable range
      *
-     * @param chainID
-     * @param number
-     * @throws Exception
+     * @param chainID chain ID
+     * @param number mutable block number
      */
     @Override
     public void setMutableRange(byte[] chainID, int number) {
@@ -250,9 +225,8 @@ public class StateDBTrack implements StateDB {
     /**
      * get mutable range
      *
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return mutable block number
      */
     @Override
     public int getMutableRange(byte[] chainID) {
@@ -262,8 +236,7 @@ public class StateDBTrack implements StateDB {
     /**
      * delete mutable range
      *
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
      */
     @Override
     public void deleteMutableRange(byte[] chainID) {
@@ -273,60 +246,60 @@ public class StateDBTrack implements StateDB {
     /**
      * add a new peer
      *
-     * @param chainID
-     * @param pubkey
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubkey public key
+     * @throws DBException database exception
      */
     @Override
-    public void addPeer(byte[] chainID, byte[] pubkey) throws Exception {
+    public void addPeer(byte[] chainID, byte[] pubkey) throws DBException {
         this.stateDB.addPeer(chainID, pubkey);
     }
 
     /**
      * get all peers of a chain
      *
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return peer set
+     * @throws DBException database exception
      */
     @Override
-    public Set<byte[]> getPeers(byte[] chainID) throws Exception {
+    public Set<byte[]> getPeers(byte[] chainID) throws DBException {
         return this.stateDB.getPeers(chainID);
     }
 
     /**
      * delete a peer
      *
-     * @param chainID
-     * @param pubkey
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubkey public key
+     * @throws DBException database exception
      */
     @Override
-    public void deletePeer(byte[] chainID, byte[] pubkey) throws Exception {
+    public void deletePeer(byte[] chainID, byte[] pubkey) throws DBException {
         this.stateDB.deletePeer(chainID, pubkey);
     }
 
     /**
      * delete all peers of a chain
      *
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
+     * @throws DBException database exception
      */
     @Override
-    public void deleteAllPeers(byte[] chainID) throws Exception {
+    public void deleteAllPeers(byte[] chainID) throws DBException {
         this.stateDB.deleteAllPeers(chainID);
     }
 
     /**
      * get self transaction pool
      *
-     * @param chainID
+     * @param chainID chain ID
      * @param pubKey  public key
-     * @return
-     * @throws Exception
+     * @return tx set
+     * @throws DBException database exception
      */
     @Override
-    public Set<Transaction> getSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception {
+    public Set<Transaction> getSelfTxPool(byte[] chainID, byte[] pubKey) throws DBException {
         return this.stateDB.getSelfTxPool(chainID, pubKey);
     }
 
@@ -336,44 +309,43 @@ public class StateDBTrack implements StateDB {
      * @param chainID chain ID
      * @param pubKey  public key
      * @param nonce   tx nonce
-     * @return tx
-     * @throws Exception
+     * @return tx or null
+     * @throws DBException database exception
      */
     @Override
-    public Transaction getSelfTx(byte[] chainID, byte[] pubKey, long nonce) throws Exception {
+    public Transaction getSelfTx(byte[] chainID, byte[] pubKey, long nonce) throws DBException {
         return this.stateDB.getSelfTx(chainID, pubKey, nonce);
     }
 
     /**
      * put transaction into pool
      *
-     * @param chainID
-     * @param tx
-     * @throws Exception
+     * @param chainID chain ID
+     * @param tx tx to put
+     * @throws DBException database exception
      */
     @Override
-    public void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws Exception {
+    public void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws DBException {
         this.stateDB.putTxIntoSelfTxPool(chainID, tx);
     }
 
     /**
      * delete self transaction pool
      *
-     * @param chainID
-     * @param pubKey
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @throws DBException database exception
      */
     @Override
-    public void deleteSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception {
+    public void deleteSelfTxPool(byte[] chainID, byte[] pubKey) throws DBException {
         this.stateDB.deleteSelfTxPool(chainID, pubKey);
     }
 
     /**
      * set immutable point block hash
      *
-     * @param chainID
-     * @param hash
-     * @throws Exception
+     * @param chainID chain ID
+     * @param hash immutable block hash
      */
     @Override
     public void setImmutablePointBlockHash(byte[] chainID, byte[] hash) {
@@ -383,9 +355,8 @@ public class StateDBTrack implements StateDB {
     /**
      * get immutable point block hash
      *
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return immutable block hash or null
      */
     @Override
     public byte[] getImmutablePointBlockHash(byte[] chainID) {
@@ -395,8 +366,7 @@ public class StateDBTrack implements StateDB {
     /**
      * delete immutable point block hash
      *
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
      */
     @Override
     public void deleteImmutablePointBlockHash(byte[] chainID) {
@@ -406,9 +376,8 @@ public class StateDBTrack implements StateDB {
     /**
      * set votes counting point block hash
      *
-     * @param chainID
-     * @param hash
-     * @throws Exception
+     * @param chainID chain ID
+     * @param hash votes counting point block hash
      */
     @Override
     public void setVotesCountingPointBlockHash(byte[] chainID, byte[] hash) {
@@ -418,9 +387,8 @@ public class StateDBTrack implements StateDB {
     /**
      * get votes counting point block hash
      *
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return votes counting point block hash or null
      */
     @Override
     public byte[] getVotesCountingPointBlockHash(byte[] chainID) {
@@ -430,8 +398,7 @@ public class StateDBTrack implements StateDB {
     /**
      * delete votes counting point block hash
      *
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
      */
     @Override
     public void deleteVotesCountingPointBlockHash(byte[] chainID) {
@@ -441,12 +408,11 @@ public class StateDBTrack implements StateDB {
     /**
      * update accounts state
      *
-     * @param chainID
-     * @param accountStateMap
-     * @throws Exception
+     * @param chainID chain ID
+     * @param accountStateMap account state map
      */
     @Override
-    public void updateAccounts(byte[] chainID, Map<ByteArrayWrapper, AccountState> accountStateMap) throws Exception {
+    public void updateAccounts(byte[] chainID, Map<ByteArrayWrapper, AccountState> accountStateMap) {
         if (null != accountStateMap) {
             for (Map.Entry<ByteArrayWrapper, AccountState> entry: accountStateMap.entrySet()) {
                 updateAccount(chainID, entry.getKey().getData(), entry.getValue());
@@ -457,26 +423,25 @@ public class StateDBTrack implements StateDB {
     /**
      * update account state
      *
-     * @param chainID
-     * @param pubKey
-     * @param account
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @param account account
      */
     @Override
-    public void updateAccount(byte[] chainID, byte[] pubKey, AccountState account) throws Exception {
+    public void updateAccount(byte[] chainID, byte[] pubKey, AccountState account) {
         this.cacheAccounts.put(wrap(PrefixKey.accountKey(chainID, pubKey)), account);
     }
 
     /**
      * get a account state
      *
-     * @param chainID
-     * @param pubKey
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @return account state or null
+     * @throws DBException database exception
      */
     @Override
-    public AccountState getAccount(byte[] chainID, byte[] pubKey) throws Exception {
+    public AccountState getAccount(byte[] chainID, byte[] pubKey) throws DBException {
 
         AccountState accountState = cacheAccounts.get(wrap(PrefixKey.accountKey(chainID, pubKey)));
 
@@ -490,13 +455,13 @@ public class StateDBTrack implements StateDB {
     /**
      * get nonce by pubKey
      *
-     * @param chainID
-     * @param pubKey
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @return nonce or null
+     * @throws DBException database exception
      */
     @Override
-    public BigInteger getNonce(byte[] chainID, byte[] pubKey) throws Exception {
+    public BigInteger getNonce(byte[] chainID, byte[] pubKey) throws DBException {
         AccountState accountState = cacheAccounts.get(wrap(PrefixKey.accountKey(chainID, pubKey)));
 
         if (accountState == null) {
@@ -511,10 +476,10 @@ public class StateDBTrack implements StateDB {
 //     *
 //     * @param chainID
 //     * @param pubKey
-//     * @throws Exception
+//     * @throws DBException database exception
 //     */
 //    @Override
-//    public void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception {
+//    public void deleteAccount(byte[] chainID, byte[] pubKey) throws DBException {
 //
 //    }
 
@@ -523,7 +488,6 @@ public class StateDBTrack implements StateDB {
      * Write batch into the database.
      *
      * @param rows key-value batch
-     * @throws Exception
      */
     @Override
     public void updateBatch(Map<byte[], byte[]> rows) {
@@ -533,11 +497,10 @@ public class StateDBTrack implements StateDB {
     /**
      * clear all state data
      *
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
      */
     @Override
-    public void clearAllState(byte[] chainID) throws Exception {
+    public void clearAllState(byte[] chainID) {
         throw new UnsupportedOperationException();
     }
 }

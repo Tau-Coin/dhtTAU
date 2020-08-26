@@ -13,16 +13,14 @@ public interface StateDB {
      * Open database.
      *
      * @param path database path which can be accessed
-     * @throws Exception
+     * @throws DBException database exception
      */
-    void open(String path) throws Exception;
+    void open(String path) throws DBException;
 
     /**
      * Close database.
      */
     void close();
-
-    /*************************state interface*************************/
 
     /**
      * Save a snapshot and start tracking future changes
@@ -36,7 +34,7 @@ public interface StateDB {
      * Store all the temporary changes made
      * to the repository in the actual database
      */
-    void commit() throws Exception;
+    void commit() throws DBException;
 
     /**
      * Undo all the changes made so far
@@ -46,143 +44,129 @@ public interface StateDB {
 
     /**
      * follow a chain
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
+     * @throws DBException database exception database exception
      */
-    void followChain(byte[] chainID) throws Exception;
+    void followChain(byte[] chainID) throws DBException;
 
     /**
-     * if follow a chain
+     * if a chain has been followed
      * @param chainID chain ID
-     * @return true:followed, false: not followed
-     * @throws Exception
+     * @return true if followed, false otherwise
+     * @throws DBException database exception database exception
      */
-    boolean isChainFollowed(byte[] chainID) throws Exception;
+    boolean isChainFollowed(byte[] chainID) throws DBException;
 
     /**
      * get all followed chains
-     * @return
-     * @throws Exception
+     * @return chain ID set
+     * @throws DBException database exception database exception
      */
-    Set<byte[]> getAllFollowedChains() throws Exception;
+    Set<byte[]> getAllFollowedChains() throws DBException;
 
     /**
      * unfollow a chain
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
+     * @throws DBException database exception database exception
      */
-    void unfollowChain(byte[] chainID) throws Exception;
+    void unfollowChain(byte[] chainID) throws DBException;
 
     // Current Block Hash
 
     /**
      * set best block hash
-     * @param chainID
-     * @param hash
-     * @throws Exception
+     * @param chainID chain ID
+     * @param hash best block hash
+     * @throws DBException database exception database exception
      */
-    void setBestBlockHash(byte[] chainID, byte[] hash) throws Exception;
+    void setBestBlockHash(byte[] chainID, byte[] hash) throws DBException;
 
     /**
      * get best block hash
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return best block hash, null otherwise
+     * @throws DBException database exception database exception
      */
-    byte[] getBestBlockHash(byte[] chainID) throws Exception;
-
-    /**
-     * delete best block hash
-     * @param chainID
-     * @throws Exception
-     */
-//    void deleteBestBlockHash(byte[] chainID) throws Exception;
+    byte[] getBestBlockHash(byte[] chainID) throws DBException;
 
     /**
      * set current chain synced block hash
-     * @param chainID
-     * @param hash
-     * @throws Exception
+     * @param chainID chain ID
+     * @param hash block hash
+     * @throws DBException database exception database exception
      */
-    void setSyncBlockHash(byte[] chainID, byte[] hash) throws Exception;
+    void setSyncBlockHash(byte[] chainID, byte[] hash) throws DBException;
 
     /**
      * get current chain synced block hash
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return sync block hash
+     * @throws DBException database exception database exception
      */
-    byte[] getSyncBlockHash(byte[] chainID) throws Exception;
-
-    /**
-     * delete current chain synced block hash
-     * @param chainID
-     * @throws Exception
-     */
-//    void deleteSyncBlockHash(byte[] chainID) throws Exception;
+    byte[] getSyncBlockHash(byte[] chainID) throws DBException;
 
     /**
      * set mutable range
-     * @param chainID
-     * @param number
-     * @throws Exception
+     * @param chainID chain ID
+     * @param number mutable block number
+     * @throws DBException database exception
      */
-    void setMutableRange(byte[] chainID, int number) throws Exception;
+    void setMutableRange(byte[] chainID, int number) throws DBException;
 
     /**
      * get mutable range
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return mutable block number
+     * @throws DBException database exception
      */
-    int getMutableRange(byte[] chainID) throws Exception;
+    int getMutableRange(byte[] chainID) throws DBException;
 
     /**
      * delete mutable range
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
+     * @throws DBException database exception
      */
-    void deleteMutableRange(byte[] chainID) throws Exception;
+    void deleteMutableRange(byte[] chainID) throws DBException;
 
     /**
      * add a new peer
-     * @param chainID
-     * @param pubkey
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubkey public key
+     * @throws DBException database exception
      */
-    void addPeer(byte[] chainID, byte[] pubkey) throws Exception;
+    void addPeer(byte[] chainID, byte[] pubkey) throws DBException;
 
     /**
      * get all peers of a chain
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return peer set
+     * @throws DBException database exception
      */
-    Set<byte[]> getPeers(byte[] chainID) throws Exception;
+    Set<byte[]> getPeers(byte[] chainID) throws DBException;
 
     /**
      * delete a peer
-     * @param chainID
-     * @param pubkey
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubkey public key
+     * @throws DBException database exception
      */
-    void deletePeer(byte[] chainID, byte[] pubkey) throws Exception;
+    void deletePeer(byte[] chainID, byte[] pubkey) throws DBException;
 
     /**
      * delete all peers of a chain
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
+     * @throws DBException database exception
      */
-    void deleteAllPeers(byte[] chainID) throws Exception;
+    void deleteAllPeers(byte[] chainID) throws DBException;
 
     /**
      * get self transaction pool
-     * @param chainID
+     * @param chainID chain ID
      * @param pubKey public key
-     * @return
-     * @throws Exception
+     * @return tx set
+     * @throws DBException database exception
      */
-    Set<Transaction> getSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception;
+    Set<Transaction> getSelfTxPool(byte[] chainID, byte[] pubKey) throws DBException;
 
 
     /**
@@ -190,131 +174,129 @@ public interface StateDB {
      * @param chainID chain ID
      * @param pubKey public key
      * @param nonce tx nonce
-     * @return tx
-     * @throws Exception
+     * @return tx or null
+     * @throws DBException database exception
      */
-    Transaction getSelfTx(byte[] chainID, byte[] pubKey, long nonce) throws Exception;
+    Transaction getSelfTx(byte[] chainID, byte[] pubKey, long nonce) throws DBException;
 
     /**
      * put transaction into pool
-     * @param chainID
-     * @param tx
-     * @throws Exception
+     * @param chainID chain ID
+     * @param tx tx to put
+     * @throws DBException database exception
      */
-    void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws Exception;
+    void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws DBException;
 
     /**
      * delete self transaction pool
-     * @param chainID
-     * @param pubKey
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @throws DBException database exception
      */
-    void deleteSelfTxPool(byte[] chainID, byte[] pubKey) throws Exception;
+    void deleteSelfTxPool(byte[] chainID, byte[] pubKey) throws DBException;
 
     /**
      * set immutable point block hash
-     * @param chainID
-     * @param hash
-     * @throws Exception
+     * @param chainID chain ID
+     * @param hash immutable block hash
+     * @throws DBException database exception
      */
-    void setImmutablePointBlockHash(byte[] chainID, byte[] hash) throws Exception;
+    void setImmutablePointBlockHash(byte[] chainID, byte[] hash) throws DBException;
 
     /**
      * get immutable point block hash
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return immutable block hash or null
+     * @throws DBException database exception
      */
-    byte[] getImmutablePointBlockHash(byte[] chainID) throws Exception;
+    byte[] getImmutablePointBlockHash(byte[] chainID) throws DBException;
 
     /**
      * delete immutable point block hash
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
+     * @throws DBException database exception
      */
-    void deleteImmutablePointBlockHash(byte[] chainID) throws Exception;
+    void deleteImmutablePointBlockHash(byte[] chainID) throws DBException;
 
     /**
      * set votes counting point block hash
-     * @param chainID
-     * @param hash
-     * @throws Exception
+     * @param chainID chain ID
+     * @param hash votes counting point block hash
+     * @throws DBException database exception
      */
-    void setVotesCountingPointBlockHash(byte[] chainID, byte[] hash) throws Exception;
+    void setVotesCountingPointBlockHash(byte[] chainID, byte[] hash) throws DBException;
 
     /**
      * get votes counting point block hash
-     * @param chainID
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @return votes counting point block hash or null
+     * @throws DBException database exception
      */
-    byte[] getVotesCountingPointBlockHash(byte[] chainID) throws Exception;
+    byte[] getVotesCountingPointBlockHash(byte[] chainID) throws DBException;
 
     /**
      * delete votes counting point block hash
-     * @param chainID
-     * @throws Exception
+     * @param chainID chain ID
+     * @throws DBException database exception
      */
-    void deleteVotesCountingPointBlockHash(byte[] chainID) throws Exception;
-
-
-    /*************************state interface*************************/
+    void deleteVotesCountingPointBlockHash(byte[] chainID) throws DBException;
 
     /**
      * update accounts state
-     * @param chainID
-     * @param accountStateMap
-     * @throws Exception
+     * @param chainID chain ID
+     * @param accountStateMap account state map
+     * @throws DBException database exception
      */
-    void updateAccounts(byte[] chainID, Map<ByteArrayWrapper, AccountState> accountStateMap) throws Exception;
+    void updateAccounts(byte[] chainID, Map<ByteArrayWrapper, AccountState> accountStateMap) throws DBException;
 
     /**
      * update account state
-     * @param chainID
-     * @param pubKey
-     * @param account
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @param account account
+     * @throws DBException database exception
      */
-    void updateAccount(byte[] chainID, byte[] pubKey, AccountState account) throws Exception;
+    void updateAccount(byte[] chainID, byte[] pubKey, AccountState account) throws DBException;
 
     /**
      * get a account state
-     * @param chainID
-     * @param pubKey
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @return account state or null
+     * @throws DBException database exception
      */
-    AccountState getAccount(byte[] chainID, byte[] pubKey) throws Exception;
+    AccountState getAccount(byte[] chainID, byte[] pubKey) throws DBException;
 
     /**
      * get nonce by pubKey
-     * @param chainID
-     * @param pubKey
-     * @return
-     * @throws Exception
+     * @param chainID chain ID
+     * @param pubKey public key
+     * @return nonce or null
+     * @throws DBException database exception
      */
-    BigInteger getNonce(byte[] chainID, byte[] pubKey) throws Exception;
+    BigInteger getNonce(byte[] chainID, byte[] pubKey) throws DBException;
 
 //    /**
 //     * delete a account
 //     * @param chainID
 //     * @param pubKey
-//     * @throws Exception
+//     * @throws DBException database exception
 //     */
-//    void deleteAccount(byte[] chainID, byte[] pubKey) throws Exception;
+//    void deleteAccount(byte[] chainID, byte[] pubKey) throws DBException;
 
     /**
      * Write batch into the database.
      *
      * @param rows key-value batch
-     * @throws Exception
+     * @throws DBException database exception
      */
-    void updateBatch(Map<byte[], byte[]> rows) throws Exception;
+    void updateBatch(Map<byte[], byte[]> rows) throws DBException;
 
     /**
      * clear all state data
-     * @throws Exception
+     * @param chainID  chain ID
+     * @throws DBException database exception
      */
-    void clearAllState(byte[] chainID) throws Exception;
+    void clearAllState(byte[] chainID) throws DBException;
 }
 
