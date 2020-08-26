@@ -65,8 +65,6 @@
     <string name="community_notifications_on">On</string>
     <string name="community_notifications_off">Off</string>
     <string name="community_add_member">Add Member via Wiring</string>
-    <string name="community_invite_link_form">TAUchain:?%1$sdn=%2$s</string>
-    <string name="community_invite_link_bs">bs=%1$s&#038;</string>
 
     <string name="community_input_hint">Message</string>
     <string name="community_users_stats">%1$d members, %2$d online</string>
@@ -110,12 +108,16 @@
     <string name="setting_privacy_security">Privacy and Security</string>
     <string name="setting_community_setting">Community Setting</string>
     <string name="setting_journal">Journal</string>
+    <string name="setting_journal_share">Share journal to</string>
+    <string name="setting_journal_uri">/sdcard/Android/data/io.taucoin.torrent.publishing/logs/tau.%1$s.log</string>
     <string name="setting_help">Help</string>
     <string name="setting_community">Community</string>
     <string name="setting_favorites">Favorites</string>
 
     <!-- Strings used for Dashboard -->
     <string name="setting_storage">Storage</string>
+    <string name="setting_journal_path">Journal storage path</string>
+    <string name="setting_share_journal">Share Journal</string>
     <string name="setting_network">Network</string>
     <string name="setting_wifi_only">WIFI Only</string>
     <string name="setting_server_mode">Server Mode</string>

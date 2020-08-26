@@ -68,7 +68,6 @@ public class MainActivity extends BaseActivity {
     private CompositeDisposable disposables = new CompositeDisposable();
     private Subject<Integer> mBackClick = PublishSubject.create();
     private CommonDialog seedDialog;
-    private ShareDialog shareDialog;
     private BadgeActionProvider actionProvider;
     private User user;
 
@@ -77,7 +76,8 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
         String action =  getIntent().getAction();
-        if (StringUtil.isNotEmpty(action) && StringUtil.isEquals(action, NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP)) {
+        if (StringUtil.isNotEmpty(action) && StringUtil.isEquals(action,
+                NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP)) {
             logger.info("MainActivity finished");
             finish();
             return;
@@ -224,9 +224,6 @@ public class MainActivity extends BaseActivity {
         if(seedDialog != null){
             seedDialog.closeDialog();
         }
-        if(shareDialog != null){
-            shareDialog.closeDialog();
-        }
     }
 
     /**
@@ -267,31 +264,10 @@ public class MainActivity extends BaseActivity {
                 ActivityUtil.startActivity(this, SettingActivity.class);
                 break;
             case R.id.item_share:
-                showShareAppDialog();
+                ActivityUtil.shareText(this, Constants.APP_SHARE_URL);
                 break;
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START);
-    }
-
-    /**
-     * 显示分享APP的对话框
-     */
-    private void showShareAppDialog() {
-        ShareDialog.Builder builder = new ShareDialog.Builder(this);
-        builder.setOnItemClickListener((dialog, imgRid, titleRid) -> {
-            dialog.dismiss();
-            String appShareLink = Constants.APP_SHARE_URL;
-            if (imgRid == R.mipmap.icon_share_copy_link) {
-                CopyManager.copyText(appShareLink);
-                ToastUtils.showShortToast(R.string.copy_share_link);
-            } else if (imgRid == R.mipmap.icon_share_sms) {
-                ActivityUtil.doSendSMSTo(this, appShareLink);
-            }
-        });
-        builder.addItems(R.mipmap.icon_share_copy_link, R.string.contacts_copy_link);
-        builder.addItems(R.mipmap.icon_share_sms, R.string.contacts_sms);
-        shareDialog = builder.create();
-        shareDialog.show();
     }
 
     /**

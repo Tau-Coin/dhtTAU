@@ -105,21 +105,6 @@ public class UsersUtil {
     }
 
     /**
-     * 获取社区邀请链接
-     * @param chainID 链的chainID
-     * @param publicKeys 社区成员的公钥
-     * @return 显示名字
-     */
-    public static String getCommunityInviteLink(@NonNull String chainID, @NonNull List<String> publicKeys) {
-        Context context = MainApplication.getInstance();
-        StringBuilder bs = new StringBuilder();
-        for(String publicKey : publicKeys){
-            bs.append(context.getString(R.string.community_invite_link_bs, publicKey));
-        }
-        return context.getString(R.string.community_invite_link_form, bs.toString(), chainID);
-    }
-
-    /**
      * 获取社区名
      * @param chainID 链的chainID
      * @return 社区名

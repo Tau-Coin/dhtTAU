@@ -29,6 +29,7 @@ import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -280,7 +281,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
             disposables.add(communityViewModel.getCommunityMembersLimit(chainID, Constants.CHAIN_LINK_BS_LIMIT)
                     .subscribeOn(Schedulers.newThread())
                     .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
-                        String communityInviteLink = UsersUtil.getCommunityInviteLink(chainID, list);
+                        String communityInviteLink = ChainLinkUtil.encode(chainID, list);
                         if (imgRid == R.mipmap.icon_share_copy_link) {
                             CopyManager.copyText(communityInviteLink);
                             ToastUtils.showShortToast(R.string.copy_share_link);

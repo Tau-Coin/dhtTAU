@@ -63,15 +63,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.community.CommunitySettingActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"/>
-
-        <activity
             android:name=".ui.community.CommunityChooseActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"/>
-
-        <activity
-            android:name=".ui.community.CommunityInfoActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
@@ -161,6 +153,10 @@
 
         <activity
             android:name=".ui.setting.FavoritesActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <activity
+            android:name=".ui.setting.JournalActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
     </application>
