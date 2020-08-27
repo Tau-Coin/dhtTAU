@@ -13,7 +13,7 @@
         android:layout_height="match_parent">
 
         <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
-            android:background="@color/color_bg"
+            android:background="@color/color_chat_bg"
             android:id="@+id/tx_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

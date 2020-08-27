@@ -16,9 +16,9 @@
                 android:layout_height="100dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:background="@color/primary">
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:background="@color/color_chat_bg">
 
                 <io.taucoin.torrent.publishing.ui.customviews.RoundButton
                     android:id="@+id/round_button"
@@ -48,7 +48,6 @@
                     android:singleLine="true"
                     android:textStyle="bold"
                     android:ellipsize="end"
-                    android:textColor="@color/color_white"
                     android:textAppearance="@style/TextAppearanceBody1" />
 
                 <TextView
@@ -59,13 +58,13 @@
                     android:layout_height="wrap_content"
                     android:includeFontPadding="false"
                     android:layout_marginStart="15dp"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="5dp"
                     android:onClick="onClick"
                     android:text="@string/tx_public_key_hint"
                     android:singleLine="true"
                     android:ellipsize="end"
-                    android:textColor="@color/color_blue_white"
-                    android:textAppearance="@style/TextAppearanceBody2" />
+                    android:textColor="@color/gray_dark"
+                    android:textAppearance="@style/TextAppearanceBody3" />
 
                 <TextView
                     android:layout_toEndOf="@+id/round_button"
@@ -75,19 +74,19 @@
                     android:layout_height="wrap_content"
                     android:includeFontPadding="false"
                     android:layout_marginStart="15dp"
-                    android:layout_marginTop="0dp"
+                    android:layout_marginTop="2dp"
                     android:singleLine="true"
                     android:ellipsize="end"
                     android:onClick="onClick"
-                    android:textColor="@color/color_blue_white"
-                    android:textAppearance="@style/TextAppearanceBody2" />
+                    android:textColor="@color/gray_dark"
+                    android:textAppearance="@style/TextAppearanceBody3" />
 
                 <ImageView
                     android:id="@+id/iv_public_key_copy"
                     android:layout_below="@+id/tv_public_key_title"
                     android:layout_toEndOf="@+id/tv_public_key"
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
                     android:onClick="onClick"
                     android:layout_marginTop="2dp"
                     android:contentDescription="@null"

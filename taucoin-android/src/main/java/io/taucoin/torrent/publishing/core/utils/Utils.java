@@ -20,10 +20,9 @@ import android.util.Log;
 import android.util.Patterns;
 import android.util.TypedValue;
 
-import org.slf4j.LoggerFactory;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
@@ -444,9 +443,6 @@ public class Utils {
                 String link = result.link;
                 int linkStart = result.start;
                 int linkEnd = result.end;
-                LoggerFactory.getLogger("getSpannableStringUrl")
-                        .info("parseMatcherFormStr.link::{}, linkStart::{}, linkEnd::{}",
-                                link, linkStart, linkEnd);
                 spanUtils.append(msg.substring(0, linkStart));
                 spanUtils.append(link);
                 spanUtils.setUnderline();
@@ -469,8 +465,6 @@ public class Utils {
 
     private static MatcherResult parseMatcherFormStr(String msg){
         Matcher magnet = MAGNET_URL.matcher(msg);
-        LoggerFactory.getLogger("parseMatcherFormStr")
-                .info("MAGNET_URL::{}", MAGNET_URL.pattern());
         if(magnet.find()){
             String magnetUrl = magnet.group();
             int magnetStart = magnet.start();
@@ -480,8 +474,6 @@ public class Utils {
             }
         }
         Matcher web = Patterns.WEB_URL.matcher(msg);
-        LoggerFactory.getLogger("parseMatcherFormStr")
-                .info("WEB_URL::{}", Patterns.WEB_URL.pattern());
         if(web.find()){
             String webLink = web.group();
             int webStart = web.start();
@@ -495,7 +487,7 @@ public class Utils {
     }
 
     public static String getCommunityName(String chainID) {
-        String[] splits = chainID.split("#");
+        String[] splits = chainID.split(ChainParam.ChainidDelimeter);
         if(splits.length > 0){
             return splits[0];
         }
