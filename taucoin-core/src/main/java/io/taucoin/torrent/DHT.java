@@ -88,4 +88,73 @@ public final class DHT {
             this.getData = getData;
         }
     }
+
+    public static interface GetDHTItemCallback {
+
+        /*
+         * This method is called back when dht item(mutable or immutable) got.
+         * Note: the implementation of this method must not block current thread.
+         */
+        void onDHTItemGot(byte[] item, Object cbData);
+    }
+
+    /**
+     * The wrapper of getting immutable request.
+     */
+    public static class ImmutableItemRequest {
+
+        private GetImmutableItemSpec spec;
+
+        private GetDHTItemCallback callback;
+
+        private Object callBackData;
+
+        public ImmutableItemRequest(GetImmutableItemSpec spec,
+                GetDHTItemCallback callback, Object cbData) {
+
+            this.spec = spec;
+            this.callback = callback;
+            this.callBackData = cbData;
+        }
+
+        public GetImmutableItemSpec getSpec() {
+            return this.spec;
+        }
+
+        public void onDHTItemGot(byte[] item) {
+            if (callback != null) {
+                callback.onDHTItemGot(item, this.callBackData);
+            }
+        }
+    }
+
+    /**
+     * The wrapper of getting mutable request.
+     */
+    public static class MutableItemRequest {
+
+        private GetMutableItemSpec spec;
+
+        private GetDHTItemCallback callback;
+
+        private Object callBackData;
+
+        public MutableItemRequest(GetMutableItemSpec spec,
+                GetDHTItemCallback callback, Object cbData) {
+
+            this.spec = spec;
+            this.callback = callback;
+            this.callBackData = cbData;
+        }
+
+        public GetMutableItemSpec getSpec() {
+            return this.spec;
+        }
+
+        public void onDHTItemGot(byte[] item) {
+            if (callback != null) {
+                callback.onDHTItemGot(item, this.callBackData);
+            }
+        }
+    }
 }

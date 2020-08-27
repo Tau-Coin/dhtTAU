@@ -12,6 +12,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.taucoin.torrent.DHT.*;
 
@@ -54,6 +56,9 @@ public class TorrentDHTEngine {
 
                 // start session statistic after listening successfully.
                 startStatsPoller();
+
+                // start thread of getting dht items.
+                startDHTItemWorkers();
             }
 
             if (type == AlertType.LISTEN_FAILED) {
@@ -131,6 +136,26 @@ public class TorrentDHTEngine {
 
     private static final String sUndefinedEntry = entry.data_type.undefined_t.toString();
 
+    // The feature of the queue of getting mutable and immutable item.
+
+    // The time interval for dht operation.
+    private static final long DHTOperationInterval = 1 * 1000; // milliseconds.
+
+    // Dht blocking queue size limit.
+    private static final int DHTBlockingQueueCapability = 1000;
+
+    // Queue of getting immutable item request.
+    private BlockingQueue<ImmutableItemRequest> gettingImmutableItemQueue
+            = new LinkedBlockingQueue<>();
+    private Thread gettingImmutableItemThread;
+
+    // Queue of getting mutable item request.
+    private BlockingQueue<MutableItemRequest> gettingMutableItemQueue
+            = new LinkedBlockingQueue<>();
+    private Thread gettingMutableItemThread;
+
+    private AtomicBoolean dhtItemWorkersStarted = new AtomicBoolean(false);
+
     /**
      * Get TorrentDHTEngine instance.
      *
@@ -198,7 +223,10 @@ public class TorrentDHTEngine {
 
         logger.info("stopping dht engine daemon");
 
-        // First of all, session statistic should be canceled.
+        // First of all, stop dht item workers.
+        stopDHTItemWorkers();
+
+        // Then, session statistic should be canceled.
         stopStatsPoller();
 
         sessionManager.stop();
@@ -228,8 +256,6 @@ public class TorrentDHTEngine {
      */
     public Sha1Hash dhtPut(ImmutableItem item) {
 
-        internalSleep();
-
         if (!sessionManager.isRunning()) {
             return null;
         }
@@ -244,8 +270,6 @@ public class TorrentDHTEngine {
      * @param item mutable item
      */
     public void dhtPut(MutableItem item) {
-
-        internalSleep();
 
         if (!sessionManager.isRunning()) {
             return;
@@ -278,14 +302,6 @@ public class TorrentDHTEngine {
         byte[] data = null;
         if (entry != null) {
             data = entry.bencode();
-            /*
-            String str = entry.string();
-            try {
-                data = str.getBytes("UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            */
         }
 
         return new ExchangeImmutableItemResult(data, hash);
@@ -312,8 +328,6 @@ public class TorrentDHTEngine {
      */
     public byte[] dhtGet(GetImmutableItemSpec spec) {
 
-        internalSleep();
-
         if (!sessionManager.isRunning()) {
             return null;
         }
@@ -327,15 +341,6 @@ public class TorrentDHTEngine {
             if (!isEntryUndefined(entry)) {
                 data = entry.bencode();
             }
-
-            /*
-            String str = entry.string();
-            try {
-                data = str.getBytes("UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            */
         }
 
         return data;
@@ -348,8 +353,6 @@ public class TorrentDHTEngine {
      * @return mutable item
      */
     public byte[] dhtGet(GetMutableItemSpec spec) {
-
-        internalSleep();
 
         if (!sessionManager.isRunning()) {
             return null;
@@ -367,6 +370,48 @@ public class TorrentDHTEngine {
                 + ", type:" + getEntryType(result.item));
 
         return result.item.bencode();
+    }
+
+    /**
+     * Request immutable item asynchronously.
+     *
+     * @param spec immutable item specification
+     * @param cb callback interface
+     * @param cbData callback data
+     * @return boolean true indicates this item is put into queue,
+     *     or else false
+     */
+    public boolean request(GetImmutableItemSpec spec, GetDHTItemCallback cb,
+            Object cbData) {
+
+        if (spec == null || !sessionManager.isRunning()
+                || gettingImmutableItemQueue.size() >= DHTBlockingQueueCapability) {
+            return false;
+        }
+
+        gettingImmutableItemQueue.add(new ImmutableItemRequest(spec, cb, cbData));
+        return true;
+    }
+
+    /**
+     * Request mutable item asynchronously.
+     *
+     * @param spec mutable item specification
+     * @param cb callback interface
+     * @param cbData callback data
+     * @return boolean true indicates this item is put into queue,
+     *     or else false.
+     */
+    public boolean request(GetMutableItemSpec spec, GetDHTItemCallback cb,
+            Object cbData) {
+
+        if (spec == null || !sessionManager.isRunning()
+                || gettingMutableItemQueue.size() >= DHTBlockingQueueCapability) {
+            return false;
+        }
+
+        gettingMutableItemQueue.add(new MutableItemRequest(spec, cb, cbData));
+        return true;
     }
 
     /**
@@ -401,6 +446,100 @@ public class TorrentDHTEngine {
         statsPoller.cancel();
     }
 
+    private void startDHTItemWorkers() {
+        if (dhtItemWorkersStarted.get()) {
+            return;
+        }
+        dhtItemWorkersStarted.set(true);
+
+        this.gettingImmutableItemThread = new Thread(this::immutableItemsRetriveLoop,
+                "gettingImmutableItemThread");
+        this.gettingImmutableItemThread.start();
+
+        this.gettingMutableItemThread = new Thread(this::mutableItemsRetriveLoop,
+                "gettingMutableItemThread");
+        this.gettingMutableItemThread.start();
+
+        logger.info("starting dht items workers");
+    }
+
+    private void stopDHTItemWorkers() {
+        if (!dhtItemWorkersStarted.get()) {
+            return;
+        }
+        dhtItemWorkersStarted.set(false);
+
+        if (this.gettingImmutableItemThread != null) {
+            this.gettingImmutableItemThread.interrupt();
+        }
+        if (this.gettingMutableItemThread != null) {
+            this.gettingMutableItemThread.interrupt();
+        }
+
+        try {
+            this.gettingImmutableItemThread.join();
+            this.gettingImmutableItemThread = null;
+            this.gettingMutableItemThread.join();
+            this.gettingMutableItemThread = null;
+        } catch (InterruptedException e) {
+            // ignore this exception
+        }
+
+        logger.info("stopping dht items workers");
+    }
+
+    /**
+     * Retrive immutable item.
+     */
+    private void immutableItemsRetriveLoop() {
+
+        while (!Thread.currentThread().isInterrupted()) {
+
+            ImmutableItemRequest req = null;
+            byte[] item = null;
+
+            try {
+                Thread.sleep(DHTOperationInterval);
+                req = gettingImmutableItemQueue.take();
+                item = dhtGet(req.getSpec());
+            } catch (InterruptedException e) {
+                break;
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+
+            if (req != null) {
+                req.onDHTItemGot(item);
+            }
+        }
+    }
+
+    /**
+     * Retrive mutable item.
+     */
+    private void mutableItemsRetriveLoop() {
+
+        while (!Thread.currentThread().isInterrupted()) {
+
+            MutableItemRequest req = null;
+            byte[] item = null;
+
+            try {
+                Thread.sleep(DHTOperationInterval);
+                req = gettingMutableItemQueue.take();
+                item = dhtGet(req.getSpec());
+            } catch (InterruptedException e) {
+                break;
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+
+            if (req != null) {
+                req.onDHTItemGot(item);
+            }
+        }
+    }
+
     private static String getEntryType(Entry e) {
         if (e == null || e.swig() == null) {
             return "";
@@ -412,13 +551,5 @@ public class TorrentDHTEngine {
 
     private static boolean isEntryUndefined(Entry e) {
         return sUndefinedEntry.equals(getEntryType(e));
-    }
-
-    private static void internalSleep() {
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }
