@@ -12,24 +12,27 @@ public class PeerManager {
     private static final Logger logger = LoggerFactory.getLogger("PeerMananger");
 
     // chain ID
-    private byte[] chainID;
+    private final byte[] chainID;
 
     private final static int PEER_NUMBER = 8;
 
     // all peers
     private Set<ByteArrayWrapper> allPeers;
 
+    // random peer list
+    private List<ByteArrayWrapper> randomPeerList = new ArrayList<>(PEER_NUMBER);
+
     // peers in mutable range
     private List<ByteArrayWrapper> priorityPeers;
 
     // peer info: peer <-> time
-    private Map<ByteArrayWrapper, Long> peerInfo = new HashMap<>();
+    private final Map<ByteArrayWrapper, Long> peerInfo = new HashMap<>();
 
     // block peers
-    private Set<ByteArrayWrapper> blockPeers = new HashSet<>(PEER_NUMBER);
+    private final Set<ByteArrayWrapper> blockPeers = new HashSet<>(PEER_NUMBER);
 
     // tx peers
-    private Set<ByteArrayWrapper> txPeers = new HashSet<>(PEER_NUMBER);
+    private final Set<ByteArrayWrapper> txPeers = new HashSet<>(PEER_NUMBER);
 
     public PeerManager(byte[] chainID) {
         this.chainID = chainID;
@@ -39,7 +42,7 @@ public class PeerManager {
      * init peer manager
      * @param allPeers not null
      * @param priorityPeers not null
-     * @return
+     * @return true if succeed, false otherwise
      */
     public synchronized boolean init(Set<ByteArrayWrapper> allPeers, List<ByteArrayWrapper> priorityPeers) {
         if (null == allPeers || allPeers.isEmpty()) {
@@ -98,7 +101,7 @@ public class PeerManager {
 
     /**
      * get optimal block peer, then remove it from set
-     * @return
+     * @return peer public key
      */
     public synchronized byte[] popUpOptimalBlockPeer() {
         byte[] peer;
@@ -109,13 +112,7 @@ public class PeerManager {
 
             // if empty, fill it up
             if (this.blockPeers.isEmpty()) {
-                int size = this.priorityPeers.size();
-                Random random = new Random(System.currentTimeMillis());
-
-                for (int i = 0; i < PEER_NUMBER; i++) {
-                    // add a peer to block peers randomly from priority peers
-                    this.blockPeers.add(priorityPeers.get(random.nextInt(size)));
-                }
+                fillBlockPeers();
 
                 // remove the limit, when the number of peers is too little
                 if (blockPeers.size() < PEER_NUMBER) {
@@ -156,23 +153,15 @@ public class PeerManager {
 
     /**
      * get a block peer randomly
-     * @return
+     * @return public key
      */
     public synchronized byte[] getBlockPeerRandomly() {
         byte[] peer;
 
         // if empty, fill it up
         if (this.blockPeers.isEmpty()) {
-            int size = this.priorityPeers.size();
-            Random random = new Random(System.currentTimeMillis());
-
-            for (int i = 0; i < PEER_NUMBER; i++) {
-                // add a peer to block peers randomly from priority peers
-                this.blockPeers.add(priorityPeers.get(random.nextInt(size)));
-            }
+            fillBlockPeers();
         }
-
-        logger.debug("++ctx---------peer size:{}", this.blockPeers.size());
 
         // get first peer, then remove it
         Iterator<ByteArrayWrapper> iterator = this.blockPeers.iterator();
@@ -198,7 +187,7 @@ public class PeerManager {
 
     /**
      * update peer the revisit time
-     * @param pubKey
+     * @param pubKey public key
      */
     public synchronized void updateVisitTime(byte[] pubKey) {
         // update latest timestamp
@@ -208,7 +197,7 @@ public class PeerManager {
 
     /**
      * add a peer to block peer set
-     * @param peer
+     * @param peer public key
      */
     public synchronized void addBlockPeer(byte[] peer) {
         // if full, throw it away
@@ -219,18 +208,12 @@ public class PeerManager {
 
     /**
      * get optimal tx peer, then remove it from set
-     * @return
+     * @return public key
      */
     public synchronized byte[] popUpOptimalTxPeer() {
         // if empty, fill it up
         if (this.txPeers.isEmpty()) {
-            int size = this.priorityPeers.size();
-            Random random = new Random(System.currentTimeMillis());
-
-            for (int i = 0; i < PEER_NUMBER; i++) {
-                // add a peer to tx peers randomly from priority peers
-                this.txPeers.add(priorityPeers.get(random.nextInt(size)));
-            }
+            fillTxPeers();
         }
 
         // get first peer, then remove it
@@ -244,18 +227,12 @@ public class PeerManager {
     /**
      * get optimal tx peer
      *
-     * @return
+     * @return public key
      */
     public synchronized byte[] getOptimalTxPeer() {
         // if empty, fill it up
         if (this.txPeers.isEmpty()) {
-            int size = this.priorityPeers.size();
-            Random random = new Random(System.currentTimeMillis());
-
-            for (int i = 0; i < PEER_NUMBER; i++) {
-                // add a peer to tx peers randomly from priority peers
-                this.txPeers.add(priorityPeers.get(random.nextInt(size)));
-            }
+            fillTxPeers();
         }
 
         // get first peer
@@ -264,8 +241,89 @@ public class PeerManager {
     }
 
     /**
+     * fill random peer list
+     */
+    private void fillRandomPeerList() {
+        int[] indexes = new int[PEER_NUMBER];
+
+        int size = this.allPeers.size();
+        Random random = new Random(System.currentTimeMillis());
+
+        for (int i = 0; i < PEER_NUMBER; i++) {
+            indexes[i] = random.nextInt(size);
+        }
+
+        Arrays.sort(indexes);
+
+        int i = 0;
+        int m = 0;
+        for (ByteArrayWrapper peer: this.allPeers) {
+            if (i >= PEER_NUMBER) {
+                break;
+            }
+
+            if (m == indexes[i]) {
+                this.randomPeerList.add(peer);
+                i ++;
+                // 处理相邻两个数一样的情况
+                continue;
+            }
+
+            m++;
+        }
+    }
+
+    /**
+     * fill block peers
+     */
+    private void fillBlockPeers() {
+        int size = this.priorityPeers.size();
+        Random random = new Random(System.currentTimeMillis());
+
+        int i = 0;
+        for (; i < PEER_NUMBER / 2; i++) {
+            // add a peer to tx peers randomly from priority peers
+            this.blockPeers.add(priorityPeers.get(random.nextInt(size)));
+        }
+
+        if (this.randomPeerList.size() < PEER_NUMBER) {
+            fillRandomPeerList();
+        }
+
+        for (; i < PEER_NUMBER; i++) {
+            // add a peer to tx peers randomly from all peers
+            this.blockPeers.add(this.randomPeerList.get(0));
+            this.randomPeerList.remove(0);
+        }
+    }
+
+    /**
+     * fill tx peers
+     */
+    private void fillTxPeers() {
+        int size = this.priorityPeers.size();
+        Random random = new Random(System.currentTimeMillis());
+
+        int i = 0;
+        for (; i < PEER_NUMBER / 2; i++) {
+            // add a peer to tx peers randomly from priority peers
+            this.txPeers.add(priorityPeers.get(random.nextInt(size)));
+        }
+
+        if (this.randomPeerList.size() < PEER_NUMBER) {
+            fillRandomPeerList();
+        }
+
+        for (; i < PEER_NUMBER; i++) {
+            // add a peer to tx peers randomly from all peers
+            this.txPeers.add(this.randomPeerList.get(0));
+            this.randomPeerList.remove(0);
+        }
+    }
+
+    /**
      * add a peer to tx peer set
-     * @param peer
+     * @param peer public key
      */
     public synchronized void addTxPeer(byte[] peer) {
         // if full, throw it away
@@ -276,7 +334,7 @@ public class PeerManager {
 
     /**
      * get all peers
-     * @return
+     * @return peer set
      */
     public synchronized Set<ByteArrayWrapper> getAllPeers() {
         return this.allPeers;
@@ -284,7 +342,7 @@ public class PeerManager {
 
     /**
      * get all peers number
-     * @return
+     * @return peer number
      */
     public synchronized int getPeerNumber() {
         return this.allPeers.size();

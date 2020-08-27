@@ -60,7 +60,7 @@ public class ChainParam {
     public static final int DEFAULT_MIN_BLOCK_TIME = 60;
 
     // range
-    public static final int MUTABLE_RANGE = 864; // 3 days
+    public static final int MUTABLE_RANGE = 288; // 3 days
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
 
     // transaction pool
