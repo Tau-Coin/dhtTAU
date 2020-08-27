@@ -1,16 +1,14 @@
-package io.taucoin.torrent.publishing.core.storage.sqlite;
+package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
-
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
-import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
+import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 
@@ -27,7 +25,7 @@ public class TxRepositoryImpl implements TxRepository{
      * @param appContext 上下文
      * @param db 数据库实例
      */
-    TxRepositoryImpl(@NonNull Context appContext, @NonNull AppDatabase db) {
+    public TxRepositoryImpl(@NonNull Context appContext, @NonNull AppDatabase db) {
         this.appContext = appContext;
         this.db = db;
     }

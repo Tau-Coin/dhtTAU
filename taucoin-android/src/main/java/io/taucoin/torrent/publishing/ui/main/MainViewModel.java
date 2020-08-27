@@ -10,9 +10,8 @@ import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
-import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 
 /**
  * 主页的ViewModel

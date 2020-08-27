@@ -446,4 +446,7 @@ public class TauDaemon {
     public long getUserBalance(String chainID, String publicKey) {
         return 100000000000L;
     }
+
+    public void followCommunity(String chainLink) {
+    }
 }

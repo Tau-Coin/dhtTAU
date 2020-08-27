@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.core.storage.sqlite;
+package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
 
@@ -6,8 +6,8 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
-import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
+import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 
 /**
@@ -23,7 +23,7 @@ public class MsgRepositoryImpl implements MsgRepository{
      * @param appContext 上下文
      * @param db 数据库实例
      */
-    MsgRepositoryImpl(@NonNull Context appContext, @NonNull AppDatabase db) {
+    public MsgRepositoryImpl(@NonNull Context appContext, @NonNull AppDatabase db) {
         this.appContext = appContext;
         this.db = db;
     }

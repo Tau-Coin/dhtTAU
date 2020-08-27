@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="78dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <CheckBox
+            android:visibility="gone"
+            android:id="@+id/cb_select"
+            android:layout_centerVertical="true"
+            android:layout_width="37dp"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tv_user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/cb_select"
+            android:includeFontPadding="false"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/gray_dark"
+            android:singleLine="true"
+            android:ellipsize="middle"
+            android:textAppearance="@style/TextAppearanceBody2" />
+
+        <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+            android:layout_toEndOf="@+id/cb_select"
+            android:layout_below="@+id/tv_user_name"
+            android:id="@+id/left_view"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="7dp"
+            android:layout_marginTop="5dp"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:textAllCaps="true"
+            android:textColor="@color/color_white"
+            android:textAppearance="@style/TextAppearanceHeadline6"
+            app:borderColor="@color/primary_light"
+            app:borderWidth="0dp"
+            app:radius="5dp"
+            app:isRadiusAutoHalf="true"
+            app:bgColor="@color/primary_light"
+            app:textColorForPressed="@color/color_white" />
+
+        <TextView
+            android:layout_below="@+id/tv_user_name"
+            android:id="@+id/tv_community_name"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_toEndOf="@+id/left_view"
+            android:layout_toStartOf="@+id/btn_join"
+            android:includeFontPadding="false"
+            android:gravity="center_vertical"
+            android:layout_marginTop="5dp"
+            android:layout_centerVertical="true"
+            android:singleLine="true"
+            android:ellipsize="middle"
+            android:textAppearance="@style/TextAppearanceHeadline6" />
+
+        <Button
+            android:id="@+id/btn_join"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="@string/notifications_join"
+            android:textAllCaps="false"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="20dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:textAppearance="@style/TextAppearanceBody1"/>
+    </RelativeLayout>
+</layout>

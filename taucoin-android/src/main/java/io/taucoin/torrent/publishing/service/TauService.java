@@ -19,7 +19,7 @@ import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.TauDaemonListener;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.TauNotifier;

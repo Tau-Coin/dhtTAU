@@ -54,6 +54,8 @@
     <string name="menu_alert">Alert</string>
     <string name="menu_search">Search</string>
     <string name="menu_done">Done</string>
+    <string name="menu_delete">Delete</string>
+    <string name="menu_edit">Edit</string>
     <string name="menu_community_info">Community Info</string>
 
     <string name="community_settings">Settings</string>
@@ -66,9 +68,6 @@
     <string name="community_mining_power">Mining Power</string>
     <string name="community_info">Info</string>
     <string name="community_invite_link">Invite Link</string>
-    <string name="community_notifications">Notifications</string>
-    <string name="community_notifications_on">On</string>
-    <string name="community_notifications_off">Off</string>
     <string name="community_add_member">Add Member via Wiring</string>
 
     <string name="community_input_hint">Message</string>
@@ -253,6 +252,11 @@
     <!-- Send text to clipboard -->
     <string name="send_text_to_clipboard">Copy</string>
     <string name="text_copied_to_clipboard">Text copied to clipboard</string>
+
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_empty">No notifications！</string>
+    <string name="notifications_join">Join</string>
+    <string name="notifications_from">From %1$s</string>
 
     <!--permission tip-->
     <string name="permission_tip_upgrade_denied">

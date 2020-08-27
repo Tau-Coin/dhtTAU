@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.core.storage.sqlite;
+package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 
 import java.util.List;

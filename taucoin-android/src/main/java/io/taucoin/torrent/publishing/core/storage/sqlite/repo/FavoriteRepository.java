@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.core.storage.sqlite;
+package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import androidx.paging.DataSource;
 import io.taucoin.torrent.publishing.core.model.data.FavoriteAndUser;

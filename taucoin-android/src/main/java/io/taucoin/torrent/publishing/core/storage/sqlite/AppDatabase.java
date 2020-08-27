@@ -10,12 +10,14 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.dao.CommunityDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.FavoriteDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.MemberDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.MessageDao;
+import io.taucoin.torrent.publishing.core.storage.sqlite.dao.NotificationDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.TxDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.UserDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Favorite;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Notification;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
@@ -24,7 +26,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
         User.class,
         Tx.class,
         Message.class,
-        Favorite.class
+        Favorite.class,
+        Notification.class
     }, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "tau.db";
@@ -37,6 +40,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract TxDao txDao();
     public abstract MessageDao msgDao();
     public abstract FavoriteDao favoriteDao();
+    public abstract NotificationDao notificationDao();
 
     /**
      * 获取数据库实例

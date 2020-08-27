@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.core.storage.sqlite;
+package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
 
@@ -10,6 +10,7 @@ import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.model.data.Statistics;
+import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**

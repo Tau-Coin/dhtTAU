@@ -1,15 +1,12 @@
-package io.taucoin.torrent.publishing.core.storage.sqlite;
+package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
-
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import io.taucoin.torrent.publishing.core.model.data.FavoriteAndUser;
-import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
+import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Favorite;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 
 /**
  * TxRepository接口实现
@@ -24,7 +21,7 @@ public class FavoriteRepositoryImpl implements FavoriteRepository{
      * @param appContext 上下文
      * @param db 数据库实例
      */
-    FavoriteRepositoryImpl(@NonNull Context appContext, @NonNull AppDatabase db) {
+    public FavoriteRepositoryImpl(@NonNull Context appContext, @NonNull AppDatabase db) {
         this.appContext = appContext;
         this.db = db;
     }

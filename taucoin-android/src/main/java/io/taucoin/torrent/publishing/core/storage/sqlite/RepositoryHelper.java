@@ -4,6 +4,20 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FavoriteRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FavoriteRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.NotificationRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.NotificationRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepositoryImpl;
 
 /**
  * RepositoryHelper创建数据库操作单例
@@ -14,8 +28,9 @@ public class RepositoryHelper {
     private static UserRepositoryImpl userRepo;
     private static TxRepositoryImpl txRepo;
     private static MsgRepositoryImpl msgRepo;
-    private static SettingsRepository settingsRepo;
-    private static FavoriteRepository favoriteRepo;
+    private static SettingsRepositoryImpl settingsRepo;
+    private static FavoriteRepositoryImpl favoriteRepo;
+    private static NotificationRepositoryImpl notificationRepo;
 
     /**
      * 获取CommunityRepository单例
@@ -104,5 +119,18 @@ public class RepositoryHelper {
                     AppDatabase.getInstance(appContext));
 
         return favoriteRepo;
+    }
+
+    /**
+     * 获取FavoriteRepository单例
+     * @param appContext 上下文
+     * @return NotificationRepository
+     */
+    public synchronized static NotificationRepository getNotificationRepository(@NonNull Context appContext) {
+        if (notificationRepo == null)
+            notificationRepo = new NotificationRepositoryImpl(appContext,
+                    AppDatabase.getInstance(appContext));
+
+        return notificationRepo;
     }
 }

@@ -16,7 +16,6 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.paging.DataSource;
 import io.reactivex.BackpressureStrategy;
-import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.Single;
@@ -32,14 +31,14 @@ import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.model.data.Statistics;
 import io.taucoin.torrent.publishing.core.model.data.Result;
-import io.taucoin.torrent.publishing.core.storage.sqlite.MemberRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.UserRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
-import io.taucoin.torrent.publishing.core.storage.sqlite.CommunityRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -80,7 +79,7 @@ public class CommunityViewModel extends AndroidViewModel {
      * 获取添加社区状态的被观察者
      * @return 被观察者
      */
-    LiveData<Result> getAddCommunityState() {
+    public LiveData<Result> getAddCommunityState() {
         return addCommunityState;
     }
 
@@ -106,6 +105,35 @@ public class CommunityViewModel extends AndroidViewModel {
      */
     public MutableLiveData<List<Community>> getBlackList() {
         return blackList;
+    }
+
+    /**
+     * 添加新的社区到数据库
+     * @param chainID
+     * @param chainLink
+     */
+    public void addCommunity(String chainID, String chainLink){
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
+            Result result = new Result();
+            String communityName = UsersUtil.getCommunityName(chainID);
+            if(StringUtil.isNotEmpty(communityName)){
+                Community community = new Community(chainID, communityName);
+                communityRepo.addCommunity(community);
+                // 链端follow community
+                daemon.followCommunity(chainLink);
+                result.setMsg(chainID);
+            }else{
+                result.setSuccess(false);
+            }
+            emitter.onNext(result);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(state -> {
+                    addCommunityState.postValue(state);
+                });
+        disposables.add(disposable);
     }
 
     /**

@@ -45,6 +45,7 @@ public class BadgeActionProvider extends ActionProvider {
         view.setLayoutParams(layoutParams);
         mIvIcon = view.findViewById(R.id.iv_icon);
         mTvBadge =  view.findViewById(R.id.tv_badge);
+        mTvBadge.setVisibility(View.GONE);
         view.setOnClickListener(onViewClickListener);
         return view;
 
@@ -89,4 +90,8 @@ public class BadgeActionProvider extends ActionProvider {
         mTvBadge.setText(i);
     }
 
+    // Badge是否可见
+    public void setVisibility(boolean visibility) {
+        mTvBadge.setVisibility(visibility ? View.VISIBLE : View.GONE);
+    }
 }

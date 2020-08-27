@@ -52,6 +52,8 @@ import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.customviews.BadgeActionProvider;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.notify.NotificationActivity;
+import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.user.ScanQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
@@ -70,12 +72,14 @@ public class MainActivity extends BaseActivity {
     private MainViewModel mainViewModel;
     private TauInfoProvider infoProvider;
     private CommunityViewModel communityViewModel;
+    private NotificationViewModel notificationViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Subject<Integer> mBackClick = PublishSubject.create();
     private CommonDialog seedDialog;
     private CommonDialog linkDialog;
     private BadgeActionProvider actionProvider;
     private User user;
+    private int unreadNum;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,11 +97,13 @@ public class MainActivity extends BaseActivity {
         userViewModel = provider.get(UserViewModel.class);
         mainViewModel = provider.get(MainViewModel.class);
         communityViewModel = provider.get(CommunityViewModel.class);
+        notificationViewModel = provider.get(NotificationViewModel.class);
         infoProvider = TauInfoProvider.getInstance(getApplicationContext());
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main_drawer);
         initLayout();
         checkCurrentUser();
         initExitApp();
+        subscribeAddCommunity();
 
         if (StringUtil.isNotEmpty(action) && StringUtil.isEquals(action,
                 ExternalLinkActivity.ACTION_CHAIN_LINK_CLICK)) {
@@ -203,6 +209,19 @@ public class MainActivity extends BaseActivity {
     }
 
     /**
+     * 订阅是否需要启动TauDaemon
+     */
+    private void subscribeAddCommunity(){
+        communityViewModel.getAddCommunityState().observe(this, result -> {
+            if(result.isSuccess()){
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.CHAIN_ID, result.getMsg());
+                ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+            }
+        });
+    }
+
+    /**
      * 更新当前用户信息
      * @param user 当前用户
      */
@@ -228,10 +247,19 @@ public class MainActivity extends BaseActivity {
         subscribeCurrentUser();
         subscribeDHTStatus();
         subscribeNeedStartDaemon();
+        subscribeUnreadNotificationNum();
+    }
+
+    private void subscribeUnreadNotificationNum() {
+        disposables.add(notificationViewModel.queryUnreadNotificationsNum()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(num -> unreadNum = num, e -> unreadNum = 0));
+        ;
     }
 
     private void handleClipboardContent() {
-        String  content = CopyManager.getClipboardContent(this);
+        String content = CopyManager.getClipboardContent(this);
         if(StringUtil.isNotEmpty(content)){
             showOpenExternalLinkDialog(content);
             CopyManager.clearClipboardContent();
@@ -356,7 +384,7 @@ public class MainActivity extends BaseActivity {
                 if(linkDialog != null){
                     linkDialog.closeDialog();
                 }
-                openExternalLink(chainID);
+                openExternalLink(chainID, chainLink);
             });
             linkDialog = new CommonDialog.Builder(this)
                     .setContentView(dialogBinding.getRoot())
@@ -370,25 +398,28 @@ public class MainActivity extends BaseActivity {
      * 打开外部chain link
      * @param chainID
      */
-    private void openExternalLink(String chainID) {
+    private void openExternalLink(String chainID, String chainLink) {
         disposables.add(communityViewModel.getCommunityByChainIDSingle(chainID)
-        .subscribeOn(Schedulers.newThread())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(community -> {
-            if (null == community) {
-                ToastUtils.showLongToast("developing...");
-            } else {
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(community -> {
                 Intent intent = new Intent();
                 intent.putExtra(IntentExtra.CHAIN_ID, chainID);
                 ActivityUtil.startActivity(intent, this, CommunityActivity.class);
-            }
-        }));
+            }, it -> {
+                communityViewModel.addCommunity(chainID, chainLink);
+            }));
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        actionProvider.setText("9");
+        if(unreadNum >= 10){
+            actionProvider.setText("···");
+        }else{
+            actionProvider.setBadge(unreadNum);
+        }
+        actionProvider.setVisibility(unreadNum > 0);
     }
 
     /**
@@ -399,9 +430,8 @@ public class MainActivity extends BaseActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         MenuItem menuItem = menu.findItem(R.id.menu_alert);
         actionProvider = (BadgeActionProvider) MenuItemCompat.getActionProvider(menuItem);
-        actionProvider.setOnClickListener(0, what -> {
-
-        });
+        actionProvider.setOnClickListener(0, what ->
+                ActivityUtil.startActivity(this, NotificationActivity.class));
         return true;
     }
 
