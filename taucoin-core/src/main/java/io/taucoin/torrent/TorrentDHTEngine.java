@@ -154,6 +154,16 @@ public class TorrentDHTEngine {
             = new LinkedBlockingQueue<>();
     private Thread gettingMutableItemThread;
 
+    // Queue of putting immutable item request.
+    private BlockingQueue<ImmutableItem> puttingImmutableItemQueue
+            = new LinkedBlockingQueue<>();
+    private Thread puttingImmutableItemThread;
+
+    // Queue of putting mutable item request.
+    private BlockingQueue<MutableItem> puttingMutableItemQueue
+            = new LinkedBlockingQueue<>();
+    private Thread puttingMutableItemThread;
+
     private AtomicBoolean dhtItemWorkersStarted = new AtomicBoolean(false);
 
     /**
@@ -278,6 +288,42 @@ public class TorrentDHTEngine {
         logger.debug("put mutable item:" + item.entry.toString());
         sessionManager.dhtPutItem(item.publicKey, item.privateKey,
                 item.entry, item.salt);
+    }
+
+    /**
+     * Put immutable item asynchronously.
+     *
+     * @param item immutable item.
+     * @return boolean true indicates this item is put into queue,
+     *     or else false.
+     */
+    public boolean distribute(ImmutableItem item) {
+
+        if (item == null || !sessionManager.isRunning()
+                || puttingImmutableItemQueue.size() >= DHTBlockingQueueCapability) {
+            return false;
+        }
+
+        puttingImmutableItemQueue.add(item);
+        return true;
+    }
+
+    /**
+     * Put mutable item asynchronously.
+     *
+     * @param item mutable item.
+     * @return boolean true indicates this item is put into queue,
+     *     or else false.
+     */
+    public boolean distribute(MutableItem item) {
+
+        if (item == null || !sessionManager.isRunning()
+                || puttingMutableItemQueue.size() >= DHTBlockingQueueCapability) {
+            return false;
+        }
+
+        puttingMutableItemQueue.add(item);
+        return true;
     }
 
     /**
@@ -460,6 +506,14 @@ public class TorrentDHTEngine {
                 "gettingMutableItemThread");
         this.gettingMutableItemThread.start();
 
+        this.puttingImmutableItemThread = new Thread(this::immutableItemsDistributeLoop,
+                "puttingImmutableItemThread");
+        this.puttingImmutableItemThread.start();
+
+        this.puttingMutableItemThread = new Thread(this::mutableItemsDistributeLoop,
+                "puttingMutableItemThread");
+        this.puttingMutableItemThread.start();
+
         logger.info("starting dht items workers");
     }
 
@@ -475,12 +529,22 @@ public class TorrentDHTEngine {
         if (this.gettingMutableItemThread != null) {
             this.gettingMutableItemThread.interrupt();
         }
+        if (this.puttingImmutableItemThread != null) {
+            this.puttingImmutableItemThread.interrupt();
+        }
+        if (this.puttingMutableItemThread != null) {
+            this.puttingMutableItemThread.interrupt();
+        }
 
         try {
             this.gettingImmutableItemThread.join();
             this.gettingImmutableItemThread = null;
             this.gettingMutableItemThread.join();
             this.gettingMutableItemThread = null;
+            this.puttingImmutableItemThread.join();
+            this.puttingImmutableItemThread = null;
+            this.puttingMutableItemThread.join();
+            this.puttingMutableItemThread = null;
         } catch (InterruptedException e) {
             // ignore this exception
         }
@@ -536,6 +600,46 @@ public class TorrentDHTEngine {
 
             if (req != null) {
                 req.onDHTItemGot(item);
+            }
+        }
+    }
+
+    /**
+     * Distribute immutable item.
+     */
+    private void immutableItemsDistributeLoop() {
+
+        while (!Thread.currentThread().isInterrupted()) {
+
+            ImmutableItem item;
+            try {
+                Thread.sleep(DHTOperationInterval);
+                item = puttingImmutableItemQueue.take();
+                dhtPut(item);
+            } catch (InterruptedException e) {
+                break;
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Distribute mutable item.
+     */
+    private void mutableItemsDistributeLoop() {
+
+        while (!Thread.currentThread().isInterrupted()) {
+
+            MutableItem item;
+            try {
+                Thread.sleep(DHTOperationInterval);
+                item = puttingMutableItemQueue.take();
+                dhtPut(item);
+            } catch (InterruptedException e) {
+                break;
+            } catch (Throwable e) {
+                e.printStackTrace();
             }
         }
     }
