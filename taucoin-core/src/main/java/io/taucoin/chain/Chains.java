@@ -19,6 +19,7 @@ import java.util.Set;
 
 import io.taucoin.account.AccountManager;
 import io.taucoin.core.AccountState;
+import io.taucoin.core.DataIdentifier;
 import io.taucoin.core.ImportResult;
 import io.taucoin.core.PeerManager;
 import io.taucoin.core.ProofOfTransaction;
@@ -43,7 +44,7 @@ import io.taucoin.types.TypesConfig;
 import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.util.ByteArrayWrapper;
 
-public class Chains {
+public class Chains implements DHT.GetDHTItemCallback{
     private static final Logger logger = LoggerFactory.getLogger("Chain");
 
     private static final int TIMEOUT = 10;
@@ -53,7 +54,7 @@ public class Chains {
     // Chain id specified by the transaction of creating new blockchain.
     private final byte[] chainID;
 
-    private Set<ByteArrayWrapper> chainIDs = new HashSet<>();
+    private final Set<ByteArrayWrapper> chainIDs = new HashSet<>();
 
     // mutable item salt: block
     private final Map<ByteArrayWrapper, byte[]> blockSalts = new HashMap<>();
@@ -69,22 +70,22 @@ public class Chains {
     // consensus: pot
     private ProofOfTransaction pot;
 
-    private Map<ByteArrayWrapper, ProofOfTransaction> pots = new HashMap<>();
+    private final Map<ByteArrayWrapper, ProofOfTransaction> pots = new HashMap<>();
 
     // tx pool
     private TransactionPool txPool;
 
-    private Map<ByteArrayWrapper, TransactionPool> txPools = new HashMap<>();
+    private final Map<ByteArrayWrapper, TransactionPool> txPools = new HashMap<>();
 
     // voting pool
     private VotingPool votingPool;
 
-    private Map<ByteArrayWrapper, VotingPool> votingPools = new HashMap<>();
+    private final Map<ByteArrayWrapper, VotingPool> votingPools = new HashMap<>();
 
     // peer manager
     private PeerManager peerManager;
 
-    private Map<ByteArrayWrapper, PeerManager> peerManagers = new HashMap<>();
+    private final Map<ByteArrayWrapper, PeerManager> peerManagers = new HashMap<>();
 
     // block db
     private final BlockStore blockStore;
@@ -95,15 +96,17 @@ public class Chains {
     // state processor: process and roll back block
     private StateProcessor stateProcessor;
 
+    private final Map<ByteArrayWrapper, StateProcessor> stateProcessors = new HashMap<>();
+
     // the best block container of current chain
     private BlockContainer bestBlockContainer;
 
-    private Map<ByteArrayWrapper, BlockContainer> bestBlockContainers = new HashMap<>();
+    private final Map<ByteArrayWrapper, BlockContainer> bestBlockContainers = new HashMap<>();
 
     // the synced block of current chain
     private Block syncBlock;
 
-    private Map<ByteArrayWrapper, Block> syncBlocks = new HashMap<>();
+    private final Map<ByteArrayWrapper, Block> syncBlocks = new HashMap<>();
 
     /**
      * Chain constructor.
@@ -122,9 +125,118 @@ public class Chains {
     /**
      * follow a new chain
      * @param chainID chain ID
+     * @return true if succeed, or false
      */
-    public void followChain(byte[] chainID) {
+    public boolean followChain(byte[] chainID) {
+        this.blockSalts.put(new ByteArrayWrapper(chainID), makeBlockSalt(chainID));
+
+        this.txSalts.put(new ByteArrayWrapper(chainID), makeTxSalt(chainID));
+
         this.chainIDs.add(new ByteArrayWrapper(chainID));
+
+        // init voting pool
+        this.votingPools.put(new ByteArrayWrapper(chainID), new VotingPool(chainID));
+
+        // init pot consensus
+        this.pots.put(new ByteArrayWrapper(chainID), new ProofOfTransaction(chainID));
+
+        // init state processor
+        this.stateProcessors.put(new ByteArrayWrapper(chainID), new StateProcessorImpl(chainID));
+
+        // init best block and sync block
+        try {
+            byte[] bestBlockHash = this.stateDB.getBestBlockHash(chainID);
+            if (null != bestBlockHash) {
+                logger.info("Chain ID[{}]: Best block hash[{}]",
+                        new String(chainID), Hex.toHexString(bestBlockHash));
+                this.bestBlockContainers.put(new ByteArrayWrapper(chainID),
+                        this.blockStore.getBlockContainerByHash(chainID, bestBlockHash));
+            }
+
+            byte[] syncBlockHash = this.stateDB.getSyncBlockHash(chainID);
+            if (null != syncBlockHash) {
+                logger.info("Chain ID[{}]: Sync block hash[{}]",
+                        new String(chainID), Hex.toHexString(syncBlockHash));
+                this.syncBlocks.put(new ByteArrayWrapper(chainID),
+                        this.blockStore.getBlockByHash(chainID, syncBlockHash));
+            }
+        } catch (Exception e) {
+            logger.error(new String(chainID) + ":" + e.getMessage(), e);
+            return false;
+        }
+
+        // init peer manager
+        PeerManager peerManager = new PeerManager(chainID);
+        // get peers form db
+        try {
+            Set<byte[]> peers = this.stateDB.getPeers(chainID);
+            Set<ByteArrayWrapper> allPeers = new HashSet<>(1);
+            List<ByteArrayWrapper> priorityPeers = new ArrayList<>();
+            if (null != peers && !peers.isEmpty()) {
+                for (byte[] peer: peers) {
+                    allPeers.add(new ByteArrayWrapper(peer));
+                }
+            } else {
+                // if there is no peers, add yourself
+                allPeers.add(new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first));
+            }
+
+            // get from mutable block
+            if (null != this.bestBlockContainer && this.bestBlockContainer.getBlock().getBlockNum() > 0) {
+                // get priority peers in mutable range
+                priorityPeers.add(new ByteArrayWrapper(this.bestBlockContainer.getBlock().getMinerPubkey()));
+                byte[] previousHash = this.bestBlockContainer.getBlock().getPreviousBlockHash();
+                for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
+                    Block block = this.blockStore.getBlockByHash(chainID, previousHash);
+                    if (null != block) {
+                        if (block.getBlockNum() <= 0) {
+                            break;
+                        }
+                        priorityPeers.add(new ByteArrayWrapper(block.getMinerPubkey()));
+                        previousHash = block.getPreviousBlockHash();
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // if no enough peers, get from all peers
+            Iterator<ByteArrayWrapper> iterator = allPeers.iterator();
+            for (int i = priorityPeers.size(); i < ChainParam.MUTABLE_RANGE; i++) {
+                if (iterator.hasNext()) {
+                    priorityPeers.add(new ByteArrayWrapper(iterator.next().getData()));
+                } else {
+                    break;
+                }
+            }
+
+            peerManager.init(allPeers, priorityPeers);
+        } catch (Exception e) {
+            logger.error(new String(chainID) + ":" + e.getMessage(), e);
+            return false;
+        }
+
+        this.peerManagers.put(new ByteArrayWrapper(chainID), peerManager);
+
+        // init tx pool
+        TransactionPool txPool = new TransactionPoolImpl(chainID,
+                AccountManager.getInstance().getKeyPair().first, this.stateDB);
+        txPool.init();
+
+        this.txPools.put(new ByteArrayWrapper(chainID), txPool);
+
+        return true;
+    }
+
+    private void multiChain() {
+        for (ByteArrayWrapper chainID: this.chainIDs) {
+            logger.debug("Chain ID:{}", new String(chainID.getData()));
+            if (null == this.syncBlocks.get(chainID)) {
+                // empty chain
+            } else {
+                //
+            }
+        }
     }
 
     /**
@@ -157,96 +269,6 @@ public class Chains {
      * @return true if succeed, false otherwise
      */
     private boolean init() {
-        // init salt
-        this.blockSalts.put(new ByteArrayWrapper(this.chainID), makeBlockSalt(this.chainID));
-
-        this.txSalts.put(new ByteArrayWrapper(this.chainID), makeTxSalt(this.chainID));
-
-        // init voting pool
-        this.votingPool = new VotingPool(this.chainID);
-
-        // init pot consensus
-        this.pot = new ProofOfTransaction(this.chainID);
-
-        // init state processor
-        this.stateProcessor = new StateProcessorImpl(this.chainID);
-
-        // init best block and sync block
-        try {
-            byte[] bestBlockHash = this.stateDB.getBestBlockHash(this.chainID);
-            if (null != bestBlockHash) {
-                logger.info("Chain ID[{}]: Best block hash[{}]",
-                        new String(this.chainID), Hex.toHexString(bestBlockHash));
-                this.bestBlockContainer = this.blockStore.getBlockContainerByHash(this.chainID, bestBlockHash);
-            }
-
-            byte[] syncBlockHash = this.stateDB.getSyncBlockHash(this.chainID);
-            if (null != syncBlockHash) {
-                logger.info("Chain ID[{}]: Sync block hash[{}]",
-                        new String(this.chainID), Hex.toHexString(syncBlockHash));
-                this.syncBlock = this.blockStore.getBlockByHash(this.chainID, syncBlockHash);
-            }
-        } catch (Exception e) {
-            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
-            return false;
-        }
-
-        // init peer manager
-        this.peerManager = new PeerManager(this.chainID);
-        // get peers form db
-        try {
-            Set<byte[]> peers = this.stateDB.getPeers(this.chainID);
-            Set<ByteArrayWrapper> allPeers = new HashSet<>(1);
-            List<ByteArrayWrapper> priorityPeers = new ArrayList<>();
-            if (null != peers && !peers.isEmpty()) {
-                for (byte[] peer: peers) {
-                    allPeers.add(new ByteArrayWrapper(peer));
-                }
-            } else {
-                // if there is no peers, add yourself
-                allPeers.add(new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first));
-            }
-
-            // get from mutable block
-            if (null != this.bestBlockContainer && this.bestBlockContainer.getBlock().getBlockNum() > 0) {
-                // get priority peers in mutable range
-                priorityPeers.add(new ByteArrayWrapper(this.bestBlockContainer.getBlock().getMinerPubkey()));
-                byte[] previousHash = this.bestBlockContainer.getBlock().getPreviousBlockHash();
-                for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
-                    Block block = this.blockStore.getBlockByHash(this.chainID, previousHash);
-                    if (null != block) {
-                        if (block.getBlockNum() <= 0) {
-                            break;
-                        }
-                        priorityPeers.add(new ByteArrayWrapper(block.getMinerPubkey()));
-                        previousHash = block.getPreviousBlockHash();
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            // if no enough peers, get from all peers
-            Iterator<ByteArrayWrapper> iterator = allPeers.iterator();
-            for (int i = priorityPeers.size(); i < ChainParam.MUTABLE_RANGE; i++) {
-                if (iterator.hasNext()) {
-                    priorityPeers.add(new ByteArrayWrapper(iterator.next().getData()));
-                } else {
-                    break;
-                }
-            }
-
-            this.peerManager.init(allPeers, priorityPeers);
-        } catch (Exception e) {
-            logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
-            return false;
-        }
-
-        // init tx pool
-        this.txPool = new TransactionPoolImpl(this.chainID,
-                AccountManager.getInstance().getKeyPair().first, this.stateDB);
-        this.txPool.init();
-
         return true;
     }
 
@@ -675,7 +697,7 @@ public class Chains {
         Vote bestVote = votingPool.getBestVote();
 
         if (null != bestVote) {
-            logger.debug("Chain ID[{}]: Best vote:{}", new String(this.chainID), bestVote.toString());
+            logger.debug("Chain ID[{}]: Best vote:{}", new String(chainID), bestVote.toString());
         }
 
         // clear voting pool for next time when voting end
@@ -1572,6 +1594,31 @@ public class Chains {
             }
         }
         return set;
+    }
+
+    @Override
+    public void onDHTItemGot(byte[] item, Object cbData) {
+        DataIdentifier dataIdentifier = (DataIdentifier) cbData;
+        switch (dataIdentifier.getDataType()) {
+            case BLOCK_MUTABLE_ITEM_VALUE: {
+                break;
+            }
+            case TX_MUTABLE_ITEM_VALUE: {
+                break;
+            }
+            case MSG_MUTABLE_ITEM_VALUE: {
+                break;
+            }
+            case BLOCK: {
+
+            }
+            case TX: {
+                break;
+            }
+            default: {
+
+            }
+        }
     }
 
 }
