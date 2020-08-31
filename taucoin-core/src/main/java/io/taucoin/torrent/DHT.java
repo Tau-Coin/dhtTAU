@@ -11,15 +11,17 @@ import java.nio.charset.Charset;
 
 public final class DHT {
 
+    // Timeout value for getting immutable & mutable item.
+    public static final int DHT_OP_TIMEOUT = 10;
+
     public static class ImmutableItem {
     
         Entry entry;
 
         public ImmutableItem(byte[] data) {
             this.entry = Entry.bdecode(data);
-            // this.entry = new Entry(new String(data, Charset.forName("UTF-8")));
         }
-    }
+     }
 
     public static class MutableItem {
 
@@ -32,8 +34,7 @@ public final class DHT {
             this.publicKey = publicKey;
             this.privateKey = privateKey;
             this.entry = Entry.bdecode(data);
-            // this.entry = new Entry(new String(data, Charset.forName("UTF-8")));
-            this.salt= salt;
+            this.salt = salt;
         }
     }
 
@@ -45,6 +46,10 @@ public final class DHT {
         public GetImmutableItemSpec(byte[] sha1, int timeout) {
             this.sha1 = new Sha1Hash(sha1);
             this.timeout = timeout;
+        }
+
+        public GetImmutableItemSpec(byte[] sha1) {
+            this(sha1, DHT_OP_TIMEOUT);
         }
     }
 
@@ -58,6 +63,10 @@ public final class DHT {
             this.publicKey = publicKey;
             this.salt = salt;
             this.timeout = timeout;
+        }
+
+        public GetMutableItemSpec(byte[] publicKey, byte[] salt) {
+            this(publicKey, salt, DHT_OP_TIMEOUT);
         }
     }
 
