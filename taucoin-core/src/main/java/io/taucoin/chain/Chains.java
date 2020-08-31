@@ -20,6 +20,7 @@ import java.util.Set;
 import io.taucoin.account.AccountManager;
 import io.taucoin.core.AccountState;
 import io.taucoin.core.DataIdentifier;
+import io.taucoin.core.DataType;
 import io.taucoin.core.ImportResult;
 import io.taucoin.core.PeerManager;
 import io.taucoin.core.ProofOfTransaction;
@@ -107,6 +108,14 @@ public class Chains implements DHT.GetDHTItemCallback{
     private Block syncBlock;
 
     private final Map<ByteArrayWrapper, Block> syncBlocks = new HashMap<>();
+
+    private final Map<ByteArrayWrapper, List<Block>> votingBlocks = new HashMap<>();
+
+    private final Map<ByteArrayWrapper, List<BlockContainer>> blockContainerMap = new HashMap<>();
+
+    private final Map<ByteArrayWrapper, List<Block>> blockMap = new HashMap<>();
+
+    private final Map<ByteArrayWrapper, List<Transaction>> txMap = new HashMap<>();
 
     /**
      * Chain constructor.
@@ -225,18 +234,75 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.txPools.put(new ByteArrayWrapper(chainID), txPool);
 
+        List<Block> blocks = new ArrayList<>();
+        this.votingBlocks.put(new ByteArrayWrapper(chainID), blocks);
+
         return true;
     }
 
     private void multiChain() {
         for (ByteArrayWrapper chainID: this.chainIDs) {
+
             logger.debug("Chain ID:{}", new String(chainID.getData()));
+
             if (null == this.syncBlocks.get(chainID)) {
                 // empty chain
-            } else {
-                //
+                Vote bestVote = tryToVote(chainID);
+                tryChangeToBestVote(bestVote);
             }
+
+            //
+            List<BlockContainer> blockContainers = this.blockContainerMap.get(chainID);
+
+            if (blockContainers.isEmpty()) {
+
+                PeerManager peerManager = this.peerManagers.get(chainID);
+                byte[] peer = peerManager.getBlockPeerRandomly();
+
+                if (!requestBlockHashFromPeer(chainID, peer)) {
+                    try {
+                        Thread.sleep(10000);
+                        continue;
+                    } catch (InterruptedException e) {
+                        logger.info(new String(chainID.getData()) + ":" + e.getMessage(), e);
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            } else {
+                if (Arrays.equals(syncBlock.getPreviousBlockHash(),
+                        blockContainers.get(0).getBlock().getBlockHash())) {
+                    // sync block
+                } else if (blockContainers.get(0).getBlock().getCumulativeDifficulty().
+                        compareTo(this.bestBlockContainers.get(chainID).getBlock().getCumulativeDifficulty()) > 0) {
+                    // find a more difficulty chain
+                    // re-branch
+                } else {
+                    // save block in db
+                }
+            }
+
+            mine();
+
+            for (int i = 0; i < 10; i++) {
+                byte[] peer = peerManager.getBlockPeerRandomly();
+                requestTxHashFromPeer(chainID, peer);
+            }
+
+            for (int i = 0; i < 10; i++) {
+                byte[] peer = peerManager.getBlockPeerRandomly();
+                responseOrRepublic(chainID, peer);
+            }
+
         }
+    }
+
+    private void responseOrRepublic(ByteArrayWrapper chainID, byte[] peer) {
+        // block
+        // tx
+    }
+
+    private void mine() {
+
     }
 
     /**
@@ -664,6 +730,66 @@ public class Chains implements DHT.GetDHTItemCallback{
         return true;
     }
 
+    private Vote tryToVote(ByteArrayWrapper chainID) {
+        // try to use all peers to vote
+        PeerManager peerManager = this.peerManagers.get(chainID);
+
+        int counter = peerManager.getPeerNumber();
+
+        counter = counter > 0 ? (int)Math.log(counter) : 0;
+
+        byte[] peer = peerManager.getBlockPeerRandomly();
+        while (!Thread.interrupted() && counter > 0) {
+            if (null != peer) {
+                if (!requestVotingBlockHashFromPeer(chainID, peer)) {
+                    try {
+                        Thread.sleep(10000);
+                        continue;
+                    } catch (InterruptedException e) {
+                        logger.info(new String(chainID.getData()) + ":" + e.getMessage(), e);
+                        Thread.currentThread().interrupt();
+                    }
+                }
+
+                peer = peerManager.getBlockPeerRandomly();
+
+                counter--;
+            }
+        }
+
+        try {
+            Thread.sleep(60000);
+        } catch (InterruptedException e) {
+            logger.info(new String(chainID.getData()) + ":" + e.getMessage(), e);
+            Thread.currentThread().interrupt();
+        }
+
+        List<Block> blocks = this.votingBlocks.get(chainID);
+
+        for (Block block: blocks) {
+            if (null != block) {
+                // vote on immutable point
+                if (block.getBlockNum() > ChainParam.MUTABLE_RANGE) {
+                    votingPool.putIntoVotingPool(block.getImmutableBlockHash(),
+                            (int) block.getBlockNum() - ChainParam.MUTABLE_RANGE);
+                } else {
+                    votingPool.putIntoVotingPool(block.getImmutableBlockHash(), 0);
+                }
+            }
+        }
+
+        Vote bestVote = votingPool.getBestVote();
+
+        if (null != bestVote) {
+            logger.debug("Chain ID[{}]: Best vote:{}", new String(chainID.getData()), bestVote.toString());
+        }
+
+        // clear voting pool for next time when voting end
+        votingPool.clearVotingPool();
+
+        return bestVote;
+    }
+
     /**
      * vote for best chain
      * @return voting result
@@ -874,6 +1000,48 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
 
         return true;
+    }
+
+    private boolean requestBlockHashFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(chainID), TIMEOUT);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID.getData(), DataType.MUTABLE_ITEM_BLOCK_HASH);
+        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private boolean requestTxHashFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalts.get(chainID), TIMEOUT);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID.getData(), DataType.MUTABLE_ITEM_TX_HASH);
+        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private boolean requestBlock(byte[] chainID, byte[] blockHash) {
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash, TIMEOUT);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK);
+        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private boolean requestTx(byte[] chainID, byte[] txid) {
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid, TIMEOUT);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX);
+        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private boolean requestTxForPool(byte[] chainID, byte[] txid) {
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid, TIMEOUT);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_FOR_POOL);
+        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private boolean requestVotingBlockHashFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(chainID), TIMEOUT);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID.getData(), DataType.MUTABLE_ITEM_BLOCK_HASH_FOR_VOTING);
+        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private boolean requestVotingBlock(byte[] chainID, byte[] blockHash) {
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash, TIMEOUT);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.MUTABLE_ITEM_BLOCK_FOR_VOTING);
+        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -1598,21 +1766,91 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     @Override
     public void onDHTItemGot(byte[] item, Object cbData) {
+        if (null == item) {
+            return;
+        }
+
         DataIdentifier dataIdentifier = (DataIdentifier) cbData;
         switch (dataIdentifier.getDataType()) {
-            case BLOCK_MUTABLE_ITEM_VALUE: {
+            case MUTABLE_ITEM_BLOCK_HASH: {
+                MutableItemValue mutableItemValue = new MutableItemValue(item);
+                requestBlock(dataIdentifier.getChainID(), mutableItemValue.getHash());
                 break;
             }
-            case TX_MUTABLE_ITEM_VALUE: {
-                break;
-            }
-            case MSG_MUTABLE_ITEM_VALUE: {
+            case MUTABLE_ITEM_TX_HASH: {
+                MutableItemValue mutableItemValue = new MutableItemValue(item);
+                requestTx(dataIdentifier.getChainID(), mutableItemValue.getHash());
                 break;
             }
             case BLOCK: {
+                Block block = new Block(item);
+                if (null != block.getTxHash()) {
+                    List<Transaction> txs = this.txMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+                    for (Transaction tx: txs) {
+                        if (Arrays.equals(block.getTxHash(), tx.getTxID())) {
+                            List<Block> blocks = this.blockMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
 
+                            BlockContainer blockContainer = new BlockContainer(block, tx);
+
+                            List<BlockContainer> blockContainers = this.blockContainerMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+                            blockContainers.add(blockContainer);
+                            this.blockContainerMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blockContainers);
+
+                            blocks.remove(block);
+                            this.blockMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blocks);
+                            return;
+                        }
+                    }
+
+                    requestTx(dataIdentifier.getChainID(), block.getTxHash());
+
+                    List<Block> blocks = this.blockMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+                    blocks.add(block);
+                    this.blockMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blocks);
+                } else {
+                    BlockContainer blockContainer = new BlockContainer(block);
+
+                    List<BlockContainer> blockContainers = this.blockContainerMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+                    blockContainers.add(blockContainer);
+                    this.blockContainerMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blockContainers);
+                }
             }
             case TX: {
+                Transaction tx = TransactionFactory.parseTransaction(item);
+
+                List<Block> blocks = this.blockMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+
+                for (Block block: blocks) {
+                    if (Arrays.equals(block.getTxHash(), tx.getTxID())) {
+                        BlockContainer blockContainer = new BlockContainer(block, tx);
+
+                        List<BlockContainer> blockContainers = this.blockContainerMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+                        blockContainers.add(blockContainer);
+                        this.blockContainerMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blockContainers);
+
+                        blocks.remove(block);
+                        this.blockMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blocks);
+                        return;
+                    }
+                }
+
+                List<Transaction> txs = this.txMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+
+                txs.add(tx);
+                this.txMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), txs);
+
+                break;
+            }
+            case MUTABLE_ITEM_BLOCK_HASH_FOR_VOTING: {
+                MutableItemValue mutableItemValue = new MutableItemValue(item);
+                requestVotingBlock(dataIdentifier.getChainID(), mutableItemValue.getHash());
+                break;
+            }
+            case MUTABLE_ITEM_BLOCK_FOR_VOTING: {
+                Block block = new Block(item);
+                List<Block> blocks = this.votingBlocks.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+                blocks.add(block);
+                this.votingBlocks.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blocks);
                 break;
             }
             default: {
