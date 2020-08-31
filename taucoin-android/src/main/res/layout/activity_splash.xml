@@ -8,13 +8,16 @@
     <ImageView
         android:layout_above="@+id/app_title"
         android:id="@+id/iv_logo"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
+        android:layout_width="160dp"
+        android:layout_height="220dp"
+        android:paddingBottom="60dp"
         android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:contentDescription="@null"
         android:src="@mipmap/ic_launcher_splash" />
 
     <TextView
+        android:visibility="gone"
         android:id="@+id/app_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

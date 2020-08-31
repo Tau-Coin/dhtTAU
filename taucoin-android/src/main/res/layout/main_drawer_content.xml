@@ -91,17 +91,17 @@
                     android:layout_marginTop="2dp"
                     android:contentDescription="@null"
                     android:layout_marginStart="5dp"
-                    android:src="@mipmap/icon_copy"/>
+                    android:src="@mipmap/icon_copy_text"/>
 
                 <ImageView
                     android:id="@+id/iv_user_qr_code"
                     android:layout_below="@+id/tv_note_name"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:onClick="onClick"
                     android:layout_alignParentEnd="true"
                     android:contentDescription="@null"
-                    android:src="@mipmap/ic_launcher_round"/>
+                    android:src="@mipmap/icon_qr_code"/>
             </RelativeLayout>
 
             <ScrollView

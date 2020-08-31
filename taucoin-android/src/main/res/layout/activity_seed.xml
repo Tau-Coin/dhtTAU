@@ -30,7 +30,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:onClick="@{listener::onClick}"
-                app:leftImage="@mipmap/icon_copy"
+                app:leftImage="@mipmap/icon_import"
                 app:rightText="@string/user_import_seed"/>
 
             <include
@@ -44,7 +44,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:onClick="@{listener::onClick}"
-                app:leftImage="@mipmap/icon_copy"
+                app:leftImage="@mipmap/icon_export"
                 app:rightText="@string/user_export_seed"/>
 
             <include
@@ -58,7 +58,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:onClick="@{listener::onClick}"
-                app:leftImage="@mipmap/icon_copy"
+                app:leftImage="@mipmap/icon_generate"
                 app:rightText="@string/user_generate_seed"/>
 
         </LinearLayout>

@@ -40,7 +40,7 @@
             android:layout_marginTop="3dp"
             android:contentDescription="@null"
             android:layout_marginStart="5dp"
-            android:src="@mipmap/icon_copy"/>
+            android:src="@mipmap/icon_copy_text"/>
 
         <TextView
             android:layout_below="@+id/tx_public_key_hint"
@@ -64,7 +64,7 @@
                 android:layout_height="18dp"
                 android:layout_marginTop="3dp"
                 android:contentDescription="@null"
-                android:src="@mipmap/icon_copy"/>
+                android:src="@mipmap/icon_copy_text"/>
 
             <TextView
                 android:layout_width="wrap_content"

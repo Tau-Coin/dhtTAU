@@ -61,7 +61,7 @@
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:onClick="@{listener::onClick}"
-            app:leftImage="@mipmap/icon_favourite"
+            app:leftImage="@mipmap/icon_msg_hash"
             app:rightText="@string/tx_operation_msg_hash"/>
 
     </LinearLayout>

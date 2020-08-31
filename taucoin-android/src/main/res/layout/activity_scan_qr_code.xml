@@ -36,30 +36,32 @@
 
         <ImageView
             android:id="@+id/iv_qr_code"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:padding="2dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="10dp"
             android:onClick="onClick"
             android:layout_gravity="start|bottom"
             android:layout_marginStart="20dp"
             android:layout_marginBottom="100dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:src="@mipmap/icon_dashboard"
+            android:src="@mipmap/icon_pkqr"
+            android:background="@drawable/circle_black"
             android:contentDescription="@null"/>
 
         <ImageView
             android:id="@+id/iv_gallery"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:padding="2dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="10dp"
             android:layout_gravity="end|bottom"
             android:onClick="onClick"
             android:layout_marginEnd="20dp"
             android:layout_marginBottom="100dp"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:src="@mipmap/icon_dashboard"
+            android:background="@drawable/circle_black"
+            android:src="@mipmap/icon_album"
             android:contentDescription="@null"/>
 
         <LinearLayout
@@ -100,7 +102,7 @@
             android:onClick="onClick"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:src="@mipmap/icon_back"
+            android:src="@mipmap/icon_back_circle"
             android:contentDescription="@null"/>
     </FrameLayout>
 </layout>

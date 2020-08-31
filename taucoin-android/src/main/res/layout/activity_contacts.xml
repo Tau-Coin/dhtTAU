@@ -33,7 +33,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:contentDescription="@null"
-                    android:src="@mipmap/icon_add_member"/>
+                    android:src="@mipmap/icon_invite_friends"/>
 
                 <TextView
                     android:layout_width="wrap_content"

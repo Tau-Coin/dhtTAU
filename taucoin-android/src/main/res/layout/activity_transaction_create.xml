@@ -43,7 +43,7 @@
                 android:layout_marginEnd="20dp"
                 android:onClick="@{listener::onClick}"
                 android:contentDescription="@null"
-                android:src="@mipmap/icon_blacklist"/>
+                android:src="@mipmap/icon_choose_contact"/>
 
         </LinearLayout>
 

@@ -16,7 +16,7 @@
 
         <include
             android:id="@+id/toolbar_include"
-            layout="@layout/toolbar_group" />
+            layout="@layout/toolbar_group_left" />
 
         <LinearLayout
             android:visibility="gone"
