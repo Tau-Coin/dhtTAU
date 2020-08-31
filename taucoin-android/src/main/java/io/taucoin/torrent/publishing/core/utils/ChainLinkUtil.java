@@ -6,7 +6,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 
 public class ChainLinkUtil {
-    private static String SCHEMA = "TAUchain:?";
+    private static String SCHEMA = "tauchain:?";
     private static String PARAMS_SEPARATOR = "&";
     private static String VALUE_SEPARATOR = "=";
     private static String BS = "bs";

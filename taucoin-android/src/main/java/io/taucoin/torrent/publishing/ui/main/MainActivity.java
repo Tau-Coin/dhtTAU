@@ -110,7 +110,10 @@ public class MainActivity extends BaseActivity {
             logger.info("MainActivity::chain link clicked");
             if (intent.hasExtra(IntentExtra.CHAIN_LINK)) {
                 String chainLink = intent.getStringExtra(IntentExtra.CHAIN_LINK);
-                showOpenExternalLinkDialog(chainLink);
+                ChainLinkUtil.ChainLink decode = ChainLinkUtil.decode(chainLink);
+                if(decode.isValid()){
+                    openExternalLink(decode.getDn(), chainLink);
+                }
             }
         }
     }

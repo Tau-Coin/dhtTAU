@@ -162,7 +162,7 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
                     ActivityUtil.shareText(activity, getString(R.string.contacts_share_link_via),
-                            communityInviteLink, member.publicKey, true);
+                            communityInviteLink, member.publicKey, isShareTau);
                 }));
     }
 }

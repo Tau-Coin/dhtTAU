@@ -1,19 +1,12 @@
 package io.taucoin.torrent.publishing.ui;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Notification;
-import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
-import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
-import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
 
 /*
  * Adds "TAU" item in share dialog.
@@ -33,10 +26,6 @@ public class SendTextToTau extends AppCompatActivity {
             if(StringUtil.isNotEmpty(inviteLink) && StringUtil.isNotEmpty(friendPk)){
                 shareInvitedLinkToFriend(inviteLink, friendPk);
                 ToastUtils.showShortToast(R.string.share_link_successfully);
-
-                ViewModelProvider provider = new ViewModelProvider(this);
-                NotificationViewModel notifyViewModel = provider.get(NotificationViewModel.class);
-                notifyViewModel.addNotification(inviteLink, friendPk);
             }
 
         }
