@@ -10,6 +10,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
@@ -102,6 +103,11 @@ public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter
             }
 
             setLeftViewClickListener(binding.leftView, msg);
+
+            if(StringUtil.isEquals(msg.senderPk,
+                    MainApplication.getInstance().getPublicKey())){
+                binding.leftView.tvBlacklist.setVisibility(View.GONE);
+            }
 
             View root = binding.getRoot();
             root.setOnLongClickListener(view -> {

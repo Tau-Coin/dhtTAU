@@ -62,6 +62,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     // 代表不同的入口页面
     private int page;
     private long medianFee;
+    private int rank = 0; // 0:last seen, 1:last communication
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,14 +198,18 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_done, menu);
+        getMenuInflater().inflate(R.menu.menu_contacts, menu);
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem menuItem = menu.findItem(R.id.menu_done);
+        MenuItem menuRankC = menu.findItem(R.id.menu_rank_c);
+        MenuItem menuRankA = menu.findItem(R.id.menu_rank_a);
         menuItem.setVisible(page == PAGE_ADD_MEMBERS);
+        menuRankC.setVisible(page == PAGE_CONTACT_LIST && rank == 0);
+        menuRankA.setVisible(page == PAGE_CONTACT_LIST && rank != 0);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -216,6 +221,14 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         if (item.getItemId() == R.id.menu_done) {
             showProgressDialog();
             txViewModel.airdropToFriends(chainID, adapter.getSelectedList(), medianFee);
+        } else if (item.getItemId() == R.id.menu_rank_c) {
+            rank = 1;
+            invalidateOptionsMenu();
+            ToastUtils.showShortToast(R.string.menu_rank_a);
+        } else if (item.getItemId() == R.id.menu_rank_a) {
+            rank = 0;
+            invalidateOptionsMenu();
+            ToastUtils.showShortToast(R.string.menu_rank_c);
         }
         return true;
     }

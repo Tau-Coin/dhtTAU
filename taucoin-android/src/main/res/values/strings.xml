@@ -54,6 +54,8 @@
     <string name="menu_alert">Alert</string>
     <string name="menu_search">Search</string>
     <string name="menu_done">Done</string>
+    <string name="menu_rank_c">Last Seen</string>
+    <string name="menu_rank_a">Last Communication</string>
     <string name="menu_delete">Delete</string>
     <string name="menu_edit">Edit</string>
     <string name="menu_community_info">Community Info</string>

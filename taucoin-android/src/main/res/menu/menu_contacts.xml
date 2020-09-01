@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/menu_done"
+        app:showAsAction="always"
+        android:icon="@mipmap/icon_done"
+        android:title="@string/menu_done" />
+
+    <item android:id="@+id/menu_rank_c"
+        app:showAsAction="always"
+        android:icon="@mipmap/icon_rank_c"
+        android:title="@string/menu_rank_c" />
+
+    <item android:id="@+id/menu_rank_a"
+        app:showAsAction="always"
+        android:icon="@mipmap/icon_rank_a"
+        android:title="@string/menu_rank_a" />
+
+</menu>
