@@ -48,8 +48,6 @@ import io.taucoin.util.ByteArrayWrapper;
 public class Chains implements DHT.GetDHTItemCallback{
     private static final Logger logger = LoggerFactory.getLogger("Chain");
 
-    private static final int TIMEOUT = 10;
-
     private static final int LOOP_LIMIT = 3;
 
     // Chain id specified by the transaction of creating new blockchain.
@@ -109,9 +107,11 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     private final Map<ByteArrayWrapper, Block> syncBlocks = new HashMap<>();
 
+
+
     private final Map<ByteArrayWrapper, List<Block>> votingBlocks = new HashMap<>();
 
-    private final Map<ByteArrayWrapper, List<BlockContainer>> blockContainerMap = new HashMap<>();
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, BlockContainer>> blockContainerMap = new HashMap<>();
 
     private final Map<ByteArrayWrapper, List<Block>> blockMap = new HashMap<>();
 
@@ -240,59 +240,72 @@ public class Chains implements DHT.GetDHTItemCallback{
         return true;
     }
 
+    private boolean isEmptyChain(ByteArrayWrapper chainID) {
+        BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
+        return null == bestBlockContainer || (
+                (System.currentTimeMillis() / 1000 - bestBlockContainer.getBlock().getTimeStamp()) >
+                        ChainParam.WARNING_RANGE * ChainParam.DEFAULT_BLOCK_TIME);
+    }
+
     private void multiChain() {
-        for (ByteArrayWrapper chainID: this.chainIDs) {
+        while (true) {
+            for (ByteArrayWrapper chainID : this.chainIDs) {
 
-            logger.debug("Chain ID:{}", new String(chainID.getData()));
+                logger.debug("Chain ID:{}", new String(chainID.getData()));
 
-            if (null == this.syncBlocks.get(chainID)) {
-                // empty chain
-                Vote bestVote = tryToVote(chainID);
-                tryChangeToBestVote(bestVote);
-            }
-
-            //
-            List<BlockContainer> blockContainers = this.blockContainerMap.get(chainID);
-
-            if (blockContainers.isEmpty()) {
-
-                PeerManager peerManager = this.peerManagers.get(chainID);
-                byte[] peer = peerManager.getBlockPeerRandomly();
-
-                if (!requestBlockHashFromPeer(chainID, peer)) {
-                    try {
-                        Thread.sleep(10000);
-                        continue;
-                    } catch (InterruptedException e) {
-                        logger.info(new String(chainID.getData()) + ":" + e.getMessage(), e);
-                        Thread.currentThread().interrupt();
+                if (isEmptyChain(chainID)) {
+                    // empty chain
+                    Vote bestVote = tryToVote(chainID);
+                    if (!initialSync(chainID, bestVote)) {
+                        logger.error("Chain ID[{}]: Initial sync fail!", new String(chainID.getData()));
                     }
                 }
-            } else {
-                if (Arrays.equals(syncBlock.getPreviousBlockHash(),
-                        blockContainers.get(0).getBlock().getBlockHash())) {
-                    // sync block
-                } else if (blockContainers.get(0).getBlock().getCumulativeDifficulty().
-                        compareTo(this.bestBlockContainers.get(chainID).getBlock().getCumulativeDifficulty()) > 0) {
-                    // find a more difficulty chain
-                    // re-branch
-                } else {
-                    // save block in db
+
+                if (!isEmptyChain(chainID)) {
+                    //
+                    Map<ByteArrayWrapper, BlockContainer> blockContainers = this.blockContainerMap.get(chainID);
+                    PeerManager peerManager = this.peerManagers.get(chainID);
+                    Block syncBlock = this.syncBlocks.get(chainID);
+                    BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
+
+                    if (blockContainers.isEmpty()) {
+
+                        byte[] peer = peerManager.getBlockPeerRandomly();
+                        requestBlockHashFromPeer(chainID, peer);
+                    } else {
+                        for (Map.Entry<ByteArrayWrapper, BlockContainer> entry: blockContainers.entrySet()) {
+                            BlockContainer blockContainer = entry.getValue();
+
+                            if (Arrays.equals(syncBlock.getPreviousBlockHash(),
+                                    blockContainer.getBlock().getBlockHash())) {
+                                // sync block
+                                if (tryToSyncBlock(chainID, blockContainer)) {
+                                    // remove block container
+                                }
+                            } else if (blockContainer.getBlock().getCumulativeDifficulty().
+                                    compareTo(bestBlockContainer.getBlock().getCumulativeDifficulty()) > 0) {
+                                // find a more difficulty chain
+                                // re-branch
+                            } else {
+                                // save block in db
+                            }
+                        }
+                    }
+
+                    mine();
+
+                    for (int i = 0; i < 10; i++) {
+                        byte[] peer = peerManager.getBlockPeerRandomly();
+                        requestTxHashFromPeer(chainID, peer);
+                    }
+
+                    for (int i = 0; i < 10; i++) {
+                        byte[] peer = peerManager.getBlockPeerRandomly();
+                        responseOrRepublic(chainID, peer);
+                    }
                 }
+
             }
-
-            mine();
-
-            for (int i = 0; i < 10; i++) {
-                byte[] peer = peerManager.getBlockPeerRandomly();
-                requestTxHashFromPeer(chainID, peer);
-            }
-
-            for (int i = 0; i < 10; i++) {
-                byte[] peer = peerManager.getBlockPeerRandomly();
-                responseOrRepublic(chainID, peer);
-            }
-
         }
     }
 
@@ -345,9 +358,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         // vote for new chain, when there is nothing in local
         if (null == this.bestBlockContainer || null == this.syncBlock) {
             Vote bestVote = vote();
-            if (!initialSync(bestVote)) {
-                logger.error("Chain ID[{}]: Initial sync fail!", new String(this.chainID));
-            }
+
         }
 
         // if offline too long, vote as a new chain
@@ -355,9 +366,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 (System.currentTimeMillis() / 1000 - this.bestBlockContainer.getBlock().getTimeStamp()) >
                         ChainParam.WARNING_RANGE * ChainParam.DEFAULT_BLOCK_TIME) {
             Vote bestVote = vote();
-            if (!initialSync(bestVote)) {
-                logger.error("Chain ID[{}]: Initial sync fail!", new String(this.chainID));
-            }
+
         }
 
         chainLoop();
@@ -605,16 +614,54 @@ public class Chains implements DHT.GetDHTItemCallback{
         return false;
     }
 
+    private boolean tryToSyncBlock(ByteArrayWrapper chainID, BlockContainer blockContainer) {
+        PeerManager peerManager = this.peerManagers.get(chainID);
+        Block syncBlock = this.syncBlocks.get(chainID);
+
+        if (null == blockContainer) {
+            return false;
+        }
+
+        if (null == syncBlock || syncBlock.getBlockNum() <= 0) {
+            return false;
+        }
+
+        try {
+            StateDB track = this.stateDB.startTracking(chainID.getData());
+            StateProcessor stateProcessor = this.stateProcessors.get(chainID);
+            if (stateProcessor.backwardProcess(blockContainer, track)) {
+                // after sync
+                // 1. save block
+                // 2. save sync block hash
+                // 3. commit new state
+                // 4. set sync block
+                // 5. add old block peer to peer pool
+
+                this.blockStore.saveBlockContainer(chainID.getData(), blockContainer, true);
+                track.setSyncBlockHash(chainID.getData(), blockContainer.getBlock().getBlockHash());
+                track.commit();
+                this.syncBlocks.put(chainID, blockContainer.getBlock());
+                peerManager.addOldBlockPeer(blockContainer.getBlock().getMinerPubkey());
+            }
+        } catch (Exception e) {
+            logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * sync a block for more state when needed
      */
-    private void syncBlockForMoreState() {
+    private void syncBlockForMoreState(ByteArrayWrapper chainID) {
         if (null != this.syncBlock && this.syncBlock.getBlockNum() >0) {
             BlockContainer blockContainer = getBlockContainerFromDHTByHash(this.syncBlock.getPreviousBlockHash());
             if (null != blockContainer) {
                 try {
-                    StateDB track = this.stateDB.startTracking(this.chainID);
-                    if (this.stateProcessor.backwardProcess(blockContainer, track)) {
+                    StateDB track = this.stateDB.startTracking(chainID.getData());
+                    StateProcessor stateProcessor = this.stateProcessors.get(chainID);
+                    if (stateProcessor.backwardProcess(blockContainer, track)) {
                         // after sync
                         // 1. save block
                         // 2. save sync block hash
@@ -622,14 +669,14 @@ public class Chains implements DHT.GetDHTItemCallback{
                         // 4. set sync block
                         // 5. add old block peer to peer pool
 
-                        this.blockStore.saveBlockContainer(this.chainID, blockContainer, true);
-                        track.setSyncBlockHash(this.chainID, blockContainer.getBlock().getBlockHash());
+                        this.blockStore.saveBlockContainer(chainID.getData(), blockContainer, true);
+                        track.setSyncBlockHash(chainID.getData(), blockContainer.getBlock().getBlockHash());
                         track.commit();
                         this.syncBlock = blockContainer.getBlock();
                         this.peerManager.addOldBlockPeer(blockContainer.getBlock().getMinerPubkey());
                     }
                 } catch (Exception e) {
-                    logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
+                    logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
                 }
             }
         }
@@ -678,7 +725,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 ImportResult result = this.stateProcessor.forwardProcess(newBlockContainers.get(i), track);
                 // if need sync more block
                 if (result == ImportResult.NO_ACCOUNT_INFO && !isSyncComplete()) {
-                    syncBlockForMoreState();
+                    syncBlockForMoreState(new ByteArrayWrapper(this.chainID));
                     i++;
                     continue;
                 }
@@ -738,56 +785,58 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         counter = counter > 0 ? (int)Math.log(counter) : 0;
 
-        byte[] peer = peerManager.getBlockPeerRandomly();
-        while (!Thread.interrupted() && counter > 0) {
-            if (null != peer) {
-                if (!requestVotingBlockHashFromPeer(chainID, peer)) {
+        List<Block> blocks = this.votingBlocks.get(chainID);
+
+        int size = blocks.size();
+
+        if (counter > size) {
+            counter -= size;
+
+            while (!Thread.interrupted() && counter > 0) {
+                byte[] peer = peerManager.getBlockPeerRandomly();
+
+                if (null != peer) {
+                    requestVotingBlockHashFromPeer(chainID, peer);
+                    counter--;
+
                     try {
-                        Thread.sleep(10000);
-                        continue;
+                        Thread.sleep(1000);
                     } catch (InterruptedException e) {
-                        logger.info(new String(chainID.getData()) + ":" + e.getMessage(), e);
+                        logger.info(new String(this.chainID) + ":" + e.getMessage(), e);
                         Thread.currentThread().interrupt();
                     }
                 }
-
-                peer = peerManager.getBlockPeerRandomly();
-
-                counter--;
             }
-        }
 
-        try {
-            Thread.sleep(60000);
-        } catch (InterruptedException e) {
-            logger.info(new String(chainID.getData()) + ":" + e.getMessage(), e);
-            Thread.currentThread().interrupt();
-        }
+            return null;
+        } else {
 
-        List<Block> blocks = this.votingBlocks.get(chainID);
-
-        for (Block block: blocks) {
-            if (null != block) {
-                // vote on immutable point
-                if (block.getBlockNum() > ChainParam.MUTABLE_RANGE) {
-                    votingPool.putIntoVotingPool(block.getImmutableBlockHash(),
-                            (int) block.getBlockNum() - ChainParam.MUTABLE_RANGE);
-                } else {
-                    votingPool.putIntoVotingPool(block.getImmutableBlockHash(), 0);
+            for (Block block : blocks) {
+                if (null != block) {
+                    // vote on immutable point
+                    if (block.getBlockNum() > ChainParam.MUTABLE_RANGE) {
+                        votingPool.putIntoVotingPool(block.getImmutableBlockHash(),
+                                (int) block.getBlockNum() - ChainParam.MUTABLE_RANGE);
+                    } else {
+                        votingPool.putIntoVotingPool(block.getImmutableBlockHash(), 0);
+                    }
                 }
             }
+
+            Vote bestVote = votingPool.getBestVote();
+
+            if (null != bestVote) {
+                logger.debug("Chain ID[{}]: Best vote:{}", new String(chainID.getData()), bestVote.toString());
+            }
+
+            // clear voting pool for next time when voting end
+            votingPool.clearVotingPool();
+
+            blocks.clear();
+            this.votingBlocks.put(chainID, blocks);
+
+            return bestVote;
         }
-
-        Vote bestVote = votingPool.getBestVote();
-
-        if (null != bestVote) {
-            logger.debug("Chain ID[{}]: Best vote:{}", new String(chainID.getData()), bestVote.toString());
-        }
-
-        // clear voting pool for next time when voting end
-        votingPool.clearVotingPool();
-
-        return bestVote;
     }
 
     /**
@@ -837,9 +886,9 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param bestVote best vote
      * @return true[success]/false[fail]
      */
-    private boolean initialSync(Vote bestVote) {
+    private boolean initialSync(ByteArrayWrapper chainID, Vote bestVote) {
         if (null == bestVote) {
-            logger.error("Chain ID[{}]: Best vote is null.", new String(this.chainID));
+            logger.error("Chain ID[{}]: Best vote is null.", new String(chainID.getData()));
             return false;
         }
 
@@ -847,10 +896,14 @@ public class Chains implements DHT.GetDHTItemCallback{
             this.blockStore.removeChain(this.chainID);
             this.stateDB.clearAllState(this.chainID);
 
-            BlockContainer bestVoteBlockContainer = getBlockContainerFromDHTByHash(bestVote.getBlockHash());
+            Map<ByteArrayWrapper, BlockContainer> blockContainers = this.blockContainerMap.get(chainID);
+            BlockContainer bestVoteBlockContainer = blockContainers.get(new ByteArrayWrapper(bestVote.getBlockHash()));
 
             if (null == bestVoteBlockContainer) {
                 logger.error("Chain ID[{}]: Best vote block is null.", new String(this.chainID));
+
+                requestBlock(chainID.getData(), bestVote.getBlockHash());
+
                 return false;
             }
 
@@ -862,24 +915,48 @@ public class Chains implements DHT.GetDHTItemCallback{
             // 5. add old block peer to peer pool
 
             // initial sync from best vote
-            StateDB track = this.stateDB.startTracking(this.chainID);
-            if (!this.stateProcessor.backwardProcess(bestVoteBlockContainer, track)) {
+            StateDB track = this.stateDB.startTracking(chainID.getData());
+            StateProcessor stateProcessor = this.stateProcessors.get(chainID);
+            if (!stateProcessor.backwardProcess(bestVoteBlockContainer, track)) {
                 logger.error("Chain ID[{}]: Process block[{}] fail!",
-                        new String(this.chainID), Hex.toHexString(bestVoteBlockContainer.getBlock().getBlockHash()));
+                        new String(chainID.getData()), Hex.toHexString(bestVoteBlockContainer.getBlock().getBlockHash()));
                 return false;
             }
 
-            this.blockStore.saveBlockContainer(this.chainID, bestVoteBlockContainer, true);
+            this.blockStore.saveBlockContainer(chainID.getData(), bestVoteBlockContainer, true);
 
-            track.setBestBlockHash(this.chainID, bestVoteBlockContainer.getBlock().getBlockHash());
-            track.setSyncBlockHash(this.chainID, bestVoteBlockContainer.getBlock().getBlockHash());
+            track.setBestBlockHash(chainID.getData(), bestVoteBlockContainer.getBlock().getBlockHash());
+            track.setSyncBlockHash(chainID.getData(), bestVoteBlockContainer.getBlock().getBlockHash());
 
-            this.bestBlockContainer = bestVoteBlockContainer;
-            this.syncBlock = bestVoteBlockContainer.getBlock();
+            this.bestBlockContainers.put(chainID, bestVoteBlockContainer);
+            this.syncBlocks.put(chainID, bestVoteBlockContainer.getBlock());
 
-            this.peerManager.addOldBlockPeer(bestVoteBlockContainer.getBlock().getMinerPubkey());
+            PeerManager peerManager = this.peerManagers.get(chainID);
+            peerManager.addOldBlockPeer(bestVoteBlockContainer.getBlock().getMinerPubkey());
 
             track.commit();
+        } catch (Exception e) {
+            logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean tryToChangeToBestVote(ByteArrayWrapper chainID, Vote bestVote) {
+        if (null != bestVote) {
+            return false;
+        }
+
+        try {
+            BlockContainer blockContainer = this.blockStore.
+                    getBlockContainerByHash(chainID.getData(), bestVote.getBlockHash());
+
+            Map<ByteArrayWrapper, BlockContainer> blockContainers = this.blockContainerMap.get(chainID);
+
+            if (null == blockContainer) {
+
+            }
         } catch (Exception e) {
             logger.error(new String(this.chainID) + ":" + e.getMessage(), e);
             return false;
@@ -986,7 +1063,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     // be as a new chain when fork point between mutable range and warning range
                     // re-init tx pool and chain
                     this.txPool.reinit();
-                    initialSync(bestVote);
+                    initialSync(new ByteArrayWrapper(this.chainID), bestVote);
                     return true;
                 } else {
                     // fork point out of warning range, maybe it's an attack chain
@@ -1003,43 +1080,43 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private boolean requestBlockHashFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(chainID), TIMEOUT);
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID.getData(), DataType.MUTABLE_ITEM_BLOCK_HASH);
         return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private boolean requestTxHashFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalts.get(chainID), TIMEOUT);
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID.getData(), DataType.MUTABLE_ITEM_TX_HASH);
         return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private boolean requestBlock(byte[] chainID, byte[] blockHash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash, TIMEOUT);
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK);
         return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private boolean requestTx(byte[] chainID, byte[] txid) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid, TIMEOUT);
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX);
         return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private boolean requestTxForPool(byte[] chainID, byte[] txid) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid, TIMEOUT);
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_FOR_POOL);
         return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private boolean requestVotingBlockHashFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(chainID), TIMEOUT);
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID.getData(), DataType.MUTABLE_ITEM_BLOCK_HASH_FOR_VOTING);
         return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private boolean requestVotingBlock(byte[] chainID, byte[] blockHash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash, TIMEOUT);
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.MUTABLE_ITEM_BLOCK_FOR_VOTING);
         return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
@@ -1052,7 +1129,7 @@ public class Chains implements DHT.GetDHTItemCallback{
     private Block getTipBlockFromPeer(byte[] peer) {
         try {
             logger.debug("+ctx----------------peer: {}", Hex.toHexString(peer));
-            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(new ByteArrayWrapper(this.chainID)), TIMEOUT);
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(new ByteArrayWrapper(this.chainID)));
             byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
 
             if (null != encode) {
@@ -1083,7 +1160,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         logger.debug("++ctx----------------peer: {}", Hex.toHexString(peer));
         try {
-            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(new ByteArrayWrapper(this.chainID)), TIMEOUT);
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(new ByteArrayWrapper(this.chainID)));
 
             int i = 0;
             byte[] encode = null;
@@ -1145,7 +1222,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return block get from dht, null otherwise
      */
     private Block getBlockFromDHTByHash(byte[] hash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
 
         int i = 0;
         byte[] blockEncode = null;
@@ -1202,7 +1279,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             logger.debug("Chain ID[{}]: get tx from peer[{}]",
                     new String(this.chainID), Hex.toHexString(peer));
 
-            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalts.get(new ByteArrayWrapper(this.chainID)), TIMEOUT);
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalts.get(new ByteArrayWrapper(this.chainID)));
             byte[] encode = TorrentDHTEngine.getInstance().dhtGet(spec);
 
             if (null != encode) {
@@ -1228,7 +1305,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return tx get from dht, null otherwise
      */
     private Transaction getTxFromDHTByHash(byte[] hash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash, TIMEOUT);
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
 
         int i = 0;
         byte[] txEncode = null;
@@ -1360,22 +1437,6 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     public BlockContainer getBestBlockContainer() {
         return this.bestBlockContainer;
-    }
-
-    /**
-     * set synced block of this chain
-     * @param block synced block
-     */
-    public void setSyncBlock(Block block) {
-        this.syncBlock = block;
-    }
-
-    /**
-     * get synced block of this chain
-     * @return sync block
-     */
-    public Block getSyncBlock() {
-        return this.syncBlock;
     }
 
     /**
@@ -1606,7 +1667,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         // if block is too less, sync more
         while (null == immutableBlockHash && !isSyncComplete()) {
             logger.info("ChainID[{}]-Sync for more state!", new String(this.chainID));
-            syncBlockForMoreState();
+            syncBlockForMoreState(new ByteArrayWrapper(chainID));
         }
 
         if (null == immutableBlockHash) {
@@ -1792,8 +1853,9 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                             BlockContainer blockContainer = new BlockContainer(block, tx);
 
-                            List<BlockContainer> blockContainers = this.blockContainerMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
-                            blockContainers.add(blockContainer);
+                            Map<ByteArrayWrapper, BlockContainer> blockContainers =
+                                    this.blockContainerMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+                            blockContainers.put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
                             this.blockContainerMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blockContainers);
 
                             blocks.remove(block);
@@ -1810,8 +1872,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                 } else {
                     BlockContainer blockContainer = new BlockContainer(block);
 
-                    List<BlockContainer> blockContainers = this.blockContainerMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
-                    blockContainers.add(blockContainer);
+                    Map<ByteArrayWrapper, BlockContainer> blockContainers = this.blockContainerMap.
+                            get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+                    blockContainers.put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
                     this.blockContainerMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blockContainers);
                 }
             }
@@ -1824,8 +1887,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                     if (Arrays.equals(block.getTxHash(), tx.getTxID())) {
                         BlockContainer blockContainer = new BlockContainer(block, tx);
 
-                        List<BlockContainer> blockContainers = this.blockContainerMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
-                        blockContainers.add(blockContainer);
+                        Map<ByteArrayWrapper, BlockContainer> blockContainers = this.blockContainerMap.get(new ByteArrayWrapper(dataIdentifier.getChainID()));
+                        blockContainers.put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
                         this.blockContainerMap.put(new ByteArrayWrapper(dataIdentifier.getChainID()), blockContainers);
 
                         blocks.remove(block);
