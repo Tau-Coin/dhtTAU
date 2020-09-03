@@ -13,7 +13,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static io.taucoin.torrent.DHT.*;
 
@@ -139,20 +142,25 @@ public class TorrentDHTEngine {
     // The feature of the queue of getting mutable and immutable item.
 
     // The time interval for dht operation.
+    // TODO:
     private static final long DHTOperationInterval = 1 * 1000; // milliseconds.
 
     // Dht blocking queue size limit.
     private static final int DHTBlockingQueueCapability = 1000;
 
+    private static final int ImmutableRequestQueueWorkers = 2;
+
+    private static final int MutableRequestQueueWorkers = 2;
+
     // Queue of getting immutable item request.
     private BlockingQueue<ImmutableItemRequest> gettingImmutableItemQueue
             = new LinkedBlockingQueue<>();
-    private Thread gettingImmutableItemThread;
+    private ExecutorService gettingImmutableItemThreadPool;
 
     // Queue of getting mutable item request.
     private BlockingQueue<MutableItemRequest> gettingMutableItemQueue
             = new LinkedBlockingQueue<>();
-    private Thread gettingMutableItemThread;
+    private ExecutorService gettingMutableItemThreadPool;
 
     // Queue of putting immutable item request.
     private BlockingQueue<ImmutableItem> puttingImmutableItemQueue
@@ -304,6 +312,11 @@ public class TorrentDHTEngine {
             return false;
         }
 
+        if (puttingImmutableItemQueue.contains(item)) {
+            logger.warn("drop immutable item" + item);
+            return false;
+        }
+
         puttingImmutableItemQueue.add(item);
         return true;
     }
@@ -319,6 +332,11 @@ public class TorrentDHTEngine {
 
         if (item == null || !sessionManager.isRunning()
                 || puttingMutableItemQueue.size() >= DHTBlockingQueueCapability) {
+            return false;
+        }
+
+        if (puttingMutableItemQueue.contains(item)) {
+            logger.warn("drop mutable item" + item);
             return false;
         }
 
@@ -435,7 +453,14 @@ public class TorrentDHTEngine {
             return false;
         }
 
-        gettingImmutableItemQueue.add(new ImmutableItemRequest(spec, cb, cbData));
+        ImmutableItemRequest req = new ImmutableItemRequest(spec, cb, cbData);
+
+        if (gettingImmutableItemQueue.contains(req)) {
+            logger.warn("drop immutable item req:" + req);
+            return false;
+        }
+
+        gettingImmutableItemQueue.add(req);
         return true;
     }
 
@@ -456,7 +481,14 @@ public class TorrentDHTEngine {
             return false;
         }
 
-        gettingMutableItemQueue.add(new MutableItemRequest(spec, cb, cbData));
+        MutableItemRequest req = new MutableItemRequest(spec, cb, cbData);
+
+        if (gettingMutableItemQueue.contains(req)) {
+            logger.warn("drop mutable item req:" + req);
+            return false;
+        }
+
+        gettingMutableItemQueue.add(req);
         return true;
     }
 
@@ -498,21 +530,25 @@ public class TorrentDHTEngine {
         }
         dhtItemWorkersStarted.set(true);
 
-        this.gettingImmutableItemThread = new Thread(this::immutableItemsRetriveLoop,
-                "gettingImmutableItemThread");
-        this.gettingImmutableItemThread.start();
-
-        this.gettingMutableItemThread = new Thread(this::mutableItemsRetriveLoop,
-                "gettingMutableItemThread");
-        this.gettingMutableItemThread.start();
-
-        this.puttingImmutableItemThread = new Thread(this::immutableItemsDistributeLoop,
+        puttingImmutableItemThread = new Thread(this::immutableItemsDistributeLoop,
                 "puttingImmutableItemThread");
-        this.puttingImmutableItemThread.start();
+        puttingImmutableItemThread.start();
 
-        this.puttingMutableItemThread = new Thread(this::mutableItemsDistributeLoop,
+        puttingMutableItemThread = new Thread(this::mutableItemsDistributeLoop,
                 "puttingMutableItemThread");
-        this.puttingMutableItemThread.start();
+        puttingMutableItemThread.start();
+
+        gettingImmutableItemThreadPool
+                = Executors.newCachedThreadPool();
+        for (int i = 0; i < ImmutableRequestQueueWorkers; i++) {
+            gettingImmutableItemThreadPool.execute(new GettingImmutableItemTask());
+        }
+
+        gettingMutableItemThreadPool
+                = Executors.newCachedThreadPool();
+        for (int i = 0; i < MutableRequestQueueWorkers; i++) {
+            gettingMutableItemThreadPool.execute(new GettingMutableItemTask());
+        }
 
         logger.info("starting dht items workers");
     }
@@ -523,33 +559,57 @@ public class TorrentDHTEngine {
         }
         dhtItemWorkersStarted.set(false);
 
-        if (this.gettingImmutableItemThread != null) {
-            this.gettingImmutableItemThread.interrupt();
+        if (puttingImmutableItemThread != null) {
+            puttingImmutableItemThread.interrupt();
         }
-        if (this.gettingMutableItemThread != null) {
-            this.gettingMutableItemThread.interrupt();
+        if (puttingMutableItemThread != null) {
+            puttingMutableItemThread.interrupt();
         }
-        if (this.puttingImmutableItemThread != null) {
-            this.puttingImmutableItemThread.interrupt();
+
+        if (gettingImmutableItemThreadPool != null) {
+            gettingImmutableItemThreadPool.shutdownNow();
         }
-        if (this.puttingMutableItemThread != null) {
-            this.puttingMutableItemThread.interrupt();
+        if (gettingMutableItemThreadPool != null) {
+            gettingMutableItemThreadPool.shutdownNow();
         }
 
         try {
-            this.gettingImmutableItemThread.join();
-            this.gettingImmutableItemThread = null;
-            this.gettingMutableItemThread.join();
-            this.gettingMutableItemThread = null;
-            this.puttingImmutableItemThread.join();
-            this.puttingImmutableItemThread = null;
-            this.puttingMutableItemThread.join();
-            this.puttingMutableItemThread = null;
+            puttingImmutableItemThread.join();
+            puttingImmutableItemThread = null;
+            puttingMutableItemThread.join();
+            puttingMutableItemThread = null;
+
+            gettingImmutableItemThreadPool.awaitTermination(
+                    1, TimeUnit.SECONDS);
+            gettingImmutableItemThreadPool = null;
+            gettingMutableItemThreadPool.awaitTermination(
+                    1, TimeUnit.SECONDS);
+            gettingMutableItemThreadPool = null;
         } catch (InterruptedException e) {
             // ignore this exception
         }
 
         logger.info("stopping dht items workers");
+    }
+
+    private class GettingImmutableItemTask implements Runnable {
+
+        public GettingImmutableItemTask() {}
+
+        @Override
+        public void run() {
+            immutableItemsRetriveLoop();
+        }
+    }
+
+    private class GettingMutableItemTask implements Runnable {
+
+        public GettingMutableItemTask() {}
+
+        @Override
+        public void run() {
+            mutableItemsRetriveLoop();
+        }
     }
 
     /**

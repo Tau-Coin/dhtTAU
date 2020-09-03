@@ -1,7 +1,10 @@
 package io.taucoin.torrent;
 
+import io.taucoin.util.FastByteComparisons;
+
 import com.frostwire.jlibtorrent.Entry;
 import com.frostwire.jlibtorrent.Sha1Hash;
+import org.spongycastle.util.encoders.Hex;
 
 import java.nio.charset.Charset;
 
@@ -17,9 +20,33 @@ public final class DHT {
     public static class ImmutableItem {
     
         Entry entry;
+        byte[] entryBytes;
 
         public ImmutableItem(byte[] data) {
+            this.entryBytes = data;
             this.entry = Entry.bdecode(data);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ImmutableItem)) {
+                return false;
+            }
+
+            ImmutableItem item = (ImmutableItem)obj;
+
+            return 0 == FastByteComparisons.compareTo(
+                    entryBytes, 0, entryBytes.length,
+                    item.entryBytes, 0, item.entryBytes.length);
+        }
+
+        @Override
+        public String toString() {
+            if (entry == null) {
+                return "";
+            }
+
+            return entry.toString();
         }
      }
 
@@ -28,13 +55,50 @@ public final class DHT {
         byte[] publicKey;
         byte[] privateKey;
         Entry entry;
+        byte[] entryBytes;
         byte[] salt;
 
         public MutableItem(byte[] publicKey, byte[] privateKey, byte[] data, byte[] salt) {
             this.publicKey = publicKey;
             this.privateKey = privateKey;
+            this.entryBytes = data;
             this.entry = Entry.bdecode(data);
             this.salt = salt;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof MutableItem)) {
+                return false;
+            }
+
+            MutableItem item = (MutableItem)obj;
+
+            return (0 == FastByteComparisons.compareTo(
+                    publicKey, 0, publicKey.length,
+                    item.publicKey, 0, item.publicKey.length))
+                && (0 == FastByteComparisons.compareTo(
+                    privateKey, 0, privateKey.length,
+                    item.privateKey, 0, item.privateKey.length))
+                && (0 == FastByteComparisons.compareTo(
+                    salt, 0, salt.length,
+                    item.salt, 0, item.salt.length))
+                && (0 == FastByteComparisons.compareTo(
+                    entryBytes, 0, entryBytes.length,
+                    item.entryBytes, 0, item.entryBytes.length));
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("MutableItem(");
+            sb.append("pubkey:" + Hex.toHexString(publicKey));
+            sb.append(",salt:" + Hex.toHexString(salt));
+            sb.append(",e:" + entry.toString());
+            sb.append(")");
+
+            return sb.toString();
         }
     }
 
@@ -50,6 +114,22 @@ public final class DHT {
 
         public GetImmutableItemSpec(byte[] sha1) {
             this(sha1, DHT_OP_TIMEOUT);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof GetImmutableItemSpec)) {
+                return false;
+            }
+
+            GetImmutableItemSpec spec = (GetImmutableItemSpec)obj;
+
+            return sha1.equals(spec.sha1) && (timeout == spec.timeout);
+        }
+
+        @Override
+        public String toString() {
+            return sha1.toString();
         }
     }
 
@@ -67,6 +147,29 @@ public final class DHT {
 
         public GetMutableItemSpec(byte[] publicKey, byte[] salt) {
             this(publicKey, salt, DHT_OP_TIMEOUT);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof GetMutableItemSpec)) {
+                return false;
+            }
+
+            GetMutableItemSpec spec = (GetMutableItemSpec)obj;
+
+            return (0 == FastByteComparisons.compareTo(
+                    publicKey, 0, publicKey.length,
+                    spec.publicKey, 0, spec.publicKey.length))
+                && (0 == FastByteComparisons.compareTo(
+                    salt, 0, salt.length,
+                    spec.salt, 0, spec.salt.length))
+                && (timeout == spec.timeout);
+        }
+
+        @Override
+        public String toString() {
+            return "(" + "pubkey:" + Hex.toHexString(publicKey)
+                + ", salt:" + Hex.toHexString(salt) + ")";
         }
     }
 
@@ -112,7 +215,7 @@ public final class DHT {
      */
     public static class ImmutableItemRequest {
 
-        private GetImmutableItemSpec spec;
+        GetImmutableItemSpec spec;
 
         private GetDHTItemCallback callback;
 
@@ -135,6 +238,22 @@ public final class DHT {
                 callback.onDHTItemGot(item, this.callBackData);
             }
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ImmutableItemRequest)) {
+                return false;
+            }
+
+            ImmutableItemRequest req = (ImmutableItemRequest)obj;
+
+            return spec.equals(req.spec);
+        }
+
+        @Override
+        public String toString() {
+            return spec.toString();
+        }
     }
 
     /**
@@ -142,7 +261,7 @@ public final class DHT {
      */
     public static class MutableItemRequest {
 
-        private GetMutableItemSpec spec;
+        GetMutableItemSpec spec;
 
         private GetDHTItemCallback callback;
 
@@ -164,6 +283,22 @@ public final class DHT {
             if (callback != null) {
                 callback.onDHTItemGot(item, this.callBackData);
             }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof MutableItemRequest)) {
+                return false;
+            }
+
+            MutableItemRequest req = (MutableItemRequest)obj;
+
+            return spec.equals(req.spec);
+        }
+
+        @Override
+        public String toString() {
+            return spec.toString();
         }
     }
 }
