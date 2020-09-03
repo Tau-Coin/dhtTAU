@@ -29,7 +29,7 @@ public class ProofOfTransaction {
     private final int maxRatio;
 
     private final int minBlockTime;
-//    private final int maxBlockTime;
+    private final int maxBlockTime;
 
     private final BigInteger genesisBaseTarget;
 
@@ -48,7 +48,7 @@ public class ProofOfTransaction {
 
         // minBlockTime : aAverageBlockTime : maxBlockTime = 1 : 5 : 9
         this.minBlockTime = this.averageBlockTime / (ChainParam.DEFAULT_BLOCK_TIME / ChainParam.DEFAULT_MIN_BLOCK_TIME);
-//        this.maxBlockTime = this.averageBlockTime * 9 / 5;
+        this.maxBlockTime = this.averageBlockTime * ChainParam.DEFAULT_MAX_BLOCK_TIME / ChainParam.DEFAULT_BLOCK_TIME;
 
         // BaseTarget and Time are in inverse proportion
         // genesisBaseTarget = CommunityChainGenesisBaseTarget * AverageCommunityChainBlockTime / averageBlockTime
@@ -243,9 +243,9 @@ public class ProofOfTransaction {
 
         if (timeInterval < this.minBlockTime) {
             timeInterval = this.minBlockTime;
-        }/* else if (timeInterval > this.maxBlockTime) {
+        } else if (timeInterval > this.maxBlockTime) {
             timeInterval = this.maxBlockTime;
-        }*/
+        }
         logger.info("Chain ID:{}: Final time interval:{}", new String(this.chainID), timeInterval);
 
         return timeInterval;
@@ -261,15 +261,18 @@ public class ProofOfTransaction {
      */
     public boolean verifyHit(BigInteger hit, BigInteger baseTarget, BigInteger power, long timeInterval) {
         if (timeInterval < this.minBlockTime) {
-            logger.error("Chain ID:{}: Time interval is less than MinBlockTime[{}]", new String(this.chainID), this.minBlockTime);
+            logger.error("Chain ID:{}: Time interval is less than MinBlockTime[{}]",
+                    new String(this.chainID), this.minBlockTime);
             return false;
-        } /*else if (timeInterval >= this.maxBlockTime) {
-            logger.info("Chain ID:{}: OK. Time interval is greater than MaxBlockTime[{}]", new String(this.chainID), this.maxBlockTime);
+        } else if (timeInterval >= this.maxBlockTime) {
+            logger.info("Chain ID:{}: OK. Time interval is greater than MaxBlockTime[{}]",
+                    new String(this.chainID), this.maxBlockTime);
             return true;
-        } */else {
+        } else {
             BigInteger target = this.calculateMinerTargetValue(baseTarget, power, timeInterval);
             if (target.compareTo(hit) <= 0) {
-                logger.error("Chain ID:{}: Invalid POT: target[{}] <= hit[{}]", new String(this.chainID), target, hit);
+                logger.error("Chain ID:{}: Invalid POT: target[{}] <= hit[{}]",
+                        new String(this.chainID), target, hit);
                 return false;
             }
         }

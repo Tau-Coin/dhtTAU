@@ -386,6 +386,15 @@ public class Chain {
                         }
 
                         byte[] immutableBlockHash1 = immutableContainer1.getBlock().getImmutableBlockHash();
+
+                        if (this.blockStore.isMainChainBlock(this.chainID, immutableBlockHash1)) {
+                            // fork point in warning range
+                            // vote when fork point between mutable range and warning range
+                            logger.debug("++ctx-----------------------go to vote.....");
+                            votingFlag = true;
+                            break;
+                        }
+
                         BlockContainer immutableContainer2 = getBlockContainerFromDHTByHash(immutableBlockHash1);
 
                         if (null == immutableContainer2) {

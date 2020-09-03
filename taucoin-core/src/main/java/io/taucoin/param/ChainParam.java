@@ -58,6 +58,7 @@ public class ChainParam {
     // time
     public static final int DEFAULT_BLOCK_TIME = 300;
     public static final int DEFAULT_MIN_BLOCK_TIME = 60;
+    public static final int DEFAULT_MAX_BLOCK_TIME = 540;
 
     // range
     public static final int MUTABLE_RANGE = 288; // 3 days
