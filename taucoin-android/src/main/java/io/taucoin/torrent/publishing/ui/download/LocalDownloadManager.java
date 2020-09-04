@@ -17,6 +17,7 @@ package io.taucoin.torrent.publishing.ui.download;
 
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -38,11 +39,11 @@ import io.taucoin.torrent.publishing.R;
 /**
  * 本地下载管理
  */
-public class LocalDownloadManager {
+class LocalDownloadManager {
     private Logger logger = LoggerFactory.getLogger("LocalDownloadManager");
     private static final int HANDLE_DOWNLOAD = 0x001;
-    public static final int DOWNLOAD_STATUS_FAILED = -1;
-    public static final int DOWNLOAD_STATUS_REMOVED = -2;
+    static final int DOWNLOAD_STATUS_FAILED = -1;
+    static final int DOWNLOAD_STATUS_REMOVED = -2;
     private Context context;
     private DownloadManager downloadManager;
     private DownloadChangeObserver downloadObserver;
@@ -62,7 +63,8 @@ public class LocalDownloadManager {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            logger.info("handleMessage, msg.what::{}, HANDLE_DOWNLOAD::{}, status::{}", msg.what, HANDLE_DOWNLOAD, msg.obj);
+            logger.info("handleMessage, msg.what::{}, HANDLE_DOWNLOAD::{}, status::{}",
+                    msg.what, HANDLE_DOWNLOAD, msg.obj);
             if (HANDLE_DOWNLOAD == msg.what) {
                 float progress;
                 int status = Integer.parseInt(msg.obj.toString());
@@ -120,21 +122,23 @@ public class LocalDownloadManager {
         request.setTitle(context.getString(R.string.app_name));
         // 设置通知栏的message
         request.setDescription(context.getString(R.string.app_upgrade_description));
+        // 现在完成后在通知栏里显示
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        // 设置漫游状态下是否可以下载
-        request.setAllowedOverRoaming(false);
         // 系统下载界面是否显示
-        request.setVisibleInDownloadsUi(false);
+        request.setVisibleInDownloadsUi(true);
+        // 允许漫游时下载
+        request.setAllowedOverRoaming(true);
         // 准许被系统扫描到
         request.allowScanningByMediaScanner();
+        // 设置文件类型，以防止部分手机（例如模拟器等）无法正确打开文件
+        request.setMimeType("application/vnd.android.package-archive");
         // 设置文件存放目录
         File file = new File(storagePath);
         Uri apkUri = Uri.fromFile(file);
         request.setDestinationUri(apkUri);
-//        request.setDestinationInExternalPublicDir(context, version.getDownloadFilePath(),version.getDownloadFileName());
         // 获取系统服务
         downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-        //进行下载
+        // 进入下载队列
         downloadID = downloadManager.enqueue(request);
 
         downloadObserver = new DownloadChangeObserver();
@@ -181,7 +185,7 @@ public class LocalDownloadManager {
      */
     private class DownloadChangeObserver extends ContentObserver {
 
-        public DownloadChangeObserver() {
+        DownloadChangeObserver() {
             super(downLoadHandler);
             logger.info("DownloadChangeObserver init");
             scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
@@ -218,12 +222,13 @@ public class LocalDownloadManager {
      * 注册ContentObserver
      */
     private void registerContentObserver(Context context, long downloadID) {
-        /** observer download change */
+        // observer download change
         if (downloadObserver != null) {
-            String uriString = "content://downloads/all_downloads/" + downloadID;
+            Uri ContentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/all_downloads/"),
+                    downloadID);
             context.getContentResolver().registerContentObserver(
-                    Uri.parse(uriString),
-                    false, downloadObserver);
+                    ContentUri,
+                    true, downloadObserver);
         }
     }
 
