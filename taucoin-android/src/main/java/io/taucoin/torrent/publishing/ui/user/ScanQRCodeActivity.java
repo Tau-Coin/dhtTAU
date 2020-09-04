@@ -1,13 +1,14 @@
 package io.taucoin.torrent.publishing.ui.user;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.frostwire.jlibtorrent.Ed25519;
-import com.google.zxing.Result;
 import com.king.zxing.CaptureActivity;
 import com.king.zxing.DecodeFormatManager;
 import com.king.zxing.camera.FrontLightMode;
@@ -20,8 +21,8 @@ import com.luck.picture.lib.language.LanguageConfig;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -32,9 +33,10 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.GlideEngine;
+import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.ZxingUtil;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.customviews.permission.EasyPermissions;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -46,6 +48,7 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
     // 是否连续扫码
     private boolean isContinuousScan = true;
     private boolean isParseImage = false;
+    private boolean isShowBanPermission = true;
     private ImageView ivQrCode;
     private ImageView ivGallery;
     private TextView tvNoQrCode;
@@ -60,9 +63,9 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
     protected void onCreate(Bundle savedInstanceState) {
         ActivityUtil.fullScreenAll(this);
         ActivityUtil.setRequestedOrientation(this);
-//        ActivityUtil.lockOrientation(this);
         super.onCreate(savedInstanceState);
         initView();
+        requestCameraPermissions();
         //获取CaptureHelper，里面有扫码相关的配置设置
         getCaptureHelper().playBeep(false)// 播放音效
                 .vibrate(false)//震动
@@ -83,6 +86,18 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
         ivGallery = findViewById(R.id.iv_gallery);
         tvNoQrCode = findViewById(R.id.tv_no_qr_code);
         tvContinue = findViewById(R.id.tv_continue);
+    }
+
+    /**
+     * 请求摄像头权限
+     */
+    private void requestCameraPermissions() {
+        String permission = Manifest.permission.CAMERA;
+        if(!EasyPermissions.hasPermissions(this, permission)){
+            EasyPermissions.requestPermissions(this,
+                    this.getString(R.string.permission_tip_camera_denied),
+                    PermissionUtils.REQUEST_PERMISSIONS_CAMERA, permission);
+        }
     }
 
     /**
@@ -228,6 +243,28 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                 default:
                     break;
             }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case PermissionUtils.REQUEST_PERMISSIONS_CAMERA:
+                if (grantResults.length > 0) {
+                    if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                        if(isShowBanPermission){
+                            PermissionUtils.checkUserBanPermission(this, (dialog, which) ->
+                                            ScanQRCodeActivity.this.finish(),
+                                    permissions[0], R.string.permission_tip_camera_never_ask_again);
+                        } else {
+                            this.finish();
+                        }
+                    }
+                }
+                break;
+            default:
+                break;
         }
     }
 }

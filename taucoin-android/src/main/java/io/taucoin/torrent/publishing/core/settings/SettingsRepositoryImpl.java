@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import java.util.Map;
+
 import androidx.annotation.NonNull;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -161,5 +163,30 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     public boolean doNotShowBanDialog() {
         String key = appContext.getString(R.string.pref_key_do_not_show_ban_dialog);
         return pref.getBoolean(key, Default.isShowBanDialog);
+    }
+
+    @Override
+    public void setApkDownloadID(long downloadID) {
+        String key = appContext.getString(R.string.pref_key_apk_download_id);
+        pref.edit().putLong(key, downloadID)
+                .apply();
+    }
+
+    @Override
+    public long getApkDownloadID() {
+        String key = appContext.getString(R.string.pref_key_apk_download_id);
+        return pref.getLong(key, -1);
+    }
+
+
+    @Override
+    public boolean isNeedPromptUser() {
+        return pref.getBoolean(appContext.getString(R.string.pref_key_need_prompt_user), true);
+    }
+
+    @Override
+    public void setNeedPromptUser(boolean isNeed) {
+        pref.edit().putBoolean(appContext.getString(R.string.pref_key_need_prompt_user), isNeed)
+                .apply();
     }
 }

@@ -12,9 +12,10 @@ import io.taucoin.torrent.publishing.core.utils.ToastUtils;
  * Adds "Copy" item in share dialog.
  */
 
-public class SendTextToClipboard extends Activity {
+public class SendTextToClipboard extends BaseActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setIsFullScreen(false);
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();

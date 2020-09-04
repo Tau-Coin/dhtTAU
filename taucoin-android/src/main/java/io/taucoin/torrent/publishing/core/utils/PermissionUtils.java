@@ -17,34 +17,54 @@ package io.taucoin.torrent.publishing.core.utils;
 
 import android.app.AppOpsManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.provider.Settings;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationManagerCompat;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.ui.customviews.permission.EasyPermissions;
 
 public class PermissionUtils {
-    static final int REQUEST_PERMISSIONS_CAMERA = 0x10;
+    public static final int REQUEST_PERMISSIONS_CAMERA = 0x10;
     public static final int REQUEST_PERMISSIONS_STORAGE = 0x20;
     public static final int REQUEST_PERMISSIONS_NETWORK = 0x30;
 
-//    /*Check if the user has completely prohibited pop-up permission requests*/
-//    public static void checkUserBanPermission(FragmentActivity activity, String permission, int resMsg) {
-//        if (StringUtil.isEmpty(permission)) {
-//            return;
-//        }
-//        List<String> deniedPerms = new ArrayList<>();
-//        deniedPerms.add(permission);
-//        checkUserBanPermission(activity, deniedPerms, resMsg);
-//    }
+    /*Check if the user has completely prohibited pop-up permission requests*/
+    public static void checkUserBanPermission(AppCompatActivity activity, String permission, int resMsg) {
+        if (StringUtil.isEmpty(permission)) {
+            return;
+        }
+    }
 
-//    static void checkUserBanPermission(FragmentActivity activity, List<String> deniedPerms, int resMsg) {
-//        String message = activity.getString(resMsg);
-//        CharSequence positiveButton = activity.getString(R.string.common_ok);
-//        CharSequence negativeButton = activity.getString(R.string.common_cancel);
-//        EasyPermissions.checkDeniedPermissionsNeverAskAgain(activity, message, positiveButton, negativeButton, deniedPerms);
-//    }
+    public static void checkUserBanPermission(AppCompatActivity activity,
+                                              DialogInterface.OnClickListener onCancelListener, String permission, int resMsg) {
+        if (StringUtil.isEmpty(permission)) {
+            return;
+        }
+        List<String> deniedPerms = new ArrayList<>();
+        deniedPerms.add(permission);
+        checkUserBanPermission(activity, onCancelListener, deniedPerms, resMsg);
+    }
+
+    static void checkUserBanPermission(AppCompatActivity activity, List<String> deniedPerms, int resMsg) {
+        checkUserBanPermission(activity, null, deniedPerms, resMsg);
+    }
+
+    static void checkUserBanPermission(AppCompatActivity activity, DialogInterface.OnClickListener onCancelListener,
+                                       List<String> deniedPerms, int resMsg) {
+        String message = activity.getString(resMsg);
+        CharSequence positiveButton = activity.getString(R.string.ok);
+        CharSequence negativeButton = activity.getString(R.string.cancel);
+        EasyPermissions.checkDeniedPermissionsNeverAskAgain(activity, message, positiveButton, negativeButton,
+                onCancelListener, deniedPerms);
+    }
 
     public static boolean isNotificationEnabled() {
         Context context = MainApplication.getInstance();

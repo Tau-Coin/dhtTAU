@@ -21,6 +21,7 @@
     <string name="common_yes">Yes</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="exit">Exit</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
     <string name="close_navigation_drawer">Close navigation drawer</string>
@@ -260,7 +261,25 @@
     <string name="notifications_join">Join</string>
     <string name="notifications_from">From %1$s</string>
 
+    <string name="app_upgrade_description">TAU downloading&#8230;</string>
+
+    <!--version upgrade-->
+    <string name="app_upgrade_progress">Updating progress&#8230;</string>
+    <string name="app_upgrade_title">Update Log</string>
+    <string name="app_upgrade_install">Install</string>
+    <string name="app_upgrade_fail">Failed</string>
+    <string name="app_upgrade_retry">Retry</string>
+    <string name="app_upgrade_latest">latest version</string>
+
     <!--permission tip-->
+    <string name="permission_tip_camera_denied">
+         Please enable camera rights for TAU, it is disabled.
+    </string>
+
+    <string name="permission_tip_camera_never_ask_again">
+        Please enable camera rights for TAU, it is forbidden now.
+    </string>
+
     <string name="permission_tip_upgrade_denied">
          Please enable storage rights for TAU, it is disabled.
     </string>

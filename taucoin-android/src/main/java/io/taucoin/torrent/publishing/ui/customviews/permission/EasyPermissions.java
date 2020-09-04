@@ -604,6 +604,52 @@ public class EasyPermissions {
         return false;
     }
 
+    public static boolean checkDeniedPermissionsNeverAskAgain(final Object object,
+                                                              EasyPermissions.PermissionCallbacks callback,
+                                                              String rationale,
+                                                              CharSequence positiveButton,
+                                                              CharSequence negativeButton,
+                                                              final @Nullable DialogInterface.OnClickListener negativeButtonOnClickListener,
+                                                              List<String> deniedPerms) {
+        boolean shouldShowRationale;
+        for (String perm : deniedPerms) {
+            shouldShowRationale = shouldShowRequestPermissionRationale(object, perm);
+            if (!shouldShowRationale) {
+                final Activity activity = getActivity(object);
+                if (null == activity) {
+                    return true;
+                }
+
+                AlertDialog dialog = new AlertDialog.Builder(activity)
+                        .setMessage(rationale)
+                        .setPositiveButton(positiveButton, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                Uri uri = Uri.fromParts("package", activity.getPackageName(), null);
+                                intent.setData(uri);
+                                startAppSettingsScreen(object, intent);
+                            }
+                        })
+                        .setNegativeButton(negativeButton, negativeButtonOnClickListener)
+                        .create();
+                dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override public void onCancel(DialogInterface dialog) {
+                        if (negativeButtonOnClickListener != null){
+                            negativeButtonOnClickListener.onClick(dialog, 0);
+                        }
+                    }
+                });
+                dialog.show();
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setAllCaps(false);
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setAllCaps(false);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @TargetApi(23)
     private static boolean shouldShowRequestPermissionRationale(Object object, String perm) {
         if (object instanceof Activity) {

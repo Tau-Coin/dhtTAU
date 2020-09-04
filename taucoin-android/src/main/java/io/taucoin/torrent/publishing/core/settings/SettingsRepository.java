@@ -115,4 +115,25 @@ public interface SettingsRepository {
      * 获取不显示ban对话框
      */
     boolean doNotShowBanDialog();
+
+    /**
+     * 设置APK下载任务的ID
+     */
+    void setApkDownloadID(long downloadID);
+
+    /**
+     * 获取APK下载任务的ID
+     */
+    long getApkDownloadID();
+
+    /**
+     * 是否需要提示用户升级
+     */
+    boolean isNeedPromptUser();
+
+    /**
+     * 设置是否需要提示用户升级
+     * @param isNeed
+     */
+    void setNeedPromptUser(boolean isNeed);
 }

@@ -13,10 +13,11 @@ import io.taucoin.torrent.publishing.ui.main.MainActivity;
  * 外部点击TAUchain link跳转页面
  */
 
-public class ExternalLinkActivity extends Activity {
+public class ExternalLinkActivity extends BaseActivity {
     public static final String ACTION_CHAIN_LINK_CLICK = "io.taucoin.torrent.publishing.ui.ACTION_CHAIN_LINK_CLICK";
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setIsFullScreen(false);
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();

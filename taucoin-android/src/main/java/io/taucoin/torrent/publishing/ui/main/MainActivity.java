@@ -52,6 +52,7 @@ import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.customviews.BadgeActionProvider;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.download.DownloadViewModel;
 import io.taucoin.torrent.publishing.ui.notify.NotificationActivity;
 import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
@@ -72,6 +73,7 @@ public class MainActivity extends BaseActivity {
     private MainViewModel mainViewModel;
     private TauInfoProvider infoProvider;
     private CommunityViewModel communityViewModel;
+    private DownloadViewModel downloadViewModel;
     private NotificationViewModel notificationViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Subject<Integer> mBackClick = PublishSubject.create();
@@ -97,7 +99,9 @@ public class MainActivity extends BaseActivity {
         userViewModel = provider.get(UserViewModel.class);
         mainViewModel = provider.get(MainViewModel.class);
         communityViewModel = provider.get(CommunityViewModel.class);
+        communityViewModel = provider.get(CommunityViewModel.class);
         notificationViewModel = provider.get(NotificationViewModel.class);
+        downloadViewModel = provider.get(DownloadViewModel.class);
         infoProvider = TauInfoProvider.getInstance(getApplicationContext());
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main_drawer);
         initLayout();
@@ -251,6 +255,7 @@ public class MainActivity extends BaseActivity {
         subscribeDHTStatus();
         subscribeNeedStartDaemon();
         subscribeUnreadNotificationNum();
+        downloadViewModel.checkAppVersion(this);
     }
 
     private void subscribeUnreadNotificationNum() {

@@ -17,6 +17,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -48,6 +49,9 @@ public class SplashActivity extends BaseActivity {
             logger.info("SplashActivity show");
             // Open for the first time
             setContentView(R.layout.activity_splash);
+
+            // 每次APP重新启动如果有新版本更新需要提示用户
+            RepositoryHelper.getSettingsRepository(this).setNeedPromptUser(true);
 
             logger.info("SplashActivity onCreate");
 

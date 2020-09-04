@@ -11,4 +11,6 @@
     <string name="pref_key_wake_lock" translatable="false">pref_key_wake_lock</string>
     <string name="pref_key_last_tx_fee" translatable="false">pref_key_last_tx_fee_</string>
     <string name="pref_key_do_not_show_ban_dialog" translatable="false">pref_key_do_not_show_ban_dialog</string>
+    <string name="pref_key_apk_download_id" translatable="false">pref_key_apk_download_id</string>
+    <string name="pref_key_need_prompt_user" translatable="false">pref_key_need_prompt_user</string>
 </resources>
