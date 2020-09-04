@@ -69,10 +69,12 @@ public class ChainParam {
 
     /**********CHANNEL**********/
     // mutable item salt suffix: block
-    public static final byte[] BLOCK_CHANNEL = "#block".getBytes();
+    public static final byte[] BLOCK_TIP_CHANNEL = "#blkTip".getBytes();
+    public static final byte[] BLOCK_REQUEST_CHANNEL = "#blkRequest".getBytes();
 
     // mutable item salt suffix: tx
-    public static final byte[] TX_CHANNEL = "#tx".getBytes();
+    public static final byte[] TX_TIP_CHANNEL = "#txTip".getBytes();
+    public static final byte[] TX_REQUEST_CHANNEL = "#txRequest".getBytes();
 
     public static final int HashLongArrayLength = 3;
 

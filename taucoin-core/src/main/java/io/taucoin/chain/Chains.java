@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import io.taucoin.account.AccountManager;
@@ -48,18 +47,19 @@ import io.taucoin.util.ByteArrayWrapper;
 public class Chains implements DHT.GetDHTItemCallback{
     private static final Logger logger = LoggerFactory.getLogger("Chain");
 
-    private static final int LOOP_LIMIT = 3;
-
-    // Chain id specified by the transaction of creating new blockchain.
-    private final byte[] chainID;
-
     private final Set<ByteArrayWrapper> chainIDs = new HashSet<>();
 
-    // mutable item salt: block
-    private final Map<ByteArrayWrapper, byte[]> blockSalts = new HashMap<>();
+    // mutable item salt: block tip channel
+    private final Map<ByteArrayWrapper, byte[]> blockTipSalts = new HashMap<>();
 
-    // mutable item salt: tx
-    private final Map<ByteArrayWrapper, byte[]> txSalts = new HashMap<>();
+    // mutable item salt: block request channel
+    private final Map<ByteArrayWrapper, byte[]> blockRequestSalts = new HashMap<>();
+
+    // mutable item salt: tx tip channel
+    private final Map<ByteArrayWrapper, byte[]> txTipSalts = new HashMap<>();
+
+    // mutable item salt: tx request channel
+    private final Map<ByteArrayWrapper, byte[]> txRequestSalts = new HashMap<>();
 
     // Voting thread.
     private Thread votingThread;
@@ -93,33 +93,49 @@ public class Chains implements DHT.GetDHTItemCallback{
     // the synced block of current chain
     private final Map<ByteArrayWrapper, Block> syncBlocks = new HashMap<>();
 
+    // 记录投票开始时间
     private final Map<ByteArrayWrapper, Long> votingTime = new HashMap<>();
 
+    // 是否在投票状态标志
+    private final Map<ByteArrayWrapper, Boolean> votingFlag = new HashMap<>();
+
+    // 积累的投票所需区块
     private final Map<ByteArrayWrapper, List<Block>> votingBlocks = new HashMap<>();
 
+    // 交易池请求的交易
     private final Map<ByteArrayWrapper, List<Transaction>> txMapForPool = new HashMap<>();
 
+    // 区块容器队列
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, BlockContainer>> blockContainerMap = new HashMap<>();
 
+    // 区块队列
     private final Map<ByteArrayWrapper, List<Block>> blockMap = new HashMap<>();
 
+    // 交易队列
     private final Map<ByteArrayWrapper, List<Transaction>> txMap = new HashMap<>();
 
+    // 同步所用区块容器队列
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, BlockContainer>> blockContainerMapForSync = new HashMap<>();
 
+    // 同步所用区块队列
     private final Map<ByteArrayWrapper, List<Block>> blockMapForSync = new HashMap<>();
 
+    // 同步所用交易队列
     private final Map<ByteArrayWrapper, List<Transaction>> txMapForSync = new HashMap<>();
+
+    // 远端请求区块哈希队列
+    private final Map<ByteArrayWrapper, List<byte[]>> blockHashMapForRequest = new HashMap<>();
+
+    // 远端请求交易哈希队列
+    private final Map<ByteArrayWrapper, List<byte[]>> txHashMapForRequest = new HashMap<>();
 
     /**
      * Chain constructor.
      *
-     * @param chainID chain identity.
      * @param blockStore block store
      * @param stateDB state db
      */
-    public Chains(byte[] chainID, BlockStore blockStore, StateDB stateDB, TauListener tauListener) {
-        this.chainID = chainID;
+    public Chains(BlockStore blockStore, StateDB stateDB, TauListener tauListener) {
         this.blockStore = blockStore;
         this.stateDB = stateDB;
         this.tauListener = tauListener;
@@ -132,9 +148,14 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     public boolean followChain(byte[] chainID) {
         ByteArrayWrapper wChainID = new ByteArrayWrapper(chainID);
-        this.blockSalts.put(wChainID, makeBlockSalt(chainID));
 
-        this.txSalts.put(wChainID, makeTxSalt(chainID));
+        this.blockTipSalts.put(wChainID, makeBlockTipSalt(chainID));
+
+        this.blockRequestSalts.put(wChainID, makeBlockTipSalt(chainID));
+
+        this.txTipSalts.put(wChainID, makeTxTipSalt(chainID));
+
+        this.txRequestSalts.put(wChainID, makeTxTipSalt(chainID));
 
         this.chainIDs.add(new ByteArrayWrapper(chainID));
 
@@ -231,6 +252,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.votingTime.put(wChainID, 0L);
 
+        this.votingFlag.put(wChainID, false);
+
         List<Block> votingBlocks = new ArrayList<>();
         this.votingBlocks.put(wChainID, votingBlocks);
 
@@ -255,6 +278,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         List<Transaction> txsForSync = new ArrayList<>();
         this.txMapForSync.put(wChainID, txsForSync);
 
+        List<byte[]> blockHashForRequest = new ArrayList<>();
+        this.blockHashMapForRequest.put(wChainID, blockHashForRequest);
+
+        List<byte[]> txHashForRequest = new ArrayList<>();
+        this.txHashMapForRequest.put(wChainID, txHashForRequest);
 
         return true;
     }
@@ -288,8 +316,6 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             if (!isEmptyChain(chainID)) {
                 //
-                boolean votingFlag = false;
-
                 Map<ByteArrayWrapper, BlockContainer> blockContainers = this.blockContainerMap.get(chainID);
                 Map<ByteArrayWrapper, BlockContainer> syncBlockContainers = this.blockContainerMapForSync.get(chainID);
                 PeerManager peerManager = this.peerManagers.get(chainID);
@@ -309,156 +335,161 @@ public class Chains implements DHT.GetDHTItemCallback{
                     syncBlockContainers.clear();
                 }
 
-                if (blockContainers.isEmpty()) {
+                if (!this.votingFlag.get(chainID)) {
+                    if (blockContainers.isEmpty()) {
 
-                    byte[] peer = peerManager.getBlockPeerRandomly();
-                    requestTipBlockFromPeer(chainID, peer);
-                } else {
+                        byte[] peer = peerManager.getBlockPeerRandomly();
+                        requestTipBlockFromPeer(chainID, peer);
+                    } else {
 
-                    for (Map.Entry<ByteArrayWrapper, BlockContainer> entry : blockContainers.entrySet()) {
-                        BlockContainer blockContainer1 = entry.getValue();
+                        for (Map.Entry<ByteArrayWrapper, BlockContainer> entry : blockContainers.entrySet()) {
+                            BlockContainer blockContainer1 = entry.getValue();
 
-                        if (blockContainer1.getBlock().getCumulativeDifficulty().
-                                compareTo(bestBlockContainer.getBlock().getCumulativeDifficulty()) > 0) {
-                            // if found a more difficult chain
-                            try {
-                                byte[] immutableBlockHash1 = blockContainer1.getBlock().getImmutableBlockHash();
-                                if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash1)) {
-                                    // 分叉点在mutable range之内
-                                    int counter = 0;
-                                    byte[] previousHash = blockContainer1.getBlock().getPreviousBlockHash();
-                                    List<BlockContainer> containerList = new ArrayList<>();
+                            if (blockContainer1.getBlock().getCumulativeDifficulty().
+                                    compareTo(bestBlockContainer.getBlock().getCumulativeDifficulty()) > 0) {
+                                // if found a more difficult chain
+                                try {
+                                    byte[] immutableBlockHash1 = blockContainer1.getBlock().getImmutableBlockHash();
+                                    if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash1)) {
+                                        // 分叉点在mutable range之内
+                                        int counter = 0;
+                                        byte[] previousHash = blockContainer1.getBlock().getPreviousBlockHash();
+                                        List<BlockContainer> containerList = new ArrayList<>();
 
-                                    containerList.add(blockContainer1);
+                                        containerList.add(blockContainer1);
 
-                                    boolean findAll = true;
-                                    while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
+                                        boolean findAll = true;
+                                        while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
 
-                                        ByteArrayWrapper key = new ByteArrayWrapper(previousHash);
+                                            ByteArrayWrapper key = new ByteArrayWrapper(previousHash);
 
-                                        // 先从队列查找
-                                        if (blockContainers.containsKey(key)) {
-                                            BlockContainer previousBlockContainer = blockContainers.get(key);
+                                            // 先从队列查找
+                                            if (blockContainers.containsKey(key)) {
+                                                BlockContainer previousBlockContainer = blockContainers.get(key);
 
-                                            if (null != previousBlockContainer) {
-                                                // 如果有返回，但是数据不为空
-                                                containerList.add(previousBlockContainer);
-                                                previousHash = previousBlockContainer.getBlock().getPreviousBlockHash();
+                                                if (null != previousBlockContainer) {
+                                                    // 如果有返回，但是数据不为空
+                                                    containerList.add(previousBlockContainer);
+                                                    previousHash = previousBlockContainer.getBlock().getPreviousBlockHash();
 
-                                                if (previousBlockContainer.getBlock().getBlockNum() <= 0) {
+                                                    if (previousBlockContainer.getBlock().getBlockNum() <= 0) {
+                                                        break;
+                                                    }
+
+                                                    counter++;
+
+                                                    continue;
+                                                } else {
+                                                    // 如果有返回，但是数据为空
+                                                    blockContainers.clear();
+                                                    findAll = false;
                                                     break;
                                                 }
+                                            }
 
-                                                counter++;
+                                            // 再从数据库查找
+                                            Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
+                                            if (null != block) {
+                                                // found in local
+                                                logger.debug("+ctx--------found in local, hash:{}",
+                                                        Hex.toHexString(previousHash));
+                                                break;
+                                            }
 
-                                                continue;
+                                            // 仍然找不到，则向dht请求
+                                            requestBlockForSync(chainID, previousHash);
+                                            findAll = false;
+                                            break;
+                                        }
+
+                                        if (findAll) {
+                                            for (BlockContainer container : containerList) {
+                                                this.blockStore.saveBlockContainer(chainID.getData(),
+                                                        container, false);
+                                            }
+
+                                            logger.debug("++ctx-----------------------re-branch.....");
+                                            // change to more difficult chain
+                                            reBranch(chainID, blockContainer1);
+
+                                            // 清空队列，以待下次使用
+                                            blockContainers.clear();
+                                            break;
+                                        } else {
+                                            containerList.clear();
+                                        }
+                                    } else {
+                                        // 分叉点在mutable range之外，判断是否在3倍的mutable range之内
+                                        ByteArrayWrapper key1 = new ByteArrayWrapper(immutableBlockHash1);
+
+                                        if (blockContainers.containsKey(key1)) {
+                                            BlockContainer blockContainer2 = blockContainers.get(key1);
+                                            if (null != blockContainer2) {
+                                                // 如果有返回，但是数据不为空，继续找第二个immutable block
+                                                // 获取第二个immutable block hash
+                                                byte[] immutableBlockHash2 = blockContainer2.
+                                                        getBlock().getImmutableBlockHash();
+
+                                                // 第二个immutable block hash是否在主链上
+                                                if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash2)) {
+                                                    // 在主链上
+                                                    this.votingFlag.put(chainID, true);
+                                                    break;
+                                                } else {
+                                                    // 不在主链上，继续查看第三个immutable block hash
+                                                    ByteArrayWrapper key2 = new ByteArrayWrapper(immutableBlockHash2);
+
+                                                    if (blockContainers.containsKey(key2)) {
+                                                        BlockContainer blockContainer3 = blockContainers.get(key2);
+                                                        if (null != blockContainer3) {
+                                                            // 如果有返回，但是数据不为空
+                                                            byte[] immutableBlockHash3 = blockContainer3.
+                                                                    getBlock().getImmutableBlockHash();
+                                                            if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash3)) {
+                                                                // 在主链上
+                                                                this.votingFlag.put(chainID, true);
+                                                                break;
+                                                            } else {
+                                                                // fork point out of warning range, maybe it's an attack chain
+                                                                logger.debug("++ctx-----------------------an attack chain.....");
+                                                                continue;
+                                                            }
+                                                        } else {
+                                                            // 如果有返回，但是数据为空
+                                                            blockContainers.clear();
+                                                            break;
+                                                        }
+                                                    } else {
+                                                        requestBlock(chainID, immutableBlockHash2);
+                                                        break;
+                                                    }
+                                                }
                                             } else {
                                                 // 如果有返回，但是数据为空
                                                 blockContainers.clear();
-                                                findAll = false;
                                                 break;
-                                            }
-                                        }
-
-                                        // 再从数据库查找
-                                        Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
-                                        if (null != block) {
-                                            // found in local
-                                            logger.debug("+ctx--------found in local, hash:{}",
-                                                    Hex.toHexString(previousHash));
-                                            break;
-                                        }
-
-                                        // 仍然找不到，则向dht请求
-                                        requestBlockForSync(chainID, previousHash);
-                                        findAll = false;
-                                        break;
-                                    }
-
-                                    if (findAll) {
-                                        for (BlockContainer container : containerList) {
-                                            this.blockStore.saveBlockContainer(chainID.getData(),
-                                                    container, false);
-                                        }
-
-                                        logger.debug("++ctx-----------------------re-branch.....");
-                                        // change to more difficult chain
-                                        reBranch(chainID, blockContainer1);
-
-                                        // 清空队列，以待下次使用
-                                        blockContainers.clear();
-                                        break;
-                                    } else {
-                                        containerList.clear();
-                                    }
-                                } else {
-                                    // 分叉点在mutable range之外，判断是否在3倍的mutable range之内
-                                    ByteArrayWrapper key1 = new ByteArrayWrapper(immutableBlockHash1);
-
-                                    if (blockContainers.containsKey(key1)) {
-                                        BlockContainer blockContainer2 = blockContainers.get(key1);
-                                        if (null != blockContainer2) {
-                                            // 如果有返回，但是数据不为空，继续找第二个immutable block
-                                            // 获取第二个immutable block hash
-                                            byte[] immutableBlockHash2 = blockContainer2.
-                                                    getBlock().getImmutableBlockHash();
-
-                                            // 第二个immutable block hash是否在主链上
-                                            if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash2)) {
-                                                // 在主链上
-                                                votingFlag = true;
-                                                break;
-                                            } else {
-                                                // 不在主链上，继续查看第三个immutable block hash
-                                                ByteArrayWrapper key2 = new ByteArrayWrapper(immutableBlockHash2);
-
-                                                if (blockContainers.containsKey(key2)) {
-                                                    BlockContainer blockContainer3 = blockContainers.get(key2);
-                                                    if (null != blockContainer3) {
-                                                        // 如果有返回，但是数据不为空
-                                                        byte[] immutableBlockHash3 = blockContainer3.
-                                                                getBlock().getImmutableBlockHash();
-                                                        if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash3)) {
-                                                            // 在主链上
-                                                            votingFlag = true;
-                                                            break;
-                                                        } else {
-                                                            // fork point out of warning range, maybe it's an attack chain
-                                                            logger.debug("++ctx-----------------------an attack chain.....");
-                                                            continue;
-                                                        }
-                                                    } else {
-                                                        // 如果有返回，但是数据为空
-                                                        blockContainers.clear();
-                                                        break;
-                                                    }
-                                                } else {
-                                                    requestBlock(chainID, immutableBlockHash2);
-                                                    break;
-                                                }
                                             }
                                         } else {
-                                            // 如果有返回，但是数据为空
-                                            blockContainers.clear();
+                                            requestBlock(chainID, immutableBlockHash1);
                                             break;
                                         }
-                                    } else {
-                                        requestBlock(chainID, immutableBlockHash1);
-                                        break;
                                     }
+                                } catch (Exception e) {
+                                    logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
                                 }
-                            } catch (Exception e) {
-                                logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
+                            } else {
+                                // clear all
+                                blockContainers.clear();
                             }
-                        } else {
-                            // clear all
                         }
                     }
                 }
 
-                if (votingFlag) {
+                if (this.votingFlag.get(chainID)) {
                     Vote bestVote = tryToVote(chainID);
-                    tryChangeToBestVote(chainID, bestVote);
+                    if (null != bestVote) {
+                        tryToChangeToBestVote(chainID, bestVote);
+                    }
                 }
 
                 if (minable(chainID)) {
@@ -501,32 +532,56 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 for (int i = 0; i < counter; i++) {
                     byte[] peer = peerManager.getBlockPeerRandomly();
+
                     requestTipTxForPoolFromPeer(chainID, peer);
+
+                    requestRequestBlockFromPeer(chainID, peer);
+
+                    requestRequestTxFromPeer(chainID, peer);
                 }
 
-                for (int i = 0; i < counter; i++) {
-                    byte[] peer = peerManager.getBlockPeerRandomly();
-                    responseOrRepublic(chainID, peer);
-                }
+                responseRequest(chainID);
             }
 
         }
     }
 
-    private void responseOrRepublic(ByteArrayWrapper chainID, byte[] peer) {
-        // block
-        // tx
+    private void responseRequest(ByteArrayWrapper chainID) {
+        try {
+            // block
+            List<byte[]> blockHashList = this.blockHashMapForRequest.get(chainID);
+            for (byte[] blockHash : blockHashList) {
+                Block block = this.blockStore.getBlockByHash(chainID.getData(), blockHash);
+                publishBlock(block);
+            }
+            // tx
+            List<byte[]> txidList = this.blockHashMapForRequest.get(chainID);
+            for (byte[] txid : txidList) {
+                Transaction tx = this.blockStore.getTransactionByHash(chainID.getData(), txid);
+                publishTransaction(tx);
+            }
+        } catch (Exception e) {
+            logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
+        }
     }
 
     /**
-     * make block salt
+     * make block tip salt
      * @return block salt
      */
-    private byte[] makeBlockSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_CHANNEL.length];
+    private byte[] makeBlockTipSalt(byte[] chainID) {
+        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length];
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.BLOCK_CHANNEL, 0, salt, chainID.length,
-                ChainParam.BLOCK_CHANNEL.length);
+        System.arraycopy(ChainParam.BLOCK_TIP_CHANNEL, 0, salt, chainID.length,
+                ChainParam.BLOCK_TIP_CHANNEL.length);
+        return salt;
+    }
+
+    private byte[] makeBlockRequestSalt(byte[] chainID) {
+        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_REQUEST_CHANNEL.length];
+        System.arraycopy(chainID, 0, salt, 0, chainID.length);
+        System.arraycopy(ChainParam.BLOCK_REQUEST_CHANNEL, 0, salt, chainID.length,
+                ChainParam.BLOCK_REQUEST_CHANNEL.length);
         return salt;
     }
 
@@ -534,11 +589,19 @@ public class Chains implements DHT.GetDHTItemCallback{
      * make tx salt
      * @return tx salt
      */
-    private byte[] makeTxSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.TX_CHANNEL.length];
+    private byte[] makeTxTipSalt(byte[] chainID) {
+        byte[] salt = new byte[chainID.length + ChainParam.TX_TIP_CHANNEL.length];
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.TX_CHANNEL, 0, salt, chainID.length,
-                ChainParam.TX_CHANNEL.length);
+        System.arraycopy(ChainParam.TX_TIP_CHANNEL, 0, salt, chainID.length,
+                ChainParam.TX_TIP_CHANNEL.length);
+        return salt;
+    }
+
+    private byte[] makeTxRequestSalt(byte[] chainID) {
+        byte[] salt = new byte[chainID.length + ChainParam.TX_REQUEST_CHANNEL.length];
+        System.arraycopy(chainID, 0, salt, 0, chainID.length);
+        System.arraycopy(ChainParam.TX_REQUEST_CHANNEL, 0, salt, chainID.length,
+                ChainParam.TX_REQUEST_CHANNEL.length);
         return salt;
     }
 
@@ -942,30 +1005,70 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param bestVote best vote
      * @return true/false
      */
-    private boolean tryChangeToBestVote(ByteArrayWrapper chainID, Vote bestVote) {
+    private boolean tryToChangeToBestVote(ByteArrayWrapper chainID, Vote bestVote) {
         try {
-            BlockContainer bestContainer = getBlockContainerFromDHTByHash(bestVote.getBlockHash());
+            Map<ByteArrayWrapper, BlockContainer> blockContainers = this.blockContainerMap.get(chainID);
 
-            if (null == bestContainer) {
-                logger.info("Chain ID[{}]: Cannot find best block container, hash[{}]",
-                        new String(chainID.getData()), Hex.toHexString(bestVote.getBlockHash()));
-                return false;
+            BlockContainer blockContainer1 = this.blockStore.
+                    getBlockContainerByHash(chainID.getData(), bestVote.getBlockHash());
+
+            if (null == blockContainer1) {
+                ByteArrayWrapper key = new ByteArrayWrapper(bestVote.getBlockHash());
+                if (blockContainers.containsKey(key)) {
+                    blockContainer1 = blockContainers.get(key);
+                    if (null == blockContainer1) {
+                        this.votingFlag.put(chainID, false);
+                        return false;
+                    }
+                } else {
+                    requestBlock(chainID, bestVote.getBlockHash());
+                    return false;
+                }
             }
 
             // if best vote is genesis block, immutable hash is not on main chain, also we cannot
             // get block container by immutable hash from genesis block
 
-            byte[] immutableBlockHash = bestContainer.getBlock().getImmutableBlockHash();
-            if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash)) {
+            byte[] immutableBlockHash1 = blockContainer1.getBlock().getImmutableBlockHash();
+            if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash1)) {
                 // 分叉点在mutable range之内
-                // download block first
                 int counter = 0;
-                byte[] previousHash = bestContainer.getBlock().getPreviousBlockHash();
+                byte[] previousHash = blockContainer1.getBlock().getPreviousBlockHash();
                 List<BlockContainer> containerList = new ArrayList<>();
 
-                containerList.add(bestContainer);
+                containerList.add(blockContainer1);
 
+                boolean findAll = true;
                 while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
+
+                    ByteArrayWrapper key = new ByteArrayWrapper(previousHash);
+
+                    // 先从队列查找
+                    if (blockContainers.containsKey(key)) {
+                        BlockContainer previousBlockContainer = blockContainers.get(key);
+
+                        if (null != previousBlockContainer) {
+                            // 如果有返回，但是数据不为空
+                            containerList.add(previousBlockContainer);
+                            previousHash = previousBlockContainer.getBlock().getPreviousBlockHash();
+
+                            if (previousBlockContainer.getBlock().getBlockNum() <= 0) {
+                                break;
+                            }
+
+                            counter++;
+
+                            continue;
+                        } else {
+                            // 如果有返回，但是数据为空
+                            this.votingFlag.put(chainID, false);
+                            blockContainers.clear();
+                            findAll = false;
+                            break;
+                        }
+                    }
+
+                    // 再从数据库查找
                     Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
                     if (null != block) {
                         // found in local
@@ -973,72 +1076,87 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 Hex.toHexString(previousHash));
                         break;
                     }
-                    // get from dht
-                    BlockContainer container = getBlockContainerFromDHTByHash(previousHash);
 
-                    if (null == container) {
-                        logger.debug("+ctx--------Cannot get container from dht, hash:{}",
-                                Hex.toHexString(previousHash));
-                        return false;
-                    }
-
-                    previousHash = container.getBlock().getPreviousBlockHash();
-
-                    logger.debug("----vote---download block number:{}, hash:{}, previous hash:{}",
-                            container.getBlock().getBlockNum(),
-                            Hex.toHexString(container.getBlock().getBlockHash()),
-                            Hex.toHexString(previousHash));
-
-                    containerList.add(container);
-
-                    if (container.getBlock().getBlockNum() <= 0) {
-                        break;
-                    }
-                    counter++;
+                    // 仍然找不到，则向dht请求
+                    requestBlockForSync(chainID, previousHash);
+                    findAll = false;
+                    break;
                 }
 
+                if (findAll) {
+                    for (BlockContainer container : containerList) {
+                        this.blockStore.saveBlockContainer(chainID.getData(),
+                                container, false);
+                    }
 
-                for (BlockContainer container: containerList) {
-                    this.blockStore.saveBlockContainer(chainID.getData(), container, false);
+                    logger.debug("++ctx-----------------------re-branch.....");
+                    // change to more difficult chain
+                    reBranch(chainID, blockContainer1);
+
+                    // 清空队列，以待下次使用
+                    this.votingFlag.put(chainID, false);
+                    blockContainers.clear();
+                } else {
+                    containerList.clear();
                 }
-                logger.debug("++ctx----------------------vote---re-branch.....");
-                // change to more difficult chain
-                reBranch(chainID, this.bestBlockContainers.get(chainID));
             } else {
                 // 分叉点在mutable range之外，判断是否在3倍的mutable range之内
-                // get from dht
-                BlockContainer immutableContainer1 = getBlockContainerFromDHTByHash(immutableBlockHash);
+                ByteArrayWrapper key1 = new ByteArrayWrapper(immutableBlockHash1);
 
-                if (null == immutableContainer1) {
-                    logger.info("Chain ID[{}]: Cannot find immutable block container1", new String(chainID.getData()));
-                    return false;
-                }
+                if (blockContainers.containsKey(key1)) {
+                    BlockContainer blockContainer2 = blockContainers.get(key1);
+                    if (null != blockContainer2) {
+                        // 如果有返回，但是数据不为空，继续找第二个immutable block
+                        // 获取第二个immutable block hash
+                        byte[] immutableBlockHash2 = blockContainer2.
+                                getBlock().getImmutableBlockHash();
 
-                byte[] immutableBlockHash1 = immutableContainer1.getBlock().getImmutableBlockHash();
-                BlockContainer immutableContainer2 = getBlockContainerFromDHTByHash(immutableBlockHash1);
+                        // 第二个immutable block hash是否在主链上
+                        if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash2)) {
+                            // 在主链上
+                            // be as a new chain when fork point between mutable range and warning range
+                            // re-init tx pool and chain
+                            this.txPools.get(chainID).reinit();
+                            initialSync(new ByteArrayWrapper(chainID.getData()), bestVote);
+                            return true;
+                        } else {
+                            // 不在主链上，继续查看第三个immutable block hash
+                            ByteArrayWrapper key2 = new ByteArrayWrapper(immutableBlockHash2);
 
-                if (null == immutableContainer2) {
-                    logger.info("Chain ID[{}]: Cannot find immutable block container1", new String(chainID.getData()));
-                    return false;
-                }
-
-                byte[] warningRangeHash = immutableContainer2.getBlock().getImmutableBlockHash();
-
-                if (this.blockStore.isMainChainBlock(chainID.getData(), warningRangeHash)) {
-                    // fork point in warning range
-                    // vote when fork point between mutable range and warning range
-                    logger.debug("++ctx-----------------------go to vote.....");
-                    // be as a new chain when fork point between mutable range and warning range
-                    // re-init tx pool and chain
-                    this.txPools.get(chainID).reinit();
-                    initialSync(new ByteArrayWrapper(chainID.getData()), bestVote);
-                    return true;
+                            if (blockContainers.containsKey(key2)) {
+                                BlockContainer blockContainer3 = blockContainers.get(key2);
+                                if (null != blockContainer3) {
+                                    // 如果有返回，但是数据不为空
+                                    byte[] immutableBlockHash3 = blockContainer3.
+                                            getBlock().getImmutableBlockHash();
+                                    if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash3)) {
+                                        // 在主链上
+                                        // be as a new chain when fork point between mutable range and warning range
+                                        // re-init tx pool and chain
+                                        this.txPools.get(chainID).reinit();
+                                        initialSync(new ByteArrayWrapper(chainID.getData()), bestVote);
+                                        return true;
+                                    } else {
+                                        // fork point out of warning range, maybe it's an attack chain
+                                        logger.debug("++ctx-----------------------an attack chain.....");
+                                    }
+                                } else {
+                                    // 如果有返回，但是数据为空
+                                    blockContainers.clear();
+                                }
+                            } else {
+                                requestBlock(chainID, immutableBlockHash2);
+                            }
+                        }
+                    } else {
+                        // 如果有返回，但是数据为空
+                        blockContainers.clear();
+                    }
                 } else {
-                    // fork point out of warning range, maybe it's an attack chain
-                    logger.debug("++ctx-----------------------an attack chain.....");
-                    return false;
+                    requestBlock(chainID, immutableBlockHash1);
                 }
             }
+
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
             return false;
@@ -1047,66 +1165,129 @@ public class Chains implements DHT.GetDHTItemCallback{
         return true;
     }
 
-    private boolean requestTipBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(chainID));
+    private void requestTipBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockTipSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_BLOCK);
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private boolean requestBlock(ByteArrayWrapper chainID, byte[] blockHash) {
+    private void requestRequestBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockRequestSalts.get(chainID));
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_FOR_REQUEST);
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private void requestBlock(ByteArrayWrapper chainID, byte[] blockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK,
                 new ByteArrayWrapper(blockHash));
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        publishBlockRequest(chainID, blockHash);
+
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private boolean requestBlockForSync(ByteArrayWrapper chainID, byte[] blockHash) {
+    private void requestBlockForSync(ByteArrayWrapper chainID, byte[] blockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_FOR_SYNC);
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        publishBlockRequest(chainID, blockHash);
+
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private boolean requestTipTxFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalts.get(chainID));
+    private void requestTipTxFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txTipSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_TX);
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private boolean requestTx(ByteArrayWrapper chainID, byte[] txid) {
+    private void requestRequestTxFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txRequestSalts.get(chainID));
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_FOR_REQUEST);
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private void requestTx(ByteArrayWrapper chainID, byte[] txid) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX,
                 new ByteArrayWrapper(txid));
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        publishTxRequest(chainID, txid);
+
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private boolean requestTxForSync(ByteArrayWrapper chainID, byte[] txid) {
+    private void requestTxForSync(ByteArrayWrapper chainID, byte[] txid) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_FOR_SYNC);
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        publishTxRequest(chainID, txid);
+
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private boolean requestTipTxForPoolFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txSalts.get(chainID));
+    private void requestTipTxForPoolFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txTipSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_TX_FOR_POOL);
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private boolean requestTxForPool(ByteArrayWrapper chainID, byte[] txid) {
+    private void requestTxForPool(ByteArrayWrapper chainID, byte[] txid) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_FOR_POOL);
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        publishTxRequest(chainID, txid);
+
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private boolean requestTipBlockForVotingFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockSalts.get(chainID));
+    private void requestTipBlockForVotingFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockTipSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_BLOCK_FOR_VOTING);
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private boolean requestBlockForVoting(ByteArrayWrapper chainID, byte[] blockHash) {
+    private void requestBlockForVoting(ByteArrayWrapper chainID, byte[] blockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_FOR_VOTING);
-        return TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        publishBlockRequest(chainID, blockHash);
+
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private void publishBlockRequest(ByteArrayWrapper chainID, byte[] blockHash) {
+        // put mutable item
+        Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+
+        DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
+                keyPair.second, blockHash, this.blockRequestSalts.get(chainID));
+        TorrentDHTEngine.getInstance().distribute(mutableItem);
+    }
+
+    private void publishTxRequest(ByteArrayWrapper chainID, byte[] txHash) {
+        // put mutable item
+        Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+
+        DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
+                keyPair.second, txHash, this.txRequestSalts.get(chainID));
+        TorrentDHTEngine.getInstance().distribute(mutableItem);
+    }
+
+    private void publishBlock(Block block) {
+        if (null != block) {
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(block.getEncoded());
+            TorrentDHTEngine.getInstance().distribute(immutableItem);
+        }
+    }
+
+    private void publishTransaction(Transaction tx) {
+        if (null != tx) {
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
+            TorrentDHTEngine.getInstance().distribute(immutableItem);
+        }
     }
 
     /**
@@ -1120,12 +1301,12 @@ public class Chains implements DHT.GetDHTItemCallback{
                 // put immutable tx
                 DHT.ImmutableItem immutableItem =
                         new DHT.ImmutableItem(bestBlockContainer.getTx().getEncoded());
-                TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+                TorrentDHTEngine.getInstance().distribute(immutableItem);
             }
 
             // put immutable block
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(bestBlockContainer.getBlock().getEncoded());
-            TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+            TorrentDHTEngine.getInstance().distribute(immutableItem);
 
             byte[] peer = peerManagers.get(chainID).getMutableRangePeerRandomly();
             MutableItemValue mutableItemValue = new MutableItemValue(bestBlockContainer.getBlock().getBlockHash(), peer);
@@ -1133,88 +1314,9 @@ public class Chains implements DHT.GetDHTItemCallback{
             // put mutable item
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                    mutableItemValue.getEncoded(), this.blockSalts.get(chainID));
-            TorrentDHTEngine.getInstance().dhtPut(mutableItem);
+                    mutableItemValue.getEncoded(), this.blockTipSalts.get(chainID));
+            TorrentDHTEngine.getInstance().distribute(mutableItem);
         }
-    }
-
-    /**
-     * get a block from dht
-     * @param hash block hash
-     * @return block get from dht, null otherwise
-     */
-    private Block getBlockFromDHTByHash(byte[] hash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-
-        int i = 0;
-        byte[] blockEncode = null;
-        while (null == blockEncode && i < LOOP_LIMIT) {
-            blockEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
-            i++;
-            logger.debug("+ctx--try to get block {} time", i);
-        }
-
-//        byte[] blockEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
-
-        if (null == blockEncode) {
-            logger.info("Chain ID[{}]: block encode still is null", new String(this.chainID));
-            return null;
-        }
-
-        return new Block(blockEncode);
-    }
-
-    /**
-     * get a block container from dht
-     * @param blockHash block hash
-     * @return block container get from dht, null otherwise
-     */
-    private BlockContainer getBlockContainerFromDHTByHash(byte[] blockHash) {
-        Block block = getBlockFromDHTByHash(blockHash);
-
-        if (null == block) {
-            return null;
-        }
-
-        BlockContainer blockContainer = new BlockContainer(block);
-
-        if (null != block.getTxHash()) {
-            Transaction tx = getTxFromDHTByHash(block.getTxHash());
-
-            if (null == tx) {
-                return null;
-            }
-
-            blockContainer.setTx(tx);
-        }
-
-        return blockContainer;
-    }
-
-    /**
-     * get a tx by hash from dht
-     * @param hash tx hash
-     * @return tx get from dht, null otherwise
-     */
-    private Transaction getTxFromDHTByHash(byte[] hash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-
-        int i = 0;
-        byte[] txEncode = null;
-        while (null == txEncode && i < LOOP_LIMIT) {
-            txEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
-            i++;
-            logger.debug("+ctx--try to get tx {} time", i);
-        }
-
-//            byte[] txEncode = TorrentDHTEngine.getInstance().dhtGet(spec);
-
-        if (null == txEncode) {
-            logger.info("Chain ID[{}]: tx encode still is null", new String(this.chainID));
-            return null;
-        }
-
-        return TransactionFactory.parseTransaction(txEncode);
     }
 
     /**
@@ -1224,7 +1326,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         Transaction tx = this.txPools.get(chainID).getBestTransaction();
         if (null != tx) {
             // put mutable tx
-            publishTransaction(chainID, tx);
+            publishTipTransaction(chainID, tx);
         }
     }
 
@@ -1232,11 +1334,11 @@ public class Chains implements DHT.GetDHTItemCallback{
      * put a tx in mutable item
      * @param tx tx to publish
      */
-    private void publishTransaction(ByteArrayWrapper chainID, Transaction tx) {
+    private void publishTipTransaction(ByteArrayWrapper chainID, Transaction tx) {
         if (null != tx) {
             // put immutable tx first
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
-            TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+            TorrentDHTEngine.getInstance().distribute(immutableItem);
 
             // put mutable item
             // get max fee peer
@@ -1254,8 +1356,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                    value.getEncoded(), this.txSalts.get(chainID));
-            TorrentDHTEngine.getInstance().dhtPut(mutableItem);
+                    value.getEncoded(), this.txTipSalts.get(chainID));
+            TorrentDHTEngine.getInstance().distribute(mutableItem);
         }
     }
 
@@ -1294,7 +1396,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * get best block of this chain
      * @return best block container
      */
-    public BlockContainer getBestBlockContainer() {
+    public BlockContainer getBestBlockContainer(ByteArrayWrapper chainID) {
         return this.bestBlockContainers.get(chainID);
     }
 
@@ -1777,6 +1879,24 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 txs.add(tx);
 
+                break;
+            }
+            case BLOCK_FOR_REQUEST: {
+                if (null == item) {
+                    return;
+                }
+
+                MutableItemValue mutableItemValue = new MutableItemValue(item);
+                this.blockHashMapForRequest.get(dataIdentifier.getChainID()).add(mutableItemValue.getHash());
+                break;
+            }
+            case TX_FOR_REQUEST: {
+                if (null == item) {
+                    return;
+                }
+
+                MutableItemValue mutableItemValue = new MutableItemValue(item);
+                this.txHashMapForRequest.get(dataIdentifier.getChainID()).add(mutableItemValue.getHash());
                 break;
             }
             case TIP_BLOCK_FOR_VOTING: {

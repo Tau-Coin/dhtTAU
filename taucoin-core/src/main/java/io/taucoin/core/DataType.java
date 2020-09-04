@@ -7,6 +7,9 @@ public enum DataType {
     BLOCK, // immutable block
     TX, // immutable tx
 
+    BLOCK_FOR_REQUEST, // mutable item: request block hash
+    TX_FOR_REQUEST, // mutable item: request tx hash
+
     BLOCK_FOR_SYNC, // immutable block for sync
     TX_FOR_SYNC, // immutable tx for sync
 

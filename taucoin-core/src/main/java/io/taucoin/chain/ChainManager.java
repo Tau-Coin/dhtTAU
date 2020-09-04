@@ -345,10 +345,10 @@ public class ChainManager {
      * @return
      */
     private byte[] makeBlockSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_CHANNEL.length];
+        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length];
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.BLOCK_CHANNEL, 0, salt, chainID.length,
-                ChainParam.BLOCK_CHANNEL.length);
+        System.arraycopy(ChainParam.BLOCK_TIP_CHANNEL, 0, salt, chainID.length,
+                ChainParam.BLOCK_TIP_CHANNEL.length);
         return salt;
     }
 
@@ -439,7 +439,6 @@ public class ChainManager {
     /**
      * get transaction pool
      * @param chainid: chain id
-     * @param txHash: hash of wanted transaction
      * @return
      */
     public List<Transaction> getTransactionsInPool(byte[] chainid) {

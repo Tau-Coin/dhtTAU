@@ -108,10 +108,10 @@ public class Chain {
      * @return block salt
      */
     private byte[] makeBlockSalt() {
-        byte[] salt = new byte[this.chainID.length + ChainParam.BLOCK_CHANNEL.length];
+        byte[] salt = new byte[this.chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length];
         System.arraycopy(this.chainID, 0, salt, 0, this.chainID.length);
-        System.arraycopy(ChainParam.BLOCK_CHANNEL, 0, salt, this.chainID.length,
-                ChainParam.BLOCK_CHANNEL.length);
+        System.arraycopy(ChainParam.BLOCK_TIP_CHANNEL, 0, salt, this.chainID.length,
+                ChainParam.BLOCK_TIP_CHANNEL.length);
         return salt;
     }
 
@@ -120,10 +120,10 @@ public class Chain {
      * @return tx salt
      */
     private byte[] makeTxSalt() {
-        byte[] salt = new byte[this.chainID.length + ChainParam.TX_CHANNEL.length];
+        byte[] salt = new byte[this.chainID.length + ChainParam.TX_TIP_CHANNEL.length];
         System.arraycopy(this.chainID, 0, salt, 0, this.chainID.length);
-        System.arraycopy(ChainParam.TX_CHANNEL, 0, salt, this.chainID.length,
-                ChainParam.TX_CHANNEL.length);
+        System.arraycopy(ChainParam.TX_TIP_CHANNEL, 0, salt, this.chainID.length,
+                ChainParam.TX_TIP_CHANNEL.length);
         return salt;
     }
 
