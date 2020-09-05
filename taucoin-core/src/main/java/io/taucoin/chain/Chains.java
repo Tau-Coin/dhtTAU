@@ -72,9 +72,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     // tx pool
     private final Map<ByteArrayWrapper, TransactionPool> txPools = new HashMap<>();
 
-    // voting pool
-    private final Map<ByteArrayWrapper, VotingPool> votingPools = new HashMap<>();
-
     // peer manager
     private final Map<ByteArrayWrapper, PeerManager> peerManagers = new HashMap<>();
 
@@ -93,6 +90,9 @@ public class Chains implements DHT.GetDHTItemCallback{
     // the synced block of current chain
     private final Map<ByteArrayWrapper, Block> syncBlocks = new HashMap<>();
 
+    // voting pool
+    private final Map<ByteArrayWrapper, VotingPool> votingPools = new HashMap<>();
+
     // 记录投票开始时间: {key: chain ID, value: starting time of voting}
     private final Map<ByteArrayWrapper, Long> votingTime = new HashMap<>();
 
@@ -105,7 +105,7 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 交易池请求的交易: {key: chain ID, value: tx set for tx pool}
     private final Map<ByteArrayWrapper, Set<Transaction>> txMapForPool = new HashMap<>();
 
-    // 区块容器数据集合: {key: chain ID, value: {key: block hash, value: block container map} }
+    // 区块容器数据集合: {key: chain ID, value: {key: block hash, value: block container} }
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, BlockContainer>> blockContainerMap = new HashMap<>();
 
     // 区块数据集合: {key: chain ID, value: block set}
@@ -114,20 +114,20 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 交易数据集合: {key: chain ID, value: {key: tx hash, value: tx} }
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Transaction>> txMap = new HashMap<>();
 
-    // 同步所用区块容器数据集合
+    // 同步所用区块容器数据集合: {key: chain ID, value: {key: block hash, value: block container} }
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, BlockContainer>> blockContainerMapForSync = new HashMap<>();
 
-    // 同步所用区块数据集合
-    private final Map<ByteArrayWrapper, List<Block>> blockMapForSync = new HashMap<>();
+    // 同步所用区块数据集合: {key: chain ID, value: block set}
+    private final Map<ByteArrayWrapper, Set<Block>> blockMapForSync = new HashMap<>();
 
-    // 同步所用交易数据集合
-    private final Map<ByteArrayWrapper, List<Transaction>> txMapForSync = new HashMap<>();
+    // 同步所用交易数据集合: {key: chain ID, value: {key: tx hash, value: tx} }
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Transaction>> txMapForSync = new HashMap<>();
 
-    // 远端请求区块哈希数据集合
-    private final Map<ByteArrayWrapper, List<byte[]>> blockHashMapForRequest = new HashMap<>();
+    // 远端请求区块哈希数据集合: {key: chain ID, value: block hash set}
+    private final Map<ByteArrayWrapper, Set<ByteArrayWrapper>> blockHashMapForRequest = new HashMap<>();
 
-    // 远端请求交易哈希数据集合
-    private final Map<ByteArrayWrapper, List<byte[]>> txHashMapForRequest = new HashMap<>();
+    // 远端请求交易哈希数据集合: {key: chain ID, value: tx hash set}
+    private final Map<ByteArrayWrapper, Set<ByteArrayWrapper>> txHashMapForRequest = new HashMap<>();
 
     /**
      * Chain constructor.
@@ -254,35 +254,25 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.votingFlag.put(wChainID, false);
 
-        List<Block> votingBlocks = new ArrayList<>();
-        this.votingBlocks.put(wChainID, votingBlocks);
+        this.votingBlocks.put(wChainID, new ArrayList<>());
 
-        Set<Transaction> txForPool = new HashSet<>();
-        this.txMapForPool.put(wChainID, txForPool);
+        this.txMapForPool.put(wChainID, new HashSet<>());
 
-        Map<ByteArrayWrapper, BlockContainer> blockContainers = new HashMap<>();
-        this.blockContainerMap.put(wChainID, blockContainers);
+        this.blockContainerMap.put(wChainID, new HashMap<>());
 
-        Set<Block> blocks = new HashSet<>();
-        this.blockMap.put(wChainID, blocks);
+        this.blockMap.put(wChainID, new HashSet<>());
 
-        Map<ByteArrayWrapper, Transaction> txs = new HashMap();
-        this.txMap.put(wChainID, txs);
+        this.txMap.put(wChainID, new HashMap<>());
 
-        Map<ByteArrayWrapper, BlockContainer> blockContainersForSync = new HashMap<>();
-        this.blockContainerMapForSync.put(wChainID, blockContainersForSync);
+        this.blockContainerMapForSync.put(wChainID, new HashMap<>());
 
-        List<Block> blocksForSync = new ArrayList<>();
-        this.blockMapForSync.put(wChainID, blocksForSync);
+        this.blockMapForSync.put(wChainID, new HashSet<>());
 
-        List<Transaction> txsForSync = new ArrayList<>();
-        this.txMapForSync.put(wChainID, txsForSync);
+        this.txMapForSync.put(wChainID, new HashMap<>());
 
-        List<byte[]> blockHashForRequest = new ArrayList<>();
-        this.blockHashMapForRequest.put(wChainID, blockHashForRequest);
+        this.blockHashMapForRequest.put(wChainID, new HashSet<>());
 
-        List<byte[]> txHashForRequest = new ArrayList<>();
-        this.txHashMapForRequest.put(wChainID, txHashForRequest);
+        this.txHashMapForRequest.put(wChainID, new HashSet<>());
 
         return true;
     }
@@ -381,7 +371,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                                     continue;
                                                 } else {
                                                     // 如果有返回，但是数据为空
-                                                    blockContainers.clear();
+//                                                    blockContainers.clear();
                                                     findAll = false;
                                                     break;
                                                 }
@@ -413,7 +403,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                             reBranch(chainID, blockContainer1);
 
                                             // 清空队列，以待下次使用
-                                            blockContainers.clear();
+//                                            blockContainers.clear();
                                             break;
                                         } else {
                                             containerList.clear();
@@ -456,7 +446,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                                             }
                                                         } else {
                                                             // 如果有返回，但是数据为空
-                                                            blockContainers.clear();
+//                                                            blockContainers.clear();
                                                             break;
                                                         }
                                                     } else {
@@ -466,7 +456,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                                 }
                                             } else {
                                                 // 如果有返回，但是数据为空
-                                                blockContainers.clear();
+//                                                blockContainers.clear();
                                                 break;
                                             }
                                         } else {
@@ -479,7 +469,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 }
                             } else {
                                 // clear all
-                                blockContainers.clear();
+//                                blockContainers.clear();
                             }
                         }
                     }
@@ -548,25 +538,87 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 // 回应请求
                 responseRequest(chainID);
+
+                tryToSlimDownCache(chainID);
             }
 
+        }
+    }
+
+    private void tryToSlimDownCache(ByteArrayWrapper chainID) {
+        if (this.blockContainerMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
+            Map<ByteArrayWrapper, BlockContainer> oldContainers = this.blockContainerMap.get(chainID);
+            Map<ByteArrayWrapper, BlockContainer> newContainers = new HashMap<>(ChainParam.MUTABLE_RANGE);
+
+            int i = 0;
+            for (Map.Entry<ByteArrayWrapper, BlockContainer> entry: oldContainers.entrySet()) {
+                newContainers.put(entry.getKey(), entry.getValue());
+
+                if (i >= ChainParam.MUTABLE_RANGE) {
+                    break;
+                }
+
+                i++;
+            }
+
+            this.blockContainerMap.put(chainID, newContainers);
+            oldContainers.clear();
+        }
+
+        if (this.blockMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
+            Set<Block> oldBlockSet = this.blockMap.get(chainID);
+            Set<Block> newBlockSet = new HashSet<>(ChainParam.MUTABLE_RANGE);
+
+            int i = 0;
+            for (Block block: oldBlockSet) {
+                newBlockSet.add(block);
+
+                if (i >= ChainParam.MUTABLE_RANGE) {
+                    break;
+                }
+
+                i++;
+            }
+
+            this.blockMap.put(chainID, newBlockSet);
+            oldBlockSet.clear();
+        }
+
+        if (this.txMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
+            Map<ByteArrayWrapper, Transaction> oldTxs = this.txMap.get(chainID);
+            Map<ByteArrayWrapper, Transaction> newTxs = new HashMap<>(ChainParam.MUTABLE_RANGE);
+
+            int i = 0;
+            for (Map.Entry<ByteArrayWrapper, Transaction> entry: oldTxs.entrySet()) {
+                newTxs.put(entry.getKey(), entry.getValue());
+
+                if (i >= ChainParam.MUTABLE_RANGE) {
+                    break;
+                }
+
+                i++;
+            }
+
+            this.txMap.put(chainID, newTxs);
+            oldTxs.clear();
         }
     }
 
     private void responseRequest(ByteArrayWrapper chainID) {
         try {
             // block
-            List<byte[]> blockHashList = this.blockHashMapForRequest.get(chainID);
-            for (byte[] blockHash : blockHashList) {
-                Block block = this.blockStore.getBlockByHash(chainID.getData(), blockHash);
+            for (ByteArrayWrapper blockHash : this.blockHashMapForRequest.get(chainID)) {
+                Block block = this.blockStore.getBlockByHash(chainID.getData(), blockHash.getData());
                 publishBlock(block);
             }
+            this.blockHashMapForRequest.get(chainID).clear();
+
             // tx
-            List<byte[]> txidList = this.blockHashMapForRequest.get(chainID);
-            for (byte[] txid : txidList) {
-                Transaction tx = this.blockStore.getTransactionByHash(chainID.getData(), txid);
+            for (ByteArrayWrapper txid : this.txHashMapForRequest.get(chainID)) {
+                Transaction tx = this.blockStore.getTransactionByHash(chainID.getData(), txid.getData());
                 publishTransaction(tx);
             }
+            this.txHashMapForRequest.get(chainID).clear();
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
         }
@@ -626,15 +678,13 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private void blockChainProcess() {
     }
+
     /**
      * Is block synchronization complete
      * @return
      */
     private boolean isSyncComplete(ByteArrayWrapper chainID) {
-        if (null != this.syncBlocks.get(chainID) && this.syncBlocks.get(chainID).getBlockNum() == 0) {
-            return true;
-        }
-        return false;
+        return null != this.syncBlocks.get(chainID) && this.syncBlocks.get(chainID).getBlockNum() == 0;
     }
 
     private void requestSyncBlock(ByteArrayWrapper chainID) {
@@ -705,17 +755,6 @@ public class Chains implements DHT.GetDHTItemCallback{
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
             return false;
         }
-
-        return true;
-    }
-
-    /**
-     * 检测分叉点和连续性
-     * @param chainID
-     * @param blockContainer
-     * @return
-     */
-    private boolean checkBranch(ByteArrayWrapper chainID, BlockContainer blockContainer) {
 
         return true;
     }
@@ -820,6 +859,13 @@ public class Chains implements DHT.GetDHTItemCallback{
         return true;
     }
 
+    private void resetAfterVoting(ByteArrayWrapper chainID) {
+        this.votingPools.get(chainID).clearVotingPool();
+        this.votingBlocks.get(chainID).clear();
+        this.votingTime.put(chainID, 0L);
+        this.votingFlag.put(chainID, false);
+    }
+
     private Vote tryToVote(ByteArrayWrapper chainID) {
         // try to use all peers to vote
         PeerManager peerManager = this.peerManagers.get(chainID);
@@ -828,9 +874,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         counter = counter > 0 ? (int)Math.log(counter) : 0;
 
-        List<Block> blocks = this.votingBlocks.get(chainID);
-
-        int size = blocks.size();
+        int size = this.votingBlocks.get(chainID).size();
 
         if (counter > size) {
             counter -= size;
@@ -1020,11 +1064,17 @@ public class Chains implements DHT.GetDHTItemCallback{
                     getBlockContainerByHash(chainID.getData(), bestVote.getBlockHash());
 
             if (null == blockContainer1) {
+
                 ByteArrayWrapper key = new ByteArrayWrapper(bestVote.getBlockHash());
+
                 if (blockContainers.containsKey(key)) {
+
                     blockContainer1 = blockContainers.get(key);
+
                     if (null == blockContainer1) {
-                        this.votingFlag.put(chainID, false);
+
+                        resetAfterVoting(chainID);
+
                         return false;
                     }
                 } else {
@@ -1037,6 +1087,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             // get block container by immutable hash from genesis block
 
             byte[] immutableBlockHash1 = blockContainer1.getBlock().getImmutableBlockHash();
+
             if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash1)) {
                 // 分叉点在mutable range之内
                 int counter = 0;
@@ -1068,10 +1119,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                             continue;
                         } else {
                             // 如果有返回，但是数据为空
-                            this.votingFlag.put(chainID, false);
-                            blockContainers.clear();
-                            findAll = false;
-                            break;
+                            resetAfterVoting(chainID);
+                            return false;
                         }
                     }
 
@@ -1100,9 +1149,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                     // change to more difficult chain
                     reBranch(chainID, blockContainer1);
 
-                    // 清空队列，以待下次使用
-                    this.votingFlag.put(chainID, false);
-                    blockContainers.clear();
+                    // 重置状态数据等，以待下次使用
+                    resetAfterVoting(chainID);
                 } else {
                     containerList.clear();
                 }
@@ -1111,7 +1159,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                 ByteArrayWrapper key1 = new ByteArrayWrapper(immutableBlockHash1);
 
                 if (blockContainers.containsKey(key1)) {
+
                     BlockContainer blockContainer2 = blockContainers.get(key1);
+
                     if (null != blockContainer2) {
                         // 如果有返回，但是数据不为空，继续找第二个immutable block
                         // 获取第二个immutable block hash
@@ -1149,7 +1199,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                     }
                                 } else {
                                     // 如果有返回，但是数据为空
-                                    blockContainers.clear();
+                                    resetAfterVoting(chainID);
                                 }
                             } else {
                                 requestBlock(chainID, immutableBlockHash2);
@@ -1157,7 +1207,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         }
                     } else {
                         // 如果有返回，但是数据为空
-                        blockContainers.clear();
+                        resetAfterVoting(chainID);
                     }
                 } else {
                     requestBlock(chainID, immutableBlockHash1);
@@ -1823,15 +1873,24 @@ public class Chains implements DHT.GetDHTItemCallback{
                 Block block = new Block(item);
 
                 if (null != block.getTxHash()) {
+
                     ByteArrayWrapper key = new ByteArrayWrapper(block.getTxHash());
-                    if (this.txMap.containsKey(key)) {
+
+                    if (this.txMap.get(dataIdentifier.getChainID()).containsKey(key)) {
+
                         Transaction tx = this.txMap.get(dataIdentifier.getChainID()).get(key);
+
                         if (null != tx) {
                             BlockContainer blockContainer = new BlockContainer(block, tx);
 
                             this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                    put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
+                                    put(dataIdentifier.getHash(), blockContainer);
                         } else {
+                            // 如果是空交易
+                            // 在block container集合里插入空标志
+                            this.blockContainerMap.get(dataIdentifier.getChainID()).
+                                    put(dataIdentifier.getHash(), null);
+
                             // 删掉空交易，非空交易不作删除，等队列满删除
                             this.txMap.remove(key);
                         }
@@ -1843,7 +1902,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     BlockContainer blockContainer = new BlockContainer(block);
 
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
-                            put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
+                            put(dataIdentifier.getHash(), blockContainer);
                 }
 
                 // 区块加入数据集合作缓存使用，队列满了删除
@@ -1852,25 +1911,32 @@ public class Chains implements DHT.GetDHTItemCallback{
                 break;
             }
             case HISTORY_TX_REQUEST_FOR_MINING: {
+                if (null == item) {
+                    for (Block block: this.blockMap.get(dataIdentifier.getChainID())) {
+                        if (Arrays.equals(block.getTxHash(), dataIdentifier.getHash().getData())) {
+                            // 区块对应交易为空，在block container集合里插入空标志
+                            this.blockContainerMap.get(dataIdentifier.getChainID()).
+                                    put(dataIdentifier.getHash(), null);
+                            return;
+                        }
+                    }
+                } else {
 
-                for (Block block: this.blockMap.get(dataIdentifier.getChainID())) {
-                    if (Arrays.equals(block.getTxHash(), dataIdentifier.getHash().getData())) {
+                    Transaction tx = TransactionFactory.parseTransaction(item);
 
-                        if (null != item) {
-                            Transaction tx = TransactionFactory.parseTransaction(item);
+                    for (Block block : this.blockMap.get(dataIdentifier.getChainID())) {
+                        if (Arrays.equals(block.getTxHash(), tx.getTxID())) {
                             BlockContainer blockContainer = new BlockContainer(block, tx);
+
                             this.blockContainerMap.get(dataIdentifier.getChainID()).
                                     put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
 
-                            // 放入交易集合作缓存
-                            this.txMap.get(dataIdentifier.getChainID()).
-                                    put(new ByteArrayWrapper(tx.getTxID()), tx);
-                        } else {
-                            // 返回交易为空，在block container集合里插入空标志
-                            this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                    put(new ByteArrayWrapper(block.getBlockHash()), null);
+                            break;
                         }
                     }
+
+                    // 放入交易集合作缓存
+                    this.txMap.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), tx);
                 }
 
                 break;
@@ -1881,7 +1947,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 MutableItemValue mutableItemValue = new MutableItemValue(item);
-                this.blockHashMapForRequest.get(dataIdentifier.getChainID()).add(mutableItemValue.getHash());
+                this.blockHashMapForRequest.get(dataIdentifier.getChainID()).
+                        add(new ByteArrayWrapper(mutableItemValue.getHash()));
                 break;
             }
             case TX_DEMAND_FROM_PEER: {
@@ -1890,7 +1957,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 MutableItemValue mutableItemValue = new MutableItemValue(item);
-                this.txHashMapForRequest.get(dataIdentifier.getChainID()).add(mutableItemValue.getHash());
+                this.txHashMapForRequest.get(dataIdentifier.getChainID()).
+                        add(new ByteArrayWrapper(mutableItemValue.getHash()));
                 break;
             }
             case TIP_BLOCK_FROM_PEER_FOR_VOTING: {
@@ -1931,61 +1999,80 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_BLOCK_REQUEST_FOR_SYNC: {
                 if (null == item) {
+                    // 返回区块为空，在block container集合里插入空标志
+                    this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
+                            put(dataIdentifier.getHash(), null);
                     return;
                 }
 
                 Block block = new Block(item);
-                if (null != block.getTxHash()) {
-                    List<Transaction> txs = this.txMapForSync.get(dataIdentifier.getChainID());
-                    for (Transaction tx: txs) {
-                        if (Arrays.equals(block.getTxHash(), tx.getTxID())) {
-                            List<Block> blocks = this.blockMapForSync.get(dataIdentifier.getChainID());
 
+                if (null != block.getTxHash()) {
+
+                    ByteArrayWrapper key = new ByteArrayWrapper(block.getTxHash());
+
+                    if (this.txMapForSync.get(dataIdentifier.getChainID()).containsKey(key)) {
+
+                        Transaction tx = this.txMapForSync.get(dataIdentifier.getChainID()).get(key);
+
+                        if (null != tx) {
                             BlockContainer blockContainer = new BlockContainer(block, tx);
 
-                            Map<ByteArrayWrapper, BlockContainer> blockContainers =
-                                    this.blockContainerMapForSync.get(dataIdentifier.getChainID());
-                            blockContainers.put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
+                            this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
+                                    put(dataIdentifier.getHash(), blockContainer);
+                        } else {
+                            // 如果是空交易
+                            // 在block container集合里插入空标志
+                            this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
+                                    put(dataIdentifier.getHash(), null);
 
-                            blocks.remove(block);
-                            return;
+                            // 删掉空交易，非空交易不作删除，等队列满删除
+                            this.txMapForSync.remove(key);
                         }
+                    } else {
+                        requestTxForSync(dataIdentifier.getChainID(), block.getTxHash());
                     }
-
-                    requestTxForSync(dataIdentifier.getChainID(), block.getTxHash());
-
-                    this.blockMapForSync.get(dataIdentifier.getChainID()).add(block);
                 } else {
+                    // 无交易区块，直接加入block container集合等待处理
                     BlockContainer blockContainer = new BlockContainer(block);
 
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                            put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
+                            put(dataIdentifier.getHash(), blockContainer);
                 }
+
+                // 区块加入数据集合作缓存使用，队列满了删除
+                this.blockMapForSync.get(dataIdentifier.getChainID()).add(block);
 
                 break;
             }
             case HISTORY_TX_REQUEST_FOR_SYNC: {
                 if (null == item) {
-                    return;
-                }
-
-                Transaction tx = TransactionFactory.parseTransaction(item);
-
-                List<Block> blocks = this.blockMapForSync.get(dataIdentifier.getChainID());
-
-                for (Block block: blocks) {
-                    if (Arrays.equals(block.getTxHash(), tx.getTxID())) {
-                        BlockContainer blockContainer = new BlockContainer(block, tx);
-
-                        this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
-
-                        blocks.remove(block);
-                        return;
+                    for (Block block: this.blockMapForSync.get(dataIdentifier.getChainID())) {
+                        if (Arrays.equals(block.getTxHash(), dataIdentifier.getHash().getData())) {
+                            // 区块对应交易为空，在block container集合里插入空标志
+                            this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
+                                    put(dataIdentifier.getHash(), null);
+                            return;
+                        }
                     }
-                }
+                } else {
 
-                this.txMapForSync.get(dataIdentifier.getChainID()).add(tx);
+                    Transaction tx = TransactionFactory.parseTransaction(item);
+
+                    for (Block block : this.blockMapForSync.get(dataIdentifier.getChainID())) {
+                        if (Arrays.equals(block.getTxHash(), tx.getTxID())) {
+                            BlockContainer blockContainer = new BlockContainer(block, tx);
+
+                            this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
+                                    put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
+
+                            break;
+                        }
+                    }
+
+                    // 放入交易集合作缓存
+                    this.txMapForSync.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), tx);
+                }
 
                 break;
             }
