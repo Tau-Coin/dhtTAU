@@ -124,10 +124,10 @@ public class Chains implements DHT.GetDHTItemCallback{
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Transaction>> txMapForSync = new HashMap<>();
 
     // 远端请求区块哈希数据集合: {key: chain ID, value: block hash set}
-    private final Map<ByteArrayWrapper, Set<ByteArrayWrapper>> blockHashMapForRequest = new HashMap<>();
+    private final Map<ByteArrayWrapper, Set<ByteArrayWrapper>> blockHashMapFromDemand = new HashMap<>();
 
     // 远端请求交易哈希数据集合: {key: chain ID, value: tx hash set}
-    private final Map<ByteArrayWrapper, Set<ByteArrayWrapper>> txHashMapForRequest = new HashMap<>();
+    private final Map<ByteArrayWrapper, Set<ByteArrayWrapper>> txHashMapFromDemand = new HashMap<>();
 
     /**
      * Chain constructor.
@@ -270,9 +270,9 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.txMapForSync.put(wChainID, new HashMap<>());
 
-        this.blockHashMapForRequest.put(wChainID, new HashSet<>());
+        this.blockHashMapFromDemand.put(wChainID, new HashSet<>());
 
-        this.txHashMapForRequest.put(wChainID, new HashSet<>());
+        this.txHashMapFromDemand.put(wChainID, new HashSet<>());
 
         return true;
     }
@@ -607,18 +607,18 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void responseRequest(ByteArrayWrapper chainID) {
         try {
             // block
-            for (ByteArrayWrapper blockHash : this.blockHashMapForRequest.get(chainID)) {
+            for (ByteArrayWrapper blockHash : this.blockHashMapFromDemand.get(chainID)) {
                 Block block = this.blockStore.getBlockByHash(chainID.getData(), blockHash.getData());
                 publishBlock(block);
             }
-            this.blockHashMapForRequest.get(chainID).clear();
+            this.blockHashMapFromDemand.get(chainID).clear();
 
             // tx
-            for (ByteArrayWrapper txid : this.txHashMapForRequest.get(chainID)) {
+            for (ByteArrayWrapper txid : this.txHashMapFromDemand.get(chainID)) {
                 Transaction tx = this.blockStore.getTransactionByHash(chainID.getData(), txid.getData());
                 publishTransaction(tx);
             }
-            this.txHashMapForRequest.get(chainID).clear();
+            this.txHashMapFromDemand.get(chainID).clear();
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
         }
@@ -1293,7 +1293,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     private void requestTxForPool(ByteArrayWrapper chainID, byte[] txid) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_FOR_MINING);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_REQUEST_FOR_MINING);
 
         publishTxRequest(chainID, txid);
 
@@ -1947,7 +1947,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 MutableItemValue mutableItemValue = new MutableItemValue(item);
-                this.blockHashMapForRequest.get(dataIdentifier.getChainID()).
+                this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).
                         add(new ByteArrayWrapper(mutableItemValue.getHash()));
                 break;
             }
@@ -1957,7 +1957,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 MutableItemValue mutableItemValue = new MutableItemValue(item);
-                this.txHashMapForRequest.get(dataIdentifier.getChainID()).
+                this.txHashMapFromDemand.get(dataIdentifier.getChainID()).
                         add(new ByteArrayWrapper(mutableItemValue.getHash()));
                 break;
             }
@@ -1988,7 +1988,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 requestTxForPool(dataIdentifier.getChainID(), mutableItemValue.getHash());
                 break;
             }
-            case TX_FOR_MINING: {
+            case TX_REQUEST_FOR_MINING: {
                 if (null == item) {
                     return;
                 }
