@@ -23,7 +23,7 @@
             android:textAppearance="@style/TextAppearanceHeadline6"
             app:borderColor="@color/primary_light"
             app:borderWidth="0dp"
-            app:radius="10dp"
+            app:radius="7dp"
             app:isRadiusAutoHalf="true"
             app:bgColor="@color/primary_light"
             app:textColorForPressed="@color/color_white" />
@@ -68,23 +68,27 @@
 
         </LinearLayout>
 
-        <RelativeLayout
+        <LinearLayout
             android:id="@+id/right_view"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
+            android:gravity="center_vertical|end"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="15dp"
+            android:paddingBottom="2dp"
             android:minWidth="50dp"
             android:orientation="vertical">
 
             <TextView
-                android:layout_above="@+id/read_only"
                 android:id="@+id/tv_msg_last_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:minWidth="32dp"
                 android:singleLine="true"
+                android:includeFontPadding="false"
                 android:ellipsize="end"
-                android:layout_centerHorizontal="true"
-                android:layout_marginEnd="0dp"
+                android:gravity="center_horizontal"
                 android:textColor="@color/gray_dark"
                 android:textAppearance="@style/TextAppearanceBody3" />
 
@@ -92,13 +96,9 @@
                 android:id="@+id/read_only"
                 android:layout_width="32dp"
                 android:layout_height="24dp"
-                android:layout_marginEnd="0dp"
-                android:layout_marginBottom="10dp"
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:textAllCaps="true"
-                android:layout_centerHorizontal="true"
-                android:layout_alignParentBottom="true"
                 android:text="@string/main_read_only"
                 android:textColor="@color/color_white"
                 android:includeFontPadding="false"
@@ -112,7 +112,7 @@
                 app:bgColor="@color/primary_light"
                 app:textColorForPressed="@color/color_white" />
 
-        </RelativeLayout>
+        </LinearLayout>
 
         <include
             android:layout_width="match_parent"

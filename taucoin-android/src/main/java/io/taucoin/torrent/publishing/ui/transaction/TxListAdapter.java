@@ -116,8 +116,9 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
             if(binding instanceof ItemWiringTxBinding){
                 ItemWiringTxBinding txBinding = (ItemWiringTxBinding) holder.binding;
                 txBinding.leftView.roundButton.setBgColor(bgColor);
-                txBinding.leftView.roundButton.setText(firstLettersName);
+                txBinding.leftView.tvName.setText(firstLettersName);
                 txBinding.leftView.tvEditName.setText(userName);
+                txBinding.leftView.tvBalance.setText(UsersUtil.getShowBalance(tx.senderBalance));
                 if(tx.txStatus == 1){
                     txBinding.tvResult.setText(R.string.tx_result_successfully);
                     txBinding.tvResult.setTextColor(context.getResources().getColor(R.color.color_black));
@@ -144,8 +145,10 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
             }else{
                 ItemNoteBinding noteBinding = (ItemNoteBinding) holder.binding;
                 noteBinding.leftView.roundButton.setBgColor(bgColor);
-                noteBinding.leftView.roundButton.setText(firstLettersName);
+                noteBinding.leftView.tvName.setText(firstLettersName);
                 noteBinding.leftView.tvEditName.setText(userName);
+                noteBinding.leftView.tvBalance.setText(UsersUtil.getShowBalance(tx.senderBalance));
+
                 noteBinding.tvName.setText(showName);
                 noteBinding.tvMsg.setText(memo);
                 noteBinding.tvTime.setText(time);

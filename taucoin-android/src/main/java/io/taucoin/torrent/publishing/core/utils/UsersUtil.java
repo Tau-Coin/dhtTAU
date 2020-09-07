@@ -9,6 +9,7 @@ import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.ui.constant.Chain;
 
 /**
  * 用户相关逻辑处理类
@@ -117,5 +118,21 @@ public class UsersUtil {
            }
        }
        return null;
+    }
+
+    /**
+     * 获取balance的显示
+     * @param balance 余额
+     * @return 余额显示
+     */
+    public static String getShowBalance(long balance) {
+        balance = FmtMicrometer.fmtAmount(balance);
+        if (balance >= 1000000) {
+            return (int)(balance / 1000000) + "m";
+        } else if(balance >= 1000) {
+            return (int)(balance / 1000) + "k";
+        } else {
+            return String.valueOf((int)balance);
+        }
     }
 }

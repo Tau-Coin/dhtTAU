@@ -81,7 +81,9 @@ public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter
             }
             binding.leftView.roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
             String showName = UsersUtil.getShowName(msg.sender, msg.senderPk);
-            binding.leftView.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
+            binding.leftView.tvName.setText(StringUtil.getFirstLettersOfName(showName));
+            binding.leftView.tvBalance.setText(UsersUtil.getShowBalance(msg.senderBalance));
+
             binding.tvName.setText(showName);
 
             String userName = UsersUtil.getUserName(msg.sender, msg.senderPk);

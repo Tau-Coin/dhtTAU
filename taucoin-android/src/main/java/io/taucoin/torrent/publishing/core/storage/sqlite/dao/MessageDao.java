@@ -22,9 +22,12 @@ public interface MessageDao {
 
     String QUERY_REPLY_USERS = " (SELECT u.localName, m.senderPk, m.msgID FROM Users u" +
             " LEFT JOIN Messages m ON u.publicKey = m.senderPk) ";
-    String QUERY_MESSAGES_AND_REPLY_BY_CHAIN_ID = "SELECT msg.*, user.localName AS replyName FROM Messages msg" +
+
+    String QUERY_MESSAGES_AND_REPLY_BY_CHAIN_ID = "SELECT msg.*, user.localName AS replyName," +
+            " mem.balance AS senderBalance FROM Messages msg" +
             " LEFT JOIN " + QUERY_REPLY_USERS + " AS user ON msg.replyID = user.msgID" +
-            " WHERE chainID = :chainID";
+            " LEFT JOIN Members AS mem ON msg.chainID = mem.chainID AND msg.senderPk = mem.publicKey" +
+            " WHERE msg.chainID = :chainID";
 
     /**
      * 添加新的消息

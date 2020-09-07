@@ -20,14 +20,18 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 @Dao
 public interface TxDao {
     // SQL:查询社区里的交易(上链，区分交易类型)
-    String QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE_ON_CHAIN = "SELECT * FROM Txs" +
-            " WHERE chainID = :chainID AND txStatus = 1 AND txType = :txType" +
-            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
+    String QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE_ON_CHAIN = "SELECT tx.*, mem.balance AS senderBalance" +
+            " FROM Txs AS tx" +
+            " LEFT JOIN Members AS mem ON tx.senderPk = mem.publicKey AND tx.chainID = mem.chainID" +
+            " WHERE tx.chainID = :chainID AND tx.txStatus = 1 AND tx.txType = :txType" +
+            " and tx.senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
 
     // SQL:查询社区里的交易(未上链，不区分交易类型)
-    String QUERY_GET_TXS_BY_CHAIN_ID_NOT_ON_CHAIN = "SELECT * FROM Txs" +
-            " WHERE chainID = :chainID AND txStatus = 0" +
-            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
+    String QUERY_GET_TXS_BY_CHAIN_ID_NOT_ON_CHAIN = "SELECT tx.*, mem.balance AS senderBalance" +
+            " FROM Txs AS tx" +
+            " LEFT JOIN Members AS mem ON tx.senderPk = mem.publicKey AND tx.chainID = mem.chainID" +
+            " WHERE tx.chainID = :chainID AND tx.txStatus = 0" +
+            " and tx.senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
 
     // SQL:查询社区里的交易
     String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT * FROM Txs" +
@@ -35,7 +39,8 @@ public interface TxDao {
             " and senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
 
     // SQL:查询未上链并且已过期的条件语句
-    String QUERY_PENDING_TXS_NOT_EXPIRED_WHERE = " WHERE senderPk = :senderPk AND chainID = :chainID and txStatus = 0 and timestamp > :expireTimePoint ";
+    String QUERY_PENDING_TXS_NOT_EXPIRED_WHERE = " WHERE senderPk = :senderPk AND chainID = :chainID" +
+            " and txStatus = 0 and timestamp > :expireTimePoint ";
 
     // SQL:查询未上链、未过期的交易
     String QUERY_PENDING_TXS_NOT_EXPIRED = "SELECT count(*) FROM Txs" + QUERY_PENDING_TXS_NOT_EXPIRED_WHERE;
@@ -67,14 +72,6 @@ public interface TxDao {
      */
     @Update
     int updateTransaction(Tx tx);
-
-    /**
-     * 根据chainID查询社区
-     * @param chainID 社区链id
-     */
-    @Transaction
-    @Query(QUERY_GET_TXS_BY_CHAIN_ID)
-    List<UserAndTx> getTxsByChainID(String chainID);
 
     /**
      * 根据chainID获取社区中的交易的被观察者

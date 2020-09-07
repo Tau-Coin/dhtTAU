@@ -106,6 +106,16 @@ public class FmtMicrometer {
         }
     }
 
+    public static long fmtAmount(long amount) {
+        try {
+            BigDecimal bigDecimal = new BigDecimal(amount);
+            bigDecimal = bigDecimal.divide(new BigDecimal(mDecimal), mScale, RoundingMode.HALF_UP);
+            return bigDecimal.longValue();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public static String fmtFormat(String num) {
         try {
             BigDecimal number = new BigDecimal(num);

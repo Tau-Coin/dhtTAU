@@ -15,6 +15,8 @@ public class UserAndTx extends Tx{
             entityColumn = "publicKey")
     public User sender;                     // 交易发送者对应的用户信息
 
+    public long senderBalance;              // 交易发送者的余额
+
     public UserAndTx(@NonNull String chainID, String receiverPk, long amount, long fee, long txType, String memo) {
         super(chainID, receiverPk, amount, fee, txType, memo);
     }

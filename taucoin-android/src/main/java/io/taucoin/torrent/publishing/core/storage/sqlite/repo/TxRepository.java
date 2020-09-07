@@ -27,8 +27,6 @@ public interface TxRepository {
      * 根据chainID查询社区
      * @param chainID 社区链ID
      */
-    List<UserAndTx> getTxsByChainID(String chainID);
-
     DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, long txType, int txStatus);
 
     /**

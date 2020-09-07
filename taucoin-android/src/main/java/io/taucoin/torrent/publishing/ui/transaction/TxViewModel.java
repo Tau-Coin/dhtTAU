@@ -106,22 +106,6 @@ public class TxViewModel extends AndroidViewModel {
     }
 
     /**
-     * 根据chainID查询社区的交易
-     * @param chainID 社区链id
-     */
-    public void getTxsByChainID(String chainID){
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<List<UserAndTx>>) emitter -> {
-            List<UserAndTx> txs = txRepo.getTxsByChainID(chainID);
-            emitter.onNext(txs);
-            emitter.onComplete();
-        }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(state -> chainTxs.postValue(state));
-        disposables.add(disposable);
-    }
-
-    /**
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
