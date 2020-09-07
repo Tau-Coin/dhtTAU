@@ -111,8 +111,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 区块数据集合: {key: chain ID, value: {key: block hash, value: block} }
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Block>> blockMap = new HashMap<>();
 
-    // 交易数据集合: {key: chain ID, value: {key: tx hash, value: TransactionWrapper} }
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, TransactionWrapper>> txMap = new HashMap<>();
+    // 交易数据集合: {key: chain ID, value: {key: tx hash, value: Transaction} }
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Transaction>> txMap = new HashMap<>();
 
     // 同步所用区块容器数据集合: {key: chain ID, value: {key: block hash, value: block container} }
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, BlockContainer>> blockContainerMapForSync = new HashMap<>();
@@ -120,8 +120,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 同步所用区块数据集合: {key: chain ID, value: {key: block hash, value: block} }
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Block>> blockMapForSync = new HashMap<>();
 
-    // 同步所用交易数据集合: {key: chain ID, value: {key: tx hash, value: TransactionWrapper} }
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, TransactionWrapper>> txMapForSync = new HashMap<>();
+    // 同步所用交易数据集合: {key: chain ID, value: {key: tx hash, value: Transaction} }
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Transaction>> txMapForSync = new HashMap<>();
 
     // 远端请求区块哈希数据集合: {key: chain ID, value: block hash set}
     private final Map<ByteArrayWrapper, Set<ByteArrayWrapper>> blockHashMapFromDemand = new HashMap<>();
@@ -585,11 +585,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
 
         if (this.txMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
-            Map<ByteArrayWrapper, TransactionWrapper> oldTxs = this.txMap.get(chainID);
-            Map<ByteArrayWrapper, TransactionWrapper> newTxs = new HashMap<>(ChainParam.MUTABLE_RANGE);
+            Map<ByteArrayWrapper, Transaction> oldTxs = this.txMap.get(chainID);
+            Map<ByteArrayWrapper, Transaction> newTxs = new HashMap<>(ChainParam.MUTABLE_RANGE);
 
             int i = 0;
-            for (Map.Entry<ByteArrayWrapper, TransactionWrapper> entry: oldTxs.entrySet()) {
+            for (Map.Entry<ByteArrayWrapper, Transaction> entry: oldTxs.entrySet()) {
                 newTxs.put(entry.getKey(), entry.getValue());
 
                 if (i >= ChainParam.MUTABLE_RANGE) {
@@ -1881,10 +1881,10 @@ public class Chains implements DHT.GetDHTItemCallback{
                     // 先在缓存查找交易
                     if (this.txMap.get(dataIdentifier.getChainID()).containsKey(key)) {
 
-                        TransactionWrapper txWrapper = this.txMap.get(dataIdentifier.getChainID()).get(key);
+                        Transaction tx = this.txMap.get(dataIdentifier.getChainID()).get(key);
 
-                        if (null != txWrapper && null != txWrapper.getTx()) {
-                            BlockContainer blockContainer = new BlockContainer(block, txWrapper.getTx());
+                        if (null != tx) {
+                            BlockContainer blockContainer = new BlockContainer(block, tx);
 
                             this.blockContainerMap.get(dataIdentifier.getChainID()).
                                     put(dataIdentifier.getHash(), blockContainer);
@@ -1945,8 +1945,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     }
 
                     // 放入交易集合作缓存
-                    this.txMap.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(),
-                            new TransactionWrapper(tx, dataIdentifier.getTxBlockHash()));
+                    this.txMap.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), tx);
                 }
 
                 break;
@@ -2023,10 +2022,10 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     if (this.txMapForSync.get(dataIdentifier.getChainID()).containsKey(key)) {
 
-                        TransactionWrapper txWrapper = this.txMapForSync.get(dataIdentifier.getChainID()).get(key);
+                        Transaction tx = this.txMapForSync.get(dataIdentifier.getChainID()).get(key);
 
-                        if (null != txWrapper && null != txWrapper.getTx()) {
-                            BlockContainer blockContainer = new BlockContainer(block, txWrapper.getTx());
+                        if (null != tx) {
+                            BlockContainer blockContainer = new BlockContainer(block, tx);
 
                             this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                                     put(dataIdentifier.getHash(), blockContainer);
@@ -2077,8 +2076,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     }
 
                     // 放入交易集合作缓存
-                    this.txMapForSync.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(),
-                            new TransactionWrapper(tx, dataIdentifier.getTxBlockHash()));
+                    this.txMapForSync.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), tx);
                 }
 
                 break;
@@ -2086,28 +2084,6 @@ public class Chains implements DHT.GetDHTItemCallback{
             default: {
 
             }
-        }
-    }
-
-    private static class TransactionWrapper {
-        private Transaction tx;
-        private final ByteArrayWrapper blockHash; // 交易所属的区块哈希
-
-        public TransactionWrapper(ByteArrayWrapper blockHash) {
-            this.blockHash = blockHash;
-        }
-
-        public TransactionWrapper(Transaction tx, ByteArrayWrapper blockHash) {
-            this.tx = tx;
-            this.blockHash = blockHash;
-        }
-
-        public Transaction getTx() {
-            return tx;
-        }
-
-        public ByteArrayWrapper getBlockHash() {
-            return blockHash;
         }
     }
 
