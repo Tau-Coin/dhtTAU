@@ -488,6 +488,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     txPool.addTx(tx);
                 }
 
+                // 挖矿
                 if (minable(chainID)) {
                     BlockContainer blockContainer = mineBlock(chainID);
 
@@ -529,16 +530,20 @@ public class Chains implements DHT.GetDHTItemCallback{
                 for (int i = 0; i < counter; i++) {
                     byte[] peer = peerManager.getBlockPeerRandomly();
 
-                    requestTipTxForPoolFromPeer(chainID, peer);
+                    // 请求交易
+                    requestTipTxForMining(chainID, peer);
 
-                    requestRequestBlockFromPeer(chainID, peer);
+                    // 请求区块需求
+                    requestDemandBlockFromPeer(chainID, peer);
 
-                    requestRequestTxFromPeer(chainID, peer);
+                    // 请求交易需求
+                    requestDemandTxFromPeer(chainID, peer);
                 }
 
                 // 回应请求
-                responseRequest(chainID);
+                responseDemand(chainID);
 
+                // 队列瘦身
                 tryToSlimDownCache(chainID);
             }
 
@@ -604,7 +609,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
     }
 
-    private void responseRequest(ByteArrayWrapper chainID) {
+    private void responseDemand(ByteArrayWrapper chainID) {
         try {
             // block
             for (ByteArrayWrapper blockHash : this.blockHashMapFromDemand.get(chainID)) {
@@ -1228,7 +1233,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private void requestRequestBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+    private void requestDemandBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockRequestSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_DEMAND_FROM_PEER);
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
@@ -1260,7 +1265,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 //        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
 //    }
 
-    private void requestRequestTxFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+    private void requestDemandTxFromPeer(ByteArrayWrapper chainID, byte[] peer) {
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txRequestSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_DEMAND_FROM_PEER);
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
@@ -1286,7 +1291,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private void requestTipTxForPoolFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+    private void requestTipTxForMining(ByteArrayWrapper chainID, byte[] peer) {
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txTipSalts.get(chainID));
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_TX_FOR_MINING);
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
