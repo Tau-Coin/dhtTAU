@@ -61,8 +61,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     // mutable item salt: tx request channel
     private final Map<ByteArrayWrapper, byte[]> txDemandSalts = new HashMap<>();
 
-    // Voting thread.
-    private Thread votingThread;
+    // multi-chain thread.
+    private Thread multiChainThread;
 
     private final TauListener tauListener;
 
@@ -139,6 +139,34 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.blockStore = blockStore;
         this.stateDB = stateDB;
         this.tauListener = tauListener;
+    }
+
+    /**
+     * Start activities of this chain, mainly including votint and mining.
+     *
+     * @return boolean successful or not.
+     */
+    public boolean start() {
+
+        multiChainThread = new Thread(this::blockChainProcess);
+        multiChainThread.start();
+
+        return true;
+    }
+
+    /**
+     * Stop all activities of this chain.
+     */
+    public void stop() {
+        if (null != multiChainThread) {
+            multiChainThread.interrupt();
+        }
+    }
+
+    private void blockChainProcess() {
+        while (true) {
+            traverseMultiChain();
+        }
     }
 
     /**
@@ -487,6 +515,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                     txPool.addTx(tx);
                 }
 
+                // 传播最佳交易
+                publishBestTx(chainID);
+
                 // 尝试挖矿
                 tryToMine(chainID);
 
@@ -633,21 +664,6 @@ public class Chains implements DHT.GetDHTItemCallback{
         System.arraycopy(ChainParam.TX_DEMAND_CHANNEL, 0, salt, chainID.length,
                 ChainParam.TX_DEMAND_CHANNEL.length);
         return salt;
-    }
-
-    /**
-     * init chain
-     *
-     * @return true if succeed, false otherwise
-     */
-    private boolean init() {
-        return true;
-    }
-
-    /**
-     * block chain main process
-     */
-    private void blockChainProcess() {
     }
 
     /**
@@ -1734,27 +1750,6 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
 
         return blockContainer;
-    }
-
-    /**
-     * Start activities of this chain, mainly including votint and mining.
-     *
-     * @return boolean successful or not.
-     */
-    public boolean start() {
-        // chain init
-        if (!init()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Stop all activities of this chain.
-     */
-    public void stop() {
-
     }
 
     /**

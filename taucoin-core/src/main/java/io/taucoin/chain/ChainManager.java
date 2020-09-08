@@ -317,17 +317,18 @@ public class ChainManager {
      * @param peer hash link
      */
     private void putBlockToDHT(byte[] chainID, BlockContainer blockContainer, byte[] peer) {
+
         if (null != blockContainer) {
             if (null != blockContainer.getTx()) {
-                // put immutable block
+                // put immutable tx
                 DHT.ImmutableItem immutableItem =
                         new DHT.ImmutableItem(blockContainer.getTx().getEncoded());
-                TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+                TorrentDHTEngine.getInstance().distribute(immutableItem);
             }
 
-            // put immutable block first
+            // put immutable block
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(blockContainer.getBlock().getEncoded());
-            TorrentDHTEngine.getInstance().dhtPut(immutableItem);
+            TorrentDHTEngine.getInstance().distribute(immutableItem);
 
             MutableItemValue mutableItemValue = new MutableItemValue(blockContainer.getBlock().getBlockHash(), peer);
 
@@ -336,7 +337,7 @@ public class ChainManager {
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
                     mutableItemValue.getEncoded(), blockSalt);
-            TorrentDHTEngine.getInstance().dhtPut(mutableItem);
+            TorrentDHTEngine.getInstance().distribute(mutableItem);
         }
     }
 
