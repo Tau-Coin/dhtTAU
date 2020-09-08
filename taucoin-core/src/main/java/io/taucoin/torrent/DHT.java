@@ -1,12 +1,18 @@
 package io.taucoin.torrent;
 
 import io.taucoin.util.FastByteComparisons;
+import io.taucoin.util.HashUtil;
 
 import com.frostwire.jlibtorrent.Entry;
 import com.frostwire.jlibtorrent.Sha1Hash;
+import com.frostwire.jlibtorrent.swig.byte_vector;
+import com.frostwire.jlibtorrent.swig.sha1_hash;
+import com.frostwire.jlibtorrent.Vectors;
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * This class defines some structures about getting and putting immutable and mutable items.
@@ -38,6 +44,12 @@ public final class DHT {
             return 0 == FastByteComparisons.compareTo(
                     entryBytes, 0, entryBytes.length,
                     item.entryBytes, 0, item.entryBytes.length);
+        }
+
+        @Override
+        public int hashCode() {
+            Sha1Hash hash = new Sha1Hash(HashUtil.sha1hash(entryBytes));
+            return hash.hashCode();
         }
 
         @Override
@@ -74,18 +86,30 @@ public final class DHT {
 
             MutableItem item = (MutableItem)obj;
 
-            return (0 == FastByteComparisons.compareTo(
-                    publicKey, 0, publicKey.length,
-                    item.publicKey, 0, item.publicKey.length))
-                && (0 == FastByteComparisons.compareTo(
-                    privateKey, 0, privateKey.length,
-                    item.privateKey, 0, item.privateKey.length))
-                && (0 == FastByteComparisons.compareTo(
-                    salt, 0, salt.length,
-                    item.salt, 0, item.salt.length))
-                && (0 == FastByteComparisons.compareTo(
-                    entryBytes, 0, entryBytes.length,
-                    item.entryBytes, 0, item.entryBytes.length));
+            return hashCode() == item.hashCode();
+        }
+
+        @Override
+        public int hashCode() {
+            MessageDigest digest = null;
+
+            try {
+                digest = MessageDigest.getInstance("SHA-1");
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                // For sha1 this exception should never happens.
+                return 0;
+            }
+
+            digest.update(publicKey);
+            digest.update(privateKey);
+            digest.update(salt);
+            digest.update(entryBytes);
+
+            byte_vector bvs = Vectors.bytes2byte_vector(digest.digest());
+            sha1_hash hash = new sha1_hash(bvs);
+
+            return hash.hash_code();
         }
 
         @Override
@@ -128,6 +152,11 @@ public final class DHT {
         }
 
         @Override
+        public int hashCode() {
+            return sha1.hashCode();
+        }
+
+        @Override
         public String toString() {
             return sha1.toString();
         }
@@ -164,6 +193,27 @@ public final class DHT {
                     salt, 0, salt.length,
                     spec.salt, 0, spec.salt.length))
                 && (timeout == spec.timeout);
+        }
+
+        @Override
+        public int hashCode() {
+            MessageDigest digest = null;
+
+            try {
+                digest = MessageDigest.getInstance("SHA-1");
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                // For sha1 this exception should never happens.
+                return 0;
+            }
+
+            digest.update(publicKey);
+            digest.update(salt);
+
+            byte_vector bvs = Vectors.bytes2byte_vector(digest.digest());
+            sha1_hash hash = new sha1_hash(bvs);
+
+            return hash.hash_code();
         }
 
         @Override
@@ -251,6 +301,11 @@ public final class DHT {
         }
 
         @Override
+        public int hashCode() {
+            return spec.hashCode();
+        }
+
+        @Override
         public String toString() {
             return spec.toString();
         }
@@ -294,6 +349,11 @@ public final class DHT {
             MutableItemRequest req = (MutableItemRequest)obj;
 
             return spec.equals(req.spec);
+        }
+
+        @Override
+        public int hashCode() {
+            return spec.hashCode();
         }
 
         @Override

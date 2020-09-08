@@ -18,6 +18,9 @@ dependencies {
     api "com.madgag.spongycastle:prov:${scastleVersion}" // for SHA3 and SECP256K1
     api group: 'com.google.guava', name: 'guava', version: '23.0'
     api "com.cedarsoftware:java-util:1.8.0" // for deep equals
+
+    // concurrent unique queue
+    compile group: 'com.hybhub', name: 'concurrent-util', version: '0.3.0'
     
     testImplementation "junit:junit:${junitVersion}"
 }

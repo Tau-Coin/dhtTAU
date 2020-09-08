@@ -2,6 +2,7 @@ package io.taucoin.torrent;
 
 import io.taucoin.listener.TauListener;
 
+import com.hybhub.util.concurrent.ConcurrentSetBlockingQueue;
 import com.frostwire.jlibtorrent.*;
 import com.frostwire.jlibtorrent.alerts.*;
 import com.frostwire.jlibtorrent.swig.entry;
@@ -9,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.Set;
 
 import static io.taucoin.torrent.DHT.*;
 
@@ -62,27 +66,20 @@ public class TorrentDHTEngine {
 
                 // start thread of getting dht items.
                 startDHTItemWorkers();
-            }
-
-            if (type == AlertType.LISTEN_FAILED) {
+            } else if (type == AlertType.LISTEN_FAILED) {
                 ListenFailedAlert a = (ListenFailedAlert) alert;
                 logger.info(a.message());
                 TorrentDHTEngine.this.tauListener.onDHTStarted(false, "listen failed");
-            }
-
-            if (type == AlertType.DHT_MUTABLE_ITEM) {
+            } else if (type == AlertType.DHT_MUTABLE_ITEM) {
                 DhtMutableItemAlert a = (DhtMutableItemAlert) alert;
                 logger.info(a.message());
-            }
-
-            if (type == AlertType.DHT_IMMUTABLE_ITEM) {
+            } else if (type == AlertType.DHT_IMMUTABLE_ITEM) {
                 DhtImmutableItemAlert a = (DhtImmutableItemAlert) alert;
                 logger.info(a.message());
-            }
-
-            if (type == AlertType.DHT_PUT) {
+            } else if (type == AlertType.DHT_PUT) {
                 DhtPutAlert a = (DhtPutAlert) alert;
                 logger.info(a.message());
+                // TODO: analysis the success rate of putting item.
             }
         }
     };
@@ -154,22 +151,22 @@ public class TorrentDHTEngine {
 
     // Queue of getting immutable item request.
     private BlockingQueue<ImmutableItemRequest> gettingImmutableItemQueue
-            = new LinkedBlockingQueue<>();
+            = new ConcurrentSetBlockingQueue<>();
     private ExecutorService gettingImmutableItemThreadPool;
 
     // Queue of getting mutable item request.
     private BlockingQueue<MutableItemRequest> gettingMutableItemQueue
-            = new LinkedBlockingQueue<>();
+            = new ConcurrentSetBlockingQueue<>();
     private ExecutorService gettingMutableItemThreadPool;
 
     // Queue of putting immutable item request.
     private BlockingQueue<ImmutableItem> puttingImmutableItemQueue
-            = new LinkedBlockingQueue<>();
+            = new ConcurrentSetBlockingQueue<>();
     private Thread puttingImmutableItemThread;
 
     // Queue of putting mutable item request.
     private BlockingQueue<MutableItem> puttingMutableItemQueue
-            = new LinkedBlockingQueue<>();
+            = new ConcurrentSetBlockingQueue<>();
     private Thread puttingMutableItemThread;
 
     private AtomicBoolean dhtItemWorkersStarted = new AtomicBoolean(false);
@@ -312,12 +309,21 @@ public class TorrentDHTEngine {
             return false;
         }
 
+        // Drop this item if it exists.
         if (puttingImmutableItemQueue.contains(item)) {
             logger.warn("drop immutable item" + item);
             return false;
         }
 
-        puttingImmutableItemQueue.add(item);
+        try {
+            puttingImmutableItemQueue.put(item);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // This exception should never happens.
+            // Because queue capability isn't set and
+            // never block current thread.
+        }
+
         return true;
     }
 
@@ -335,12 +341,21 @@ public class TorrentDHTEngine {
             return false;
         }
 
+        // Drop this item if it exists.
         if (puttingMutableItemQueue.contains(item)) {
             logger.warn("drop mutable item" + item);
             return false;
         }
 
-        puttingMutableItemQueue.add(item);
+        try {
+            puttingMutableItemQueue.put(item);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // This exception should never happens.
+            // Because queue capability isn't set and
+            // never block current thread.
+        }
+
         return true;
     }
 
@@ -455,12 +470,21 @@ public class TorrentDHTEngine {
 
         ImmutableItemRequest req = new ImmutableItemRequest(spec, cb, cbData);
 
+        // Drop this request if it exists.
         if (gettingImmutableItemQueue.contains(req)) {
             logger.warn("drop immutable item req:" + req);
             return false;
         }
 
-        gettingImmutableItemQueue.add(req);
+        try {
+            gettingImmutableItemQueue.put(req);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // This exception should never happens.
+            // Because queue capability isn't set and
+            // never block current thread.
+        }
+
         return true;
     }
 
@@ -483,12 +507,21 @@ public class TorrentDHTEngine {
 
         MutableItemRequest req = new MutableItemRequest(spec, cb, cbData);
 
+        // Drop this request if it exists.
         if (gettingMutableItemQueue.contains(req)) {
             logger.warn("drop mutable item req:" + req);
             return false;
         }
 
-        gettingMutableItemQueue.add(req);
+        try {
+            gettingMutableItemQueue.put(req);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // This exception should never happens.
+            // Because queue capability isn't set and
+            // never block current thread.
+        }
+
         return true;
     }
 
@@ -624,6 +657,7 @@ public class TorrentDHTEngine {
 
             try {
                 Thread.sleep(DHTOperationInterval);
+
                 req = gettingImmutableItemQueue.take();
                 item = dhtGet(req.getSpec());
             } catch (InterruptedException e) {
@@ -650,6 +684,7 @@ public class TorrentDHTEngine {
 
             try {
                 Thread.sleep(DHTOperationInterval);
+
                 req = gettingMutableItemQueue.take();
                 item = dhtGet(req.getSpec());
             } catch (InterruptedException e) {
@@ -673,7 +708,9 @@ public class TorrentDHTEngine {
 
             ImmutableItem item;
             try {
+                // TODO: improve time interval
                 Thread.sleep(DHTOperationInterval);
+
                 item = puttingImmutableItemQueue.take();
                 dhtPut(item);
             } catch (InterruptedException e) {
@@ -694,6 +731,7 @@ public class TorrentDHTEngine {
             MutableItem item;
             try {
                 Thread.sleep(DHTOperationInterval);
+
                 item = puttingMutableItemQueue.take();
                 dhtPut(item);
             } catch (InterruptedException e) {
