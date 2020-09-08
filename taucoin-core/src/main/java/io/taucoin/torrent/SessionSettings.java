@@ -29,6 +29,7 @@ public final class SessionSettings {
     public static Set<String> PrivateBootstrapNodes = new HashSet<String>();
     static {
         PrivateBootstrapNodes.add("52.74.25.27:6882");
+        PrivateBootstrapNodes.add("tau.geekgalaxy.com:6881");
     }
 
     // DHT bootstrap nodes.
