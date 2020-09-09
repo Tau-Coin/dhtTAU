@@ -290,7 +290,8 @@ public class PeerManager {
             fillRandomPeerList();
         }
 
-        for (; i < PEER_NUMBER; i++) {
+        size = Math.min(randomPeerList.size(), PEER_NUMBER);
+        for (; i < size; i++) {
             // add a peer to tx peers randomly from all peers
             this.blockPeers.add(this.randomPeerList.get(0));
             this.randomPeerList.remove(0);
@@ -314,7 +315,8 @@ public class PeerManager {
             fillRandomPeerList();
         }
 
-        for (; i < PEER_NUMBER; i++) {
+        size = Math.min(randomPeerList.size(), PEER_NUMBER);
+        for (; i < size; i++) {
             // add a peer to tx peers randomly from all peers
             this.txPeers.add(this.randomPeerList.get(0));
             this.randomPeerList.remove(0);

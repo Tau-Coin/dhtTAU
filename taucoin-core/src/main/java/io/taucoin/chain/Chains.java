@@ -1501,8 +1501,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(bestBlockContainer.getBlock().getEncoded());
             TorrentDHTEngine.getInstance().distribute(immutableItem);
 
-            byte[] peer = peerManagers.get(chainID).getMutableRangePeerRandomly();
-            MutableItemValue mutableItemValue = new MutableItemValue(bestBlockContainer.getBlock().getBlockHash(), peer);
+            MutableItemValue mutableItemValue = new MutableItemValue(bestBlockContainer.getBlock().getBlockHash(), null);
 
             // put mutable item
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
@@ -1536,18 +1535,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             TorrentDHTEngine.getInstance().distribute(immutableItem);
 
             // put mutable item
-            // get max fee peer
-            byte[] peer = this.txPools.get(chainID).getOptimalPeer();
-            if (null == peer) {
-                // get active peer from other peer
-                peer = this.peerManagers.get(chainID).getOptimalTxPeer();
-            }
-            if (null == peer) {
-                // get myself
-                peer = AccountManager.getInstance().getKeyPair().first;
-            }
 
-            MutableItemValue value = new MutableItemValue(tx.getTxID(), peer);
+            MutableItemValue value = new MutableItemValue(tx.getTxID(), null);
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
