@@ -169,7 +169,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void blockChainProcess() {
         while (!Thread.currentThread().isInterrupted()) {
 
-            traverseMultiChain();
+            Set<ByteArrayWrapper> chainIDs = new HashSet<>(this.chainIDs);
+            traverseMultiChain(chainIDs);
 
             try {
                 Thread.sleep(LOOP_INTERVAL_TIME);
@@ -187,6 +188,11 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     public boolean followChain(byte[] chainID) {
         ByteArrayWrapper wChainID = new ByteArrayWrapper(chainID);
+
+        if (this.chainIDs.contains(wChainID)) {
+            logger.info("Chain:{} is followed.", wChainID.toString());
+            return true;
+        }
 
         this.blockTipSalts.put(wChainID, makeBlockTipSalt(chainID));
 
@@ -311,8 +317,79 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.txHashMapFromDemand.put(wChainID, new HashSet<>());
 
+        try{
+            this.stateDB.followChain(chainID);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
         // 最后增加添加标记
         this.chainIDs.add(wChainID);
+
+        return true;
+    }
+
+    public boolean unFollowChain(byte[] chainID) {
+        ByteArrayWrapper wChainID = new ByteArrayWrapper(chainID);
+
+        this.chainIDs.remove(wChainID);
+
+        this.blockTipSalts.remove(wChainID);
+
+        this.blockDemandSalts.remove(wChainID);
+
+        this.txTipSalts.remove(wChainID);
+
+        this.txDemandSalts.remove(wChainID);
+
+        // init voting pool
+        this.votingPools.remove(wChainID);
+
+        // init pot consensus
+        this.pots.remove(wChainID);
+
+        // init state processor
+        this.stateProcessors.remove(wChainID);
+
+        // init best block and sync block
+        this.bestBlockContainers.remove(wChainID);
+        this.syncBlocks.remove(wChainID);
+
+        this.peerManagers.remove(wChainID);
+
+        this.txPools.remove(wChainID);
+
+        this.votingTime.remove(wChainID);
+
+        this.votingFlag.remove(wChainID);
+
+        this.votingBlocks.remove(wChainID);
+
+        this.txMapForPool.remove(wChainID);
+
+        this.blockContainerMap.remove(wChainID);
+
+        this.blockMap.remove(wChainID);
+
+        this.txMap.remove(wChainID);
+
+        this.blockContainerMapForSync.remove(wChainID);
+
+        this.blockMapForSync.remove(wChainID);
+
+        this.txMapForSync.remove(wChainID);
+
+        this.blockHashMapFromDemand.remove(wChainID);
+
+        this.txHashMapFromDemand.remove(wChainID);
+
+        try{
+            this.stateDB.unfollowChain(chainID);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
 
         return true;
     }
@@ -332,8 +409,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     /**
      * 对多条链进行一次遍历
      */
-    private void traverseMultiChain() {
-        for (ByteArrayWrapper chainID : this.chainIDs) {
+    private void traverseMultiChain(Set<ByteArrayWrapper> chainIDs) {
+        for (ByteArrayWrapper chainID : chainIDs) {
 
             logger.debug("Chain ID:{}", new String(chainID.getData()));
 
@@ -1760,6 +1837,10 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
 
         return blockContainer;
+    }
+
+    public Set<ByteArrayWrapper> getAllChainIDs() {
+        return new HashSet<>(this.chainIDs);
     }
 
     /**

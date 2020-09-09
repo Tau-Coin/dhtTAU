@@ -3,6 +3,7 @@ package io.taucoin.chain;
 import com.frostwire.jlibtorrent.Pair;
 import io.taucoin.account.AccountManager;
 import io.taucoin.core.AccountState;
+import io.taucoin.core.TransactionPool;
 import io.taucoin.types.BlockContainer;
 import io.taucoin.types.MutableItemValue;
 import io.taucoin.db.BlockDB;
@@ -43,9 +44,7 @@ public class ChainManager {
 
     private static final Logger logger = LoggerFactory.getLogger("ChainManager");
 
-    // Chain maps: chainID -> Chain.
-    private Map<ByteArrayWrapper, Chain> chains
-            = Collections.synchronizedMap(new HashMap<>());
+    private Chains chains;
 
     private TauListener listener;
 
@@ -119,24 +118,16 @@ public class ChainManager {
 			
 			initTauChain();
 
-            Set<byte[]> followedChains = new HashSet<byte[]>();
-            followedChains= this.stateDB.getAllFollowedChains();
+            chains = new Chains(this.blockDB, this.stateDB, this.listener);
 
-            Iterator<byte[]> chainsItor = followedChains.iterator();
-            while (chainsItor.hasNext()) {
-
-                // New single chain
-                byte[] chainid = chainsItor.next();
-                ByteArrayWrapper wrapperChainID = new ByteArrayWrapper(chainid);
-
-                logger.info("Follow chain ID: {}", new String(chainid));
-                Chain chain = new Chain(chainid, this.blockDB, this.stateDB, this.listener);
-
-                // Add chain
-                this.chains.put(wrapperChainID, chain);
-                // start chain process
-                chain.start();
+            Set<byte[]> chainIDs = this.stateDB.getAllFollowedChains();
+            if (null != chainIDs) {
+                for (byte[] chainID: chainIDs) {
+                    chains.followChain(chainID);
+                }
             }
+
+            chains.start();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             // notify starting blockchains exception.
@@ -153,11 +144,7 @@ public class ChainManager {
      */
     public void stop() {
 		// stop chains
-        Iterator<ByteArrayWrapper> chainsItor = this.chains.keySet().iterator();
-        while(chainsItor.hasNext()) {
-			chains.get(chainsItor.next()).stop();	
-		}
-
+        chains.stop();
 		// close db
 		closeChainDB();
 
@@ -187,7 +174,7 @@ public class ChainManager {
      * @return boolean successful or not.
      */
     public boolean unfollowChain(byte[] chainID) {
-        return false;
+        return this.chains.unFollowChain(chainID);
     }
 
     /**
@@ -195,18 +182,10 @@ public class ChainManager {
      * @param pubKey
      */
     public void updateKey(byte[] pubKey) {
-        for (Map.Entry<ByteArrayWrapper, Chain> entry: this.chains.entrySet()) {
-            entry.getValue().getTransactionPool().updatePubKey(pubKey);
+        Set<ByteArrayWrapper> chainIDs = chains.getAllChainIDs();
+        for (ByteArrayWrapper chainID: chainIDs) {
+            chains.getTransactionPool(chainID).updatePubKey(pubKey);
         }
-    }
-
-    /**
-     * get chain by chain ID
-     * @param chainID chain ID
-     * @return chain or null if not found
-     */
-    public Chain getChain(byte[] chainID) {
-        return chains.get(new ByteArrayWrapper(chainID));
     }
 
     /**
@@ -363,8 +342,11 @@ public class ChainManager {
 		// get chainid
 		ByteArrayWrapper chainid= new ByteArrayWrapper(tx.getChainID());
 
-		// get chain and then add tx into the txpool
-		chains.get(chainid).getTransactionPool().addTx(tx);
+		TransactionPool  transactionPool = this.chains.getTransactionPool(chainid);
+
+		if (null != transactionPool) {
+		    transactionPool.addTx(tx);
+        }
     }
 
     /**
@@ -396,9 +378,9 @@ public class ChainManager {
 
 		ArrayList<Block> blocks= new ArrayList<Block>();
 
-		for (Map.Entry<ByteArrayWrapper, Chain> entry: this.chains.entrySet()) {
-		    logger.debug("Chain ID: {}", new String(entry.getKey().getData()));
-		    blocks.add(entry.getValue().getBestBlockContainer().getBlock());
+        Set<ByteArrayWrapper> chainIDs = chains.getAllChainIDs();
+        for (ByteArrayWrapper chainID: chainIDs) {
+            blocks.add(chains.getBestBlockContainer(chainID).getBlock());
         }
 
 		return blocks;
@@ -443,9 +425,14 @@ public class ChainManager {
      * @return
      */
     public List<Transaction> getTransactionsInPool(byte[] chainid) {
-        ByteArrayWrapper chainidWrapper = new ByteArrayWrapper(chainid);
-        Chain chain = this.chains.get(chainidWrapper);
-        return  chain.getTransactionPool().getAllTransactions();
+        List<Transaction> list = new ArrayList<>();
+        TransactionPool transactionPool = this.chains.getTransactionPool(new ByteArrayWrapper(chainid));
+
+        if (null != transactionPool) {
+            list = transactionPool.getAllTransactions();
+        }
+
+        return list;
     }
 
     /**
