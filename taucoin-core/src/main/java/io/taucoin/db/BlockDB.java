@@ -80,7 +80,7 @@ public class BlockDB implements BlockStore {
             return TransactionFactory.parseTransaction(encode);
         }
 
-        logger.info("ChainID[{}]:Cannot find block by hash:{}", new String(chainID), Hex.toHexString(hash));
+        logger.info("ChainID[{}]:Cannot find tx by hash:{}", new String(chainID), Hex.toHexString(hash));
         return null;
     }
 
@@ -122,7 +122,7 @@ public class BlockDB implements BlockStore {
         if (null != block) {
             BlockContainer blockContainer = new BlockContainer(block);
             if (null != block.getTxHash()) {
-                Transaction tx = getTransactionByHash(chainID, block.getBlockHash());
+                Transaction tx = getTransactionByHash(chainID, block.getTxHash());
                 if (null != tx) {
                     blockContainer.setTx(tx);
                 }
@@ -131,6 +131,7 @@ public class BlockDB implements BlockStore {
             return blockContainer;
         }
 
+        logger.info("ChainID[{}]:Cannot find block container by hash:{}", new String(chainID), Hex.toHexString(hash));
         return null;
     }
 

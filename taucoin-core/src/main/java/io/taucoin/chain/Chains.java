@@ -46,7 +46,7 @@ import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.util.ByteArrayWrapper;
 
 public class Chains implements DHT.GetDHTItemCallback{
-    private static final Logger logger = LoggerFactory.getLogger("Chain");
+    private static final Logger logger = LoggerFactory.getLogger("Chains");
 
     // 当前follow的chain ID集合
     private final Set<ByteArrayWrapper> chainIDs = Collections.synchronizedSet(new HashSet<>());
@@ -441,7 +441,8 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private boolean isEmptyChain(ByteArrayWrapper chainID) {
         BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
-        return null == bestBlockContainer || (
+        // TODO:: if only genesis
+        return null == bestBlockContainer || (bestBlockContainer.getBlock().getBlockNum() != 0 &&
                 (System.currentTimeMillis() / 1000 - bestBlockContainer.getBlock().getTimeStamp()) >
                         ChainParam.WARNING_RANGE * ChainParam.DEFAULT_BLOCK_TIME);
     }
@@ -453,6 +454,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         for (ByteArrayWrapper chainID : chainIDs) {
 
             logger.debug("Chain ID:{}", new String(chainID.getData()));
+
 
             // 1. 判断是否空链，非空链忽略这一步
             if (isEmptyChain(chainID)) {
@@ -849,10 +851,12 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private void tryToSync(ByteArrayWrapper chainID) {
         // 合法性判断
-        BlockContainer blockContainer = this.blockContainerMapForSync.get(chainID).
-                get(new ByteArrayWrapper(this.syncBlocks.get(chainID).getPreviousBlockHash()));
+        if (isSyncUncompleted(chainID)) {
+            BlockContainer blockContainer = this.blockContainerMapForSync.get(chainID).
+                    get(new ByteArrayWrapper(this.syncBlocks.get(chainID).getPreviousBlockHash()));
 
-        syncBlock(chainID, blockContainer);
+            syncBlock(chainID, blockContainer);
+        }
     }
 
     /**

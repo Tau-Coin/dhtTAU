@@ -21,16 +21,11 @@ public class MutableItemValue {
     ArrayList<Long> peer;
 
     public MutableItemValue(byte[] hash, byte[] peer) {
-        logger.debug("+++++++++++++++++++++++++++++++++++++++++++++");
-        logger.debug("Hash: " + Hex.toHexString(hash));
-        logger.debug("Peer: " + Hex.toHexString(peer));
-        logger.debug("+++++++++++++++++++++++++++++++++++++++++++++");
         this.hash = ByteUtil.unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
         this.peer = ByteUtil.byteArrayToSignLongArray(peer, ChainParam.PubkeyLongArrayLength);
     }
 
     public MutableItemValue(byte[] encode) {
-        logger.debug("------------encode:{}", new String(encode));
         Entry entry = Entry.bdecode(encode);
         List<Entry> entryList = entry.list();
 
@@ -49,13 +44,11 @@ public class MutableItemValue {
     public byte[] getEncoded(){
         List list = new ArrayList();
         if (null == this.hash) {
-            logger.debug("++++++++++++++++++++++:hash is null");
             list.add(new ArrayList<Long>());
         } else {
             list.add(this.hash);
         }
         if (null == this.peer) {
-            logger.debug("++++++++++++++++++++++:peer is null");
             list.add(new ArrayList<Long>());
         } else {
             list.add(this.peer);
@@ -63,7 +56,6 @@ public class MutableItemValue {
         Entry entry = Entry.fromList(list);
 
         byte[] encode = entry.bencode();
-        logger.debug("------------------encode:{}", Hex.toHexString(encode));
         return encode;
     }
 
