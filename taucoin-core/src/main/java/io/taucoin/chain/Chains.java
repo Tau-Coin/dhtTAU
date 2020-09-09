@@ -48,8 +48,13 @@ import io.taucoin.util.ByteArrayWrapper;
 public class Chains implements DHT.GetDHTItemCallback{
     private static final Logger logger = LoggerFactory.getLogger("Chain");
 
+    // 当前follow的chain ID集合
     private final Set<ByteArrayWrapper> chainIDs = Collections.synchronizedSet(new HashSet<>());
 
+    // 记录等待停止follow的chain ID集合
+    private final Set<ByteArrayWrapper> unFollowChainIDs = Collections.synchronizedSet(new HashSet<>());
+
+    // 循环间隔时间
     private final int LOOP_INTERVAL_TIME = 100; // 100 ms
 
     // mutable item salt: block tip channel
@@ -92,6 +97,9 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     // the synced block of current chain
     private final Map<ByteArrayWrapper, Block> syncBlocks = Collections.synchronizedMap(new HashMap<>());
+
+    // 时间记录器，用于处理定时事件
+    private final Map<ByteArrayWrapper, Long> timeRecorders = Collections.synchronizedMap(new HashMap<>());
 
     // voting pool
     private final Map<ByteArrayWrapper, VotingPool> votingPools = Collections.synchronizedMap(new HashMap<>());
@@ -166,11 +174,26 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
     }
 
+    /**
+     * 死循环，遍历所有的链
+     */
     private void blockChainProcess() {
+        Set<ByteArrayWrapper> chainIDs = new HashSet<>();
+
         while (!Thread.currentThread().isInterrupted()) {
 
-            Set<ByteArrayWrapper> chainIDs = new HashSet<>(this.chainIDs);
+            for (ByteArrayWrapper chainID: this.unFollowChainIDs) {
+                this.chainIDs.remove(chainID);
+                removeChainComponent(chainID);
+            }
+
+            chainIDs.addAll(this.chainIDs);
+
             traverseMultiChain(chainIDs);
+
+            chainIDs.clear();
+
+            // TODO:: 研究使用全局chain ID,响应UI操作步骤，延缓统一执行
 
             try {
                 Thread.sleep(LOOP_INTERVAL_TIME);
@@ -184,7 +207,7 @@ public class Chains implements DHT.GetDHTItemCallback{
     /**
      * follow a new chain
      * @param chainID chain ID
-     * @return true if succeed, or false
+     * @return true if succeed, false otherwise
      */
     public boolean followChain(byte[] chainID) {
         ByteArrayWrapper wChainID = new ByteArrayWrapper(chainID);
@@ -201,6 +224,8 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.txTipSalts.put(wChainID, makeTxTipSalt(chainID));
 
         this.txDemandSalts.put(wChainID, makeTxDemandSalt(chainID));
+
+        this.timeRecorders.put(wChainID, 0L);
 
         // init voting pool
         this.votingPools.put(wChainID, new VotingPool(chainID));
@@ -317,6 +342,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.txHashMapFromDemand.put(wChainID, new HashSet<>());
 
+        // 把新链放入数据库
         try{
             this.stateDB.followChain(chainID);
         } catch (Exception e) {
@@ -330,66 +356,80 @@ public class Chains implements DHT.GetDHTItemCallback{
         return true;
     }
 
-    public boolean unFollowChain(byte[] chainID) {
-        ByteArrayWrapper wChainID = new ByteArrayWrapper(chainID);
+    /**
+     * 移除链相关的各个组件
+     * @param chainID chain ID
+     */
+    private void removeChainComponent(ByteArrayWrapper chainID) {
+        this.blockTipSalts.remove(chainID);
 
-        this.chainIDs.remove(wChainID);
+        this.blockDemandSalts.remove(chainID);
 
-        this.blockTipSalts.remove(wChainID);
+        this.txTipSalts.remove(chainID);
 
-        this.blockDemandSalts.remove(wChainID);
+        this.txDemandSalts.remove(chainID);
 
-        this.txTipSalts.remove(wChainID);
-
-        this.txDemandSalts.remove(wChainID);
+        this.timeRecorders.remove(chainID);
 
         // init voting pool
-        this.votingPools.remove(wChainID);
+        this.votingPools.remove(chainID);
 
         // init pot consensus
-        this.pots.remove(wChainID);
+        this.pots.remove(chainID);
 
         // init state processor
-        this.stateProcessors.remove(wChainID);
+        this.stateProcessors.remove(chainID);
 
         // init best block and sync block
-        this.bestBlockContainers.remove(wChainID);
-        this.syncBlocks.remove(wChainID);
+        this.bestBlockContainers.remove(chainID);
+        this.syncBlocks.remove(chainID);
 
-        this.peerManagers.remove(wChainID);
+        this.peerManagers.remove(chainID);
 
-        this.txPools.remove(wChainID);
+        this.txPools.remove(chainID);
 
-        this.votingTime.remove(wChainID);
+        this.votingTime.remove(chainID);
 
-        this.votingFlag.remove(wChainID);
+        this.votingFlag.remove(chainID);
 
-        this.votingBlocks.remove(wChainID);
+        this.votingBlocks.remove(chainID);
 
-        this.txMapForPool.remove(wChainID);
+        this.txMapForPool.remove(chainID);
 
-        this.blockContainerMap.remove(wChainID);
+        this.blockContainerMap.remove(chainID);
 
-        this.blockMap.remove(wChainID);
+        this.blockMap.remove(chainID);
 
-        this.txMap.remove(wChainID);
+        this.txMap.remove(chainID);
 
-        this.blockContainerMapForSync.remove(wChainID);
+        this.blockContainerMapForSync.remove(chainID);
 
-        this.blockMapForSync.remove(wChainID);
+        this.blockMapForSync.remove(chainID);
 
-        this.txMapForSync.remove(wChainID);
+        this.txMapForSync.remove(chainID);
 
-        this.blockHashMapFromDemand.remove(wChainID);
+        this.blockHashMapFromDemand.remove(chainID);
 
-        this.txHashMapFromDemand.remove(wChainID);
+        this.txHashMapFromDemand.remove(chainID);
+    }
 
+    /**
+     * 停止follow一条链
+     * @param chainID chain ID
+     * @return true if success, false otherwise
+     */
+    public boolean unFollowChain(byte[] chainID) {
+
+        // 先把停止信息写入数据库
         try{
             this.stateDB.unfollowChain(chainID);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
         }
+
+        // 再加入待处理集合
+        this.unFollowChainIDs.add(new ByteArrayWrapper(chainID));
 
         return true;
     }
@@ -438,7 +478,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 // 2.1 首先尝试进行一次状态同步，查看是否有之前轮次请求回来的需要同步的数据，有数据则进行链的同步
                 tryToSync(chainID);
 
-                // 2.2 判断当前是处在挖投票阶段
+                // 2.2 判断当前是处在投票阶段
                 if (!this.votingFlag.get(chainID)) {
                     // 2.2.1 如果不在投票阶段，则尝试用之前请求回来数据进行切换最难链的操作，
                     // 或者没有之前的数据的情况下，开始请求查找最难链
@@ -462,27 +502,33 @@ public class Chains implements DHT.GetDHTItemCallback{
                 // 2.5 尝试挖矿
                 tryToMine(chainID);
 
-                // 2.6 传播最佳区块
-                publishBestBlock(chainID);
+                // 定时操作，检查是否到时间
+                if (System.currentTimeMillis() / 1000 - this.timeRecorders.get(chainID) >= ChainParam.DEFAULT_MAX_BLOCK_TIME) {
+                    // 2.6 传播最佳区块
+                    publishBestBlock(chainID);
 
-                // 2.7 传播最佳交易
-                publishBestTx(chainID);
+                    // 2.7 传播最佳交易
+                    publishBestTx(chainID);
 
-                // 2.8 随机挑选logN个peer
-                int counter = this.peerManagers.get(chainID).getPeerNumber();
-                counter = counter > 0 ? (int)Math.log(counter) : 0;
+                    // 2.8 随机挑选logN个peer
+                    int counter = this.peerManagers.get(chainID).getPeerNumber();
+                    counter = counter > 0 ? (int)Math.log(counter) : 0;
 
-                for (int i = 0; i < counter; i++) {
-                    byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
+                    for (int i = 0; i < counter; i++) {
+                        byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
 
-                    // 2.8.1 请求最佳交易
-                    requestTipTxForMining(chainID, peer);
+                        // 2.8.1 请求最佳交易
+                        requestTipTxForMining(chainID, peer);
 
-                    // 2.8.2 请求远端区块需求
-                    requestDemandBlockFromPeer(chainID, peer);
+                        // 2.8.2 请求远端区块需求
+                        requestDemandBlockFromPeer(chainID, peer);
 
-                    // 2.8.3 请求远端交易需求
-                    requestDemandTxFromPeer(chainID, peer);
+                        // 2.8.3 请求远端交易需求
+                        requestDemandTxFromPeer(chainID, peer);
+                    }
+
+                    // 设定新时间起点
+                    this.timeRecorders.put(chainID, System.currentTimeMillis() / 1000);
                 }
 
                 // 2.9 回应远端需求
@@ -502,6 +548,10 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
     }
 
+    /**
+     * 尝试使用已有的数据切换链，没有数据则请求数据
+     * @param chainID chain ID
+     */
     private void tryToReBranchOrRequest(ByteArrayWrapper chainID) {
         if (this.blockContainerMap.get(chainID).isEmpty()) {
             // 随机挑选一个peer请求最难链
@@ -652,8 +702,14 @@ public class Chains implements DHT.GetDHTItemCallback{
         return true;
     }
 
+    /**
+     * 尝试对缓存数据集合(block & tx)进行瘦身
+     * 瘦身策略：数量超过WARNING RANGE，则删除保留MUTABLE RANGE数量的数据
+     * @param chainID chain ID
+     */
     private void tryToSlimDownCache(ByteArrayWrapper chainID) {
 
+        // block
         if (this.blockMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
             Map<ByteArrayWrapper, Block> oldBlockMap = this.blockMap.get(chainID);
             Map<ByteArrayWrapper, Block> newBlockMap = new HashMap<>(ChainParam.MUTABLE_RANGE);
@@ -673,6 +729,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             oldBlockMap.clear();
         }
 
+        // tx
         if (this.txMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
             Map<ByteArrayWrapper, Transaction> oldTxs = this.txMap.get(chainID);
             Map<ByteArrayWrapper, Transaction> newTxs = new HashMap<>(ChainParam.MUTABLE_RANGE);
@@ -693,6 +750,10 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
     }
 
+    /**
+     * 回应发现的需求
+     * @param chainID chain ID
+     */
     private void responseDemand(ByteArrayWrapper chainID) {
         try {
             // block
@@ -715,7 +776,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * make block tip salt
-     * @return block salt
+     * @param chainID chain ID
+     * @return block tip salt
      */
     private byte[] makeBlockTipSalt(byte[] chainID) {
         byte[] salt = new byte[chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length];
@@ -725,6 +787,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         return salt;
     }
 
+    /**
+     * make block demand salt
+     * @param chainID chain ID
+     * @return block demand salt
+     */
     private byte[] makeBlockDemandSalt(byte[] chainID) {
         byte[] salt = new byte[chainID.length + ChainParam.BLOCK_DEMAND_CHANNEL.length];
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
@@ -735,7 +802,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * make tx salt
-     * @return tx salt
+     * @param chainID chain ID
+     * @return tx tip salt
      */
     private byte[] makeTxTipSalt(byte[] chainID) {
         byte[] salt = new byte[chainID.length + ChainParam.TX_TIP_CHANNEL.length];
@@ -745,6 +813,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         return salt;
     }
 
+    /**
+     * make tx demand salt
+     * @param chainID chain ID
+     * @return tx demand salt
+     */
     private byte[] makeTxDemandSalt(byte[] chainID) {
         byte[] salt = new byte[chainID.length + ChainParam.TX_DEMAND_CHANNEL.length];
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
@@ -755,19 +828,24 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * Is block synchronization uncompleted
+     * @param chainID chain ID
      * @return true if uncompleted, false otherwise
      */
     private boolean isSyncUncompleted(ByteArrayWrapper chainID) {
         return null != this.syncBlocks.get(chainID) && this.syncBlocks.get(chainID).getBlockNum() > 0;
     }
 
+    /**
+     * 请求同步区块
+     * @param chainID chain ID
+     */
     private void requestSyncBlock(ByteArrayWrapper chainID) {
         requestBlock(chainID, this.syncBlocks.get(chainID).getBlockHash());
     }
 
     /**
      * 尝试同步，有同步数据返回则同步，否则，不同步
-     * @param chainID
+     * @param chainID chain ID
      */
     private void tryToSync(ByteArrayWrapper chainID) {
         // 合法性判断
@@ -777,6 +855,12 @@ public class Chains implements DHT.GetDHTItemCallback{
         syncBlock(chainID, blockContainer);
     }
 
+    /**
+     * 同步区块
+     * @param chainID chain ID
+     * @param blockContainer block container
+     * @return true if succeed, false otherwise
+     */
     private boolean syncBlock(ByteArrayWrapper chainID, BlockContainer blockContainer) {
 
         if (null == blockContainer) {
@@ -808,6 +892,10 @@ public class Chains implements DHT.GetDHTItemCallback{
         return true;
     }
 
+    /**
+     * 尝试进行一次挖矿
+     * @param chainID chain ID
+     */
     private void tryToMine(ByteArrayWrapper chainID) {
         if (minable(chainID)) {
             BlockContainer blockContainer = mineBlock(chainID);
@@ -944,6 +1032,10 @@ public class Chains implements DHT.GetDHTItemCallback{
         return true;
     }
 
+    /**
+     * 重置数据状态集合等信息
+     * @param chainID chain ID
+     */
     private void resetAfterVoting(ByteArrayWrapper chainID) {
         this.votingPools.get(chainID).clearVotingPool();
         this.votingBlocks.get(chainID).clear();
@@ -951,6 +1043,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.votingFlag.put(chainID, false);
     }
 
+    /**
+     * 尝试进行投票及投票结束收集最佳选票工作
+     * @param chainID chain ID
+     * @return best vote or null
+     */
     private Vote tryToVote(ByteArrayWrapper chainID) {
         // try to use all peers to vote
         PeerManager peerManager = this.peerManagers.get(chainID);
@@ -992,6 +1089,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
     }
 
+    /**
+     * 汇总选票，并挑出最佳选票
+     * @param chainID chain ID
+     * @return best vest or null
+     */
     private Vote getBestVote(ByteArrayWrapper chainID) {
         VotingPool votingPool = this.votingPools.get(chainID);
         List<Block> blocks = this.votingBlocks.get(chainID);
@@ -1024,6 +1126,12 @@ public class Chains implements DHT.GetDHTItemCallback{
         return bestVote;
     }
 
+    /**
+     * 用block container初始化链的状态
+     * @param chainID chain ID
+     * @param blockContainer block container
+     * @return true if success, false otherwise
+     */
     private boolean initChain(ByteArrayWrapper chainID, BlockContainer blockContainer) {
         if (null == blockContainer) {
             logger.error("Chain ID[{}]: Block container is null.", new String(chainID.getData()));
@@ -1070,67 +1178,19 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
-     * first sync when follow a chain
-     * @param bestVote best vote
-     * @return true[success]/false[fail]
+     * 重置链，将状态归零，需要清楚的组件相应重置
+     * @param chainID chain ID
      */
-    private boolean initialSync(ByteArrayWrapper chainID, Vote bestVote) {
-        if (null == bestVote) {
-            logger.error("Chain ID[{}]: Best vote is null.", new String(chainID.getData()));
-            return false;
-        }
-
+    private void resetChain(ByteArrayWrapper chainID) {
         try {
             this.blockStore.removeChain(chainID.getData());
             this.stateDB.clearAllState(chainID.getData());
 
-            Map<ByteArrayWrapper, BlockContainer> blockContainers = this.blockContainerMap.get(chainID);
-            BlockContainer bestVoteBlockContainer = blockContainers.get(new ByteArrayWrapper(bestVote.getBlockHash()));
-
-            if (null == bestVoteBlockContainer) {
-                logger.error("Chain ID[{}]: Best vote block is null.", new String(chainID.getData()));
-
-                requestBlock(chainID, bestVote.getBlockHash());
-
-                return false;
-            }
-
-            // after sync
-            // 1. save block
-            // 2. save best and sync block hash
-            // 3. commit new state
-            // 4. set best and sync block
-            // 5. add old block peer to peer pool
-
-            // initial sync from best vote
-            StateDB track = this.stateDB.startTracking(chainID.getData());
-            StateProcessor stateProcessor = this.stateProcessors.get(chainID);
-            if (!stateProcessor.backwardProcess(bestVoteBlockContainer, track)) {
-                logger.error("Chain ID[{}]: Process block[{}] fail!",
-                        new String(chainID.getData()), Hex.toHexString(bestVoteBlockContainer.getBlock().getBlockHash()));
-                return false;
-            }
-
-            this.blockStore.saveBlockContainer(chainID.getData(), bestVoteBlockContainer, true);
-
-            track.setBestBlockHash(chainID.getData(), bestVoteBlockContainer.getBlock().getBlockHash());
-            track.setSyncBlockHash(chainID.getData(), bestVoteBlockContainer.getBlock().getBlockHash());
-
-            this.bestBlockContainers.put(chainID, bestVoteBlockContainer);
-            this.syncBlocks.put(chainID, bestVoteBlockContainer.getBlock());
-
-            PeerManager peerManager = this.peerManagers.get(chainID);
-            peerManager.addOldBlockPeer(bestVoteBlockContainer.getBlock().getMinerPubkey());
-
-            track.commit();
+            this.txPools.get(chainID).reinit();
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
-            return false;
         }
-
-        return true;
     }
-
 
     /**
      * try to change chain tip to best vote block
@@ -1257,9 +1317,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash2)) {
                             // 在主链上
                             // be as a new chain when fork point between mutable range and warning range
-                            // re-init tx pool and chain
-                            this.txPools.get(chainID).reinit();
-                            initialSync(chainID, bestVote);
+                            resetChain(chainID);
                             return true;
                         } else {
                             // 不在主链上，继续查看第三个immutable block hash
@@ -1274,9 +1332,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                     if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash3)) {
                                         // 在主链上
                                         // be as a new chain when fork point between mutable range and warning range
-                                        // re-init tx pool and chain
-                                        this.txPools.get(chainID).reinit();
-                                        initialSync(chainID, bestVote);
+                                        resetChain(chainID);
                                         return true;
                                     } else {
                                         // fork point out of warning range, maybe it's an attack chain
@@ -1428,6 +1484,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * publish tip block on main chain to dht
+     * @param chainID chain ID
      */
     private void publishBestBlock(ByteArrayWrapper chainID) {
         BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
@@ -1457,6 +1514,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * publish tip block on main chain to dht
+     * @param chainID chain ID
      */
     private void publishBestTx(ByteArrayWrapper chainID) {
         Transaction tx = this.txPools.get(chainID).getBestTransaction();
@@ -1468,6 +1526,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * put a tx in mutable item
+     * @param chainID chain ID
      * @param tx tx to publish
      */
     private void publishTipTransaction(ByteArrayWrapper chainID, Transaction tx) {
@@ -1499,6 +1558,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * connect a block
+     * @param chainID chain ID
      * @param blockContainer block container
      * @param stateDB state db
      * @return true if connect successfully, false otherwise
@@ -1522,6 +1582,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * set best block of this chain
+     * @param chainID chain ID
      * @param blockContainer best block container
      */
     public void setBestBlockContainer(ByteArrayWrapper chainID, BlockContainer blockContainer) {
@@ -1530,6 +1591,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * get best block of this chain
+     * @param chainID chain ID
      * @return best block container
      */
     public BlockContainer getBestBlockContainer(ByteArrayWrapper chainID) {
@@ -1538,6 +1600,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * check if a block valid
+     * @param chainID chain ID
      * @param block block to check
      * @param stateDB state db
      * @return true if valid, false otherwise
@@ -1594,6 +1657,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * check if a block container valid
+     * @param chainID chain ID
      * @param blockContainer block container
      * @param stateDB state db
      * @return true if valid, false otherwise
@@ -1605,6 +1669,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * check pot consensus
+     * @param chainID chain ID
      * @param block block to check
      * @param stateDB state db
      * @return true if ok, false otherwise
@@ -1680,6 +1745,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * check if be able to mine now
+     * @param chainID chain ID
      * @return true if can mine, false otherwise
      */
     private boolean minable(ByteArrayWrapper chainID) {
@@ -1739,6 +1805,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * mine a block
+     * @param chainID chain ID
      * @return block container, or null
      */
     private BlockContainer mineBlock(ByteArrayWrapper chainID) {
@@ -1839,12 +1906,17 @@ public class Chains implements DHT.GetDHTItemCallback{
         return blockContainer;
     }
 
+    /**
+     * get all chain ID
+     * @return chain ID set
+     */
     public Set<ByteArrayWrapper> getAllChainIDs() {
         return new HashSet<>(this.chainIDs);
     }
 
     /**
      * get transaction pool
+     * @param chainID chain ID
      * @return tx pool
      */
     public TransactionPool getTransactionPool(ByteArrayWrapper chainID) {
@@ -2137,7 +2209,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 break;
             }
             default: {
-
+                logger.error("Type mismatch.");
             }
         }
     }
