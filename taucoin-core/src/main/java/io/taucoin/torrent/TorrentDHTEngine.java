@@ -317,6 +317,7 @@ public class TorrentDHTEngine {
 
         try {
             puttingImmutableItemQueue.put(item);
+            logger.debug("immutable item is queued:" + item);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.
@@ -349,6 +350,7 @@ public class TorrentDHTEngine {
 
         try {
             puttingMutableItemQueue.put(item);
+            logger.debug("mutable item is queued:" + item);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.
@@ -478,6 +480,7 @@ public class TorrentDHTEngine {
 
         try {
             gettingImmutableItemQueue.put(req);
+            logger.debug("immutable item req is queued:" + req);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.
@@ -515,6 +518,7 @@ public class TorrentDHTEngine {
 
         try {
             gettingMutableItemQueue.put(req);
+            logger.debug("mutable item req is queued:" + req);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.
