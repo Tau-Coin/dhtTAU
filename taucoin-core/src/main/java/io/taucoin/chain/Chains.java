@@ -1412,44 +1412,66 @@ public class Chains implements DHT.GetDHTItemCallback{
     /**
      * 尝试从本地缓存或者数据库获取block container，如果没有则请求
      * @param chainID chain ID
-     * @return block container or null
+     * @return true if got or request, false if found error(null)
      */
-    private BlockContainer tryToGetBlockContainerFromLocal(ByteArrayWrapper chainID, byte[] blockHash) {
-        BlockContainer blockContainer = null;
+    private boolean tryToGetBlockContainerFromLocal(ByteArrayWrapper chainID, byte[] blockHash,
+                                                    BlockContainer blockContainer) {
+        if (null == blockContainer) {
+            return false;
+        }
 
         try {
-            blockContainer = this.blockStore.getBlockContainerByHash(chainID.getData(), blockHash);
+            BlockContainer blockContainerInDb = this.blockStore.
+                    getBlockContainerByHash(chainID.getData(), blockHash);
 
-            if (null == blockContainer) {
-                ByteArrayWrapper key = new ByteArrayWrapper(blockHash);
-                blockContainer = this.blockContainerMap.get(chainID).get(key);
+            if (null == blockContainerInDb) {
+                ByteArrayWrapper blockKey = new ByteArrayWrapper(blockHash);
 
-                if (null == blockContainer) {
-                    Block block = this.blockMap.get(chainID).get(key);
-                    if (null != block) {
-                        if (null != block.getTxHash()) {
-                            // 区块带有交易
-                            Transaction tx = this.txMap.get(chainID).get(new ByteArrayWrapper(block.getTxHash()));
-                            if (null != tx) { // 本地找到了交易
-                                blockContainer = new BlockContainer(block, tx);
+                BlockContainer blockContainerInCache = this.blockContainerMap.get(chainID).get(blockKey);
+                if (this.blockContainerMap.get(chainID).containsKey(blockKey) && null != blockContainerInCache) {
+                    // 发现现成的数据
+                    blockContainer.copy(blockContainerInCache);
+                } else {
+                    // 没有现成的数据，试着从缓存中读取
+                    if (this.blockMap.get(chainID).containsKey(blockKey)) {
+                        Block block = this.blockMap.get(chainID).get(blockKey);
+                        if (null != block) {
+                            if (null != block.getTxHash()) {
+                                // 区块带有交易
+                                ByteArrayWrapper txKey = new ByteArrayWrapper(block.getTxHash());
+                                if (this.txMap.get(chainID).containsKey(txKey)) {
+                                    Transaction tx = this.txMap.get(chainID).get(txKey);
+                                    if (null != tx) {
+                                        blockContainer.setBlock(block);
+                                        blockContainer.setTx(tx);
+                                    } else {
+                                        return false;
+                                    }
+                                } else {
+                                    // 本地没找到， 请求交易
+                                    requestTxForMining(chainID, block.getTxHash(), blockKey);
+                                }
                             } else {
-                                // 本地没找到， 请求交易
-                                requestTxForMining(chainID, block.getTxHash(), key);
+                                // 是空区块
+                                blockContainer.setBlock(block);
                             }
                         } else {
-                            // 空区块
-                            blockContainer = new BlockContainer(block);
+                            return false;
                         }
                     } else {
                         requestBlockForMining(chainID, blockHash);
                     }
                 }
+
+            } else {
+                blockContainer.copy(blockContainerInDb);
             }
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
+            return false;
         }
 
-        return blockContainer;
+        return true;
     }
 
     private void requestTipBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {

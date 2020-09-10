@@ -4,6 +4,9 @@ public class BlockContainer {
     private Block block;
     private Transaction tx;
 
+    public BlockContainer() {
+    }
+
     public BlockContainer(Block block) {
         this.block = block;
     }
@@ -27,5 +30,14 @@ public class BlockContainer {
 
     public void setTx(Transaction tx) {
         this.tx = tx;
+    }
+
+    public boolean isEmpty() {
+        return null == block;
+    }
+
+    public void copy(BlockContainer blockContainer) {
+        this.block = blockContainer.block;
+        this.tx = blockContainer.tx;
     }
 }

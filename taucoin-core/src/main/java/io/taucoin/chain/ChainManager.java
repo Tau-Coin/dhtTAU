@@ -5,7 +5,6 @@ import io.taucoin.account.AccountManager;
 import io.taucoin.core.AccountState;
 import io.taucoin.core.TransactionPool;
 import io.taucoin.types.BlockContainer;
-import io.taucoin.types.MutableItemValue;
 import io.taucoin.db.BlockDB;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.db.StateDB;
@@ -33,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.*;
 
 /**
@@ -74,6 +72,8 @@ public class ChainManager {
         // If not exist, create log
         this.stateDB = new StateDBImpl(dbFactory.newDatabase());
         this.blockDB = new BlockDB(dbFactory.newDatabase());
+
+        chains = new Chains(this.blockDB, this.stateDB, this.listener);
     }
 
     public void openChainDB() throws Exception {
@@ -118,8 +118,6 @@ public class ChainManager {
             openChainDB();
             
             initTauChain();
-
-            chains = new Chains(this.blockDB, this.stateDB, this.listener);
 
             Set<byte[]> chainIDs = this.stateDB.getAllFollowedChains();
             if (null != chainIDs) {
@@ -249,8 +247,9 @@ public class ChainManager {
                 logger.error(e.getMessage(), e);
                 return false;
             }
-            putBlockToDHT(chainID, genesisContainer, pubKey);
         }
+
+        putBlockContainerToDHT(chainID, genesisContainer);
 
 
         if(ret) {
@@ -294,9 +293,8 @@ public class ChainManager {
      * put block to dht
      * @param chainID chain id
      * @param blockContainer block to put
-     * @param peer hash link
      */
-    private void putBlockToDHT(byte[] chainID, BlockContainer blockContainer, byte[] peer) {
+    private void putBlockContainerToDHT(byte[] chainID, BlockContainer blockContainer) {
 
         if (null != blockContainer) {
             if (null != blockContainer.getTx()) {
