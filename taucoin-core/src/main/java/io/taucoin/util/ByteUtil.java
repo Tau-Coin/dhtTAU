@@ -319,7 +319,7 @@ public class ByteUtil {
         Entry entry = Entry.bdecode(encode);
         List<Entry> entryList = entry.list();
 
-        return longArrayToBytes(stringToLongArrayList(entryList.get(0).toString()), ChainParam.HashLength);
+        return longArrayToBytes(stringToLongArrayList(entryList.toString()), ChainParam.HashLength);
     }
 
     /**
