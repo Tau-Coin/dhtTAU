@@ -182,25 +182,29 @@ public class Chains implements DHT.GetDHTItemCallback{
         Set<ByteArrayWrapper> chainIDs = new HashSet<>();
 
         while (!Thread.currentThread().isInterrupted()) {
-
-            for (ByteArrayWrapper chainID: this.unFollowChainIDs) {
-                this.chainIDs.remove(chainID);
-                removeChainComponent(chainID);
-            }
-
-            chainIDs.addAll(this.chainIDs);
-
-            traverseMultiChain(chainIDs);
-
-            chainIDs.clear();
-
-            // TODO:: 研究使用全局chain ID,响应UI操作步骤，延缓统一执行
-
             try {
-                Thread.sleep(LOOP_INTERVAL_TIME);
-            } catch (InterruptedException e) {
-                logger.info(e.getMessage(), e);
-                Thread.currentThread().interrupt();
+
+                for (ByteArrayWrapper chainID : this.unFollowChainIDs) {
+                    this.chainIDs.remove(chainID);
+                    removeChainComponent(chainID);
+                }
+
+                chainIDs.addAll(this.chainIDs);
+
+                traverseMultiChain(chainIDs);
+
+                chainIDs.clear();
+
+                // TODO:: 研究使用全局chain ID,响应UI操作步骤，延缓统一执行
+
+                try {
+                    Thread.sleep(LOOP_INTERVAL_TIME);
+                } catch (InterruptedException e) {
+                    logger.info(e.getMessage(), e);
+                    Thread.currentThread().interrupt();
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
             }
         }
     }
@@ -465,7 +469,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (iterator.hasNext()) {
                     // 有完整数据回来，则用数据进行初始化链
                     BlockContainer blockContainer = iterator.next().getValue();
-                    initChain(chainID, blockContainer);
+                    if (null != blockContainer) {
+                        initChain(chainID, blockContainer);
+                    }
 
                     iterator.remove();
                 } else {
@@ -566,7 +572,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             for (Map.Entry<ByteArrayWrapper, BlockContainer> entry : this.blockContainerMap.get(chainID).entrySet()) {
                 BlockContainer blockContainer = entry.getValue();
 
-                if (blockContainer.getBlock().getCumulativeDifficulty().
+                if (null != blockContainer && blockContainer.getBlock().getCumulativeDifficulty().
                         compareTo(this.bestBlockContainers.get(chainID).getBlock().
                                 getCumulativeDifficulty()) > 0) {
                     // 是否需要清除数据，以备下一轮
