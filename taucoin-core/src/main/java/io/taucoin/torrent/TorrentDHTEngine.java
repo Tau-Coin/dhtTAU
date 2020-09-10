@@ -671,7 +671,11 @@ public class TorrentDHTEngine {
             }
 
             if (req != null) {
-                req.onDHTItemGot(item);
+                try {
+                    req.onDHTItemGot(item);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -698,7 +702,11 @@ public class TorrentDHTEngine {
             }
 
             if (req != null) {
-                req.onDHTItemGot(item);
+                try {
+                    req.onDHTItemGot(item);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
