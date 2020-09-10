@@ -38,7 +38,6 @@ import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.types.Block;
 import io.taucoin.types.BlockContainer;
-import io.taucoin.types.MutableItemValue;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TransactionFactory;
 import io.taucoin.types.TypesConfig;
@@ -694,13 +693,13 @@ public class Chains implements DHT.GetDHTItemCallback{
                                     }
                                 }
                             } else {
-                                requestBlock(chainID, immutableBlockHash2);
+                                requestBlockForMining(chainID, immutableBlockHash2);
                                 return false;
                             }
                         }
                     }
                 } else {
-                    requestBlock(chainID, immutableBlockHash1);
+                    requestBlockForMining(chainID, immutableBlockHash1);
                     return false;
                 }
             }
@@ -849,7 +848,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void requestSyncBlock(ByteArrayWrapper chainID) {
-        requestBlock(chainID, this.syncBlocks.get(chainID).getBlockHash());
+        requestBlockForMining(chainID, this.syncBlocks.get(chainID).getBlockHash());
     }
 
     /**
@@ -1044,6 +1043,38 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
+     * 在投票结果出来，成功切到投票结果位置之后，从投票的block中选出最难的作为新tip
+     * @param chainID chain ID
+     */
+    private void chooseBestBlockAsTipAfterVoting(ByteArrayWrapper chainID) {
+        Block bestTipBlock = null;
+        for (Block block: this.votingBlocks.get(chainID)) {
+            if (null == bestTipBlock || block.getCumulativeDifficulty().
+                    compareTo(bestTipBlock.getCumulativeDifficulty()) > 0) {
+                bestTipBlock = block;
+            }
+        }
+
+        ByteArrayWrapper blockKey = new ByteArrayWrapper(bestTipBlock.getBlockHash());
+        this.blockMap.get(chainID).put(blockKey, bestTipBlock);
+
+        if (null != bestTipBlock.getTxHash()) {
+            ByteArrayWrapper key = new ByteArrayWrapper(bestTipBlock.getTxHash());
+            Transaction tx = this.txMap.get(chainID).get(key);
+            if (null != tx) {
+                this.blockContainerMap.get(chainID).
+                        put(key, new BlockContainer(bestTipBlock, tx));
+            } else {
+                requestTxForMining(chainID, bestTipBlock.getTxHash(), blockKey);
+            }
+        } else {
+            this.blockContainerMap.get(chainID).
+                    put(new ByteArrayWrapper(bestTipBlock.getBlockHash()),
+                            new BlockContainer(bestTipBlock));
+        }
+    }
+
+    /**
      * 重置数据状态集合等信息
      * @param chainID chain ID
      */
@@ -1234,7 +1265,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         return false;
                     }
                 } else {
-                    requestBlock(chainID, bestVote.getBlockHash());
+                    requestBlockForMining(chainID, bestVote.getBlockHash());
                     return false;
                 }
             }
@@ -1303,7 +1334,11 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     logger.debug("++ctx-----------------------re-branch.....");
                     // change to more difficult chain
-                    reBranch(chainID, blockContainer1);
+                    if (reBranch(chainID, blockContainer1)) {
+                        // 如果成功切换到投票分支，则选择一个immutable block hash和best vote一致的难度值最高的区块
+                        // 将其加入最长链待处理的数据集合
+                        chooseBestBlockAsTipAfterVoting(chainID);
+                    }
 
                     // 重置状态数据等，以待下次使用
                     resetAfterVoting(chainID);
@@ -1354,7 +1389,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                     resetAfterVoting(chainID);
                                 }
                             } else {
-                                requestBlock(chainID, immutableBlockHash2);
+                                requestBlockForMining(chainID, immutableBlockHash2);
                             }
                         }
                     } else {
@@ -1362,7 +1397,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         resetAfterVoting(chainID);
                     }
                 } else {
-                    requestBlock(chainID, immutableBlockHash1);
+                    requestBlockForMining(chainID, immutableBlockHash1);
                 }
             }
 
@@ -1372,6 +1407,49 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
 
         return true;
+    }
+
+    /**
+     * 尝试从本地缓存或者数据库获取block container，如果没有则请求
+     * @param chainID chain ID
+     * @return block container or null
+     */
+    private BlockContainer tryToGetBlockContainerFromLocal(ByteArrayWrapper chainID, byte[] blockHash) {
+        BlockContainer blockContainer = null;
+
+        try {
+            blockContainer = this.blockStore.getBlockContainerByHash(chainID.getData(), blockHash);
+
+            if (null == blockContainer) {
+                ByteArrayWrapper key = new ByteArrayWrapper(blockHash);
+                blockContainer = this.blockContainerMap.get(chainID).get(key);
+
+                if (null == blockContainer) {
+                    Block block = this.blockMap.get(chainID).get(key);
+                    if (null != block) {
+                        if (null != block.getTxHash()) {
+                            // 区块带有交易
+                            Transaction tx = this.txMap.get(chainID).get(new ByteArrayWrapper(block.getTxHash()));
+                            if (null != tx) { // 本地找到了交易
+                                blockContainer = new BlockContainer(block, tx);
+                            } else {
+                                // 本地没找到， 请求交易
+                                requestTxForMining(chainID, block.getTxHash(), key);
+                            }
+                        } else {
+                            // 空区块
+                            blockContainer = new BlockContainer(block);
+                        }
+                    } else {
+                        requestBlockForMining(chainID, blockHash);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
+        }
+
+        return blockContainer;
     }
 
     private void requestTipBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
@@ -1386,7 +1464,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private void requestBlock(ByteArrayWrapper chainID, byte[] blockHash) {
+    private void requestBlockForMining(ByteArrayWrapper chainID, byte[] blockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_REQUEST_FOR_MINING,
                 new ByteArrayWrapper(blockHash));
@@ -1411,7 +1489,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private void requestTx(ByteArrayWrapper chainID, byte[] txid, ByteArrayWrapper txBlockHash) {
+    private void requestTxForMining(ByteArrayWrapper chainID, byte[] txid, ByteArrayWrapper txBlockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_TX_REQUEST_FOR_MINING, new ByteArrayWrapper(txid), txBlockHash);
@@ -1983,7 +2061,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     return;
                 }
 
-                requestBlock(dataIdentifier.getChainID(), ByteUtil.getHashFromEncode(item));
+                requestBlockForMining(dataIdentifier.getChainID(), ByteUtil.getHashFromEncode(item));
 
                 break;
             }
@@ -2023,7 +2101,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         }
                     } else {
                         // 缓存没有，则请求
-                        requestTx(dataIdentifier.getChainID(), block.getTxHash(), dataIdentifier.getHash());
+                        requestTxForMining(dataIdentifier.getChainID(), block.getTxHash(), dataIdentifier.getHash());
                     }
                 } else {
                     // 无交易区块，直接加入block container集合等待处理
