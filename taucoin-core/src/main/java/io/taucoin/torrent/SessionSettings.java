@@ -24,12 +24,12 @@ public final class SessionSettings {
 
     private static final boolean EnablePrivateNetwork = false;
 
-    public static final String PN_Listen_Interface = "0.0.0.0:6882";
+    public static final String PN_Listen_Interface = "0.0.0.0:6883";
 
     public static Set<String> PrivateBootstrapNodes = new HashSet<String>();
     static {
-        PrivateBootstrapNodes.add("52.74.25.27:6882");
-        PrivateBootstrapNodes.add("tau.geekgalaxy.com:6881");
+        PrivateBootstrapNodes.add("52.74.25.27:6883");
+        //PrivateBootstrapNodes.add("tau.geekgalaxy.com:6881");
     }
 
     // DHT bootstrap nodes.
