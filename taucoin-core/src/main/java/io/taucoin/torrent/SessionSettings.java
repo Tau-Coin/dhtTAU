@@ -95,6 +95,7 @@ public final class SessionSettings {
         if (this.privateNetwork) {
             // For private network, unrestrict dht entries to one per IP.
             ds.setRestrict_routing_ips(false);
+            ds.setRestrict_search_ips(false);
         }
 
         sparams.setDht_settings(ds);
