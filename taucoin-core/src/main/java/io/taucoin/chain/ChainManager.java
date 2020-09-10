@@ -85,19 +85,19 @@ public class ChainManager {
     }
 
     public boolean initTauChain() throws Exception {
-		// New TauConfig
-		GenesisConfig tauConfig = TauGenesisConfig.getInstance();
-		byte[] chainid = TauGenesisTransaction.ChainID;
-		logger.info("Initial tau chain chainid: {}", new String(chainid));
+        // New TauConfig
+        GenesisConfig tauConfig = TauGenesisConfig.getInstance();
+        byte[] chainid = TauGenesisTransaction.ChainID;
+        logger.info("Initial tau chain chainid: {}", new String(chainid));
 
-		if(!this.stateDB.isChainFollowed(chainid)) {
-			// New TauChain
-    		if (!createNewCommunity(tauConfig)) {
-    		    return false;
+        if(!this.stateDB.isChainFollowed(chainid)) {
+            // New TauChain
+            if (!createNewCommunity(tauConfig)) {
+                return false;
             }
-		}
+        }
 
-		return true;
+        return true;
     }
 
     public void closeChainDB() {
@@ -111,12 +111,12 @@ public class ChainManager {
      */
     public void start() {
 
-		// Open the db for repo and block
+        // Open the db for repo and block
         try {
 
             openChainDB();
-			
-			initTauChain();
+            
+            initTauChain();
 
             chains = new Chains(this.blockDB, this.stateDB, this.listener);
 
@@ -143,10 +143,10 @@ public class ChainManager {
      * This method is called by TauController.
      */
     public void stop() {
-		// stop chains
+        // stop chains
         chains.stop();
-		// close db
-		closeChainDB();
+        // close db
+        closeChainDB();
 
         listener.onChainManagerStopped();
     }
@@ -158,12 +158,12 @@ public class ChainManager {
      * @return boolean successful or not.
      */
     public boolean followChain(byte[] chainID) {
-		try{
-			this.stateDB.followChain(chainID);
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			return false;
-		}
+        try{
+            this.stateDB.followChain(chainID);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
         return true;
     }
 
@@ -209,7 +209,7 @@ public class ChainManager {
      */
     public boolean createNewCommunity(GenesisConfig cf){
         byte[] chainID = cf.getChainID();
-		
+        
         Block genesis = cf.getBlock();
         BlockContainer genesisContainer = new BlockContainer(genesis, cf.getTransaction());
 
@@ -241,7 +241,7 @@ public class ChainManager {
         // add peer and put block to dht
         for (Map.Entry<ByteArrayWrapper, GenesisItem> entry : map.entrySet()) {
             byte[] pubKey = entry.getKey().getData();
-			logger.info("create new community pubkey: {}", Hex.toHexString(pubKey));
+            logger.info("create new community pubkey: {}", Hex.toHexString(pubKey));
             try {
                 this.stateDB.addPeer(chainID, pubKey);
             } catch (Exception e) {
@@ -252,18 +252,18 @@ public class ChainManager {
         }
 
 
-		if(ret) {
-        	try {
-        	    logger.info("Save genesis block in block store. Chain ID:{}",
+        if(ret) {
+            try {
+                logger.info("Save genesis block in block store. Chain ID:{}",
                         new String(chainID));
-            	blockDB.saveBlockContainer(chainID, genesisContainer,true);
-        	} catch (Exception e) {
-            	logger.error(e.getMessage(), e);
-				return false;
-        	}
-		}
+                blockDB.saveBlockContainer(chainID, genesisContainer,true);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                return false;
+            }
+        }
 
-		return true;
+        return true;
     }
 
     /**
@@ -339,13 +339,13 @@ public class ChainManager {
      * todo
      */
     public void sendTransaction(Transaction tx){
-		// get chainid
-		ByteArrayWrapper chainid= new ByteArrayWrapper(tx.getChainID());
+        // get chainid
+        ByteArrayWrapper chainid= new ByteArrayWrapper(tx.getChainID());
 
-		TransactionPool  transactionPool = this.chains.getTransactionPool(chainid);
+        TransactionPool  transactionPool = this.chains.getTransactionPool(chainid);
 
-		if (null != transactionPool) {
-		    transactionPool.addTx(tx);
+        if (null != transactionPool) {
+            transactionPool.addTx(tx);
         }
     }
 
@@ -358,15 +358,15 @@ public class ChainManager {
      */
     public AccountState getAccountState(byte[] chainid, byte[] pubkey) throws Exception {
 
-		AccountState account= null;
+        AccountState account= null;
 
-		try{
-			account= this.stateDB.getAccount(chainid, pubkey);
+        try{
+            account= this.stateDB.getAccount(chainid, pubkey);
         } catch (Exception e) {
             throw e;
         }
 
-		return account;
+        return account;
     }
 
     /**
@@ -376,14 +376,14 @@ public class ChainManager {
      */
     public ArrayList<Block> getAllBestBlocks(){
 
-		ArrayList<Block> blocks= new ArrayList<Block>();
+        ArrayList<Block> blocks= new ArrayList<Block>();
 
         Set<ByteArrayWrapper> chainIDs = chains.getAllChainIDs();
         for (ByteArrayWrapper chainID: chainIDs) {
             blocks.add(chains.getBestBlockContainer(chainID).getBlock());
         }
 
-		return blocks;
+        return blocks;
     }
 
     /**
