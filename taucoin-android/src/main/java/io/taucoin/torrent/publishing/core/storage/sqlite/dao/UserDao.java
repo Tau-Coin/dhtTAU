@@ -25,6 +25,7 @@ public interface UserDao {
     String QUERY_ADD_USER_BLACKLIST = "UPDATE Users SET isBanned = :isBanned WHERE publicKey = :publicKey";
     String QUERY_SEED_HISTORY_LIST = "SELECT * FROM Users WHERE isCurrentUser != 1 and seed not null";
     String QUERY_USER_BY_PUBLIC_KEY = "SELECT * FROM Users WHERE publicKey = :publicKey";
+    String QUERY_GET_USER_PKS_IN_BAN_LIST = " (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1) ";
 
     /**
      * 添加新的User/Seed

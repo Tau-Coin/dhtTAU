@@ -20,23 +20,35 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 @Dao
 public interface TxDao {
     // SQL:查询社区里的交易(上链，区分交易类型)
-    String QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE_ON_CHAIN = "SELECT tx.*, mem.balance AS senderBalance" +
-            " FROM Txs AS tx" +
-            " LEFT JOIN Members AS mem ON tx.senderPk = mem.publicKey AND tx.chainID = mem.chainID" +
-            " WHERE tx.chainID = :chainID AND tx.txStatus = 1 AND tx.txType = :txType" +
-            " and tx.senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
+    String QUERY_GET_TXS_BY_CHAIN_WHERE = " WHERE tx.chainID = :chainID AND tx.txStatus = :txStatus" +
+            " and tx.senderPk NOT IN " + UserDao.QUERY_GET_USER_PKS_IN_BAN_LIST;
+
+    String QUERY_GET_TXS_NUM_BY_CHAIN_ID_AND_TYPE_ON_CHAIN = "SELECT count(*) FROM Txs AS tx" +
+            QUERY_GET_TXS_BY_CHAIN_WHERE;
 
     // SQL:查询社区里的交易(未上链，不区分交易类型)
     String QUERY_GET_TXS_BY_CHAIN_ID_NOT_ON_CHAIN = "SELECT tx.*, mem.balance AS senderBalance" +
             " FROM Txs AS tx" +
             " LEFT JOIN Members AS mem ON tx.senderPk = mem.publicKey AND tx.chainID = mem.chainID" +
-            " WHERE tx.chainID = :chainID AND tx.txStatus = 0" +
-            " and tx.senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
+            QUERY_GET_TXS_BY_CHAIN_WHERE +
+            " limit :loadSize offset :startPosition";
 
-    // SQL:查询社区里的交易
-    String QUERY_GET_TXS_BY_CHAIN_ID = "SELECT * FROM Txs" +
-            " WHERE chainID = :chainID" +
-            " and senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)";
+    // SQL:查询社区里的交易数(未上链，不区分交易类型)
+    String QUERY_GET_TXS_NUM_BY_CHAIN_ID_NOT_ON_CHAIN = QUERY_GET_TXS_NUM_BY_CHAIN_ID_AND_TYPE_ON_CHAIN +
+            " AND tx.txType = :txType";
+
+    // SQL:查询社区里的交易(上链，区分交易类型)
+    String QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE_ON_CHAIN = "SELECT tx.*, mem.balance AS senderBalance" +
+            " FROM Txs AS tx" +
+            " LEFT JOIN Members AS mem ON tx.senderPk = mem.publicKey AND tx.chainID = mem.chainID" +
+            QUERY_GET_TXS_BY_CHAIN_WHERE +
+            " AND tx.txType = :txType" +
+            " limit :loadSize offset :startPosition";
+
+
+    // SQL:查询社区里的交易数(上链，区分交易类型)
+    String QUERY_GET_TXS_NUM_BY_CHAIN_ID_ON_CHAIN = QUERY_GET_TXS_NUM_BY_CHAIN_ID_NOT_ON_CHAIN +
+            " AND tx.txType = :txType";
 
     // SQL:查询未上链并且已过期的条件语句
     String QUERY_PENDING_TXS_NOT_EXPIRED_WHERE = " WHERE senderPk = :senderPk AND chainID = :chainID" +
@@ -59,7 +71,7 @@ public interface TxDao {
 
     String QUERY_TX_MEDIAN_FEE = "SELECT fee FROM Txs " +
             " WHERE chainID = :chainID and " +
-            " senderPk NOT IN (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1)" +
+            " senderPk NOT IN " + UserDao.QUERY_GET_USER_PKS_IN_BAN_LIST +
             " ORDER BY fee";
     /**
      * 添加新的交易
@@ -79,11 +91,19 @@ public interface TxDao {
      */
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID_AND_TYPE_ON_CHAIN)
-    DataSource.Factory<Integer, UserAndTx> queryCommunityTxsOnChain(String chainID, long txType);
+    List<UserAndTx> queryCommunityTxsOnChain(String chainID, long txType, int txStatus,
+                                             int startPosition, int loadSize);
+
+    @Query(QUERY_GET_TXS_NUM_BY_CHAIN_ID_ON_CHAIN)
+    int queryNumCommunityTxsOnChain(String chainID, long txType, int txStatus);
 
     @Transaction
     @Query(QUERY_GET_TXS_BY_CHAIN_ID_NOT_ON_CHAIN)
-    DataSource.Factory<Integer, UserAndTx> queryCommunityTxsNotOnChain(String chainID);
+    List<UserAndTx> queryCommunityTxsNotOnChain(String chainID, int txStatus,
+                                                int startPosition, int loadSize);
+
+    @Query(QUERY_GET_TXS_NUM_BY_CHAIN_ID_AND_TYPE_ON_CHAIN)
+    int queryNumCommunityTxsNotOnChain(String chainID, int txStatus);
 
     /**
      * 获取社区里用户未上链并且未过期的交易数

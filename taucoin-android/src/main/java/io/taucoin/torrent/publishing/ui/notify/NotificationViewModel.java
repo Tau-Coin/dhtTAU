@@ -9,8 +9,11 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.paging.DataSource;
+import androidx.paging.LivePagedListBuilder;
+import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -25,6 +28,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Notification;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.NotificationRepository;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.ui.constant.Page;
 
 /**
  * Community模块的ViewModel
@@ -121,5 +125,9 @@ public class NotificationViewModel extends AndroidViewModel {
      */
     public Flowable<Integer> queryUnreadNotificationsNum() {
         return notifyRepo.queryUnreadNotificationsNum();
+    }
+
+    LiveData<PagedList<NotificationAndUser>> observerNotifications() {
+        return new LivePagedListBuilder<>(queryNotifications(), Page.getPageListConfig()).build();
     }
 }

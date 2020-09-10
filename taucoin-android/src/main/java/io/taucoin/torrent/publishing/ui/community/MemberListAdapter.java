@@ -17,13 +17,12 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemContactListBinding;
-import io.taucoin.torrent.publishing.ui.Selectable;
 
 /**
  * 显示的联系人列表的Adapter
  */
-public class MemberListAdapter extends PagedListAdapter<MemberAndUser, MemberListAdapter.ViewHolder>
-    implements Selectable<MemberAndUser> {
+public class MemberListAdapter extends PagedListAdapter<MemberAndUser,
+        MemberListAdapter.ViewHolder> {
     private ClickListener listener;
 
     MemberListAdapter(ClickListener listener) {
@@ -45,23 +44,7 @@ public class MemberListAdapter extends PagedListAdapter<MemberAndUser, MemberLis
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(holder, getItemKey(position));
-    }
-
-    @Override
-    public MemberAndUser getItemKey(int position) {
-        if(getCurrentList() != null){
-            return getCurrentList().get(position);
-        }
-        return null;
-    }
-
-    @Override
-    public int getItemPosition(MemberAndUser key) {
-        if(getCurrentList() != null){
-            return getCurrentList().indexOf(key);
-        }
-        return 0;
+        holder.bind(holder, getItem(position));
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

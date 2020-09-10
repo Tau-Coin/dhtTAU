@@ -19,13 +19,12 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemNotifyListBinding;
-import io.taucoin.torrent.publishing.ui.Selectable;
 
 /**
  * 显示的联系人列表的Adapter
  */
-public class NotificationAdapter extends PagedListAdapter<NotificationAndUser, NotificationAdapter.ViewHolder>
-    implements Selectable<NotificationAndUser> {
+public class NotificationAdapter extends PagedListAdapter<NotificationAndUser,
+        NotificationAdapter.ViewHolder> {
     private ClickListener listener;
     private List<NotificationAndUser> selectedList = new ArrayList<>();
     private static boolean isEdit;
@@ -50,25 +49,8 @@ public class NotificationAdapter extends PagedListAdapter<NotificationAndUser, N
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(holder, getItemKey(position));
+        holder.bind(holder, getItem(position));
     }
-
-    @Override
-    public NotificationAndUser getItemKey(int position) {
-        if(getCurrentList() != null){
-            return getCurrentList().get(position);
-        }
-        return null;
-    }
-
-    @Override
-    public int getItemPosition(NotificationAndUser key) {
-        if(getCurrentList() != null){
-            return getCurrentList().indexOf(key);
-        }
-        return 0;
-    }
-
 
     List<NotificationAndUser> getSelectedList() {
         return selectedList;

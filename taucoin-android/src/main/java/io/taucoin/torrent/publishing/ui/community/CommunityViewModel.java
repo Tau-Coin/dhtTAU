@@ -15,6 +15,8 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.paging.DataSource;
+import androidx.paging.LivePagedListBuilder;
+import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -42,6 +44,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepositor
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
@@ -337,5 +340,10 @@ public class CommunityViewModel extends AndroidViewModel {
 
     public Single<Community> getCommunityByChainIDSingle(String chainID) {
         return communityRepo.getCommunityByChainIDSingle(chainID);
+    }
+
+    LiveData<PagedList<MemberAndUser>> observerCommunityMembers(String chainID, boolean onChain) {
+        return new LivePagedListBuilder<>(queryCommunityMembers(chainID, onChain),
+                Page.getPageListConfig()).build();
     }
 }

@@ -28,6 +28,8 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -50,9 +52,12 @@ public class UserViewModel extends AndroidViewModel {
     private static final Logger logger = LoggerFactory.getLogger("UserViewModel");
     private UserRepository userRepo;
     private SettingsRepository settingsRepo;
+    private TxRepository txRepo;
+    private MsgRepository msgRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
     private MutableLiveData<Boolean> addContactResult = new MutableLiveData<>();
+    private MutableLiveData<Boolean> editNameResult = new MutableLiveData<>();
     private MutableLiveData<List<User>> blackList = new MutableLiveData<>();
     private MutableLiveData<UserAndMember> userDetail = new MutableLiveData<>();
     private CommonDialog commonDialog;
@@ -60,6 +65,8 @@ public class UserViewModel extends AndroidViewModel {
         super(application);
         userRepo = RepositoryHelper.getUserRepository(getApplication());
         settingsRepo = RepositoryHelper.getSettingsRepository(getApplication());
+        txRepo = RepositoryHelper.getTxRepository(getApplication());
+        msgRepo = RepositoryHelper.getMsgRepository(getApplication());
     }
 
     @Override
@@ -206,6 +213,11 @@ public class UserViewModel extends AndroidViewModel {
     public MutableLiveData<List<User>> getBlackList() {
         return blackList;
     }
+
+    public MutableLiveData<Boolean> getEditNameResult() {
+        return editNameResult;
+    }
+
     /**
      * 获取在黑名单的用户列表
      */
@@ -234,7 +246,9 @@ public class UserViewModel extends AndroidViewModel {
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe();
+                .subscribe(isSuccess -> {
+                    submitDataSetChanged();
+                });
         disposables.add(disposable);
     }
 
@@ -284,8 +298,19 @@ public class UserViewModel extends AndroidViewModel {
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe();
+                .subscribe(result -> {
+                    submitDataSetChanged();
+                    editNameResult.postValue(result);
+                });
         disposables.add(disposable);
+    }
+
+    /**
+     * 在社区页面，刷新数据
+     */
+    private void submitDataSetChanged(){
+        msgRepo.submitDataSetChanged();
+        txRepo.submitDataSetChanged();
     }
 
     /**

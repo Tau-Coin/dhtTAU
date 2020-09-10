@@ -13,10 +13,7 @@ import org.slf4j.LoggerFactory;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.paging.LivePagedListBuilder;
-import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -39,14 +36,14 @@ import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
  * 交易Tab页
  */
-public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickListener, View.OnClickListener {
+public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickListener,
+        View.OnClickListener {
 
     private static final Logger logger = LoggerFactory.getLogger("TxsTabFragment");
     private BaseActivity activity;
@@ -63,7 +60,8 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_txs_tab, container, false);
         return binding.getRoot();
     }
@@ -73,7 +71,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         super.onActivityCreated(savedInstanceState);
         activity = (BaseActivity) getActivity();
         assert activity != null;
-        ViewModelProvider provider = new ViewModelProvider(activity);
+        ViewModelProvider provider = new ViewModelProvider(this);
         txViewModel = provider.get(TxViewModel.class);
         userViewModel = provider.get(UserViewModel.class);
         favoriteViewModel = provider.get(FavoriteViewModel.class);
@@ -111,20 +109,15 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
 
         binding.txList.setItemAnimator(animator);
         binding.txList.setAdapter(adapter);
-
-        PagedList.Config pagedListConfig = new PagedList.Config.Builder()
-                .setEnablePlaceholders(Page.ENABLE_PLACEHOLDERS)
-                .setPageSize(Page.PAGE_SIZE)
-                .setInitialLoadSizeHint(Page.PAGE_SIZE)
-                .build();
-        LiveData<PagedList<UserAndTx>> postList = new LivePagedListBuilder<>(
-                txViewModel.queryCommunityTxs(chainID, txType), pagedListConfig).build();
-        postList.observe(activity, replyAndAllTxs -> {
-            adapter.submitList(replyAndAllTxs);
-            logger.debug("adapter.size::{}, newSize::{}", adapter.getItemCount(), replyAndAllTxs.size());
-            binding.txList.scrollToPosition(adapter.getItemCount() - 1);
-        });
     }
+
+    private final Runnable handleUpdateAdapter = () -> {
+        if (binding.txList.getLayoutManager() != null) {
+            int bottomPosition = adapter.getItemCount() - 1;
+            logger.debug("handleUpdateAdapter scrollToPosition::{}", bottomPosition);
+            binding.txList.getLayoutManager().scrollToPosition(bottomPosition);
+        }
+    };
 
     /**
      * 初始化右下角悬浮按钮组件
@@ -152,6 +145,10 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     @Override
     public void onStart() {
         super.onStart();
+        txViewModel.observerCommunityTxs(chainID, txType).observe(this, replyAndAllTxs -> {
+            adapter.submitList(replyAndAllTxs, handleUpdateAdapter);
+            logger.debug("adapter.size::{}, newSize::{}", adapter.getItemCount(), replyAndAllTxs.size());
+        });
     }
 
     @Override

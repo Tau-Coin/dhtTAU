@@ -3,10 +3,13 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 import android.content.Context;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
-import androidx.paging.DataSource;
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.subjects.PublishSubject;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
@@ -19,6 +22,8 @@ public class TxRepositoryImpl implements TxRepository{
 
     private Context appContext;
     private AppDatabase db;
+    private PublishSubject<String> dataSetChangedPublish = PublishSubject.create();
+    private ExecutorService sender = Executors.newSingleThreadExecutor();
 
     /**
      * CommunityRepositoryImpl 构造函数
@@ -35,7 +40,9 @@ public class TxRepositoryImpl implements TxRepository{
      */
     @Override
     public long addTransaction(Tx transaction){
-        return db.txDao().addTransaction(transaction);
+        long result = db.txDao().addTransaction(transaction);
+        submitDataSetChanged();
+        return result;
     }
 
     /**
@@ -43,19 +50,47 @@ public class TxRepositoryImpl implements TxRepository{
      */
     @Override
     public int updateTransaction(Tx transaction){
-        return db.txDao().updateTransaction(transaction);
+        int result = db.txDao().updateTransaction(transaction);
+        submitDataSetChanged();
+        return result;
+    }
+
+//    /**
+//     * 根据chainID获取社区的交易的被被观察者
+//     * @param chainID 社区链id
+//     */
+//    @Override
+//    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, long txType, int txStatus){
+//        if(txType == -1){
+//            return db.txDao().queryCommunityTxsNotOnChain(chainID);
+//        }else{
+//            return db.txDao().queryCommunityTxsOnChain(chainID, txType);
+//        }
+//    }
+
+    /**
+     * 根据chainID查询社区交易
+     * @param chainID 社区链ID
+     */
+    @Override
+    public int queryNumCommunityTxs(String chainID, long txType){
+        if(txType == -1){
+            return db.txDao().queryNumCommunityTxsNotOnChain(chainID, 0);
+        }else{
+            return db.txDao().queryNumCommunityTxsOnChain(chainID, txType, 1);
+        }
     }
 
     /**
-     * 根据chainID获取社区的交易的被被观察者
-     * @param chainID 社区链id
+     * 根据chainID查询社区交易
+     * @param chainID 社区链ID
      */
     @Override
-    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, long txType, int txStatus){
+    public List<UserAndTx> queryCommunityTxs(String chainID, long txType, int startPos, int loadSize){
         if(txType == -1){
-            return db.txDao().queryCommunityTxsNotOnChain(chainID);
+            return db.txDao().queryCommunityTxsNotOnChain(chainID, 0, startPos, loadSize);
         }else{
-            return db.txDao().queryCommunityTxsOnChain(chainID, txType);
+            return db.txDao().queryCommunityTxsOnChain(chainID, txType, 1, startPos, loadSize);
         }
     }
 
@@ -121,4 +156,14 @@ public class TxRepositoryImpl implements TxRepository{
         return db.txDao().getMedianFee(chainID);
     }
 
+    @Override
+    public Observable<String> observeDataSetChanged() {
+        return dataSetChangedPublish;
+    }
+
+    @Override
+    public void submitDataSetChanged() {
+        String dateTime = DateUtil.getDateTime();
+        sender.submit(() -> dataSetChangedPublish.onNext(dateTime));
+    }
 }

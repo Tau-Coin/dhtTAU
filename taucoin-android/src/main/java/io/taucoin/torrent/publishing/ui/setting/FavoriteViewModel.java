@@ -9,7 +9,10 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.paging.DataSource;
+import androidx.paging.LivePagedListBuilder;
+import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -28,6 +31,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.ui.constant.Page;
 
 /**
  * 收藏相关的ViewModel
@@ -147,5 +151,10 @@ public class FavoriteViewModel extends AndroidViewModel {
      */
     DataSource.Factory<Integer, FavoriteAndUser> queryFavorites(){
         return favoriteRepo.queryFavorites();
+    }
+
+    LiveData<PagedList<FavoriteAndUser>> observerFavorites() {
+        return new LivePagedListBuilder<>(
+                queryFavorites(), Page.getPageListConfig()).build();
     }
 }

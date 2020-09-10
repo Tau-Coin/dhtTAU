@@ -19,13 +19,11 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemMsgBinding;
 import io.taucoin.torrent.publishing.databinding.MsgLeftViewBinding;
-import io.taucoin.torrent.publishing.ui.Selectable;
 
 /**
  * 消息/交易列表显示的Adapter
  */
-public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter.ViewHolder>
-    implements Selectable<MsgAndReply> {
+public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter.ViewHolder> {
     private ClickListener listener;
 
     MsgListAdapter(ClickListener listener) {
@@ -46,23 +44,7 @@ public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(holder, getItemKey(position));
-    }
-
-    @Override
-    public MsgAndReply getItemKey(int position) {
-        if(getCurrentList() != null){
-            return getCurrentList().get(position);
-        }
-        return null;
-    }
-
-    @Override
-    public int getItemPosition(MsgAndReply key) {
-        if(getCurrentList() != null){
-            return getCurrentList().indexOf(key);
-        }
-        return 0;
+        holder.bind(holder, getItem(position));
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -109,10 +91,10 @@ public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter
             if(StringUtil.isEquals(msg.senderPk,
                     MainApplication.getInstance().getPublicKey())){
                 binding.leftView.tvBlacklist.setVisibility(View.GONE);
+            } else {
+                binding.leftView.tvBlacklist.setVisibility(View.VISIBLE);
             }
-
-            View root = binding.getRoot();
-            root.setOnLongClickListener(view -> {
+            binding.middleView.setOnLongClickListener(view -> {
                 if(listener != null){
                     listener.onItemLongClicked(view, msg);
                 }
@@ -149,7 +131,16 @@ public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter
     private static final DiffUtil.ItemCallback<MsgAndReply> diffCallback = new DiffUtil.ItemCallback<MsgAndReply>() {
         @Override
         public boolean areContentsTheSame(@NonNull MsgAndReply oldItem, @NonNull MsgAndReply newItem) {
-            return oldItem.equals(newItem);
+            boolean isSame = false;
+            if (null == oldItem.sender && null == newItem.sender) {
+                isSame = true;
+            } else if(null != oldItem.sender && null != newItem.sender){
+                isSame =  StringUtil.isEquals(oldItem.sender.localName, newItem.sender.localName);
+            }
+            if(isSame && oldItem.senderBalance != newItem.senderBalance){
+                isSame = false;
+            }
+            return isSame;
         }
 
         @Override

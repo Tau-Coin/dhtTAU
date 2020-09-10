@@ -9,8 +9,11 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.paging.DataSource;
+import androidx.paging.LivePagedListBuilder;
+import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -25,6 +28,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.ui.constant.Page;
 
 /**
  * 消息模块相关的ViewModel
@@ -34,16 +38,31 @@ public class MsgViewModel extends AndroidViewModel {
     private static final Logger logger = LoggerFactory.getLogger("MsgViewModel");
     private MsgRepository msgRepo;
     private UserRepository userRepo;
+    private MsgSourceFactory sourceFactory;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<List<Message>> msgList = new MutableLiveData<>();
     private MutableLiveData<String> addState = new MutableLiveData<>();
+
     public MsgViewModel(@NonNull Application application) {
         super(application);
         msgRepo = RepositoryHelper.getMsgRepository(application);
         userRepo = RepositoryHelper.getUserRepository(application);
+        sourceFactory = new MsgSourceFactory(msgRepo);
     }
 
-    public MutableLiveData<String> getAddState() {
+    /**
+     * 观察社区消息
+     * @param chainID 社区chainID
+     * @return LiveData
+     */
+    LiveData<PagedList<MsgAndReply>> observeMessages(String chainID) {
+        sourceFactory.setChainID(chainID);
+        return new LivePagedListBuilder<>(sourceFactory, Page.getPageListConfig())
+                .setInitialLoadKey(Page.PAGE_SIZE)
+                .build();
+    }
+
+    MutableLiveData<String> getAddState() {
         return addState;
     }
 
@@ -79,14 +98,6 @@ public class MsgViewModel extends AndroidViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(list -> msgList.postValue(list));
         disposables.add(disposable);
-    }
-
-    /**
-     * 根据chainID获取社区的消息
-     * @param chainID 社区链id
-     */
-    public DataSource.Factory<Integer, MsgAndReply> queryMessagesByChainID(String chainID){
-        return msgRepo.queryMessagesByChainID(chainID);
     }
 
     /**

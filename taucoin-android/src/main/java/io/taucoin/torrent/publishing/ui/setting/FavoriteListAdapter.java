@@ -21,15 +21,13 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemFavoriteBinding;
 import io.taucoin.torrent.publishing.databinding.ItemFavoriteWiringBinding;
-import io.taucoin.torrent.publishing.databinding.ItemWiringTxBinding;
-import io.taucoin.torrent.publishing.ui.Selectable;
 import io.taucoin.types.TypesConfig;
 
 /**
  * 收藏列表显示的Adapter
  */
-public class FavoriteListAdapter extends PagedListAdapter<FavoriteAndUser, FavoriteListAdapter.ViewHolder>
-    implements Selectable<FavoriteAndUser> {
+public class FavoriteListAdapter extends PagedListAdapter<FavoriteAndUser,
+        FavoriteListAdapter.ViewHolder> {
 
     FavoriteListAdapter() {
         super(diffCallback);
@@ -56,28 +54,12 @@ public class FavoriteListAdapter extends PagedListAdapter<FavoriteAndUser, Favor
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(holder, getItemKey(position));
-    }
-
-    @Override
-    public FavoriteAndUser getItemKey(int position) {
-        if(getCurrentList() != null){
-            return getCurrentList().get(position);
-        }
-        return null;
-    }
-
-    @Override
-    public int getItemPosition(FavoriteAndUser key) {
-        if(getCurrentList() != null){
-            return getCurrentList().indexOf(key);
-        }
-        return 0;
+        holder.bind(holder, getItem(position));
     }
 
     @Override
     public int getItemViewType(int position) {
-        FavoriteAndUser tx = getItemKey(position);
+        FavoriteAndUser tx = getItem(position);
         if(tx != null){
             return (int) tx.type;
         }

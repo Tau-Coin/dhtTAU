@@ -15,8 +15,11 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.paging.DataSource;
+import androidx.paging.LivePagedListBuilder;
+import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -25,6 +28,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
@@ -70,6 +74,7 @@ public class TxViewModel extends AndroidViewModel {
     private MutableLiveData<String> airdropState = new MutableLiveData<>();
     private MutableLiveData<String> addState = new MutableLiveData<>();
     private CommonDialog editFeeDialog;
+    private TxSourceFactory txSourceFactory;
     public TxViewModel(@NonNull Application application) {
         super(application);
         this.application = application;
@@ -78,6 +83,7 @@ public class TxViewModel extends AndroidViewModel {
         daemon  = TauDaemon.getInstance(application);
         settingsRepo  = RepositoryHelper.getSettingsRepository(application);
         memberRepo = RepositoryHelper.getMemberRepository(application);
+        txSourceFactory = new TxSourceFactory(txRepo);
     }
 
     public MutableLiveData<String> getAddState() {
@@ -109,8 +115,12 @@ public class TxViewModel extends AndroidViewModel {
      * 根据chainID获取社区的交易的被被观察者
      * @param chainID 社区链id
      */
-    public DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, long txType){
-        return txRepo.queryCommunityTxs(chainID, txType, txType == -1 ? 0 : 1);
+     LiveData<PagedList<UserAndTx>> observerCommunityTxs(String chainID, long txType){
+
+        txSourceFactory.setTxQueryParam(chainID, txType);
+        return new LivePagedListBuilder<>(txSourceFactory, Page.getPageListConfig())
+                .setInitialLoadKey(Page.PAGE_SIZE)
+                .build();
     }
 
     public MutableLiveData<String> getAirdropState(){

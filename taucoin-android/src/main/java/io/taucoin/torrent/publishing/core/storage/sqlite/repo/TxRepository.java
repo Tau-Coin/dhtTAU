@@ -2,8 +2,7 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import java.util.List;
 
-import androidx.paging.DataSource;
-import io.reactivex.Flowable;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.UserAndTx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
@@ -24,10 +23,16 @@ public interface TxRepository {
     int updateTransaction(Tx transaction);
 
     /**
-     * 根据chainID查询社区
+     * 根据chainID查询社区交易数
      * @param chainID 社区链ID
      */
-    DataSource.Factory<Integer, UserAndTx> queryCommunityTxs(String chainID, long txType, int txStatus);
+    int queryNumCommunityTxs(String chainID, long txType);
+
+    /**
+     * 根据chainID查询社区交易
+     * @param chainID 社区链ID
+     */
+    List<UserAndTx> queryCommunityTxs(String chainID, long txType, int startPos, int loadSize);
 
     /**
      * 获取社区里用户未上链并且未过期的交易数
@@ -69,4 +74,14 @@ public interface TxRepository {
      * @param chainID 交易所属的社区chainID
      */
     List<Long> getMedianFee(String chainID);
+
+    /**
+     * 观察社区的交易的变化
+     */
+    Observable<String> observeDataSetChanged();
+
+    /**
+     * 提交数据变化
+     */
+    void submitDataSetChanged();
 }

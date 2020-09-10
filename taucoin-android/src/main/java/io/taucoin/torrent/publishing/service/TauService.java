@@ -85,15 +85,15 @@ public class TauService extends Service {
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(user -> {
-                    if(null == user){
-                        return;
-                    }
-                    // 更新设置用户seed
-                    daemon.updateSeed(user.seed);
-                    logger.info("Update user seed");
-                    if(isAlreadyInit.compareAndSet(false, true)){
-                        initAndStart();
-                    }
+//                    if(null == user){
+//                        return;
+//                    }
+//                    // 更新设置用户seed
+//                    daemon.updateSeed(user.seed);
+//                    logger.info("Update user seed");
+//                    if(isAlreadyInit.compareAndSet(false, true)){
+//                        initAndStart();
+//                    }
                 }));
     }
 
@@ -110,8 +110,8 @@ public class TauService extends Service {
 
         daemon.enableServerMode(settingsRepo.serverMode());
 
-//        daemon.doStart();
-//        daemon.registerListener(daemonListener);
+        daemon.doStart();
+        daemon.registerListener(daemonListener);
     }
 
     /**

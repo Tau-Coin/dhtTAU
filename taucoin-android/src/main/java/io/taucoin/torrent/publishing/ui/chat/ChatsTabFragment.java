@@ -9,13 +9,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.paging.LivePagedListBuilder;
-import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,7 +36,6 @@ import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.setting.FavoriteViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
@@ -47,7 +46,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
  */
 public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.ClickListener,
         View.OnClickListener {
-
+    private static final Logger logger = LoggerFactory.getLogger("ChatsTabFragment");
     private BaseActivity activity;
     private FragmentChatsTabBinding binding;
     private MsgViewModel msgViewModel;
@@ -72,7 +71,7 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         activity = (BaseActivity) getActivity();
-        ViewModelProvider provider = new ViewModelProvider(activity);
+        ViewModelProvider provider = new ViewModelProvider(this);
         msgViewModel = provider.get(MsgViewModel.class);
         userViewModel = provider.get(UserViewModel.class);
         favoriteViewModel = provider.get(FavoriteViewModel.class);
@@ -126,24 +125,24 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
         });
     }
 
+    private final Runnable handleUpdateAdapter = () -> {
+        if (binding.txList.getLayoutManager() != null) {
+            int bottomPosition = adapter.getItemCount() - 1;
+            logger.debug("handleUpdateAdapter scrollToPosition::{}", bottomPosition);
+            binding.txList.getLayoutManager().scrollToPosition(bottomPosition);
+        }
+    };
+
     /**
      * 订阅社区交易列表
      */
     private void subscribeTxViewModel() {
-        if(StringUtil.isEmpty(chainID)){
-            return;
+        if (StringUtil.isNotEmpty(chainID)) {
+            msgViewModel.observeMessages(chainID).observe(this, messages -> {
+                adapter.submitList(messages, handleUpdateAdapter);
+                logger.debug("messages.size::{}", messages.size());
+            });
         }
-        PagedList.Config pagedListConfig = new PagedList.Config.Builder()
-                .setEnablePlaceholders(Page.ENABLE_PLACEHOLDERS)
-                .setPageSize(Page.PAGE_SIZE)
-                .setInitialLoadSizeHint(Page.PAGE_SIZE)
-                .build();
-        LiveData<PagedList<MsgAndReply>> postList = new LivePagedListBuilder<>(
-                msgViewModel.queryMessagesByChainID(chainID), pagedListConfig).build();
-        postList.observe(activity, messages -> {
-            adapter.submitList(messages);
-            binding.txList.scrollToPosition(adapter.getItemCount() - 1);
-        });
 
         msgViewModel.getAddState().observe(this, result -> {
             if(isHidden()){

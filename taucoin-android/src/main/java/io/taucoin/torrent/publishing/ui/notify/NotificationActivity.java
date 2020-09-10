@@ -4,15 +4,9 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.paging.LivePagedListBuilder;
-import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,7 +16,6 @@ import io.taucoin.torrent.publishing.core.model.data.NotificationAndUser;
 import io.taucoin.torrent.publishing.databinding.ActivityNotificationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
-import io.taucoin.torrent.publishing.ui.constant.Page;
 
 /**
  * 通知页面
@@ -72,14 +65,7 @@ public class NotificationActivity extends BaseActivity implements NotificationAd
         binding.recyclerList.setEmptyView(binding.emptyViewList);
         binding.recyclerList.setAdapter(adapter);
 
-        PagedList.Config pagedListConfig = new PagedList.Config.Builder()
-                .setEnablePlaceholders(Page.ENABLE_PLACEHOLDERS)
-                .setPageSize(Page.PAGE_SIZE)
-                .setInitialLoadSizeHint(Page.PAGE_SIZE)
-                .build();
-        LiveData<PagedList<NotificationAndUser>> postList = new LivePagedListBuilder<>(
-                notifyViewModel.queryNotifications(), pagedListConfig).build();
-        postList.observe(this, list -> {
+        notifyViewModel.observerNotifications().observe(this, list -> {
             adapter.submitList(list);
             notifyViewModel.readAllNotifications();
         });

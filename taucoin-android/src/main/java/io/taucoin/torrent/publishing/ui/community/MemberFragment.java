@@ -13,10 +13,7 @@ import org.slf4j.LoggerFactory;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.paging.LivePagedListBuilder;
-import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,7 +31,6 @@ import io.taucoin.torrent.publishing.databinding.FragmentMemberBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 
 /**
@@ -98,14 +94,7 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
         binding.recyclerView.setItemAnimator(animator);
         binding.recyclerView.setAdapter(adapter);
 
-        PagedList.Config pagedListConfig = new PagedList.Config.Builder()
-                .setEnablePlaceholders(Page.ENABLE_PLACEHOLDERS)
-                .setPageSize(Page.PAGE_SIZE)
-                .setInitialLoadSizeHint(Page.PAGE_SIZE)
-                .build();
-        LiveData<PagedList<MemberAndUser>> postList = new LivePagedListBuilder<>(
-                communityViewModel.queryCommunityMembers(chainID, onChain), pagedListConfig).build();
-        postList.observe(activity, members -> {
+        communityViewModel.observerCommunityMembers(chainID, onChain).observe(activity, members -> {
             adapter.submitList(members);
             logger.debug("adapter.size::{}, newSize::{}", adapter.getItemCount(), members.size());
         });

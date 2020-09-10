@@ -24,13 +24,11 @@ import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemNoteBinding;
 import io.taucoin.torrent.publishing.databinding.ItemWiringTxBinding;
 import io.taucoin.torrent.publishing.databinding.MsgLeftViewBinding;
-import io.taucoin.torrent.publishing.ui.Selectable;
 
 /**
  * 消息/交易列表显示的Adapter
  */
-public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.ViewHolder>
-    implements Selectable<UserAndTx> {
+public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.ViewHolder> {
     private ClickListener listener;
     private String chainID;
 
@@ -61,28 +59,12 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(holder, getItemKey(position));
-    }
-
-    @Override
-    public UserAndTx getItemKey(int position) {
-        if(getCurrentList() != null){
-            return getCurrentList().get(position);
-        }
-        return null;
-    }
-
-    @Override
-    public int getItemPosition(UserAndTx key) {
-        if(getCurrentList() != null){
-            return getCurrentList().indexOf(key);
-        }
-        return 0;
+        holder.bind(holder, getItem(position));
     }
 
     @Override
     public int getItemViewType(int position) {
-        UserAndTx tx = getItemKey(position);
+        UserAndTx tx = getItem(position);
         if(tx != null){
             return (int) tx.txType;
         }
@@ -200,7 +182,19 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
     private static final DiffUtil.ItemCallback<UserAndTx> diffCallback = new DiffUtil.ItemCallback<UserAndTx>() {
         @Override
         public boolean areContentsTheSame(@NonNull UserAndTx oldItem, @NonNull UserAndTx newItem) {
-            return oldItem.equals(newItem);
+            boolean isSame = false;
+            if (null == oldItem.sender && null == newItem.sender) {
+                isSame = true;
+            } else if(null != oldItem.sender && null != newItem.sender){
+                isSame =  StringUtil.isEquals(oldItem.sender.localName, newItem.sender.localName);
+            }
+            if(isSame && oldItem.senderBalance != newItem.senderBalance){
+                isSame = false;
+            }
+            if(isSame && oldItem.txStatus != newItem.txStatus){
+                isSame = false;
+            }
+            return isSame;
         }
         @Override
         public boolean areItemsTheSame(@NonNull UserAndTx oldItem, @NonNull UserAndTx newItem) {

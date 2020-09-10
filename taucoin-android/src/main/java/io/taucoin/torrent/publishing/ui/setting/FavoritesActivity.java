@@ -4,18 +4,13 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.paging.LivePagedListBuilder;
-import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.FavoriteAndUser;
 import io.taucoin.torrent.publishing.databinding.ActivityFavoritesBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
-import io.taucoin.torrent.publishing.ui.constant.Page;
 
 /**
  * 设置页面
@@ -56,14 +51,7 @@ public class FavoritesActivity extends BaseActivity {
         binding.recyclerView.setItemAnimator(animator);
         binding.recyclerView.setAdapter(adapter);
 
-        PagedList.Config pagedListConfig = new PagedList.Config.Builder()
-                .setEnablePlaceholders(Page.ENABLE_PLACEHOLDERS)
-                .setPageSize(Page.PAGE_SIZE)
-                .setInitialLoadSizeHint(Page.PAGE_SIZE)
-                .build();
-        LiveData<PagedList<FavoriteAndUser>> postList = new LivePagedListBuilder<>(
-                viewModel.queryFavorites(), pagedListConfig).build();
-        postList.observe(this, favorites -> {
+        viewModel.observerFavorites().observe(this, favorites -> {
             adapter.submitList(favorites);
         });
     }
