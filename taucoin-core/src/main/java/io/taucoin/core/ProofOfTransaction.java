@@ -79,7 +79,6 @@ public class ProofOfTransaction {
                         new String(this.chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
                 return null;
             }
-            logger.debug("++++++ctx------------------------1:{}", ancestor1.getEncoded().length);
 
             ancestor2 = blockStore.getBlockByHash(chainID, ancestor1.getPreviousBlockHash());
             if (null == ancestor2) {
@@ -87,7 +86,6 @@ public class ProofOfTransaction {
                         new String(this.chainID), Hex.toHexString(ancestor1.getPreviousBlockHash()));
                 return null;
             }
-            logger.debug("++++++ctx------------------------2:{}", ancestor2.getEncoded().length);
 
             ancestor3 = blockStore.getBlockByHash(chainID, ancestor2.getPreviousBlockHash());
             if (null == ancestor3) {
@@ -95,7 +93,6 @@ public class ProofOfTransaction {
                         new String(this.chainID), Hex.toHexString(ancestor2.getPreviousBlockHash()));
                 return null;
             }
-            logger.debug("++++++ctx------------------------3:{}", ancestor3.getEncoded().length);
         } catch (Exception e) {
             logger.info(new String(this.chainID) + ":" + e.getMessage(), e);
             return null;
@@ -191,23 +188,23 @@ public class ProofOfTransaction {
         System.arraycopy(generationSignature,0,headBytes,0,8);
 
         BigInteger bhit = new BigInteger(1, headBytes);
-        logger.info("Chain ID:{}: bhit:{}", new String(this.chainID), bhit);
+        logger.trace("Chain ID:{}: bhit:{}", new String(this.chainID), bhit);
 
         BigInteger bhitUzero = bhit.add(BigInteger.ONE);
-        logger.info("Chain ID:{}: bhitUzero:{}", new String(this.chainID), bhitUzero);
+        logger.trace("Chain ID:{}: bhitUzero:{}", new String(this.chainID), bhitUzero);
 
         double logarithm = abs(log(bhitUzero.doubleValue()) - 2 * log(DiffAdjustNumeratorHalf.doubleValue()));
         // Values of logarithm are mostly distributed between (0, 0.1), and int64(logarithm) == 0
         // To make hit smoother, we use logarithm * 1000 instead
         logarithm = logarithm * 1000;
-        logger.info("Chain ID:{}: logarithm:{}", new String(this.chainID), logarithm);
+        logger.trace("Chain ID:{}: logarithm:{}", new String(this.chainID), logarithm);
 
         long ulogarithm = (Double.valueOf(logarithm)).longValue();
-        logger.info("Chain ID:{}: ulogarithm:{}", new String(this.chainID), ulogarithm);
+        logger.trace("Chain ID:{}: ulogarithm:{}", new String(this.chainID), ulogarithm);
 
         // To offset the impact, divide by 1000
         BigInteger adjustHit = DiffAdjustNumeratorCoe.multiply(BigInteger.valueOf(ulogarithm)).divide(BigInteger.valueOf(1000));
-        logger.info("Chain ID:{}: adjustHit:{}", new String(this.chainID), adjustHit);
+        logger.trace("Chain ID:{}: adjustHit:{}", new String(this.chainID), adjustHit);
 
         return adjustHit;
     }
@@ -239,14 +236,14 @@ public class ProofOfTransaction {
 
         // C++ to make sure T > H
         timeInterval++;
-        logger.info("Chain ID:{}: Time interval:{}", new String(this.chainID), timeInterval);
+        logger.debug("Chain ID:{}: Time interval:{}", new String(this.chainID), timeInterval);
 
         if (timeInterval < this.minBlockTime) {
             timeInterval = this.minBlockTime;
         } else if (timeInterval > this.maxBlockTime) {
             timeInterval = this.maxBlockTime;
         }
-        logger.info("Chain ID:{}: Final time interval:{}", new String(this.chainID), timeInterval);
+        logger.debug("Chain ID:{}: Final time interval:{}", new String(this.chainID), timeInterval);
 
         return timeInterval;
     }
@@ -265,7 +262,7 @@ public class ProofOfTransaction {
                     new String(this.chainID), this.minBlockTime);
             return false;
         } else if (timeInterval >= this.maxBlockTime) {
-            logger.info("Chain ID:{}: OK. Time interval is greater than MaxBlockTime[{}]",
+            logger.debug("Chain ID:{}: OK. Time interval is greater than MaxBlockTime[{}]",
                     new String(this.chainID), this.maxBlockTime);
             return true;
         } else {
