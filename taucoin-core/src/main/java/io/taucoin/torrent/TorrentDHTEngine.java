@@ -306,12 +306,13 @@ public class TorrentDHTEngine {
 
         if (item == null || !sessionManager.isRunning()
                 || puttingImmutableItemQueue.size() >= DHTBlockingQueueCapability) {
+            logger.warn("drop immutable item" + item);
             return false;
         }
 
         // Drop this item if it exists.
         if (puttingImmutableItemQueue.contains(item)) {
-            logger.warn("drop immutable item" + item);
+            logger.warn("duplicate immutable item" + item);
             return false;
         }
 
@@ -339,12 +340,13 @@ public class TorrentDHTEngine {
 
         if (item == null || !sessionManager.isRunning()
                 || puttingMutableItemQueue.size() >= DHTBlockingQueueCapability) {
+            logger.warn("drop mutable item" + item);
             return false;
         }
 
         // Drop this item if it exists.
         if (puttingMutableItemQueue.contains(item)) {
-            logger.warn("drop mutable item" + item);
+            logger.warn("duplicate mutable item" + item);
             return false;
         }
 
@@ -467,6 +469,7 @@ public class TorrentDHTEngine {
 
         if (spec == null || !sessionManager.isRunning()
                 || gettingImmutableItemQueue.size() >= DHTBlockingQueueCapability) {
+            logger.warn("drop immutable item req:" + spec);
             return false;
         }
 
@@ -474,7 +477,7 @@ public class TorrentDHTEngine {
 
         // Drop this request if it exists.
         if (gettingImmutableItemQueue.contains(req)) {
-            logger.warn("drop immutable item req:" + req);
+            logger.warn("duplicate immutable item req:" + req);
             return false;
         }
 
@@ -505,6 +508,7 @@ public class TorrentDHTEngine {
 
         if (spec == null || !sessionManager.isRunning()
                 || gettingMutableItemQueue.size() >= DHTBlockingQueueCapability) {
+            logger.warn("drop mutable item req:" + spec);
             return false;
         }
 
@@ -512,7 +516,7 @@ public class TorrentDHTEngine {
 
         // Drop this request if it exists.
         if (gettingMutableItemQueue.contains(req)) {
-            logger.warn("drop mutable item req:" + req);
+            logger.warn("duplicate mutable item req:" + req);
             return false;
         }
 
