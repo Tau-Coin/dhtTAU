@@ -89,8 +89,14 @@ public final class SessionSettings {
         }
 
         session_params sparams = new session_params(sp);
+
         dht_settings ds = new dht_settings();
         ds.setMax_dht_items(this.maxDhtItems);
+        if (this.privateNetwork) {
+            // For private network, unrestrict dht entries to one per IP.
+            ds.setRestrict_routing_ips(false);
+        }
+
         sparams.setDht_settings(ds);
 
         return new SessionParams(sparams);
