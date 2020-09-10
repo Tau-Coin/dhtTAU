@@ -25,11 +25,12 @@ import android.os.Environment;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.core.content.FileProvider;
 import io.taucoin.torrent.publishing.BuildConfig;
 import io.taucoin.torrent.publishing.MainApplication;
-import io.taucoin.torrent.publishing.core.model.data.Version;
 
 public class FileUtil {
 
@@ -174,5 +175,19 @@ public class FileUtil {
             uri = Uri.fromFile(file);
         }
         return uri;
+    }
+
+    public static List<File> getFiles(String fileAbsolutePath) {
+        List<File> list = new ArrayList<>();
+        File fileDirectory = new File(fileAbsolutePath);
+        File[] subFile = fileDirectory.listFiles();
+
+        for (File file : subFile) {
+            // 判断是否为文件夹
+            if (!file.isDirectory()) {
+                list.add(file);
+            }
+        }
+        return list;
     }
 }

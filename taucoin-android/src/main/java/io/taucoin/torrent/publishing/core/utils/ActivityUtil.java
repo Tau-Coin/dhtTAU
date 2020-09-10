@@ -47,7 +47,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.receiver.BootReceiver;
 import io.taucoin.torrent.publishing.ui.SendTextToTau;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 
@@ -280,18 +279,34 @@ public class ActivityUtil {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            Uri uri = FileProvider.getUriForFile(activity,
-                    activity.getPackageName() + ".provider", new File(path));
-            intent.putExtra(Intent.EXTRA_STREAM, uri);
-        } else {
-            intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(path)));
         }
+        intent.putExtra(Intent.EXTRA_STREAM, FileUtil.getUriForFile(new File(path)));
         try {
             activity.startActivity(Intent.createChooser(intent, shareTitle));
         } catch (android.content.ActivityNotFoundException ex) {
             ToastUtils.showShortToast(R.string.app_share_error);
         }
+    }
 
+    public static void shareFiles(AppCompatActivity activity, List<File> list, String shareTitle) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND_MULTIPLE);
+        intent.setType("application/octet-stream");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        ArrayList<Uri> fileUris = new ArrayList<>();
+        for (File file: list) {
+            Uri uri = FileUtil.getUriForFile(file);
+            fileUris.add(uri);
+        }
+        intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, fileUris);
+        try {
+            activity.startActivity(Intent.createChooser(intent, shareTitle));
+        } catch (android.content.ActivityNotFoundException ex) {
+            ToastUtils.showShortToast(R.string.app_share_error);
+        }
     }
 
     /**

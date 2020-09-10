@@ -23,11 +23,11 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
             <fileNamePattern>${LOG_DIR}/tau.%i.log.zip</fileNamePattern>
             <minIndex>1</minIndex>
-            <maxIndex>100</maxIndex>
+            <maxIndex>20</maxIndex>
         </rollingPolicy>
 
         <triggeringPolicy class="io.taucoin.torrent.publishing.core.utils.LogbackSizeBasedTriggeringPolicy">
-            <maxFileSize>50MB</maxFileSize>
+            <maxFileSize>1MB</maxFileSize>
         </triggeringPolicy>
     </appender>
 
