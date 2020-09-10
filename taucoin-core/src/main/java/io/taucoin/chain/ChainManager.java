@@ -24,6 +24,7 @@ import io.taucoin.types.TypesConfig;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
+import io.taucoin.util.ByteUtil;
 import io.taucoin.util.Repo;
 import io.taucoin.types.Block;
 
@@ -309,13 +310,11 @@ public class ChainManager {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(blockContainer.getBlock().getEncoded());
             TorrentDHTEngine.getInstance().distribute(immutableItem);
 
-            MutableItemValue mutableItemValue = new MutableItemValue(blockContainer.getBlock().getBlockHash(), peer);
-
             // put mutable item
             byte[] blockSalt = makeBlockSalt(chainID);
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                    mutableItemValue.getEncoded(), blockSalt);
+                    ByteUtil.getHashEncoded(blockContainer.getBlock().getBlockHash()), blockSalt);
             TorrentDHTEngine.getInstance().distribute(mutableItem);
         }
     }

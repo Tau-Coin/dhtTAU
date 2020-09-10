@@ -1,11 +1,16 @@
 package io.taucoin.util;
 
+import com.frostwire.jlibtorrent.Entry;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.spongycastle.util.encoders.Hex;
+
+import io.taucoin.param.ChainParam;
 
 public class ByteUtil {
 
@@ -290,6 +295,31 @@ public class ByteUtil {
         System.arraycopy(zero, 0, temp, alignCount * 8, zero.length);
         System.arraycopy(b, alignCount * 8, temp, alignCount * 8 + zero.length, b.length - alignCount * 8);
         return byteArrayToSignLongArray(temp, piece);
+    }
+
+    /**
+     * get hash encode
+     * @param hash hash
+     * @return encoded hash
+     */
+    public static byte[] getHashEncoded(byte[] hash) {
+        List<Long> list = ByteUtil.unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
+
+        Entry entry = Entry.fromList(list);
+
+        return entry.bencode();
+    }
+
+    /**
+     * get hash from encode
+     * @param encode hash encode
+     * @return hash
+     */
+    public static byte[] getHashFromEncode(byte[] encode) {
+        Entry entry = Entry.bdecode(encode);
+        List<Entry> entryList = entry.list();
+
+        return longArrayToBytes(stringToLongArrayList(entryList.get(0).toString()), ChainParam.HashLength);
     }
 
     /**
