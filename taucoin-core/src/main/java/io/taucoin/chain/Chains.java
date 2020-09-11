@@ -511,7 +511,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                 tryToMine(chainID);
 
                 // 定时操作，检查是否到时间
-                if (System.currentTimeMillis() / 1000 - this.timeRecorders.get(chainID) >= ChainParam.DEFAULT_MAX_BLOCK_TIME) {
+                // TODO:: remove after test, ChainParam.DEFAULT_BLOCK_TIME
+                if (System.currentTimeMillis() / 1000 - this.timeRecorders.get(chainID) >= 3) {
                     // 2.6 传播最佳区块
                     publishBestBlock(chainID);
 
@@ -520,8 +521,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     // 2.8 随机挑选logN个peer
                     int counter = this.peerManagers.get(chainID).getPeerNumber();
-                    // TODO:: add for test
-//                    counter = (int)Math.log(counter);
+                    counter = (int)Math.log(counter);
                     if (counter < 1) {
                         counter = 1;
                     }
@@ -1116,8 +1116,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         PeerManager peerManager = this.peerManagers.get(chainID);
 
         int counter = peerManager.getPeerNumber();
-        // TODO:: add for test
-//        counter = (int)Math.log(counter);
+        counter = (int)Math.log(counter);
         if (counter < 1) {
             counter = 1;
         }
