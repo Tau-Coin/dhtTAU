@@ -578,6 +578,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     if (!tryToReBranch(chainID, blockContainer)) {
                         clearContainer = false;
                     }
+                    break;
                 }
             }
 
