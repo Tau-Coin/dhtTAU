@@ -506,6 +506,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 for (Transaction tx: this.txMapForPool.get(chainID)) {
                     txPool.addTx(tx);
                 }
+                this.txMapForPool.clear();
 
                 // 2.5 尝试挖矿
                 tryToMine(chainID);
