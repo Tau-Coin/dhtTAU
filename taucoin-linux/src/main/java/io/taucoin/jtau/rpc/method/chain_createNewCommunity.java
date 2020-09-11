@@ -58,22 +58,16 @@ public class chain_createNewCommunity extends JsonRpcServerMethod {
             JSONObject obj = (JSONObject)params.get(0);
 
             ChainManager chainmanager = tauController.getChainManager();
-            // name
-			String name = null;
-			if (obj.containsKey("name") && !((String)obj.get("name")).equals("")) {
-				name = (String) obj.get("name");
-			}
 
 			// coins
-			int coins = 10000000;
-			if (obj.containsKey("coins") && ((int)obj.get("coins")) > 0) {
-				coins = (int) obj.get("coins");
-			}
-
+			int coins = obj.getAsNumber("coins").intValue();
 			// power
-			int power = 100;
-			if (obj.containsKey("power") && ((int)obj.get("power")) > 0) {
-				power = (int) obj.get("power");
+			int power = obj.getAsNumber("power").intValue();
+
+            // name
+			String name = null;
+			if (obj.containsKey("name") && !(obj.get("name")).equals("")) {
+				name = (String) obj.get("name");
 			}
 
 			logger.info("name: {}, coins: {}, power: {}", name, coins, power);
@@ -88,10 +82,11 @@ public class chain_createNewCommunity extends JsonRpcServerMethod {
 
 			Iterator ita = gadds.iterator();
 			while(ita.hasNext()){
-				logger.info("geneis account: {}", (String)ita.next());
-				ByteArrayWrapper account = new ByteArrayWrapper(((String)ita.next()).getBytes());
+				String account = (String)ita.next();
+				logger.info("geneis account: {}", account);
+				ByteArrayWrapper accountBytes = new ByteArrayWrapper(account.getBytes());
 				GenesisItem state = new GenesisItem(BigInteger.valueOf(coins), BigInteger.valueOf(power));
-				genesisMsg.put(account, state);
+				genesisMsg.put(accountBytes, state);
 			}
 
 			// get chainmanager and send tx	

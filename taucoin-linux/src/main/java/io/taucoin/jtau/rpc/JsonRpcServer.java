@@ -71,6 +71,8 @@ public final class JsonRpcServer {
 
         this.dispatcher.register(new chain_sendTransaction(this.tauController));
         this.dispatcher.register(new chain_sendRawBlock(this.tauController));
+
+        this.dispatcher.register(new chain_createNewCommunity(this.tauController));
     }
 
     /**

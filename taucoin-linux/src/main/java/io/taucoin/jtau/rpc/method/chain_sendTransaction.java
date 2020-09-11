@@ -18,11 +18,14 @@ package io.taucoin.jtau.rpc.method;
 
 import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
+import io.taucoin.genesis.GenesisItem;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
+import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.ForumNoteTx;
 import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.types.TypesConfig;
+import io.taucoin.util.ByteArrayWrapper;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
@@ -36,6 +39,9 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -114,12 +120,34 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 
 			int txfee = fee.intValue();
 
-			// type = 1: forum note transaction, 2: wiring coins transaction
-			if(TypesConfig.TxType.FNoteType.ordinal() == type){
+			// type = 0: genesis tx, 1: forum note transaction, 2: wiring coins transaction
+			if(TypesConfig.TxType.GenesisType.ordinal() == type){
+				logger.info("geneis tx");
+				// genesismsg
+				HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
+				List<String> gadds = new ArrayList<String>();
+				if (obj.containsKey("gadds") && !((List)obj.get("gadds")).equals("")) {
+					gadds = (List) obj.get("gadds");
+				}
+				logger.info("geneis account list: {}", gadds);
+
+				Iterator ita = gadds.iterator();
+				while(ita.hasNext()){
+					logger.info("geneis account: {}", (String)ita.next());
+					ByteArrayWrapper account = new ByteArrayWrapper(((String)ita.next()).getBytes());
+					GenesisItem state = new GenesisItem(BigInteger.valueOf(10000000), BigInteger.valueOf(100));
+					genesisMsg.put(account, state);
+				}
+
+				tx = new GenesisTx(version, chainID, timeStamp, txfee, type, publicKey, nonce, genesisMsg);
+
+				tx.signTransactionWithPriKey(privateKey);
+
+			} else if(TypesConfig.TxType.FNoteType.ordinal() == type){
 				// msg
 				// tx construct
 				String forumNoteHash = obj.getAsString("fnhash");
-				tx = new ForumNoteTx(version, chainID, timeStamp, txfee, 1L, publicKey, nonce, forumNoteHash.getBytes());
+				tx = new ForumNoteTx(version, chainID, timeStamp, txfee, type, publicKey, nonce, forumNoteHash.getBytes());
 				tx.signTransactionWithPriKey(privateKey);
 
 			} else if(TypesConfig.TxType.WCoinsType.ordinal() == type) {
@@ -150,7 +178,7 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
         		}
 
 				// tx construct
-				tx = new WiringCoinsTx(version, chainID, timeStamp, txfee, 2L, publicKey, nonce, to, value, memo);
+				tx = new WiringCoinsTx(version, chainID, timeStamp, txfee, type, publicKey, nonce, to, value, memo);
 				tx.signTransactionWithPriKey(privateKey);
         	}
 
