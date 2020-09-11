@@ -520,10 +520,17 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     // 2.8 随机挑选logN个peer
                     int counter = this.peerManagers.get(chainID).getPeerNumber();
-                    counter = counter > 0 ? (int)Math.log(counter) : 0;
+                    // TODO:: add for test
+//                    counter = (int)Math.log(counter);
+                    if (counter < 1) {
+                        counter = 1;
+                    }
 
                     for (int i = 0; i < counter; i++) {
+
                         byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
+                        logger.debug("Chain ID:{} get a peer:{}",
+                                new String(chainID.getData()), Hex.toHexString(peer));
 
                         // 2.8.1 请求最佳交易
                         requestTipTxForMining(chainID, peer);
@@ -727,6 +734,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         // block
         if (this.blockMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
+            logger.info("Chain ID:{}: Remove block cache.", new String(chainID.getData()));
             Map<ByteArrayWrapper, Block> oldBlockMap = this.blockMap.get(chainID);
             Map<ByteArrayWrapper, Block> newBlockMap = new HashMap<>(ChainParam.MUTABLE_RANGE);
 
@@ -747,6 +755,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         // tx
         if (this.txMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
+            logger.info("Chain ID:{}: Remove tx cache.", new String(chainID.getData()));
             Map<ByteArrayWrapper, Transaction> oldTxs = this.txMap.get(chainID);
             Map<ByteArrayWrapper, Transaction> newTxs = new HashMap<>(ChainParam.MUTABLE_RANGE);
 
@@ -774,6 +783,8 @@ public class Chains implements DHT.GetDHTItemCallback{
         try {
             // block
             for (ByteArrayWrapper blockHash : this.blockHashMapFromDemand.get(chainID)) {
+                logger.debug("Chain ID:{} Response block hash:{}",
+                        new String(chainID.getData()), blockHash.toString());
                 Block block = this.blockStore.getBlockByHash(chainID.getData(), blockHash.getData());
                 publishBlock(block);
             }
@@ -781,6 +792,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             // tx
             for (ByteArrayWrapper txid : this.txHashMapFromDemand.get(chainID)) {
+                logger.debug("Chain ID:{} Response tx hash:{}",
+                        new String(chainID.getData()), txid.toString());
                 Transaction tx = this.blockStore.getTransactionByHash(chainID.getData(), txid.getData());
                 publishTransaction(tx);
             }
@@ -1103,8 +1116,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         PeerManager peerManager = this.peerManagers.get(chainID);
 
         int counter = peerManager.getPeerNumber();
-
-        counter = counter > 0 ? (int)Math.log(counter) : 0;
+        // TODO:: add for test
+//        counter = (int)Math.log(counter);
+        if (counter < 1) {
+            counter = 1;
+        }
 
         int size = this.votingBlocks.get(chainID).size();
 
@@ -2192,6 +2208,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case BLOCK_DEMAND_FROM_PEER: {
                 if (null == item) {
+                    logger.error("BLOCK_DEMAND_FROM_PEER is empty");
                     return;
                 }
 
@@ -2202,6 +2219,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case TX_DEMAND_FROM_PEER: {
                 if (null == item) {
+                    logger.error("TX_DEMAND_FROM_PEER is empty");
                     return;
                 }
 
@@ -2212,6 +2230,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case TIP_BLOCK_FROM_PEER_FOR_VOTING: {
                 if (null == item) {
+                    logger.error("TIP_BLOCK_FROM_PEER_FOR_VOTING is empty");
                     return;
                 }
 
@@ -2221,6 +2240,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_BLOCK_REQUEST_FOR_VOTING: {
                 if (null == item) {
+                    logger.error("HISTORY_BLOCK_REQUEST_FOR_VOTING is empty");
                     return;
                 }
 
@@ -2230,6 +2250,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case TIP_TX_FOR_MINING: {
                 if (null == item) {
+                    logger.error("TIP_TX_FOR_MINING is empty");
                     return;
                 }
 
@@ -2239,6 +2260,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case TX_REQUEST_FOR_MINING: {
                 if (null == item) {
+                    logger.error("TX_REQUEST_FOR_MINING is empty");
                     return;
                 }
 
@@ -2248,6 +2270,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_BLOCK_REQUEST_FOR_SYNC: {
                 if (null == item) {
+                    logger.error("HISTORY_BLOCK_REQUEST_FOR_SYNC is empty");
                     // 返回区块为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), null);
@@ -2297,6 +2320,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_TX_REQUEST_FOR_SYNC: {
                 if (null == item) {
+                    logger.error("HISTORY_TX_REQUEST_FOR_SYNC is empty");
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), null);
