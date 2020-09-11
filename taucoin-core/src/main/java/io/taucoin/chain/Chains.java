@@ -618,9 +618,18 @@ public class Chains implements DHT.GetDHTItemCallback{
                 boolean findAll = true;
                 while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
 
+                    // 先查看数据库是否存在
+                    Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
+                    if (null != block) {
+                        // found in local
+                        logger.debug("+ctx--------found in local, hash:{}",
+                                Hex.toHexString(previousHash));
+                        break;
+                    }
+
                     ByteArrayWrapper key = new ByteArrayWrapper(previousHash);
 
-                    // 先从队列查找
+                    // 再从缓存查找
                     if (this.blockContainerMap.get(chainID).containsKey(key)) {
                         logger.debug("ChainID:{}, Try to find block:{}", new String(chainID.getData()),
                                 Hex.toHexString(key.getData()));
@@ -644,15 +653,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                             // 如果有返回，但是数据为空
                             return true;
                         }
-                    }
-
-                    // 再从数据库查找
-                    Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
-                    if (null != block) {
-                        // found in local
-                        logger.debug("+ctx--------found in local, hash:{}",
-                                Hex.toHexString(previousHash));
-                        break;
                     }
 
                     logger.debug("ChainID:{}, Try to find block from dht:{}", new String(chainID.getData()),
@@ -1309,9 +1309,18 @@ public class Chains implements DHT.GetDHTItemCallback{
                 boolean findAll = true;
                 while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
 
+                    // 先查看数据库是否存在
+                    Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
+                    if (null != block) {
+                        // found in local
+                        logger.debug("+ctx--------found in local, hash:{}",
+                                Hex.toHexString(previousHash));
+                        break;
+                    }
+
                     ByteArrayWrapper key = new ByteArrayWrapper(previousHash);
 
-                    // 先从队列查找
+                    // 再从缓存查找
                     if (blockContainers.containsKey(key)) {
                         BlockContainer previousBlockContainer = blockContainers.get(key);
 
@@ -1332,15 +1341,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                             resetAfterVoting(chainID);
                             return false;
                         }
-                    }
-
-                    // 再从数据库查找
-                    Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
-                    if (null != block) {
-                        // found in local
-                        logger.debug("+ctx--------found in local, hash:{}",
-                                Hex.toHexString(previousHash));
-                        break;
                     }
 
                     // 仍然找不到，则向dht请求
