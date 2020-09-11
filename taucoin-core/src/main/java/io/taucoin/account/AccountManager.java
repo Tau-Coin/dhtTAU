@@ -3,6 +3,9 @@ package io.taucoin.account;
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * AccountManager manages public key and private key for the miner.
  * This class implementation is the singleton.
@@ -16,6 +19,8 @@ public class AccountManager {
     private Pair<byte[], byte[]> key;
 
     private byte[] seed;
+
+    List<KeyChangedListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * Get AccountManager instance.
@@ -41,6 +46,7 @@ public class AccountManager {
      */
     public synchronized void updateKey(Pair<byte[], byte[]> key) {
         this.key = key;
+        notifyKeyChanged(this.key);
     }
 
     /**
@@ -51,6 +57,7 @@ public class AccountManager {
     public synchronized void updateKey(byte[] seed) {
         this.seed = seed;
         this.key = Ed25519.createKeypair(seed);
+        notifyKeyChanged(this.key);
     }
 
     /**
@@ -60,5 +67,19 @@ public class AccountManager {
      */
     public synchronized Pair<byte[], byte[]> getKeyPair() {
         return this.key;
+    }
+
+    public void addListener(KeyChangedListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(KeyChangedListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyKeyChanged(Pair<byte[], byte[]> newKey) {
+        for (KeyChangedListener listener : listeners) {
+            listener.onKeyChanged(newKey);
+        }
     }
 }
