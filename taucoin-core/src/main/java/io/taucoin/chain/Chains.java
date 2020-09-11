@@ -2213,6 +2213,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
+                logger.debug("Got a demand block hash:{}", Hex.toHexString(hash));
                 this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).
                         add(new ByteArrayWrapper(hash));
                 break;
@@ -2224,6 +2225,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
+                logger.debug("Got a demand tx hash:{}", Hex.toHexString(hash));
                 this.txHashMapFromDemand.get(dataIdentifier.getChainID()).
                         add(new ByteArrayWrapper(hash));
                 break;
