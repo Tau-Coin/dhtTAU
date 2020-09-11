@@ -614,9 +614,13 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     // 先从队列查找
                     if (this.blockContainerMap.get(chainID).containsKey(key)) {
+                        logger.debug("ChainID:{}, Try to find block:{}", new String(chainID.getData()),
+                                Hex.toHexString(key.getData()));
                         BlockContainer previousBlockContainer = this.blockContainerMap.get(chainID).get(key);
 
                         if (null != previousBlockContainer) {
+                            logger.debug("ChainID:{}, Find block:{} in cache.", new String(chainID.getData()),
+                                    Hex.toHexString(key.getData()));
                             // 如果有返回，但是数据不为空
                             containerList.add(previousBlockContainer);
                             previousHash = previousBlockContainer.getBlock().getPreviousBlockHash();
@@ -643,8 +647,11 @@ public class Chains implements DHT.GetDHTItemCallback{
                         break;
                     }
 
+                    logger.debug("ChainID:{}, Try to find block from dht:{}", new String(chainID.getData()),
+                            Hex.toHexString(key.getData()));
+
                     // 仍然找不到，则向dht请求
-                    requestBlockForSync(chainID, previousHash);
+                    requestBlockForMining(chainID, previousHash);
                     return false;
                 }
 
@@ -848,7 +855,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void requestSyncBlock(ByteArrayWrapper chainID) {
-        requestBlockForMining(chainID, this.syncBlocks.get(chainID).getBlockHash());
+        requestBlockForSync(chainID, this.syncBlocks.get(chainID).getBlockHash());
     }
 
     /**
@@ -1321,7 +1328,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     }
 
                     // 仍然找不到，则向dht请求
-                    requestBlockForSync(chainID, previousHash);
+                    requestBlockForMining(chainID, previousHash);
                     findAll = false;
                     break;
                 }
@@ -2080,15 +2087,20 @@ public class Chains implements DHT.GetDHTItemCallback{
         switch (dataIdentifier.getDataType()) {
             case TIP_BLOCK_FROM_PEER_FOR_MINING: {
                 if (null == item) {
+                    logger.error("TIP_BLOCK_FROM_PEER_FOR_MINING is empty.");
                     return;
                 }
 
-                requestBlockForMining(dataIdentifier.getChainID(), ByteUtil.getHashFromEncode(item));
+                byte[] hash = ByteUtil.getHashFromEncode(item);
+                logger.debug("Request tip block hash:{}", Hex.toHexString(hash));
+                requestBlockForMining(dataIdentifier.getChainID(), hash);
 
                 break;
             }
             case HISTORY_BLOCK_REQUEST_FOR_MINING: {
                 if (null == item) {
+                    logger.error("HISTORY_BLOCK_REQUEST_FOR_MINING is empty, block hash:{}",
+                            Hex.toHexString(dataIdentifier.getHash().getData()));
                     // 返回区块为空，在block container集合里插入空标志
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), null);
@@ -2148,6 +2160,9 @@ public class Chains implements DHT.GetDHTItemCallback{
 //                            blockMap.remove(dataIdentifier.getTxBlockHash());
 //                        }
 //                    }
+
+                    logger.error("HISTORY_TX_REQUEST_FOR_MINING is empty, block hash:{}",
+                            Hex.toHexString(dataIdentifier.getHash().getData()));
 
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
