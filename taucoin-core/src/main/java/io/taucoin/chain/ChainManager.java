@@ -212,7 +212,7 @@ public class ChainManager {
         Block genesis = cf.getBlock();
         BlockContainer genesisContainer = new BlockContainer(genesis, cf.getTransaction());
 
-        boolean ret = followChain(chainID);
+        boolean ret = chains.followChain(chainID);
 
         // load genesis state
         if (!loadGenesisState(chainID, genesisContainer)) {
