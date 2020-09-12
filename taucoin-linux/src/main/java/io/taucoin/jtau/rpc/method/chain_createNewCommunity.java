@@ -29,6 +29,7 @@ import com.thetransactioncompany.jsonrpc2.server.MessageContext;
 import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public class chain_createNewCommunity extends JsonRpcServerMethod {
 			while(ita.hasNext()){
 				String account = (String)ita.next();
 				logger.info("geneis account: {}", account);
-				ByteArrayWrapper accountBytes = new ByteArrayWrapper(account.getBytes());
+				ByteArrayWrapper accountBytes = new ByteArrayWrapper(Hex.decode(account));
 				GenesisItem state = new GenesisItem(BigInteger.valueOf(coins), BigInteger.valueOf(power));
 				genesisMsg.put(accountBytes, state);
 			}
