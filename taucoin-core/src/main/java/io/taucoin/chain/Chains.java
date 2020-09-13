@@ -28,6 +28,7 @@ import io.taucoin.core.TransactionPool;
 import io.taucoin.core.TransactionPoolImpl;
 import io.taucoin.core.Vote;
 import io.taucoin.core.VotingPool;
+import io.taucoin.db.BlockInfo;
 import io.taucoin.db.BlockStore;
 import io.taucoin.db.StateDB;
 import io.taucoin.listener.TauListener;
@@ -624,7 +625,17 @@ public class Chains implements DHT.GetDHTItemCallback{
         try {
             byte[] immutableBlockHash1 = blockContainer.getBlock().getImmutableBlockHash();
 
-            if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash1)) {
+            BlockInfo blockInfo1 = this.blockStore.getBlockInfoByHash(chainID.getData(), immutableBlockHash1);
+            if (null == blockInfo1) {
+                if (isSyncUncompleted(chainID)) {
+                    requestSyncBlock(chainID);
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+
+            if (blockInfo1.isMainChain()) {
                 // 分叉点在mutable range之内
                 int counter = 0;
                 byte[] previousHash = blockContainer.getBlock().getPreviousBlockHash();
@@ -690,7 +701,17 @@ public class Chains implements DHT.GetDHTItemCallback{
                     byte[] immutableBlockHash2 = blockContainer2.getBlock().getImmutableBlockHash();
 
                     // 第二个immutable block hash是否在主链上
-                    if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash2)) {
+                    BlockInfo blockInfo2= this.blockStore.getBlockInfoByHash(chainID.getData(), immutableBlockHash2);
+                    if (null == blockInfo2) {
+                        if (isSyncUncompleted(chainID)) {
+                            requestSyncBlock(chainID);
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    }
+
+                    if (blockInfo2.isMainChain()) {
                         // 在主链上
                         this.votingFlag.put(chainID, true);
                     } else {
@@ -703,7 +724,18 @@ public class Chains implements DHT.GetDHTItemCallback{
                             // 如果有返回，但是数据不为空
                             byte[] immutableBlockHash3 = blockContainer3.
                                     getBlock().getImmutableBlockHash();
-                            if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash3)) {
+
+                            BlockInfo blockInfo3 = this.blockStore.getBlockInfoByHash(chainID.getData(), immutableBlockHash3);
+                            if (null == blockInfo3) {
+                                if (isSyncUncompleted(chainID)) {
+                                    requestSyncBlock(chainID);
+                                    return false;
+                                } else {
+                                    return true;
+                                }
+                            }
+
+                            if (blockInfo3.isMainChain()) {
                                 // 在主链上
                                 this.votingFlag.put(chainID, true);
                             } else {
@@ -1014,6 +1046,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 ImportResult result = stateProcessor.forwardProcess(newBlockContainers.get(i), track);
                 // if need sync more block
                 if (result == ImportResult.NO_ACCOUNT_INFO && isSyncUncompleted(chainID)) {
+                    // TODO: wait or fail
                     requestSyncBlock(chainID);
                     return false;
                 }
@@ -1300,7 +1333,17 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             byte[] immutableBlockHash1 = blockContainer1.getBlock().getImmutableBlockHash();
 
-            if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash1)) {
+            BlockInfo blockInfo1 = this.blockStore.getBlockInfoByHash(chainID.getData(), immutableBlockHash1);
+            if (null == blockInfo1) {
+                if (isSyncUncompleted(chainID)) {
+                    requestSyncBlock(chainID);
+                } else {
+                    resetAfterVoting(chainID);
+                }
+                return false;
+            }
+
+            if (blockInfo1.isMainChain()) {
                 // 分叉点在mutable range之内
                 int counter = 0;
                 byte[] previousHash = blockContainer1.getBlock().getPreviousBlockHash();
@@ -1384,7 +1427,17 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 getBlock().getImmutableBlockHash();
 
                         // 第二个immutable block hash是否在主链上
-                        if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash2)) {
+                        BlockInfo blockInfo2 = this.blockStore.getBlockInfoByHash(chainID.getData(), immutableBlockHash2);
+                        if (null == blockInfo2) {
+                            if (isSyncUncompleted(chainID)) {
+                                requestSyncBlock(chainID);
+                            } else {
+                                resetAfterVoting(chainID);
+                            }
+                            return false;
+                        }
+
+                        if (blockInfo2.isMainChain()) {
                             // 在主链上
                             // be as a new chain when fork point between mutable range and warning range
                             resetChain(chainID);
@@ -1399,7 +1452,17 @@ public class Chains implements DHT.GetDHTItemCallback{
                                     // 如果有返回，但是数据不为空
                                     byte[] immutableBlockHash3 = blockContainer3.
                                             getBlock().getImmutableBlockHash();
-                                    if (this.blockStore.isMainChainBlock(chainID.getData(), immutableBlockHash3)) {
+                                    BlockInfo blockInfo3 = this.blockStore.getBlockInfoByHash(chainID.getData(), immutableBlockHash3);
+                                    if (null == blockInfo3) {
+                                        if (isSyncUncompleted(chainID)) {
+                                            requestSyncBlock(chainID);
+                                        } else {
+                                            resetAfterVoting(chainID);
+                                        }
+                                        return false;
+                                    }
+
+                                    if (blockInfo3.isMainChain()) {
                                         // 在主链上
                                         // be as a new chain when fork point between mutable range and warning range
                                         resetChain(chainID);
