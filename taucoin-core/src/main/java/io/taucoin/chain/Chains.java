@@ -186,6 +186,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 for (ByteArrayWrapper chainID : this.unFollowChainIDs) {
                     this.chainIDs.remove(chainID);
                     removeChainComponent(chainID);
+                    removeAllChainInfoInDB(chainID);
                 }
 
                 chainIDs.addAll(this.chainIDs);
@@ -361,6 +362,19 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
+     * remove all chain info in database
+     * @param chainID chain ID
+     */
+    private void removeAllChainInfoInDB(ByteArrayWrapper chainID) {
+        try {
+            this.blockStore.removeChainInfo(chainID.getData());
+            this.stateDB.clearAllState(chainID.getData());
+        } catch (Exception e) {
+            logger.error(new String(chainID.getData()) + e.getMessage(), e);
+        }
+    }
+
+    /**
      * 移除链相关的各个组件
      * @param chainID chain ID
      */
@@ -386,6 +400,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         // init best block and sync block
         this.bestBlockContainers.remove(chainID);
+
         this.syncBlocks.remove(chainID);
 
         this.peerManagers.remove(chainID);
@@ -620,8 +635,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
 
                     // 先查看数据库是否存在
-                    Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
-                    if (null != block) {
+                    if (this.blockStore.isBlockOnChain(chainID.getData(), previousHash)) {
                         // found in local
                         logger.debug("+ctx--------found in local, hash:{}",
                                 Hex.toHexString(previousHash));
@@ -1192,7 +1206,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
 
         try {
-            this.blockStore.removeChain(chainID.getData());
+            this.blockStore.removeChainBlockInfo(chainID.getData());
             this.stateDB.clearAllState(chainID.getData());
 
             // after sync
@@ -1236,7 +1250,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private void resetChain(ByteArrayWrapper chainID) {
         try {
-            this.blockStore.removeChain(chainID.getData());
+            this.blockStore.removeChainBlockInfo(chainID.getData());
             this.stateDB.clearAllState(chainID.getData());
 
             this.txPools.get(chainID).reinit();
@@ -1298,8 +1312,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 while (!Thread.interrupted() && counter < ChainParam.MUTABLE_RANGE) {
 
                     // 先查看数据库是否存在
-                    Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
-                    if (null != block) {
+                    if (this.blockStore.isBlockOnChain(chainID.getData(), previousHash)) {
                         // found in local
                         logger.debug("+ctx--------found in local, hash:{}",
                                 Hex.toHexString(previousHash));
@@ -1740,7 +1753,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         // 是否孤块
         try {
-            if (null == this.blockStore.getBlockByHash(chainID.getData(), block.getPreviousBlockHash())) {
+            if (!this.blockStore.isBlockOnChain(chainID.getData(), block.getPreviousBlockHash())) {
                 logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
                         new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
                 return false;

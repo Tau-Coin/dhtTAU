@@ -2,16 +2,14 @@ package io.taucoin.jtau.rpc;
 
 import com.thetransactioncompany.jsonrpc2.*;
 import com.thetransactioncompany.jsonrpc2.server.*;
-import net.minidev.json.JSONArray;
+
 import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import io.taucoin.chain.Chain;
 import io.taucoin.controller.TauController;
 import io.taucoin.types.Transaction;
-import io.taucoin.util.ByteUtil;
 
 import java.math.BigInteger;
 

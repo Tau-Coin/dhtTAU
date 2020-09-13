@@ -225,9 +225,22 @@ public class PrefixKey {
 
     /**
      * block info key: chainID + 'blockInfo' + number
-     * @param chainID
-     * @param number
-     * @return
+     * @param chainID chain ID
+     * @return block info
+     */
+    public static byte[] blockInfoPrefix(byte[] chainID) {
+        byte[] prefix = new byte[chainID.length + blockInfo.length];
+        System.arraycopy(chainID, 0, prefix, 0, chainID.length);
+        System.arraycopy(blockInfo, 0, prefix, chainID.length, blockInfo.length);
+
+        return prefix;
+    }
+
+    /**
+     * block info key: chainID + 'blockInfo' + number
+     * @param chainID chain ID
+     * @param number block number
+     * @return block info
      */
     public static byte[] blockInfoKey(byte[] chainID, long number) {
         byte[] numberBytes = ByteUtil.longToBytes(number);

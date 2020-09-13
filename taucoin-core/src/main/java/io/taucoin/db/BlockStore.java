@@ -68,6 +68,15 @@ public interface BlockStore {
     boolean isMainChainBlock(byte[] chainID, byte[] hash) throws DBException;
 
     /**
+     * if a block is on chain
+     * @param chainID chain ID
+     * @param hash block hash
+     * @return true if main chain, false otherwise
+     * @throws DBException  database exception
+     */
+    boolean isBlockOnChain(byte[] chainID, byte[] hash) throws DBException;
+
+    /**
      * get main chain block by number
      * @param chainID chain id
      * @param number block number
@@ -121,11 +130,18 @@ public interface BlockStore {
     Set<Block> getChainAllBlocks(byte[] chainID) throws DBException;
 
     /**
-     * remove all blocks and info of a chain
+     * remove all chain info
      * @param chainID chain ID
      * @throws DBException database exception
      */
-    void removeChain(byte[] chainID) throws DBException;
+    void removeChainInfo(byte[] chainID) throws DBException;
+
+    /**
+     * remove block info of a chain
+     * @param chainID chain ID
+     * @throws DBException database exception
+     */
+    void removeChainBlockInfo(byte[] chainID) throws DBException;
 
     /**
      * get fork point block between main chain and fork chain
