@@ -836,16 +836,16 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void tryToSlimDownCache(ByteArrayWrapper chainID) {
 
         // block
-        if (this.blockMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
+        if (this.blockMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
             logger.info("Chain ID:{}: Remove block cache.", new String(chainID.getData()));
             Map<ByteArrayWrapper, Block> oldBlockMap = this.blockMap.get(chainID);
-            Map<ByteArrayWrapper, Block> newBlockMap = new HashMap<>(ChainParam.MUTABLE_RANGE);
+            Map<ByteArrayWrapper, Block> newBlockMap = new HashMap<>(ChainParam.WARNING_RANGE);
 
             int i = 0;
             for (Map.Entry<ByteArrayWrapper, Block> entry: oldBlockMap.entrySet()) {
                 newBlockMap.put(entry.getKey(), entry.getValue());
 
-                if (i >= ChainParam.MUTABLE_RANGE) {
+                if (i >= ChainParam.WARNING_RANGE) {
                     break;
                 }
 
@@ -857,16 +857,16 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
 
         // tx
-        if (this.txMap.get(chainID).size() > ChainParam.WARNING_RANGE) {
+        if (this.txMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
             logger.info("Chain ID:{}: Remove tx cache.", new String(chainID.getData()));
             Map<ByteArrayWrapper, Transaction> oldTxs = this.txMap.get(chainID);
-            Map<ByteArrayWrapper, Transaction> newTxs = new HashMap<>(ChainParam.MUTABLE_RANGE);
+            Map<ByteArrayWrapper, Transaction> newTxs = new HashMap<>(ChainParam.WARNING_RANGE);
 
             int i = 0;
             for (Map.Entry<ByteArrayWrapper, Transaction> entry: oldTxs.entrySet()) {
                 newTxs.put(entry.getKey(), entry.getValue());
 
-                if (i >= ChainParam.MUTABLE_RANGE) {
+                if (i >= ChainParam.WARNING_RANGE) {
                     break;
                 }
 
