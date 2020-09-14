@@ -233,7 +233,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             return false;
         }
 
-        followChain(chainID);
+        startChain(chainID);
 
         return true;
     }
@@ -243,7 +243,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @return true if succeed, false otherwise
      */
-    public boolean followChain(byte[] chainID) {
+    public boolean startChain(byte[] chainID) {
         ByteArrayWrapper wChainID = new ByteArrayWrapper(chainID);
 
         if (this.chainIDs.contains(wChainID)) {

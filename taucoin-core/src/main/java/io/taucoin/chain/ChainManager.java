@@ -122,7 +122,7 @@ public class ChainManager {
             Set<byte[]> chainIDs = this.stateDB.getAllFollowedChains();
             if (null != chainIDs) {
                 for (byte[] chainID: chainIDs) {
-                    chains.followChain(chainID);
+                    chains.startChain(chainID);
                 }
             }
 
@@ -208,8 +208,6 @@ public class ChainManager {
         Block genesis = cf.getBlock();
         BlockContainer genesisContainer = new BlockContainer(genesis, cf.getTransaction());
 
-        boolean ret = chains.followChain(chainID);
-
         // load genesis state
         if (!loadGenesisState(chainID, genesisContainer)) {
             return false;
@@ -233,31 +231,28 @@ public class ChainManager {
             return false;
         }
 
-        // add peer and put block to dht
+        try {
+            logger.info("Save genesis block in block store. Chain ID:{}",
+                    new String(chainID));
+            blockDB.saveBlockContainer(chainID, genesisContainer,true);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
+        // follow chain
+        List<byte[]> peerList = new ArrayList<>();
+
         for (Map.Entry<ByteArrayWrapper, GenesisItem> entry : map.entrySet()) {
             byte[] pubKey = entry.getKey().getData();
             logger.info("create new community pubkey: {}", Hex.toHexString(pubKey));
-            try {
-                this.stateDB.addPeer(chainID, pubKey);
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                return false;
-            }
+            peerList.add(pubKey);
         }
 
+        this.chains.followChain(chainID, peerList);
+
+        // put block to dht
         putBlockContainerToDHT(chainID, genesisContainer);
-
-
-        if(ret) {
-            try {
-                logger.info("Save genesis block in block store. Chain ID:{}",
-                        new String(chainID));
-                blockDB.saveBlockContainer(chainID, genesisContainer,true);
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                return false;
-            }
-        }
 
         return true;
     }
