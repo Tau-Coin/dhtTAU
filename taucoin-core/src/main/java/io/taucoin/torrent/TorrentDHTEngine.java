@@ -707,6 +707,7 @@ public class TorrentDHTEngine {
                 item = dhtGet(req.getSpec());
                 logger.debug("immutable item got cost {}ms",
                         (System.nanoTime() - startTime) / 1000000);
+                dhtEngineRegulator.immutableItemRequest();
             } catch (InterruptedException e) {
                 break;
             } catch (Throwable e) {
@@ -745,6 +746,7 @@ public class TorrentDHTEngine {
                 item = dhtGet(req.getSpec());
                 logger.debug("mutable item got cost {}ms",
                         (System.nanoTime() - startTime) / 1000000);
+                dhtEngineRegulator.mutableItemRequest();
             } catch (InterruptedException e) {
                 break;
             } catch (Throwable e) {
