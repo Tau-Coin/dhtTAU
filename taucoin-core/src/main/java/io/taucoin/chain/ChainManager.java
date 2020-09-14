@@ -156,13 +156,9 @@ public class ChainManager {
      * @param chainID
      * @return boolean successful or not.
      */
-    public boolean followChain(byte[] chainID) {
-        try{
-            this.stateDB.followChain(chainID);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return false;
-        }
+    public boolean followChain(byte[] chainID, List<byte[]> peerList) {
+        this.chains.followChain(chainID, peerList);
+
         return true;
     }
 

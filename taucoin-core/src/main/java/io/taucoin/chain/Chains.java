@@ -215,6 +215,34 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @return true if succeed, false otherwise
      */
+    public boolean followChain(byte[] chainID, List<byte[]> peerList) {
+
+        ByteArrayWrapper wChainID = new ByteArrayWrapper(chainID);
+
+        if (null == peerList || peerList.isEmpty()) {
+            logger.info("Chain:{} no peers.", wChainID.toString());
+            return false;
+        }
+
+        try {
+            for (byte[] peer : peerList) {
+                this.stateDB.addPeer(chainID, peer);
+            }
+        } catch (Exception e) {
+            logger.error(new String(chainID) + ":" + e.getMessage(), e);
+            return false;
+        }
+
+        followChain(chainID);
+
+        return true;
+    }
+
+    /**
+     * follow a new chain
+     * @param chainID chain ID
+     * @return true if succeed, false otherwise
+     */
     public boolean followChain(byte[] chainID) {
         ByteArrayWrapper wChainID = new ByteArrayWrapper(chainID);
 

@@ -14,6 +14,8 @@ import com.frostwire.jlibtorrent.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 /**
  * TauController is the core controller of tau blockchain.
  * It manages all the components including ChainManager, RpcServer,
@@ -156,8 +158,8 @@ public class TauController {
      * @param chainID
      * @return boolean successful or not.
      */
-    public boolean followChain(byte[] chainID) {
-        return chainManager.followChain(chainID);
+    public boolean followChain(byte[] chainID, List<byte[]> peerList) {
+        return chainManager.followChain(chainID, peerList);
     }
 
     /**
