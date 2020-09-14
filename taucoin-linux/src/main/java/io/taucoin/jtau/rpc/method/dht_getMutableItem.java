@@ -52,12 +52,8 @@ public class dht_getMutableItem extends JsonRpcServerMethod {
                 result= "Get mutable item, nothing !";
             } else {
                 try {
-                    List <Entry> entryList = Entry.bdecode(item).list();
-                    ArrayList<Long> hashAL = ByteUtil.stringToLongArrayList(entryList.get(0).toString());
-                    ArrayList<Long> peerAL = ByteUtil.stringToLongArrayList(entryList.get(1).toString());
-                    String hashTemp = ByteUtil.toHexString(ByteUtil.longArrayToBytes(hashAL, ChainParam.HashLength));
-                    String peerTemp = ByteUtil.toHexString(ByteUtil.longArrayToBytes(peerAL, ChainParam.PubkeyLength));
-                    result = "Hash: " + hashTemp + " Peer: " + peerTemp;
+                    byte[] hash = ByteUtil.getHashFromEncode(item);
+                    result = "Hash: " + Hex.toHexString(hash);
                 } catch (Exception e) {
                     result = e.toString();
                     e.printStackTrace();
