@@ -34,6 +34,8 @@ public class TorrentDHTEngine {
 
     private static volatile TorrentDHTEngine INSTANCE;
 
+    private DHTEngineRegulator dhtEngineRegulator;
+
     // enable torrent log or not.
     private static final boolean EnableTorrentLog = false;
 
@@ -140,14 +142,16 @@ public class TorrentDHTEngine {
 
     // The time interval for dht operation.
     // TODO:
-    private static final long DHTOperationInterval = 1 * 1000; // milliseconds.
+    private static final long DHTGettingInterval = 1 * 1000; // milliseconds.
+    private static final long DHTPuttingInterval = 1 * 1000; // milliseconds.
 
     // Dht blocking queue size limit.
-    private static final int DHTBlockingQueueCapability = 1000;
+    private static final int DHTBlockingQueueCapability = 10000;
 
     private static final int ImmutableRequestQueueWorkers = 2;
-
     private static final int MutableRequestQueueWorkers = 2;
+    private static final int ImmutableRetriveQueueWorkers = 1;
+    private static final int MutableRetriveQueueWorkers = 1;
 
     // Queue of getting immutable item request.
     private BlockingQueue<ImmutableItemRequest> gettingImmutableItemQueue
@@ -162,12 +166,12 @@ public class TorrentDHTEngine {
     // Queue of putting immutable item request.
     private BlockingQueue<ImmutableItem> puttingImmutableItemQueue
             = new ConcurrentSetBlockingQueue<>();
-    private Thread puttingImmutableItemThread;
+    private ExecutorService puttingImmutableItemThreadPool;
 
     // Queue of putting mutable item request.
     private BlockingQueue<MutableItem> puttingMutableItemQueue
             = new ConcurrentSetBlockingQueue<>();
-    private Thread puttingMutableItemThread;
+    private ExecutorService puttingMutableItemThreadPool;
 
     private AtomicBoolean dhtItemWorkersStarted = new AtomicBoolean(false);
 
@@ -191,6 +195,8 @@ public class TorrentDHTEngine {
     private TorrentDHTEngine() {
         sessionManager = new SessionManager(EnableTorrentLog);
         sessionManager.addListener(torrentListener);
+
+        dhtEngineRegulator = new DHTEngineRegulator();
     }
 
     /**
@@ -312,13 +318,14 @@ public class TorrentDHTEngine {
 
         // Drop this item if it exists.
         if (puttingImmutableItemQueue.contains(item)) {
-            logger.warn("duplicate immutable item" + item);
+            logger.debug("duplicate immutable item" + item);
             return false;
         }
 
         try {
             puttingImmutableItemQueue.put(item);
-            logger.debug("immutable item is queued:" + item);
+            logger.debug("immutable item is queued(size:" + puttingImmutableItemQueue.size()
+                     + "):" + item);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.
@@ -346,13 +353,14 @@ public class TorrentDHTEngine {
 
         // Drop this item if it exists.
         if (puttingMutableItemQueue.contains(item)) {
-            logger.warn("duplicate mutable item" + item);
+            logger.debug("duplicate mutable item" + item);
             return false;
         }
 
         try {
             puttingMutableItemQueue.put(item);
-            logger.debug("mutable item is queued:" + item);
+            logger.debug("mutable item is queued(size:" + puttingMutableItemQueue.size()
+                    + "):" + item);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.
@@ -477,13 +485,14 @@ public class TorrentDHTEngine {
 
         // Drop this request if it exists.
         if (gettingImmutableItemQueue.contains(req)) {
-            logger.warn("duplicate immutable item req:" + req);
+            logger.debug("duplicate immutable item req:" + req);
             return false;
         }
 
         try {
             gettingImmutableItemQueue.put(req);
-            logger.debug("immutable item req is queued:" + req);
+            logger.debug("immutable item req is queued(size:" + gettingImmutableItemQueue.size()
+                    +  "):" + req);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.
@@ -516,13 +525,14 @@ public class TorrentDHTEngine {
 
         // Drop this request if it exists.
         if (gettingMutableItemQueue.contains(req)) {
-            logger.warn("duplicate mutable item req:" + req);
+            logger.debug("duplicate mutable item req:" + req);
             return false;
         }
 
         try {
             gettingMutableItemQueue.put(req);
-            logger.debug("mutable item req is queued:" + req);
+            logger.debug("mutable item req is queued(size:" + gettingMutableItemQueue.size()
+                     + "):" + req);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.
@@ -571,14 +581,6 @@ public class TorrentDHTEngine {
         }
         dhtItemWorkersStarted.set(true);
 
-        puttingImmutableItemThread = new Thread(this::immutableItemsDistributeLoop,
-                "puttingImmutableItemThread");
-        puttingImmutableItemThread.start();
-
-        puttingMutableItemThread = new Thread(this::mutableItemsDistributeLoop,
-                "puttingMutableItemThread");
-        puttingMutableItemThread.start();
-
         gettingImmutableItemThreadPool
                 = Executors.newCachedThreadPool();
         for (int i = 0; i < ImmutableRequestQueueWorkers; i++) {
@@ -591,6 +593,18 @@ public class TorrentDHTEngine {
             gettingMutableItemThreadPool.execute(new GettingMutableItemTask());
         }
 
+        puttingImmutableItemThreadPool
+                = Executors.newCachedThreadPool();
+        for (int i = 0; i < ImmutableRetriveQueueWorkers; i++) {
+            puttingImmutableItemThreadPool.execute(new PuttingImmutableItemTask());
+        }
+
+        puttingMutableItemThreadPool
+                = Executors.newCachedThreadPool();
+        for (int i = 0; i < MutableRetriveQueueWorkers; i++) {
+            puttingMutableItemThreadPool.execute(new PuttingMutableItemTask());
+        }
+
         logger.info("starting dht items workers");
     }
 
@@ -600,13 +614,6 @@ public class TorrentDHTEngine {
         }
         dhtItemWorkersStarted.set(false);
 
-        if (puttingImmutableItemThread != null) {
-            puttingImmutableItemThread.interrupt();
-        }
-        if (puttingMutableItemThread != null) {
-            puttingMutableItemThread.interrupt();
-        }
-
         if (gettingImmutableItemThreadPool != null) {
             gettingImmutableItemThreadPool.shutdownNow();
         }
@@ -614,18 +621,27 @@ public class TorrentDHTEngine {
             gettingMutableItemThreadPool.shutdownNow();
         }
 
-        try {
-            puttingImmutableItemThread.join();
-            puttingImmutableItemThread = null;
-            puttingMutableItemThread.join();
-            puttingMutableItemThread = null;
+        if (puttingImmutableItemThreadPool != null) {
+            puttingImmutableItemThreadPool.shutdownNow();
+        }
+        if (puttingMutableItemThreadPool != null) {
+            puttingMutableItemThreadPool.shutdownNow();
+        }
 
+        try {
             gettingImmutableItemThreadPool.awaitTermination(
                     1, TimeUnit.SECONDS);
             gettingImmutableItemThreadPool = null;
             gettingMutableItemThreadPool.awaitTermination(
                     1, TimeUnit.SECONDS);
             gettingMutableItemThreadPool = null;
+
+            puttingImmutableItemThreadPool.awaitTermination(
+                    1, TimeUnit.SECONDS);
+            puttingImmutableItemThreadPool = null;
+            puttingMutableItemThreadPool.awaitTermination(
+                    1, TimeUnit.SECONDS);
+            puttingMutableItemThreadPool = null;
         } catch (InterruptedException e) {
             // ignore this exception
         }
@@ -653,6 +669,26 @@ public class TorrentDHTEngine {
         }
     }
 
+    private class PuttingImmutableItemTask implements Runnable {
+
+        public PuttingImmutableItemTask() {}
+
+        @Override
+        public void run() {
+            immutableItemsDistributeLoop();
+        }
+    }
+
+    private class PuttingMutableItemTask implements Runnable {
+
+        public PuttingMutableItemTask() {}
+
+        @Override
+        public void run() {
+            mutableItemsDistributeLoop();
+        }
+    }
+
     /**
      * Retrive immutable item.
      */
@@ -664,10 +700,13 @@ public class TorrentDHTEngine {
             byte[] item = null;
 
             try {
-                Thread.sleep(DHTOperationInterval);
+                Thread.sleep(DHTGettingInterval);
 
                 req = gettingImmutableItemQueue.take();
+                long startTime = System.nanoTime();
                 item = dhtGet(req.getSpec());
+                logger.debug("immutable item got cost {}ms",
+                        (System.nanoTime() - startTime) / 1000000);
             } catch (InterruptedException e) {
                 break;
             } catch (Throwable e) {
@@ -676,6 +715,10 @@ public class TorrentDHTEngine {
 
             if (req != null) {
                 try {
+                    if (item == null) {
+                        dhtEngineRegulator.immutableGettingFailed();
+                    }
+
                     req.onDHTItemGot(item);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -695,10 +738,13 @@ public class TorrentDHTEngine {
             byte[] item = null;
 
             try {
-                Thread.sleep(DHTOperationInterval);
+                Thread.sleep(DHTGettingInterval);
 
                 req = gettingMutableItemQueue.take();
+                long startTime = System.nanoTime();
                 item = dhtGet(req.getSpec());
+                logger.debug("mutable item got cost {}ms",
+                        (System.nanoTime() - startTime) / 1000000);
             } catch (InterruptedException e) {
                 break;
             } catch (Throwable e) {
@@ -707,6 +753,10 @@ public class TorrentDHTEngine {
 
             if (req != null) {
                 try {
+                    if (item == null) {
+                        dhtEngineRegulator.mutableGettingFailed();
+                    }
+
                     req.onDHTItemGot(item);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -725,7 +775,7 @@ public class TorrentDHTEngine {
             ImmutableItem item;
             try {
                 // TODO: improve time interval
-                Thread.sleep(DHTOperationInterval);
+                Thread.sleep(DHTPuttingInterval);
 
                 item = puttingImmutableItemQueue.take();
                 dhtPut(item);
@@ -746,7 +796,7 @@ public class TorrentDHTEngine {
 
             MutableItem item;
             try {
-                Thread.sleep(DHTOperationInterval);
+                Thread.sleep(DHTPuttingInterval);
 
                 item = puttingMutableItemQueue.take();
                 dhtPut(item);
