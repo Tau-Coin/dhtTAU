@@ -1,8 +1,7 @@
 package io.taucoin.chain;
 
 public enum TryResult {
-    Got, // 获得数据
+    SUCCESS, // 成功获得数据
     REQUEST, // 请求数据
-    Got_NULL, // 获取数据为空
-    ERROR // 出现错误
+    ERROR, // 获取数据出错或者其它错误
 }
