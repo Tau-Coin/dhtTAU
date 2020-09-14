@@ -142,14 +142,14 @@ public class TorrentDHTEngine {
 
     // The time interval for dht operation.
     // TODO:
-    private static final long DHTGettingInterval = 1 * 1000; // milliseconds.
-    private static final long DHTPuttingInterval = 1 * 1000; // milliseconds.
+    private static final long DHTGettingInterval = 200; // milliseconds.
+    private static final long DHTPuttingInterval = 500; // milliseconds.
 
     // Dht blocking queue size limit.
     private static final int DHTBlockingQueueCapability = 10000;
 
-    private static final int ImmutableRequestQueueWorkers = 2;
-    private static final int MutableRequestQueueWorkers = 2;
+    private static final int ImmutableRequestQueueWorkers = 1;
+    private static final int MutableRequestQueueWorkers = 1;
     private static final int ImmutableRetriveQueueWorkers = 1;
     private static final int MutableRetriveQueueWorkers = 1;
 
