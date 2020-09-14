@@ -1592,9 +1592,9 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private void requestDemandBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockDemandSalts.get(chainID));
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_DEMAND_FROM_PEER);
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+//        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockDemandSalts.get(chainID));
+//        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_DEMAND_FROM_PEER);
+//        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private void requestBlockForMining(ByteArrayWrapper chainID, byte[] blockHash) {
@@ -1617,9 +1617,9 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private void requestDemandTxFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txDemandSalts.get(chainID));
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_DEMAND_FROM_PEER);
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+//        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txDemandSalts.get(chainID));
+//        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_DEMAND_FROM_PEER);
+//        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private void requestTxForMining(ByteArrayWrapper chainID, byte[] txid, ByteArrayWrapper txBlockHash) {
@@ -1643,9 +1643,9 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private void requestTipTxForMining(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txTipSalts.get(chainID));
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_TX_FOR_MINING);
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+//        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txTipSalts.get(chainID));
+//        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_TX_FOR_MINING);
+//        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private void requestTxForPool(ByteArrayWrapper chainID, byte[] txid) {
