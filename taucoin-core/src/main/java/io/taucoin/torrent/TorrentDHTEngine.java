@@ -142,8 +142,8 @@ public class TorrentDHTEngine {
 
     // The time interval for dht operation.
     // TODO:
-    private static final long DHTGettingInterval = 500; // milliseconds.
-    private static final long DHTPuttingInterval = 500; // milliseconds.
+    private static final long DHTGettingInterval = 1000; // milliseconds.
+    private static final long DHTPuttingInterval = 1000; // milliseconds.
 
     // Dht blocking queue size limit.
     private static final int DHTBlockingQueueCapability = 10000;
@@ -698,6 +698,7 @@ public class TorrentDHTEngine {
 
             ImmutableItemRequest req = null;
             byte[] item = null;
+            long timeCost = 0;
 
             try {
                 Thread.sleep(DHTGettingInterval);
@@ -705,8 +706,8 @@ public class TorrentDHTEngine {
                 req = gettingImmutableItemQueue.take();
                 long startTime = System.nanoTime();
                 item = dhtGet(req.getSpec());
-                logger.debug("immutable item got cost {}ms",
-                        (System.nanoTime() - startTime) / 1000000);
+
+                timeCost = (System.nanoTime() - startTime) / 1000000;
                 dhtEngineRegulator.immutableItemRequest();
             } catch (InterruptedException e) {
                 break;
@@ -718,6 +719,19 @@ public class TorrentDHTEngine {
                 try {
                     if (item == null) {
                         dhtEngineRegulator.immutableGettingFailed();
+                        logger.debug(String.format("immutable getting failed:"
+                                + "time cost %d ms, fail rate:(%d/%d=%.4f)"
+                                + ", req %s, callback data %s",
+                                timeCost,
+                                dhtEngineRegulator.getImmutableGettingFailCounter(),
+                                dhtEngineRegulator.getImmutableGettingCounter(),
+                                dhtEngineRegulator.getImmutableGettingFailRate(),
+                                req,
+                                req.getCallbackData() != null ? req.getCallbackData() : "null"
+                        ));
+                    } else {
+                        logger.debug(String.format("immutable getting success:"
+                                 + "time cost %d ms", timeCost));
                     }
 
                     req.onDHTItemGot(item);
@@ -737,6 +751,7 @@ public class TorrentDHTEngine {
 
             MutableItemRequest req = null;
             byte[] item = null;
+            long timeCost = 0;
 
             try {
                 Thread.sleep(DHTGettingInterval);
@@ -744,8 +759,8 @@ public class TorrentDHTEngine {
                 req = gettingMutableItemQueue.take();
                 long startTime = System.nanoTime();
                 item = dhtGet(req.getSpec());
-                logger.debug("mutable item got cost {}ms",
-                        (System.nanoTime() - startTime) / 1000000);
+
+                timeCost = (System.nanoTime() - startTime) / 1000000;
                 dhtEngineRegulator.mutableItemRequest();
             } catch (InterruptedException e) {
                 break;
@@ -757,6 +772,20 @@ public class TorrentDHTEngine {
                 try {
                     if (item == null) {
                         dhtEngineRegulator.mutableGettingFailed();
+                        logger.debug(String.format("mutable getting failed:"
+                                + "time cost %d ms, fail rate:(%d/%d=%.4f)"
+                                + ", req %s, callback data %s",
+                                timeCost,
+                                dhtEngineRegulator.getMutableGettingFailCounter(),
+                                dhtEngineRegulator.getMutableGettingCounter(),
+                                dhtEngineRegulator.getMutableGettingFailRate(),
+                                req,
+                                req.getCallbackData() != null ? req.getCallbackData() : "null"
+                        ));
+                    } else {
+                        logger.debug(String.format("mutable getting success:"
+                                 + "time cost %d ms", timeCost));
+
                     }
 
                     req.onDHTItemGot(item);

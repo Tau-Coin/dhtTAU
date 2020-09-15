@@ -30,15 +30,33 @@ class DHTEngineRegulator {
 
     public synchronized void immutableGettingFailed() {
         immutableGettingFailCounter++;
-        logger.debug(String.format("immutable getting fail rate:(%d/%d=%.4f)",
-                immutableGettingFailCounter, immutableGettingCounter,
-                immutableGettingFailCounter / (double)immutableGettingCounter));
     }
 
     public synchronized void mutableGettingFailed() {
         mutableGettingFailCounter++;
-        logger.debug(String.format("mutable getting fail rate:(%d/%d=%.4f)",
-                mutableGettingFailCounter, mutableGettingCounter,
-                mutableGettingFailCounter / (double)mutableGettingCounter));
+    }
+
+    public synchronized long getImmutableGettingCounter() {
+        return immutableGettingCounter;
+    }
+
+    public synchronized long getImmutableGettingFailCounter() {
+        return immutableGettingFailCounter;
+    }
+
+    public synchronized double getImmutableGettingFailRate() {
+        return immutableGettingFailCounter / (double)immutableGettingCounter;
+    }
+
+    public synchronized long getMutableGettingCounter() {
+        return mutableGettingCounter;
+    }
+
+    public synchronized long getMutableGettingFailCounter() {
+        return mutableGettingFailCounter;
+    }
+
+    public synchronized double getMutableGettingFailRate() {
+        return mutableGettingFailCounter / (double)mutableGettingCounter;
     }
 }

@@ -283,6 +283,10 @@ public final class DHT {
             return this.spec;
         }
 
+        public Object getCallbackData() {
+            return this.callBackData;
+        }
+
         public void onDHTItemGot(byte[] item) {
             if (callback != null) {
                 callback.onDHTItemGot(item, this.callBackData);
@@ -332,6 +336,10 @@ public final class DHT {
 
         public GetMutableItemSpec getSpec() {
             return this.spec;
+        }
+
+        public Object getCallbackData() {
+            return this.callBackData;
         }
 
         public void onDHTItemGot(byte[] item) {
