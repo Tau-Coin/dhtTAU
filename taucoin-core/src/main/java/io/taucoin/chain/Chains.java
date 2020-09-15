@@ -2057,7 +2057,10 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             BigInteger power = this.stateDB.getNonce(chainID.getData(), pubKey);
             if (null == power || power.longValue() <= 0) {
-                logger.info("Chain ID[{}]: PubKey[{}]-No mining power.",
+                if (isSyncUncompleted(chainID)) {
+                    requestSyncBlock(chainID);
+                }
+                logger.info("Chain ID[{}]: PubKey[{}]-No mining power，try to sync.",
                         new String(chainID.getData()), Hex.toHexString(pubKey));
                 return false;
             }
