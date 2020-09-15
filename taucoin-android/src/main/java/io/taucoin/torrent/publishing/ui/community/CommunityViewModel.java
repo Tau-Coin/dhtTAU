@@ -27,6 +27,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.genesis.GenesisItem;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
@@ -37,7 +38,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
@@ -139,14 +139,24 @@ public class CommunityViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
+    GenesisConfig createGenesisConfig(@NonNull Community community){
+        byte[] publicKey = ByteUtil.toByte(community.publicKey);
+        BigInteger totalCoin = BigInteger.valueOf(community.totalCoin);
+        HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
+        GenesisItem item = new GenesisItem(totalCoin);
+        genesisMsg.put(new ByteArrayWrapper(publicKey), item);
+        return new GenesisConfig(daemon.getChainManager(),
+                community.communityName, genesisMsg);
+    }
+
     /**
      * 添加新的社区到数据库
      * @param community 社区数据
      */
-    void addCommunity(@NonNull Community community){
+    void addCommunity(@NonNull Community community, GenesisConfig cf){
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             // TauController:创建Community社区
-            Result result = createCommunity(community);
+            Result result = createCommunity(community, cf);
             emitter.onNext(result);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -156,27 +166,21 @@ public class CommunityViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
-    /**
-     * 创建Community社区
-     * @param community
-     */
-    private Result createCommunity(Community community) {
+    private Result createCommunity(Community community, GenesisConfig cf) {
         Result result = new Result();
         try {
-            BigInteger totalCoin = BigInteger.valueOf(community.totalCoin);
-            byte[] publicKey = ByteUtil.toByte(community.publicKey);
-            HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
-            GenesisItem item = new GenesisItem(totalCoin);
-            genesisMsg.put(new ByteArrayWrapper(publicKey), item);
-            daemon.createNewCommunity(community.communityName, genesisMsg);
-            community.chainID = new String(GenesisConfig.chainID(community.communityName, publicKey,
-                    DateUtil.getTime()), StandardCharsets.UTF_8);
+            if (null == cf) {
+                cf = createGenesisConfig(community);
+            }
+            daemon.createNewCommunity(cf);
+
+            community.chainID = new String(cf.getChainID(), StandardCharsets.UTF_8);
             communityRepo.addCommunity(community);
             logger.debug("Add community to database: communityName={}, chainID={}",
                     community.communityName, community.chainID);
             // 把社区创建者添加为社区成员
             Member member = new Member(community.chainID, community.publicKey,
-                    community.totalCoin, item.getPower().longValue());
+                    community.totalCoin, ChainParam.DefaultGeneisisPower.longValue());
             memberRepo.addMember(member);
         }catch (Exception e){
             result.setFailMsg(e.getMessage());
@@ -282,7 +286,7 @@ public class CommunityViewModel extends AndroidViewModel {
                 Community community = new Community(communityName, currentUser.publicKey,
                         Constants.TOTAL_COIN.longValue(), Constants.BLOCK_IN_AVG);
                 // TauController:创建Community社区
-                result = createCommunity(community);
+                result = createCommunity(community, null);
                 if(result.isSuccess()){
                     // 社区创建完成，直接给要聊天的朋友空投币
                     String msg = txViewModel.airdropToFriend(community.chainID, friendPk);

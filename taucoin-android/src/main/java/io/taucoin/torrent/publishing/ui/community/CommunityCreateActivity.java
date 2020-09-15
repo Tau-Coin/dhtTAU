@@ -9,8 +9,11 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.nio.charset.StandardCharsets;
+
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
+import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
@@ -35,6 +38,7 @@ public class CommunityCreateActivity extends BaseActivity {
     private ActivityCommunityCreateBinding binding;
     private CommunityViewModel viewModel;
     private CommonDialog successDialog;
+    private GenesisConfig cf;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +70,21 @@ public class CommunityCreateActivity extends BaseActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String communityName = s.toString();
+                String chainID;
+                if (StringUtil.isEmpty(communityName)) {
+                    cf = null;
+                    chainID = null;
+                } else {
+                    Community community = buildCommunity();
+                    cf = viewModel.createGenesisConfig(community);
+                    chainID = new String(cf.getChainID(), StandardCharsets.UTF_8);
+                }
+
                 String firstLetters = StringUtil.getFirstLettersOfName(s.toString());
                 binding.roundButton.setText(firstLetters);
                 int defaultColor = getResources().getColor(R.color.primary_light);
-                int bgColor = StringUtil.isEmpty(firstLetters) ? defaultColor : Utils.getGroupColor(firstLetters);
+                int bgColor = StringUtil.isEmpty(chainID) ? defaultColor : Utils.getGroupColor(chainID);
                 binding.roundButton.setBgColor(bgColor);
             }
 
@@ -136,16 +151,22 @@ public class CommunityCreateActivity extends BaseActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // 添加新社区处理事件
         if (item.getItemId() == R.id.menu_done) {
-            String communityName = ViewUtils.getText(binding.etCommunityName);
-            String publicKey = ViewUtils.getText(binding.tvPublicKey);
-            Community community = new Community(communityName, publicKey,
-                    Constants.TOTAL_COIN.longValue(), Constants.BLOCK_IN_AVG);
+            Community community = buildCommunity();
             if(viewModel.validateCommunity(community)){
-                viewModel.addCommunity(community);
+                viewModel.addCommunity(community, cf);
             }
         }
         return true;
     }
+
+    private Community buildCommunity(){
+        String communityName = ViewUtils.getText(binding.etCommunityName);
+        String publicKey = ViewUtils.getText(binding.tvPublicKey);
+        return new Community(communityName, publicKey,
+                Constants.TOTAL_COIN.longValue(), Constants.BLOCK_IN_AVG);
+    }
+
+
 
     @Override
     protected void onDestroy() {

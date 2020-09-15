@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
 
+import com.frostwire.jlibtorrent.Ed25519;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,8 +21,10 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.chain.ChainManager;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.controller.TauController;
+import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.publishing.MainApplication;
@@ -99,7 +103,7 @@ public class TauDaemon {
      */
     public void updateSeed(String seed) {
         byte[] byteSeed = ByteUtil.toByte(seed);
-        tauController.updateKey(byteSeed);
+        tauController.updateKey(Ed25519.createKeypair(byteSeed));
     }
 
     /**
@@ -193,6 +197,7 @@ public class TauDaemon {
         @Override
         public void onTauStarted(boolean success, String errMsg) {
             if (success) {
+                logger.debug("Tau start successfully");
                 isRunning = true;
                 rescheduleTauBySettings();
             } else {
@@ -429,6 +434,14 @@ public class TauDaemon {
      */
     public void createNewCommunity(String communityName, HashMap<ByteArrayWrapper, GenesisItem> genesisItems) {
         tauController.getChainManager().createNewCommunity(communityName, genesisItems);
+    }
+
+    public void createNewCommunity(GenesisConfig cf) {
+        tauController.getChainManager().createNewCommunity(cf);
+    }
+
+    public ChainManager getChainManager() {
+        return tauController.getChainManager();
     }
 
     /**
