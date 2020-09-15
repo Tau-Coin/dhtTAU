@@ -986,10 +986,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                     get(new ByteArrayWrapper(this.syncBlocks.get(chainID).getPreviousBlockHash()));
 
             syncBlock(chainID, blockContainer);
-
-            this.blockContainerMapForSync.get(chainID).clear();
-            this.blockMapForSync.get(chainID).clear();
-            this.txMapForSync.get(chainID).clear();
         }
     }
 
@@ -1035,7 +1031,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void tryToMine(ByteArrayWrapper chainID) {
-        if (minable(chainID)) {
+        if (TryResult.SUCCESS == minable(chainID)) {
             BlockContainer blockContainer = mineBlock(chainID);
 
             if (null != blockContainer) {
@@ -1975,72 +1971,107 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return true if ok, false otherwise
      */
     private boolean verifyPOT(ByteArrayWrapper chainID, Block block, StateDB stateDB) {
-        try {
-            ProofOfTransaction pot = this.pots.get(chainID);
-
-            byte[] pubKey = block.getMinerPubkey();
-
-            BigInteger power = stateDB.getNonce(chainID.getData(), pubKey);
-            if (null == power) {
-                logger.error("ChainID[{}]: Miner[{}] has no power!",
-                        new String(chainID.getData()), Hex.toHexString(pubKey));
-                return false;
-            }
-            logger.info("Chain ID[{}]: Address: {}, mining power: {}",
-                    new String(chainID.getData()), Hex.toHexString(pubKey), power);
-
-            Block parentBlock = this.blockStore.getBlockByHash(chainID.getData(), block.getPreviousBlockHash());
-            if (null == parentBlock) {
-                logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
-                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-                return false;
-            }
-
-            // check base target
-            BigInteger baseTarget = pot.calculateRequiredBaseTarget(chainID.getData(), parentBlock, this.blockStore);
-            if (0 != baseTarget.compareTo(block.getBaseTarget())) {
-                logger.error("ChainID[{}]: Block[{}] base target error!",
-                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-                return false;
-            }
-
-            // check generation signature
-            byte[] genSig = pot.calculateGenerationSignature(parentBlock.getGenerationSignature(), pubKey);
-            if (!Arrays.equals(genSig, block.getGenerationSignature())) {
-                logger.error("ChainID[{}]: Block[{}] generation signature error!",
-                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-                return false;
-            }
-
-            // check cumulative difficulty
-            BigInteger culDifficulty = pot.calculateCumulativeDifficulty(
-                    parentBlock.getCumulativeDifficulty(), baseTarget);
-            if (0 != culDifficulty.compareTo(block.getCumulativeDifficulty())) {
-                logger.error("ChainID[{}]: Block[{}] Cumulative difficulty error!",
-                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-                return false;
-            }
-
-            // check if target >= hit
-//            BigInteger target = this.pot.calculateMinerTargetValue(baseTarget, power,
-//                    block.getTimeStamp() - parentBlock.getTimeStamp());
-
-            BigInteger hit = pot.calculateRandomHit(genSig);
-            long timeInterval = block.getTimeStamp() - parentBlock.getTimeStamp();
-
-            // verify hit
-            if (!pot.verifyHit(hit, baseTarget, power, timeInterval)) {
-                logger.error("ChainID[{}]: The block[{}] does not meet the pot consensus!!",
-                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-                return false;
-            }
-
-        } catch (Exception e) {
-            logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
-            return false;
-        }
-
+        // TODO
         return true;
+//        try {
+//            ProofOfTransaction pot = this.pots.get(chainID);
+//
+//            byte[] pubKey = block.getMinerPubkey();
+//
+//            BigInteger power = stateDB.getNonce(chainID.getData(), pubKey);
+//            if (null == power) {
+//                logger.error("ChainID[{}]: Miner[{}] has no power!",
+//                        new String(chainID.getData()), Hex.toHexString(pubKey));
+//                return TryResult.ERROR;
+//            }
+//            logger.info("Chain ID[{}]: Address: {}, mining power: {}",
+//                    new String(chainID.getData()), Hex.toHexString(pubKey), power);
+//
+//            Block parentBlock = this.blockStore.getBlockByHash(chainID.getData(), block.getPreviousBlockHash());
+//            if (null == parentBlock) {
+//                logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
+//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+//                return TryResult.ERROR;
+//            }
+//
+//            // check base target
+//            Block ancestor3 = null;
+//            if (parentBlock.getBlockNum() > 3) {
+//                Block ancestor1 = this.blockStore.getBlockByHash(chainID.getData(),
+//                        parentBlock.getPreviousBlockHash());
+//                if (null == ancestor1) {
+//                    if (isSyncUncompleted(chainID)) {
+//                        requestSyncBlock(chainID);
+//                        return TryResult.REQUEST;
+//                    }
+//                    return TryResult.ERROR;
+//                }
+//
+//                Block ancestor2 = this.blockStore.getBlockByHash(chainID.getData(),
+//                        ancestor1.getPreviousBlockHash());
+//                if (null == ancestor2) {
+//                    if (isSyncUncompleted(chainID)) {
+//                        requestSyncBlock(chainID);
+//                        return TryResult.REQUEST;
+//                    }
+//                    return TryResult.ERROR;
+//                }
+//
+//                ancestor3 = this.blockStore.getBlockByHash(chainID.getData(),
+//                        ancestor2.getPreviousBlockHash());
+//                if (null == ancestor3) {
+//                    if (isSyncUncompleted(chainID)) {
+//                        requestSyncBlock(chainID);
+//                        return TryResult.REQUEST;
+//                    }
+//                    return TryResult.ERROR;
+//                }
+//            }
+//
+//            BigInteger baseTarget = pot.calculateRequiredBaseTarget(parentBlock, ancestor3);
+//            if (0 != baseTarget.compareTo(block.getBaseTarget())) {
+//                logger.error("ChainID[{}]: Block[{}] base target error!",
+//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+//                return TryResult.ERROR;
+//            }
+//
+//            // check generation signature
+//            byte[] genSig = pot.calculateGenerationSignature(parentBlock.getGenerationSignature(), pubKey);
+//            if (!Arrays.equals(genSig, block.getGenerationSignature())) {
+//                logger.error("ChainID[{}]: Block[{}] generation signature error!",
+//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+//                return TryResult.ERROR;
+//            }
+//
+//            // check cumulative difficulty
+//            BigInteger culDifficulty = pot.calculateCumulativeDifficulty(
+//                    parentBlock.getCumulativeDifficulty(), baseTarget);
+//            if (0 != culDifficulty.compareTo(block.getCumulativeDifficulty())) {
+//                logger.error("ChainID[{}]: Block[{}] Cumulative difficulty error!",
+//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+//                return TryResult.ERROR;
+//            }
+//
+//            // check if target >= hit
+////            BigInteger target = this.pot.calculateMinerTargetValue(baseTarget, power,
+////                    block.getTimeStamp() - parentBlock.getTimeStamp());
+//
+//            BigInteger hit = pot.calculateRandomHit(genSig);
+//            long timeInterval = block.getTimeStamp() - parentBlock.getTimeStamp();
+//
+//            // verify hit
+//            if (!pot.verifyHit(hit, baseTarget, power, timeInterval)) {
+//                logger.error("ChainID[{}]: The block[{}] does not meet the pot consensus!!",
+//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+//                return TryResult.ERROR;
+//            }
+//
+//        } catch (Exception e) {
+//            logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
+//            return TryResult.ERROR;
+//        }
+//
+//        return TryResult.SUCCESS;
     }
 
     /**
@@ -2048,7 +2079,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @return true if can mine, false otherwise
      */
-    private boolean minable(ByteArrayWrapper chainID) {
+    private TryResult minable(ByteArrayWrapper chainID) {
         try {
             ProofOfTransaction pot = this.pots.get(chainID);
             BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
@@ -2057,25 +2088,59 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             if (null == pubKey) {
                 logger.info("Chain ID[{}]: PubKey is null.", new String(chainID.getData()));
-                return false;
+                return TryResult.ERROR;
             }
 
             BigInteger power = this.stateDB.getNonce(chainID.getData(), pubKey);
             if (null == power || power.longValue() <= 0) {
                 if (isSyncUncompleted(chainID)) {
+                    logger.info("Chain ID[{}]: PubKey[{}]-No mining power, try to sync.",
+                            new String(chainID.getData()), Hex.toHexString(pubKey));
                     requestSyncBlock(chainID);
+                    return TryResult.REQUEST;
                 }
-                logger.info("Chain ID[{}]: PubKey[{}]-No mining power, try to sync.",
-                        new String(chainID.getData()), Hex.toHexString(pubKey));
-                return false;
+
+                return TryResult.ERROR;
             }
 
             logger.info("ChainID[{}]: PubKey[{}] mining power: {}",
                     new String(chainID.getData()), Hex.toHexString(pubKey), power);
 
             // check base target
-            BigInteger baseTarget = pot.calculateRequiredBaseTarget(chainID.getData(),
-                    bestBlockContainer.getBlock(), this.blockStore);
+            Block ancestor3 = null;
+            if (bestBlockContainer.getBlock().getBlockNum() > 3) {
+                Block ancestor1 = this.blockStore.getBlockByHash(chainID.getData(),
+                        bestBlockContainer.getBlock().getPreviousBlockHash());
+                if (null == ancestor1) {
+                    if (isSyncUncompleted(chainID)) {
+                        requestSyncBlock(chainID);
+                        return TryResult.REQUEST;
+                    }
+                    return TryResult.ERROR;
+                }
+
+                Block ancestor2 = this.blockStore.getBlockByHash(chainID.getData(),
+                        ancestor1.getPreviousBlockHash());
+                if (null == ancestor2) {
+                    if (isSyncUncompleted(chainID)) {
+                        requestSyncBlock(chainID);
+                        return TryResult.REQUEST;
+                    }
+                    return TryResult.ERROR;
+                }
+
+                ancestor3 = this.blockStore.getBlockByHash(chainID.getData(),
+                        ancestor2.getPreviousBlockHash());
+                if (null == ancestor3) {
+                    if (isSyncUncompleted(chainID)) {
+                        requestSyncBlock(chainID);
+                        return TryResult.REQUEST;
+                    }
+                    return TryResult.ERROR;
+                }
+            }
+
+            BigInteger baseTarget = pot.calculateRequiredBaseTarget(bestBlockContainer.getBlock(), ancestor3);
 
             // check generation signature
             byte[] genSig = pot.calculateGenerationSignature(bestBlockContainer.
@@ -2090,7 +2155,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             long timeInterval = pot.calculateMiningTimeInterval(hit, baseTarget, power);
             if ((System.currentTimeMillis() / 1000 - bestBlockContainer.getBlock().getTimeStamp()) < timeInterval) {
                 logger.info("Chain ID[{}]: It's not time for the block.", new String(chainID.getData()));
-                return false;
+                return TryResult.ERROR;
             }
 
 //            if (target.compareTo(hit) < 0) {
@@ -2100,10 +2165,10 @@ public class Chains implements DHT.GetDHTItemCallback{
 //            }
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
-            return false;
+            return TryResult.ERROR;
         }
 
-        return true;
+        return TryResult.SUCCESS;
     }
 
     /**
@@ -2117,11 +2182,29 @@ public class Chains implements DHT.GetDHTItemCallback{
         TransactionPool txPool = this.txPools.get(chainID);
         StateProcessor stateProcessor = this.stateProcessors.get(chainID);
 
-        BigInteger baseTarget = pot.calculateRequiredBaseTarget(chainID.getData(),
-                bestBlockContainer.getBlock(), this.blockStore);
+        Block ancestor3 = null;
+        try {
+            if (bestBlockContainer.getBlock().getBlockNum() > 3) {
+                Block ancestor1 = this.blockStore.getBlockByHash(chainID.getData(),
+                        bestBlockContainer.getBlock().getPreviousBlockHash());
+
+                Block ancestor2 = this.blockStore.getBlockByHash(chainID.getData(),
+                        ancestor1.getPreviousBlockHash());
+
+                ancestor3 = this.blockStore.getBlockByHash(chainID.getData(),
+                        ancestor2.getPreviousBlockHash());
+            }
+        } catch (Exception e) {
+            logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
+            return null;
+        }
+
+        BigInteger baseTarget = pot.calculateRequiredBaseTarget(bestBlockContainer.getBlock(), ancestor3);
+
         byte[] generationSignature = pot.calculateGenerationSignature(
                 bestBlockContainer.getBlock().getGenerationSignature(),
                 AccountManager.getInstance().getKeyPair().first);
+
         BigInteger cumulativeDifficulty = pot.calculateCumulativeDifficulty(
                 bestBlockContainer.getBlock().getCumulativeDifficulty(),
                 baseTarget);
@@ -2519,7 +2602,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         BlockContainer blockContainer = new BlockContainer(block, tx);
 
                         this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                                put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
+                                put(dataIdentifier.getTxBlockHash(), blockContainer);
                     }
 
                     // 放入交易集合作缓存

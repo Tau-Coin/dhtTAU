@@ -60,42 +60,13 @@ public class ProofOfTransaction {
     /**
      * get required base target
      *
-     * @param chainID chain ID
      * @param previousBlock previous block
-     * @param blockStore block store
      * @return base target or null if error
      */
-    public BigInteger calculateRequiredBaseTarget(byte[] chainID, Block previousBlock, BlockStore blockStore) {
+    public BigInteger calculateRequiredBaseTarget(Block previousBlock, Block ancestor3) {
         long blockNumber = previousBlock.getBlockNum();
         if (blockNumber <= 3) {
             return this.genesisBaseTarget;
-        }
-
-        Block ancestor1, ancestor2, ancestor3;
-        try {
-            ancestor1 = blockStore.getBlockByHash(chainID, previousBlock.getPreviousBlockHash());
-            if (null == ancestor1) {
-                logger.error("Chain ID:{}: Cannot find parent1, hash:{}",
-                        new String(this.chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
-                return null;
-            }
-
-            ancestor2 = blockStore.getBlockByHash(chainID, ancestor1.getPreviousBlockHash());
-            if (null == ancestor2) {
-                logger.error("Chain ID:{}: Cannot find parent2, hash:{}",
-                        new String(this.chainID), Hex.toHexString(ancestor1.getPreviousBlockHash()));
-                return null;
-            }
-
-            ancestor3 = blockStore.getBlockByHash(chainID, ancestor2.getPreviousBlockHash());
-            if (null == ancestor3) {
-                logger.error("Chain ID:{}: Cannot find parent3, hash:{}",
-                        new String(this.chainID), Hex.toHexString(ancestor2.getPreviousBlockHash()));
-                return null;
-            }
-        } catch (Exception e) {
-            logger.info(new String(this.chainID) + ":" + e.getMessage(), e);
-            return null;
         }
 
         long totalTimeInterval = 0;
