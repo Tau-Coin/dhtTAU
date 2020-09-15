@@ -972,7 +972,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void requestSyncBlock(ByteArrayWrapper chainID) {
-        requestBlockForSync(chainID, this.syncBlocks.get(chainID).getBlockHash());
+        requestBlockForSync(chainID, this.syncBlocks.get(chainID).getPreviousBlockHash());
     }
 
     /**
