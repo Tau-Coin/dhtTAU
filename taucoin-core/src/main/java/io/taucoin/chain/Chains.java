@@ -560,6 +560,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                         BlockContainer blockContainer = iterator.next().getValue();
                         if (null != blockContainer) {
                             initChain(chainID, blockContainer);
+
+                            this.miningFlag.put(chainID, true);
                         }
 
                         iterator.remove();
