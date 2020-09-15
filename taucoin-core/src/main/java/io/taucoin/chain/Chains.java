@@ -501,9 +501,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void traverseMultiChain(Set<ByteArrayWrapper> chainIDs) {
         for (ByteArrayWrapper chainID : chainIDs) {
 
-            logger.debug("Chain ID:{}", new String(chainID.getData()));
-
-
             // 1. 判断是否空链，非空链忽略这一步
             if (isEmptyChain(chainID)) {
                 // 1.1 如果是空链，先查看是否有之前轮次请求回来的数据，有数据则进行链的初始化，没有数据则请求数据
@@ -534,6 +531,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (!this.votingFlag.get(chainID)) {
                     // 2.2.1 如果不在投票阶段，则尝试用之前请求回来数据进行切换最难链的操作，
                     // 或者没有之前的数据的情况下，开始请求查找最难链
+                    logger.debug("Try to re-branch or request");
                     tryToReBranchOrRequest(chainID);
                 }
 
@@ -556,13 +554,12 @@ public class Chains implements DHT.GetDHTItemCallback{
                 tryToMine(chainID);
 
                 // 定时操作，检查是否到时间
-                // TODO:: remove after test, ChainParam.DEFAULT_BLOCK_TIME
-//                if (System.currentTimeMillis() / 1000 - this.timeRecorders.get(chainID) >= 3) {
-//                    // 2.6 传播最佳区块
-//                    publishBestBlock(chainID);
-//
-//                    // 2.7 传播最佳交易
-//                    publishBestTx(chainID);
+                if (System.currentTimeMillis() / 1000 - this.timeRecorders.get(chainID) >= ChainParam.DEFAULT_BLOCK_TIME) {
+                    // 2.6 传播最佳区块
+                    publishBestBlock(chainID);
+
+                    // 2.7 传播最佳交易
+                    publishBestTx(chainID);
 
 //                    // 2.8 随机挑选logN个peer
 //                    int counter = this.peerManagers.get(chainID).getPeerNumber();
@@ -587,15 +584,9 @@ public class Chains implements DHT.GetDHTItemCallback{
 //                        requestDemandTxFromPeer(chainID, peer);
 //                    }
 
-                    // 设定新时间起点
-//                    this.timeRecorders.put(chainID, System.currentTimeMillis() / 1000);
-//                }
-
-                // 2.6 传播最佳区块
-                publishBestBlock(chainID);
-
-                // 2.7 传播最佳交易
-                publishBestTx(chainID);
+                    //设定新时间起点
+                    this.timeRecorders.put(chainID, System.currentTimeMillis() / 1000);
+                }
 
                 byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
                 // 2.8.1 请求最佳交易
@@ -642,6 +633,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null != blockContainer && blockContainer.getBlock().getCumulativeDifficulty().
                         compareTo(this.bestBlockContainers.get(chainID).getBlock().
                                 getCumulativeDifficulty()) > 0) {
+                    logger.debug("Block[{}] is greater than best block.",
+                            Hex.toHexString(blockContainer.getBlock().getBlockHash()));
                     // 是否需要清除数据，以备下一轮
                     if (TryResult.REQUEST == tryToReBranch(chainID, blockContainer)) {
                         clearContainer = false;
@@ -651,6 +644,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
 
             if (clearContainer) {
+                logger.debug("Clear block container map.");
                 this.blockContainerMap.get(chainID).clear();
             }
         }
@@ -672,7 +666,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
 
             // 两条链头先对齐
-            // 1. 范围先缩小到mutable range之内
+            // 1. 高度差先缩小到mutable range之内
             BlockContainer referenceBlockContainer = blockContainer;
             BlockContainer immutableBlockContainer = new BlockContainer();
             while (referenceBlockContainer.getBlock().getBlockNum() - this.bestBlockContainers.get(chainID).
@@ -1627,8 +1621,12 @@ public class Chains implements DHT.GetDHTItemCallback{
             ByteArrayWrapper blockKey = new ByteArrayWrapper(blockHash);
 
             BlockContainer blockContainerInCache = this.blockContainerMap.get(chainID).get(blockKey);
-            if (this.blockContainerMap.get(chainID).containsKey(blockKey) && null != blockContainerInCache) {
+            if (this.blockContainerMap.get(chainID).containsKey(blockKey)) {
+                if (null == blockContainerInCache) {
+                    return TryResult.ERROR;
+                }
                 // 发现现成的数据
+                logger.debug("Find in block container cache:{}", Hex.toHexString(blockHash));
                 blockContainer.copy(blockContainerInCache);
             } else {
                 // 没有现成的数据，试着从缓存中读取
@@ -1648,6 +1646,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 }
                             } else {
                                 // 本地没找到， 请求交易
+                                logger.debug("Request block :{}", Hex.toHexString(block.getTxHash()));
                                 requestTxForMining(chainID, block.getTxHash(), blockKey);
                                 return TryResult.REQUEST;
                             }
@@ -1659,6 +1658,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         return TryResult.ERROR;
                     }
                 } else {
+                    logger.debug("Request block :{}", Hex.toHexString(blockHash));
                     requestBlockForMining(chainID, blockHash);
                     return TryResult.REQUEST;
                 }
@@ -1864,9 +1864,10 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (Arrays.equals(this.bestBlockContainers.get(chainID).getBlock().getBlockHash(),
                 blockContainer.getBlock().getPreviousBlockHash())) {
             // main chain
-            if (!isValidBlockContainer(chainID, blockContainer, stateDB)) {
-                return false;
-            }
+            // 自己挖的块，不必再做检查
+//            if (!isValidBlockContainer(chainID, blockContainer, stateDB)) {
+//                return false;
+//            }
 
             ImportResult result = stateProcessors.get(chainID).forwardProcess(blockContainer, stateDB);
             return result.isSuccessful();
