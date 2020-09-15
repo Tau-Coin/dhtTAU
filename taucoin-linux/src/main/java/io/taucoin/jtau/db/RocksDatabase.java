@@ -214,11 +214,11 @@ public class RocksDatabase implements KeyValueDataBase {
         RocksIterator iterator = db.newIterator();
         byte[] key = null;
 
-        iterator.seek(prefix);
-        for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
+        for (iterator.seek(prefix); iterator.isValid(); iterator.next()) {
             key = iterator.key();
             if (key != null && ByteUtil.startsWith(key, prefix)) {
                 db.remove(syncWriteOptions, key);
+                logger.debug("remove key:" + Hex.toHexString(key));
             } else {
                 break;
             }
