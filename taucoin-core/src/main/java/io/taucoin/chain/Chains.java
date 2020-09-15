@@ -986,6 +986,10 @@ public class Chains implements DHT.GetDHTItemCallback{
                     get(new ByteArrayWrapper(this.syncBlocks.get(chainID).getPreviousBlockHash()));
 
             syncBlock(chainID, blockContainer);
+
+            this.blockContainerMapForSync.get(chainID).clear();
+            this.blockMapForSync.get(chainID).clear();
+            this.txMapForSync.get(chainID).clear();
         }
     }
 
@@ -1695,7 +1699,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     private void requestBlockForSync(ByteArrayWrapper chainID, byte[] blockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_REQUEST_FOR_SYNC);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID,
+                DataType.HISTORY_BLOCK_REQUEST_FOR_SYNC, new ByteArrayWrapper(blockHash));
 
         publishBlockRequest(chainID, blockHash);
 
@@ -2060,7 +2065,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (isSyncUncompleted(chainID)) {
                     requestSyncBlock(chainID);
                 }
-                logger.info("Chain ID[{}]: PubKey[{}]-No mining power，try to sync.",
+                logger.info("Chain ID[{}]: PubKey[{}]-No mining power, try to sync.",
                         new String(chainID.getData()), Hex.toHexString(pubKey));
                 return false;
             }
@@ -2492,7 +2497,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 // 区块加入数据集合作缓存使用，队列满了删除
                 this.blockMapForSync.get(dataIdentifier.getChainID()).
-                        put(new ByteArrayWrapper(block.getBlockHash()), block);
+                        put(dataIdentifier.getHash(), block);
 
                 break;
             }

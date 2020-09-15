@@ -75,21 +75,21 @@ public class ProofOfTransaction {
         try {
             ancestor1 = blockStore.getBlockByHash(chainID, previousBlock.getPreviousBlockHash());
             if (null == ancestor1) {
-                logger.error("Chain ID:{}: Cannot find parent, hash:{}",
+                logger.error("Chain ID:{}: Cannot find parent1, hash:{}",
                         new String(this.chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
                 return null;
             }
 
             ancestor2 = blockStore.getBlockByHash(chainID, ancestor1.getPreviousBlockHash());
             if (null == ancestor2) {
-                logger.error("Chain ID:{}: Cannot find parent, hash:{}",
+                logger.error("Chain ID:{}: Cannot find parent2, hash:{}",
                         new String(this.chainID), Hex.toHexString(ancestor1.getPreviousBlockHash()));
                 return null;
             }
 
             ancestor3 = blockStore.getBlockByHash(chainID, ancestor2.getPreviousBlockHash());
             if (null == ancestor3) {
-                logger.error("Chain ID:{}: Cannot find parent, hash:{}",
+                logger.error("Chain ID:{}: Cannot find parent3, hash:{}",
                         new String(this.chainID), Hex.toHexString(ancestor2.getPreviousBlockHash()));
                 return null;
             }
