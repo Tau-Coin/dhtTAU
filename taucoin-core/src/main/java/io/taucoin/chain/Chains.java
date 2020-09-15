@@ -105,6 +105,12 @@ public class Chains implements DHT.GetDHTItemCallback{
     // voting pool
     private final Map<ByteArrayWrapper, VotingPool> votingPools = Collections.synchronizedMap(new HashMap<>());
 
+    // 记录寻找peer开始时间: {key: chain ID, value: starting time}
+    private final Map<ByteArrayWrapper, Long> findingTime = Collections.synchronizedMap(new HashMap<>());
+
+    // 是否进入挖矿标志: {key: chain ID, value: 是否进入挖矿标志}
+    private final Map<ByteArrayWrapper, Boolean> miningFlag = Collections.synchronizedMap(new HashMap<>());
+
     // 记录投票开始时间: {key: chain ID, value: starting time of voting}
     private final Map<ByteArrayWrapper, Long> votingTime = Collections.synchronizedMap(new HashMap<>());
 
@@ -195,8 +201,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                 traverseMultiChain(chainIDs);
 
                 chainIDs.clear();
-
-                // TODO:: 研究使用全局chain ID,响应UI操作步骤，延缓统一执行
 
                 try {
                     Thread.sleep(LOOP_INTERVAL_TIME);
@@ -352,6 +356,10 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.txPools.put(wChainID, txPool);
 
+        this.findingTime.put(wChainID, 0L);
+
+        this.miningFlag.put(wChainID, true);
+
         this.votingTime.put(wChainID, 0L);
 
         this.votingFlag.put(wChainID, false);
@@ -436,6 +444,10 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.txPools.remove(chainID);
 
+        this.findingTime.remove(chainID);
+
+        this.miningFlag.remove(chainID);
+
         this.votingTime.remove(chainID);
 
         this.votingFlag.remove(chainID);
@@ -485,14 +497,25 @@ public class Chains implements DHT.GetDHTItemCallback{
     /**
      * 是否空链
      * @param chainID chain ID
-     * @return true if empty chain or off-line for warning range time, false otherwise
+     * @return true if empty chain, false otherwise
      */
     private boolean isEmptyChain(ByteArrayWrapper chainID) {
-        BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
-        // TODO:: if only genesis
-        return null == bestBlockContainer || (bestBlockContainer.getBlock().getBlockNum() != 0 &&
-                (System.currentTimeMillis() / 1000 - bestBlockContainer.getBlock().getTimeStamp()) >
-                        ChainParam.WARNING_RANGE * ChainParam.DEFAULT_BLOCK_TIME);
+        if (null == this.bestBlockContainers.get(chainID)) {
+            logger.debug("Chain ID:{} has no best block container.", new String(chainID.getData()));
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 是否离线时间过长
+     * @param chainID chain ID
+     * @return true if offline too long, false otherwise
+     */
+    private boolean isOfflineTooLong(ByteArrayWrapper chainID) {
+        return (System.currentTimeMillis() / 1000 - this.bestBlockContainers.get(chainID).getBlock().
+                getTimeStamp()) > ChainParam.WARNING_RANGE * ChainParam.DEFAULT_BLOCK_TIME;
     }
 
     /**
@@ -521,8 +544,46 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
             }
 
-            if (!isEmptyChain(chainID)) {
-                // 2. 如果是非空链，进行挖矿等一系列操作
+            // 如果离线时间过长，先进行一个区块时间的数据查找，以决定是否在旧数据基础上挖矿
+            if (isOfflineTooLong(chainID)) {
+                if (0 == this.votingTime.get(chainID)) {
+                    this.votingTime.put(chainID, System.currentTimeMillis() / 1000);
+                    this.miningFlag.put(chainID, false);
+                } else if (System.currentTimeMillis() / 1000 - this.votingTime.get(chainID) > ChainParam.DEFAULT_BLOCK_TIME) {
+                    this.miningFlag.put(chainID, true);
+                } else {
+                    // 先查看是否有之前轮次请求回来的数据，有数据则放弃之前的数据，用获得的数据进行链的初始化，没有数据则请求数据
+                    Iterator<Map.Entry<ByteArrayWrapper, BlockContainer>> iterator =
+                            this.blockContainerMap.get(chainID).entrySet().iterator();
+                    if (iterator.hasNext()) {
+                        // 有完整数据回来，则用数据进行初始化链
+                        BlockContainer blockContainer = iterator.next().getValue();
+                        if (null != blockContainer) {
+                            initChain(chainID, blockContainer);
+                        }
+
+                        iterator.remove();
+                    } else {
+                        // 没有数据则请求logN的数据
+                        int counter = this.peerManagers.get(chainID).getPeerNumber();
+                        counter = (int) Math.log(counter);
+                        if (counter < 1) {
+                            counter = 1;
+                        }
+
+                        for (int i = 0; i < counter; i++) {
+
+                            byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
+                            logger.debug("Chain ID:{} get a peer:{}",
+                                    new String(chainID.getData()), Hex.toHexString(peer));
+                            requestTipBlockFromPeer(chainID, peer);
+                        }
+                    }
+                }
+            }
+
+            // 2. 如果是非空链，并且允许挖矿，进行挖矿等一系列操作
+            if (this.miningFlag.get(chainID) && !isEmptyChain(chainID)) {
 
                 // 2.1 首先尝试进行一次状态同步，查看是否有之前轮次请求回来的需要同步的数据，有数据则进行链的同步
                 tryToSync(chainID);
@@ -531,7 +592,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (!this.votingFlag.get(chainID)) {
                     // 2.2.1 如果不在投票阶段，则尝试用之前请求回来数据进行切换最难链的操作，
                     // 或者没有之前的数据的情况下，开始请求查找最难链
-                    logger.debug("Try to re-branch or request");
                     tryToReBranchOrRequest(chainID);
                 }
 
@@ -635,7 +695,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 getCumulativeDifficulty()) > 0) {
                     logger.debug("Block[{}] is greater than best block.",
                             Hex.toHexString(blockContainer.getBlock().getBlockHash()));
-                    // 是否需要清除数据，以备下一轮
+                    // 是否需要清除数据，以备下一轮（处理完成或者处理出错，都将清理数据）
                     if (TryResult.REQUEST == tryToReBranch(chainID, blockContainer)) {
                         clearContainer = false;
                     }
@@ -675,14 +735,24 @@ public class Chains implements DHT.GetDHTItemCallback{
                         referenceBlockContainer.getBlock().getImmutableBlockHash(), immutableBlockContainer);
 
                 if (TryResult.SUCCESS == result) {
+                    logger.debug("Chain ID[{}] Got in cache block hash[{}] immutable block[{}]",
+                            new String(chainID.getData()),
+                            Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
+                            Hex.toHexString(referenceBlockContainer.getBlock().getImmutableBlockHash()));
+
                     referenceBlockContainer = immutableBlockContainer;
                     immutableBlockContainer = new BlockContainer();
                 } else {
+                    logger.debug("Chain ID[{}] Got failed in cache block hash[{}] immutable block[{}]",
+                            new String(chainID.getData()),
+                            Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
+                            Hex.toHexString(referenceBlockContainer.getBlock().getImmutableBlockHash()));
+
                     return result;
                 }
             }
 
-            // 2. 在mutable range范围内对齐
+            // 2. 在mutable range范围内高度对齐
             BlockContainer previousBlockContainer = new BlockContainer();
             while (referenceBlockContainer.getBlock().getBlockNum() >
                     this.bestBlockContainers.get(chainID).getBlock().getBlockNum()) {
@@ -690,9 +760,19 @@ public class Chains implements DHT.GetDHTItemCallback{
                         referenceBlockContainer.getBlock().getPreviousBlockHash(), previousBlockContainer);
 
                 if (TryResult.SUCCESS == result) {
+                    logger.debug("Chain ID[{}] Got in cache block hash[{}] previous block[{}]",
+                            new String(chainID.getData()),
+                            Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
+                            Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+
                     referenceBlockContainer = previousBlockContainer;
                     previousBlockContainer = new BlockContainer();
                 } else {
+                    logger.debug("Chain ID[{}] Got failed in cache block hash[{}] previous block[{}]",
+                            new String(chainID.getData()),
+                            Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
+                            Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+
                     return result;
                 }
             }
@@ -716,14 +796,20 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == hash) {
                     // 在此高度没有主链信息
                     if (isSyncUncompleted(chainID)) {
+                        logger.debug("Chain ID[{}] Need to sync in height1:{}",
+                                new String(chainID.getData()), immutableBlockNumber1);
                         requestSyncBlock(chainID);
                         return TryResult.REQUEST;
                     } else {
+                        logger.debug("Chain ID[{}] Cannot find main chain info in height1:{}",
+                                new String(chainID.getData()), immutableBlockNumber1);
                         return TryResult.ERROR;
                     }
                 } else {
                     if (Arrays.equals(hash, immutableBlockHash1)) {
                         // 在immutable point哈希一致，说明分叉点在mutable range之内
+                        logger.debug("Chain ID[{}] Block hash1[{}] fork in mutable range",
+                                new String(chainID.getData()), Hex.toHexString(immutableBlockHash1));
                         return reBranch(chainID, blockContainer);
                     } else {
                         // 分叉点在mutable range之外，判断是否在3倍的mutable range之内
@@ -746,14 +832,20 @@ public class Chains implements DHT.GetDHTItemCallback{
                             if (null == hash) {
                                 // 在此高度没有主链信息
                                 if (isSyncUncompleted(chainID)) {
+                                    logger.debug("Chain ID[{}] Need to sync in height2:{}",
+                                            new String(chainID.getData()), immutableBlockNumber2);
                                     requestSyncBlock(chainID);
                                     return TryResult.REQUEST;
                                 } else {
+                                    logger.debug("Chain ID[{}] Cannot find main chain info in height2:{}",
+                                            new String(chainID.getData()), immutableBlockNumber2);
                                     return TryResult.ERROR;
                                 }
                             } else {
                                 if (Arrays.equals(hash, immutableBlockHash2)) {
                                     // 在immutable point2哈希一致，说明分叉点在1-3*mutable range之内
+                                    logger.debug("Chain ID[{}] Block hash2[{}] fork in mutable range",
+                                            new String(chainID.getData()), Hex.toHexString(immutableBlockHash2));
                                     this.votingFlag.put(chainID, true);
                                 } else {
                                     // 不在主链上，继续查看第3个immutable block hash
@@ -776,14 +868,20 @@ public class Chains implements DHT.GetDHTItemCallback{
                                         if (null == hash) {
                                             // 在此高度没有主链信息
                                             if (isSyncUncompleted(chainID)) {
+                                                logger.debug("Chain ID[{}] Need to sync in height3:{}",
+                                                        new String(chainID.getData()), immutableBlockNumber3);
                                                 requestSyncBlock(chainID);
                                                 return TryResult.REQUEST;
                                             } else {
+                                                logger.debug("Chain ID[{}] Cannot find main chain info in height3:{}",
+                                                        new String(chainID.getData()), immutableBlockNumber3);
                                                 return TryResult.ERROR;
                                             }
                                         } else {
                                             if (Arrays.equals(hash, immutableBlockHash3)) {
                                                 // 在immutable point3哈希一致，说明分叉点在1-3*mutable range之内
+                                                logger.debug("Chain ID[{}] Block hash3[{}] fork in mutable range",
+                                                        new String(chainID.getData()), Hex.toHexString(immutableBlockHash3));
                                                 this.votingFlag.put(chainID, true);
                                             } else {
                                                 // fork point out of warning range, maybe it's an attack chain
@@ -800,18 +898,11 @@ public class Chains implements DHT.GetDHTItemCallback{
                         }
                     }
                 }
-
-                BlockInfo blockInfo1 = this.blockStore.getBlockInfoByHash(chainID.getData(), immutableBlockHash1);
-                if (null == blockInfo1) {
-                    if (isSyncUncompleted(chainID)) {
-                        requestSyncBlock(chainID);
-                        return TryResult.REQUEST;
-                    } else {
-                        return TryResult.ERROR;
-                    }
-                }
             } else {
                 // 该区块在主链上
+                logger.debug("Chain ID[{}] Block [{}] is on main chain, re-branch.",
+                        new String(chainID.getData()),
+                        Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()));
                 return reBranch(chainID, blockContainer);
             }
         } catch (Exception e) {
@@ -1641,18 +1732,22 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 if (null != tx) {
                                     blockContainer.setBlock(block);
                                     blockContainer.setTx(tx);
+                                    this.blockContainerMap.get(chainID).put(blockKey,
+                                            BlockContainer.with(blockContainer));
                                 } else {
                                     return TryResult.ERROR;
                                 }
                             } else {
                                 // 本地没找到， 请求交易
-                                logger.debug("Request block :{}", Hex.toHexString(block.getTxHash()));
+                                logger.debug("Request tx :{}", Hex.toHexString(block.getTxHash()));
                                 requestTxForMining(chainID, block.getTxHash(), blockKey);
                                 return TryResult.REQUEST;
                             }
                         } else {
                             // 区块无交易
                             blockContainer.setBlock(block);
+                            this.blockContainerMap.get(chainID).put(blockKey,
+                                    BlockContainer.with(blockContainer));
                         }
                     } else {
                         return TryResult.ERROR;
@@ -2412,7 +2507,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             this.blockContainerMap.get(dataIdentifier.getChainID()).
                                     put(dataIdentifier.getHash(), null);
 
-                            // 删掉空交易，非空交易不作删除，等队列满删除
+                            // 从缓存删掉空交易，非空交易不作删除，等队列满删除
                             this.txMap.remove(key);
                         }
                     } else {
@@ -2435,25 +2530,16 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_TX_REQUEST_FOR_MINING: {
                 if (null == item) {
-                    // 如果区块也是空， 目前不可能
-//                    Map<ByteArrayWrapper, Block> blockMap = this.blockMap.get(dataIdentifier.getChainID());
-//                    if (blockMap.containsKey(dataIdentifier.getTxBlockHash())) {
-//                        if (null == blockMap.get(dataIdentifier.getTxBlockHash())) {
-//                            blockMap.remove(dataIdentifier.getTxBlockHash());
-//                        }
-//                    }
-
                     logger.error("HISTORY_TX_REQUEST_FOR_MINING is empty, block hash:{}",
                             Hex.toHexString(dataIdentifier.getHash().getData()));
 
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getHash(), null);
+                            put(dataIdentifier.getTxBlockHash(), null);
 
                     return;
                 } else {
                     // 数据非空
-
                     Transaction tx = TransactionFactory.parseTransaction(item);
 
                     Block block = this.blockMap.get(dataIdentifier.getChainID()).get(dataIdentifier.getTxBlockHash());
@@ -2462,7 +2548,10 @@ public class Chains implements DHT.GetDHTItemCallback{
                         BlockContainer blockContainer = new BlockContainer(block, tx);
 
                         this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                put(new ByteArrayWrapper(block.getBlockHash()), blockContainer);
+                                put(dataIdentifier.getTxBlockHash(), blockContainer);
+                    } else {
+                        // 可能区块被缓存删掉，重新请求区块
+                        requestBlockForMining(dataIdentifier.getChainID(), dataIdentifier.getTxBlockHash().getData());
                     }
 
                     // 放入交易集合作缓存
@@ -2479,8 +2568,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
                 logger.debug("Got a demand block hash:{}", Hex.toHexString(hash));
-                this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).
-                        add(new ByteArrayWrapper(hash));
+                this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).add(new ByteArrayWrapper(hash));
+
                 break;
             }
             case TX_DEMAND_FROM_PEER: {
@@ -2491,8 +2580,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
                 logger.debug("Got a demand tx hash:{}", Hex.toHexString(hash));
-                this.txHashMapFromDemand.get(dataIdentifier.getChainID()).
-                        add(new ByteArrayWrapper(hash));
+                this.txHashMapFromDemand.get(dataIdentifier.getChainID()).add(new ByteArrayWrapper(hash));
+
                 break;
             }
             case TIP_BLOCK_FROM_PEER_FOR_VOTING: {
@@ -2503,6 +2592,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
                 requestBlockForVoting(dataIdentifier.getChainID(), hash);
+
                 break;
             }
             case HISTORY_BLOCK_REQUEST_FOR_VOTING: {
@@ -2513,6 +2603,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 Block block = new Block(item);
                 this.votingBlocks.get(dataIdentifier.getChainID()).add(block);
+
                 break;
             }
             case TIP_TX_FOR_MINING: {
@@ -2523,6 +2614,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
                 requestTxForPool(dataIdentifier.getChainID(), hash);
+
                 break;
             }
             case TX_REQUEST_FOR_MINING: {

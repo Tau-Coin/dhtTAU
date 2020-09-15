@@ -16,6 +16,10 @@ public class BlockContainer {
         this.tx = tx;
     }
 
+    public static BlockContainer with(BlockContainer blockContainer) {
+        return new BlockContainer(blockContainer.block, blockContainer.tx);
+    }
+
     public Block getBlock() {
         return block;
     }
