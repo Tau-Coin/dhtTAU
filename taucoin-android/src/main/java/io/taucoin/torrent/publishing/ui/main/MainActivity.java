@@ -43,6 +43,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.databinding.ExternalLinkDialogBinding;
 import io.taucoin.torrent.publishing.databinding.UserDialogBinding;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
+import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.ExternalLinkActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
@@ -195,14 +196,18 @@ public class MainActivity extends BaseActivity {
         long telecomSpeed = 0;
         if(sessionStats != null){
             dhtNodes = sessionStats.dhtNodes();
-            wifiSpeed = sessionStats.downloadRate() + sessionStats.uploadRate();
-            telecomSpeed = sessionStats.downloadRate() + sessionStats.uploadRate();
+            if (SystemServiceManager.getInstance(this).isMobileConnected()) {
+                telecomSpeed = sessionStats.downloadRate();
+            } else {
+                wifiSpeed = sessionStats.downloadRate();
+            }
         }
+        String wifiSpeedStr = Formatter.formatFileSize(this, wifiSpeed).toUpperCase();
+        String telecomSpeedStr = Formatter.formatFileSize(this, telecomSpeed).toUpperCase();
+        logger.info("dhtNodes::{}, wifiSpeedStr::{}, telecomSpeedStr::{}", dhtNodes, wifiSpeedStr, telecomSpeedStr);
         binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, dhtNodes));
-        binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed,
-                Formatter.formatFileSize(this, wifiSpeed)));
-        binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed,
-                Formatter.formatFileSize(this, telecomSpeed)));
+        binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed, wifiSpeedStr));
+        binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed, telecomSpeedStr));
     }
 
     /**
@@ -255,7 +260,7 @@ public class MainActivity extends BaseActivity {
         subscribeDHTStatus();
         subscribeNeedStartDaemon();
         subscribeUnreadNotificationNum();
-        downloadViewModel.checkAppVersion(this);
+//        downloadViewModel.checkAppVersion(this);
     }
 
     private void subscribeUnreadNotificationNum() {
