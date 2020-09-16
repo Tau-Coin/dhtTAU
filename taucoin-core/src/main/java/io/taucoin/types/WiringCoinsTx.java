@@ -177,17 +177,22 @@ public class WiringCoinsTx extends Transaction {
         } else {
             Entry entry = Entry.bdecode(this.encodedBytes);
             List<Entry> entrylist = entry.list();
-            this.version = entrylist.get(TxIndex.Version.ordinal()).integer();
-            this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString().replace("'","");
-            this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
-            this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
-            this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();
-            this.senderPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
-            this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
-            this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
-            this.receiverPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
-            this.amount = entrylist.get(TxIndex.TxData.ordinal() + 1).integer();
-            this.memo = entrylist.get(TxIndex.TxData.ordinal() + 2).toString().replace("'","");
+            try {
+                this.version = entrylist.get(TxIndex.Version.ordinal()).integer();
+                this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString().replace("'", "");
+                this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
+                this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
+                this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();
+                this.senderPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
+                this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
+                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
+                this.receiverPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
+                this.amount = entrylist.get(TxIndex.TxData.ordinal() + 1).integer();
+                this.memo = entrylist.get(TxIndex.TxData.ordinal() + 2).toString().replace("'", "");
+            } (Exception e) {
+                logger.error(e.getMessage(), e);
+                return;
+            }
             isParsed = true;
         }
     }
