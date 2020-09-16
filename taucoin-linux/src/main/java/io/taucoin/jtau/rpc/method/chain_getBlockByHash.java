@@ -53,7 +53,11 @@ public class chain_getBlockByHash extends JsonRpcServerMethod {
 		    String result = "";
 		    try {
                 Block block = chainmanager.getBlockByHash(chainid, blockHash);
-                result = block.toString();
+                if(null == block) {
+                    result = "Hash "+ blockHash+ " block is empty";
+                } else {
+                    result = block.toString();
+                }
             } catch (Exception e) {
                 return new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, req.getID());
             }

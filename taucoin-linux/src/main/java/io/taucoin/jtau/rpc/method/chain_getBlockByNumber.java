@@ -54,7 +54,12 @@ public class chain_getBlockByNumber extends JsonRpcServerMethod {
             try {
                 logger.info("chainid: {}, blockNum: {}", chainid, blockNum);
                 Block block = chainmanager.getBlockByNumber(chainid, blockNum);
-                result = block.toString();
+                if(null == block) {
+                    result = "No "+ blockNum+ " block is empty";
+                } else {
+                    result = block.toString();
+                }
+
             } catch (Exception e) {
                 return new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, req.getID());
             }
