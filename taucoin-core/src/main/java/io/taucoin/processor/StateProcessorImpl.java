@@ -37,7 +37,7 @@ public class StateProcessorImpl implements StateProcessor {
      *
      * @param blockContainer      to be processed
      * @param stateDB : state db
-     * @return
+     * @return import result
      */
     @Override
     public ImportResult forwardProcess(BlockContainer blockContainer, StateDB stateDB) {
@@ -51,12 +51,12 @@ public class StateProcessorImpl implements StateProcessor {
             if (null != tx) {
                 if (!tx.isTxParamValidate()) {
                     logger.error("Tx validate fail!");
-                    return INVALID_TX;
+                    return INVALID_BLOCK;
                 }
 
                 if (!tx.verifyTransactionSig()) {
                     logger.error("Bad Signature.");
-                    return INVALID_TX;
+                    return INVALID_BLOCK;
                 }
 
                 byte[] sender = tx.getSenderPubkey();
@@ -75,7 +75,7 @@ public class StateProcessorImpl implements StateProcessor {
                 // check nonce
                 if (sendState.getNonce().longValue() + 1 != tx.getNonce()) {
                     logger.error("Account:{} nonce mismatch!", Hex.toHexString(sender));
-                    return INVALID_TX;
+                    return INVALID_BLOCK;
                 }
 
                 long fee = tx.getTxFee();
@@ -87,7 +87,7 @@ public class StateProcessorImpl implements StateProcessor {
                     if (sendState.getBalance().longValue() < cost) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
                                 cost, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
-                        return INVALID_TX;
+                        return INVALID_BLOCK;
                     }
 
                     //Execute the transaction
@@ -109,7 +109,7 @@ public class StateProcessorImpl implements StateProcessor {
                     if (sendState.getBalance().longValue() < fee) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
                                 fee, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
-                        return INVALID_TX;
+                        return INVALID_BLOCK;
                     }
 
                     //Execute the transaction
@@ -123,7 +123,7 @@ public class StateProcessorImpl implements StateProcessor {
                     stateDB.updateAccount(this.chainID, sender, sendState);
                 } else {
                     logger.error("Transaction type not supported");
-                    return INVALID_TX;
+                    return INVALID_BLOCK;
                 }
 
             }
@@ -140,21 +140,22 @@ public class StateProcessorImpl implements StateProcessor {
      *
      * @param blockContainer genesis block container
      * @param stateDB state db
-     * @return
+     * @return import result
      */
     @Override
-    public boolean backwardProcessGenesisBlock(BlockContainer blockContainer, StateDB stateDB) {
+    public ImportResult backwardProcessGenesisBlock(BlockContainer blockContainer, StateDB stateDB) {
         try {
             Transaction tx = blockContainer.getTx();
             if (null == tx) {
                 logger.error("Tx is null!");
-                return false;
+                return INVALID_BLOCK;
             }
 
             if (!tx.isTxParamValidate()) {
                 logger.error("Tx validate fail!");
-                return false;
+                return INVALID_BLOCK;
             }
+            // TODO:: verify
             /*
             if (!tx.verifyTransactionSig()) {
                 logger.error("Bad Signature.");
@@ -187,14 +188,14 @@ public class StateProcessorImpl implements StateProcessor {
                 }
             } else {
                 logger.error("Cannot found genesis account.");
-                return false;
+                return INVALID_BLOCK;
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return false;
+            return EXCEPTION;
         }
 
-        return true;
+        return IMPORTED_BEST;
     }
 
     /**
@@ -202,10 +203,10 @@ public class StateProcessorImpl implements StateProcessor {
      *
      * @param blockContainer   block to be processed
      * @param stateDB state db
-     * @return
+     * @return import result
      */
     @Override
-    public boolean backwardProcess(BlockContainer blockContainer, StateDB stateDB) {
+    public ImportResult backwardProcess(BlockContainer blockContainer, StateDB stateDB) {
 
         Block block = blockContainer.getBlock();
         // if genesis block
@@ -216,24 +217,21 @@ public class StateProcessorImpl implements StateProcessor {
         // check balance and nonce, then update state
         try {
             // collect new peer
+            // TODO:: do it here?
             stateDB.addPeer(this.chainID, block.getMinerPubkey());
 
             Transaction tx = blockContainer.getTx();
 
             if (null != tx) {
+                // TODO:: type match?
                 if (!tx.isTxParamValidate()) {
                     logger.error("Tx validate fail!");
-                    return false;
+                    return INVALID_BLOCK;
                 }
 
                 if (!tx.verifyTransactionSig()) {
                     logger.error("Bad Signature.");
-                    return false;
-                }
-
-                // if genesis block
-                if (block.getBlockNum() == 0) {
-                    return backwardProcessGenesisBlock(blockContainer, stateDB);
+                    return INVALID_BLOCK;
                 }
 
                 byte[] sender = tx.getSenderPubkey();
@@ -284,10 +282,10 @@ public class StateProcessorImpl implements StateProcessor {
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return false;
+            return EXCEPTION;
         }
 
-        return true;
+        return IMPORTED_BEST;
     }
 
     /**
@@ -295,7 +293,7 @@ public class StateProcessorImpl implements StateProcessor {
      *
      * @param blockContainer block container
      * @param stateDB state db
-     * @return
+     * @return true if succeed, false otherwise
      */
     @Override
     public boolean rollback(BlockContainer blockContainer, StateDB stateDB) {

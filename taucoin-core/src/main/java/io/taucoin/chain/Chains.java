@@ -970,6 +970,18 @@ public class Chains implements DHT.GetDHTItemCallback{
             this.txMap.put(chainID, newTxs);
             oldTxs.clear();
         }
+
+        if (this.blockContainerMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
+            this.blockContainerMapForSync.get(chainID).clear();
+        }
+
+        if (this.blockMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
+            this.blockMapForSync.get(chainID).clear();
+        }
+
+        if (this.txMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
+            this.txMapForSync.get(chainID).clear();
+        }
     }
 
     /**
@@ -1066,6 +1078,9 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void requestSyncBlock(ByteArrayWrapper chainID) {
+        logger.debug("Request sync block hash:{}, block number:{}",
+                Hex.toHexString(this.syncBlocks.get(chainID).getPreviousBlockHash()),
+                this.syncBlocks.get(chainID).getBlockNum());
         requestBlockForSync(chainID, this.syncBlocks.get(chainID).getPreviousBlockHash());
     }
 
@@ -1079,7 +1094,15 @@ public class Chains implements DHT.GetDHTItemCallback{
             BlockContainer blockContainer = this.blockContainerMapForSync.get(chainID).
                     get(new ByteArrayWrapper(this.syncBlocks.get(chainID).getPreviousBlockHash()));
 
-            syncBlock(chainID, blockContainer);
+            if (null != blockContainer) {
+                // 如果同步遇到非法区块，放弃这条链
+                if (ImportResult.INVALID_BLOCK == syncBlock(chainID, blockContainer)) {
+                    logger.error("Chain ID:{}, Throw this chain away, invalid block:{}",
+                            new String(chainID.getData()),
+                            Hex.toHexString(blockContainer.getBlock().getBlockHash()));
+                    resetChain(chainID);
+                }
+            }
         }
     }
 
@@ -1087,18 +1110,18 @@ public class Chains implements DHT.GetDHTItemCallback{
      * 同步区块
      * @param chainID chain ID
      * @param blockContainer block container
-     * @return true if succeed, false otherwise
+     * @return import result
      */
-    private boolean syncBlock(ByteArrayWrapper chainID, BlockContainer blockContainer) {
+    private ImportResult syncBlock(ByteArrayWrapper chainID, BlockContainer blockContainer) {
 
-        if (null == blockContainer) {
-            return false;
-        }
+        ImportResult result;
 
         try {
             StateDB track = this.stateDB.startTracking(chainID.getData());
-            StateProcessor stateProcessor = this.stateProcessors.get(chainID);
-            if (stateProcessor.backwardProcess(blockContainer, track)) {
+
+            result = this.stateProcessors.get(chainID).backwardProcess(blockContainer, track);
+
+            if (ImportResult.IMPORTED_BEST == result) {
                 // after sync
                 // 1. save block
                 // 2. save sync block hash
@@ -1114,10 +1137,10 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
-            return false;
+            return ImportResult.EXCEPTION;
         }
 
-        return true;
+        return result;
     }
 
     /**
@@ -1463,7 +1486,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             // initial sync from best vote
             StateDB track = this.stateDB.startTracking(chainID.getData());
             StateProcessor stateProcessor = this.stateProcessors.get(chainID);
-            if (!stateProcessor.backwardProcess(blockContainer, track)) {
+            if (ImportResult.IMPORTED_BEST != stateProcessor.backwardProcess(blockContainer, track)) {
                 logger.error("Chain ID[{}]: Process block[{}] fail!",
                         new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
                 return false;
@@ -1798,7 +1821,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private void requestBlockForSync(ByteArrayWrapper chainID, byte[] blockHash) {
-        logger.debug("Request sync block hash:{}", Hex.toHexString(blockHash));
 
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
@@ -1976,7 +1998,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 //            }
 
             ImportResult result = stateProcessors.get(chainID).forwardProcess(blockContainer, stateDB);
-            return result.isSuccessful();
+            return ImportResult.IMPORTED_BEST == result;
         } else {
             logger.info("Chain ID[{}]: previous hash mis-match", new String(chainID.getData()));
             return false;

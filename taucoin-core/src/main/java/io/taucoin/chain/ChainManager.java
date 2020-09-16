@@ -3,6 +3,7 @@ package io.taucoin.chain;
 import com.frostwire.jlibtorrent.Pair;
 import io.taucoin.account.AccountManager;
 import io.taucoin.core.AccountState;
+import io.taucoin.core.ImportResult;
 import io.taucoin.core.TransactionPool;
 import io.taucoin.types.BlockContainer;
 import io.taucoin.db.BlockDB;
@@ -267,7 +268,7 @@ public class ChainManager {
         try {
             StateProcessor stateProcessor = new StateProcessorImpl(chainID);
             StateDB track = stateDB.startTracking(chainID);
-            if (stateProcessor.backwardProcessGenesisBlock(genesisContainer, track)) {
+            if (ImportResult.IMPORTED_BEST == stateProcessor.backwardProcessGenesisBlock(genesisContainer, track)) {
                 track.setBestBlockHash(chainID, genesisContainer.getBlock().getBlockHash());
                 track.setSyncBlockHash(chainID, genesisContainer.getBlock().getBlockHash());
                 track.commit();
