@@ -17,6 +17,7 @@ public class chain_followChain extends JsonRpcServerMethod {
         super(tauController);
     }
 
+    @Override
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
         List<Object> params = req.getPositionalParams();
 

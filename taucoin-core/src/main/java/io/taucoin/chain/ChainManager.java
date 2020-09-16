@@ -448,4 +448,20 @@ public class ChainManager {
     public byte[][] startMining(){
         return null;
     }
+
+    /**
+     * start mining
+     * @param chainID chain ID
+     */
+    public void startMining(byte[] chainID) {
+        this.chains.startMining(chainID);
+    }
+
+    /**
+     * stop mining, just sync
+     * @param chainID chain ID
+     */
+    public void stopMining(byte[] chainID) {
+        this.chains.stopMining(chainID);
+    }
 }

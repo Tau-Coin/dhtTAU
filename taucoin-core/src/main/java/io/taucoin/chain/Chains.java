@@ -147,6 +147,9 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 远端请求交易哈希数据集合: {key: chain ID, value: tx hash set}
     private final Map<ByteArrayWrapper, Set<ByteArrayWrapper>> txHashMapFromDemand = Collections.synchronizedMap(new HashMap<>());
 
+    // 控制是否自己挖矿还是只同步
+    private final Map<ByteArrayWrapper, Boolean> enableMineForTest = Collections.synchronizedMap(new HashMap<>());
+
     /**
      * Chain constructor.
      *
@@ -384,6 +387,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.txHashMapFromDemand.put(wChainID, new HashSet<>());
 
+        this.enableMineForTest.put(wChainID, true);
+
         // 把新链放入数据库
         try{
             this.stateDB.followChain(chainID);
@@ -471,6 +476,8 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.blockHashMapFromDemand.remove(chainID);
 
         this.txHashMapFromDemand.remove(chainID);
+
+        this.enableMineForTest.remove(chainID);
     }
 
     /**
@@ -1121,7 +1128,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (TryResult.SUCCESS == minable(chainID)) {
             BlockContainer blockContainer = mineBlock(chainID);
 
-            if (null != blockContainer) {
+            if (this.enableMineForTest.get(chainID) && null != blockContainer) {
                 StateDB track = this.stateDB.startTracking(chainID.getData());
 
                 if (tryToConnect(chainID, blockContainer, track)) {
@@ -1791,6 +1798,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private void requestBlockForSync(ByteArrayWrapper chainID, byte[] blockHash) {
+        logger.debug("Request sync block hash:{}", Hex.toHexString(blockHash));
+
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_BLOCK_REQUEST_FOR_SYNC, new ByteArrayWrapper(blockHash));
@@ -2191,6 +2200,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             BigInteger power = this.stateDB.getNonce(chainID.getData(), pubKey);
             if (null == power || power.longValue() <= 0) {
+                // 如果没有power，并且同步未完成，则请求同步，因为有可能自己的状态数据在更早的区块上记载，比如创世区块地址
                 if (isSyncUncompleted(chainID)) {
                     logger.info("Chain ID[{}]: PubKey[{}]-No mining power, try to sync.",
                             new String(chainID.getData()), Hex.toHexString(pubKey));
@@ -2459,6 +2469,28 @@ public class Chains implements DHT.GetDHTItemCallback{
         return set;
     }
 
+    /**
+     * start mining
+     * @param chainID chain ID
+     */
+    public void startMining(byte[] chainID) {
+        ByteArrayWrapper key = new ByteArrayWrapper(chainID);
+        if (this.enableMineForTest.containsKey(key)) {
+            this.enableMineForTest.put(key, true);
+        }
+    }
+
+    /**
+     * stop mining, just sync
+     * @param chainID chain ID
+     */
+    public void stopMining(byte[] chainID) {
+        ByteArrayWrapper key = new ByteArrayWrapper(chainID);
+        if (this.enableMineForTest.containsKey(key)) {
+            this.enableMineForTest.put(key, false);
+        }
+    }
+
     @Override
     public void onDHTItemGot(byte[] item, Object cbData) {
 
@@ -2631,7 +2663,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_BLOCK_REQUEST_FOR_SYNC: {
                 if (null == item) {
-                    logger.error("HISTORY_BLOCK_REQUEST_FOR_SYNC is empty");
+                    logger.error("HISTORY_BLOCK_REQUEST_FOR_SYNC is empty, sync block hash:{}",
+                            dataIdentifier.getHash().toString());
                     // 返回区块为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), null);
@@ -2681,7 +2714,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_TX_REQUEST_FOR_SYNC: {
                 if (null == item) {
-                    logger.error("HISTORY_TX_REQUEST_FOR_SYNC is empty");
+                    logger.error("HISTORY_TX_REQUEST_FOR_SYNC is empty, sync tx hash:{}",
+                            dataIdentifier.getHash().toString());
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), null);

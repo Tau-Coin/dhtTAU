@@ -173,6 +173,22 @@ public class TauController {
     }
 
     /**
+     * start mining
+     * @param chainID chain ID
+     */
+    public void startMining(byte[] chainID) {
+        this.chainManager.startMining(chainID);
+    }
+
+    /**
+     * stop mining, just sync
+     * @param chainID chain ID
+     */
+    public void stopMining(byte[] chainID) {
+        this.chainManager.stopMining(chainID);
+    }
+
+    /**
      * Get SessionManager from torrect session context.
      *
      * @return SessionManager

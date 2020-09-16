@@ -76,6 +76,12 @@ public final class JsonRpcServer {
         this.dispatcher.register(new chain_sendRawBlock(this.tauController));
 
         this.dispatcher.register(new chain_createNewCommunity(this.tauController));
+
+        this.dispatcher.register(new chain_startMining(this.tauController));
+        this.dispatcher.register(new chain_stopMining(this.tauController));
+
+        // test
+        this.dispatcher.register(new dht_putGenesisHashInTipBlockChannel(this.tauController));
     }
 
     /**
