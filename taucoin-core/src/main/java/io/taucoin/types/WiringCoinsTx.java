@@ -189,7 +189,7 @@ public class WiringCoinsTx extends Transaction {
                 this.receiverPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
                 this.amount = entrylist.get(TxIndex.TxData.ordinal() + 1).integer();
                 this.memo = entrylist.get(TxIndex.TxData.ordinal() + 2).toString().replace("'", "");
-            } (Exception e) {
+            } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 return;
             }

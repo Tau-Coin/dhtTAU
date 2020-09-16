@@ -167,7 +167,7 @@ public class ForumNoteTx extends Transaction {
                 this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
                 this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
                 this.forumNoteHash = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
-            }   (Exception e) {
+            } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                     return;
             }
