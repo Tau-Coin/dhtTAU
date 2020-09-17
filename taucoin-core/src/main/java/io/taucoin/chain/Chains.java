@@ -1130,9 +1130,20 @@ public class Chains implements DHT.GetDHTItemCallback{
                 // 5. add old block peer to peer pool
 
                 this.blockStore.saveBlockContainer(chainID.getData(), blockContainer, true);
+
                 track.setSyncBlockHash(chainID.getData(), blockContainer.getBlock().getBlockHash());
                 track.commit();
+
+                Set<ByteArrayWrapper> accounts = extractAccountFromBlockContainer(blockContainer);
+
+                for (ByteArrayWrapper account: accounts) {
+                    this.stateDB.addPeer(chainID.getData(), account.getData());
+                }
+
+                this.tauListener.onSyncBlock(blockContainer.getBlock());
+
                 this.syncBlocks.put(chainID, blockContainer.getBlock());
+
                 this.peerManagers.get(chainID).addOldBlockPeer(blockContainer.getBlock().getMinerPubkey());
             }
         } catch (Exception e) {
@@ -1166,19 +1177,29 @@ public class Chains implements DHT.GetDHTItemCallback{
                         // 7. publish new block
                         this.blockStore.saveBlockContainer(chainID.getData(),
                                 blockContainer, true);
+
                         track.setBestBlockHash(chainID.getData(),
                                 blockContainer.getBlock().getBlockHash());
                         track.commit();
+
                         setBestBlockContainer(chainID, blockContainer);
+
                         this.peerManagers.get(chainID).addNewBlockPeer(blockContainer.getBlock().getMinerPubkey());
+
+                        Set<ByteArrayWrapper> accounts = extractAccountFromBlockContainer(blockContainer);
+
+                        txPools.get(chainID).recheckAccoutTx(accounts);
+
+                        for (ByteArrayWrapper account: accounts) {
+                            this.stateDB.addPeer(chainID.getData(), account.getData());
+                        }
+
+                        this.tauListener.onNewBlock(blockContainer.getBlock());
+
+                        publishBestBlock(chainID);
                     } catch (Exception e) {
                         logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
                     }
-
-                    Set<ByteArrayWrapper> accounts = extractAccountFromBlockContainer(blockContainer);
-                    txPools.get(chainID).recheckAccoutTx(accounts);
-
-                    publishBestBlock(chainID);
                 }
             }
         }
@@ -1312,15 +1333,30 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             publishBestBlock(chainID);
 
-            // update tx pool
+            // 提取相关peer
             Set<ByteArrayWrapper> accounts = extractAccountFromBlockContainer(undoBlockContainers);
             accounts.addAll(extractAccountFromBlockContainer(newBlockContainers));
-            this.txPools.get(chainID).recheckAccoutTx(accounts);
 
+            // 更新交易池
+            this.txPools.get(chainID).recheckAccoutTx(accounts);
+            // 添加发现的peer
+            for (ByteArrayWrapper account: accounts) {
+                this.stateDB.addPeer(chainID.getData(), account.getData());
+            }
+
+            // 回滚的区块，交易放回交易池
             for (BlockContainer undoBlockContainer : undoBlockContainers) {
                 if (null != undoBlockContainer.getTx()) {
                     this.txPools.get(chainID).addTx(undoBlockContainer.getTx());
                 }
+
+                // 通知UI区块回滚
+                this.tauListener.onRollBack(undoBlockContainer.getBlock());
+            }
+
+            size = newBlockContainers.size();
+            for (int i = size - 1; i >= 0; i--) {
+                this.tauListener.onNewBlock(newBlockContainers.get(i).getBlock());
             }
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
@@ -1496,13 +1532,19 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             track.setBestBlockHash(chainID.getData(), blockContainer.getBlock().getBlockHash());
             track.setSyncBlockHash(chainID.getData(), blockContainer.getBlock().getBlockHash());
+            track.commit();
 
             this.bestBlockContainers.put(chainID, blockContainer);
             this.syncBlocks.put(chainID, blockContainer.getBlock());
 
-            this.peerManagers.get(chainID).addOldBlockPeer(blockContainer.getBlock().getMinerPubkey());
+            Set<ByteArrayWrapper> accounts= extractAccountFromBlockContainer(blockContainer);
+            for (ByteArrayWrapper account: accounts) {
+                this.stateDB.addPeer(chainID.getData(), account.getData());
+            }
 
-            track.commit();
+            this.tauListener.onSyncBlock(blockContainer.getBlock());
+
+            this.peerManagers.get(chainID).addOldBlockPeer(blockContainer.getBlock().getMinerPubkey());
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
             return false;
@@ -2309,8 +2351,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     private BlockContainer mineBlock(ByteArrayWrapper chainID) {
         ProofOfTransaction pot = this.pots.get(chainID);
         BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
-        TransactionPool txPool = this.txPools.get(chainID);
-        StateProcessor stateProcessor = this.stateProcessors.get(chainID);
 
         Block ancestor3 = null;
         try {
@@ -2347,7 +2387,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                         bestBlockContainer.getBlock().getBlockNum() + 1 - ChainParam.MUTABLE_RANGE);
             } else {
                 immutableBlockHash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(), 0);
-//                immutableBlockHash = new byte[ChainParam.HashLength];
             }
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
@@ -2367,7 +2406,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
-        Transaction tx = txPool.getBestTransaction();
+        Transaction tx = this.txPools.get(chainID).getBestTransaction();
 
         Block block;
         logger.debug("-------------Previous hash:{}", Hex.toHexString(bestBlockContainer.getBlock().getBlockHash()));
@@ -2389,7 +2428,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         // set state
         StateDB miningTrack = this.stateDB.startTracking(chainID.getData());
-        stateProcessor.forwardProcess(blockContainer, miningTrack);
+        this.stateProcessors.get(chainID).forwardProcess(blockContainer, miningTrack);
 
         try {
             // set state

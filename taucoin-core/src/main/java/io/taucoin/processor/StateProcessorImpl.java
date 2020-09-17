@@ -44,8 +44,6 @@ public class StateProcessorImpl implements StateProcessor {
         // check balance and nonce, then update state
         try {
             Block block = blockContainer.getBlock();
-            // collect new peer
-            stateDB.addPeer(this.chainID, block.getMinerPubkey());
 
             Transaction tx = blockContainer.getTx();
             if (null != tx) {
@@ -216,9 +214,6 @@ public class StateProcessorImpl implements StateProcessor {
 
         // check balance and nonce, then update state
         try {
-            // collect new peer
-            // TODO:: do it here?
-            stateDB.addPeer(this.chainID, block.getMinerPubkey());
 
             Transaction tx = blockContainer.getTx();
 
