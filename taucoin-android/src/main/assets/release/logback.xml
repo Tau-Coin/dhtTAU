@@ -13,7 +13,7 @@
             <level>INFO</level>
         </filter>
 
-        <file>${LOG_DIR}/tau.${today}.log</file>
+        <file>${LOG_DIR}/tau.latest.log</file>
         <append>true</append>
 
         <encoder>

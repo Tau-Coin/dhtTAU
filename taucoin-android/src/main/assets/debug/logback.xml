@@ -13,7 +13,7 @@
             <level>DEBUG</level>
         </filter>
 
-        <file>${LOG_DIR}/tau.${today}.log</file>
+        <file>${LOG_DIR}/tau.latest.log</file>
         <append>true</append>
 
         <encoder>
@@ -27,7 +27,7 @@
         </rollingPolicy>
 
         <triggeringPolicy class="io.taucoin.torrent.publishing.core.utils.LogbackSizeBasedTriggeringPolicy">
-            <maxFileSize>1MB</maxFileSize>
+            <maxFileSize>50MB</maxFileSize>
         </triggeringPolicy>
     </appender>
 
