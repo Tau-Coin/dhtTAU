@@ -1018,7 +1018,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return block tip salt
      */
     private byte[] makeBlockTipSalt(byte[] chainID) {
-        long time = System.currentTimeMillis() / 1000 / 5;
+        long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
         byte[] salt = new byte[chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length + timeBytes.length];
@@ -1035,7 +1035,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return block demand salt
      */
     private byte[] makeBlockDemandSalt(byte[] chainID) {
-        long time = System.currentTimeMillis() / 1000 / 5;
+        long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
         byte[] salt = new byte[chainID.length + ChainParam.BLOCK_DEMAND_CHANNEL.length + timeBytes.length];
@@ -1052,7 +1052,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return tx tip salt
      */
     private byte[] makeTxTipSalt(byte[] chainID) {
-        long time = System.currentTimeMillis() / 1000 / 5;
+        long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
         byte[] salt = new byte[chainID.length + ChainParam.TX_TIP_CHANNEL.length + timeBytes.length];
@@ -1069,7 +1069,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return tx demand salt
      */
     private byte[] makeTxDemandSalt(byte[] chainID) {
-        long time = System.currentTimeMillis() / 1000 / 5;
+        long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
         byte[] salt = new byte[chainID.length + ChainParam.TX_DEMAND_CHANNEL.length + timeBytes.length];
