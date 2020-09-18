@@ -58,17 +58,17 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 循环间隔时间
     private final int LOOP_INTERVAL_TIME = 50; // 50 ms
 
-    // mutable item salt: block tip channel
-    private final Map<ByteArrayWrapper, byte[]> blockTipSalts = Collections.synchronizedMap(new HashMap<>());
-
-    // mutable item salt: block request channel
-    private final Map<ByteArrayWrapper, byte[]> blockDemandSalts = Collections.synchronizedMap(new HashMap<>());
-
-    // mutable item salt: tx tip channel
-    private final Map<ByteArrayWrapper, byte[]> txTipSalts = Collections.synchronizedMap(new HashMap<>());
-
-    // mutable item salt: tx request channel
-    private final Map<ByteArrayWrapper, byte[]> txDemandSalts = Collections.synchronizedMap(new HashMap<>());
+//    // mutable item salt: block tip channel
+//    private final Map<ByteArrayWrapper, byte[]> blockTipSalts = Collections.synchronizedMap(new HashMap<>());
+//
+//    // mutable item salt: block request channel
+//    private final Map<ByteArrayWrapper, byte[]> blockDemandSalts = Collections.synchronizedMap(new HashMap<>());
+//
+//    // mutable item salt: tx tip channel
+//    private final Map<ByteArrayWrapper, byte[]> txTipSalts = Collections.synchronizedMap(new HashMap<>());
+//
+//    // mutable item salt: tx request channel
+//    private final Map<ByteArrayWrapper, byte[]> txDemandSalts = Collections.synchronizedMap(new HashMap<>());
 
     // multi-chain thread.
     private Thread multiChainThread;
@@ -258,13 +258,13 @@ public class Chains implements DHT.GetDHTItemCallback{
             return true;
         }
 
-        this.blockTipSalts.put(wChainID, makeBlockTipSalt(chainID));
-
-        this.blockDemandSalts.put(wChainID, makeBlockDemandSalt(chainID));
-
-        this.txTipSalts.put(wChainID, makeTxTipSalt(chainID));
-
-        this.txDemandSalts.put(wChainID, makeTxDemandSalt(chainID));
+//        this.blockTipSalts.put(wChainID, makeBlockTipSalt(chainID));
+//
+//        this.blockDemandSalts.put(wChainID, makeBlockDemandSalt(chainID));
+//
+//        this.txTipSalts.put(wChainID, makeTxTipSalt(chainID));
+//
+//        this.txDemandSalts.put(wChainID, makeTxDemandSalt(chainID));
 
         this.timeRecorders.put(wChainID, 0L);
 
@@ -421,13 +421,13 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void removeChainComponent(ByteArrayWrapper chainID) {
-        this.blockTipSalts.remove(chainID);
-
-        this.blockDemandSalts.remove(chainID);
-
-        this.txTipSalts.remove(chainID);
-
-        this.txDemandSalts.remove(chainID);
+//        this.blockTipSalts.remove(chainID);
+//
+//        this.blockDemandSalts.remove(chainID);
+//
+//        this.txTipSalts.remove(chainID);
+//
+//        this.txDemandSalts.remove(chainID);
 
         this.timeRecorders.remove(chainID);
 
@@ -734,7 +734,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 return TryResult.ERROR;
             }
 
-            // 两条链头先对齐
+            // 先对齐区块号
             // 1. 高度差先缩小到mutable range之内
             BlockContainer referenceBlockContainer = blockContainer;
             BlockContainer immutableBlockContainer = new BlockContainer();
@@ -1018,10 +1018,14 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return block tip salt
      */
     private byte[] makeBlockTipSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length];
+        long time = System.currentTimeMillis() / 1000 / 5;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length + timeBytes.length];
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
         System.arraycopy(ChainParam.BLOCK_TIP_CHANNEL, 0, salt, chainID.length,
                 ChainParam.BLOCK_TIP_CHANNEL.length);
+        System.arraycopy(timeBytes, 0, salt, chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length, timeBytes.length);
         return salt;
     }
 
@@ -1031,10 +1035,14 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return block demand salt
      */
     private byte[] makeBlockDemandSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_DEMAND_CHANNEL.length];
+        long time = System.currentTimeMillis() / 1000 / 5;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_DEMAND_CHANNEL.length + timeBytes.length];
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
         System.arraycopy(ChainParam.BLOCK_DEMAND_CHANNEL, 0, salt, chainID.length,
                 ChainParam.BLOCK_DEMAND_CHANNEL.length);
+        System.arraycopy(timeBytes, 0, salt, chainID.length + ChainParam.BLOCK_DEMAND_CHANNEL.length, timeBytes.length);
         return salt;
     }
 
@@ -1044,10 +1052,14 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return tx tip salt
      */
     private byte[] makeTxTipSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.TX_TIP_CHANNEL.length];
+        long time = System.currentTimeMillis() / 1000 / 5;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[chainID.length + ChainParam.TX_TIP_CHANNEL.length + timeBytes.length];
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
         System.arraycopy(ChainParam.TX_TIP_CHANNEL, 0, salt, chainID.length,
                 ChainParam.TX_TIP_CHANNEL.length);
+        System.arraycopy(timeBytes, 0, salt, chainID.length + ChainParam.TX_TIP_CHANNEL.length, timeBytes.length);
         return salt;
     }
 
@@ -1057,10 +1069,14 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return tx demand salt
      */
     private byte[] makeTxDemandSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.TX_DEMAND_CHANNEL.length];
+        long time = System.currentTimeMillis() / 1000 / 5;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[chainID.length + ChainParam.TX_DEMAND_CHANNEL.length + timeBytes.length];
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
         System.arraycopy(ChainParam.TX_DEMAND_CHANNEL, 0, salt, chainID.length,
                 ChainParam.TX_DEMAND_CHANNEL.length);
+        System.arraycopy(timeBytes, 0, salt, chainID.length + ChainParam.TX_DEMAND_CHANNEL.length, timeBytes.length);
         return salt;
     }
 
@@ -1290,11 +1306,12 @@ public class Chains implements DHT.GetDHTItemCallback{
             int size = newBlockContainers.size();
             for (int i = size - 1; i >= 0; i--) {
 
-                if (!isValidBlockContainer(chainID, newBlockContainers.get(i), track)) {
-                    logger.error("Chain ID[{}]: Import block fail, block hash:{}",
+                TryResult validResult = isValidBlockContainer(chainID, newBlockContainers.get(i), track);
+                if (TryResult.SUCCESS != validResult) {
+                    logger.error("Chain ID[{}]: Validation is not pass, block hash:{}",
                             new String(chainID.getData()),
                             Hex.toHexString(newBlockContainers.get(i).getBlock().getBlockHash()));
-                    return TryResult.ERROR;
+                    return validResult;
                 }
 
                 ImportResult result = stateProcessor.forwardProcess(newBlockContainers.get(i), track);
@@ -1841,13 +1858,15 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private void requestTipBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockTipSalts.get(chainID));
+        byte[] salt = makeBlockTipSalt(chainID.getData());
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_BLOCK_FROM_PEER_FOR_MINING);
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     private void requestDemandBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockDemandSalts.get(chainID));
+        byte[] salt = makeBlockDemandSalt(chainID.getData());
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_DEMAND_FROM_PEER);
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
@@ -1874,7 +1893,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private void requestDemandTxFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txDemandSalts.get(chainID));
+        byte[] salt = makeTxDemandSalt(chainID.getData());
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_DEMAND_FROM_PEER);
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
@@ -1900,7 +1920,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private void requestTipTxForMining(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.txTipSalts.get(chainID));
+        byte[] salt = makeTxTipSalt(chainID.getData());
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_TX_FOR_MINING);
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
@@ -1915,7 +1936,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     private void requestTipBlockForVotingFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, this.blockTipSalts.get(chainID));
+        byte[] salt = makeBlockTipSalt(chainID.getData());
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_BLOCK_FROM_PEER_FOR_VOTING);
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
@@ -1933,8 +1955,9 @@ public class Chains implements DHT.GetDHTItemCallback{
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
+        byte[] salt = makeBlockDemandSalt(chainID.getData());
         DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
-                keyPair.second, ByteUtil.getHashEncoded(blockHash), this.blockDemandSalts.get(chainID));
+                keyPair.second, ByteUtil.getHashEncoded(blockHash), salt);
         TorrentDHTEngine.getInstance().distribute(mutableItem);
     }
 
@@ -1942,8 +1965,9 @@ public class Chains implements DHT.GetDHTItemCallback{
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
+        byte[] salt = makeTxDemandSalt(chainID.getData());
         DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
-                keyPair.second, ByteUtil.getHashEncoded(txHash), this.txDemandSalts.get(chainID));
+                keyPair.second, ByteUtil.getHashEncoded(txHash), salt);
         TorrentDHTEngine.getInstance().distribute(mutableItem);
     }
 
@@ -1982,9 +2006,10 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             // put mutable item
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+            byte[] salt = makeBlockTipSalt(chainID.getData());
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
                     ByteUtil.getHashEncoded(bestBlockContainer.getBlock().getBlockHash()),
-                    this.blockTipSalts.get(chainID));
+                    salt);
             TorrentDHTEngine.getInstance().distribute(mutableItem);
         }
     }
@@ -2016,8 +2041,9 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
+            byte[] salt = makeTxTipSalt(chainID.getData());
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                    ByteUtil.getHashEncoded(tx.getTxID()), this.txTipSalts.get(chainID));
+                    ByteUtil.getHashEncoded(tx.getTxID()), salt);
             TorrentDHTEngine.getInstance().distribute(mutableItem);
         }
     }
@@ -2070,34 +2096,35 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @param block block to check
      * @param stateDB state db
-     * @return true if valid, false otherwise
+     * @return try result
      */
-    private boolean isValidBlock(ByteArrayWrapper chainID, Block block, StateDB stateDB) {
+    private TryResult isValidBlock(ByteArrayWrapper chainID, Block block, StateDB stateDB) {
 //        // 是否本链
 //        if (!Arrays.equals(chainID.getData(), block.getChainID())) {
 //            logger.error("ChainID[{}]: ChainID mismatch!", new String(chainID.getData()));
 //            return false;
 //        }
+        // TODO:: 检查immutable block hash
 
         // 时间戳检查
         if (block.getTimeStamp() > System.currentTimeMillis() / 1000) {
             logger.error("ChainID[{}]: Block[{}] Time is in the future!",
                     new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-            return false;
+            return TryResult.ERROR;
         }
 
         // 区块内部自检
         if (!block.isBlockParamValidate()) {
             logger.error("ChainID[{}]: Block[{}] Validate block param error!",
                     new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-            return false;
+            return TryResult.ERROR;
         }
 
         // 区块签名检查
         if (!block.verifyBlockSig()) {
             logger.error("ChainID[{}]: Block[{}] Bad Signature!",
                     new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-            return false;
+            return TryResult.ERROR;
         }
 
         // 是否孤块
@@ -2105,21 +2132,15 @@ public class Chains implements DHT.GetDHTItemCallback{
             if (!this.blockStore.isBlockOnChain(chainID.getData(), block.getPreviousBlockHash())) {
                 logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
                         new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-                return false;
+                return TryResult.ERROR;
             }
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
-            return false;
+            return TryResult.ERROR;
         }
 
         // POT共识验证
-        if (!verifyPOT(chainID, block, stateDB)) {
-            logger.error("ChainID[{}]: Block[{}] Validate block param error!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-            return false;
-        }
-
-        return true;
+        return verifyPOT(chainID, block, stateDB);
     }
 
     /**
@@ -2127,9 +2148,9 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @param blockContainer block container
      * @param stateDB state db
-     * @return true if valid, false otherwise
+     * @return try result
      */
-    private boolean isValidBlockContainer(ByteArrayWrapper chainID,
+    private TryResult isValidBlockContainer(ByteArrayWrapper chainID,
                                           BlockContainer blockContainer, StateDB stateDB) {
         return isValidBlock(chainID, blockContainer.getBlock(), stateDB);
     }
@@ -2139,110 +2160,104 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @param block block to check
      * @param stateDB state db
-     * @return true if ok, false otherwise
+     * @return try result
      */
-    private boolean verifyPOT(ByteArrayWrapper chainID, Block block, StateDB stateDB) {
-        // TODO
-        return true;
-//        try {
-//            ProofOfTransaction pot = this.pots.get(chainID);
-//
-//            byte[] pubKey = block.getMinerPubkey();
-//
-//            BigInteger power = stateDB.getNonce(chainID.getData(), pubKey);
-//            if (null == power) {
-//                logger.error("ChainID[{}]: Miner[{}] has no power!",
-//                        new String(chainID.getData()), Hex.toHexString(pubKey));
-//                return TryResult.ERROR;
-//            }
-//            logger.info("Chain ID[{}]: Address: {}, mining power: {}",
-//                    new String(chainID.getData()), Hex.toHexString(pubKey), power);
-//
-//            Block parentBlock = this.blockStore.getBlockByHash(chainID.getData(), block.getPreviousBlockHash());
-//            if (null == parentBlock) {
-//                logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
-//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-//                return TryResult.ERROR;
-//            }
-//
-//            // check base target
-//            Block ancestor3 = null;
-//            if (parentBlock.getBlockNum() > 3) {
-//                Block ancestor1 = this.blockStore.getBlockByHash(chainID.getData(),
-//                        parentBlock.getPreviousBlockHash());
-//                if (null == ancestor1) {
-//                    if (isSyncUncompleted(chainID)) {
-//                        requestSyncBlock(chainID);
-//                        return TryResult.REQUEST;
-//                    }
-//                    return TryResult.ERROR;
-//                }
-//
-//                Block ancestor2 = this.blockStore.getBlockByHash(chainID.getData(),
-//                        ancestor1.getPreviousBlockHash());
-//                if (null == ancestor2) {
-//                    if (isSyncUncompleted(chainID)) {
-//                        requestSyncBlock(chainID);
-//                        return TryResult.REQUEST;
-//                    }
-//                    return TryResult.ERROR;
-//                }
-//
-//                ancestor3 = this.blockStore.getBlockByHash(chainID.getData(),
-//                        ancestor2.getPreviousBlockHash());
-//                if (null == ancestor3) {
-//                    if (isSyncUncompleted(chainID)) {
-//                        requestSyncBlock(chainID);
-//                        return TryResult.REQUEST;
-//                    }
-//                    return TryResult.ERROR;
-//                }
-//            }
-//
-//            BigInteger baseTarget = pot.calculateRequiredBaseTarget(parentBlock, ancestor3);
-//            if (0 != baseTarget.compareTo(block.getBaseTarget())) {
-//                logger.error("ChainID[{}]: Block[{}] base target error!",
-//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-//                return TryResult.ERROR;
-//            }
-//
-//            // check generation signature
-//            byte[] genSig = pot.calculateGenerationSignature(parentBlock.getGenerationSignature(), pubKey);
-//            if (!Arrays.equals(genSig, block.getGenerationSignature())) {
-//                logger.error("ChainID[{}]: Block[{}] generation signature error!",
-//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-//                return TryResult.ERROR;
-//            }
-//
-//            // check cumulative difficulty
-//            BigInteger culDifficulty = pot.calculateCumulativeDifficulty(
-//                    parentBlock.getCumulativeDifficulty(), baseTarget);
-//            if (0 != culDifficulty.compareTo(block.getCumulativeDifficulty())) {
-//                logger.error("ChainID[{}]: Block[{}] Cumulative difficulty error!",
-//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-//                return TryResult.ERROR;
-//            }
-//
-//            // check if target >= hit
-////            BigInteger target = this.pot.calculateMinerTargetValue(baseTarget, power,
-////                    block.getTimeStamp() - parentBlock.getTimeStamp());
-//
-//            BigInteger hit = pot.calculateRandomHit(genSig);
-//            long timeInterval = block.getTimeStamp() - parentBlock.getTimeStamp();
-//
-//            // verify hit
-//            if (!pot.verifyHit(hit, baseTarget, power, timeInterval)) {
-//                logger.error("ChainID[{}]: The block[{}] does not meet the pot consensus!!",
-//                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-//                return TryResult.ERROR;
-//            }
-//
-//        } catch (Exception e) {
-//            logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
-//            return TryResult.ERROR;
-//        }
-//
-//        return TryResult.SUCCESS;
+    private TryResult verifyPOT(ByteArrayWrapper chainID, Block block, StateDB stateDB) {
+        try {
+            ProofOfTransaction pot = this.pots.get(chainID);
+
+            byte[] pubKey = block.getMinerPubkey();
+
+            BigInteger power = stateDB.getNonce(chainID.getData(), pubKey);
+            if (null == power) {
+                logger.error("ChainID[{}]: Miner[{}] has no power!",
+                        new String(chainID.getData()), Hex.toHexString(pubKey));
+                return TryResult.ERROR;
+            }
+            logger.info("Chain ID[{}]: Address: {}, mining power: {}",
+                    new String(chainID.getData()), Hex.toHexString(pubKey), power);
+
+            Block parentBlock = this.blockStore.getBlockByHash(chainID.getData(), block.getPreviousBlockHash());
+            if (null == parentBlock) {
+                logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
+                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                return TryResult.ERROR;
+            }
+
+            // check base target
+            Block ancestor3 = null;
+            if (parentBlock.getBlockNum() > 3) {
+                Block ancestor1 = this.blockStore.getBlockByHash(chainID.getData(),
+                        parentBlock.getPreviousBlockHash());
+                if (null == ancestor1) {
+                    if (isSyncUncompleted(chainID)) {
+                        requestSyncBlock(chainID);
+                        return TryResult.REQUEST;
+                    }
+                    return TryResult.ERROR;
+                }
+
+                Block ancestor2 = this.blockStore.getBlockByHash(chainID.getData(),
+                        ancestor1.getPreviousBlockHash());
+                if (null == ancestor2) {
+                    if (isSyncUncompleted(chainID)) {
+                        requestSyncBlock(chainID);
+                        return TryResult.REQUEST;
+                    }
+                    return TryResult.ERROR;
+                }
+
+                ancestor3 = this.blockStore.getBlockByHash(chainID.getData(),
+                        ancestor2.getPreviousBlockHash());
+                if (null == ancestor3) {
+                    if (isSyncUncompleted(chainID)) {
+                        requestSyncBlock(chainID);
+                        return TryResult.REQUEST;
+                    }
+                    return TryResult.ERROR;
+                }
+            }
+
+            BigInteger baseTarget = pot.calculateRequiredBaseTarget(parentBlock, ancestor3);
+            if (0 != baseTarget.compareTo(block.getBaseTarget())) {
+                logger.error("ChainID[{}]: Block[{}] base target error!",
+                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                return TryResult.ERROR;
+            }
+
+            // check generation signature
+            byte[] genSig = pot.calculateGenerationSignature(parentBlock.getGenerationSignature(), pubKey);
+            if (!Arrays.equals(genSig, block.getGenerationSignature())) {
+                logger.error("ChainID[{}]: Block[{}] generation signature error!",
+                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                return TryResult.ERROR;
+            }
+
+            // check cumulative difficulty
+            BigInteger culDifficulty = pot.calculateCumulativeDifficulty(
+                    parentBlock.getCumulativeDifficulty(), baseTarget);
+            if (0 != culDifficulty.compareTo(block.getCumulativeDifficulty())) {
+                logger.error("ChainID[{}]: Block[{}] Cumulative difficulty error!",
+                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                return TryResult.ERROR;
+            }
+
+            BigInteger hit = pot.calculateRandomHit(genSig);
+            long timeInterval = block.getTimeStamp() - parentBlock.getTimeStamp();
+
+            // verify hit
+            if (!pot.verifyHit(hit, baseTarget, power, timeInterval)) {
+                logger.error("ChainID[{}]: The block[{}] does not meet the pot consensus!!",
+                        new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                return TryResult.ERROR;
+            }
+
+        } catch (Exception e) {
+            logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
+            return TryResult.ERROR;
+        }
+
+        return TryResult.SUCCESS;
     }
 
     /**
