@@ -70,7 +70,8 @@ public class ChainParam {
     /**********CHANNEL**********/
     // mutable item salt suffix: block
     public static final byte[] BLOCK_TIP_CHANNEL = "#blkTip".getBytes();
-    public static final byte[] BLOCK_DEMAND_CHANNEL = "#blkDemand".getBytes();
+    // block demand
+    public static final byte[] BLOCK_DEMAND_CHANNEL = "#BD".getBytes();
 
     // mutable item salt suffix: tx
     public static final byte[] TX_TIP_CHANNEL = "#txTip".getBytes();
