@@ -82,6 +82,8 @@ public final class JsonRpcServer {
 
         // test
         this.dispatcher.register(new dht_putGenesisHashInTipBlockChannel(this.tauController));
+        this.dispatcher.register(new dht_getTauBlockDemandFromPeer(this.tauController));
+        this.dispatcher.register(new dht_putTauGenesisBlockHashInDemand(this.tauController));
     }
 
     /**

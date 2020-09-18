@@ -1017,7 +1017,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @return block tip salt
      */
-    private byte[] makeBlockTipSalt(byte[] chainID) {
+    public static byte[] makeBlockTipSalt(byte[] chainID) {
         long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
@@ -1034,7 +1034,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @return block demand salt
      */
-    private byte[] makeBlockDemandSalt(byte[] chainID) {
+    public static byte[] makeBlockDemandSalt(byte[] chainID) {
         long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
@@ -1051,7 +1051,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @return tx tip salt
      */
-    private byte[] makeTxTipSalt(byte[] chainID) {
+    public static byte[] makeTxTipSalt(byte[] chainID) {
         long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
@@ -1068,7 +1068,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @return tx demand salt
      */
-    private byte[] makeTxDemandSalt(byte[] chainID) {
+    public static byte[] makeTxDemandSalt(byte[] chainID) {
         long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
@@ -1094,7 +1094,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void requestSyncBlock(ByteArrayWrapper chainID) {
-        logger.debug("Request sync block hash:{}, block number:{}",
+        logger.debug("Request sync block hash:{}, current block number:{}",
                 Hex.toHexString(this.syncBlocks.get(chainID).getPreviousBlockHash()),
                 this.syncBlocks.get(chainID).getBlockNum());
         requestBlockForSync(chainID, this.syncBlocks.get(chainID).getPreviousBlockHash());
