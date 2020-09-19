@@ -55,6 +55,7 @@ public final class JsonRpcServer {
         this.dispatcher.register(new dht_nodesCount(this.tauController));
         this.dispatcher.register(new dht_getImmutableItem(this.tauController));
         this.dispatcher.register(new dht_getMutableItem(this.tauController));
+        this.dispatcher.register(new dht_getTipBlockFromPeer(this.tauController));
 
 		// methods about chain
         this.dispatcher.register(new chain_generateNewSeed(this.tauController));

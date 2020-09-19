@@ -994,9 +994,9 @@ public class Chains implements DHT.GetDHTItemCallback{
             for (ByteArrayWrapper blockHash : this.blockHashMapFromDemand.get(chainID)) {
 
                 byte[] previousHash = blockHash.getData();
+                logger.debug("Chain ID:{} Response from block hash:{}",
+                        new String(chainID.getData()), Hex.toHexString(previousHash));
                 for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
-                    logger.debug("Chain ID:{} Response block hash:{}",
-                            new String(chainID.getData()), Hex.toHexString(previousHash));
                     Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
                     if (null != block) {
                         publishBlock(block);
