@@ -281,7 +281,7 @@ public class TorrentDHTEngine {
             return null;
         }
 
-        logger.debug("put immutable item:" + item.entry.toString());
+        logger.trace("put immutable item:" + item.entry.toString());
         return sessionManager.dhtPutItem(item.entry);
     }
 
@@ -296,7 +296,7 @@ public class TorrentDHTEngine {
             return;
         }
 
-        logger.debug("put mutable item:" + item.entry.toString());
+        logger.trace("put mutable item:" + item.entry.toString());
         sessionManager.dhtPutItem(item.publicKey, item.privateKey,
                 item.entry, item.salt);
     }
@@ -318,13 +318,13 @@ public class TorrentDHTEngine {
 
         // Drop this item if it exists.
         if (puttingImmutableItemQueue.contains(item)) {
-            logger.debug("duplicate immutable item" + item);
+            logger.trace("duplicate immutable item" + item);
             return false;
         }
 
         try {
             puttingImmutableItemQueue.put(item);
-            logger.debug("immutable item is queued(size:" + puttingImmutableItemQueue.size()
+            logger.trace("immutable item is queued(size:" + puttingImmutableItemQueue.size()
                      + "):" + item);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -353,13 +353,13 @@ public class TorrentDHTEngine {
 
         // Drop this item if it exists.
         if (puttingMutableItemQueue.contains(item)) {
-            logger.debug("duplicate mutable item" + item);
+            logger.trace("duplicate mutable item" + item);
             return false;
         }
 
         try {
             puttingMutableItemQueue.put(item);
-            logger.debug("mutable item is queued(size:" + puttingMutableItemQueue.size()
+            logger.trace("mutable item is queued(size:" + puttingMutableItemQueue.size()
                     + "):" + item);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -426,7 +426,7 @@ public class TorrentDHTEngine {
         Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
         byte[] data = null;
         if (entry != null) {
-            logger.debug("immutable entry [" + spec.sha1 + "] got:" + entry.toString()
+            logger.trace("immutable entry [" + spec.sha1 + "] got:" + entry.toString()
                     + ", type:" + getEntryType(entry));
 
             if (!isEntryUndefined(entry)) {
@@ -457,7 +457,7 @@ public class TorrentDHTEngine {
             return null;
         }
 
-        logger.debug("mutable item got:" + result.item.toString()
+        logger.trace("mutable item got:" + result.item.toString()
                 + ", type:" + getEntryType(result.item));
 
         return result.item.bencode();
@@ -485,13 +485,13 @@ public class TorrentDHTEngine {
 
         // Drop this request if it exists.
         if (gettingImmutableItemQueue.contains(req)) {
-            logger.debug("duplicate immutable item req:" + req);
+            logger.trace("duplicate immutable item req:" + req);
             return false;
         }
 
         try {
             gettingImmutableItemQueue.put(req);
-            logger.debug("immutable item req is queued(size:" + gettingImmutableItemQueue.size()
+            logger.trace("immutable item req is queued(size:" + gettingImmutableItemQueue.size()
                     +  "):" + req);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -525,13 +525,13 @@ public class TorrentDHTEngine {
 
         // Drop this request if it exists.
         if (gettingMutableItemQueue.contains(req)) {
-            logger.debug("duplicate mutable item req:" + req);
+            logger.trace("duplicate mutable item req:" + req);
             return false;
         }
 
         try {
             gettingMutableItemQueue.put(req);
-            logger.debug("mutable item req is queued(size:" + gettingMutableItemQueue.size()
+            logger.trace("mutable item req is queued(size:" + gettingMutableItemQueue.size()
                      + "):" + req);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -730,7 +730,7 @@ public class TorrentDHTEngine {
                                 req.getCallbackData() != null ? req.getCallbackData() : "null"
                         ));
                     } else {
-                        logger.debug(String.format("immutable getting success:"
+                        logger.trace(String.format("immutable getting success:"
                                  + "time cost %d ms", timeCost));
                     }
 
@@ -783,7 +783,7 @@ public class TorrentDHTEngine {
                                 req.getCallbackData() != null ? req.getCallbackData() : "null"
                         ));
                     } else {
-                        logger.debug(String.format("mutable getting success:"
+                        logger.trace(String.format("mutable getting success:"
                                  + "time cost %d ms", timeCost));
 
                     }
