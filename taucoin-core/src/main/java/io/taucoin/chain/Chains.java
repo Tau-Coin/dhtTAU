@@ -1866,6 +1866,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         return TryResult.SUCCESS;
     }
 
+    /**
+     * request tip block hash from peer
+     * @param chainID chain ID
+     * @param peer peer
+     */
     private void requestTipBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
         byte[] salt = makeBlockTipSalt(chainID.getData());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
@@ -1873,6 +1878,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request demand block hash from peer
+     * @param chainID chain ID
+     * @param peer peer
+     */
     private void requestDemandBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
         byte[] salt = makeBlockDemandSalt(chainID.getData());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
@@ -1880,27 +1890,38 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request block for mining
+     * @param chainID chain ID
+     * @param blockHash block hash
+     */
     private void requestBlockForMining(ByteArrayWrapper chainID, byte[] blockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_REQUEST_FOR_MINING,
                 new ByteArrayWrapper(blockHash));
 
-        publishBlockRequest(chainID, blockHash);
-
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request block for sync
+     * @param chainID chain ID
+     * @param blockHash block hash
+     */
     private void requestBlockForSync(ByteArrayWrapper chainID, byte[] blockHash) {
 
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_BLOCK_REQUEST_FOR_SYNC, new ByteArrayWrapper(blockHash));
 
-        publishBlockRequest(chainID, blockHash);
-
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request demand tx from peer
+     * @param chainID chain ID
+     * @param peer peer
+     */
     private void requestDemandTxFromPeer(ByteArrayWrapper chainID, byte[] peer) {
         byte[] salt = makeTxDemandSalt(chainID.getData());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
@@ -1908,26 +1929,39 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request tx for mining
+     * @param chainID chain ID
+     * @param txid tx hash
+     * @param txBlockHash block hash which tx belongs to
+     */
     private void requestTxForMining(ByteArrayWrapper chainID, byte[] txid, ByteArrayWrapper txBlockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_TX_REQUEST_FOR_MINING, new ByteArrayWrapper(txid), txBlockHash);
 
-        publishTxRequest(chainID, txid);
-
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request tx for sync
+     * @param chainID chain ID
+     * @param txid tx hash
+     * @param txBlockHash block hash which tx belongs to
+     */
     private void requestTxForSync(ByteArrayWrapper chainID, byte[] txid, ByteArrayWrapper txBlockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_TX_REQUEST_FOR_SYNC, new ByteArrayWrapper(txid), txBlockHash);
 
-        publishTxRequest(chainID, txid);
-
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request tip tx for mining
+     * @param chainID chain ID
+     * @param peer peer
+     */
     private void requestTipTxForMining(ByteArrayWrapper chainID, byte[] peer) {
         byte[] salt = makeTxTipSalt(chainID.getData());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
@@ -1935,15 +1969,23 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request tx for pool
+     * @param chainID
+     * @param txid
+     */
     private void requestTxForPool(ByteArrayWrapper chainID, byte[] txid) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_REQUEST_FOR_MINING);
 
-        publishTxRequest(chainID, txid);
-
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request tip block for voting from peer
+     * @param chainID chain ID
+     * @param peer peer
+     */
     private void requestTipBlockForVotingFromPeer(ByteArrayWrapper chainID, byte[] peer) {
         byte[] salt = makeBlockTipSalt(chainID.getData());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
@@ -1951,16 +1993,24 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
+    /**
+     * request block for voting
+     * @param chainID chain ID
+     * @param blockHash block hash
+     */
     private void requestBlockForVoting(ByteArrayWrapper chainID, byte[] blockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_REQUEST_FOR_VOTING);
 
-        publishBlockRequest(chainID, blockHash);
-
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private void publishBlockRequest(ByteArrayWrapper chainID, byte[] blockHash) {
+    /**
+     * publish block hash that demand
+     * @param chainID chain ID
+     * @param blockHash block hash that demand
+     */
+    private void publishBlockDemand(ByteArrayWrapper chainID, byte[] blockHash) {
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
@@ -1970,7 +2020,12 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().distribute(mutableItem);
     }
 
-    private void publishTxRequest(ByteArrayWrapper chainID, byte[] txHash) {
+    /**
+     * publish tx hash that demand
+     * @param chainID chain ID
+     * @param txHash tx hash that demand
+     */
+    private void publishTxDemand(ByteArrayWrapper chainID, byte[] txHash) {
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
@@ -1980,6 +2035,10 @@ public class Chains implements DHT.GetDHTItemCallback{
         TorrentDHTEngine.getInstance().distribute(mutableItem);
     }
 
+    /**
+     * publish block
+     * @param block block
+     */
     private void publishBlock(Block block) {
         if (null != block) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(block.getEncoded());
@@ -1987,6 +2046,10 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
     }
 
+    /**
+     * publish transaction
+     * @param tx transaction
+     */
     private void publishTransaction(Transaction tx) {
         if (null != tx) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
@@ -2597,6 +2660,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == item) {
                     logger.error("HISTORY_BLOCK_REQUEST_FOR_MINING is empty, block hash:{}",
                             Hex.toHexString(dataIdentifier.getHash().getData()));
+                    // 向dht请求
+                    publishBlockDemand(dataIdentifier.getChainID(), dataIdentifier.getHash().getData());
+
                     // 返回区块为空，在block container集合里插入空标志
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), null);
@@ -2651,6 +2717,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == item) {
                     logger.error("HISTORY_TX_REQUEST_FOR_MINING is empty, block hash:{}",
                             Hex.toHexString(dataIdentifier.getHash().getData()));
+
+                    // 向dht请求
+                    publishTxDemand(dataIdentifier.getChainID(), dataIdentifier.getHash().getData());
 
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
@@ -2717,6 +2786,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_BLOCK_REQUEST_FOR_VOTING: {
                 if (null == item) {
                     logger.error("HISTORY_BLOCK_REQUEST_FOR_VOTING is empty");
+                    // 向dht请求
+                    publishBlockDemand(dataIdentifier.getChainID(), dataIdentifier.getHash().getData());
                     return;
                 }
 
@@ -2739,6 +2810,10 @@ public class Chains implements DHT.GetDHTItemCallback{
             case TX_REQUEST_FOR_MINING: {
                 if (null == item) {
                     logger.error("TX_REQUEST_FOR_MINING is empty");
+
+                    // 向dht请求
+                    publishTxDemand(dataIdentifier.getChainID(), dataIdentifier.getHash().getData());
+
                     return;
                 }
 
@@ -2750,6 +2825,10 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == item) {
                     logger.error("HISTORY_BLOCK_REQUEST_FOR_SYNC is empty, sync block hash:{}",
                             dataIdentifier.getHash().toString());
+
+                    // 向dht请求
+                    publishBlockDemand(dataIdentifier.getChainID(), dataIdentifier.getHash().getData());
+
                     // 返回区块为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), null);
@@ -2801,6 +2880,10 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == item) {
                     logger.error("HISTORY_TX_REQUEST_FOR_SYNC is empty, sync tx hash:{}",
                             dataIdentifier.getHash().toString());
+
+                    // 向dht请求
+                    publishTxDemand(dataIdentifier.getChainID(), dataIdentifier.getHash().getData());
+
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), null);
