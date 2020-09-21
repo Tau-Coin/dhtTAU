@@ -73,6 +73,7 @@ public class BlockDB implements BlockStore {
         try {
             encode = db.get(PrefixKey.txKey(chainID, hash));
         } catch (Exception e) {
+            logger.error("GetTransactionByHash:" + e.getMessage(), e);
             throw new DBException(e.getMessage());
         }
 
@@ -97,6 +98,7 @@ public class BlockDB implements BlockStore {
         try {
             blockEncode = db.get(PrefixKey.blockKey(chainID, hash));
         } catch (Exception e) {
+            logger.error("GetBlockByHash:" + e.getMessage(), e);
             throw new DBException(e.getMessage());
         }
 

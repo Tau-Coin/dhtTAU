@@ -997,11 +997,14 @@ public class Chains implements DHT.GetDHTItemCallback{
                 logger.debug("Chain ID:{} Response from block hash:{}",
                         new String(chainID.getData()), Hex.toHexString(previousHash));
                 for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
-                    Block block = this.blockStore.getBlockByHash(chainID.getData(), previousHash);
-                    if (null != block) {
-                        publishBlock(block);
-                        previousHash = block.getPreviousBlockHash();
-                        if (block.getBlockNum() == 0) {
+                    BlockContainer blockContainer = this.blockStore.
+                            getBlockContainerByHash(chainID.getData(), previousHash);
+
+                    if (null != blockContainer) {
+                        publishBlockContainer(blockContainer);
+
+                        previousHash = blockContainer.getBlock().getPreviousBlockHash();
+                        if (blockContainer.getBlock().getBlockNum() == 0) {
                             break;
                         }
                     } else {
@@ -1009,7 +1012,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                     }
                 }
             }
-            this.blockHashMapFromDemand.get(chainID).clear();
 
             // tx
             for (ByteArrayWrapper txid : this.txHashMapFromDemand.get(chainID)) {
@@ -1018,10 +1020,12 @@ public class Chains implements DHT.GetDHTItemCallback{
                 Transaction tx = this.blockStore.getTransactionByHash(chainID.getData(), txid.getData());
                 publishTransaction(tx);
             }
-            this.txHashMapFromDemand.get(chainID).clear();
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
         }
+
+        this.blockHashMapFromDemand.get(chainID).clear();
+        this.txHashMapFromDemand.get(chainID).clear();
     }
 
     /**
@@ -2085,6 +2089,15 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
+     * publish block container
+     * @param blockContainer block container
+     */
+    private void publishBlockContainer(BlockContainer blockContainer) {
+        publishTransaction(blockContainer.getTx());
+        publishBlock(blockContainer.getBlock());
+    }
+
+    /**
      * publish tip block on main chain to dht
      * @param chainID chain ID
      */
@@ -2092,23 +2105,14 @@ public class Chains implements DHT.GetDHTItemCallback{
         BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
 
         if (null != bestBlockContainer) {
-            if (null != bestBlockContainer.getTx()) {
-                // put immutable tx
-                DHT.ImmutableItem immutableItem =
-                        new DHT.ImmutableItem(bestBlockContainer.getTx().getEncoded());
-                TorrentDHTEngine.getInstance().distribute(immutableItem);
-            }
-
-            // put immutable block
-            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(bestBlockContainer.getBlock().getEncoded());
-            TorrentDHTEngine.getInstance().distribute(immutableItem);
+            publishBlockContainer(bestBlockContainer);
 
             // put mutable item
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
             byte[] salt = makeBlockTipSalt(chainID.getData());
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                    ByteUtil.getHashEncoded(bestBlockContainer.getBlock().getBlockHash()),
-                    salt);
+                    ByteUtil.getHashEncoded(bestBlockContainer.getBlock().getBlockHash()), salt);
+
             TorrentDHTEngine.getInstance().distribute(mutableItem);
         }
     }
