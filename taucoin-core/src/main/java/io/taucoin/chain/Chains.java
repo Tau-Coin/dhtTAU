@@ -1001,6 +1001,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                     if (null != block) {
                         publishBlock(block);
                         previousHash = block.getPreviousBlockHash();
+                        if (block.getBlockNum() == 0) {
+                            break;
+                        }
                     } else {
                         break;
                     }
@@ -1971,8 +1974,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
     /**
      * request tx for pool
-     * @param chainID
-     * @param txid
+     * @param chainID chain ID
+     * @param txid tx hash
      */
     private void requestTxForPool(ByteArrayWrapper chainID, byte[] txid) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
@@ -2001,6 +2004,30 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void requestBlockForVoting(ByteArrayWrapper chainID, byte[] blockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_REQUEST_FOR_VOTING);
+
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    /**
+     * request block that others demand
+     * @param chainID chain ID
+     * @param blockHash block hash
+     */
+    private void requestBlockDemand(ByteArrayWrapper chainID, byte[] blockHash) {
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_DEMAND);
+
+        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    /**
+     * request tx that others demand
+     * @param chainID chain ID
+     * @param txid tx hash
+     */
+    private void requestTxDemand(ByteArrayWrapper chainID, byte[] txid) {
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_TX_DEMAND);
 
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
@@ -2756,7 +2783,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
                 logger.debug("Got a demand block hash:{}", Hex.toHexString(hash));
-                this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).add(new ByteArrayWrapper(hash));
+                requestBlockDemand(dataIdentifier.getChainID(), hash);
 
                 break;
             }
@@ -2768,7 +2795,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
                 logger.debug("Got a demand tx hash:{}", Hex.toHexString(hash));
-                this.txHashMapFromDemand.get(dataIdentifier.getChainID()).add(new ByteArrayWrapper(hash));
+                requestTxDemand(dataIdentifier.getChainID(), hash);
 
                 break;
             }
@@ -2904,6 +2931,24 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     // 放入交易集合作缓存
                     this.txMapForSync.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), tx);
+                }
+
+                break;
+            }
+            case HISTORY_BLOCK_DEMAND: {
+                if (null == item) {
+                    logger.error("HISTORY_BLOCK_DEMAND is empty, try to response to block hash:{} from local",
+                            dataIdentifier.getHash().toString());
+                    this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
+                }
+
+                break;
+            }
+            case HISTORY_TX_DEMAND: {
+                if (null == item) {
+                    logger.error("HISTORY_TX_DEMAND is empty, try to response to tx hash:{} from local",
+                            dataIdentifier.getHash().toString());
+                    this.txHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
                 }
 
                 break;

@@ -9,6 +9,9 @@ public enum DataType {
     BLOCK_DEMAND_FROM_PEER, // mutable item: request block hash
     TX_DEMAND_FROM_PEER, // mutable item: request tx hash
 
+    HISTORY_BLOCK_DEMAND, // immutable item: get block
+    HISTORY_TX_DEMAND, // immutable item: get tx
+
     HISTORY_BLOCK_REQUEST_FOR_SYNC, // immutable block for sync
     HISTORY_TX_REQUEST_FOR_SYNC, // immutable tx for sync
 
