@@ -281,7 +281,7 @@ public class TorrentDHTEngine {
             return null;
         }
 
-        logger.trace("put immutable item:" + item.entry.toString());
+        //logger.trace("put immutable item:" + item.entry.toString());
         return sessionManager.dhtPutItem(item.entry);
     }
 
@@ -296,7 +296,7 @@ public class TorrentDHTEngine {
             return;
         }
 
-        logger.trace("put mutable item:" + item.entry.toString());
+        //logger.trace("put mutable item:" + item.entry.toString());
         sessionManager.dhtPutItem(item.publicKey, item.privateKey,
                 item.entry, item.salt);
     }
@@ -426,8 +426,8 @@ public class TorrentDHTEngine {
         Entry entry = sessionManager.dhtGetItem(spec.sha1, spec.timeout);
         byte[] data = null;
         if (entry != null) {
-            logger.trace("immutable entry [" + spec.sha1 + "] got:" + entry.toString()
-                    + ", type:" + getEntryType(entry));
+            // logger.trace("immutable entry [" + spec.sha1 + "] got:" + entry.toString()
+            //        + ", type:" + getEntryType(entry));
 
             if (!isEntryUndefined(entry)) {
                 data = entry.bencode();
@@ -457,8 +457,8 @@ public class TorrentDHTEngine {
             return null;
         }
 
-        logger.trace("mutable item got:" + result.item.toString()
-                + ", type:" + getEntryType(result.item));
+        //logger.trace("mutable item got:" + result.item.toString()
+        //        + ", type:" + getEntryType(result.item));
 
         return result.item.bencode();
     }
