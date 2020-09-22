@@ -2,6 +2,7 @@ package io.taucoin.listener;
 
 import io.taucoin.torrent.SessionStats;
 import io.taucoin.types.Block;
+import io.taucoin.types.BlockContainer;
 
 /**
  * TauListener is the event listener of the tau blockchain.
@@ -9,7 +10,7 @@ import io.taucoin.types.Block;
  */
 public interface TauListener {
 
-    void onNewChain(String chainId, String nickName);
+    void onClearChainAllState(byte[] chainID);
 
     /**
      * When starting TauController sucessfully or not,
@@ -67,9 +68,9 @@ public interface TauListener {
      */
     void onSessionStats(SessionStats newStats);
 
-    void onNewBlock(byte[] chainID, Block block);
+    void onNewBlock(byte[] chainID, BlockContainer blockContainer);
 
-    void onRollBack(byte[] chainID, Block block);
+    void onRollBack(byte[] chainID, BlockContainer blockContainer);
 
-    void onSyncBlock(byte[] chainID, Block block);
+    void onSyncBlock(byte[] chainID, BlockContainer blockContainer);
 }

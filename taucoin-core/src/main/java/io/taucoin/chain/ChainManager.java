@@ -252,6 +252,9 @@ public class ChainManager {
 
         this.chains.followChain(chainID, peerList);
 
+        // 通知UI
+        this.listener.onNewBlock(chainID, genesisContainer);
+
         // put block to dht
         putBlockContainerToDHT(chainID, genesisContainer);
 

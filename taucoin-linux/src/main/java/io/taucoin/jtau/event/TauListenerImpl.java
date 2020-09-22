@@ -4,6 +4,7 @@ import io.taucoin.controller.TauController;
 import io.taucoin.listener.TauListener;
 import io.taucoin.torrent.SessionStats;
 import io.taucoin.types.Block;
+import io.taucoin.types.BlockContainer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,7 @@ public class TauListenerImpl implements TauListener {
     }
 
     @Override
-    public void onNewChain(String chainId, String nickName) {}
+    public void onClearChainAllState(byte[] chainID) {}
 
     @Override
     public void onTauStarted(boolean success, String errMsg) {
@@ -76,12 +77,12 @@ public class TauListenerImpl implements TauListener {
     }
 
     @Override
-    public void onNewBlock(byte[] chainID, Block block) {}
+    public void onNewBlock(byte[] chainID, BlockContainer blockContainer) {}
 
     @Override
-    public void onRollBack(byte[] chainID, Block block) {}
+    public void onRollBack(byte[] chainID, BlockContainer blockContainer) {}
 
     @Override
-    public void onSyncBlock(byte[] chainID, Block block) {}
+    public void onSyncBlock(byte[] chainID, BlockContainer blockContainer) {}
 
 }

@@ -1,7 +1,7 @@
 package io.taucoin.listener;
 
 import io.taucoin.torrent.SessionStats;
-import io.taucoin.types.Block;
+import io.taucoin.types.BlockContainer;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -24,9 +24,9 @@ public class CompositeTauListener implements TauListener {
     }
 
     @Override
-    public void onNewChain(String chainId, String nickName) {
+    public void onClearChainAllState(byte[] chainID) {
         for (TauListener listener : listeners) {
-            listener.onNewChain(chainId, nickName);
+            listener.onClearChainAllState(chainID);
         }
     }
 
@@ -87,23 +87,23 @@ public class CompositeTauListener implements TauListener {
     }
 
     @Override
-    public void onNewBlock(byte[] chainID, Block block) {
+    public void onNewBlock(byte[] chainID, BlockContainer blockContainer) {
         for (TauListener listener : listeners) {
-            listener.onNewBlock(chainID, block);
+            listener.onNewBlock(chainID, blockContainer);
         }
     }
 
     @Override
-    public void onRollBack(byte[] chainID, Block block) {
+    public void onRollBack(byte[] chainID, BlockContainer blockContainer) {
         for (TauListener listener : listeners) {
-            listener.onRollBack(chainID, block);
+            listener.onRollBack(chainID, blockContainer);
         }
     }
 
     @Override
-    public void onSyncBlock(byte[] chainID, Block block) {
+    public void onSyncBlock(byte[] chainID, BlockContainer blockContainer) {
         for (TauListener listener : listeners) {
-            listener.onSyncBlock(chainID, block);
+            listener.onSyncBlock(chainID, blockContainer);
         }
     }
 }
