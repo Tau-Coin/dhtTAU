@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.Set;
 
 import static io.taucoin.torrent.DHT.*;
+import static io.taucoin.torrent.DHTReqResult.*;
 
 /**
  * TorrentDHTEngine is the bridge between tau blockchain and torrent SessionManager.
@@ -308,18 +309,18 @@ public class TorrentDHTEngine {
      * @return boolean true indicates this item is put into queue,
      *     or else false.
      */
-    public boolean distribute(ImmutableItem item) {
+    public DHTReqResult distribute(ImmutableItem item) {
 
         if (item == null || !sessionManager.isRunning()
                 || puttingImmutableItemQueue.size() >= DHTBlockingQueueCapability) {
             logger.warn("drop immutable item" + item);
-            return false;
+            return Dropped;
         }
 
         // Drop this item if it exists.
         if (puttingImmutableItemQueue.contains(item)) {
             logger.trace("duplicate immutable item" + item);
-            return false;
+            return Duplicated;
         }
 
         try {
@@ -333,7 +334,7 @@ public class TorrentDHTEngine {
             // never block current thread.
         }
 
-        return true;
+        return Success;
     }
 
     /**
@@ -343,18 +344,18 @@ public class TorrentDHTEngine {
      * @return boolean true indicates this item is put into queue,
      *     or else false.
      */
-    public boolean distribute(MutableItem item) {
+    public DHTReqResult distribute(MutableItem item) {
 
         if (item == null || !sessionManager.isRunning()
                 || puttingMutableItemQueue.size() >= DHTBlockingQueueCapability) {
             logger.warn("drop mutable item" + item);
-            return false;
+            return Dropped;
         }
 
         // Drop this item if it exists.
         if (puttingMutableItemQueue.contains(item)) {
             logger.trace("duplicate mutable item" + item);
-            return false;
+            return Duplicated;
         }
 
         try {
@@ -368,7 +369,7 @@ public class TorrentDHTEngine {
             // never block current thread.
         }
 
-        return true;
+        return Success;
     }
 
     /**
@@ -472,13 +473,13 @@ public class TorrentDHTEngine {
      * @return boolean true indicates this item is put into queue,
      *     or else false
      */
-    public boolean request(GetImmutableItemSpec spec, GetDHTItemCallback cb,
+    public DHTReqResult request(GetImmutableItemSpec spec, GetDHTItemCallback cb,
             Object cbData) {
 
         if (spec == null || !sessionManager.isRunning()
                 || gettingImmutableItemQueue.size() >= DHTBlockingQueueCapability) {
             logger.warn("drop immutable item req:" + spec);
-            return false;
+            return Dropped;
         }
 
         ImmutableItemRequest req = new ImmutableItemRequest(spec, cb, cbData);
@@ -486,7 +487,7 @@ public class TorrentDHTEngine {
         // Drop this request if it exists.
         if (gettingImmutableItemQueue.contains(req)) {
             logger.trace("duplicate immutable item req:" + req);
-            return false;
+            return Duplicated;
         }
 
         try {
@@ -500,7 +501,7 @@ public class TorrentDHTEngine {
             // never block current thread.
         }
 
-        return true;
+        return Success;
     }
 
     /**
@@ -512,13 +513,13 @@ public class TorrentDHTEngine {
      * @return boolean true indicates this item is put into queue,
      *     or else false.
      */
-    public boolean request(GetMutableItemSpec spec, GetDHTItemCallback cb,
+    public DHTReqResult request(GetMutableItemSpec spec, GetDHTItemCallback cb,
             Object cbData) {
 
         if (spec == null || !sessionManager.isRunning()
                 || gettingMutableItemQueue.size() >= DHTBlockingQueueCapability) {
             logger.warn("drop mutable item req:" + spec);
-            return false;
+            return Dropped;
         }
 
         MutableItemRequest req = new MutableItemRequest(spec, cb, cbData);
@@ -526,7 +527,7 @@ public class TorrentDHTEngine {
         // Drop this request if it exists.
         if (gettingMutableItemQueue.contains(req)) {
             logger.trace("duplicate mutable item req:" + req);
-            return false;
+            return Duplicated;
         }
 
         try {
@@ -540,7 +541,7 @@ public class TorrentDHTEngine {
             // never block current thread.
         }
 
-        return true;
+        return Success;
     }
 
     /**
