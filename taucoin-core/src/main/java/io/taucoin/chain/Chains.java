@@ -1008,6 +1008,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                             break;
                         }
                     } else {
+                        logger.debug("Chain ID:{} Cannot find block hash:{}",
+                                new String(chainID.getData()), Hex.toHexString(previousHash));
                         break;
                     }
                 }
@@ -1172,7 +1174,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     this.stateDB.addPeer(chainID.getData(), account.getData());
                 }
 
-                this.tauListener.onSyncBlock(blockContainer.getBlock());
+                this.tauListener.onSyncBlock(chainID.getData(), blockContainer.getBlock());
 
                 this.syncBlocks.put(chainID, blockContainer.getBlock());
 
@@ -1226,7 +1228,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             this.stateDB.addPeer(chainID.getData(), account.getData());
                         }
 
-                        this.tauListener.onNewBlock(blockContainer.getBlock());
+                        this.tauListener.onNewBlock(chainID.getData(), blockContainer.getBlock());
 
                         publishBestBlock(chainID);
                     } catch (Exception e) {
@@ -1384,12 +1386,12 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 // 通知UI区块回滚
-                this.tauListener.onRollBack(undoBlockContainer.getBlock());
+                this.tauListener.onRollBack(chainID.getData(), undoBlockContainer.getBlock());
             }
 
             size = newBlockContainers.size();
             for (int i = size - 1; i >= 0; i--) {
-                this.tauListener.onNewBlock(newBlockContainers.get(i).getBlock());
+                this.tauListener.onNewBlock(chainID.getData(), newBlockContainers.get(i).getBlock());
             }
         } catch (Exception e) {
             logger.error(new String(chainID.getData()) + ":" + e.getMessage(), e);
@@ -1575,7 +1577,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 this.stateDB.addPeer(chainID.getData(), account.getData());
             }
 
-            this.tauListener.onSyncBlock(blockContainer.getBlock());
+            this.tauListener.onSyncBlock(chainID.getData(), blockContainer.getBlock());
 
             this.peerManagers.get(chainID).addOldBlockPeer(blockContainer.getBlock().getMinerPubkey());
         } catch (Exception e) {

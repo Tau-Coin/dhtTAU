@@ -76,12 +76,12 @@ public class TauListenerImpl implements TauListener {
     }
 
     @Override
-    public void onNewBlock(Block block) {}
+    public void onNewBlock(byte[] chainID, Block block) {}
 
     @Override
-    public void onRollBack(Block block) {}
+    public void onRollBack(byte[] chainID, Block block) {}
 
     @Override
-    public void onSyncBlock(Block block) {}
+    public void onSyncBlock(byte[] chainID, Block block) {}
 
 }

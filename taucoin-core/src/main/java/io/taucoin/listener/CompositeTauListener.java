@@ -87,23 +87,23 @@ public class CompositeTauListener implements TauListener {
     }
 
     @Override
-    public void onNewBlock(Block block) {
+    public void onNewBlock(byte[] chainID, Block block) {
         for (TauListener listener : listeners) {
-            listener.onNewBlock(block);
+            listener.onNewBlock(chainID, block);
         }
     }
 
     @Override
-    public void onRollBack(Block block) {
+    public void onRollBack(byte[] chainID, Block block) {
         for (TauListener listener : listeners) {
-            listener.onRollBack(block);
+            listener.onRollBack(chainID, block);
         }
     }
 
     @Override
-    public void onSyncBlock(Block block) {
+    public void onSyncBlock(byte[] chainID, Block block) {
         for (TauListener listener : listeners) {
-            listener.onSyncBlock(block);
+            listener.onSyncBlock(chainID, block);
         }
     }
 }

@@ -67,9 +67,9 @@ public interface TauListener {
      */
     void onSessionStats(SessionStats newStats);
 
-    void onNewBlock(Block block);
+    void onNewBlock(byte[] chainID, Block block);
 
-    void onRollBack(Block block);
+    void onRollBack(byte[] chainID, Block block);
 
-    void onSyncBlock(Block block);
+    void onSyncBlock(byte[] chainID, Block block);
 }
