@@ -21,7 +21,7 @@ public interface CommunityRepository {
 
 //    int updateCommunity(@NonNull Community community);
 //
-//    Community getCommunityBychainID(@NonNull String chainID);
+    Community getCommunityByChainID(@NonNull String chainID);
 
     /**
      * 观察不在黑名单的社区列表数据变化

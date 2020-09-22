@@ -192,22 +192,19 @@ public class MainActivity extends BaseActivity {
      */
     private void updateDHTStats(SessionStats sessionStats) {
         long dhtNodes = 0;
-        long wifiSpeed = 0;
-        long telecomSpeed = 0;
+        long downloadSpeed = 0;
+        long uploadSpeed = 0;
         if(sessionStats != null){
             dhtNodes = sessionStats.dhtNodes();
-            if (SystemServiceManager.getInstance(this).isMobileConnected()) {
-                telecomSpeed = sessionStats.downloadRate();
-            } else {
-                wifiSpeed = sessionStats.downloadRate();
-            }
+            downloadSpeed = sessionStats.downloadSpeed;
+            uploadSpeed = sessionStats.uploadSpeed;
         }
-        String wifiSpeedStr = Formatter.formatFileSize(this, wifiSpeed).toUpperCase();
-        String telecomSpeedStr = Formatter.formatFileSize(this, telecomSpeed).toUpperCase();
-        logger.info("dhtNodes::{}, wifiSpeedStr::{}, telecomSpeedStr::{}", dhtNodes, wifiSpeedStr, telecomSpeedStr);
+        String downloadSpeedStr = Formatter.formatFileSize(this, downloadSpeed).toUpperCase();
+        String uploadSpeedStr = Formatter.formatFileSize(this, uploadSpeed).toUpperCase();
+        logger.info("dhtNodes::{}, downloadSpeedStr::{}, uploadSpeedStr::{}", dhtNodes, downloadSpeedStr, uploadSpeedStr);
         binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, dhtNodes));
-        binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed, wifiSpeedStr));
-        binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed, telecomSpeedStr));
+        binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed, downloadSpeedStr));
+        binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed, uploadSpeedStr));
     }
 
     /**

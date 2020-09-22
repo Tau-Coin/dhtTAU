@@ -43,10 +43,10 @@ public class CommunityRepositoryImpl implements CommunityRepository{
 //        return db.communityDao().updateCommunity(community);
 //    }
 //
-//    @Override
-//    public Community getCommunityBychainID(@NonNull String chainID) {
-//        return db.communityDao().getCommunityBychainID(chainID);
-//    }
+    @Override
+    public Community getCommunityByChainID(@NonNull String chainID) {
+        return db.communityDao().getCommunityBychainID(chainID);
+    }
 
     /**
      * 观察不在黑名单的社区列表数据变化

@@ -38,7 +38,7 @@ import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.receiver.PowerReceiver;
 import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
-import io.taucoin.types.Block;
+import io.taucoin.types.BlockContainer;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
@@ -206,18 +206,18 @@ public class TauDaemon {
         }
 
         @Override
-        public void onNewBlock(String chainID, Block block) {
-            tauListenHandler.handleNewBlock(chainID, block);
+        public void onNewBlock(byte[] chainID, BlockContainer blockContainer) {
+            tauListenHandler.handleNewBlock(chainID, blockContainer);
         }
 
         @Override
-        public void onRollBack(String chainID, Block block) {
-            tauListenHandler.handleRollBack(chainID, block);
+        public void onRollBack(byte[] chainID, BlockContainer blockContainer) {
+            tauListenHandler.handleRollBack(chainID, blockContainer);
         }
 
         @Override
-        public void onSyncBlock(String chainID, Block block) {
-            tauListenHandler.handleSyncBlock(chainID, block);
+        public void onSyncBlock(byte[] chainID, BlockContainer blockContainer) {
+            tauListenHandler.handleSyncBlock(chainID, blockContainer);
         }
     };
 
