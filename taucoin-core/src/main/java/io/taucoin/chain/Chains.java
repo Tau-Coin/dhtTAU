@@ -2023,7 +2023,8 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private void requestBlockDemand(ByteArrayWrapper chainID, byte[] blockHash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_DEMAND);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_DEMAND,
+                new ByteArrayWrapper(blockHash));
 
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
@@ -2035,7 +2036,8 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private void requestTxDemand(ByteArrayWrapper chainID, byte[] txid) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_TX_DEMAND);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_TX_DEMAND,
+                new ByteArrayWrapper(txid));
 
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
@@ -2945,8 +2947,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_BLOCK_DEMAND: {
                 if (null == item) {
-                    logger.error("HISTORY_BLOCK_DEMAND is empty, try to response to block hash:{} from local",
-                            dataIdentifier.getHash().toString());
+                    logger.debug("HISTORY_BLOCK_DEMAND is empty");
                     this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
                 }
 
@@ -2954,8 +2955,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_TX_DEMAND: {
                 if (null == item) {
-                    logger.error("HISTORY_TX_DEMAND is empty, try to response to tx hash:{} from local",
-                            dataIdentifier.getHash().toString());
+                    logger.debug("HISTORY_TX_DEMAND is empty");
                     this.txHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
                 }
 
