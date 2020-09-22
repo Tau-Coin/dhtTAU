@@ -4,7 +4,7 @@ import io.taucoin.torrent.SessionStats;
 
 import androidx.annotation.NonNull;
 import io.taucoin.listener.TauListener;
-import io.taucoin.types.Block;
+import io.taucoin.types.BlockContainer;
 
 public abstract class TauDaemonListener implements TauListener {
 
@@ -31,40 +31,31 @@ public abstract class TauDaemonListener implements TauListener {
     @Override
     public void onSessionStats(@NonNull SessionStats newStats){}
 
-    /**
-     * 新的社区链
-     * @param chainId 链ID
-     * @param nickName 链名
-     */
     @Override
-    public void onNewChain(String chainId, String nickName) {}
+    public void onClearChainAllState(byte[] chainID) {
+
+    }
 
     /**
      * 新的区块
-     * @param block 区块
+     * @param blockContainer 区块
      */
     @Override
-    public void onNewBlock(Block block) {}
-
-    public void onNewBlock(String chainID, Block block) {}
+    public void onNewBlock(byte[] chainID, BlockContainer blockContainer) {}
 
     /**
      * 区块回滚
-     * @param block 区块
+     * @param blockContainer 区块
      */
     @Override
-    public void onRollBack(Block block) {}
-
-    public void onRollBack(String chainID, Block block) {}
+    public void onRollBack(byte[] chainID, BlockContainer blockContainer) {}
 
     /**
      * 同步区块
-     * @param block 区块
+     * @param blockContainer 区块
      */
     @Override
-    public void onSyncBlock(Block block) {}
-
-    public void onSyncBlock(String chainID, Block block) {}
+    public void onSyncBlock(byte[] chainID,  BlockContainer blockContainer) {}
 
     @Override
     public void onDHTStarted(boolean success, String errMsg) {

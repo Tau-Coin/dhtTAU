@@ -163,14 +163,16 @@
                         android:id="@+id/item_wifi_speed"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        app:leftText="@string/drawer_wifi"
+                        android:layout_marginTop="5dp"
+                        app:leftImage="@mipmap/icon_download"
                         app:rightText="@string/drawer_net_speed"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_telecom_speed"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        app:leftText="@string/drawer_telecom"
+                        android:layout_marginTop="5dp"
+                        app:leftImage="@mipmap/icon_upload"
                         app:rightText="@string/drawer_net_speed"/>
 
                 </LinearLayout>

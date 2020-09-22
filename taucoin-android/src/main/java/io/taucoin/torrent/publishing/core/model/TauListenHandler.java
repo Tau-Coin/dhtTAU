@@ -8,9 +8,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.genesis.GenesisItem;
+import io.taucoin.types.BlockContainer;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepository;
@@ -54,29 +57,29 @@ class TauListenHandler {
      * @param block 链上区块
      */
     private void saveCommunityInfo(String chainID, Block block, boolean isSync) {
-        disposables.add(communityRepo.getCommunityByChainIDSingle(chainID)
-                .subscribeOn(Schedulers.io())
-                .subscribe(community -> {
-                    if(null == community){
-                        community = new Community();
-                        community.chainID = chainID;
-                        community.communityName = Utils.getCommunityName(community.chainID);
-                        community.totalBlocks = block.getBlockNum();
-                        community.syncBlock = block.getBlockNum();
-                        communityRepo.addCommunity(community);
-                        logger.info("SaveCommunity to local, communityName::{}, chainID::{}, totalBlocks::{}, syncBlock::{}",
-                                community.communityName, community.chainID, community.totalBlocks, community.syncBlock);
-                    }else {
-                        if(isSync){
-                            community.syncBlock = block.getBlockNum();
-                        }else{
-                            community.totalBlocks = block.getBlockNum();
-                        }
-                        communityRepo.addCommunity(community);
-                        logger.info("Update Community Info, communityName::{}, chainID::{}, totalBlocks::{}, syncBlock::{}",
-                                community.communityName, community.chainID, community.totalBlocks, community.syncBlock);
-                    }
-                }));
+        Community community = communityRepo.getCommunityByChainID(chainID);
+
+        if(null == community){
+            community = new Community();
+            community.chainID = chainID;
+            community.communityName = Utils.getCommunityName(community.chainID);
+            community.totalBlocks = block.getBlockNum();
+            community.syncBlock = block.getBlockNum();
+            communityRepo.addCommunity(community);
+            logger.info("SaveCommunity to local, communityName::{}, chainID::{}, " +
+                            "totalBlocks::{}, syncBlock::{}", community.communityName,
+                    community.chainID, community.totalBlocks, community.syncBlock);
+        }else {
+            if(isSync){
+                community.syncBlock = block.getBlockNum();
+            }else{
+                community.totalBlocks = block.getBlockNum();
+            }
+            communityRepo.addCommunity(community);
+            logger.info("Update Community Info, communityName::{}, chainID::{}, " +
+                            "totalBlocks::{}, syncBlock::{}", community.communityName,
+                    community.chainID, community.totalBlocks, community.syncBlock);
+        }
     }
     /**
      * 处理Block数据：解析Block数据，处理社区、交易、用户、社区成员数据
@@ -84,60 +87,69 @@ class TauListenHandler {
      * 1、处理矿工用户数据
      * 2、本地不存在该交易，添加交易数据、用户数据、社区成员数据
      * 3、本地存在该交易，更新交易状态、以及成员的balance和power值
-     * @param chainID 链上ID
-     * @param block 链上区块
+     * @param bytes_chainID 链上ID
+     * @param blockContainer 链上区块
      * @param isRollback 区块回滚
      * @param isSync 区块向前同步
      */
-    private void handleBlockData(String chainID, Block block, boolean isRollback, boolean isSync) {
-        if(block != null){
-            // 更新社区信息
-            saveCommunityInfo(chainID, block, isSync);
-            // TODO: 根据交易hash获取Transaction
-            Transaction txMsg = null;
-            // 更新矿工的信息
-            saveUserInfo(block.getMinerPubkey(), block.getTimeStamp());
-            if(txMsg != null){
-                String txID = ByteUtil.toHexString(txMsg.getTxID());
-                disposables.add(txRepo.getTxByTxIDSingle(txID)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(tx -> {
-                            // 本地不存在此交易
-                            if(null == tx){
-                                handleTransactionData(txMsg, isRollback, isSync);
-                            }else{
-                                tx.txStatus = isRollback ? 0 : 1;
-                                txRepo.updateTransaction(tx);
-                                handleMemberInfo(txMsg);
-                            }
-                        }));
-            }
+    private void handleBlockData(byte[] bytes_chainID, BlockContainer blockContainer,
+                                 boolean isRollback, boolean isSync) {
+        if(!blockContainer.isEmpty()){
+            Flowable.create(emitter -> {
+                String chainID = Utils.toUTF8String(bytes_chainID);
+                Block block = blockContainer.getBlock();
+                logger.debug("handleBlockData:: chainID::{}，blockNum::{}, blockHash::{}", chainID,
+                        block.getBlockNum(), ByteUtil.toHexString(block.getBlockHash()));
+                // 更新社区信息
+                saveCommunityInfo(chainID, block, isSync);
+                Transaction txMsg = blockContainer.getTx();
+                // 更新矿工的信息
+                saveUserInfo(block.getMinerPubkey(), block.getTimeStamp());
+                if(txMsg != null){
+                    String txID = ByteUtil.toHexString(txMsg.getTxID());
+                    Tx tx = txRepo.getTxByTxID(txID);
+                    // 本地不存在此交易
+                    if(null == tx){
+                        handleTransactionData(txMsg, isRollback, isSync);
+                    }else{
+                        tx.txStatus = isRollback ? 0 : 1;
+                        txRepo.updateTransaction(tx);
+                        handleMemberInfo(txMsg);
+                    }
+                }
+                emitter.onComplete();
+            }, BackpressureStrategy.LATEST)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe();
         }
     }
 
     /**
      * 处理上报新的区块
-     * @param chainID chainID
-     * @param block Block
+     * @param chainID byte[]
+     * @param blockContainer BlockContainer
      */
-    void handleNewBlock(String chainID, Block block) {
-        handleBlockData(chainID, block, false, false);
+    void handleNewBlock(byte[] chainID, BlockContainer blockContainer) {
+        logger.debug("handleNewBlock");
+        handleBlockData(chainID, blockContainer, false, false);
     }
     /**
      * 处理上报被回滚的区块
-     * @param chainID chainID
-     * @param block Block
+     * @param chainID byte[]
+     * @param blockContainer BlockContainer
      */
-    void handleRollBack(String chainID, Block block) {
-        handleBlockData(chainID, block, true, false);
+    void handleRollBack(byte[] chainID, BlockContainer blockContainer) {
+        logger.debug("handleRollBack");
+        handleBlockData(chainID, blockContainer, true, false);
     }
     /**
      * 处理上报向前同步的区块
-     * @param chainID chainID
-     * @param block Block
+     * @param chainID byte[]
+     * @param blockContainer BlockContainer
      */
-    void handleSyncBlock(String chainID, Block block) {
-        handleBlockData(chainID, block, false, true);
+    void handleSyncBlock(byte[] chainID, BlockContainer blockContainer) {
+        logger.debug("handleSyncBlock");
+        handleBlockData(chainID, blockContainer, false, true);
     }
 
     /**
@@ -275,8 +287,8 @@ class TauListenHandler {
                 member.balance = balance;
                 member.power = power;
                 memberRepo.updateMember(member);
-                logger.info("Update Member's balance and power, chainID::{}, publicKey::{}, balance::{}, power::{}",
-                        chainID, publicKey, member.balance, member.power);
+                logger.info("Update Member's balance and power, chainID::{}, publicKey::{}, " +
+                        "balance::{}, power::{}", chainID, publicKey, member.balance, member.power);
             }
         }
     }

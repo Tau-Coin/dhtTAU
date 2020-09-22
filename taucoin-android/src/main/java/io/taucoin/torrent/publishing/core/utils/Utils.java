@@ -30,6 +30,7 @@ import io.taucoin.torrent.publishing.receiver.BootReceiver;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.MessageDigest;
@@ -492,6 +493,15 @@ public class Utils {
             return splits[0];
         }
         return "";
+    }
+
+    /**
+     * byte[]转化为UTF_8 String
+     * @param bytes byte[]
+     * @return UTF_8 String
+     */
+    public static String toUTF8String(byte[] bytes){
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     static class MatcherResult{
