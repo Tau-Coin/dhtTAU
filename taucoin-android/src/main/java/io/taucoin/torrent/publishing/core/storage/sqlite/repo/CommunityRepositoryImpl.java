@@ -96,4 +96,9 @@ public class CommunityRepositoryImpl implements CommunityRepository{
     public Observable<Community> observerCommunityByChainID(String chainID) {
         return db.communityDao().observerCommunityByChainID(chainID);
     }
+
+    @Override
+    public void clearCommunityState(String chainID) {
+        db.communityDao().clearCommunityState(chainID);
+    }
 }

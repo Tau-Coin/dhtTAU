@@ -69,17 +69,23 @@ class TauListenHandler {
             communityRepo.addCommunity(community);
             logger.info("SaveCommunity to local, communityName::{}, chainID::{}, " +
                             "totalBlocks::{}, syncBlock::{}", community.communityName,
-                    community.chainID, community.totalBlocks, community.syncBlock);
+                    community.chainID, community.totalBlocks + 1, community.syncBlock);
         }else {
             if(isSync){
                 community.syncBlock = block.getBlockNum();
+                if(community.totalBlocks < community.syncBlock){
+                    community.totalBlocks = community.syncBlock;
+                }
             }else{
                 community.totalBlocks = block.getBlockNum();
+                if(community.totalBlocks < community.syncBlock){
+                    community.syncBlock = community.totalBlocks;
+                }
             }
             communityRepo.addCommunity(community);
             logger.info("Update Community Info, communityName::{}, chainID::{}, " +
                             "totalBlocks::{}, syncBlock::{}", community.communityName,
-                    community.chainID, community.totalBlocks, community.syncBlock);
+                    community.chainID, community.totalBlocks + 1, community.syncBlock);
         }
     }
     /**
@@ -296,12 +302,17 @@ class TauListenHandler {
 
     /**
      * 处理清除链的所有状态
-     * @param chainID byte[]
+     * @param bytes_chainID byte[]
      */
-    void handleClearChainAllState(byte[] chainID) {
+    void handleClearChainAllState(byte[] bytes_chainID) {
         Disposable disposable = Flowable.create(emitter -> {
-            logger.debug("handleClearChainAllState chainID::{}",
-                    Utils.toUTF8String(chainID));
+            String chainID = Utils.toUTF8String(bytes_chainID);
+            logger.debug("handleClearChainAllState chainID::{}", chainID);
+            // 清除社区状态，totalBlocks, syncBlock数据
+            communityRepo.clearCommunityState(chainID);
+            // 删除社区成员数据
+            memberRepo.deleteCommunityMembers(chainID);
+            // TODO: 社区交易，常用联系人的用户（社区成员）
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())

@@ -44,6 +44,7 @@ public interface MemberDao {
             " and publicKey IN" +
             " (SELECT publicKey FROM Users WHERE lastUpdateTime > strftime('%s', 'now','-" + Constants.ONLINE_HOURS + "') OR isCurrentUser = 1)) b";
 
+    String QUERY_DELETE_COMMUNITY_MEMBERS = "DELETE FROM Members where chainID =:chainID";
     /**
      * 添加新社区成员
      */
@@ -105,4 +106,7 @@ public interface MemberDao {
 
     @Query(QUERY_MEMBERS_STATISTICS)
     Flowable<Statistics> getMembersStatistics(String chainID);
+
+    @Query(QUERY_DELETE_COMMUNITY_MEMBERS)
+    void deleteCommunityMembers(String chainID);
 }

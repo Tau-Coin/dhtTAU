@@ -199,12 +199,15 @@ public class MainActivity extends BaseActivity {
             downloadSpeed = sessionStats.downloadSpeed;
             uploadSpeed = sessionStats.uploadSpeed;
         }
-        String downloadSpeedStr = Formatter.formatFileSize(this, downloadSpeed).toUpperCase();
-        String uploadSpeedStr = Formatter.formatFileSize(this, uploadSpeed).toUpperCase();
-        logger.info("dhtNodes::{}, downloadSpeedStr::{}, uploadSpeedStr::{}", dhtNodes, downloadSpeedStr, uploadSpeedStr);
+        String downloadSpeedStr = Formatter.formatFileSize(this, downloadSpeed);
+        String uploadSpeedStr = Formatter.formatFileSize(this, uploadSpeed);
+        logger.info("dhtNodes::{}, downloadSpeedStr::{}, uploadSpeedStr::{}", dhtNodes,
+                downloadSpeedStr, uploadSpeedStr);
         binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, dhtNodes));
-        binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed, downloadSpeedStr));
-        binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed, uploadSpeedStr));
+        binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed,
+                downloadSpeedStr).toUpperCase());
+        binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed,
+                uploadSpeedStr).toUpperCase());
     }
 
     /**
@@ -247,8 +250,6 @@ public class MainActivity extends BaseActivity {
         binding.drawer.tvNoteName.setText(showName);
         binding.drawer.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
     }
-
-
 
     @Override
     public void onStart() {
