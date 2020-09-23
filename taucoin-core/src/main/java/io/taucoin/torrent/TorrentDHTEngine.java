@@ -78,10 +78,10 @@ public class TorrentDHTEngine {
                 TorrentDHTEngine.this.tauListener.onDHTStarted(false, "listen failed");
             } else if (type == AlertType.DHT_MUTABLE_ITEM) {
                 DhtMutableItemAlert a = (DhtMutableItemAlert) alert;
-                logger.info(a.message());
+                //logger.info(a.message());
             } else if (type == AlertType.DHT_IMMUTABLE_ITEM) {
                 DhtImmutableItemAlert a = (DhtImmutableItemAlert) alert;
-                logger.info(a.message());
+                //logger.info(a.message());
             } else if (type == AlertType.DHT_PUT) {
                 DhtPutAlert a = (DhtPutAlert) alert;
                 logger.info(a.message());
