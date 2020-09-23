@@ -9,7 +9,10 @@ import com.frostwire.jlibtorrent.swig.entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Timer;
@@ -714,6 +717,7 @@ public class TorrentDHTEngine {
                 break;
             } catch (Throwable e) {
                 e.printStackTrace();
+                printStacktraceToLogger(logger, e);
             }
 
             if (req != null) {
@@ -738,6 +742,7 @@ public class TorrentDHTEngine {
                     req.onDHTItemGot(item);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    printStacktraceToLogger(logger, e);
                 }
             }
         }
@@ -767,6 +772,7 @@ public class TorrentDHTEngine {
                 break;
             } catch (Throwable e) {
                 e.printStackTrace();
+                printStacktraceToLogger(logger, e);
             }
 
             if (req != null) {
@@ -792,6 +798,7 @@ public class TorrentDHTEngine {
                     req.onDHTItemGot(item);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    printStacktraceToLogger(logger, e);
                 }
             }
         }
@@ -815,6 +822,7 @@ public class TorrentDHTEngine {
                 break;
             } catch (Throwable e) {
                 e.printStackTrace();
+                printStacktraceToLogger(logger, e);
             }
         }
     }
@@ -836,6 +844,7 @@ public class TorrentDHTEngine {
                 break;
             } catch (Throwable e) {
                 e.printStackTrace();
+                printStacktraceToLogger(logger, e);
             }
         }
     }
@@ -851,5 +860,20 @@ public class TorrentDHTEngine {
 
     private static boolean isEntryUndefined(Entry e) {
         return sUndefinedEntry.equals(getEntryType(e));
+    }
+
+    private static void printStacktraceToLogger(Logger logger, Throwable t) {
+        if (t == null || logger == null) {
+            return;
+        }
+
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final String utf8 = StandardCharsets.UTF_8.name();
+
+        try {
+            PrintStream ps = new PrintStream(baos, true, utf8);
+            t.printStackTrace(ps);
+            logger.error(baos.toString(utf8));
+        } catch (Exception e) {}
     }
 }
