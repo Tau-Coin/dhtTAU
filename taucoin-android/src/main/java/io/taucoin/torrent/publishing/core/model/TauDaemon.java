@@ -24,6 +24,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.chain.ChainManager;
 import io.taucoin.config.ChainConfig;
 import io.taucoin.controller.TauController;
+import io.taucoin.core.AccountState;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.torrent.SessionSettings;
@@ -32,6 +33,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
@@ -102,6 +104,10 @@ public class TauDaemon {
      * @param seed Seed
      */
     public void updateSeed(String seed) {
+        logger.debug("updateSeed ::{}", seed);
+        if (StringUtil.isEmpty(seed)) {
+            return;
+        }
         byte[] byteSeed = ByteUtil.toByte(seed);
         tauController.updateKey(Ed25519.createKeypair(byteSeed));
     }
@@ -203,6 +209,11 @@ public class TauDaemon {
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
+        }
+
+        @Override
+        public void onClearChainAllState(byte[] chainID) {
+            tauListenHandler.handleClearChainAllState(chainID);
         }
 
         @Override
@@ -449,7 +460,16 @@ public class TauDaemon {
      * @return long
      */
     public long getUserPower(String chainID, String publicKey) {
-        return 100;
+        try {
+            AccountState accountState = tauController.getChainManager().getAccountState(
+                    chainID.getBytes(), ByteUtil.toByte(publicKey));
+            if (accountState != null) {
+                return accountState.getNonce().longValue();
+            }
+        } catch (Exception e) {
+            logger.error("getUserPower error", e);
+        }
+        return 0L;
     }
 
     /**
@@ -457,7 +477,16 @@ public class TauDaemon {
      * @return long
      */
     public long getUserBalance(String chainID, String publicKey) {
-        return 100000000000L;
+        try {
+            AccountState accountState = tauController.getChainManager().getAccountState(
+                    chainID.getBytes(), ByteUtil.toByte(publicKey));
+            if (accountState != null) {
+                return accountState.getBalance().longValue();
+            }
+        } catch (Exception e) {
+            logger.error("getUserPower error", e);
+        }
+        return 0L;
     }
 
     public void followCommunity(String chainLink) {

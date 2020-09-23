@@ -4,6 +4,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
@@ -53,4 +54,6 @@ public interface CommunityRepository {
      * @param chainID 社区chainID
      */
     Single<Community> getCommunityByChainIDSingle(String chainID);
+
+    Observable<Community> observerCommunityByChainID(String chainID);
 }

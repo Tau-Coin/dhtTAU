@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.types.TypesConfig;
@@ -142,6 +143,18 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
             .subscribe(statistics ->
                 binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats,
                 statistics.getMembers(), statistics.getOnline()))));
+
+        disposables.add(communityViewModel.observerCommunityByChainID(chainID)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(community -> {
+                    long totalBlocks = community.totalBlocks + 1;
+                    long syncBlocks = community.syncBlock;
+                    String communityState = getString(R.string.community_state,
+                            FmtMicrometer.fmtLong(totalBlocks),
+                            FmtMicrometer.fmtLong(syncBlocks));
+                    binding.tvCommunityState.setText(communityState);
+                }));
     }
 
     @Override
@@ -187,8 +200,8 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.iv_mining_income_close) {
-            binding.llTodayIncomeTips.setVisibility(View.GONE);
+        if (v.getId() == R.id.iv_community_state_close) {
+            binding.llCommunityState.setVisibility(View.GONE);
         }else if (v.getId() == R.id.toolbar_title) {
             Intent intent = new Intent();
             intent.putExtra(IntentExtra.CHAIN_ID, chainID);

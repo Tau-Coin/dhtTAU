@@ -19,36 +19,27 @@
             layout="@layout/toolbar_group_left" />
 
         <LinearLayout
-            android:visibility="gone"
-            android:id="@+id/ll_today_income_tips"
+            android:id="@+id/ll_community_state"
             android:layout_below="@+id/toolbar_include"
             android:background="@color/gray_light"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
             android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/tv_today_mining_income_title"
+                android:id="@+id/tv_community_state"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="@string/community_today_mining_income"
-                android:textColor="@color/color_white"
-                android:textAppearance="@style/TextAppearanceBody2"/>
-
-            <TextView
-                android:id="@+id/tv_today_mining_income_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
+                android:text="@string/community_state"
                 android:textColor="@color/color_white"
                 android:textAppearance="@style/TextAppearanceBody2"/>
 
             <ImageView
-                android:id="@+id/iv_mining_income_close"
+                android:visibility="gone"
+                android:id="@+id/iv_community_state_close"
                 android:layout_width="30dp"
                 android:layout_height="20dp"
                 android:onClick="@{listener::onClick}"
@@ -57,7 +48,7 @@
         </LinearLayout>
 
         <com.google.android.material.tabs.TabLayout
-            android:layout_below="@+id/ll_today_income_tips"
+            android:layout_below="@+id/ll_community_state"
             android:id="@+id/tab_layout"
             android:layout_height="40dp"
             android:layout_width="wrap_content"

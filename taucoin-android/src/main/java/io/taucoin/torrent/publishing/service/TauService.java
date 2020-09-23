@@ -85,7 +85,7 @@ public class TauService extends Service {
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(user -> {
-                    if(null == user){
+                    if(null == user || StringUtil.isEmpty(user.seed)){
                         return;
                     }
                     // 更新设置用户seed

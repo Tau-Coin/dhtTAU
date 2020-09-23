@@ -20,6 +20,7 @@ import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -344,6 +345,10 @@ public class CommunityViewModel extends AndroidViewModel {
 
     public Single<Community> getCommunityByChainIDSingle(String chainID) {
         return communityRepo.getCommunityByChainIDSingle(chainID);
+    }
+
+    public Observable<Community> observerCommunityByChainID(String chainID) {
+        return communityRepo.observerCommunityByChainID(chainID);
     }
 
     LiveData<PagedList<MemberAndUser>> observerCommunityMembers(String chainID, boolean onChain) {

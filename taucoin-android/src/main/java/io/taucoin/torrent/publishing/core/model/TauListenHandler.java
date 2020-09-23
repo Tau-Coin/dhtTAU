@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.types.BlockContainer;
@@ -95,7 +96,7 @@ class TauListenHandler {
     private void handleBlockData(byte[] bytes_chainID, BlockContainer blockContainer,
                                  boolean isRollback, boolean isSync) {
         if(!blockContainer.isEmpty()){
-            Flowable.create(emitter -> {
+            Disposable disposable = Flowable.create(emitter -> {
                 String chainID = Utils.toUTF8String(bytes_chainID);
                 Block block = blockContainer.getBlock();
                 logger.debug("handleBlockData:: chainID::{}，blockNum::{}, blockHash::{}", chainID,
@@ -121,6 +122,7 @@ class TauListenHandler {
             }, BackpressureStrategy.LATEST)
                     .subscribeOn(Schedulers.io())
                     .subscribe();
+            disposables.add(disposable);
         }
     }
 
@@ -157,9 +159,8 @@ class TauListenHandler {
      * @param txMsg Transaction
      */
     private void handleTransactionData(@NonNull Transaction txMsg, boolean isRollback, boolean isSync) {
-        // TODO: 根据hash获取交易Transaction
         String txID = ByteUtil.toHexString(txMsg.getTxID());
-        String chainID = ByteUtil.toHexString(txMsg.getChainID());
+        String chainID = Utils.toUTF8String(txMsg.getChainID());
         long fee = txMsg.getTxFee();
         final long txType = txMsg.getTxType();
         Tx tx = new Tx(txID, chainID, fee, txType);
@@ -207,7 +208,7 @@ class TauListenHandler {
      * @param txMsg 交易
      */
     private void handleMemberInfo(@NonNull Transaction txMsg) {
-        String chainID = ByteUtil.toHexString(txMsg.getChainID());
+        String chainID = Utils.toUTF8String(txMsg.getChainID());
         long txType = txMsg.getTxType();
         if (txType == TypesConfig.TxType.FNoteType.ordinal()){
             addMemberInfo(txMsg.getChainID(), txMsg.getSenderPubkey(), false);
@@ -265,7 +266,7 @@ class TauListenHandler {
      * @param chainID chainID
      */
     private void addMemberInfo(byte[] chainID, byte[] publicKey, boolean isSync) {
-        addMemberInfo(ByteUtil.toHexString(chainID), ByteUtil.toHexString(publicKey), isSync);
+        addMemberInfo(Utils.toUTF8String(chainID), ByteUtil.toHexString(publicKey), isSync);
     }
 
     /**
@@ -291,6 +292,21 @@ class TauListenHandler {
                         "balance::{}, power::{}", chainID, publicKey, member.balance, member.power);
             }
         }
+    }
+
+    /**
+     * 处理清除链的所有状态
+     * @param chainID byte[]
+     */
+    void handleClearChainAllState(byte[] chainID) {
+        Disposable disposable = Flowable.create(emitter -> {
+            logger.debug("handleClearChainAllState chainID::{}",
+                    Utils.toUTF8String(chainID));
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        disposables.add(disposable);
     }
 
     /**

@@ -139,6 +139,7 @@ public class UserViewModel extends AndroidViewModel {
                     if(StringUtil.isNotEmpty(name)){
                         user.localName = name;
                     }
+                    user.seed = seed;
                     user.isCurrentUser = true;
                     userRepo.updateUser(user);
                 }
