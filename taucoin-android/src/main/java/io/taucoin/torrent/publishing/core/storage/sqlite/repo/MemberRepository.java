@@ -61,4 +61,10 @@ public interface MemberRepository {
      * @param chainID
      */
     Flowable<Statistics> getMembersStatistics(String chainID);
+
+    /**
+     * 删除社区成员数据
+     * @param chainID
+     */
+    void deleteCommunityMembers(String chainID);
 }

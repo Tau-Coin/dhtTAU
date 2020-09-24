@@ -56,4 +56,10 @@ public interface CommunityRepository {
     Single<Community> getCommunityByChainIDSingle(String chainID);
 
     Observable<Community> observerCommunityByChainID(String chainID);
+
+    /**
+     * 清除社区状态，totalBlocks, syncBlock数据
+     * @param chainID
+     */
+    void clearCommunityState(String chainID);
 }

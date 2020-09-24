@@ -24,6 +24,11 @@ public final class SessionSettings {
 
     private static final boolean EnablePrivateNetwork = false;
 
+    // the starting listen port
+    private static final int Listen_Port = 6881;
+    private static final int Listen_Interfaces_Count = 32;
+
+    // test network listen interface
     public static final String PN_Listen_Interface = "0.0.0.0:6883";
 
     public static Set<String> PrivateBootstrapNodes = new HashSet<String>();
@@ -81,6 +86,8 @@ public final class SessionSettings {
         if (!this.privateNetwork) {
             sp.set_str(settings_pack.string_types.dht_bootstrap_nodes.swigValue(),
                     dhtBootstrapNodes());
+            sp.set_str(settings_pack.string_types.listen_interfaces.swigValue(),
+                    constructListenInterfaces(Listen_Port, Listen_Interfaces_Count));
         } else {
             sp.set_str(settings_pack.string_types.dht_bootstrap_nodes.swigValue(),
                     privateDhtBootstrapNodes());
@@ -127,6 +134,18 @@ public final class SessionSettings {
         String result = s.substring(0, s.length() - 1);
 
         return result;
+    }
+
+    private static String constructListenInterfaces(int port, int count) {
+        String interfaces = "";
+
+        for (int i = 1; i < count; i++) {
+            interfaces = interfaces + "0.0.0.0:" + port + ",";
+            port++;
+        }
+        interfaces = interfaces + "0.0.0.0:" + port;
+
+        return interfaces;
     }
 
     public static final class Builder {

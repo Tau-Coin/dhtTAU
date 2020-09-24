@@ -105,4 +105,9 @@ public class MemberRepositoryImpl implements MemberRepository{
     public Flowable<Statistics> getMembersStatistics(String chainID){
         return db.memberDao().getMembersStatistics(chainID);
     }
+
+    @Override
+    public void deleteCommunityMembers(String chainID) {
+        db.memberDao().deleteCommunityMembers(chainID);
+    }
 }

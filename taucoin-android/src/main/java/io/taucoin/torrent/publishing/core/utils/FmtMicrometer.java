@@ -22,10 +22,11 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
+import io.taucoin.torrent.publishing.core.Constants;
+
 public class FmtMicrometer {
-    
-    private static String mDecimal = "100000000";
-    private static int mScale = 8;
+    private static String mDecimal = Constants.COIN.toString(10);
+    private static int mScale = mDecimal.length() -1;
 
     public static String fmtBalance(long balance) {
         DecimalFormat df = getDecimalFormatInstance();

@@ -94,7 +94,7 @@
     <string name="community_mining_status">Mining Status</string>
     <string name="community_mining_online">Mining online</string>
     <string name="community_mining_income">Mining Income</string>
-    <string name="community_state">Total Blocks %1$s, Sync Block %2$s</string>
+    <string name="community_state">Total Blocks %1$s, Sync Blocks %2$s</string>
     <string name="community_chain_note">Chain Note</string>
     <string name="community_instant_chat">Chat</string>
     <string name="community_wired">Wired</string>

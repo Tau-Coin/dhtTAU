@@ -38,6 +38,8 @@ public interface CommunityDao {
     String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Communities WHERE chainID = :chainID";
     String QUERY_ADD_COMMUNITY_BLACKLIST = "Update Communities set isBanned =:isBanned WHERE chainID = :chainID";
     String QUERY_JOINED_COMMUNITY = "SELECT * FROM Communities";
+    String QUERY_CLEAR_COMMUNITY_STATE = "UPDATE Communities SET totalBlocks = 0, syncBlock = 0" +
+            " WHERE chainID = :chainID";
 
     /**
      * 添加新的社区
@@ -90,4 +92,7 @@ public interface CommunityDao {
 
     @Query(QUERY_GET_COMMUNITY_BY_CHAIN_ID)
     Observable<Community> observerCommunityByChainID(String chainID);
+
+    @Query(QUERY_CLEAR_COMMUNITY_STATE)
+    void clearCommunityState(String chainID);
 }

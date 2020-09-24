@@ -149,7 +149,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(community -> {
                     long totalBlocks = community.totalBlocks + 1;
-                    long syncBlocks = community.syncBlock;
+                    long syncBlocks = totalBlocks - community.syncBlock;
                     String communityState = getString(R.string.community_state,
                             FmtMicrometer.fmtLong(totalBlocks),
                             FmtMicrometer.fmtLong(syncBlocks));
@@ -174,29 +174,29 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         });
     }
 
-    /**
-     *  创建右上角Menu
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_community, menu);
-        return true;
-    }
-    /**
-     * 右上角Menu选项选择事件
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if(StringUtil.isEmpty(chainID)){
-            return false;
-        }
-        if (item.getItemId() == R.id.community_search) {
-            Intent intent = new Intent();
-            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-            ActivityUtil.startActivity(intent, this, SearchActivity.class);
-        }
-        return true;
-    }
+//    /**
+//     *  创建右上角Menu
+//     */
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.menu_community, menu);
+//        return true;
+//    }
+//    /**
+//     * 右上角Menu选项选择事件
+//     */
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        if(StringUtil.isEmpty(chainID)){
+//            return false;
+//        }
+//        if (item.getItemId() == R.id.community_search) {
+//            Intent intent = new Intent();
+//            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+//            ActivityUtil.startActivity(intent, this, SearchActivity.class);
+//        }
+//        return true;
+//    }
 
     @Override
     public void onClick(View v) {

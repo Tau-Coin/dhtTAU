@@ -7,7 +7,7 @@ import java.math.BigInteger;
  */
 public class Constants {
     // 1 COIN
-    private static final BigInteger COIN = new BigInteger("100000000", 10);
+    public static final BigInteger COIN = new BigInteger("1", 10);
     // 默认社区链总共的coin值 10000000 COIN
     public static final BigInteger TOTAL_COIN = new BigInteger("10000000", 10).multiply(COIN);
     // 给朋友空投币的数量 10 COIN
