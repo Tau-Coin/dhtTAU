@@ -52,16 +52,11 @@ public class TauInfoProvider {
      */
     private Flowable<SessionStats> makeSessionStatsFlowable() {
         return Flowable.create((emitter) -> {
-            final AtomicReference<SessionStats> stats = new AtomicReference<>();
             TauDaemonListener listener = new TauDaemonListener() {
                 @Override
                 public void onSessionStats(@NonNull SessionStats newStats) {
-                    SessionStats oldStats = stats.get();
-                    if (!newStats.equals(oldStats)) {
-                        stats.set(newStats);
-                        if (!emitter.isCancelled())
-                            emitter.onNext(newStats);
-                    }
+                    if (!emitter.isCancelled())
+                        emitter.onNext(newStats);
                 }
             };
             if (!emitter.isCancelled()) {

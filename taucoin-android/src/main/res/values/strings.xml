@@ -45,7 +45,7 @@
     <string name="drawer_setting">Settings</string>
     <string name="drawer_share">Share</string>
     <string name="drawer_dht_nodes">DHT Nodes/%1$d</string>
-    <string name="drawer_net_speed">%1$s/s</string>
+    <string name="drawer_net_speed">%1$s&#032;\u2022&#032;%2$s/s</string>
     <string name="drawer_export_seed">Export Seed</string>
     <string name="drawer_wifi">Wifi</string>
     <string name="drawer_telecom">Tele\ncom</string>

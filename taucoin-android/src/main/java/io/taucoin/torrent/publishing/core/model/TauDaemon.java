@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
 
-import com.frostwire.jlibtorrent.Ed25519;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +107,7 @@ public class TauDaemon {
             return;
         }
         byte[] byteSeed = ByteUtil.toByte(seed);
-        tauController.updateKey(Ed25519.createKeypair(byteSeed));
+        tauController.updateKey(byteSeed);
     }
 
     /**

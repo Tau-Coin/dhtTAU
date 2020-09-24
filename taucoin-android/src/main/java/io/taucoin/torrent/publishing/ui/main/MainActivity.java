@@ -194,20 +194,27 @@ public class MainActivity extends BaseActivity {
         long dhtNodes = 0;
         long downloadSpeed = 0;
         long uploadSpeed = 0;
+        long totalUpload = 0;
+        long totalDownload = 0;
         if(sessionStats != null){
             dhtNodes = sessionStats.dhtNodes();
             downloadSpeed = sessionStats.downloadSpeed;
+            totalDownload = sessionStats.totalDownload;
             uploadSpeed = sessionStats.uploadSpeed;
+            totalUpload = sessionStats.totalUpload;
         }
         String downloadSpeedStr = Formatter.formatFileSize(this, downloadSpeed);
+        String totalDownloadStr = Formatter.formatFileSize(this, totalDownload);
         String uploadSpeedStr = Formatter.formatFileSize(this, uploadSpeed);
-        logger.info("dhtNodes::{}, downloadSpeedStr::{}, uploadSpeedStr::{}", dhtNodes,
-                downloadSpeedStr, uploadSpeedStr);
+        String totalUploadStr = Formatter.formatFileSize(this, totalUpload);
+        logger.info("dhtNodes::{}, totalDownloadStr::{}, downloadSpeedStr::{}, totalUploadStr::{}, " +
+                "uploadSpeedStr::{}", dhtNodes, totalDownloadStr, downloadSpeedStr,
+                totalUploadStr, uploadSpeedStr);
         binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, dhtNodes));
         binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed,
-                downloadSpeedStr).toUpperCase());
+                totalDownloadStr, downloadSpeedStr));
         binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed,
-                uploadSpeedStr).toUpperCase());
+                totalUploadStr, uploadSpeedStr));
     }
 
     /**
@@ -272,8 +279,10 @@ public class MainActivity extends BaseActivity {
     private void handleClipboardContent() {
         String content = CopyManager.getClipboardContent(this);
         if(StringUtil.isNotEmpty(content)){
-            showOpenExternalLinkDialog(content);
-            CopyManager.clearClipboardContent();
+            boolean isShowLinkDialog = showOpenExternalLinkDialog(content);
+            if(isShowLinkDialog){
+                CopyManager.clearClipboardContent();
+            }
         }
     }
 
@@ -379,7 +388,7 @@ public class MainActivity extends BaseActivity {
     /**
      * 显示打开外部chain link的对话框（来自剪切板或外部链接）
      */
-    private void showOpenExternalLinkDialog(String chainLink) {
+    private boolean showOpenExternalLinkDialog(String chainLink) {
         ChainLinkUtil.ChainLink decode = ChainLinkUtil.decode(chainLink);
         if(decode.isValid()){
             String chainID = decode.getDn();
@@ -402,7 +411,9 @@ public class MainActivity extends BaseActivity {
                     .setCanceledOnTouchOutside(false)
                     .create();
             linkDialog.show();
+            return true;
         }
+        return false;
     }
 
     /**
