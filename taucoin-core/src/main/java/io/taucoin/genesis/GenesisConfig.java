@@ -101,23 +101,15 @@ public class GenesisConfig {
      *
      * This constructor is only used for creating new community. 
      */
-    public GenesisConfig(ChainManager chainManager, String communityName,
+    public GenesisConfig(String communityName,
             HashMap<ByteArrayWrapper, GenesisItem> genesisItems) {
 
         // First of all, get account state from TAU blockchain.
         byte[] tauChainID = TauGenesisTransaction.ChainID;
         Pair<byte[], byte[]> senderKey = AccountManager.getInstance().getKeyPair();
-        long senderNonce = 0;
 
-        try {
-            AccountState state = chainManager.getAccountState(tauChainID, senderKey.first);
-            if (state != null) {
-                senderNonce = state.getNonce().longValue();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            // TODO: How to handle this exception?
-        }
+        // Note: 'senderNonce' is always 0 according to requirement.
+        final long senderNonce = 0;
 
         this.communityName = communityName;
         long timeStamp = System.currentTimeMillis() / 1000;

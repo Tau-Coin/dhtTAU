@@ -194,7 +194,7 @@ public class ChainManager {
     public boolean createNewCommunity(String communityName,
             HashMap<ByteArrayWrapper, GenesisItem> genesisItems) {
 
-        GenesisConfig config = new GenesisConfig(this, communityName, genesisItems);
+        GenesisConfig config = new GenesisConfig(communityName, genesisItems);
         return createNewCommunity(config);
     }
 

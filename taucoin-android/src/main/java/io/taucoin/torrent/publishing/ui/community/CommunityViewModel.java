@@ -146,8 +146,7 @@ public class CommunityViewModel extends AndroidViewModel {
         HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
         GenesisItem item = new GenesisItem(totalCoin);
         genesisMsg.put(new ByteArrayWrapper(publicKey), item);
-        return new GenesisConfig(daemon.getChainManager(),
-                community.communityName, genesisMsg);
+        return new GenesisConfig(community.communityName, genesisMsg);
     }
 
     /**
