@@ -81,7 +81,7 @@ public class StateDBImpl implements StateDB {
     @Override
     public void followChain(byte[] chainID) throws DBException {
         try {
-            db.put(PrefixKey.chainKey(chainID), new byte[0]);
+            db.put(PrefixKey.chainKey(chainID), new byte[1]);
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
@@ -280,7 +280,7 @@ public class StateDBImpl implements StateDB {
     @Override
     public void addPeer(byte[] chainID, byte[] pubkey) throws DBException {
         try {
-            db.put(PrefixKey.peerKey(chainID, pubkey), new byte[0]);
+            db.put(PrefixKey.peerKey(chainID, pubkey), new byte[1]);
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
