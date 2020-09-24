@@ -36,7 +36,7 @@ public class dht_getTipBlockFromPeer extends JsonRpcServerMethod {
             // get pubkey
             byte[] pubkey = Hex.decode((String)(params.get(0)));
             // get salt
-            byte[] salt = Chains.makeBlockDemandSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
+            byte[] salt = Chains.makeBlockTipSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
 
             // get immutable item
             byte[] item = TorrentDHTEngine.getInstance().dhtGet(

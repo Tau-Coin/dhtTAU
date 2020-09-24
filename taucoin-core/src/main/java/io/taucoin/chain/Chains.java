@@ -1572,6 +1572,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             this.bestBlockContainers.put(chainID, blockContainer);
             this.syncBlocks.put(chainID, blockContainer.getBlock());
 
+            publishBestBlock(chainID);
+
             Set<ByteArrayWrapper> accounts= extractAccountFromBlockContainer(blockContainer);
             for (ByteArrayWrapper account: accounts) {
                 this.stateDB.addPeer(chainID.getData(), account.getData());
