@@ -5,7 +5,7 @@ import io.taucoin.util.ByteArrayWrapper;
 public class DataIdentifier {
     ByteArrayWrapper chainID;
     DataType dataType;
-    ByteArrayWrapper hash; // tx or block hash
+    ByteArrayWrapper hash; // block hash, txid or pubKey
     ByteArrayWrapper txBlockHash; // the block hash to which tx belongs
 
     public DataIdentifier(ByteArrayWrapper chainID, DataType dataType) {
