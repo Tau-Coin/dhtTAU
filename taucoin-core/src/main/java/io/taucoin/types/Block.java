@@ -19,6 +19,7 @@ package io.taucoin.types;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.DateUtil;
 import io.taucoin.util.HashUtil;
 
 import com.frostwire.jlibtorrent.Ed25519;
@@ -26,7 +27,9 @@ import com.frostwire.jlibtorrent.Entry;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -685,7 +688,8 @@ public class Block {
         strBlock.append("block: [");
         strBlock.append(" blockhash: ").append(ByteUtil.toHexString(this.getBlockHash()));
         strBlock.append(" version: ").append(this.getVersion());
-        strBlock.append(" timestamp: ").append(this.getTimeStamp());
+        Date date = new Date(this.getTimeStamp() * 1000);
+        strBlock.append(" timestamp: ").append(DateUtil.dateToStrLong(date));
         strBlock.append(" blocknum: ").append(this.getBlockNum());
         strBlock.append(" previousblockhash: ").append(ByteUtil.toHexString(this.getPreviousBlockHash()));
         strBlock.append(" immutableblockhash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash()));
