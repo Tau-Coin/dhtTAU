@@ -151,6 +151,15 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 控制是否自己挖矿还是只同步
     private final Map<ByteArrayWrapper, Boolean> enableMineForTest = Collections.synchronizedMap(new HashMap<>());
 
+    // for test
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>>  blockTipSucceed = Collections.synchronizedMap(new HashMap<>());
+
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>>  blockTipFail = Collections.synchronizedMap(new HashMap<>());
+
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>>  blockDemandSucceed = Collections.synchronizedMap(new HashMap<>());
+
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>>  blockDemandFail = Collections.synchronizedMap(new HashMap<>());
+
     /**
      * Chain constructor.
      *
@@ -379,6 +388,15 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.enableMineForTest.put(wChainID, true);
 
+        // for test
+        this.blockTipSucceed.put(wChainID, new HashMap<>());
+
+        this.blockTipFail.put(wChainID, new HashMap<>());
+
+        this.blockDemandSucceed.put(wChainID, new HashMap<>());
+
+        this.blockDemandFail.put(wChainID, new HashMap<>());
+
         // 把新链放入数据库
         this.stateDB.followChain(chainID);
 
@@ -460,6 +478,15 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.txHashMapFromDemand.remove(chainID);
 
         this.enableMineForTest.remove(chainID);
+
+        // for test
+        this.blockTipSucceed.remove(chainID);
+
+        this.blockTipFail.remove(chainID);
+
+        this.blockDemandSucceed.remove(chainID);
+
+        this.blockDemandFail.remove(chainID);
     }
 
     /**
@@ -1831,7 +1858,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void requestDemandBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
         byte[] salt = makeBlockDemandSalt(chainID.getData());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_DEMAND_FROM_PEER);
+        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_DEMAND_FROM_PEER,
+                new ByteArrayWrapper(peer));
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
@@ -2583,8 +2611,44 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == item) {
                     logger.error("TIP_BLOCK_FROM_PEER_FOR_MINING from peer[{}] is empty.",
                             dataIdentifier.getHash().toString());
+
+                    Long count = this.blockTipFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                    if (null == count) {
+                        count = 1L;
+                    } else {
+                        count++;
+
+                        this.blockTipFail.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
+                    }
+
+                    Long total = this.blockTipSucceed.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                    if (null == total) {
+                        total = count;
+                    } else {
+                        total += count;
+                    }
+                    logger.info("Block Tip: Address:{}, failure rate: {} / {} = {}",
+                            dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
+
                     return;
                 }
+
+                Long count = this.blockTipSucceed.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                if (null == count) {
+                    count = 1L;
+                } else {
+                    count++;
+
+                    this.blockTipSucceed.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
+                }
+                Long total = this.blockTipFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                if (null == total) {
+                    total = count;
+                } else {
+                    total += count;
+                }
+                logger.info("Block Tip: Address:{}, success rate: {} / {} = {}",
+                        dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
                 logger.debug("Request tip block hash[{}] from peer[{}]", Hex.toHexString(hash),
@@ -2688,8 +2752,42 @@ public class Chains implements DHT.GetDHTItemCallback{
             case BLOCK_DEMAND_FROM_PEER: {
                 if (null == item) {
                     logger.error("BLOCK_DEMAND_FROM_PEER is empty");
+                    Long count = this.blockDemandSucceed.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                    if (null == count) {
+                        count = 1L;
+                    } else {
+                        count++;
+
+                        this.blockDemandSucceed.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
+                    }
+                    Long total = this.blockDemandFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                    if (null == total) {
+                        total = count;
+                    } else {
+                        total += count;
+                    }
+                    logger.info("Block Demand: Address:{}, failure rate: {} / {} = {}",
+                            dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
+
                     return;
                 }
+
+                Long count = this.blockDemandSucceed.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                if (null == count) {
+                    count = 1L;
+                } else {
+                    count++;
+
+                    this.blockDemandSucceed.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
+                }
+                Long total = this.blockDemandFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                if (null == total) {
+                    total = count;
+                } else {
+                    total += count;
+                }
+                logger.info("Block Demand: Address:{}, success rate: {} / {} = {}",
+                        dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
                 logger.debug("Got a demand block hash:{}", Hex.toHexString(hash));
