@@ -47,7 +47,7 @@ public class DashboardActivity extends BaseActivity {
      */
     private void initView() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.setting_dashboard);
+        binding.toolbarInclude.toolbar.setTitle(R.string.drawer_dashboard);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         binding.switchServerMode.setChecked(settingsRepo.serverMode());

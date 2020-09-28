@@ -126,9 +126,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
             case R.id.ll_favorites:
                 ActivityUtil.startActivity(this, FavoritesActivity.class);
                 break;
-            case R.id.item_dashboard:
-                ActivityUtil.startActivity(this, DashboardActivity.class);
-                break;
             case R.id.item_privacy_security:
                 ActivityUtil.startActivity(this, PrivacySecurityActivity.class);
                 break;

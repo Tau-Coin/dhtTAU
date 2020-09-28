@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
+import android.text.format.Formatter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +27,14 @@ import io.taucoin.core.AccountState;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.torrent.SessionSettings;
+import io.taucoin.torrent.SessionStats;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
@@ -206,9 +209,19 @@ public class TauDaemon {
                 logger.debug("Tau start successfully");
                 isRunning = true;
                 rescheduleTauBySettings();
+                TrafficUtil.resetTrafficTotalOld();
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
+        }
+
+        @Override
+        public void onSessionStats(@NonNull SessionStats newStats) {
+            logger.debug("onSessionStats totalDownload::{}, totalUpload::{}",
+                    Formatter.formatFileSize(appContext, newStats.totalDownload()),
+                    Formatter.formatFileSize(appContext, newStats.totalUpload()));
+            TrafficUtil.saveTrafficTotal(TrafficUtil.TRAFFIC_DOWN, newStats.totalDownload());
+            TrafficUtil.saveTrafficTotal(TrafficUtil.TRAFFIC_UP, newStats.totalUpload());
         }
 
         @Override
@@ -241,9 +254,6 @@ public class TauDaemon {
             return;
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribe(this::handleSettingsChanged));
-        disposables.add(tauInfoProvider.observeResourceStatistics()
-                .subscribeOn(Schedulers.computation())
-                .subscribe());
         tauController.start(sessionSettings);
     }
 

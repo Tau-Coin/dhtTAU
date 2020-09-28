@@ -137,15 +137,7 @@ public interface SettingsRepository {
      */
     void setNeedPromptUser(boolean isNeed);
 
-    long trafficTotalOld();
+    long getValue(String key);
 
-    void setTrafficTotalOld(long byteSize);
-
-    long trafficTotal();
-
-    void setTrafficTotal(long byteSize);
-
-    long trafficTime();
-
-    void setTrafficTime(long trafficTime);
+    void setValue(String key, long value);
 }

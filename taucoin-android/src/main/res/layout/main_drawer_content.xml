@@ -131,6 +131,15 @@
                         app:rightText="@string/drawer_contacts"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                        android:id="@+id/item_dashboard"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="5dp"
+                        android:onClick="onClick"
+                        app:leftImage="@mipmap/icon_dashboard"
+                        app:rightText="@string/drawer_dashboard"/>
+
+                    <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_setting"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
@@ -160,12 +169,36 @@
                         app:rightText="@string/drawer_dht_nodes"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                        android:id="@+id/item_daily_data"
+                        android:id="@+id/item_download_data"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:layout_marginTop="5dp"
-                        app:leftImage="@mipmap/icon_network"
+                        app:leftImage="@mipmap/icon_download"
                         app:rightText="@string/drawer_daily_data"/>
+
+                    <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                        android:id="@+id/item_upload_data"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="5dp"
+                        app:leftImage="@mipmap/icon_upload"
+                        app:rightText="@string/drawer_daily_data"/>
+
+                    <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                        android:id="@+id/item_cpu_usage"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="5dp"
+                        app:leftImage="@mipmap/icon_cpu"
+                        app:rightText="@string/drawer_cpu_usage"/>
+
+                    <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                        android:id="@+id/item_mem_size"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="5dp"
+                        app:leftImage="@mipmap/icon_memory"
+                        app:rightText="@string/drawer_mem_data"/>
 
                 </LinearLayout>
             </ScrollView>

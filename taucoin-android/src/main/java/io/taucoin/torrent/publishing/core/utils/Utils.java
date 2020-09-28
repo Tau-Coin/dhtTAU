@@ -467,6 +467,9 @@ public class Utils {
     }
 
     private static MatcherResult parseMatcherFormStr(String msg){
+        if (null == msg) {
+            return null;
+        }
         Matcher magnet = MAGNET_URL.matcher(msg);
         if(magnet.find()){
             String magnetUrl = magnet.group();

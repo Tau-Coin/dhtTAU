@@ -43,9 +43,12 @@
     <string name="drawer_new_community">New Community</string>
     <string name="drawer_contacts">Contacts</string>
     <string name="drawer_setting">Settings</string>
+    <string name="drawer_dashboard">Dashboard</string>
     <string name="drawer_share">Share</string>
     <string name="drawer_dht_nodes">Peers/%1$d</string>
-    <string name="drawer_daily_data">Daily&#160;Data/%1$s</string>
+    <string name="drawer_daily_data">%1$s</string>
+    <string name="drawer_cpu_usage">CPU/%1$s</string>
+    <string name="drawer_mem_data">Memory/%1$s</string>
     <string name="drawer_export_seed">Export Seed</string>
     <string name="drawer_wifi">Wifi</string>
     <string name="drawer_telecom">Tele\ncom</string>
@@ -111,7 +114,6 @@
     <string name="setting_account">PublicKey(Address)</string>
     <string name="setting_import_seed">Tap to import seed</string>
     <string name="setting_username_app">Username in app</string>
-    <string name="setting_dashboard">Dashboard</string>
     <string name="setting_privacy_security">Privacy and Security</string>
     <string name="setting_community_setting">Community Setting</string>
     <string name="setting_journal">Journal</string>

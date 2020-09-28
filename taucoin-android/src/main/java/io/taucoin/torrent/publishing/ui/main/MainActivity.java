@@ -56,6 +56,7 @@ import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.download.DownloadViewModel;
 import io.taucoin.torrent.publishing.ui.notify.NotificationActivity;
 import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
+import io.taucoin.torrent.publishing.ui.setting.DashboardActivity;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.user.ScanQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
@@ -195,12 +196,17 @@ public class MainActivity extends BaseActivity {
         if(sessionStats != null){
             dhtNodes = sessionStats.dhtNodes();
         }
-        long totalData = TrafficUtil.getTrafficTotal();
-        String totalDataStr = Formatter.formatFileSize(this, totalData);
-        logger.info("dhtNodes::{}, totalDataStr::{}", dhtNodes, totalDataStr);
+        long downloadTotal = TrafficUtil.getTrafficDownloadTotal();
+        long uploadTotal = TrafficUtil.getTrafficUploadTotal();
+        String downloadTotalStr = Formatter.formatFileSize(this, downloadTotal).toUpperCase();
+        String uploadTotalStr = Formatter.formatFileSize(this, uploadTotal).toUpperCase();
+        logger.info("dhtNodes::{}, downloadTotalStr::{}, uploadTotalStr::{}", dhtNodes,
+                downloadTotalStr, uploadTotalStr);
         binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, dhtNodes));
-        binding.drawer.itemDailyData.setRightText(getString(R.string.drawer_daily_data,
-                totalDataStr));
+        binding.drawer.itemDownloadData.setRightText(getString(R.string.drawer_daily_data,
+                downloadTotalStr));
+        binding.drawer.itemUploadData.setRightText(getString(R.string.drawer_daily_data,
+                uploadTotalStr));
     }
 
     /**
@@ -249,9 +255,22 @@ public class MainActivity extends BaseActivity {
         super.onStart();
         subscribeCurrentUser();
         subscribeDHTStatus();
+        subscribeCPUAndMemStatistics();
         subscribeNeedStartDaemon();
         subscribeUnreadNotificationNum();
 //        downloadViewModel.checkAppVersion(this);
+    }
+
+    private void subscribeCPUAndMemStatistics() {
+        disposables.add(infoProvider.observeCPUAndMemStatistics()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(statistics -> {
+                    binding.drawer.itemCpuUsage.setRightText(getString(R.string.drawer_cpu_usage,
+                            statistics.cpuUsageRate + ""));
+                    binding.drawer.itemMemSize.setRightText(getString(R.string.drawer_mem_data,
+                            Formatter.formatFileSize(this, statistics.totalMemory)));
+                }));
     }
 
     private void subscribeUnreadNotificationNum() {
@@ -335,6 +354,9 @@ public class MainActivity extends BaseActivity {
                 break;
             case R.id.item_share:
                 ActivityUtil.shareText(this, getString(R.string.app_share), Constants.APP_SHARE_URL);
+                break;
+            case R.id.item_dashboard:
+                ActivityUtil.startActivity(this, DashboardActivity.class);
                 break;
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START);
