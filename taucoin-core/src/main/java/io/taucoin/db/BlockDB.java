@@ -68,6 +68,11 @@ public class BlockDB implements BlockStore {
      */
     @Override
     public Transaction getTransactionByHash(byte[] chainID, byte[] hash) throws DBException {
+        if (null == hash) {
+            logger.error("Chain ID[{}], tx hash is null", new String(chainID));
+            return null;
+        }
+
         byte[] encode;
 
         try {
@@ -94,6 +99,11 @@ public class BlockDB implements BlockStore {
      */
     @Override
     public Block getBlockByHash(byte[] chainID, byte[] hash) throws DBException {
+        if (null == hash) {
+            logger.error("Chain ID[{}], block hash is null", new String(chainID));
+            return null;
+        }
+
         byte[] blockEncode;
         try {
             blockEncode = db.get(PrefixKey.blockKey(chainID, hash));
@@ -120,6 +130,11 @@ public class BlockDB implements BlockStore {
      */
     @Override
     public BlockContainer getBlockContainerByHash(byte[] chainID, byte[] hash) throws DBException {
+        if (null == hash) {
+            logger.error("Chain ID[{}], block container hash is null", new String(chainID));
+            return null;
+        }
+
         Block block = getBlockByHash(chainID, hash);
         if (null != block) {
             BlockContainer blockContainer = new BlockContainer(block);
@@ -178,6 +193,11 @@ public class BlockDB implements BlockStore {
      */
     @Override
     public BlockInfo getBlockInfoByHash(byte[] chainID, byte[] hash) throws DBException {
+        if (null == hash) {
+            logger.error("Chain ID[{}], block info hash is null", new String(chainID));
+            return null;
+        }
+
         byte[] encode;
         try {
             encode = db.get(PrefixKey.blockKey(chainID, hash));
@@ -204,6 +224,11 @@ public class BlockDB implements BlockStore {
      */
     @Override
     public boolean isMainChainBlock(byte[] chainID, byte[] hash) throws DBException {
+        if (null == hash) {
+            logger.error("Chain ID[{}], block hash is null", new String(chainID));
+            return false;
+        }
+
         byte[] encode;
         try {
             encode = db.get(PrefixKey.blockKey(chainID, hash));
@@ -234,6 +259,11 @@ public class BlockDB implements BlockStore {
      */
     @Override
     public boolean isBlockOnChain(byte[] chainID, byte[] hash) throws DBException {
+        if (null == hash) {
+            logger.error("Chain ID[{}], block hash is null", new String(chainID));
+            return false;
+        }
+
         byte[] encode;
         try {
             encode = db.get(PrefixKey.blockKey(chainID, hash));
