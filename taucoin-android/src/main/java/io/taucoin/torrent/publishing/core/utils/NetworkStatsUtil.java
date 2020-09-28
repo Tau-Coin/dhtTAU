@@ -101,6 +101,7 @@ public class NetworkStatsUtil {
                     summaryMobile += summaryBucket.getTxBytes();
                 }
             } while (summaryStats.hasNextBucket());
+            summaryStats.close();
 
             summaryStats = networkStatsManager.querySummary(ConnectivityManager.TYPE_WIFI,
                     null, timesDayMorning, currentTimeMillis);
@@ -112,6 +113,7 @@ public class NetworkStatsUtil {
                     summaryWifi += summaryBucket.getTxBytes();
                 }
             } while (summaryStats.hasNextBucket());
+            summaryStats.close();
         }catch (Exception e) {
             logger.error("networkStatsManager.querySummary is error", e);
         }
