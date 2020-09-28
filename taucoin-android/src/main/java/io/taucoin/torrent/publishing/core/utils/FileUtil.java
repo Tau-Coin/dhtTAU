@@ -180,12 +180,16 @@ public class FileUtil {
     public static List<File> getFiles(String fileAbsolutePath) {
         List<File> list = new ArrayList<>();
         File fileDirectory = new File(fileAbsolutePath);
-        File[] subFile = fileDirectory.listFiles();
-
-        for (File file : subFile) {
-            // 判断是否为文件夹
-            if (!file.isDirectory()) {
-                list.add(file);
+        if(!fileDirectory.exists()){
+            fileDirectory.mkdirs();
+        }
+        File[] subFiles = fileDirectory.listFiles();
+        if(subFiles != null){
+            for (File file : subFiles) {
+                // 判断是否为文件夹
+                if (!file.isDirectory()) {
+                    list.add(file);
+                }
             }
         }
         return list;

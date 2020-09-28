@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.ui.splash;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -12,6 +13,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.util.ContextInitializer;
+import ch.qos.logback.core.joran.spi.JoranException;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -127,6 +131,18 @@ public class SplashActivity extends BaseActivity {
         switch (requestCode) {
             case PermissionUtils.REQUEST_PERMISSIONS_STORAGE:
                 handlePermissionsCallBack();
+                if (grantResults.length > 0) {
+                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+                        loggerContext.reset();
+                        ContextInitializer ci = new ContextInitializer(loggerContext);
+                        try {
+                            ci.autoConfig();
+                        } catch (JoranException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
                 break;
             default:
                 break;
