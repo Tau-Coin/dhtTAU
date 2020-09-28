@@ -556,44 +556,44 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
 
             // 如果离线时间过长，先进行一个区块时间的数据查找，以决定是否在旧数据基础上挖矿
-//            if (isOfflineTooLong(chainID)) {
-//                if (0 == this.votingTime.get(chainID)) {
-//                    this.votingTime.put(chainID, System.currentTimeMillis() / 1000);
-//                    this.miningFlag.put(chainID, false);
-//                } else if (System.currentTimeMillis() / 1000 - this.votingTime.get(chainID) > ChainParam.DEFAULT_BLOCK_TIME) {
-//                    this.miningFlag.put(chainID, true);
-//                } else {
-//                    // 先查看是否有之前轮次请求回来的数据，有数据则放弃之前的数据，用获得的数据进行链的初始化，没有数据则请求数据
-//                    Iterator<Map.Entry<ByteArrayWrapper, BlockContainer>> iterator =
-//                            this.blockContainerMap.get(chainID).entrySet().iterator();
-//                    if (iterator.hasNext()) {
-//                        // 有完整数据回来，则用数据进行初始化链
-//                        BlockContainer blockContainer = iterator.next().getValue();
-//                        if (null != blockContainer) {
-//                            initChain(chainID, blockContainer);
-//
-//                            this.miningFlag.put(chainID, true);
-//                        }
-//
-//                        iterator.remove();
-//                    } else {
-//                        // 没有数据则请求logN的数据
-//                        int counter = this.peerManagers.get(chainID).getPeerNumber();
-//                        counter = (int) Math.log(counter);
-//                        if (counter < 1) {
-//                            counter = 1;
-//                        }
-//
-//                        for (int i = 0; i < counter; i++) {
-//
-//                            byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
-//                            logger.debug("Chain ID:{} get a peer:{}",
-//                                    new String(chainID.getData()), Hex.toHexString(peer));
-//                            requestTipBlockFromPeer(chainID, peer);
-//                        }
-//                    }
-//                }
-//            }
+            if (isOfflineTooLong(chainID)) {
+                if (0 == this.votingTime.get(chainID)) {
+                    this.votingTime.put(chainID, System.currentTimeMillis() / 1000);
+                    this.miningFlag.put(chainID, false);
+                } else if (System.currentTimeMillis() / 1000 - this.votingTime.get(chainID) > ChainParam.DEFAULT_BLOCK_TIME) {
+                    this.miningFlag.put(chainID, true);
+                } else {
+                    // 先查看是否有之前轮次请求回来的数据，有数据则放弃之前的数据，用获得的数据进行链的初始化，没有数据则请求数据
+                    Iterator<Map.Entry<ByteArrayWrapper, BlockContainer>> iterator =
+                            this.blockContainerMap.get(chainID).entrySet().iterator();
+                    if (iterator.hasNext()) {
+                        // 有完整数据回来，则用数据进行初始化链
+                        BlockContainer blockContainer = iterator.next().getValue();
+                        if (null != blockContainer) {
+                            initChain(chainID, blockContainer);
+
+                            this.miningFlag.put(chainID, true);
+                        }
+
+                        iterator.remove();
+                    } else {
+                        // 没有数据则请求logN的数据
+                        int counter = this.peerManagers.get(chainID).getPeerNumber();
+                        counter = (int) Math.log(counter);
+                        if (counter < 1) {
+                            counter = 1;
+                        }
+
+                        for (int i = 0; i < counter; i++) {
+
+                            byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
+                            logger.debug("Chain ID:{} get a peer:{}",
+                                    new String(chainID.getData()), Hex.toHexString(peer));
+                            requestTipBlockFromPeer(chainID, peer);
+                        }
+                    }
+                }
+            }
 
             // 2. 如果是非空链，并且允许挖矿，进行挖矿等一系列操作
             if (this.miningFlag.get(chainID) && !isEmptyChain(chainID)) {
