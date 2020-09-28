@@ -158,7 +158,12 @@ public class ChainManager {
      * @return boolean successful or not.
      */
     public boolean followChain(byte[] chainID, List<byte[]> peerList) {
-        this.chains.followChain(chainID, peerList);
+        try {
+            this.chains.followChain(chainID, peerList);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
 
         return true;
     }
@@ -170,7 +175,14 @@ public class ChainManager {
      * @return boolean successful or not.
      */
     public boolean unfollowChain(byte[] chainID) {
-        return this.chains.unFollowChain(chainID);
+        try {
+            this.chains.unFollowChain(chainID);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -236,21 +248,22 @@ public class ChainManager {
             logger.info("Save genesis block in block store. Chain ID:{}",
                     new String(chainID));
             blockDB.saveBlockContainer(chainID, genesisContainer,true);
+
+            // follow chain
+            List<byte[]> peerList = new ArrayList<>();
+
+            for (Map.Entry<ByteArrayWrapper, GenesisItem> entry : map.entrySet()) {
+                byte[] pubKey = entry.getKey().getData();
+                logger.info("create new community pubkey: {}", Hex.toHexString(pubKey));
+                peerList.add(pubKey);
+            }
+
+            this.chains.followChain(chainID, peerList);
+
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
         }
-
-        // follow chain
-        List<byte[]> peerList = new ArrayList<>();
-
-        for (Map.Entry<ByteArrayWrapper, GenesisItem> entry : map.entrySet()) {
-            byte[] pubKey = entry.getKey().getData();
-            logger.info("create new community pubkey: {}", Hex.toHexString(pubKey));
-            peerList.add(pubKey);
-        }
-
-        this.chains.followChain(chainID, peerList);
 
         // 通知UI
         this.listener.onNewBlock(chainID, genesisContainer);

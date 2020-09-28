@@ -207,14 +207,14 @@ public class ProofOfTransaction {
 
         // C++ to make sure T > H
         timeInterval++;
-        logger.debug("Chain ID:{}: Time interval:{}", new String(this.chainID), timeInterval);
+        logger.trace("Chain ID:{}: Time interval:{}", new String(this.chainID), timeInterval);
 
         if (timeInterval < this.minBlockTime) {
             timeInterval = this.minBlockTime;
         } else if (timeInterval > this.maxBlockTime) {
             timeInterval = this.maxBlockTime;
         }
-        logger.debug("Chain ID:{}: Final time interval:{}", new String(this.chainID), timeInterval);
+        logger.trace("Chain ID:{}: Final time interval:{}", new String(this.chainID), timeInterval);
 
         return timeInterval;
     }
