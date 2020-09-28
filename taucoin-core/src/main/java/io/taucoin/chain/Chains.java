@@ -556,44 +556,44 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
 
             // 如果离线时间过长，先进行一个区块时间的数据查找，以决定是否在旧数据基础上挖矿
-            if (isOfflineTooLong(chainID)) {
-                if (0 == this.votingTime.get(chainID)) {
-                    this.votingTime.put(chainID, System.currentTimeMillis() / 1000);
-                    this.miningFlag.put(chainID, false);
-                } else if (System.currentTimeMillis() / 1000 - this.votingTime.get(chainID) > ChainParam.DEFAULT_BLOCK_TIME) {
-                    this.miningFlag.put(chainID, true);
-                } else {
-                    // 先查看是否有之前轮次请求回来的数据，有数据则放弃之前的数据，用获得的数据进行链的初始化，没有数据则请求数据
-                    Iterator<Map.Entry<ByteArrayWrapper, BlockContainer>> iterator =
-                            this.blockContainerMap.get(chainID).entrySet().iterator();
-                    if (iterator.hasNext()) {
-                        // 有完整数据回来，则用数据进行初始化链
-                        BlockContainer blockContainer = iterator.next().getValue();
-                        if (null != blockContainer) {
-                            initChain(chainID, blockContainer);
-
-                            this.miningFlag.put(chainID, true);
-                        }
-
-                        iterator.remove();
-                    } else {
-                        // 没有数据则请求logN的数据
-                        int counter = this.peerManagers.get(chainID).getPeerNumber();
-                        counter = (int) Math.log(counter);
-                        if (counter < 1) {
-                            counter = 1;
-                        }
-
-                        for (int i = 0; i < counter; i++) {
-
-                            byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
-                            logger.debug("Chain ID:{} get a peer:{}",
-                                    new String(chainID.getData()), Hex.toHexString(peer));
-                            requestTipBlockFromPeer(chainID, peer);
-                        }
-                    }
-                }
-            }
+//            if (isOfflineTooLong(chainID)) {
+//                if (0 == this.votingTime.get(chainID)) {
+//                    this.votingTime.put(chainID, System.currentTimeMillis() / 1000);
+//                    this.miningFlag.put(chainID, false);
+//                } else if (System.currentTimeMillis() / 1000 - this.votingTime.get(chainID) > ChainParam.DEFAULT_BLOCK_TIME) {
+//                    this.miningFlag.put(chainID, true);
+//                } else {
+//                    // 先查看是否有之前轮次请求回来的数据，有数据则放弃之前的数据，用获得的数据进行链的初始化，没有数据则请求数据
+//                    Iterator<Map.Entry<ByteArrayWrapper, BlockContainer>> iterator =
+//                            this.blockContainerMap.get(chainID).entrySet().iterator();
+//                    if (iterator.hasNext()) {
+//                        // 有完整数据回来，则用数据进行初始化链
+//                        BlockContainer blockContainer = iterator.next().getValue();
+//                        if (null != blockContainer) {
+//                            initChain(chainID, blockContainer);
+//
+//                            this.miningFlag.put(chainID, true);
+//                        }
+//
+//                        iterator.remove();
+//                    } else {
+//                        // 没有数据则请求logN的数据
+//                        int counter = this.peerManagers.get(chainID).getPeerNumber();
+//                        counter = (int) Math.log(counter);
+//                        if (counter < 1) {
+//                            counter = 1;
+//                        }
+//
+//                        for (int i = 0; i < counter; i++) {
+//
+//                            byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
+//                            logger.debug("Chain ID:{} get a peer:{}",
+//                                    new String(chainID.getData()), Hex.toHexString(peer));
+//                            requestTipBlockFromPeer(chainID, peer);
+//                        }
+//                    }
+//                }
+//            }
 
             // 2. 如果是非空链，并且允许挖矿，进行挖矿等一系列操作
             if (this.miningFlag.get(chainID) && !isEmptyChain(chainID)) {
@@ -2617,9 +2617,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                         count = 1L;
                     } else {
                         count++;
-
-                        this.blockTipFail.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
                     }
+                    this.blockTipFail.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
 
                     Long total = this.blockTipSucceed.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
                     if (null == total) {
@@ -2638,9 +2637,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                     count = 1L;
                 } else {
                     count++;
-
-                    this.blockTipSucceed.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
                 }
+                this.blockTipSucceed.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
+
                 Long total = this.blockTipFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
                 if (null == total) {
                     total = count;
@@ -2752,15 +2751,15 @@ public class Chains implements DHT.GetDHTItemCallback{
             case BLOCK_DEMAND_FROM_PEER: {
                 if (null == item) {
                     logger.error("BLOCK_DEMAND_FROM_PEER is empty");
-                    Long count = this.blockDemandSucceed.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                    Long count = this.blockDemandFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
                     if (null == count) {
                         count = 1L;
                     } else {
                         count++;
-
-                        this.blockDemandSucceed.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
                     }
-                    Long total = this.blockDemandFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                    this.blockDemandFail.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
+
+                    Long total = this.blockDemandSucceed.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
                     if (null == total) {
                         total = count;
                     } else {
@@ -2777,9 +2776,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                     count = 1L;
                 } else {
                     count++;
-
-                    this.blockDemandSucceed.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
                 }
+                this.blockDemandSucceed.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
+
                 Long total = this.blockDemandFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
                 if (null == total) {
                     total = count;
