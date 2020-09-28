@@ -44,8 +44,8 @@
     <string name="drawer_contacts">Contacts</string>
     <string name="drawer_setting">Settings</string>
     <string name="drawer_share">Share</string>
-    <string name="drawer_dht_nodes">DHT Nodes/%1$d</string>
-    <string name="drawer_net_speed">%1$s&#032;\u2022&#032;%2$s/s</string>
+    <string name="drawer_dht_nodes">Peers/%1$d</string>
+    <string name="drawer_daily_data">Daily&#160;Data/%1$s</string>
     <string name="drawer_export_seed">Export Seed</string>
     <string name="drawer_wifi">Wifi</string>
     <string name="drawer_telecom">Tele\ncom</string>
@@ -97,7 +97,7 @@
     <string name="community_state">Total Blocks %1$s, Sync Blocks %2$s</string>
     <string name="community_chain_note">Chain Note</string>
     <string name="community_instant_chat">Chat</string>
-    <string name="community_wired">Wired</string>
+    <string name="community_wired">Transaction</string>
     <string name="community_queue">Queue</string>
     <string name="community_on_chain">Onchain</string>
 

@@ -189,4 +189,37 @@ public class SettingsRepositoryImpl implements SettingsRepository {
         pref.edit().putBoolean(appContext.getString(R.string.pref_key_need_prompt_user), isNeed)
                 .apply();
     }
+
+    @Override
+    public long trafficTotalOld() {
+        return pref.getLong(appContext.getString(R.string.pref_key_traffic_total_old), 0);
+    }
+
+    @Override
+    public void setTrafficTotalOld(long byteSize) {
+        pref.edit().putLong(appContext.getString(R.string.pref_key_traffic_total_old), byteSize)
+                .apply();
+    }
+
+    @Override
+    public long trafficTotal() {
+        return pref.getLong(appContext.getString(R.string.pref_key_traffic_total), 0);
+    }
+
+    @Override
+    public void setTrafficTotal(long byteSize) {
+        pref.edit().putLong(appContext.getString(R.string.pref_key_traffic_total), byteSize)
+                .apply();
+    }
+
+    @Override
+    public long trafficTime() {
+        return pref.getLong(appContext.getString(R.string.pref_key_traffic_time), 0);
+    }
+
+    @Override
+    public void setTrafficTime(long trafficTime) {
+        pref.edit().putLong(appContext.getString(R.string.pref_key_traffic_time), trafficTime)
+                .apply();
+    }
 }

@@ -136,4 +136,16 @@ public interface SettingsRepository {
      * @param isNeed
      */
     void setNeedPromptUser(boolean isNeed);
+
+    long trafficTotalOld();
+
+    void setTrafficTotalOld(long byteSize);
+
+    long trafficTotal();
+
+    void setTrafficTotal(long byteSize);
+
+    long trafficTime();
+
+    void setTrafficTime(long trafficTime);
 }

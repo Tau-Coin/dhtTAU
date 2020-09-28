@@ -36,6 +36,7 @@ import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityMainDrawerBinding;
@@ -43,7 +44,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.databinding.ExternalLinkDialogBinding;
 import io.taucoin.torrent.publishing.databinding.UserDialogBinding;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
-import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.ExternalLinkActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
@@ -192,29 +192,15 @@ public class MainActivity extends BaseActivity {
      */
     private void updateDHTStats(SessionStats sessionStats) {
         long dhtNodes = 0;
-        long downloadSpeed = 0;
-        long uploadSpeed = 0;
-        long totalUpload = 0;
-        long totalDownload = 0;
         if(sessionStats != null){
             dhtNodes = sessionStats.dhtNodes();
-            downloadSpeed = sessionStats.downloadSpeed;
-            totalDownload = sessionStats.totalDownload;
-            uploadSpeed = sessionStats.uploadSpeed;
-            totalUpload = sessionStats.totalUpload;
         }
-        String downloadSpeedStr = Formatter.formatFileSize(this, downloadSpeed);
-        String totalDownloadStr = Formatter.formatFileSize(this, totalDownload);
-        String uploadSpeedStr = Formatter.formatFileSize(this, uploadSpeed);
-        String totalUploadStr = Formatter.formatFileSize(this, totalUpload);
-        logger.info("dhtNodes::{}, totalDownloadStr::{}, downloadSpeedStr::{}, totalUploadStr::{}, " +
-                "uploadSpeedStr::{}", dhtNodes, totalDownloadStr, downloadSpeedStr,
-                totalUploadStr, uploadSpeedStr);
+        long totalData = TrafficUtil.getTrafficTotal();
+        String totalDataStr = Formatter.formatFileSize(this, totalData);
+        logger.info("dhtNodes::{}, totalDataStr::{}", dhtNodes, totalDataStr);
         binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, dhtNodes));
-        binding.drawer.itemWifiSpeed.setRightText(getString(R.string.drawer_net_speed,
-                totalDownloadStr, downloadSpeedStr));
-        binding.drawer.itemTelecomSpeed.setRightText(getString(R.string.drawer_net_speed,
-                totalUploadStr, uploadSpeedStr));
+        binding.drawer.itemDailyData.setRightText(getString(R.string.drawer_daily_data,
+                totalDataStr));
     }
 
     /**

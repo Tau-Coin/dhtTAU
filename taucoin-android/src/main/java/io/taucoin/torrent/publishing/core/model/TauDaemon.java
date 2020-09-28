@@ -61,6 +61,7 @@ public class TauDaemon {
     private SystemServiceManager systemServiceManager;
     private ExecutorService exec = Executors.newSingleThreadExecutor();
     private TauListenHandler tauListenHandler;
+    private TauInfoProvider tauInfoProvider;
     private boolean isRunning = false;
 
     private static volatile TauDaemon instance;
@@ -83,6 +84,7 @@ public class TauDaemon {
         settingsRepo = RepositoryHelper.getSettingsRepository(appContext);
         systemServiceManager = SystemServiceManager.getInstance(appContext);
         tauListenHandler = new TauListenHandler(appContext, this);
+        tauInfoProvider = TauInfoProvider.getInstance(this);
 
         AndroidLeveldbFactory androidLeveldbFactory = new AndroidLeveldbFactory();
         String repoPath = appContext.getApplicationInfo().dataDir;
@@ -239,6 +241,9 @@ public class TauDaemon {
             return;
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribe(this::handleSettingsChanged));
+        disposables.add(tauInfoProvider.observeResourceStatistics()
+                .subscribeOn(Schedulers.computation())
+                .subscribe());
         tauController.start(sessionSettings);
     }
 

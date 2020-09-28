@@ -160,20 +160,12 @@
                         app:rightText="@string/drawer_dht_nodes"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                        android:id="@+id/item_wifi_speed"
+                        android:id="@+id/item_daily_data"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:layout_marginTop="5dp"
-                        app:leftImage="@mipmap/icon_download"
-                        app:rightText="@string/drawer_net_speed"/>
-
-                    <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                        android:id="@+id/item_telecom_speed"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="5dp"
-                        app:leftImage="@mipmap/icon_upload"
-                        app:rightText="@string/drawer_net_speed"/>
+                        app:leftImage="@mipmap/icon_network"
+                        app:rightText="@string/drawer_daily_data"/>
 
                 </LinearLayout>
             </ScrollView>

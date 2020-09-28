@@ -433,7 +433,9 @@ public class Utils {
      */
     public static SpannableStringBuilder getSpannableStringUrl(String msg) {
         SpanUtils spanUtils = new SpanUtils();
-        getSpannableStringUrl(spanUtils, msg);
+        if (StringUtil.isNotEmpty(msg)) {
+            getSpannableStringUrl(spanUtils, msg);
+        }
         return spanUtils.create();
     }
 
