@@ -60,6 +60,7 @@ public final class JsonRpcServer {
 		// methods about chain
         this.dispatcher.register(new chain_generateNewSeed(this.tauController));
 
+        this.dispatcher.register(new chain_getAllFollowedChainID(this.tauController));
         this.dispatcher.register(new chain_getBestBlock(this.tauController));
         this.dispatcher.register(new chain_getBlockByHash(this.tauController));
         this.dispatcher.register(new chain_getBlockByNumber(this.tauController));

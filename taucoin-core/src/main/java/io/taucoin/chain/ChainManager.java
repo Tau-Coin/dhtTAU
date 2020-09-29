@@ -380,6 +380,16 @@ public class ChainManager {
     }
 
     /**
+     * get all followed chains
+     * @return
+     */
+    public Set<ByteArrayWrapper> getAllChainsID(){
+
+        Set<ByteArrayWrapper> chainIDs = chains.getAllChainIDs();
+        return chainIDs;
+    }
+
+    /**
      * get block by hash
      * @param chainid: chain id
      * @param blockHash: hash of wanted block
