@@ -17,7 +17,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.paging.DataSource;
+import androidx.paging.LivePagedListBuilder;
+import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -41,6 +45,7 @@ import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.util.ByteUtil;
 
@@ -316,9 +321,24 @@ public class UserViewModel extends AndroidViewModel {
 
     /**
      * 观察不在黑名单的列表中
+     * @param order
      */
-    public Flowable<List<UserAndMember>> observeUsersNotInBanList() {
-        return userRepo.observeUsersNotInBanList();
+    public Flowable<List<UserAndMember>> observeUsersNotInBanList(int order) {
+        return userRepo.observeUsersNotInBanList(order);
+    }
+
+    /**
+     * 查询收藏
+     * @return DataSource
+     * @param order
+     */
+    DataSource.Factory<Integer, UserAndMember> queryUsers(int order){
+        return userRepo.queryUsers(order);
+    }
+
+    public LiveData<PagedList<UserAndMember>> observerUsers(int order) {
+        return new LivePagedListBuilder<>(
+                queryUsers(order), Page.getPageListConfig()).build();
     }
 
     /**

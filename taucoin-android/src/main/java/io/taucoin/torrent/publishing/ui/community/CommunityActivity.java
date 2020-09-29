@@ -23,6 +23,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.ui.CommunityFragment;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
@@ -43,7 +44,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private CommunityViewModel communityViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private String chainID;
-    private List<Fragment> fragmentList = new ArrayList<>();
+    private List<CommunityFragment> fragmentList = new ArrayList<>();
     private int[] titles = new int[]{R.string.community_instant_chat, R.string.community_chain_note,
             R.string.community_wired, R.string.community_queue};
 
@@ -97,14 +98,14 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         // 初始化Tab页
 
         // 添加Chat页面
-        Fragment chatTab = new ChatsTabFragment();
+        CommunityFragment chatTab = new ChatsTabFragment();
         Bundle chatBundle = new Bundle();
         chatBundle.putString(IntentExtra.CHAIN_ID, chainID);
         chatTab.setArguments(chatBundle);
         fragmentList.add(chatTab);
 
         // 添加Chain Note页面
-        Fragment chainNoteTab = new TxsTabFragment();
+        CommunityFragment chainNoteTab = new TxsTabFragment();
         Bundle noteBundle = new Bundle();
         noteBundle.putString(IntentExtra.CHAIN_ID, chainID);
         noteBundle.putInt(IntentExtra.TYPE, TypesConfig.TxType.FNoteType.ordinal());
@@ -112,7 +113,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         fragmentList.add(chainNoteTab);
 
         // 添加Wired页面
-        Fragment wiringTab = new TxsTabFragment();
+        CommunityFragment wiringTab = new TxsTabFragment();
         Bundle wiringBundle = new Bundle();
         wiringBundle.putString(IntentExtra.CHAIN_ID, chainID);
         wiringBundle.putInt(IntentExtra.TYPE, TypesConfig.TxType.WCoinsType.ordinal());
@@ -120,7 +121,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         fragmentList.add(wiringTab);
 
         // 添加Queue页面
-        Fragment queueTab = new TxsTabFragment();
+        CommunityFragment queueTab = new TxsTabFragment();
         Bundle queueBundle = new Bundle();
         queueBundle.putString(IntentExtra.CHAIN_ID, chainID);
         queueTab.setArguments(queueBundle);
@@ -137,24 +138,6 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     public void onStart() {
         super.onStart();
         subscribeCommunityViewModel();
-        disposables.add(communityViewModel.getMembersStatistics(chainID)
-            .subscribeOn(Schedulers.newThread())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(statistics ->
-                binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats,
-                statistics.getMembers(), statistics.getOnline()))));
-
-        disposables.add(communityViewModel.observerCommunityByChainID(chainID)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(community -> {
-                    long totalBlocks = community.totalBlocks + 1;
-                    long syncBlocks = totalBlocks - community.syncBlock;
-                    String communityState = getString(R.string.community_state,
-                            FmtMicrometer.fmtLong(totalBlocks),
-                            FmtMicrometer.fmtLong(syncBlocks));
-                    binding.tvCommunityState.setText(communityState);
-                }));
     }
 
     @Override
@@ -172,40 +155,71 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
                 onBackPressed();
             }
         });
+        disposables.add(communityViewModel.getMembersStatistics(chainID)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(statistics ->
+                        binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats,
+                                statistics.getMembers(), statistics.getOnline()))));
+
+        disposables.add(communityViewModel.observerCommunityByChainID(chainID)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(community -> {
+                    long totalBlocks = community.totalBlocks + 1;
+                    long syncBlocks = totalBlocks - community.syncBlock;
+                    String communityState = getString(R.string.community_state,
+                            FmtMicrometer.fmtLong(totalBlocks),
+                            FmtMicrometer.fmtLong(syncBlocks));
+                    binding.tvCommunityState.setText(communityState);
+                }));
+
+        disposables.add(communityViewModel.observerCurrentMember(chainID)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(member -> {
+                    boolean isReadOnly = member.balance <= 0 && member.power <= 0;
+                    for (int i = 0; i < fragmentList.size() - 1; i++) {
+                        CommunityFragment fragment = fragmentList.get(i);
+                        fragment.handleReadOnly(isReadOnly);
+                    }
+                }));
+
     }
 
-//    /**
-//     *  创建右上角Menu
-//     */
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.menu_community, menu);
-//        return true;
-//    }
-//    /**
-//     * 右上角Menu选项选择事件
-//     */
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        if(StringUtil.isEmpty(chainID)){
-//            return false;
-//        }
-//        if (item.getItemId() == R.id.community_search) {
-//            Intent intent = new Intent();
-//            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-//            ActivityUtil.startActivity(intent, this, SearchActivity.class);
-//        }
-//        return true;
-//    }
+    /**
+     *  创建右上角Menu
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_community, menu);
+        return true;
+    }
+
+    /**
+     * 右上角Menu选项选择事件
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(StringUtil.isEmpty(chainID)){
+            return false;
+        }
+        if (item.getItemId() == R.id.community_search) {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+            ActivityUtil.startActivity(intent, this, SearchActivity.class);
+        } else if (item.getItemId() == R.id.menu_members) {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+            ActivityUtil.startActivityForResult(intent, this, MembersActivity.class, REQUEST_CODE);
+        }
+        return true;
+    }
 
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.iv_community_state_close) {
             binding.llCommunityState.setVisibility(View.GONE);
-        }else if (v.getId() == R.id.toolbar_title) {
-            Intent intent = new Intent();
-            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-            ActivityUtil.startActivityForResult(intent, this, MembersActivity.class, REQUEST_CODE);
         }
     }
 

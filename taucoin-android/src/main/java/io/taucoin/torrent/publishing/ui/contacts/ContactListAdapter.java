@@ -10,8 +10,8 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
+import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
@@ -21,22 +21,25 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemContactListBinding;
-import io.taucoin.torrent.publishing.ui.Selectable;
 
 /**
  * 显示的联系人列表的Adapter
  */
-public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAdapter.ViewHolder>
-    implements Selectable<UserAndMember> {
+public class ContactListAdapter extends PagedListAdapter<UserAndMember, ContactListAdapter.ViewHolder> {
     private ClickListener listener;
-    private List<UserAndMember> dataList = new ArrayList<>();
     private List<String> selectedList = new ArrayList<>();
     private int page;
+    private int order;
 
-    ContactListAdapter(ClickListener listener, int type) {
+    ContactListAdapter(ClickListener listener, int type, int order) {
         super(diffCallback);
         this.listener = listener;
         this.page = type;
+    }
+
+    void setOrder(int order) {
+        this.order = order;
+        diffCallback.updateOrder(order);
     }
 
     @NonNull
@@ -53,35 +56,10 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(holder, getItemKey(position));
+        holder.bind(holder, getItem(position), order);
     }
 
-    @Override
-    public int getItemCount() {
-        return dataList.size();
-    }
-
-    @Override
-    public UserAndMember getItemKey(int position) {
-        return dataList.get(position);
-    }
-
-    @Override
-    public int getItemPosition(UserAndMember key) {
-        return getCurrentList().indexOf(key);
-    }
-
-    /**
-     * 设置联系人展示数据
-     * @param user 用户数据
-     */
-    void setDataList(List<UserAndMember> user) {
-        dataList.clear();
-        dataList.addAll(user);
-        notifyDataSetChanged();
-    }
-
-    public List<String> getSelectedList() {
+    List<String> getSelectedList() {
         return selectedList;
     }
 
@@ -92,7 +70,8 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
         private int type;
         private List<String> selectedList;
 
-        ViewHolder(ItemContactListBinding binding, ClickListener listener, int type, List<String> selectedList) {
+        ViewHolder(ItemContactListBinding binding, ClickListener listener, int type,
+                   List<String> selectedList) {
             super(binding.getRoot());
             this.binding = binding;
             this.context = binding.getRoot().getContext();
@@ -101,12 +80,14 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
             this.selectedList = selectedList;
         }
 
-        void bind(ViewHolder holder, UserAndMember user) {
+        void bind(ViewHolder holder, UserAndMember user, int order) {
             if(null == holder || null == user){
                 return;
             }
-            holder.binding.cbSelect.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS ? View.VISIBLE : View.GONE);
-            holder.binding.ivShare.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS ? View.VISIBLE : View.GONE);
+            holder.binding.cbSelect.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS
+                    ? View.VISIBLE : View.GONE);
+            holder.binding.ivShare.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS
+                    ? View.VISIBLE : View.GONE);
             if(type == ContactsActivity.PAGE_ADD_MEMBERS){
                 holder.binding.cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
                     selectedList.remove(user.publicKey);
@@ -129,9 +110,12 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
             holder.binding.leftView.setText(firstLetters);
 
             String time = "";
-            if(user.lastUpdateTime > 0){
+            if (order == 0 && user.lastUpdateTime > 0) {
                 time = DateUtil.formatTime(user.lastUpdateTime, DateUtil.pattern5);
                 time = context.getResources().getString(R.string.contacts_last_seen, time);
+            } else if (order != 0 && user.lastCommTime > 0) {
+                time = DateUtil.formatTime(user.lastCommTime, DateUtil.pattern5);
+                time = context.getResources().getString(R.string.contacts_last_communication, time);
             }
             holder.binding.tvTime.setText(time);
 
@@ -179,10 +163,21 @@ public class ContactListAdapter extends ListAdapter<UserAndMember, ContactListAd
         void onShareClicked(UserAndMember item);
     }
 
-    private static final DiffUtil.ItemCallback<UserAndMember> diffCallback = new DiffUtil.ItemCallback<UserAndMember>() {
+    static abstract class ItemCallback extends DiffUtil.ItemCallback<UserAndMember> {
+        int oldOrder;
+        int order;
+
+        void updateOrder(int order) {
+            this.oldOrder = this.order;
+            this.order = order;
+
+        }
+    }
+
+    private static final ItemCallback diffCallback = new ItemCallback() {
         @Override
         public boolean areContentsTheSame(@NonNull UserAndMember oldItem, @NonNull UserAndMember newItem) {
-            return oldItem.equals(newItem);
+            return oldItem.equals(newItem) && oldOrder == order;
         }
 
         @Override

@@ -1,10 +1,6 @@
 package io.taucoin.torrent.publishing.core.utils;
 
 import android.content.Context;
-import android.text.format.Formatter;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -13,8 +9,10 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 
+/**
+ * 流量统计工具类
+ */
 public class TrafficUtil {
-    private static final Logger logger = LoggerFactory.getLogger("TrafficUtil");
     public static final String TRAFFIC_DOWN = "download";
     public static final String TRAFFIC_UP = "upload";
 
@@ -29,7 +27,7 @@ public class TrafficUtil {
         String trafficValueOld = TRAFFIC_VALUE_OLD + trafficType;
         long oldTraffic = settingsRepo.getValue(trafficValueOld);
         settingsRepo.setValue(trafficValueOld, byteSize);
-        if (oldTraffic > 0 && byteSize > oldTraffic) {
+        if (oldTraffic >= 0 && byteSize > oldTraffic) {
             byteSize = byteSize - oldTraffic;
         } else {
             byteSize = 0;
@@ -37,11 +35,6 @@ public class TrafficUtil {
         String trafficValue = TRAFFIC_VALUE + trafficType;
         long trafficTotal = byteSize + settingsRepo.getValue(trafficValue);
         settingsRepo.setValue(trafficValue, trafficTotal);
-        logger.debug("saveTrafficTotal trafficType::{}, oldTraffic::{}, trafficTotal::{}, " +
-                "bytesSize::{}", trafficType,
-                Formatter.formatFileSize(context, oldTraffic),
-                Formatter.formatFileSize(context, trafficTotal),
-                Formatter.formatFileSize(context, byteSize));
     }
 
     public static void resetTrafficTotalOld() {

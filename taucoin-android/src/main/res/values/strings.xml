@@ -57,6 +57,7 @@
     <string name="menu_scan">Scan</string>
     <string name="menu_alert">Alert</string>
     <string name="menu_search">Search</string>
+    <string name="menu_members">Members</string>
     <string name="menu_done">Done</string>
     <string name="menu_rank_c">Last Seen</string>
     <string name="menu_rank_a">Last Communication</string>
@@ -217,6 +218,7 @@
     <string name="tx_fee">Fee/</string>
     <string name="tx_hash">Hash/</string>
     <string name="tx_memo">Memo/</string>
+    <string name="tx_memo_airdrop">Airdrop coins</string>
 
     <!-- Strings used for notifier -->
     <string name="app_running_in_the_background">TAU running in the background</string>
@@ -232,6 +234,7 @@
     <string name="contacts_community_more">,C/%1$s</string>
     <string name="contacts_empty_content">Start adding by tapping the pencil\nbutton in the bottom right corner.</string>
     <string name="contacts_last_seen">Last seen %1$s</string>
+    <string name="contacts_last_communication">Last communication %1$s</string>
     <string name="contacts_share_link_via">Share community link via</string>
     <string name="contacts_copy_link">Copy Link</string>
     <string name="contacts_community">TAU</string>

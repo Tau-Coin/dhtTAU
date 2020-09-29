@@ -4,6 +4,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 /**
  * 数据库升级迁移类
@@ -12,16 +13,15 @@ class DatabaseMigration {
 
     static Migration[] getMigrations(@NonNull Context appContext) {
         return new Migration[] {
-//                MIGRATION_1_2
+                MIGRATION_1_2
         };
     }
 
-//    static final Migration MIGRATION_1_2 = new Migration(1, 2) {
-//        @Override
-//        public void migrate(@NonNull SupportSQLiteDatabase database)
-//        {
-//            database.execSQL("ALTER TABLE torrents ADD COLUMN downloading_metadata integer ");
-//            database.execSQL("ALTER TABLE torrents ADD COLUMN datetime integer ");
-//        }
-//    };
+    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE Users ADD COLUMN mobilePhone TEXT");
+            database.execSQL("ALTER TABLE Users ADD COLUMN lastCommTime INTEGER NOT NULL DEFAULT 0");
+        }
+    };
 }

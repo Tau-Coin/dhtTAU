@@ -29,6 +29,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
@@ -294,6 +295,7 @@ public class CommunityViewModel extends AndroidViewModel {
                         result.setFailMsg(msg);
                     }
                 }
+                result.setMsg(community.chainID);
             }catch (Exception e){
                 result.setFailMsg(e.getMessage());
             }
@@ -353,5 +355,15 @@ public class CommunityViewModel extends AndroidViewModel {
     LiveData<PagedList<MemberAndUser>> observerCommunityMembers(String chainID, boolean onChain) {
         return new LivePagedListBuilder<>(queryCommunityMembers(chainID, onChain),
                 Page.getPageListConfig()).build();
+    }
+
+    /**
+     * 观察当前登陆的社区成员
+     * @param chainID
+     * @return
+     */
+    Observable<Member> observerCurrentMember(String chainID) {
+        String publicKey = MainApplication.getInstance().getPublicKey();
+        return communityRepo.observerCurrentMember(chainID, publicKey);
     }
 }

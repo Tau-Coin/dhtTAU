@@ -48,12 +48,14 @@
 
             <TextView
                 android:id="@+id/tv_balance_power"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="15dp"
                 android:includeFontPadding="false"
-                android:singleLine="true"
-                android:ellipsize="end"
-                android:textColor="@color/gray_dark"
+                android:maxLines="1"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMaxTextSize="14dp"
+                app:autoSizeMinTextSize="2dp"
+                app:autoSizeStepGranularity="0.5dp"
                 android:textAppearance="@style/TextAppearanceBody2" />
 
             <TextView

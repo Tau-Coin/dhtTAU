@@ -10,11 +10,11 @@ import android.view.View;
 
 import com.frostwire.jlibtorrent.Ed25519;
 
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -58,11 +58,13 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     private ContactListAdapter adapter;
     private CommonDialog commonDialog;
     private CompositeDisposable disposables = new CompositeDisposable();
+    // 联系人列表资源
+    private LiveData<PagedList<UserAndMember>> pagedListLiveData;
     private String chainID;
     // 代表不同的入口页面
     private int page;
     private long medianFee;
-    private int rank = 0; // 0:last seen, 1:last communication
+    private int order = 0; // 0:last seen, 1:last communication
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +97,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        adapter = new ContactListAdapter(this, page);
+        adapter = new ContactListAdapter(this, page, order);
         /*
          * A RecyclerView by default creates another copy of the ViewHolder in order to
          * fade the views into each other. This causes the problem because the old ViewHolder gets
@@ -142,10 +144,17 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         });
     }
 
+    private void subscribeUserList() {
+        if (pagedListLiveData != null && !pagedListLiveData.hasObservers()) {
+            pagedListLiveData.removeObservers(this);
+        }
+        pagedListLiveData = userViewModel.observerUsers(order);
+        pagedListLiveData.observe(this, list -> {
+            adapter.setOrder(order);
+            adapter.submitList(list);
+        });
+    }
     private void subscribeUserViewModel() {
-        disposables.add(userViewModel.observeUsersNotInBanList()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::showUserList));
 
         userViewModel.getAddContactResult().observe(this, isExist -> {
             closeProgressDialog();
@@ -175,16 +184,11 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         });
     }
 
-    private void showUserList(List<UserAndMember> users) {
-        if (users != null) {
-            adapter.setDataList(users);
-        }
-    }
-
     @Override
     public void onStart() {
         super.onStart();
         subscribeUserViewModel();
+        subscribeUserList();
     }
 
     @Override
@@ -208,8 +212,8 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
         MenuItem menuRankC = menu.findItem(R.id.menu_rank_c);
         MenuItem menuRankA = menu.findItem(R.id.menu_rank_a);
         menuItem.setVisible(page == PAGE_ADD_MEMBERS);
-        menuRankC.setVisible(page == PAGE_CONTACT_LIST && rank == 0);
-        menuRankA.setVisible(page == PAGE_CONTACT_LIST && rank != 0);
+        menuRankC.setVisible(page == PAGE_CONTACT_LIST && order == 0);
+        menuRankA.setVisible(page == PAGE_CONTACT_LIST && order != 0);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -222,13 +226,15 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
             showProgressDialog();
             txViewModel.airdropToFriends(chainID, adapter.getSelectedList(), medianFee);
         } else if (item.getItemId() == R.id.menu_rank_c) {
-            rank = 1;
+            order = 1;
             invalidateOptionsMenu();
             ToastUtils.showShortToast(R.string.menu_rank_a);
+            subscribeUserList();
         } else if (item.getItemId() == R.id.menu_rank_a) {
-            rank = 0;
+            order = 0;
             invalidateOptionsMenu();
             ToastUtils.showShortToast(R.string.menu_rank_c);
+            subscribeUserList();
         }
         return true;
     }

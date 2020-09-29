@@ -28,7 +28,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
         Message.class,
         Favorite.class,
         Notification.class
-    }, version = 1)
+    }, version = 2)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "tau.db";
 

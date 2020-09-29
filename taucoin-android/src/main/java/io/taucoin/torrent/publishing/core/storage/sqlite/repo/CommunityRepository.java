@@ -8,6 +8,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**
  * 提供操作Community数据的接口
@@ -62,4 +63,12 @@ public interface CommunityRepository {
      * @param chainID
      */
     void clearCommunityState(String chainID);
+
+    /**
+     * 观察当前登陆的社区成员
+     * @param chainID
+     * @param publicKey
+     * @return
+     */
+    Observable<Member> observerCurrentMember(String chainID, String publicKey);
 }

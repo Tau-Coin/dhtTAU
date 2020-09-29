@@ -175,6 +175,7 @@ public class TxViewModel extends AndroidViewModel {
                 transaction = new WiringCoinsTx(1, chainID, timestamp, tx.fee, tx.txType, senderPk,
                         nonce, receiverPk, tx.amount, tx.memo);
             } else {
+                // TODO: DHT PUT
                 byte[] forumNoteHash = new byte[24];
                 transaction = new ForumNoteTx(1, chainID, timestamp, tx.fee, tx.txType,
                         senderPk, nonce, forumNoteHash);
@@ -378,7 +379,8 @@ public class TxViewModel extends AndroidViewModel {
     public String airdropToFriend(String chainID, String friendPk) {
         long medianFee = getMedianFee(chainID);
         Tx tx = new Tx(chainID, friendPk, Constants.AIRDROP_COIN.longValue(),
-                medianFee, TypesConfig.TxType.WCoinsType.ordinal(), "");
+                medianFee, TypesConfig.TxType.WCoinsType.ordinal(),
+                getApplication().getString(R.string.tx_memo_airdrop));
         return createTransaction(tx);
     }
 }

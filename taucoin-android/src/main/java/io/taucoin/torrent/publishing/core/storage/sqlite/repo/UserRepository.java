@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.paging.DataSource;
 import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
@@ -39,6 +40,12 @@ public interface UserRepository {
      * @return 当前用户最新User实例
      */
     Flowable<User> observeCurrentUser();
+
+    /**
+     * 观察当前用户Seed变化
+     * @return seed
+     */
+    Flowable<String> observeCurrentUserSeed();
 
     /**
      * 设置当前用户是否是当前用户
@@ -78,8 +85,11 @@ public interface UserRepository {
 
     /**
      * 观察不在黑名单的列表中
+     * @param order
      */
-    Flowable<List<UserAndMember>> observeUsersNotInBanList();
+    Flowable<List<UserAndMember>> observeUsersNotInBanList(int order);
+
+    DataSource.Factory<Integer, UserAndMember> queryUsers(int order);
 
     /**
      * 获取用户和用户所在的社区信息

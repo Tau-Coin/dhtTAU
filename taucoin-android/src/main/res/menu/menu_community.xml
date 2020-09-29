@@ -4,7 +4,13 @@
 
     <item android:id="@+id/community_search"
         app:showAsAction="always"
+        android:visible="false"
         android:icon="@mipmap/ic_search_white_24dp"
         android:title="@string/menu_search" />
+
+    <item android:id="@+id/menu_members"
+        app:showAsAction="always"
+        android:icon="@mipmap/icon_more"
+        android:title="@string/menu_members" />
 
 </menu>

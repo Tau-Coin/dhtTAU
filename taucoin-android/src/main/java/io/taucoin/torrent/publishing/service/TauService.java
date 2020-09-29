@@ -81,15 +81,15 @@ public class TauService extends Service {
      */
     private void subscribeCurrentUser() {
         final AtomicBoolean isAlreadyInit = new AtomicBoolean(false);
-        disposables.add(userRepo.observeCurrentUser()
+        disposables.add(userRepo.observeCurrentUserSeed()
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(user -> {
-                    if(null == user || StringUtil.isEmpty(user.seed)){
+                .subscribe(seed -> {
+                    if(StringUtil.isEmpty(seed)){
                         return;
                     }
                     // 更新设置用户seed
-                    daemon.updateSeed(user.seed);
+                    daemon.updateSeed(seed);
                     logger.info("Update user seed");
                     if(isAlreadyInit.compareAndSet(false, true)){
                         initAndStart();

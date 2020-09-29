@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.ui.CommunityFragment;
 import io.taucoin.torrent.publishing.ui.setting.FavoriteViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.types.TypesConfig;
@@ -34,7 +35,6 @@ import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentTxsTabBinding;
 import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
-import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
@@ -42,7 +42,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 /**
  * 交易Tab页
  */
-public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickListener,
+public class TxsTabFragment extends CommunityFragment implements TxListAdapter.ClickListener,
         View.OnClickListener {
 
     private static final Logger logger = LoggerFactory.getLogger("TxsTabFragment");
@@ -57,6 +57,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
 
     private String chainID;
     private int txType;
+    private boolean isReadOnly = true;
 
     @Nullable
     @Override
@@ -78,6 +79,7 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
         initParameter();
         initView();
         initFabSpeedDial();
+        handleReadOnly(isReadOnly);
     }
 
     /**
@@ -125,13 +127,16 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
     private void initFabSpeedDial() {
         // 自定义点击事件
         binding.fabButton.getMainFab().setOnClickListener(v ->{
-                    Intent intent = new Intent();
-                    intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-                    if(txType == TypesConfig.TxType.WCoinsType.ordinal()){
-                        ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
-                    }else{
-                        ActivityUtil.startActivity(intent, this, MessageActivity.class);
-                    }
+            if(isReadOnly){
+                return;
+            }
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+            if(txType == TypesConfig.TxType.WCoinsType.ordinal()){
+                ActivityUtil.startActivity(intent, this, TransactionCreateActivity.class);
+            }else{
+                ActivityUtil.startActivity(intent, this, MessageActivity.class);
+            }
         });
     }
 
@@ -255,5 +260,12 @@ public class TxsTabFragment extends BaseFragment implements TxListAdapter.ClickL
                 ToastUtils.showShortToast(R.string.copy_message_hash);
                 break;
         }
+    }
+
+    @Override
+    public void handleReadOnly(boolean isReadOnly) {
+        this.isReadOnly = isReadOnly;
+        int color = isReadOnly ? R.color.gray_light : R.color.primary;
+        binding.fabButton.setMainFabClosedBackgroundColor(getResources().getColor(color));
     }
 }

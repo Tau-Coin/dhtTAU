@@ -15,19 +15,33 @@ import io.taucoin.torrent.publishing.ui.constant.Chain;
  * 用户相关逻辑处理类
  */
 public class UsersUtil {
-    private static final int DEFAULT_NAME_LENGTH = 8;
+    private static final int DEFAULT_NAME_LENGTH = 4;
 
     /**
      * 获取默认截取的名字
+     * 规则：以T开头，然后取前3个数字
      * @param name 截取前的名字
      * @return 截取后的名字
      */
-    public static String getDefaultName(String name){
-        return StringUtil.subStringLater(name, DEFAULT_NAME_LENGTH);
+    public static String getDefaultName(String name) {
+        StringBuilder defaultName = new StringBuilder();
+        if(StringUtil.isNotEmpty(name)){
+            defaultName.append("T");
+            for (int i = 0; i < name.length(); i++) {
+                if (Character.isDigit(name.charAt(i))) {
+                    defaultName.append(name.charAt(i));
+                    if(defaultName.length() == DEFAULT_NAME_LENGTH) {
+                        break;
+                    }
+                }
+            }
+        }
+        return defaultName.toString();
+//        return StringUtil.subStringLater(name, DEFAULT_NAME_LENGTH);
     }
 
     /**
-     * 获取中国隐藏的名字
+     * 获取中间隐藏的名字
      * @param name 隐藏前的名字
      * @return 隐藏后的名字
      */

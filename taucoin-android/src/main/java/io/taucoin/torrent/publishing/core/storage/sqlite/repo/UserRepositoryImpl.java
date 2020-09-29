@@ -5,6 +5,7 @@ import android.content.Context;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.paging.DataSource;
 import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
@@ -71,6 +72,11 @@ public class UserRepositoryImpl implements UserRepository{
         return db.userDao().observeCurrentUser();
     }
 
+    @Override
+    public Flowable<String> observeCurrentUserSeed() {
+        return db.userDao().observeCurrentUserSeed();
+    }
+
     /**
      * 设置当前用户是否是当前用户
      * @param isCurrentUser 是否是当前用户
@@ -127,10 +133,16 @@ public class UserRepositoryImpl implements UserRepository{
 
     /**
      * 观察不在黑名单的列表中
+     * @param order
      */
     @Override
-    public Flowable<List<UserAndMember>> observeUsersNotInBanList(){
-        return db.userDao().observeUsersNotInBanList();
+    public Flowable<List<UserAndMember>> observeUsersNotInBanList(int order){
+        return db.userDao().observeUsersNotInBanList(order == 0 ? "lastUpdateTime" : "lastCommTime");
+    }
+
+    @Override
+    public DataSource.Factory<Integer, UserAndMember> queryUsers(int order) {
+        return db.userDao().queryUsers(order == 0 ? "lastUpdateTime" : "lastCommTime");
     }
 
     /**

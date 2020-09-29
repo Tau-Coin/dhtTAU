@@ -12,6 +12,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**
  * Room:Community操作接口
@@ -40,6 +41,8 @@ public interface CommunityDao {
     String QUERY_JOINED_COMMUNITY = "SELECT * FROM Communities";
     String QUERY_CLEAR_COMMUNITY_STATE = "UPDATE Communities SET totalBlocks = 0, syncBlock = 0" +
             " WHERE chainID = :chainID";
+    String QUERY_CURRENT_MEMBER = "SELECT * FROM Members" +
+            " WHERE chainID = :chainID AND publicKey = :publicKey";
 
     /**
      * 添加新的社区
@@ -95,4 +98,7 @@ public interface CommunityDao {
 
     @Query(QUERY_CLEAR_COMMUNITY_STATE)
     void clearCommunityState(String chainID);
+
+    @Query(QUERY_CURRENT_MEMBER)
+    Observable<Member> observerCurrentMember(String chainID, String publicKey);
 }

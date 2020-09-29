@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import io.taucoin.util.ByteUtil;
 
 public class ChainLinkUtil {
     private static String SCHEMA = "tauchain:?";
+    private static String SCHEMA_REGEX = "tauchain:\\?";
     private static String PARAMS_SEPARATOR = "&";
     private static String VALUE_SEPARATOR = "=";
     private static String BS = "bs";
@@ -20,7 +22,7 @@ public class ChainLinkUtil {
         ChainLink chainLink = new ChainLink();
         if(StringUtil.isNotEmpty(link)){
             link = link.trim();
-            String[] data = link.split(SCHEMA);
+            String[] data = link.split(SCHEMA_REGEX);
             if(data.length == 2){
                 String[] params = data[1].split(PARAMS_SEPARATOR);
                 if(params.length > 0){
@@ -49,31 +51,38 @@ public class ChainLinkUtil {
     public static String encode(@NonNull String chainID, @NonNull List<String> publicKeys) {
         StringBuilder link = new StringBuilder();
         link.append(SCHEMA);
+        link.append(DN);
+        link.append(VALUE_SEPARATOR);
+        link.append(chainID);
         for (int i = 0; i < publicKeys.size(); i++) {
-            if(i > 0){
-                link.append(PARAMS_SEPARATOR);
-            }
+            link.append(PARAMS_SEPARATOR);
             link.append(BS);
             link.append(VALUE_SEPARATOR);
             link.append(publicKeys.get(i));
         }
-        link.append(PARAMS_SEPARATOR);
-        link.append(DN);
-        link.append(VALUE_SEPARATOR);
-        link.append(chainID);
         return link.toString();
     }
 
     public static class ChainLink{
         private List<String> bootstraps = new ArrayList<>();
         private String dn;
+        private byte[] bytesDn;
+        private List<byte[]> bytesBootstraps;
 
         public void addBootstrap(String bs){
             this.bootstraps.add(bs);
+            try {
+                bytesBootstraps.add(ByteUtil.toByte(bs));
+            } catch (Exception ignore) {}
         }
 
         public void setDn(String dn){
             this.dn = dn;
+            this.bytesDn = dn.getBytes();
+        }
+
+        public List<byte[]> getBytesBootstraps() {
+            return bytesBootstraps;
         }
 
         public List<String> getBootstraps() {
@@ -84,6 +93,9 @@ public class ChainLinkUtil {
             return dn;
         }
 
+        public byte[] getBytesDn() {
+            return bytesDn;
+        }
         public boolean isValid() {
             return StringUtil.isNotEmpty(dn);
         }

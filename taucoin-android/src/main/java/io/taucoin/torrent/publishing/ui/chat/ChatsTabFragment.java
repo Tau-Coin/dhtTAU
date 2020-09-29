@@ -34,7 +34,7 @@ import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentChatsTabBinding;
 import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
-import io.taucoin.torrent.publishing.ui.BaseFragment;
+import io.taucoin.torrent.publishing.ui.CommunityFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.setting.FavoriteViewModel;
@@ -44,7 +44,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 /**
  * 聊天Tab页
  */
-public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.ClickListener,
+public class ChatsTabFragment extends CommunityFragment implements MsgListAdapter.ClickListener,
         View.OnClickListener {
     private static final Logger logger = LoggerFactory.getLogger("ChatsTabFragment");
     private BaseActivity activity;
@@ -58,6 +58,7 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
 
     private String chainID;
     private String replyID;
+    private boolean isReadOnly = true;
 
     @Nullable
     @Override
@@ -78,6 +79,7 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
         binding.setListener(this);
         initParameter();
         initView();
+        handleReadOnly(isReadOnly);
     }
 
     /**
@@ -187,6 +189,9 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
         ItemOperationsBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.item_operations, null, false);
         binding.replay.setTag(msg);
+        if (isReadOnly) {
+            binding.replay.setVisibility(View.GONE);
+        }
         binding.copy.setTag(msg.context);
         String link = Utils.parseUrlFormStr(msg.context);
         if(StringUtil.isNotEmpty(link)){
@@ -300,5 +305,14 @@ public class ChatsTabFragment extends BaseFragment implements MsgListAdapter.Cli
             replyID = null;
         }
         msgViewModel.sendMessage(msg);
+    }
+
+    @Override
+    public void handleReadOnly(boolean isReadOnly) {
+        this.isReadOnly = isReadOnly;
+        binding.etMessage.setEnabled(!isReadOnly);
+        int drawable = isReadOnly ? R.drawable.grey_rect_round_bg : R.drawable.white_rect_round_bg;
+        binding.etMessage.getText().clear();
+        binding.etMessage.setBackgroundResource(drawable);
     }
 }

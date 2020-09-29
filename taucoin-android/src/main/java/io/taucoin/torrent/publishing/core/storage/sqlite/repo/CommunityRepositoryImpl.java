@@ -11,6 +11,7 @@ import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 
 /**
  * CommunityRepository接口实现
@@ -100,5 +101,10 @@ public class CommunityRepositoryImpl implements CommunityRepository{
     @Override
     public void clearCommunityState(String chainID) {
         db.communityDao().clearCommunityState(chainID);
+    }
+
+    @Override
+    public Observable<Member> observerCurrentMember(String chainID, String publicKey) {
+        return db.communityDao().observerCurrentMember(chainID, publicKey);
     }
 }

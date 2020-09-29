@@ -6,10 +6,11 @@ import android.content.Intent;
 import android.os.PowerManager;
 import android.text.format.Formatter;
 
+import com.frostwire.jlibtorrent.Ed25519;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,11 +22,9 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.chain.ChainManager;
-import io.taucoin.config.ChainConfig;
 import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
 import io.taucoin.genesis.GenesisConfig;
-import io.taucoin.genesis.GenesisItem;
 import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.SessionStats;
 import io.taucoin.torrent.publishing.MainApplication;
@@ -33,6 +32,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
+import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -43,7 +43,6 @@ import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
 import io.taucoin.types.BlockContainer;
 import io.taucoin.types.Transaction;
-import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -64,8 +63,8 @@ public class TauDaemon {
     private SystemServiceManager systemServiceManager;
     private ExecutorService exec = Executors.newSingleThreadExecutor();
     private TauListenHandler tauListenHandler;
-    private TauInfoProvider tauInfoProvider;
-    private boolean isRunning = false;
+    private volatile boolean isRunning = false;
+    private volatile String seed;
 
     private static volatile TauDaemon instance;
 
@@ -87,7 +86,6 @@ public class TauDaemon {
         settingsRepo = RepositoryHelper.getSettingsRepository(appContext);
         systemServiceManager = SystemServiceManager.getInstance(appContext);
         tauListenHandler = new TauListenHandler(appContext, this);
-        tauInfoProvider = TauInfoProvider.getInstance(this);
 
         AndroidLeveldbFactory androidLeveldbFactory = new AndroidLeveldbFactory();
         String repoPath = appContext.getApplicationInfo().dataDir;
@@ -107,12 +105,17 @@ public class TauDaemon {
      * @param seed Seed
      */
     public void updateSeed(String seed) {
-        logger.debug("updateSeed ::{}", seed);
-        if (StringUtil.isEmpty(seed)) {
+        if (StringUtil.isEmpty(seed) || StringUtil.isEquals(seed, this.seed)) {
             return;
         }
-        byte[] byteSeed = ByteUtil.toByte(seed);
-        tauController.updateKey(byteSeed);
+        this.seed = seed;
+        logger.debug("updateSeed ::{}", seed);
+        byte[] bytesSeed = ByteUtil.toByte(seed);
+        if (isRunning) {
+            tauController.updateKey(bytesSeed);
+        } else {
+            tauController.updateKey(Ed25519.createKeypair(bytesSeed));
+        }
     }
 
     /**
@@ -440,31 +443,27 @@ public class TauDaemon {
      * @param tx 签过名的交易数据
      */
     public void submitTransaction(Transaction tx){
-
+        if (isRunning) {
+            getChainManager().sendTransaction(tx);
+            logger.info("submitTransaction txID::{}, txType::{}",
+                    ByteUtil.toHexString(tx.getTxID()), tx.getTxType());
+        }
     }
 
     /**
      * 添加或创建社区
-     * @param chainConfig 链的配置
+     * @param cf GenesisConfig
      */
-    public void createCommunity(ChainConfig chainConfig) {
-
-    }
-
-    /**
-     * 添加或创建社区
-     * @param communityName community name
-     * @param genesisItems airdrop accounts balance and power
-     */
-    public void createNewCommunity(String communityName, HashMap<ByteArrayWrapper, GenesisItem> genesisItems) {
-        tauController.getChainManager().createNewCommunity(communityName, genesisItems);
-    }
-
     public void createNewCommunity(GenesisConfig cf) {
-        tauController.getChainManager().createNewCommunity(cf);
+        if (isRunning) {
+            getChainManager().createNewCommunity(cf);
+            logger.info("createNewCommunity CommunityName::{}, chainID::{}",
+                    cf.getCommunityName(),
+                    Utils.toUTF8String(cf.getChainID()));
+        }
     }
 
-    public ChainManager getChainManager() {
+    private ChainManager getChainManager() {
         return tauController.getChainManager();
     }
 
@@ -502,6 +501,28 @@ public class TauDaemon {
         return 0L;
     }
 
+    /**
+     * 跟随链/社区
+     * @param chainLink
+     */
     public void followCommunity(String chainLink) {
+        if (isRunning) {
+            ChainLinkUtil.ChainLink decode = ChainLinkUtil.decode(chainLink);
+            if (decode.isValid()) {
+                getChainManager().followChain(decode.getBytesDn(), decode.getBytesBootstraps());
+                logger.info("followCommunity chainLink::{}", chainLink);
+            }
+        }
+    }
+
+    /**
+     * 取消跟随链/社区
+     * @param chainID
+     */
+    public void unfollowCommunity(String chainID) {
+        if (isRunning) {
+            getChainManager().unfollowChain(chainID.getBytes());
+            logger.info("unfollowCommunity chainID::{}", chainID);
+        }
     }
 }

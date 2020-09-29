@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.dao;
 
 import java.util.List;
 
+import androidx.paging.DataSource;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -18,9 +19,11 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 @Dao
 public interface UserDao {
     String QUERY_GET_CURRENT_USER = "SELECT * FROM Users WHERE isCurrentUser = 1";
+    String QUERY_GET_CURRENT_USER_SEED = "SELECT seed FROM Users WHERE isCurrentUser = 1";
     String QUERY_GET_USER_LIST = "SELECT * FROM Users";
     String QUERY_GET_USERS_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 1 and isCurrentUser != 1";
-    String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 0 and isCurrentUser != 1 ORDER BY lastUpdateTime DESC";
+    String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 0 and isCurrentUser != 1 " +
+            " ORDER BY :orderName DESC";
     String QUERY_SET_CURRENT_USER = "UPDATE Users SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
     String QUERY_ADD_USER_BLACKLIST = "UPDATE Users SET isBanned = :isBanned WHERE publicKey = :publicKey";
     String QUERY_SEED_HISTORY_LIST = "SELECT * FROM Users WHERE isCurrentUser != 1 and seed not null";
@@ -59,6 +62,9 @@ public interface UserDao {
      */
     @Query(QUERY_GET_CURRENT_USER)
     Flowable<User> observeCurrentUser();
+
+    @Query(QUERY_GET_CURRENT_USER_SEED)
+    Flowable<String> observeCurrentUserSeed();
 
     /**
      * 设置当前用户是否是当前用户
@@ -99,7 +105,14 @@ public interface UserDao {
      */
     @Transaction
     @Query(QUERY_GET_USERS_NOT_IN_BAN_LIST)
-    Flowable<List<UserAndMember>> observeUsersNotInBanList();
+    Flowable<List<UserAndMember>> observeUsersNotInBanList(String orderName);
+
+    /**
+     * 观察不在黑名单的列表中
+     */
+    @Transaction
+    @Query(QUERY_GET_USERS_NOT_IN_BAN_LIST)
+    DataSource.Factory<Integer, UserAndMember> queryUsers(String orderName);
 
     /**
      * 获取用户和用户所在的社区信息
