@@ -138,7 +138,7 @@ public class TorrentDHTEngine {
     private AtomicBoolean statsPollerStarted = new AtomicBoolean(false);
 
     private static final long START_STATS_DELAY = 2 * 1000;
-    private static final long STATS_PERIOD = 10 * 1000;
+    private static final long STATS_PERIOD = 1 * 1000;
 
     private static final String sUndefinedEntry = entry.data_type.undefined_t.toString();
 
