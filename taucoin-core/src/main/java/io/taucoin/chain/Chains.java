@@ -552,6 +552,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                     // 没有数据则请求数据
                     byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
                     requestTipBlockFromPeer(chainID, peer);
+
+                    return;
                 }
             }
 
