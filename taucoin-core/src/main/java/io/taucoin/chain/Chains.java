@@ -552,89 +552,88 @@ public class Chains implements DHT.GetDHTItemCallback{
                     // 没有数据则请求数据
                     byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
                     requestTipBlockFromPeer(chainID, peer);
-
-                    return;
                 }
             }
 
-            // 如果离线时间过长，先进行一个区块时间的数据查找，以决定是否在旧数据基础上挖矿
-            if (isOfflineTooLong(chainID)) {
-                if (0 == this.votingTime.get(chainID)) {
-                    this.votingTime.put(chainID, System.currentTimeMillis() / 1000);
-                    this.miningFlag.put(chainID, false);
-                } else if (System.currentTimeMillis() / 1000 - this.votingTime.get(chainID) > ChainParam.DEFAULT_BLOCK_TIME) {
-                    this.miningFlag.put(chainID, true);
-                } else {
-                    // 先查看是否有之前轮次请求回来的数据，有数据则放弃之前的数据，用获得的数据进行链的初始化，没有数据则请求数据
-                    Iterator<Map.Entry<ByteArrayWrapper, BlockContainer>> iterator =
-                            this.blockContainerMap.get(chainID).entrySet().iterator();
-                    if (iterator.hasNext()) {
-                        // 有完整数据回来，则用数据进行初始化链
-                        BlockContainer blockContainer = iterator.next().getValue();
-                        if (null != blockContainer) {
-                            initChain(chainID, blockContainer);
-
-                            this.miningFlag.put(chainID, true);
-                        }
-
-                        iterator.remove();
+            if (!isEmptyChain(chainID)) {
+                // 如果离线时间过长，先进行一个区块时间的数据查找，以决定是否在旧数据基础上挖矿
+                if (isOfflineTooLong(chainID)) {
+                    if (0 == this.votingTime.get(chainID)) {
+                        this.votingTime.put(chainID, System.currentTimeMillis() / 1000);
+                        this.miningFlag.put(chainID, false);
+                    } else if (System.currentTimeMillis() / 1000 - this.votingTime.get(chainID) > ChainParam.DEFAULT_BLOCK_TIME) {
+                        this.miningFlag.put(chainID, true);
                     } else {
-                        // 没有数据则请求logN的数据
-                        int counter = this.peerManagers.get(chainID).getPeerNumber();
-                        counter = (int) Math.log(counter);
-                        if (counter < 1) {
-                            counter = 1;
-                        }
+                        // 先查看是否有之前轮次请求回来的数据，有数据则放弃之前的数据，用获得的数据进行链的初始化，没有数据则请求数据
+                        Iterator<Map.Entry<ByteArrayWrapper, BlockContainer>> iterator =
+                                this.blockContainerMap.get(chainID).entrySet().iterator();
+                        if (iterator.hasNext()) {
+                            // 有完整数据回来，则用数据进行初始化链
+                            BlockContainer blockContainer = iterator.next().getValue();
+                            if (null != blockContainer) {
+                                initChain(chainID, blockContainer);
 
-                        for (int i = 0; i < counter; i++) {
+                                this.miningFlag.put(chainID, true);
+                            }
 
-                            byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
-                            logger.debug("Chain ID:{} get a peer:{}",
-                                    new String(chainID.getData()), Hex.toHexString(peer));
-                            requestTipBlockFromPeer(chainID, peer);
+                            iterator.remove();
+                        } else {
+                            // 没有数据则请求logN的数据
+                            int counter = this.peerManagers.get(chainID).getPeerNumber();
+                            counter = (int) Math.log(counter);
+                            if (counter < 1) {
+                                counter = 1;
+                            }
+
+                            for (int i = 0; i < counter; i++) {
+
+                                byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
+                                logger.debug("Chain ID:{} get a peer:{}",
+                                        new String(chainID.getData()), Hex.toHexString(peer));
+                                requestTipBlockFromPeer(chainID, peer);
+                            }
                         }
                     }
                 }
-            }
 
-            // 2. 如果是非空链，并且允许挖矿，进行挖矿等一系列操作
-            if (this.miningFlag.get(chainID) && !isEmptyChain(chainID)) {
+                // 2. 如果是非空链，并且允许挖矿，进行挖矿等一系列操作
+                if (this.miningFlag.get(chainID)) {
 
-                // 2.1 首先尝试进行一次状态同步，查看是否有之前轮次请求回来的需要同步的数据，有数据则进行链的同步
-                tryToSync(chainID);
+                    // 2.1 首先尝试进行一次状态同步，查看是否有之前轮次请求回来的需要同步的数据，有数据则进行链的同步
+                    tryToSync(chainID);
 
-                // 2.2 判断当前是否处在投票阶段
-                if (!this.votingFlag.get(chainID)) {
-                    // 2.2.1 如果不在投票阶段，则尝试用之前请求回来数据进行切换最难链的操作，
-                    // 或者没有之前的数据的情况下，开始请求查找最难链
-                    tryToReBranchOrRequest(chainID);
-                }
-
-                // 2.3 如果处于投票阶段, 可能是接着之前的轮次投票，或者在查找最难链的过程第一次触发投票，则尝试投票并切换
-                if (this.votingFlag.get(chainID)) {
-                    Vote bestVote = tryToVote(chainID);
-                    if (null != bestVote) {
-                        tryToChangeToBestVote(chainID, bestVote);
+                    // 2.2 判断当前是否处在投票阶段
+                    if (!this.votingFlag.get(chainID)) {
+                        // 2.2.1 如果不在投票阶段，则尝试用之前请求回来数据进行切换最难链的操作，
+                        // 或者没有之前的数据的情况下，开始请求查找最难链
+                        tryToReBranchOrRequest(chainID);
                     }
-                }
 
-                // 2.4 查看是否有请求的交易回到交易池队列，有则把交易放入交易池入池
-                TransactionPool txPool = this.txPools.get(chainID);
-                for (Transaction tx: this.txMapForPool.get(chainID)) {
-                    txPool.addTx(tx);
-                }
-                this.txMapForPool.get(chainID).clear();
+                    // 2.3 如果处于投票阶段, 可能是接着之前的轮次投票，或者在查找最难链的过程第一次触发投票，则尝试投票并切换
+                    if (this.votingFlag.get(chainID)) {
+                        Vote bestVote = tryToVote(chainID);
+                        if (null != bestVote) {
+                            tryToChangeToBestVote(chainID, bestVote);
+                        }
+                    }
 
-                // 2.5 尝试挖矿
-                tryToMine(chainID);
+                    // 2.4 查看是否有请求的交易回到交易池队列，有则把交易放入交易池入池
+                    TransactionPool txPool = this.txPools.get(chainID);
+                    for (Transaction tx : this.txMapForPool.get(chainID)) {
+                        txPool.addTx(tx);
+                    }
+                    this.txMapForPool.get(chainID).clear();
 
-                // 定时操作，检查是否到时间
-                if (System.currentTimeMillis() / 1000 - this.timeRecorders.get(chainID) >= ChainParam.DEFAULT_BLOCK_TIME) {
-                    // 2.6 传播最佳区块
-                    publishBestBlock(chainID);
+                    // 2.5 尝试挖矿
+                    tryToMine(chainID);
 
-                    // 2.7 传播最佳交易
-                    publishBestTx(chainID);
+                    // 定时操作，检查是否到时间
+                    if (System.currentTimeMillis() / 1000 - this.timeRecorders.get(chainID) >= ChainParam.DEFAULT_BLOCK_TIME) {
+                        // 2.6 传播最佳区块
+                        publishBestBlock(chainID);
+
+                        // 2.7 传播最佳交易
+                        publishBestTx(chainID);
 
 //                    // 2.8 随机挑选logN个peer
 //                    int counter = this.peerManagers.get(chainID).getPeerNumber();
@@ -659,25 +658,26 @@ public class Chains implements DHT.GetDHTItemCallback{
 //                        requestDemandTxFromPeer(chainID, peer);
 //                    }
 
-                    //设定新时间起点
-                    this.timeRecorders.put(chainID, System.currentTimeMillis() / 1000);
+                        //设定新时间起点
+                        this.timeRecorders.put(chainID, System.currentTimeMillis() / 1000);
+                    }
+
+                    byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
+                    // 2.8.1 请求最佳交易
+                    requestTipTxForMining(chainID, peer);
+
+                    // 2.8.2 请求远端区块需求
+                    requestDemandBlockFromPeer(chainID, peer);
+
+                    // 2.8.3 请求远端交易需求
+                    requestDemandTxFromPeer(chainID, peer);
+
+                    // 2.9 回应远端需求
+                    responseDemand(chainID);
+
+                    // 2.10 尝试缓存瘦身
+                    tryToSlimDownCache(chainID);
                 }
-
-                byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
-                // 2.8.1 请求最佳交易
-                requestTipTxForMining(chainID, peer);
-
-                // 2.8.2 请求远端区块需求
-                requestDemandBlockFromPeer(chainID, peer);
-
-                // 2.8.3 请求远端交易需求
-                requestDemandTxFromPeer(chainID, peer);
-
-                // 2.9 回应远端需求
-                responseDemand(chainID);
-
-                // 2.10 尝试缓存瘦身
-                tryToSlimDownCache(chainID);
             }
 
             try {
