@@ -998,6 +998,10 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (this.txMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
             this.txMapForSync.get(chainID).clear();
         }
+
+        if (this.blockHashToRequest.get(chainID).size() > ChainParam.MAX_RESPONSE_NUMBER) {
+            this.blockHashToRequest.get(chainID).clear();
+        }
     }
 
     /**
@@ -3054,7 +3058,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == item) {
                     logger.info("BLOCK_RESPONSE_FROM_PEER is empty.");
                 } else {
-                    logger.info("Response block hash:{}", dataIdentifier.getHash().toString());
+                    logger.info("Got response block hash:{}", dataIdentifier.getHash().toString());
                     this.blockHashToRequest.get(dataIdentifier.getChainID()).remove(dataIdentifier.getHash());
 
                     HashList hashList = new HashList(item);

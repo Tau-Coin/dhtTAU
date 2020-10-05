@@ -65,7 +65,7 @@ public class ChainParam {
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
 
     // max response block hash
-    public static final int MAX_RESPONSE_NUMBER = 45;
+    public static final int MAX_RESPONSE_NUMBER = 40;
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
