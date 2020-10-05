@@ -682,6 +682,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     // 2.8.4 查看远端回应
                     for (ByteArrayWrapper hash: this.blockHashToRequest.get(chainID)) {
+                        logger.info("Check sync hash[{}] response from peer[{}]",
+                                hash.toString(), Hex.toHexString(peer));
                         requestBlockHashList(chainID, peer, hash.getData());
                     }
 
@@ -2067,7 +2069,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         byte[] salt = makeBlockResponseSalt(chainID.getData(), blockHash);
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_RESPONSE_FROM_PEER,
-                new ByteArrayWrapper(peer));
+                new ByteArrayWrapper(blockHash));
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
@@ -3052,6 +3054,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == item) {
                     logger.info("BLOCK_RESPONSE_FROM_PEER is empty.");
                 } else {
+                    logger.info("Response block hash:{}", dataIdentifier.getHash().toString());
+                    this.blockHashToRequest.get(dataIdentifier.getChainID()).remove(dataIdentifier.getHash());
+
                     HashList hashList = new HashList(item);
                     List<byte[]> list = hashList.getHashList();
                     if (null != list) {
