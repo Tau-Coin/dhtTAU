@@ -2873,6 +2873,10 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 Block block = new Block(item);
 
+                if (null != block.getPreviousBlockHash()) {
+                    requestBlockForSync(dataIdentifier.getChainID(), block.getPreviousBlockHash());
+                }
+
                 if (null != block.getTxHash()) {
 
                     ByteArrayWrapper key = new ByteArrayWrapper(block.getTxHash());
