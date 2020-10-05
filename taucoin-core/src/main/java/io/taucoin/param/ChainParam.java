@@ -64,6 +64,9 @@ public class ChainParam {
     public static final int MUTABLE_RANGE = 288; // 3 days
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
 
+    // max response block hash
+    public static final int MAX_RESPONSE_NUMBER = 45;
+
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
 
@@ -72,6 +75,8 @@ public class ChainParam {
     public static final byte[] BLOCK_TIP_CHANNEL = "#BT".getBytes();
     // block demand
     public static final byte[] BLOCK_DEMAND_CHANNEL = "#BD".getBytes();
+    // block response
+    public static final byte[] BLOCK_RESPONSE_CHANNEL = "#BR".getBytes();
 
     // mutable item salt suffix: tx tip
     public static final byte[] TX_TIP_CHANNEL = "#TT".getBytes();

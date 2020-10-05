@@ -20,4 +20,6 @@ public enum DataType {
 
     TIP_TX_FOR_MINING, // mutable tx for pool
     TX_REQUEST_FOR_MINING, // immutable tx for pool
+
+    BLOCK_RESPONSE_FROM_PEER, // mutable item: request block hash list
 }
