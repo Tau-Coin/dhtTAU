@@ -2082,7 +2082,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @param blockHash block hash that demand
      */
-    private void publishBlockDemand(ByteArrayWrapper chainID, byte[] blockHash) {
+    public static void publishBlockDemand(ByteArrayWrapper chainID, byte[] blockHash) {
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 

@@ -51,7 +51,7 @@ public class dht_getImmutableItem extends JsonRpcServerMethod {
             String result = "";
 
             if (item == null) {
-                result= "Get mutable item, nothing !";
+                result= "Get immutable item, nothing !";
             } else {
                 try {
                     if ("block".equals(type)) {
