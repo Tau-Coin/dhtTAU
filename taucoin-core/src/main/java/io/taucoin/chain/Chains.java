@@ -2097,7 +2097,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      * @param list hash list that response
      */
-    private void publishBlockResponse(ByteArrayWrapper chainID, byte[] blockHash, List<byte[]> list) {
+    public static void publishBlockResponse(ByteArrayWrapper chainID, byte[] blockHash, List<byte[]> list) {
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
