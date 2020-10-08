@@ -517,8 +517,13 @@ public class BlockDB implements BlockStore {
                 }
             }
 
-            // save main chain block info
-            db.put(PrefixKey.blockInfoKey(chainID, number), blockInfos.getEncoded());
+            // save or delete main chain block info
+            byte[] infosEncode = blockInfos.getEncoded();
+            if (null == infosEncode) {
+                db.delete(PrefixKey.blockInfoKey(chainID, number));
+            } else {
+                db.put(PrefixKey.blockInfoKey(chainID, number), blockInfos.getEncoded());
+            }
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }

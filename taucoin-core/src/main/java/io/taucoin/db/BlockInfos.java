@@ -63,13 +63,19 @@ public class BlockInfos {
 
     /**
      * get rlp encode
-     * @return
+     * @return encode
      */
     public byte[] getEncoded() {
-        if (null == blockInfoList || blockInfoList.isEmpty()) {
-            logger.error("Block Info is null or empty");
+        if (null == blockInfoList) {
+            logger.error("Block Info is null");
             return null;
         }
+
+        if (blockInfoList.isEmpty()) {
+            logger.error("Block Info is empty");
+            return null;
+        }
+
         byte[][] blockInfosEncoded = new byte[blockInfoList.size()][];
         int i = 0;
         for (BlockInfo blockInfo: blockInfoList) {
