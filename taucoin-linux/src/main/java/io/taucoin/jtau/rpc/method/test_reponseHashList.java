@@ -13,6 +13,7 @@ import java.util.List;
 import io.taucoin.chain.Chains;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
+import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.types.HashList;
@@ -35,7 +36,7 @@ public class test_reponseHashList extends JsonRpcServerMethod {
             byte[] chainID = "TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes();
 
             List<byte[]> hashList = new ArrayList<>();
-            for(int i = 0; i < 40; i++) {
+            for(int i = 0; i < ChainParam.MAX_RESPONSE_NUMBER; i++) {
                 hashList.add(Hex.decode("b7b8ccd357ee09cd2905d114f6dcbf718aa0f90a"));
             }
             Chains.publishBlockResponse(new ByteArrayWrapper(chainID), blockHash, hashList);
