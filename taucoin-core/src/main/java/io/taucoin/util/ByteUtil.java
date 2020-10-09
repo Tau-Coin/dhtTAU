@@ -326,8 +326,7 @@ public class ByteUtil {
         int end  = str.lastIndexOf("'");
         if((-1 == start)||(-1 == end)) {
             logger.error("ByteUtil stringToLongArrayList 2 null");
-            ret.add(EMPTY_STRING_TO_ALL);
-            return ret;
+            return null;
         }
         String newStr = str.substring(start, end + 1);
         String[] strArr = newStr.split(",");
