@@ -14,7 +14,6 @@ import io.taucoin.torrent.publishing.receiver.SchedulerReceiver;
  * Scheduler: APP调度
  */
 public class Scheduler {
-    public static final String SCHEDULER_WORK_SWITCH_WIFI_ONLY = "scheduler_work_switch_wifi_only";
     public static final String SCHEDULER_WORK_WAKE_UP_APP_SERVICE = "scheduler_work_wake_up_app_service";
     private static final int WAKE_UP_TIME = 10 * 60; // 10 minutes
 
@@ -37,24 +36,6 @@ public class Scheduler {
         } else{
             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeMillis, pi);
         }
-    }
-
-    /**
-     * 设置切换wifi only的Alarm
-     * @param timeMillis 时间点
-     */
-    public static void setSwitchWifiOnlyAlarm(@NonNull Context applicationContext, long timeMillis) {
-        setAppAlarm(applicationContext, SCHEDULER_WORK_SWITCH_WIFI_ONLY, timeMillis);
-    }
-
-    /**
-     * 关闭切换wifi only的Alarm
-     */
-    public static void cancelSwitchWifiOnlyAlarm(@NonNull Context appContext) {
-        Intent intent = new Intent(appContext, SchedulerReceiver.class);
-        PendingIntent pi = PendingIntent.getBroadcast(appContext, SCHEDULER_WORK_SWITCH_WIFI_ONLY.hashCode(), intent, 0);
-        AlarmManager am = (AlarmManager)appContext.getSystemService(Context.ALARM_SERVICE);
-        am.cancel(pi);
     }
 
     /**

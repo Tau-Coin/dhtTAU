@@ -76,6 +76,7 @@
     <string name="community_info">Info</string>
     <string name="community_invite_link">Invite Link</string>
     <string name="community_add_member">Add Member via Wiring</string>
+    <string name="community_qr_code">Community QR Code</string>
 
     <string name="community_input_hint">Message</string>
     <string name="community_users_stats">%1$d members, %2$d online</string>
@@ -99,7 +100,7 @@
     <string name="community_mining_online">Mining online</string>
     <string name="community_mining_income">Mining Income</string>
     <string name="community_state">Total Blocks %1$s, Sync Blocks %2$s</string>
-    <string name="community_chain_note">Chain Note</string>
+    <string name="community_chain_note">Chain Content</string>
     <string name="community_instant_chat">Chat</string>
     <string name="community_wired">Transaction</string>
     <string name="community_queue">Queue</string>
@@ -129,13 +130,23 @@
     <string name="setting_journal_path">Journal storage path</string>
     <string name="setting_share_journal">Share All Journal</string>
     <string name="setting_network">Network</string>
-    <string name="setting_wifi_only">WIFI Only</string>
+    <string name="setting_metered_network_title">Metered Network</string>
+    <string name="setting_auto_mode">Auto Mode</string>
+    <string name="setting_metered_network_type">Network Type</string>
+    <string name="setting_metered_network">Metered</string>
+    <string name="setting_un_metered_network">Un-Metered</string>
+    <string name="setting_metered_network_usage">Network Usage / Day</string>
+    <string name="setting_metered_network_speed">Network Speed</string>
+    <string name="setting_metered_network_speed_limit">Network Speed Limit</string>
+    <string name="setting_network_unlimited">Unlimited</string>
+    <string name="setting_metered_network_limit">%1$s / %2$s</string>
+    <string name="setting_metered_network_limit_speed">%1$s/s</string>
     <string name="setting_server_mode">Server Mode</string>
     <string name="setting_charging">Charging</string>
     <string name="setting_internet">Internet</string>
     <string name="setting_wake_lock">Wake Lock</string>
-    <string name="setting_telecom_data">Using telecom data may incur additional fees.\nHow long would you like the service to be
-    operated with telecom data?</string>
+    <string name="setting_metered_limit_select_tips">Using telecom data may incur additional fees.\n
+        How much traffic do you want to use per day?</string>
 
     <!-- Strings used for privacy and security -->
     <string name="setting_privacy">Privacy</string>
@@ -296,4 +307,10 @@
     <string name="permission_install_unknown_apk_note">
         Please allow installation of TAU.
     </string>
+    <string name="byteShort">B</string>
+    <string name="kilobyteShort">KB</string>
+    <string name="megabyteShort">MB</string>
+    <string name="gigabyteShort">GB</string>
+    <string name="terabyteShort">TB</string>
+    <string name="petabyteShort">PB</string>
 </resources>

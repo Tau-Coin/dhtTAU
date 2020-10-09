@@ -2,6 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item android:id="@+id/community_qr_code"
+        app:showAsAction="always"
+        android:icon="@mipmap/icon_qr_code_white"
+        android:title="@string/community_qr_code" />
+
     <item android:id="@+id/member_add"
         app:showAsAction="always"
         android:icon="@mipmap/icon_add_member"

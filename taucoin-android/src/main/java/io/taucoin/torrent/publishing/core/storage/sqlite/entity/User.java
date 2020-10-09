@@ -21,8 +21,7 @@ public class User implements Parcelable {
     public boolean isCurrentUser = false;   // 是否是当前用户
     public long lastUpdateTime;             // 用户最后一次交易和出块时间
     public boolean isBanned = false;        // 用户是否被用户拉入黑名单
-    public String mobilePhone;              // 用户手机号
-    public long lastCommTime;             // 上次交流时间
+    public long lastCommTime;               // 上次交流时间
 
     public User(@NonNull String publicKey, String seed, String localName, boolean isCurrentUser){
         this.publicKey = publicKey;
@@ -51,7 +50,6 @@ public class User implements Parcelable {
         lastUpdateTime = in.readLong();
         isBanned = in.readByte() != 0;
         lastCommTime = in.readLong();
-        mobilePhone = in.readString();
     }
 
     @Override
@@ -62,7 +60,6 @@ public class User implements Parcelable {
         dest.writeByte((byte) (isCurrentUser ? 1 : 0));
         dest.writeLong(lastUpdateTime);
         dest.writeByte((byte) (isBanned ? 1 : 0));
-        dest.writeString(mobilePhone);
         dest.writeLong(lastCommTime);
     }
 

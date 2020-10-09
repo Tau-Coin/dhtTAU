@@ -56,6 +56,11 @@ public class SystemServiceManager {
      * 是否是Mobile连接
      * @return boolean
      */
+    public boolean isNetworkMetered() {
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo != null && connectivityManager.isActiveNetworkMetered();
+    }
+
     public boolean isMobileConnected() {
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
 

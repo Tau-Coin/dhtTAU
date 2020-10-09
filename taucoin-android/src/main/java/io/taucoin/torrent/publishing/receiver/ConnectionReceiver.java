@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 
 /*
  * The receiver for Network connection state changes state.
@@ -36,6 +37,7 @@ public class ConnectionReceiver extends BroadcastReceiver {
                     info != null ? info.getType() : null,
                     info != null ? info.getTypeName() : null,
                     connectivityManager.isActiveNetworkMetered());
+            NetworkSetting.setMeteredNetwork(info != null && connectivityManager.isActiveNetworkMetered());
             if (info != null && (info.getType() == ConnectivityManager.TYPE_WIFI ||
                     info.getType() == ConnectivityManager.TYPE_MOBILE)
                     && info.isConnected()) {

@@ -9,14 +9,11 @@
         <item>#7C7386</item>
     </array>
 
-    <string-array name="duration_name">
-        <item>1 hr</item>
-        <item>3 hrs</item>
-        <item>5 hrs</item>
+    <string-array name="metered_limit">
+        <item>31457280</item>
+        <item>104857600</item>
+        <item>209715200</item>
+        <item>524288000</item>
+        <item>Unlimited</item>
     </string-array>
-    <integer-array name="duration_value">
-        <item>3600</item>
-        <item>10800</item>
-        <item>18000</item>
-    </integer-array>
 </resources>

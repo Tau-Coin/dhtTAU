@@ -1,7 +1,6 @@
 package io.taucoin.torrent.publishing.core.model;
 
 import android.content.Context;
-import android.text.format.Formatter;
 
 import io.taucoin.torrent.SessionStats;
 
@@ -13,6 +12,7 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposables;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.NetworkStatsUtil;
 import io.taucoin.torrent.publishing.core.utils.Sampler;
 import io.taucoin.torrent.publishing.core.utils.TrafficInfo;

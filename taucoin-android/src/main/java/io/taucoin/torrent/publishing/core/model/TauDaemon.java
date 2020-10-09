@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
-import android.text.format.Formatter;
 
 import com.frostwire.jlibtorrent.Ed25519;
 
@@ -33,6 +32,8 @@ import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
+import io.taucoin.torrent.publishing.core.utils.Formatter;
+import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -223,8 +224,9 @@ public class TauDaemon {
             logger.debug("onSessionStats totalDownload::{}, totalUpload::{}",
                     Formatter.formatFileSize(appContext, newStats.totalDownload()),
                     Formatter.formatFileSize(appContext, newStats.totalUpload()));
-            TrafficUtil.saveTrafficTotal(TrafficUtil.TRAFFIC_DOWN, newStats.totalDownload());
-            TrafficUtil.saveTrafficTotal(TrafficUtil.TRAFFIC_UP, newStats.totalUpload());
+            NetworkSetting.updateSpeed(newStats);
+            TrafficUtil.saveTrafficTotal(newStats);
+            rescheduleTauBySettings();
         }
 
         @Override
@@ -315,6 +317,7 @@ public class TauDaemon {
      */
     private void switchConnectionReceiver() {
         settingsRepo.internetState(systemServiceManager.isHaveNetwork());
+        NetworkSetting.setMeteredNetwork(systemServiceManager.isNetworkMetered());
         try {
             appContext.unregisterReceiver(connectionReceiver);
         } catch (IllegalArgumentException ignore) {
@@ -328,20 +331,17 @@ public class TauDaemon {
      * @param key 存储key
      */
     private void handleSettingsChanged(String key) {
-        logger.info("handleSettingsChanged::{}", key);
-        if (key.equals(appContext.getString(R.string.pref_key_wifi_only))) {
-            rescheduleTauBySettings();
-        }else if (key.equals(appContext.getString(R.string.pref_key_telecom_data_end_time))) {
-            rescheduleTauBySettings();
-        } else if (key.equals(appContext.getString(R.string.pref_key_internet_state))) {
+        if (key.equals(appContext.getString(R.string.pref_key_internet_state))) {
             logger.info("SettingsChanged, internet state::{}", settingsRepo.internetState());
             enableServerMode(settingsRepo.serverMode());
-            if(settingsRepo.wifiOnly()){
-                rescheduleTauBySettings();
-            }
         } else if (key.equals(appContext.getString(R.string.pref_key_charging_state))) {
             logger.info("SettingsChanged, charging state::{}", settingsRepo.chargingState());
             enableServerMode(settingsRepo.serverMode());
+        } else if (key.equals(appContext.getString(R.string.pref_key_is_metered_network))) {
+            logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
+            if (!NetworkSetting.isMeteredNetwork()) {
+                NetworkSetting.clearSpeedList();
+            }
         }
     }
 
@@ -352,41 +352,21 @@ public class TauDaemon {
         if (!isRunning){
             return;
         }
-        logger.info("rescheduleTauBySettings Wifi Only::{}", settingsRepo.wifiOnly());
-        if(settingsRepo.wifiOnly()){
-            settingsRepo.telecomDataEndTime(0);
-            Scheduler.cancelSwitchWifiOnlyAlarm(appContext);
-            if(systemServiceManager.isMobileConnected()){
-                if(isRunning){
-                    // TODO：电信网络暂停链端业务
-                    // tauController.pause();
+        logger.info("rescheduleTauBySettings Auto Mode::{}", NetworkSetting.autoMode());
+        if (systemServiceManager.isNetworkMetered()) {
+            long currentSpeed = NetworkSetting.getMeteredSpeed();
+            long speedLimit = NetworkSetting.getMeteredSpeedLimit();
+            if (speedLimit > 0) {
+                if (currentSpeed > speedLimit) {
+                    // TODO: DHT信号0
+                } else {
+                    // TODO: DHT信号1
                 }
-
-                logger.info("rescheduleTauBySettings, network type::MobileConnected");
-            }else if(systemServiceManager.isWifiConnected()){
-                if(isRunning){
-                    // TODO：wifi网络恢复链端业务
-                    // tauController.resume();
-                }
-                logger.info("rescheduleTauBySettings, network type::WifiConnected");
+            } else {
+                // TODO: DHT禁用网络
             }
-        }else{
-            long endTime = settingsRepo.telecomDataEndTime();
-            logger.info("rescheduleTauBySettings, end time::{}", endTime);
-            if(endTime <= 0){
-                return;
-            }
-            long currentTime = System.currentTimeMillis();
-            logger.info("rescheduleTauBySettings, current time::{}", currentTime);
-            if(!settingsRepo.wifiOnly() && endTime > currentTime){
-                Scheduler.setSwitchWifiOnlyAlarm(appContext, endTime);
-                if(isRunning){
-                    // TODO：恢复链端业务
-                    // tauController.resume();
-                }
-            }else{
-                settingsRepo.wifiOnly(true);
-            }
+        } else {
+            // TODO: DHT不限制网速
         }
     }
 

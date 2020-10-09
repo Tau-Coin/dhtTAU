@@ -58,9 +58,9 @@ import io.taucoin.torrent.publishing.ui.notify.NotificationActivity;
 import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
 import io.taucoin.torrent.publishing.ui.setting.DashboardActivity;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
-import io.taucoin.torrent.publishing.ui.user.ScanQRCodeActivity;
+import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
-import io.taucoin.torrent.publishing.ui.user.UserQRCodeActivity;
+import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
@@ -324,12 +324,10 @@ public class MainActivity extends BaseActivity {
         }
         switch (view.getId()) {
             case R.id.iv_user_qr_code:
-                Intent intent = new Intent();
-                intent.putExtra(IntentExtra.BEAN, user);
-                ActivityUtil.startActivity(intent, this, UserQRCodeActivity.class);
+                ActivityUtil.startActivity(this, UserQRCodeActivity.class);
                 break;
             case R.id.round_button:
-                intent = new Intent();
+                Intent intent = new Intent();
                 intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
                 ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
                 break;

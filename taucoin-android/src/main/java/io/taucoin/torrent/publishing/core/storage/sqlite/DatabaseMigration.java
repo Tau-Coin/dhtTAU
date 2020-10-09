@@ -20,7 +20,6 @@ class DatabaseMigration {
     private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("ALTER TABLE Users ADD COLUMN mobilePhone TEXT");
             database.execSQL("ALTER TABLE Users ADD COLUMN lastCommTime INTEGER NOT NULL DEFAULT 0");
         }
     };

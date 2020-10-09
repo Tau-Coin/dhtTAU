@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.ui.user;
+package io.taucoin.torrent.publishing.ui.qrcode;
 
 import android.Manifest;
 import android.content.Intent;
@@ -23,6 +23,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
@@ -32,11 +33,15 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.GlideEngine;
 import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
+import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.permission.EasyPermissions;
+import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -53,6 +58,7 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
     private ImageView ivGallery;
     private TextView tvNoQrCode;
     private TextView tvContinue;
+    private CommunityViewModel communityViewModel;
 
     @Override
     public int getLayoutId() {
@@ -64,6 +70,8 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
         ActivityUtil.fullScreenAll(this);
         ActivityUtil.setRequestedOrientation(this);
         super.onCreate(savedInstanceState);
+        ViewModelProvider provider = new ViewModelProvider(this);
+        communityViewModel = provider.get(CommunityViewModel.class);
         initView();
         requestCameraPermissions();
         //获取CaptureHelper，里面有扫码相关的配置设置
@@ -117,18 +125,66 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
     /**
      * 处理扫描结果
      */
-    private void handleScanResult(String publicKey) {
+    private void handleScanResult(String scanResult) {
         try {
-            if(StringUtil.isNotEmpty(publicKey) &&
-                    ByteUtil.toByte(publicKey).length == Ed25519.PUBLIC_KEY_SIZE){
-                Intent intent = new Intent();
-                intent.putExtra(IntentExtra.PUBLIC_KEY, publicKey);
-                ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
-                onBackPressed();
-                return;
+            if (StringUtil.isNotEmpty(scanResult)) {
+                ChainLinkUtil.ChainLink decode = ChainLinkUtil.decode(scanResult);
+                if(decode.isValid()){
+                    String chainID = decode.getDn();
+                    openChainLink(chainID, scanResult);
+                    return;
+                } else if (ByteUtil.toByte(scanResult).length == Ed25519.PUBLIC_KEY_SIZE) {
+                    Intent intent = new Intent();
+                    intent.putExtra(IntentExtra.PUBLIC_KEY, scanResult);
+                    ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
+                    onBackPressed();
+                    return;
+                }
             }
-        }catch (Exception ignore){ }
+        } catch (Exception ignore){ }
         showNoQrCodeView(true, false);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        subscribeAddCommunity();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        disposables.clear();
+    }
+
+    private void subscribeAddCommunity(){
+        communityViewModel.getAddCommunityState().observe(this, result -> {
+            if(result.isSuccess()){
+                openCommunityActivity(result.getMsg());
+            }
+        });
+    }
+
+    private void openCommunityActivity(String chainID) {
+        Intent intent = new Intent();
+        intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+        ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+        onBackPressed();
+    }
+
+    /**
+     * 打开chain link
+     * @param chainID
+     */
+    private void openChainLink(String chainID, String chainLink) {
+        disposables.add(communityViewModel.getCommunityByChainIDSingle(chainID)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(community -> {
+                    openCommunityActivity(chainID);
+                }, it -> {
+                    communityViewModel.addCommunity(chainID, chainLink);
+                }));
     }
 
     /**
@@ -142,10 +198,7 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                 break;
             case R.id.iv_qr_code:
                 onBackPressed();
-                Intent intent = getIntent();
-                if(null != intent){
-                    ActivityUtil.startActivity(intent, this, UserQRCodeActivity.class);
-                }
+                ActivityUtil.startActivity(this, UserQRCodeActivity.class);
                 break;
             case R.id.iv_gallery:
                 openGallery();
@@ -204,20 +257,20 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
     private void handleSelectedImage(String imgPath) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String result = CodeUtils.parseQRCode(imgPath);
-            String publicKey = "";
+            String scanResult = "";
             if(StringUtil.isNotEmpty(result)){
-                publicKey = result;
+                scanResult = result;
             }
-            emitter.onNext(publicKey);
+            emitter.onNext(scanResult);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(publicKey -> {
-                    if (StringUtil.isEmpty(publicKey)) {
+                .subscribe(result -> {
+                    if (StringUtil.isEmpty(result)) {
                         showNoQrCodeView(true, true);
                     } else {
-                        handleScanResult(publicKey);
+                        handleScanResult(result);
                     }
                 });
         disposables.add(disposable);
