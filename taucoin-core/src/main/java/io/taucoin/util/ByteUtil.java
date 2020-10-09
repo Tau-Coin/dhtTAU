@@ -21,7 +21,6 @@ public class ByteUtil {
     public static final long EMPTY_STRING_TO_ALL = 0;
     public static final ArrayList<Long> EMPTY_STRING_TO_ALLALL = new ArrayList<Long>(0);
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-    public static final byte[] ZERO_BYTE_ARRAY = new byte[]{0};
 
     /**
      * Creates a copy of bytes and appends b to the end of it
@@ -241,10 +240,7 @@ public class ByteUtil {
         ArrayList<Long> retval = new ArrayList<>();
         if ((null == b) || (b.length < (8 * piece))) {
             logger.error("ByteUtil byteArrayToSignLongArray null");
-            for(int i = 0; i < piece; i++) {
-                retval.add(EMPTY_STRING_TO_ALL);
-            }
-            return retval;
+            return null;
         }
 
         byte[] slice = new byte[8];
@@ -262,14 +258,10 @@ public class ByteUtil {
      * @return
      */
     public static ArrayList<Long> unAlignByteArrayToSignLongArray(byte[] b, int piece){
-        ArrayList<Long> retval = new ArrayList<>();
 
         if (null == b) {
             logger.error("ByteUtil unAlignByteArrayToSignLongArray null");
-            for(int i = 0; i < piece; i++) {
-                retval.add(EMPTY_STRING_TO_ALL);
-            }
-            return retval;
+            return null;
         }
 
         byte[] temp = new byte[8 * piece];
@@ -279,9 +271,11 @@ public class ByteUtil {
         for(int i = 0; i < zero.length; i++){
             zero[i] = 0x00;
         }
+
         System.arraycopy(b, 0, temp, 0, alignCount * 8);
         System.arraycopy(zero, 0, temp, alignCount * 8, zero.length);
         System.arraycopy(b, alignCount * 8, temp, alignCount * 8 + zero.length, b.length - alignCount * 8);
+
         return byteArrayToSignLongArray(temp, piece);
     }
 
@@ -292,9 +286,7 @@ public class ByteUtil {
      */
     public static byte[] getHashEncoded(byte[] hash) {
         List<Long> list = ByteUtil.unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
-
         Entry entry = Entry.fromList(list);
-
         return entry.bencode();
     }
 
@@ -319,8 +311,7 @@ public class ByteUtil {
         ArrayList<Long> ret = new ArrayList<>();
         if (null == str) {
             logger.error("ByteUtil stringToLongArrayList 1 null");
-            ret.add(EMPTY_STRING_TO_ALL);
-            return ret;
+            return null;
         }
         int start = str.indexOf("'");
         int end  = str.lastIndexOf("'");
@@ -346,8 +337,7 @@ public class ByteUtil {
         ArrayList<ArrayList<Long>> ret = new ArrayList<>();
         if (null == str) {
             logger.error("ByteUtil stringToLong2ArrayList null");
-            ret.add(EMPTY_STRING_TO_ALLALL);
-            return ret;
+            return null;
         }
         String[] strArr = str.split("],");
         for(int i = 0; i < strArr.length; i++) {
