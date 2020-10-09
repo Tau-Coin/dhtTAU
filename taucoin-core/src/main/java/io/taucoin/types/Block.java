@@ -27,7 +27,6 @@ import com.frostwire.jlibtorrent.Entry;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -112,6 +111,7 @@ public class Block {
         if (minerPubkey.length != ChainParam.PubkeyLength) {
             throw new IllegalArgumentException("Miner pubkey should be : " + ChainParam.PubkeyLength + " bytes");
         }
+
         this.version = version;
         this.timestamp = timestamp;
         this.blockNum = blockNum;
@@ -305,6 +305,11 @@ public class Block {
         } else {
             Entry entry = Entry.bdecode(this.encodedBytes);
             List<Entry> entrylist = entry.list();
+
+            if(entrylist.size() != (BlockIndex.MPubkey.ordinal() + 1)) {
+                logger.error("Block decoded entry size error {}", entrylist.size());
+            }
+
             try {
                 this.version = entrylist.get(BlockIndex.Version.ordinal()).integer();
                 this.timestamp = entrylist.get(BlockIndex.Timestamp.ordinal()).integer();
@@ -326,7 +331,8 @@ public class Block {
                 return;
             }
         }
-            isParsed = true;
+
+        isParsed = true;
     }
 
     /**

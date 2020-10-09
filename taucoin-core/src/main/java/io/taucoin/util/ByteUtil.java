@@ -8,11 +8,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import io.taucoin.param.ChainParam;
 
 public class ByteUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger("ByteUtil");
 
     public static final long EMPTY_STRING_TO_ALL = 0;
     public static final ArrayList<Long> EMPTY_STRING_TO_ALLALL = new ArrayList<Long>(0);
@@ -39,20 +43,6 @@ public class ByteUtil {
     }
 
     /**
-     * Converts a long value into a byte array.
-     *
-     * @param val - long value to convert
-     * @return decimal value with leading byte that are zeroes striped
-     */
-    public static byte[] longToBytesNoLeadZeroes(long val) {
-
-        // todo: improve performance by while strip numbers until (long >> 8 == 0)
-        byte[] data = ByteBuffer.allocate(8).putLong(val).array();
-
-        return stripLeadingZeroes(data);
-    }
-
-    /**
      * Converts a long array list into a byte array.
      *
      * @param array - long arraylist to convert
@@ -61,8 +51,10 @@ public class ByteUtil {
      */
     public static byte[] longArrayToBytes(ArrayList<Long> longArray, int byteLength) {
         if (null == longArray) {
+            logger.error("ByteUtil longArrayToBytes null");
             return null;            
         }
+
         byte[] byteArray = new byte[byteLength];
 
         int count = 0;
@@ -102,18 +94,6 @@ public class ByteUtil {
         byte[] data = ByteBuffer.allocate(Constants.LongTypeLength).putLong(val).array();
         byte[] retval = new byte[n];
         System.arraycopy(data, Constants.LongTypeLength - n, retval, 0, n);
-        return retval;
-    }
-
-    /**
-     * padding 4 bytes to hash.
-     * @param val
-     * @return
-     */
-    public static byte[] keep4bytesOfLong(long val){
-        byte[] data = ByteBuffer.allocate(8).putLong(val).array();
-        byte[] retval = new byte[4];
-        System.arraycopy(data, 4, retval, 0, 4);
         return retval;
     }
 
@@ -260,13 +240,15 @@ public class ByteUtil {
     public static ArrayList<Long> byteArrayToSignLongArray(byte[] b, int piece){
         ArrayList<Long> retval = new ArrayList<>();
         if ((null == b) || (b.length < (8 * piece))) {
+            logger.error("ByteUtil byteArrayToSignLongArray null");
             for(int i = 0; i < piece; i++) {
                 retval.add(EMPTY_STRING_TO_ALL);
             }
             return retval;
         }
+
         byte[] slice = new byte[8];
-        for(int i = 0;i <piece;++i){
+        for(int i = 0; i < piece; ++i){
            System.arraycopy(b,8*i,slice,0,8);
            retval.add(byteArrayToSignLong(slice));
         }
@@ -281,9 +263,15 @@ public class ByteUtil {
      */
     public static ArrayList<Long> unAlignByteArrayToSignLongArray(byte[] b, int piece){
         ArrayList<Long> retval = new ArrayList<>();
+
         if (null == b) {
-            return null;
+            logger.error("ByteUtil unAlignByteArrayToSignLongArray null");
+            for(int i = 0; i < piece; i++) {
+                retval.add(EMPTY_STRING_TO_ALL);
+            }
+            return retval;
         }
+
         byte[] temp = new byte[8 * piece];
         int alignCount = piece - 1;
         byte[] zero = new byte[8 * piece - b.length];
@@ -330,14 +318,16 @@ public class ByteUtil {
     public static ArrayList<Long> stringToLongArrayList(String str){
         ArrayList<Long> ret = new ArrayList<>();
         if (null == str) {
+            logger.error("ByteUtil stringToLongArrayList 1 null");
             ret.add(EMPTY_STRING_TO_ALL);
             return ret;
         }
         int start = str.indexOf("'");
         int end  = str.lastIndexOf("'");
         if((-1 == start)||(-1 == end)) {
+            logger.error("ByteUtil stringToLongArrayList 2 null");
             ret.add(EMPTY_STRING_TO_ALL);
-            return null;
+            return ret;
         }
         String newStr = str.substring(start, end + 1);
         String[] strArr = newStr.split(",");
@@ -356,6 +346,7 @@ public class ByteUtil {
         //],
         ArrayList<ArrayList<Long>> ret = new ArrayList<>();
         if (null == str) {
+            logger.error("ByteUtil stringToLong2ArrayList null");
             ret.add(EMPTY_STRING_TO_ALLALL);
             return ret;
         }
@@ -389,67 +380,6 @@ public class ByteUtil {
         String retVal = Integer.toString(value & 0xFF, 16);
         if (retVal.length() == 1) retVal = "0" + retVal;
         return retVal;
-    }
-
-    /**
-     * @param arg - not more that 32 bits
-     * @return - bytes of the value pad with complete to 32 zeroes
-     */
-    public static byte[] encodeValFor32Bits(Object arg) {
-
-        byte[] data;
-
-        // check if the string is numeric
-        if (arg.toString().trim().matches("-?\\d+(\\.\\d+)?"))
-            data = new BigInteger(arg.toString().trim()).toByteArray();
-            // check if it's hex number
-        else if (arg.toString().trim().matches("0[xX][0-9a-fA-F]+"))
-            data = new BigInteger(arg.toString().trim().substring(2), 16).toByteArray();
-        else
-            data = arg.toString().trim().getBytes();
-
-
-        if (data.length > 32)
-            throw new RuntimeException("values can't be more than 32 byte");
-
-        byte[] val = new byte[32];
-
-        int j = 0;
-        for (int i = data.length; i > 0; --i) {
-            val[31 - j] = data[i - 1];
-            ++j;
-        }
-        return val;
-    }
-
-    public static int firstNonZeroByte(byte[] data) {
-        for (int i = 0; i < data.length; ++i) {
-            if (data[i] != 0) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public static byte[] stripLeadingZeroes(byte[] data) {
-
-        if (data == null)
-            return null;
-
-        final int firstNonZero = firstNonZeroByte(data);
-        switch (firstNonZero) {
-            case -1:
-                return ZERO_BYTE_ARRAY;
-
-            case 0:
-                return data;
-
-            default:
-                byte[] result = new byte[data.length - firstNonZero];
-                System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
-
-                return result;
-        }
     }
 
     public static ByteArrayWrapper wrap(byte[] data) {
@@ -521,33 +451,6 @@ public class ByteUtil {
             result += (array == null) ? 0 : array.length;
         }
         return result;
-    }
-
-    /**
-     * Converts 4 bytes IPv4 IP to String representation
-     */
-    public static String bytesToIp(byte[] bytesIp) {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(bytesIp[0] & 0xFF);
-        sb.append(".");
-        sb.append(bytesIp[1] & 0xFF);
-        sb.append(".");
-        sb.append(bytesIp[2] & 0xFF);
-        sb.append(".");
-        sb.append(bytesIp[3] & 0xFF);
-
-        String ip = sb.toString();
-        return ip;
-    }
-
-    /**
-     * Remove hex string prefix '0x'
-     */
-    public static String removeHexPrefix(String data) {
-        if (data.substring(0, 2).equals("0x"))
-            return data.substring(2);
-        return data;
     }
 
     /**

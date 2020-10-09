@@ -173,6 +173,11 @@ public class GenesisTx extends Transaction {
         } else {
             Entry entry = Entry.bdecode(this.encodedBytes);
             List<Entry> entrylist = entry.list();
+
+            if(entrylist.size() != (TxIndex.TxData.ordinal() + 1)) {
+                logger.error("GenesisTx decoded entry size error {}", entrylist.size());
+            }
+
             try {
                 this.version = entrylist.get(TxIndex.Version.ordinal()).integer();
                 this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString().replace("'","");
