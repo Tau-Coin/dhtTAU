@@ -27,10 +27,12 @@ public class dht_putTauGenesisBlockHashInDemand extends JsonRpcServerMethod {
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
         byte[] encode = ByteUtil.getHashEncoded(Hex.decode("9738450c31228d0e4b8c29e4677515e30c2e64e6"));
         byte[] salt = Chains.makeBlockDemandSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
-        DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second, encode, salt);
-        TorrentDHTEngine.getInstance().dhtPut(mutableItem);
-
-        JSONRPC2Response response = new JSONRPC2Response("ok", req.getID());
-        return response;
+        if (null != encode) {
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second, encode, salt);
+            TorrentDHTEngine.getInstance().dhtPut(mutableItem);
+            return new JSONRPC2Response("ok", req.getID());
+        } else {
+            return new JSONRPC2Response("Null", req.getID());
+        }
     }
 }

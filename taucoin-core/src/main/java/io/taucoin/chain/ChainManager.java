@@ -319,9 +319,12 @@ public class ChainManager {
             // put mutable item
             byte[] blockSalt = Chains.makeBlockTipSalt(chainID);
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
-            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                    ByteUtil.getHashEncoded(blockContainer.getBlock().getBlockHash()), blockSalt);
-            TorrentDHTEngine.getInstance().distribute(mutableItem);
+            byte[] encode = ByteUtil.getHashEncoded(blockContainer.getBlock().getBlockHash());
+            if (null != encode) {
+                DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
+                        encode, blockSalt);
+                TorrentDHTEngine.getInstance().distribute(mutableItem);
+            }
         }
     }
 

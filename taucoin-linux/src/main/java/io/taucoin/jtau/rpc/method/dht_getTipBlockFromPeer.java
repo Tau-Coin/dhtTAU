@@ -50,7 +50,11 @@ public class dht_getTipBlockFromPeer extends JsonRpcServerMethod {
             } else {
                 try {
                     byte[] hash = ByteUtil.getHashFromEncode(item);
-                    result = "Hash: " + Hex.toHexString(hash);
+                    if (null != hash) {
+                        result = "Hash: " + Hex.toHexString(hash);
+                    } else {
+                        result = "empty";
+                    }
                 } catch (Exception e) {
                     result = e.toString();
                     e.printStackTrace();

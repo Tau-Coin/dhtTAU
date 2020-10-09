@@ -285,9 +285,13 @@ public class ByteUtil {
      * @return encoded hash
      */
     public static byte[] getHashEncoded(byte[] hash) {
-        List<Long> list = ByteUtil.unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
-        Entry entry = Entry.fromList(list);
-        return entry.bencode();
+        List<Long> list = unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
+        if (null != list) {
+            Entry entry = Entry.fromList(list);
+            return entry.bencode();
+        } else {
+            return null;
+        }
     }
 
     /**

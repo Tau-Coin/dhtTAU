@@ -22,7 +22,14 @@ public class HashList {
         this.hashList = new ArrayList<>();
         if (null != entryList) {
             for (Entry entryItem: entryList) {
-                this.hashList.add(ByteUtil.longArrayToBytes(ByteUtil.stringToLongArrayList(entryItem.toString()), ChainParam.HashLength));
+                ArrayList<Long> list = ByteUtil.stringToLongArrayList(entryItem.toString());
+                if (null != list) {
+                    byte[] hash = ByteUtil.longArrayToBytes(list, ChainParam.HashLength);
+                    if (null != hash) {
+                        this.hashList.add(hash);
+                    }
+                }
+//                this.hashList.add(ByteUtil.longArrayToBytes(ByteUtil.stringToLongArrayList(entryItem.toString()), ChainParam.HashLength));
             }
         }
     }
@@ -35,7 +42,12 @@ public class HashList {
         List list = new ArrayList();
         if (null != this.hashList) {
             for (byte[] hash: this.hashList) {
-                list.add(ByteUtil.unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength));
+                ArrayList<Long> longList = ByteUtil.unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
+                if (null != longList) {
+                    list.add(longList);
+                } else {
+                    return null;
+                }
             }
         }
         Entry entry = Entry.fromList(list);

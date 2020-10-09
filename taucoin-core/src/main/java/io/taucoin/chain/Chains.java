@@ -2087,9 +2087,12 @@ public class Chains implements DHT.GetDHTItemCallback{
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
         byte[] salt = makeBlockDemandSalt(chainID.getData());
-        DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
-                keyPair.second, ByteUtil.getHashEncoded(blockHash), salt);
-        TorrentDHTEngine.getInstance().distribute(mutableItem);
+        byte[] encode = ByteUtil.getHashEncoded(blockHash);
+        if (null != encode) {
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
+                    keyPair.second, encode, salt);
+            TorrentDHTEngine.getInstance().distribute(mutableItem);
+        }
     }
 
     /**
@@ -2103,9 +2106,12 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         byte[] salt = makeBlockResponseSalt(chainID.getData(), blockHash);
         HashList hashList = new HashList(list);
-        DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
-                keyPair.second, hashList.getEncoded(), salt);
-        TorrentDHTEngine.getInstance().distribute(mutableItem);
+        byte[] encode = hashList.getEncoded();
+        if (null != encode) {
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
+                    keyPair.second, encode, salt);
+            TorrentDHTEngine.getInstance().distribute(mutableItem);
+        }
     }
 
     /**
@@ -2118,9 +2124,12 @@ public class Chains implements DHT.GetDHTItemCallback{
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
         byte[] salt = makeTxDemandSalt(chainID.getData());
-        DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
-                keyPair.second, ByteUtil.getHashEncoded(txHash), salt);
-        TorrentDHTEngine.getInstance().distribute(mutableItem);
+        byte[] encode = ByteUtil.getHashEncoded(txHash);
+        if (null != encode) {
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
+                    keyPair.second, encode, salt);
+            TorrentDHTEngine.getInstance().distribute(mutableItem);
+        }
     }
 
     /**
@@ -2167,10 +2176,12 @@ public class Chains implements DHT.GetDHTItemCallback{
             // put mutable item
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
             byte[] salt = this.blockTipSalts.get(chainID);
-            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                    ByteUtil.getHashEncoded(bestBlockContainer.getBlock().getBlockHash()), salt);
-
-            TorrentDHTEngine.getInstance().distribute(mutableItem);
+            byte[] encode = ByteUtil.getHashEncoded(bestBlockContainer.getBlock().getBlockHash());
+            if (null != encode) {
+                DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
+                        encode, salt);
+                TorrentDHTEngine.getInstance().distribute(mutableItem);
+            }
         }
     }
 
@@ -2202,9 +2213,12 @@ public class Chains implements DHT.GetDHTItemCallback{
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
             byte[] salt = this.txTipSalts.get(chainID);
-            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                    ByteUtil.getHashEncoded(tx.getTxID()), salt);
-            TorrentDHTEngine.getInstance().distribute(mutableItem);
+            byte[] encode = ByteUtil.getHashEncoded(tx.getTxID());
+            if (null != encode) {
+                DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
+                        encode, salt);
+                TorrentDHTEngine.getInstance().distribute(mutableItem);
+            }
         }
     }
 
@@ -2739,9 +2753,11 @@ public class Chains implements DHT.GetDHTItemCallback{
                         dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
-                logger.debug("Request tip block hash[{}] from peer[{}]", Hex.toHexString(hash),
-                        dataIdentifier.getHash().toString());
-                requestBlockForMining(dataIdentifier.getChainID(), hash);
+                if (null != hash) {
+                    logger.debug("Request tip block hash[{}] from peer[{}]", Hex.toHexString(hash),
+                            dataIdentifier.getHash().toString());
+                    requestBlockForMining(dataIdentifier.getChainID(), hash);
+                }
 
                 break;
             }
@@ -2878,8 +2894,10 @@ public class Chains implements DHT.GetDHTItemCallback{
                         dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
-                logger.debug("Got a demand block hash:{}", Hex.toHexString(hash));
-                requestBlockDemand(dataIdentifier.getChainID(), hash);
+                if (null != hash) {
+                    logger.debug("Got a demand block hash:{}", Hex.toHexString(hash));
+                    requestBlockDemand(dataIdentifier.getChainID(), hash);
+                }
 
                 break;
             }
@@ -2890,8 +2908,10 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
-                logger.debug("Got a demand tx hash:{}", Hex.toHexString(hash));
-                requestTxDemand(dataIdentifier.getChainID(), hash);
+                if (null != hash) {
+                    logger.debug("Got a demand tx hash:{}", Hex.toHexString(hash));
+                    requestTxDemand(dataIdentifier.getChainID(), hash);
+                }
 
                 break;
             }
@@ -2902,7 +2922,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
-                requestBlockForVoting(dataIdentifier.getChainID(), hash);
+                if (null != hash) {
+                    requestBlockForVoting(dataIdentifier.getChainID(), hash);
+                }
 
                 break;
             }
@@ -2926,7 +2948,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 byte[] hash = ByteUtil.getHashFromEncode(item);
-                requestTxForPool(dataIdentifier.getChainID(), hash);
+                if (null != hash) {
+                    requestTxForPool(dataIdentifier.getChainID(), hash);
+                }
 
                 break;
             }
