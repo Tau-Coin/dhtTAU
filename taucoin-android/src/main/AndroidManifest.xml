@@ -149,11 +149,15 @@
         </provider>
 
         <activity
-            android:name=".ui.user.UserQRCodeActivity"
+            android:name=".ui.qrcode.CommunityQRCodeActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.user.ScanQRCodeActivity"
+            android:name=".ui.qrcode.UserQRCodeActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <activity
+            android:name=".ui.qrcode.ScanQRCodeActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity

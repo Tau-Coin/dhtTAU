@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="0dp"
             android:layout_marginEnd="0dp"
-            android:text="@string/setting_telecom_data"
+            android:text="@string/setting_metered_limit_select_tips"
             android:gravity="center_horizontal"
             android:textAppearance="@style/TextAppearanceBody1" />
 

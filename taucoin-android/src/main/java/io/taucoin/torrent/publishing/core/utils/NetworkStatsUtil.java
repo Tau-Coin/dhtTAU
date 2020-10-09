@@ -9,7 +9,6 @@ import android.content.pm.PackageInfo;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.provider.Settings;
-import android.text.format.Formatter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

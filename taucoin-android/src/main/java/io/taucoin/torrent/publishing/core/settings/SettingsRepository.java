@@ -1,5 +1,7 @@
 package io.taucoin.torrent.publishing.core.settings;
 
+import java.util.List;
+
 import io.reactivex.Flowable;
 
 /**
@@ -35,30 +37,6 @@ public interface SettingsRepository {
      * @param val 是否开启
      */
     void serverMode(boolean val);
-
-    /**
-     * 只能wifi环境下运行
-     * @return boolean 是否开启
-     */
-    boolean wifiOnly();
-
-    /**
-     * 设置使用电信数据结束时间
-     * @param time 结束时间
-     */
-    void telecomDataEndTime(long time);
-
-    /**
-     * 使用电信数据结束时间
-     * @return long 结束时间
-     */
-    long telecomDataEndTime();
-
-    /**
-     * 设置只能wifi环境下运行
-     * @param val 是否开启
-     */
-    void wifiOnly(boolean val);
 
     /**
      * 设置充电状态
@@ -137,7 +115,19 @@ public interface SettingsRepository {
      */
     void setNeedPromptUser(boolean isNeed);
 
-    long getValue(String key);
+    long getLongValue(String key);
 
-    void setValue(String key, long value);
+    long getLongValue(String key, long defValue);
+
+    void setLongValue(String key, long value);
+
+    boolean getBooleanValue(String key);
+
+    boolean getBooleanValue(String key, boolean defValue);
+
+    void setBooleanValue(String key, boolean value);
+
+    <T> void setListData(String key, List<T> list);
+
+    <T> List<T> getListData(String key, Class<T> cls);
 }

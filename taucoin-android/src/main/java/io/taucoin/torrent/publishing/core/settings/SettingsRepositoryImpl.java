@@ -4,6 +4,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
@@ -11,6 +19,7 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposables;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 
 /**
  * SettingsRepository: 用户设置的接口的实现
@@ -19,7 +28,6 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     private static class Default {
         static final boolean bootStart = true;
         static final boolean serverMode = false;
-        static final boolean wifiOnly = true;
         static final boolean chargingState = false;
         static final boolean internetState = false;
         static final boolean wakeLock = false;
@@ -76,30 +84,6 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     @Override
     public void serverMode(boolean val) {
         pref.edit().putBoolean(appContext.getString(R.string.pref_key_server_mode),val)
-                .apply();
-    }
-
-    @Override
-    public boolean wifiOnly() {
-        return pref.getBoolean(appContext.getString(R.string.pref_key_wifi_only),
-                Default.wifiOnly);
-    }
-
-    @Override
-    public void telecomDataEndTime(long time) {
-        pref.edit().putLong(appContext.getString(R.string.pref_key_telecom_data_end_time), time)
-                .apply();
-    }
-
-    @Override
-    public long telecomDataEndTime() {
-        return pref.getLong(appContext.getString(R.string.pref_key_telecom_data_end_time),
-                0);
-    }
-
-    @Override
-    public void wifiOnly(boolean val) {
-        pref.edit().putBoolean(appContext.getString(R.string.pref_key_wifi_only),val)
                 .apply();
     }
 
@@ -191,13 +175,62 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     }
 
     @Override
-    public long getValue(String key) {
+    public long getLongValue(String key) {
         return pref.getLong(key, 0);
     }
 
     @Override
-    public void setValue(String key, long value) {
+    public long getLongValue(String key, long defValue) {
+        return pref.getLong(key, defValue);
+    }
+
+    @Override
+    public void setLongValue(String key, long value) {
         pref.edit().putLong(key, value)
                 .apply();
+    }
+
+    @Override
+    public boolean getBooleanValue(String key) {
+        return pref.getBoolean(key, false);
+    }
+
+    @Override
+    public boolean getBooleanValue(String key, boolean defValue) {
+        return pref.getBoolean(key, defValue);
+    }
+
+    @Override
+    public void setBooleanValue(String key, boolean value) {
+        pref.edit().putBoolean(key, value)
+                .apply();
+    }
+
+    @Override
+    public <T> void setListData(String key, List<T> list) {
+        try {
+            Gson gson = new Gson();
+            String jsonArray = gson.toJson(list);
+            pref.edit().putString(key, jsonArray)
+                    .apply();
+        } catch (Exception ignore) {
+        }
+    }
+
+    @Override
+    public <T> List<T> getListData(String key, Class<T> cls) {
+        List<T> list = new ArrayList<>();
+        String jsonStr = pref.getString(key, "");
+        if (StringUtil.isNotEmpty(jsonStr)) {
+            try {
+                Gson gson = new Gson();
+                JsonArray array = JsonParser.parseString(jsonStr).getAsJsonArray();
+                for (JsonElement elem : array) {
+                    list.add(gson.fromJson(elem, cls));
+                }
+            } catch (Exception ignore) {
+            }
+        }
+        return list;
     }
 }

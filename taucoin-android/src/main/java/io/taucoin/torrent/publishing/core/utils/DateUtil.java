@@ -281,4 +281,27 @@ public class DateUtil {
             return weeks[weekIndex];
         }
     }
+
+    /**
+     * 得到今天剩余秒数
+     * @return
+     */
+    public static int getTodayLastSeconds(){
+        format.applyPattern(pattern4);
+        TimeZone timeZone = TimeZone.getDefault();
+        format.setTimeZone(timeZone);
+        String today = format.format(new Date());
+        // 得到今天 晚上的最后一刻 最后时间
+        String last = today + " 23:59:59";
+        format.applyPattern(pattern6);
+        try {
+            // 转换为今天
+            Date latDate = format.parse(last);
+            // 得到的毫秒 除以1000转换 为秒
+            return (int)(latDate.getTime() - System.currentTimeMillis()) / 1000;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }
