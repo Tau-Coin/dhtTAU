@@ -45,6 +45,7 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         txViewModel = provider.get(TxViewModel.class);
+        txViewModel.observeNeedStartDaemon();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_transaction_create);
         binding.setListener(this);
         initParameter();

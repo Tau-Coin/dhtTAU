@@ -45,6 +45,7 @@ public class CommunityCreateActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         viewModel = provider.get(CommunityViewModel.class);
+        viewModel.observeNeedStartDaemon();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_community_create);
         initLayout();
         observeAddCommunityState();

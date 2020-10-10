@@ -40,6 +40,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
@@ -61,6 +62,7 @@ public class CommunityViewModel extends AndroidViewModel {
     private MemberRepository memberRepo;
     private UserRepository userRepo;
     private TauDaemon daemon;
+    private Disposable observeDaemonRunning;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<Result> addCommunityState = new MutableLiveData<>();
     private MutableLiveData<Boolean> setBlacklistState = new MutableLiveData<>();
@@ -76,7 +78,14 @@ public class CommunityViewModel extends AndroidViewModel {
         daemon = TauDaemon.getInstance(getApplication());
     }
 
-    public MutableLiveData<List<Community>> getJoinedList() {
+    public void observeNeedStartDaemon () {
+        disposables.add(daemon.observeNeedStartDaemon()
+                .subscribeOn(Schedulers.io())
+                .filter((needStart) -> needStart)
+                .subscribe((needStart) -> daemon.start()));
+    }
+
+    MutableLiveData<List<Community>> getJoinedList() {
         return joinedList;
     }
 
@@ -155,6 +164,22 @@ public class CommunityViewModel extends AndroidViewModel {
      * @param community 社区数据
      */
     void addCommunity(@NonNull Community community, GenesisConfig cf){
+        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+            return;
+        }
+        observeDaemonRunning = daemon.observeDaemonRunning()
+            .subscribeOn(Schedulers.io())
+            .subscribe((isRunning) -> {
+                if (isRunning) {
+                    newCommunity(community, cf);
+                    if (observeDaemonRunning != null) {
+                        observeDaemonRunning.dispose();
+                    }
+                }
+            });
+    }
+
+    private void newCommunity(@NonNull Community community, GenesisConfig cf){
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             // TauController:创建Community社区
             Result result = createCommunity(community, cf);
@@ -193,6 +218,9 @@ public class CommunityViewModel extends AndroidViewModel {
     protected void onCleared() {
         super.onCleared();
         disposables.clear();
+        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+            observeDaemonRunning.dispose();
+        }
     }
 
     /**
@@ -215,8 +243,31 @@ public class CommunityViewModel extends AndroidViewModel {
      * @param blacklist 是否加入黑名单
      */
     public void setCommunityBlacklist(String chainID, boolean blacklist) {
+        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+            return;
+        }
+        observeDaemonRunning = daemon.observeDaemonRunning()
+                .subscribeOn(Schedulers.io())
+                .subscribe((isRunning) -> {
+                    if (isRunning) {
+                        setCommunityBlacklistTask(chainID, blacklist);
+                        if (observeDaemonRunning != null) {
+                            observeDaemonRunning.dispose();
+                        }
+                    }
+                });
+    }
+
+    private void setCommunityBlacklistTask(String chainID, boolean blacklist) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             communityRepo.setCommunityBlacklist(chainID, blacklist);
+            if (blacklist) {
+                daemon.unfollowCommunity(chainID);
+            } else {
+                List<String> list = queryCommunityMembersLimit(chainID, Constants.CHAIN_LINK_BS_LIMIT);
+                String communityInviteLink = ChainLinkUtil.encode(chainID, list);
+                daemon.followCommunity(communityInviteLink);
+            }
             emitter.onNext(true);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -272,6 +323,22 @@ public class CommunityViewModel extends AndroidViewModel {
      * @param friendPk friend's PK
      */
     public void createChat(TxViewModel txViewModel, String chatName, String friendPk) {
+        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+            return;
+        }
+        observeDaemonRunning = daemon.observeDaemonRunning()
+                .subscribeOn(Schedulers.io())
+                .subscribe((isRunning) -> {
+                    if (isRunning) {
+                        createNewChat(txViewModel, chatName, friendPk);
+                        if (observeDaemonRunning != null) {
+                            observeDaemonRunning.dispose();
+                        }
+                    }
+                });
+    }
+
+    private void createNewChat(TxViewModel txViewModel, String chatName, String friendPk) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
@@ -333,6 +400,10 @@ public class CommunityViewModel extends AndroidViewModel {
      */
     public Single<List<String>> getCommunityMembersLimit(String chainID, int limit) {
         return memberRepo.getCommunityMembersLimit(chainID, limit);
+    }
+
+    public List<String> queryCommunityMembersLimit(String chainID, int limit) {
+        return memberRepo.queryCommunityMembersLimit(chainID, limit);
     }
 
     /**

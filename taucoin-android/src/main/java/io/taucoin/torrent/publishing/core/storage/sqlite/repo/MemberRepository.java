@@ -56,6 +56,8 @@ public interface MemberRepository {
      */
     Single<List<String>> getCommunityMembersLimit(String chainID, int limit);
 
+    List<String> queryCommunityMembersLimit(String chainID, int limit);
+
     /**
      * 获取社区成员统计
      * @param chainID

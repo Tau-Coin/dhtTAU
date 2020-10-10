@@ -104,6 +104,9 @@ public interface MemberDao {
     @Query(QUERY_COMMUNITY_MEMBERS_LIMIT)
     Single<List<String>> getCommunityMembersLimit(String chainID, int limit);
 
+    @Query(QUERY_COMMUNITY_MEMBERS_LIMIT)
+    List<String> queryCommunityMembersLimit(String chainID, int limit);
+
     @Query(QUERY_MEMBERS_STATISTICS)
     Flowable<Statistics> getMembersStatistics(String chainID);
 

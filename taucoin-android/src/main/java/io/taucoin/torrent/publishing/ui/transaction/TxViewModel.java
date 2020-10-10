@@ -17,7 +17,6 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.paging.DataSource;
 import androidx.paging.LivePagedListBuilder;
 import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
@@ -70,6 +69,7 @@ public class TxViewModel extends AndroidViewModel {
     private SettingsRepository settingsRepo;
     private TauDaemon daemon;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private Disposable observeDaemonRunning;
     private MutableLiveData<List<UserAndTx>> chainTxs = new MutableLiveData<>();
     private MutableLiveData<String> airdropState = new MutableLiveData<>();
     private MutableLiveData<String> addState = new MutableLiveData<>();
@@ -86,7 +86,14 @@ public class TxViewModel extends AndroidViewModel {
         txSourceFactory = new TxSourceFactory(txRepo);
     }
 
-    public MutableLiveData<String> getAddState() {
+    public void observeNeedStartDaemon () {
+        disposables.add(daemon.observeNeedStartDaemon()
+                .subscribeOn(Schedulers.io())
+                .filter((needStart) -> needStart)
+                .subscribe((needStart) -> daemon.start()));
+    }
+
+    MutableLiveData<String> getAddState() {
         return addState;
     }
 
@@ -108,6 +115,9 @@ public class TxViewModel extends AndroidViewModel {
         disposables.clear();
         if(editFeeDialog != null){
             editFeeDialog.closeDialog();
+        }
+        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+            observeDaemonRunning.dispose();
         }
     }
 
@@ -132,6 +142,22 @@ public class TxViewModel extends AndroidViewModel {
      * @param tx 根据用户输入构建的用户数据
      */
     void addTransaction(Tx tx) {
+        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+            return;
+        }
+        observeDaemonRunning = daemon.observeDaemonRunning()
+                .subscribeOn(Schedulers.io())
+                .subscribe((isRunning) -> {
+                    if (isRunning) {
+                        addTransactionTask(tx);
+                        if (observeDaemonRunning != null) {
+                            observeDaemonRunning.dispose();
+                        }
+                    }
+                });
+    }
+
+    private void addTransactionTask(Tx tx) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String result = createTransaction(tx);
             emitter.onNext(result);
@@ -175,8 +201,8 @@ public class TxViewModel extends AndroidViewModel {
                 transaction = new WiringCoinsTx(1, chainID, timestamp, tx.fee, tx.txType, senderPk,
                         nonce, receiverPk, tx.amount, tx.memo);
             } else {
-                // TODO: DHT PUT
-                byte[] forumNoteHash = new byte[24];
+                // DHT PUT
+                byte[] forumNoteHash = daemon.putForumNote(tx.memo);
                 transaction = new ForumNoteTx(1, chainID, timestamp, tx.fee, tx.txType,
                         senderPk, nonce, forumNoteHash);
             }
@@ -342,6 +368,23 @@ public class TxViewModel extends AndroidViewModel {
      * @param friendPks
      */
     public void airdropToFriends(String chainID, List<String> friendPks, long medianFee) {
+        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+            return;
+        }
+        observeDaemonRunning = daemon.observeDaemonRunning()
+                .subscribeOn(Schedulers.io())
+                .subscribe((isRunning) -> {
+                    if (isRunning) {
+                        airdropToFriendsTask(chainID, friendPks, medianFee);
+                        if (observeDaemonRunning != null) {
+                            observeDaemonRunning.dispose();
+                        }
+                    }
+                });
+
+    }
+
+    private void airdropToFriendsTask(String chainID, List<String> friendPks, long medianFee) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String result = "";
             try {

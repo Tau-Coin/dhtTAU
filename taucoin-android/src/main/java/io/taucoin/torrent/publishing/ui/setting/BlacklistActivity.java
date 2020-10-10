@@ -38,6 +38,7 @@ public class BlacklistActivity extends BaseActivity {
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
         communityViewModel = provider.get(CommunityViewModel.class);
+        communityViewModel.observeNeedStartDaemon();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_blacklist);
         initParameter();
         initView();

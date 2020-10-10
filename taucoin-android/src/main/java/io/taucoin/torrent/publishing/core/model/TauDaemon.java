@@ -26,6 +26,7 @@ import io.taucoin.core.AccountState;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.SessionStats;
+import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -175,7 +176,7 @@ public class TauDaemon {
     /**
      * 观察Daemon是否是在运行
      */
-    private Flowable<Boolean> observeDaemonRunning() {
+    public Flowable<Boolean> observeDaemonRunning() {
         return Flowable.create((emitter) -> {
             if (emitter.isCancelled())
                 return;
@@ -436,10 +437,11 @@ public class TauDaemon {
      */
     public void createNewCommunity(GenesisConfig cf) {
         if (isRunning) {
-            getChainManager().createNewCommunity(cf);
-            logger.info("createNewCommunity CommunityName::{}, chainID::{}",
+            boolean isSuccess = getChainManager().createNewCommunity(cf);
+            logger.info("createNewCommunity CommunityName::{}, chainID::{}, isSuccess::{}",
                     cf.getCommunityName(),
-                    Utils.toUTF8String(cf.getChainID()));
+                    Utils.toUTF8String(cf.getChainID()),
+                    isSuccess);
         }
     }
 
@@ -489,8 +491,9 @@ public class TauDaemon {
         if (isRunning) {
             ChainLinkUtil.ChainLink decode = ChainLinkUtil.decode(chainLink);
             if (decode.isValid()) {
-                getChainManager().followChain(decode.getBytesDn(), decode.getBytesBootstraps());
-                logger.info("followCommunity chainLink::{}", chainLink);
+                boolean isSuccess = tauController.followChain(decode.getBytesDn(),
+                        decode.getBytesBootstraps());
+                logger.info("followCommunity chainLink::{}, isSuccess::{}", chainLink, isSuccess);
             }
         }
     }
@@ -501,8 +504,18 @@ public class TauDaemon {
      */
     public void unfollowCommunity(String chainID) {
         if (isRunning) {
-            getChainManager().unfollowChain(chainID.getBytes());
-            logger.info("unfollowCommunity chainID::{}", chainID);
+            boolean isSuccess = tauController.unfollowChain(chainID.getBytes());
+            logger.info("unfollowChain chainID::{}, isSuccess::{}", chainID, isSuccess);
         }
+    }
+
+    /**
+     *
+     * @param memo
+     * @return
+     */
+    public byte[] putForumNote(String memo) {
+        if (isRunning) { }
+        return new byte[20];
     }
 }

@@ -46,6 +46,7 @@ public class MembersActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);
+        communityViewModel.observeNeedStartDaemon();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_members);
         initParameter();
         initLayout();

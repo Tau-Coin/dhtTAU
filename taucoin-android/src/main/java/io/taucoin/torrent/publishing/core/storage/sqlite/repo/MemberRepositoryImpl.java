@@ -102,6 +102,11 @@ public class MemberRepositoryImpl implements MemberRepository{
     }
 
     @Override
+    public List<String> queryCommunityMembersLimit(String chainID, int limit) {
+        return db.memberDao().queryCommunityMembersLimit(chainID, limit);
+    }
+
+    @Override
     public Flowable<Statistics> getMembersStatistics(String chainID){
         return db.memberDao().getMembersStatistics(chainID);
     }
