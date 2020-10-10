@@ -211,6 +211,10 @@ public class GenesisTx extends Transaction {
             GenesisItem value = genesisMsg.get(key);
 
             // key -> arraylist
+            // Check
+            if(key.getData().length != ChainParam.PubkeyLength) {
+                throw new IllegalArgumentException("Genesis key be : "+ChainParam.PubkeyLength + " bytes");
+            }
             ArrayList<Long> account = ByteUtil.byteArrayToSignLongArray(key.getData(), ChainParam.PubkeyLongArrayLength);
             account.add(value.getBalance().longValue());
             account.add(value.getPower().longValue());
@@ -231,8 +235,11 @@ public class GenesisTx extends Transaction {
 
         if(txType != TypesConfig.TxType.GenesisType.ordinal()) {
             logger.error("Genesis msg transaction append error, tx type is {}", txType);
-        } 
-
+        }
+        // Check
+        if(pubkey.getData().length != ChainParam.PubkeyLength) {
+            throw new IllegalArgumentException("Genesis key be : "+ChainParam.PubkeyLength + " bytes");
+        }
         ArrayList<Long> account = ByteUtil.byteArrayToSignLongArray(pubkey.getData(), ChainParam.PubkeyLongArrayLength);
         account.add(item.getBalance().longValue());
         account.add(item.getPower().longValue());

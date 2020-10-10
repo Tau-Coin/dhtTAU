@@ -99,11 +99,18 @@ public class Block {
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, byte[] txHash, long minerBalance, long senderBalance,
                  long receiverBalance, long senderNonce, byte[] signature,byte[] minerPubkey){
+        // Check
         if (previousBlockHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("Previous block hash should be : " + ChainParam.HashLength + " bytes");
         }
         if (immutableBlockHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("Immutable block hash should be : " + ChainParam.HashLength + " bytes");
+        }
+        if (generationSignature.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("GenerationSignature should be : " + ChainParam.HashLength + " bytes");
+        }
+        if (txHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Txhash pubkey should be : " + ChainParam.HashLength + " bytes");
         }
         if (signature.length != ChainParam.SignatureLength) {
             throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
@@ -151,12 +158,18 @@ public class Block {
                  byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
                  byte[] generationSignature, byte[] txHash, long minerBalance, long senderBalance,
                  long receiverBalance, long senderNonce,byte[] minerPubkey){
-
+        // Check
         if (previousBlockHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("Previous block hash should be : " + ChainParam.HashLength + " bytes");
         }
         if (immutableBlockHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("Immutable block hash should be : " + ChainParam.HashLength + " bytes");
+        }
+        if (generationSignature.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("GenerationSignature should be : " + ChainParam.HashLength + " bytes");
+        }
+        if (txHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Txhash pubkey should be : " + ChainParam.HashLength + " bytes");
         }
         if (minerPubkey.length != ChainParam.PubkeyLength) {
             throw new IllegalArgumentException("Miner pubkey should be : " + ChainParam.PubkeyLength + " bytes");
@@ -185,6 +198,20 @@ public class Block {
      * @param cf
      */
     public Block(GenesisConfig cf){
+        // Check
+        if (cf.getGenerationSignature().length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("GenerationSignature should be : " + ChainParam.HashLength + " bytes");
+        }
+        if (cf.getGenerationSignature().length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Txhash pubkey should be : " + ChainParam.HashLength + " bytes");
+        }
+        if (cf.getPubkey().length != ChainParam.PubkeyLength) {
+            throw new IllegalArgumentException("Miner pubkey should be : " + ChainParam.PubkeyLength + " bytes");
+        }
+        if (cf.getSignature().length != ChainParam.SignatureLength) {
+            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
+        }
+
         this.version = cf.getVersion();
         this.timestamp = cf.getTimeStamp();
         this.blockNum = 0L;
@@ -198,6 +225,9 @@ public class Block {
 
         // handle tx hash
         byte[] genesisTxHash = cf.getTransaction().getTxID();
+        if (genesisTxHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Txhash pubkey should be : " + ChainParam.HashLength + " bytes");
+        }
         this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(
                 genesisTxHash, ChainParam.HashLongArrayLength);
 

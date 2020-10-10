@@ -55,6 +55,10 @@ public class WiringCoinsTx extends Transaction {
         //父类构造函数
         super(version, chainID, timestamp, txFee, txType, sender, nonce, signature);
 
+        //Check
+        if(receiver.length != ChainParam.SenderLength) {
+            throw new IllegalArgumentException("Receiver should be : " + ChainParam.SenderLength + " bytes");
+        }
         this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
         this.amount = amount;
         this.memo = memo;
@@ -81,6 +85,10 @@ public class WiringCoinsTx extends Transaction {
         //父类构造函数
         super(version, chainID, timestamp, txFee, txType, sender, nonce);
 
+        //Check
+        if(receiver.length != ChainParam.SenderLength) {
+            throw new IllegalArgumentException("Receiver should be : " + ChainParam.SenderLength + " bytes");
+        }
         this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
         this.amount = amount;
         this.memo = memo;
@@ -209,7 +217,11 @@ public class WiringCoinsTx extends Transaction {
     public void setReceiver(byte[] receiver){
         if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Forum note transaction set receiver error, tx type is {}", txType);
-        } 
+        }
+        //Check
+        if(receiver.length != ChainParam.SenderLength) {
+            throw new IllegalArgumentException("Receiver should be : " + ChainParam.SenderLength + " bytes");
+        }
         this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
         encodedBytes = null;
         sigEncodedBytes = null;

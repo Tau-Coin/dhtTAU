@@ -51,6 +51,11 @@ public class ForumNoteTx extends Transaction {
         //父类构造函数
         super(version, chainID, timestamp, txFee, txType, sender, nonce, signature);
 
+        //Check
+        if(forumNoteHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("ForumNoteHashshould be : "+ChainParam.HashLength + " bytes");
+        }
+
         this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
 
         isParsed = true;
@@ -72,7 +77,10 @@ public class ForumNoteTx extends Transaction {
 
         //父类构造函数
         super(version, chainID, timestamp, txFee, txType, sender, nonce);
-
+        //Check
+        if(forumNoteHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("ForumNoteHashshould be : "+ChainParam.HashLength + " bytes");
+        }
         this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
 
         isParsed = true;
@@ -188,7 +196,11 @@ public class ForumNoteTx extends Transaction {
     public void setForumNoteHash(byte[] forumNoteHash){
         if(txType != TypesConfig.TxType.FNoteType.ordinal()) {
             logger.error("Forum note transaction set note error, tx type is {}", txType);
-        } 
+        }
+        //Check
+        if(forumNoteHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("ForumNoteHashshould be : "+ChainParam.HashLength + " bytes");
+        }
         this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
         encodedBytes = null;
         sigEncodedBytes = null;

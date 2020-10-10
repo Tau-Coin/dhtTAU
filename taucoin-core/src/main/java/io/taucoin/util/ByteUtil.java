@@ -17,9 +17,6 @@ import io.taucoin.param.ChainParam;
 public class ByteUtil {
 
     private static final Logger logger = LoggerFactory.getLogger("ByteUtil");
-
-    public static final long EMPTY_STRING_TO_ALL = 0;
-    public static final ArrayList<Long> EMPTY_STRING_TO_ALLALL = new ArrayList<Long>(0);
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
     /**
@@ -285,6 +282,11 @@ public class ByteUtil {
      * @return encoded hash
      */
     public static byte[] getHashEncoded(byte[] hash) {
+
+        if (hash.length != ChainParam.HashLength){
+            throw new IllegalArgumentException("Get hash encoded error");
+        }
+
         List<Long> list = unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
         if (null != list) {
             Entry entry = Entry.fromList(list);
@@ -300,6 +302,11 @@ public class ByteUtil {
      * @return hash
      */
     public static byte[] getHashFromEncode(byte[] encode) {
+
+        if (encode.length < 1){
+            throw new IllegalArgumentException("Get hash from encoded error");
+        }
+
         Entry entry = Entry.bdecode(encode);
         List<Entry> entryList = entry.list();
 
