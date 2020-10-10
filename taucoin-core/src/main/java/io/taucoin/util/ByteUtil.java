@@ -321,13 +321,13 @@ public class ByteUtil {
     public static ArrayList<Long> stringToLongArrayList(String str){
         ArrayList<Long> ret = new ArrayList<>();
         if (null == str) {
-            logger.error("ByteUtil stringToLongArrayList 1 null");
+            logger.error("ByteUtil stringToLongArrayList 1 null, {}", str);
             return null;
         }
         int start = str.indexOf("'");
         int end  = str.lastIndexOf("'");
         if((-1 == start)||(-1 == end)) {
-            logger.error("ByteUtil stringToLongArrayList 2 null");
+            logger.error("ByteUtil stringToLongArrayList 2 null, {}", str);
             return null;
         }
         String newStr = str.substring(start, end + 1);
