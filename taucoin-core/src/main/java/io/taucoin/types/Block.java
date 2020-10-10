@@ -109,9 +109,6 @@ public class Block {
         if (generationSignature.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("GenerationSignature should be : " + ChainParam.HashLength + " bytes");
         }
-        if (txHash.length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Txhash pubkey should be : " + ChainParam.HashLength + " bytes");
-        }
         if (signature.length != ChainParam.SignatureLength) {
             throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
         }
@@ -127,7 +124,11 @@ public class Block {
         this.baseTarget = ByteUtil.byteArrayToLong(baseTarget.toByteArray());
         this.cumulativeDifficulty = ByteUtil.byteArrayToLong(cumulativeDifficulty.toByteArray());
         this.generationSignature = ByteUtil.unAlignByteArrayToSignLongArray(generationSignature, ChainParam.HashLongArrayLength);
-        this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
+        if(txHash != null) {
+            this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
+        } else {
+            this.txHash = null;
+        }
         this.minerBalance = minerBalance;
         this.senderBalance = senderBalance;
         this.receiverBalance = receiverBalance;
@@ -168,9 +169,6 @@ public class Block {
         if (generationSignature.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("GenerationSignature should be : " + ChainParam.HashLength + " bytes");
         }
-        if (txHash.length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Txhash pubkey should be : " + ChainParam.HashLength + " bytes");
-        }
         if (minerPubkey.length != ChainParam.PubkeyLength) {
             throw new IllegalArgumentException("Miner pubkey should be : " + ChainParam.PubkeyLength + " bytes");
         }
@@ -183,7 +181,11 @@ public class Block {
         this.baseTarget = ByteUtil.byteArrayToLong(baseTarget.toByteArray());
         this.cumulativeDifficulty = ByteUtil.byteArrayToLong(cumulativeDifficulty.toByteArray());
         this.generationSignature = ByteUtil.unAlignByteArrayToSignLongArray(generationSignature, ChainParam.HashLongArrayLength);
-        this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
+        if(txHash != null) {
+            this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
+        } else {
+            this.txHash = null;
+        }
         this.minerBalance = minerBalance;
         this.senderBalance = senderBalance;
         this.receiverBalance = receiverBalance;
@@ -225,11 +227,11 @@ public class Block {
 
         // handle tx hash
         byte[] genesisTxHash = cf.getTransaction().getTxID();
-        if (genesisTxHash.length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Txhash pubkey should be : " + ChainParam.HashLength + " bytes");
+        if(txHash != null) {
+            this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(genesisTxHash, ChainParam.HashLongArrayLength);
+        } else {
+            this.txHash = null;
         }
-        this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(
-                genesisTxHash, ChainParam.HashLongArrayLength);
 
         this.minerBalance = 0L;
         this.senderBalance = 0L;
