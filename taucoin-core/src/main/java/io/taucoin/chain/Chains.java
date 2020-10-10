@@ -272,11 +272,11 @@ public class Chains implements DHT.GetDHTItemCallback{
             return true;
         }
 
-        this.blockTipSalts.put(wChainID, makeBlockTipSalt(chainID));
+        this.blockTipSalts.put(wChainID, Salt.makeBlockTipSalt(chainID));
 
 //        this.blockDemandSalts.put(wChainID, makeBlockDemandSalt(chainID));
 
-        this.txTipSalts.put(wChainID, makeTxTipSalt(chainID));
+        this.txTipSalts.put(wChainID, Salt.makeTxTipSalt(chainID));
 
 //        this.txDemandSalts.put(wChainID, makeTxDemandSalt(chainID));
 
@@ -1071,85 +1071,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
-     * make block tip salt
-     * @param chainID chain ID
-     * @return block tip salt
-     */
-    public static byte[] makeBlockTipSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length];
-
-        System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.BLOCK_TIP_CHANNEL, 0, salt, chainID.length,
-                ChainParam.BLOCK_TIP_CHANNEL.length);
-
-        return salt;
-    }
-
-    /**
-     * make block demand salt
-     * @param chainID chain ID
-     * @return block demand salt
-     */
-    public static byte[] makeBlockDemandSalt(byte[] chainID) {
-        long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_DEMAND_CHANNEL.length + timeBytes.length];
-        System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.BLOCK_DEMAND_CHANNEL, 0, salt, chainID.length,
-                ChainParam.BLOCK_DEMAND_CHANNEL.length);
-        System.arraycopy(timeBytes, 0, salt, chainID.length + ChainParam.BLOCK_DEMAND_CHANNEL.length, timeBytes.length);
-        return salt;
-    }
-
-    /**
-     * make block response salt
-     * @param chainID chain ID
-     * @return block response salt
-     */
-    public static byte[] makeBlockResponseSalt(byte[] chainID, byte[] blockHash) {
-        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_RESPONSE_CHANNEL.length + 10];
-        System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.BLOCK_RESPONSE_CHANNEL, 0, salt, chainID.length,
-                ChainParam.BLOCK_RESPONSE_CHANNEL.length);
-        System.arraycopy(blockHash, 0, salt, chainID.length + ChainParam.BLOCK_RESPONSE_CHANNEL.length, 10);
-
-        return salt;
-    }
-
-    /**
-     * make tx salt
-     * @param chainID chain ID
-     * @return tx tip salt
-     */
-    public static byte[] makeTxTipSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.TX_TIP_CHANNEL.length];
-
-        System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.TX_TIP_CHANNEL, 0, salt, chainID.length,
-                ChainParam.TX_TIP_CHANNEL.length);
-
-        return salt;
-    }
-
-    /**
-     * make tx demand salt
-     * @param chainID chain ID
-     * @return tx demand salt
-     */
-    public static byte[] makeTxDemandSalt(byte[] chainID) {
-        long time = System.currentTimeMillis() / 1000 / ChainParam.DEFAULT_BLOCK_TIME;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[chainID.length + ChainParam.TX_DEMAND_CHANNEL.length + timeBytes.length];
-        System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.TX_DEMAND_CHANNEL, 0, salt, chainID.length,
-                ChainParam.TX_DEMAND_CHANNEL.length);
-        System.arraycopy(timeBytes, 0, salt, chainID.length + ChainParam.TX_DEMAND_CHANNEL.length, timeBytes.length);
-        return salt;
-    }
-
-    /**
      * Is block synchronization uncompleted
      * @param chainID chain ID
      * @return true if uncompleted, false otherwise
@@ -1916,7 +1837,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param peer peer
      */
     private void requestDemandBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        byte[] salt = makeBlockDemandSalt(chainID.getData());
+        byte[] salt = Salt.makeBlockDemandSalt(chainID.getData());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_DEMAND_FROM_PEER,
                 new ByteArrayWrapper(peer));
@@ -1956,7 +1877,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param peer peer
      */
     private void requestDemandTxFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        byte[] salt = makeTxDemandSalt(chainID.getData());
+        byte[] salt = Salt.makeTxDemandSalt(chainID.getData());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_DEMAND_FROM_PEER);
         TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
@@ -2070,7 +1991,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param blockHash block hash
      */
     private void requestBlockHashList(ByteArrayWrapper chainID, byte[] peer, byte[] blockHash) {
-        byte[] salt = makeBlockResponseSalt(chainID.getData(), blockHash);
+        byte[] salt = Salt.makeBlockResponseSalt(chainID.getData(), blockHash);
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_RESPONSE_FROM_PEER,
                 new ByteArrayWrapper(blockHash));
@@ -2086,7 +2007,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
-        byte[] salt = makeBlockDemandSalt(chainID.getData());
+        byte[] salt = Salt.makeBlockDemandSalt(chainID.getData());
         byte[] encode = ByteUtil.getHashEncoded(blockHash);
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
@@ -2104,7 +2025,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
-        byte[] salt = makeBlockResponseSalt(chainID.getData(), blockHash);
+        byte[] salt = Salt.makeBlockResponseSalt(chainID.getData(), blockHash);
         HashList hashList = new HashList(list);
         byte[] encode = hashList.getEncoded();
         if (null != encode) {
@@ -2123,7 +2044,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
-        byte[] salt = makeTxDemandSalt(chainID.getData());
+        byte[] salt = Salt.makeTxDemandSalt(chainID.getData());
         byte[] encode = ByteUtil.getHashEncoded(txHash);
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,

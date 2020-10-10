@@ -317,7 +317,7 @@ public class ChainManager {
             TorrentDHTEngine.getInstance().distribute(immutableItem);
 
             // put mutable item
-            byte[] blockSalt = Chains.makeBlockTipSalt(chainID);
+            byte[] blockSalt = Salt.makeBlockTipSalt(chainID);
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
             byte[] encode = ByteUtil.getHashEncoded(blockContainer.getBlock().getBlockHash());
             if (null != encode) {

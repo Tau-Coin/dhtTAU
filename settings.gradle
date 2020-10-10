@@ -1,4 +1,3 @@
 rootProject.name='dhtTAU'
-include ':taucoin-android'
 include ':taucoin-core'
 include ':taucoin-linux'

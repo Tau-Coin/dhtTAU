@@ -10,6 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.List;
 
 import io.taucoin.chain.Chains;
+import io.taucoin.chain.Salt;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.torrent.DHT;
@@ -32,7 +33,7 @@ public class dht_getTauBlockDemandFromPeer extends JsonRpcServerMethod {
             // get pubkey
             byte[] pubkey = Hex.decode((String)(params.get(0)));
             // get salt
-            byte[] salt = Chains.makeBlockDemandSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
+            byte[] salt = Salt.makeBlockDemandSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
 
             // get immutable item
             byte[] item = TorrentDHTEngine.getInstance().dhtGet(
