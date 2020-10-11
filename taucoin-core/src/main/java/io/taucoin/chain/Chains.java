@@ -2199,7 +2199,26 @@ public class Chains implements DHT.GetDHTItemCallback{
 //            logger.error("ChainID[{}]: ChainID mismatch!", new String(chainID.getData()));
 //            return false;
 //        }
-        // TODO:: 检查immutable block hash
+
+        byte[] immutableBlockHash;
+
+        // if current block number is larger than mutable range
+        if (block.getBlockNum() >= ChainParam.MUTABLE_RANGE) {
+            immutableBlockHash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(),
+                    block.getBlockNum() - ChainParam.MUTABLE_RANGE);
+        } else {
+            immutableBlockHash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(), 0);
+        }
+
+        if (null == immutableBlockHash) {
+            return TryResult.REQUEST;
+        }
+
+        if (!Arrays.equals(immutableBlockHash, block.getImmutableBlockHash())) {
+            logger.error("ChainID[{}]: Block[{}] immutable block hash mismatch!",
+                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+            return TryResult.ERROR;
+        }
 
         // 时间戳检查
         if (block.getTimeStamp() > System.currentTimeMillis() / 1000) {
