@@ -337,6 +337,7 @@ public class Block {
         } else {
             Entry entry = Entry.bdecode(this.encodedBytes);
             List<Entry> entrylist = entry.list();
+            logger.info("Block encoded entry bytes: {}", new String(this.encodedBytes));
 
             if(entrylist.size() != (BlockIndex.MPubkey.ordinal() + 1)) {
                 logger.error("Block decoded entry size error {}", entrylist.size());
