@@ -152,9 +152,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 控制是否自己挖矿还是只同步
     private final Map<ByteArrayWrapper, Boolean> enableMineForTest = Collections.synchronizedMap(new HashMap<>());
 
-    // 本地请求同步的区块哈希
-    private final Map<ByteArrayWrapper, Set<ByteArrayWrapper>> blockHashToRequest = Collections.synchronizedMap(new HashMap<>());
-
     // for test
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>>  blockTipSucceed = Collections.synchronizedMap(new HashMap<>());
 
@@ -392,8 +389,6 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.enableMineForTest.put(wChainID, true);
 
-        this.blockHashToRequest.put(wChainID, new HashSet<>());
-
         // for test
         this.blockTipSucceed.put(wChainID, new HashMap<>());
 
@@ -484,8 +479,6 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.txHashMapFromDemand.remove(chainID);
 
         this.enableMineForTest.remove(chainID);
-
-        this.blockHashToRequest.remove(chainID);
 
         // for test
         this.blockTipSucceed.remove(chainID);
@@ -679,13 +672,6 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     // 2.8.3 请求远端交易需求
                     requestDemandTxFromPeer(chainID, peer);
-
-                    // 2.8.4 查看远端回应
-                    for (ByteArrayWrapper hash: this.blockHashToRequest.get(chainID)) {
-                        logger.info("Check sync hash[{}] response from peer[{}]",
-                                hash.toString(), Hex.toHexString(peer));
-                        requestBlockHashList(chainID, peer, hash.getData());
-                    }
 
                     // 2.9 回应远端需求
                     responseDemand(chainID);
@@ -998,10 +984,6 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (this.txMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
             this.txMapForSync.get(chainID).clear();
         }
-
-        if (this.blockHashToRequest.get(chainID).size() > ChainParam.MAX_RESPONSE_NUMBER) {
-            this.blockHashToRequest.get(chainID).clear();
-        }
     }
 
     /**
@@ -1016,14 +998,12 @@ public class Chains implements DHT.GetDHTItemCallback{
             logger.debug("Chain ID:{} Response from block hash:{}",
                     new String(chainID.getData()), Hex.toHexString(previousHash));
 
-            List<byte[]> hashList = new ArrayList<>();
-            for (int i = 0; i < ChainParam.MAX_RESPONSE_NUMBER; i++) {
+            for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
                 BlockContainer blockContainer = this.blockStore.
                         getBlockContainerByHash(chainID.getData(), previousHash);
 
                 if (null != blockContainer) {
                     publishBlockContainer(blockContainer);
-                    hashList.add(previousHash);
 
                     previousHash = blockContainer.getBlock().getPreviousBlockHash();
                     if (blockContainer.getBlock().getBlockNum() == 0) {
@@ -1035,27 +1015,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                     break;
                 }
             }
-            if (!hashList.isEmpty()) {
-                publishBlockResponse(chainID, blockHash.getData(), hashList);
-            }
-
-//            for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
-//                BlockContainer blockContainer = this.blockStore.
-//                        getBlockContainerByHash(chainID.getData(), previousHash);
-//
-//                if (null != blockContainer) {
-//                    publishBlockContainer(blockContainer);
-//
-//                    previousHash = blockContainer.getBlock().getPreviousBlockHash();
-//                    if (blockContainer.getBlock().getBlockNum() == 0) {
-//                        break;
-//                    }
-//                } else {
-//                    logger.debug("Chain ID:{} Cannot find block hash:{}",
-//                            new String(chainID.getData()), Hex.toHexString(previousHash));
-//                    break;
-//                }
-//            }
         }
 
         // tx
@@ -1986,19 +1945,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
-     * request block hash list that response
-     * @param chainID chain ID
-     * @param blockHash block hash
-     */
-    private void requestBlockHashList(ByteArrayWrapper chainID, byte[] peer, byte[] blockHash) {
-        byte[] salt = Salt.makeBlockResponseSalt(chainID.getData(), blockHash);
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_RESPONSE_FROM_PEER,
-                new ByteArrayWrapper(blockHash));
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
-    }
-
-    /**
      * publish block hash that demand
      * @param chainID chain ID
      * @param blockHash block hash that demand
@@ -2009,25 +1955,6 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         byte[] salt = Salt.makeBlockDemandSalt(chainID.getData());
         byte[] encode = ByteUtil.getHashEncoded(blockHash);
-        if (null != encode) {
-            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
-                    keyPair.second, encode, salt);
-            TorrentDHTEngine.getInstance().distribute(mutableItem);
-        }
-    }
-
-    /**
-     * publish block hash list that response
-     * @param chainID chain ID
-     * @param list hash list that response
-     */
-    public static void publishBlockResponse(ByteArrayWrapper chainID, byte[] blockHash, List<byte[]> list) {
-        // put mutable item
-        Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
-
-        byte[] salt = Salt.makeBlockResponseSalt(chainID.getData(), blockHash);
-        HashList hashList = new HashList(list);
-        byte[] encode = hashList.getEncoded();
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                     keyPair.second, encode, salt);
@@ -2916,9 +2843,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                     // 向dht请求
                     publishBlockDemand(dataIdentifier.getChainID(), dataIdentifier.getHash().getData());
 
-                    // 记录本地请求的区块哈希
-                    this.blockHashToRequest.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
-
                     // 返回区块为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), null);
@@ -2927,9 +2851,9 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 Block block = new Block(item);
 
-//                if (null != block.getPreviousBlockHash()) {
-//                    requestBlockForSync(dataIdentifier.getChainID(), block.getPreviousBlockHash());
-//                }
+                if (block.getBlockNum() > 0 && null != block.getPreviousBlockHash()) {
+                    requestBlockForSync(dataIdentifier.getChainID(), block.getPreviousBlockHash());
+                }
 
                 if (null != block.getTxHash()) {
 
@@ -3016,24 +2940,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                     this.txHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
                 }
 
-                break;
-            }
-            case BLOCK_RESPONSE_FROM_PEER: {
-                if (null == item) {
-                    logger.info("BLOCK_RESPONSE_FROM_PEER is empty.");
-                } else {
-                    logger.info("Got response block hash:{}", dataIdentifier.getHash().toString());
-                    this.blockHashToRequest.get(dataIdentifier.getChainID()).remove(dataIdentifier.getHash());
-
-                    HashList hashList = new HashList(item);
-                    List<byte[]> list = hashList.getHashList();
-                    if (null != list) {
-                        for (byte[] hash: list) {
-                            logger.info("Request block hash:{}", Hex.toHexString(hash));
-                            requestBlockForSync(dataIdentifier.getChainID(), hash);
-                        }
-                    }
-                }
                 break;
             }
             default: {

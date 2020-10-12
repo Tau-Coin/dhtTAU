@@ -56,7 +56,6 @@ public final class JsonRpcServer {
         this.dispatcher.register(new dht_getImmutableItem(this.tauController));
         this.dispatcher.register(new dht_getMutableItem(this.tauController));
         this.dispatcher.register(new dht_getTipBlockFromPeer(this.tauController));
-        this.dispatcher.register(new dht_getHashResponseFromPeer(this.tauController));
         this.dispatcher.register(new dht_putBlockHashDemand(this.tauController));
 
 		// methods about chain
@@ -89,7 +88,6 @@ public final class JsonRpcServer {
         this.dispatcher.register(new dht_getTauBlockDemandFromPeer(this.tauController));
         this.dispatcher.register(new dht_putTauGenesisBlockHashInDemand(this.tauController));
         this.dispatcher.register(new test_getDemandSalt(this.tauController));
-        this.dispatcher.register(new test_reponseHashList(this.tauController));
     }
 
     /**

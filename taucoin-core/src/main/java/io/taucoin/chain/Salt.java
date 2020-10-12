@@ -37,21 +37,6 @@ public class Salt {
     }
 
     /**
-     * make block response salt
-     * @param chainID chain ID
-     * @return block response salt
-     */
-    public static byte[] makeBlockResponseSalt(byte[] chainID, byte[] blockHash) {
-        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_RESPONSE_CHANNEL.length + 10];
-        System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.BLOCK_RESPONSE_CHANNEL, 0, salt, chainID.length,
-                ChainParam.BLOCK_RESPONSE_CHANNEL.length);
-        System.arraycopy(blockHash, 0, salt, chainID.length + ChainParam.BLOCK_RESPONSE_CHANNEL.length, 10);
-
-        return salt;
-    }
-
-    /**
      * make tx salt
      * @param chainID chain ID
      * @return tx tip salt
