@@ -137,6 +137,9 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 同步所用区块容器数据集合: {key: chain ID, value: {key: block hash, value: block container} }
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, BlockContainer>> blockContainerMapForSync = Collections.synchronizedMap(new HashMap<>());
 
+    // 同步计数器，控制一次同步数量
+    private final Map<ByteArrayWrapper, Integer> syncCounter = Collections.synchronizedMap(new HashMap<>());
+
     // 同步所用区块数据集合: {key: chain ID, value: {key: block hash, value: block} }
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Block>> blockMapForSync = Collections.synchronizedMap(new HashMap<>());
 
@@ -379,6 +382,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.blockContainerMapForSync.put(wChainID, new HashMap<>());
 
+        this.syncCounter.put(wChainID, 0);
+
         this.blockMapForSync.put(wChainID, new HashMap<>());
 
         this.txMapForSync.put(wChainID, new HashMap<>());
@@ -469,6 +474,8 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.txMap.remove(chainID);
 
         this.blockContainerMapForSync.remove(chainID);
+
+        this.syncCounter.remove(chainID);
 
         this.blockMapForSync.remove(chainID);
 
@@ -1046,6 +1053,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         logger.debug("Request sync block hash:{}, current block number:{}",
                 Hex.toHexString(this.syncBlocks.get(chainID).getPreviousBlockHash()),
                 this.syncBlocks.get(chainID).getBlockNum());
+        this.syncCounter.put(chainID, 0);
         requestBlockForSync(chainID, this.syncBlocks.get(chainID).getPreviousBlockHash());
     }
 
@@ -1055,9 +1063,9 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private void tryToSync(ByteArrayWrapper chainID) throws DBException {
         // 合法性判断
-        if (isSyncUncompleted(chainID)) {
-            BlockContainer blockContainer = this.blockContainerMapForSync.get(chainID).
-                    get(new ByteArrayWrapper(this.syncBlocks.get(chainID).getPreviousBlockHash()));
+        while (isSyncUncompleted(chainID)) {
+            ByteArrayWrapper key = new ByteArrayWrapper(this.syncBlocks.get(chainID).getPreviousBlockHash());
+            BlockContainer blockContainer = this.blockContainerMapForSync.get(chainID).get(key);
 
             if (null != blockContainer) {
                 // 如果同步遇到非法区块，放弃这条链
@@ -1065,8 +1073,13 @@ public class Chains implements DHT.GetDHTItemCallback{
                     logger.error("Chain ID:{}, Throw this chain away, invalid block:{}",
                             new String(chainID.getData()),
                             Hex.toHexString(blockContainer.getBlock().getBlockHash()));
+                    this.blockContainerMapForSync.get(chainID).clear();
                     resetChain(chainID);
+                    break;
                 }
+            } else {
+                this.blockContainerMapForSync.get(chainID).remove(key);
+                break;
             }
         }
     }
@@ -2849,9 +2862,12 @@ public class Chains implements DHT.GetDHTItemCallback{
                     return;
                 }
 
+                int counter = this.syncCounter.get(dataIdentifier.getChainID()) + 1;
+                this.syncCounter.put(dataIdentifier.getChainID(), counter);
+
                 Block block = new Block(item);
 
-                if (block.getBlockNum() > 0 && null != block.getPreviousBlockHash()) {
+                if (counter < ChainParam.MUTABLE_RANGE && block.getBlockNum() > 0 && null != block.getPreviousBlockHash()) {
                     requestBlockForSync(dataIdentifier.getChainID(), block.getPreviousBlockHash());
                 }
 
