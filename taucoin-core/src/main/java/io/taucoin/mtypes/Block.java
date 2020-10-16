@@ -215,11 +215,9 @@ public class Block {
     }
 
     /**
-     * @TODO
      * construct genesis block respecting user intention.
      * @param cf
      */
-    /*
     public Block(GenesisConfig cf){
 
         // Check
@@ -237,25 +235,24 @@ public class Block {
         this.timestamp = cf.getTimeStamp();
         this.blockNum = 0L;
 
-        this.verticalHash = ;
-        this.horizontalHash = ;
-        this.immutableBlockHash = ;
+        this.verticalHash = null;
+        this.horizontalHash = cf.getTransaction().getTxID();
+        this.immutableBlockHash = null;
 
         this.baseTarget = cf.getBaseTarget();
         this.cumulativeDifficulty = cf.getCummulativeDifficulty();
         this.generationSignature = cf.getGenerationSignature();
 
-        this.minerBalance = 0L;
-        this.senderBalance = 0L;
-        this.receiverBalance = 0L;
-        this.senderNonce = 0L;
+        this.minerBalance = BigInteger.ZERO;
+        this.senderBalance = BigInteger.ZERO;
+        this.receiverBalance = BigInteger.ZERO;
+        this.senderNonce = BigInteger.ZERO;
 
         this.minerPubkey = cf.getPubkey();
         this.signature = cf.getSignature();
 
         isParsed = true;
     }
-    */
 
     /**
      * construct block from complete byte encoding.
