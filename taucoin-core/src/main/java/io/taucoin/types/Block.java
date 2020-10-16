@@ -18,18 +18,17 @@ package io.taucoin.types;
 
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.param.ChainParam;
+
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.DateUtil;
 import io.taucoin.util.HashUtil;
+import io.taucoin.util.RLP;
+import io.taucoin.util.RLPList;
 
 import com.frostwire.jlibtorrent.Ed25519;
-import com.frostwire.jlibtorrent.Entry;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,35 +40,43 @@ public class Block {
     private long version;
     private long timestamp;
     private long blockNum;
-    private ArrayList<Long> previousBlockHash;    //Hash - 20 Bytes, 3 longs
-    private ArrayList<Long> immutableBlockHash;   //Hash - 20 Bytes, 3 longs
-    private long baseTarget;
-    private long cumulativeDifficulty;
-    private ArrayList<Long> generationSignature;  //Hash - 20 Bytes, 3 longs
-    private ArrayList<Long> txHash;     //Hash - 20 Bytes, 3 longs
-    private long minerBalance;
-    private long senderBalance;
-    private long receiverBalance;
-    private long senderNonce;
-    private ArrayList<Long> signature;     //Signature - 64 Bytes, 8 longs
-    private ArrayList<Long> minerPubkey;   //Pubkey - 32 Bytes, 4 longs
+
+    private byte[] verticalHash;    // 代表历史区块immutable items(0: previous)
+    private byte[] horizontalHash;  // 代表交易、社区消息immutable items(0: txHash)
+
+    private byte[] immutableBlockHash;  //For voting and fork Hash - 20 Bytes
+
+    // pot
+    private BigInteger baseTarget;
+    private BigInteger cumulativeDifficulty;
+    private byte[] generationSignature;  //Hash - 20 Bytes
+
+    // state
+    private BigInteger minerBalance;
+    private BigInteger senderBalance;
+    private BigInteger receiverBalance;
+    private BigInteger senderNonce;
+
+    private byte[] signature;     //Signature - 64 Bytes
+    private byte[] minerPubkey;   //Pubkey - 32 Bytes
 
     // 中间结果，暂存内存，不上链
+    private byte[] blockHash;
     private byte[] encodedBytes;
     private byte[] sigEncodedBytes;
-    private byte[] blockHash;
+
     private boolean isParsed;
 
     private enum BlockIndex {
         Version, 
         Timestamp, 
         BlockNum, 
-        PBHash, 
-        IBHash,
+        VHash, 
+        HHash,
+        IMBHash,
         BaseTarget,
         CDifficulty,
         GSignature,
-        TxHash,
         MBalance,
         SBalance,
         RBalance,
@@ -83,7 +90,8 @@ public class Block {
      * @param version: current block version.
      * @param timestamp: unix timestamp block was created.
      * @param blockNum: block index number start with 0.
-     * @param previousBlockHash: current block father hash reference.
+     * @param verticalHash: the historical block hashes.
+     * @param horizontalHash: tx, messages immutable hash.
      * @param immutableBlockHash: the chain immutable point block hash.
      * @param baseTarget:block mining base target(pot).
      * @param cumulativeDifficulty:chain difficulty.
@@ -95,13 +103,18 @@ public class Block {
      * @param senderNonce:transaction sender nonce(power).
      * @param signature:block signature.
      */
-    public  Block(long version, long timestamp, long blockNum, byte[] previousBlockHash,
-                 byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
-                 byte[] generationSignature, byte[] txHash, long minerBalance, long senderBalance,
-                 long receiverBalance, long senderNonce, byte[] signature,byte[] minerPubkey){
-        // Check
-        if (previousBlockHash.length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Previous block hash should be : " + ChainParam.HashLength + " bytes");
+    public  Block(long version, long timestamp, long blockNum,
+            byte[] verticalHash, byte[] horizontalHash, byte[] immutableBlockHash,
+            BigInteger baseTarget, BigInteger cumulativeDifficulty, byte[] generationSignature,
+            BigInteger minerBalance, BigInteger senderBalance, BigInteger receiverBalance, BigInteger senderNonce,
+            byte[] signature,byte[] minerPubkey){
+
+        // Check - 可以在构造之前检查
+        if (verticalHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Vertical blocks hash should be : " + ChainParam.HashLength + " bytes");
+        }
+        if (horizontalHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Horizontal blocks hash should be : " + ChainParam.HashLength + " bytes");
         }
         if (immutableBlockHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("Immutable block hash should be : " + ChainParam.HashLength + " bytes");
@@ -119,32 +132,33 @@ public class Block {
         this.version = version;
         this.timestamp = timestamp;
         this.blockNum = blockNum;
-        this.previousBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(previousBlockHash, ChainParam.HashLongArrayLength);
-        this.immutableBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(immutableBlockHash, ChainParam.HashLongArrayLength);
-        this.baseTarget = ByteUtil.byteArrayToLong(baseTarget.toByteArray());
-        this.cumulativeDifficulty = ByteUtil.byteArrayToLong(cumulativeDifficulty.toByteArray());
-        this.generationSignature = ByteUtil.unAlignByteArrayToSignLongArray(generationSignature, ChainParam.HashLongArrayLength);
-        if(txHash != null) {
-            this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
-        } else {
-            this.txHash = null;
-        }
+
+        this.verticalHash = verticalHash;
+        this.horizontalHash = horizontalHash;
+        this.immutableBlockHash = immutableBlockHash;
+
+        this.baseTarget = baseTarget;
+        this.cumulativeDifficulty = cumulativeDifficulty;
+        this.generationSignature = generationSignature;
+
         this.minerBalance = minerBalance;
         this.senderBalance = senderBalance;
         this.receiverBalance = receiverBalance;
         this.senderNonce = senderNonce;
-        this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
-        this.minerPubkey = ByteUtil.byteArrayToSignLongArray(minerPubkey, ChainParam.PubkeyLongArrayLength);
+
+        this.signature = signature;
+        this.minerPubkey = minerPubkey;
 
         isParsed = true;
     }
 
     /**
-     * construct a block without signature,this can be used to initial a block.
+     * construct a complete block.
      * @param version: current block version.
      * @param timestamp: unix timestamp block was created.
      * @param blockNum: block index number start with 0.
-     * @param previousBlockHash: current block father hash reference.
+     * @param verticalHash: the historical block hashes.
+     * @param horizontalHash: tx, messages immutable hash.
      * @param immutableBlockHash: the chain immutable point block hash.
      * @param baseTarget:block mining base target(pot).
      * @param cumulativeDifficulty:chain difficulty.
@@ -155,13 +169,18 @@ public class Block {
      * @param receiverBalance:transaction receiver balance.
      * @param senderNonce:transaction sender nonce(power).
      */
-    public Block(long version, long timestamp, long blockNum, byte[] previousBlockHash,
-                 byte[] immutableBlockHash, BigInteger baseTarget, BigInteger cumulativeDifficulty,
-                 byte[] generationSignature, byte[] txHash, long minerBalance, long senderBalance,
-                 long receiverBalance, long senderNonce,byte[] minerPubkey){
-        // Check
-        if (previousBlockHash.length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Previous block hash should be : " + ChainParam.HashLength + " bytes");
+    public  Block(long version, long timestamp, long blockNum,
+            byte[] verticalHash, byte[] horizontalHash, byte[] immutableBlockHash,
+            BigInteger baseTarget, BigInteger cumulativeDifficulty, byte[] generationSignature,
+            BigInteger minerBalance, BigInteger senderBalance, BigInteger receiverBalance, BigInteger senderNonce,
+            byte[] minerPubkey){
+
+        // Check - 可以在构造之前检查
+        if (verticalHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Vertical blocks hash should be : " + ChainParam.HashLength + " bytes");
+        }
+        if (horizontalHash.length != ChainParam.HashLength) {
+            throw new IllegalArgumentException("Horizontal blocks hash should be : " + ChainParam.HashLength + " bytes");
         }
         if (immutableBlockHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("Immutable block hash should be : " + ChainParam.HashLength + " bytes");
@@ -176,36 +195,36 @@ public class Block {
         this.version = version;
         this.timestamp = timestamp;
         this.blockNum = blockNum;
-        this.previousBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(previousBlockHash, ChainParam.HashLongArrayLength);
-        this.immutableBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(immutableBlockHash, ChainParam.HashLongArrayLength);
-        this.baseTarget = ByteUtil.byteArrayToLong(baseTarget.toByteArray());
-        this.cumulativeDifficulty = ByteUtil.byteArrayToLong(cumulativeDifficulty.toByteArray());
-        this.generationSignature = ByteUtil.unAlignByteArrayToSignLongArray(generationSignature, ChainParam.HashLongArrayLength);
-        if(txHash != null) {
-            this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
-        } else {
-            this.txHash = null;
-        }
+
+        this.verticalHash = verticalHash;
+        this.horizontalHash = horizontalHash;
+        this.immutableBlockHash = immutableBlockHash;
+
+        this.baseTarget = baseTarget;
+        this.cumulativeDifficulty = cumulativeDifficulty;
+        this.generationSignature = generationSignature;
+
         this.minerBalance = minerBalance;
         this.senderBalance = senderBalance;
         this.receiverBalance = receiverBalance;
         this.senderNonce = senderNonce;
-        this.minerPubkey = ByteUtil.byteArrayToSignLongArray(minerPubkey, ChainParam.PubkeyLongArrayLength);
+
+        this.minerPubkey = minerPubkey;
 
         isParsed = true;
     }
 
     /**
+     * @TODO
      * construct genesis block respecting user intention.
      * @param cf
      */
+    /*
     public Block(GenesisConfig cf){
+
         // Check
         if (cf.getGenerationSignature().length != ChainParam.HashLength) {
             throw new IllegalArgumentException("GenerationSignature should be : " + ChainParam.HashLength + " bytes");
-        }
-        if (cf.getGenerationSignature().length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Txhash pubkey should be : " + ChainParam.HashLength + " bytes");
         }
         if (cf.getPubkey().length != ChainParam.PubkeyLength) {
             throw new IllegalArgumentException("Miner pubkey should be : " + ChainParam.PubkeyLength + " bytes");
@@ -217,39 +236,30 @@ public class Block {
         this.version = cf.getVersion();
         this.timestamp = cf.getTimeStamp();
         this.blockNum = 0L;
-        this.previousBlockHash = new ArrayList<Long>();
-        this.immutableBlockHash = new ArrayList<Long>();
-        this.baseTarget = ByteUtil.byteArrayToLong(cf.getBaseTarget().toByteArray());
-        this.cumulativeDifficulty = ByteUtil.byteArrayToLong(
-                cf.getCummulativeDifficulty().toByteArray());
-        this.generationSignature = ByteUtil.unAlignByteArrayToSignLongArray(
-                cf.getGenerationSignature(), ChainParam.HashLongArrayLength);
 
-        // handle tx hash
-        byte[] genesisTxHash = cf.getTransaction().getTxID();
-        if(txHash != null) {
-            this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(genesisTxHash, ChainParam.HashLongArrayLength);
-        } else {
-            this.txHash = null;
-        }
+        this.verticalHash = ;
+        this.horizontalHash = ;
+        this.immutableBlockHash = ;
+
+        this.baseTarget = cf.getBaseTarget();
+        this.cumulativeDifficulty = cf.getCummulativeDifficulty();
+        this.generationSignature = cf.getGenerationSignature();
 
         this.minerBalance = 0L;
         this.senderBalance = 0L;
         this.receiverBalance = 0L;
         this.senderNonce = 0L;
-        this.minerPubkey = ByteUtil.byteArrayToSignLongArray(cf.getPubkey(), ChainParam.PubkeyLongArrayLength);
 
-        if (cf.getSignature() != null) {
-            this.signature = ByteUtil.byteArrayToSignLongArray(
-                    cf.getSignature(), ChainParam.SignLongArrayLength);
-        }
+        this.minerPubkey = cf.getPubkey();
+        this.signature = cf.getSignature();
 
         isParsed = true;
     }
+    */
 
     /**
      * construct block from complete byte encoding.
-     * @param encodedBytes:complete byte encoding.
+     * @param encodedBytes: rlp complete byte encoding.
      */
     public Block(byte[] encodedBytes){
         this.encodedBytes = encodedBytes;
@@ -257,34 +267,40 @@ public class Block {
     }
 
     /**
-     * bencoding block to bytes
+     * rlp encoding block to bytes
      * @return
      */
     public byte[] getEncoded(){
-        if (encodedBytes == null) {
-           List list = new ArrayList();
-           list.add(new Entry(this.version));
-           list.add(new Entry(this.timestamp));
-           list.add(new Entry(this.blockNum));
-           list.add(this.previousBlockHash);
-           list.add(this.immutableBlockHash);
-           list.add(new Entry(this.baseTarget));
-           list.add(new Entry(this.cumulativeDifficulty));
-           list.add(this.generationSignature);
-           if (this.txHash != null) {
-               list.add(this.txHash);
-           } else {
-               list.add(new ArrayList<Long>());
-           }
-           list.add(new Entry(this.minerBalance));
-           list.add(new Entry(this.senderBalance));
-           list.add(new Entry(this.receiverBalance));
-           list.add(new Entry(this.senderNonce));
-           list.add(this.signature);
-           list.add(this.minerPubkey);
-           Entry entry = Entry.fromList(list);
-           this.encodedBytes = entry.bencode();
+
+        if(encodedBytes == null) {
+
+            byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
+            byte[] blockNum = RLP.encodeElement(ByteUtil.longToBytes(this.blockNum));
+
+            byte[] verticalHash = RLP.encodeElement(this.verticalHash);
+            byte[] horizontalHash = RLP.encodeElement(this.horizontalHash);
+            byte[] immutableblockhash = RLP.encodeElement(this.immutableBlockHash);
+
+            byte[] baseTarget = RLP.encodeBigInteger(this.baseTarget);
+            byte[] cumulativeDifficulty = RLP.encodeBigInteger(this.cumulativeDifficulty);
+            byte[] generationSignature = RLP.encodeElement(this.generationSignature);
+
+            byte[] minerBalance= RLP.encodeBigInteger(this.minerBalance);
+            byte[] senderBalance = RLP.encodeBigInteger(this.senderBalance);
+            byte[] receiverBalance = RLP.encodeBigInteger(this.receiverBalance);
+            byte[] senderNonce = RLP.encodeBigInteger(this.senderNonce);
+
+            byte[] signature = RLP.encodeElement(this.signature);
+            byte[] minerPubkey = RLP.encodeElement(this.minerPubkey);
+
+            this.encodedBytes = RLP.encodeList(version, timestamp, blockNum,
+                                verticalHash, horizontalHash, immutableBlockHash,
+                                baseTarget, cumulativeDifficulty, generationSignature,
+                                minerBalance, senderBalance, receiverBalance,  senderNonce,
+                                signature, minerPubkey);
         }
+
         return encodedBytes;
     }
 
@@ -302,29 +318,35 @@ public class Block {
      * @return
      */
     public byte[] getSigEncodedBytes(){
+
         if (sigEncodedBytes == null) {
-            List list = new ArrayList();
-            list.add(new Entry(this.version));
-            list.add(new Entry(this.timestamp));
-            list.add(new Entry(this.blockNum));
-            list.add(this.previousBlockHash);
-            list.add(this.immutableBlockHash);
-            list.add(new Entry(this.baseTarget));
-            list.add(new Entry(this.cumulativeDifficulty));
-            list.add(this.generationSignature);
-            if (this.txHash != null) {
-                list.add(this.txHash);
-            } else {
-                list.add(new ArrayList<Long>());
-            }
-            list.add(new Entry(this.minerBalance));
-            list.add(new Entry(this.senderBalance));
-            list.add(new Entry(this.receiverBalance));
-            list.add(new Entry(this.senderNonce));
-            list.add(this.minerPubkey);
-            Entry entry = Entry.fromList(list);
-            this.sigEncodedBytes = entry.bencode();
+
+            byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
+            byte[] blockNum = RLP.encodeElement(ByteUtil.longToBytes(this.blockNum));
+
+            byte[] verticalHash = RLP.encodeElement(this.verticalHash);
+            byte[] horizontalHash = RLP.encodeElement(this.horizontalHash);
+            byte[] immutableblockhash = RLP.encodeElement(this.immutableBlockHash);
+
+            byte[] baseTarget = RLP.encodeBigInteger(this.baseTarget);
+            byte[] cumulativeDifficulty = RLP.encodeBigInteger(this.cumulativeDifficulty);
+            byte[] generationSignature = RLP.encodeElement(this.generationSignature);
+
+            byte[] minerBalance= RLP.encodeBigInteger(this.minerBalance);
+            byte[] senderBalance = RLP.encodeBigInteger(this.senderBalance);
+            byte[] receiverBalance = RLP.encodeBigInteger(this.receiverBalance);
+            byte[] senderNonce = RLP.encodeBigInteger(this.senderNonce);
+
+            byte[] minerPubkey = RLP.encodeElement(this.minerPubkey);
+
+            this.encodedBytes = RLP.encodeList(version, timestamp, blockNum,
+                                verticalHash, horizontalHash, immutableBlockHash,
+                                baseTarget, cumulativeDifficulty, generationSignature,
+                                minerBalance, senderBalance, receiverBalance,  senderNonce,
+                                minerPubkey);
         }
+
         return sigEncodedBytes;
     }
 
@@ -335,34 +357,29 @@ public class Block {
         if (isParsed) {
             return;
         } else {
-            Entry entry = Entry.bdecode(this.encodedBytes);
-            List<Entry> entrylist = entry.list();
-            logger.info("Block encoded entry bytes: {}", new String(this.encodedBytes));
 
-            if(entrylist.size() != (BlockIndex.MPubkey.ordinal() + 1)) {
-                logger.error("Block decoded entry size error {}", entrylist.size());
-            }
+            RLPList list = RLP.decode2(this.encodedBytes);
+            RLPList block = (RLPList) list.get(0);
 
-            try {
-                this.version = entrylist.get(BlockIndex.Version.ordinal()).integer();
-                this.timestamp = entrylist.get(BlockIndex.Timestamp.ordinal()).integer();
-                this.blockNum = entrylist.get(BlockIndex.BlockNum.ordinal()).integer();
-                this.previousBlockHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.PBHash.ordinal()).toString());
-                this.immutableBlockHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.IBHash.ordinal()).toString());
-                this.baseTarget = entrylist.get(BlockIndex.BaseTarget.ordinal()).integer();
-                this.cumulativeDifficulty = entrylist.get(BlockIndex.CDifficulty.ordinal()).integer();
-                this.generationSignature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.GSignature.ordinal()).toString());
-                this.txHash = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.TxHash.ordinal()).toString());
-                this.minerBalance = entrylist.get(BlockIndex.MBalance.ordinal()).integer();
-                this.senderBalance = entrylist.get(BlockIndex.SBalance.ordinal()).integer();
-                this.receiverBalance = entrylist.get(BlockIndex.RBalance.ordinal()).integer();
-                this.senderNonce = entrylist.get(BlockIndex.SNonce.ordinal()).integer();
-                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.Signature.ordinal()).toString());
-                this.minerPubkey = ByteUtil.stringToLongArrayList(entrylist.get(BlockIndex.MPubkey.ordinal()).toString());
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                return;
-            }
+            this.version = ByteUtil.byteArrayToLong(block.get(BlockIndex.Version.ordinal()).getRLPData());
+            this.timestamp = ByteUtil.byteArrayToLong(block.get(BlockIndex.Timestamp.ordinal()).getRLPData());
+            this.blockNum = ByteUtil.byteArrayToLong(block.get(BlockIndex.BlockNum.ordinal()).getRLPData());
+
+            this.verticalHash = block.get(BlockIndex.VHash.ordinal()).getRLPData();
+            this.horizontalHash = block.get(BlockIndex.HHash.ordinal()).getRLPData();
+            this.immutableBlockHash = block.get(BlockIndex.IMBHash.ordinal()).getRLPData();
+
+            this.baseTarget = new BigInteger(block.get(BlockIndex.BaseTarget.ordinal()).getRLPData());
+            this.cumulativeDifficulty = new BigInteger(block.get(BlockIndex.CDifficulty.ordinal()).getRLPData());
+            this.generationSignature = block.get(BlockIndex.GSignature.ordinal()).getRLPData();
+
+            this.minerBalance = new BigInteger(block.get(BlockIndex.MBalance.ordinal()).getRLPData());
+            this.senderBalance = new BigInteger(block.get(BlockIndex.SBalance.ordinal()).getRLPData());
+            this.receiverBalance = new BigInteger(block.get(BlockIndex.RBalance.ordinal()).getRLPData());
+            this.senderNonce = new BigInteger(block.get(BlockIndex.SNonce.ordinal()).getRLPData());
+
+            this.signature = block.get(BlockIndex.Signature.ordinal()).getRLPData();
+            this.minerPubkey = block.get(BlockIndex.MPubkey.ordinal()).getRLPData();
         }
 
         isParsed = true;
@@ -383,7 +400,7 @@ public class Block {
      */
     public long getTimeStamp() {
         if(!isParsed) parseEncodedBytes();
-        return timestamp;
+        return this.timestamp;
     }
 
     /**
@@ -392,16 +409,25 @@ public class Block {
      */
     public long getBlockNum() {
         if(!isParsed) parseEncodedBytes();
-        return blockNum;
+        return this.blockNum;
     }
 
     /**
-     * get previous block hash.
+     * get vertical hash.
      * @return
      */
-    public byte[] getPreviousBlockHash() {
+    public byte[] getVerticalHash() {
         if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(previousBlockHash, ChainParam.HashLength);
+        return this.verticalHash;
+    }
+
+    /**
+     * get horizontal hash.
+     * @return
+     */
+    public byte[] getHorizontalHash() {
+        if(!isParsed) parseEncodedBytes();
+        return this.horizontalHash;
     }
 
     /**
@@ -410,7 +436,7 @@ public class Block {
      */
     public byte[] getImmutableBlockHash() {
         if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(immutableBlockHash, ChainParam.HashLength);
+        return this.immutableBlockHash;
     }
 
     /**
@@ -419,9 +445,7 @@ public class Block {
      */
     public BigInteger getBaseTarget() {
         if(!isParsed) parseEncodedBytes();
-        byte[] targetbyte = ByteUtil.longToBytes(baseTarget);
-        //transfer signed bytes to unsigned.
-        return new BigInteger(targetbyte);
+        return this.baseTarget;
     }
 
     /**
@@ -430,8 +454,7 @@ public class Block {
      */
     public BigInteger getCumulativeDifficulty() {
         if(!isParsed) parseEncodedBytes();
-        byte[] difficultybyte = ByteUtil.longToBytes(cumulativeDifficulty);
-        return new BigInteger(difficultybyte);
+        return this.cumulativeDifficulty;
     }
 
     /**
@@ -440,55 +463,43 @@ public class Block {
      */
     public byte[] getGenerationSignature() {
         if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(generationSignature, ChainParam.HashLength);
-    }
-
-    /**
-     * get transaction hash
-     * @return
-     */
-    public byte[] getTxHash() {
-        if(!isParsed) parseEncodedBytes();
-        if(null == txHash) {
-            return null;
-        }
-        return ByteUtil.longArrayToBytes(txHash, ChainParam.HashLength);
+        return this.generationSignature;
     }
 
     /**
      * get current block miner balance.
      * @return
      */
-    public long getMinerBalance() {
+    public BigInteger getMinerBalance() {
         if(!isParsed) parseEncodedBytes();
-        return minerBalance;
+        return this.minerBalance;
     }
 
     /**
      * get transaction sender balance.
      * @return
      */
-    public long getSenderBalance() {
+    public BigInteger getSenderBalance() {
         if(!isParsed) parseEncodedBytes();
-        return senderBalance;
+        return this.senderBalance;
     }
 
     /**
      * get receiver balance.
      * @return
      */
-    public long getReceiverBalance() {
+    public BigInteger getReceiverBalance() {
         if(!isParsed) parseEncodedBytes();
-        return receiverBalance;
+        return this.receiverBalance;
     }
 
     /**
      * get transaction sender nonce.
      * @return
      */
-    public long getSenderNonce() {
+    public BigInteger getSenderNonce() {
         if(!isParsed) parseEncodedBytes();
-        return senderNonce;
+        return this.senderNonce;
     }
 
     /**
@@ -497,7 +508,7 @@ public class Block {
      */
     public byte[] getSignature() {
         if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(signature, ChainParam.SignatureLength);
+        return this.signature;
     }
 
     /**
@@ -506,7 +517,7 @@ public class Block {
      */
     public byte[] getMinerPubkey() {
         if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(minerPubkey, ChainParam.PubkeyLength);
+        return this.minerPubkey;
     }
 
     /**
@@ -541,7 +552,7 @@ public class Block {
      */
     public byte[] signBlock(byte[] prikey){
         byte[] sig = Ed25519.sign(this.getBlockSigMsg(), getMinerPubkey(), prikey);
-        this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
+        this.signature = sig;
         return sig;
     }
 
@@ -553,12 +564,14 @@ public class Block {
      */
     public boolean isBlockParamValidate(){
         if(!isParsed) parseEncodedBytes();
+
         if((timestamp > (System.currentTimeMillis() / 1000 + ChainParam.BlockTimeDrift)) || timestamp < 0) return false;
         if(blockNum < 0) return false;
-        if(minerBalance < 0) return false;
-        if(senderBalance < 0) return false;
-        if(receiverBalance < 0) return false;
-        if(senderNonce < 0 ) return false;
+        if(minerBalance.compareTo(BigInteger.ZERO) < 0) return false;
+        if(senderBalance.compareTo(BigInteger.ZERO) < 0) return false;
+        if(receiverBalance.compareTo(BigInteger.ZERO) < 0) return false;
+        if(senderNonce.compareTo(BigInteger.ZERO) < 0) return false;
+
         return true;
     }
 
@@ -576,7 +589,7 @@ public class Block {
      * set block version
      * @param version
      */
-    public void setVersion(byte version) {
+    public void setVersion(long version) {
         this.version = version;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
@@ -603,11 +616,21 @@ public class Block {
     }
 
     /**
-     * set previous block hash.
-     * @param previousBlockHash
+     * set vertical block hash.
+     * @param verticalHash
      */
-    public void setPreviousBlockHash(byte[] previousBlockHash) {
-        this.previousBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(previousBlockHash, ChainParam.HashLongArrayLength);
+    public void setVerticalHash(byte[] verticalHash) {
+        this.verticalHash = verticalHash;
+        this.encodedBytes = null;
+        this.sigEncodedBytes = null;
+    }
+
+    /**
+     * set horizontal block hash.
+     * @param horizontalHash
+     */
+    public void setHorizontalHash(byte[] horizontalHash) {
+        this.verticalHash = verticalHash;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
     }
@@ -617,7 +640,7 @@ public class Block {
      * @param immutableBlockHash
      */
     public void setImmutableBlockHash(byte[] immutableBlockHash) {
-        this.immutableBlockHash = ByteUtil.unAlignByteArrayToSignLongArray(immutableBlockHash, ChainParam.HashLongArrayLength);
+        this.immutableBlockHash = immutableBlockHash;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
     }
@@ -627,7 +650,7 @@ public class Block {
      * @param baseTarget
      */
     public void setBaseTarget(BigInteger baseTarget) {
-        this.baseTarget = ByteUtil.byteArrayToSignLong(baseTarget.toByteArray());;
+        this.baseTarget = baseTarget;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
     }
@@ -637,7 +660,7 @@ public class Block {
      * @param cumulativeDifficulty
      */
     public void setCumulativeDifficulty(BigInteger cumulativeDifficulty) {
-        this.cumulativeDifficulty = ByteUtil.byteArrayToSignLong(cumulativeDifficulty.toByteArray());
+        this.cumulativeDifficulty = cumulativeDifficulty;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
     }
@@ -647,17 +670,7 @@ public class Block {
      * @param generationSignature
      */
     public void setGenerationSignature(byte[] generationSignature) {
-        this.generationSignature = ByteUtil.byteArrayToSignLongArray(generationSignature,4);
-        this.encodedBytes = null;
-        this.sigEncodedBytes = null;
-    }
-
-    /**
-     * set block tx Message.
-     * @param txHash
-     */
-    public void setTxHash(byte[] txHash) {
-        this.txHash = ByteUtil.unAlignByteArrayToSignLongArray(txHash, ChainParam.HashLongArrayLength);
+        this.generationSignature = generationSignature;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
     }
@@ -666,7 +679,7 @@ public class Block {
      * set miner balance.
      * @param minerBalance
      */
-    public void setMinerBalance(long minerBalance) {
+    public void setMinerBalance(BigInteger minerBalance) {
         this.minerBalance = minerBalance;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
@@ -676,7 +689,7 @@ public class Block {
      * set sender balance.
      * @param senderBalance
      */
-    public void setSenderBalance(long senderBalance) {
+    public void setSenderBalance(BigInteger senderBalance) {
         this.senderBalance = senderBalance;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
@@ -686,7 +699,7 @@ public class Block {
      * set receiver balance.
      * @param receiverBalance
      */
-    public void setReceiverBalance(long receiverBalance) {
+    public void setReceiverBalance(BigInteger receiverBalance) {
         this.receiverBalance = receiverBalance;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
@@ -696,7 +709,7 @@ public class Block {
      * set sender nonce.
      * @param senderNonce
      */
-    public void setSenderNonce(long senderNonce) {
+    public void setSenderNonce(BigInteger senderNonce) {
         this.senderNonce = senderNonce;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
@@ -707,7 +720,7 @@ public class Block {
      * @param minerPubkey
      */
     public void setMinerPubkey(byte[] minerPubkey) {
-        this.minerPubkey = ByteUtil.byteArrayToSignLongArray(minerPubkey, ChainParam.PubkeyLongArrayLength);
+        this.minerPubkey = minerPubkey;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
     }
@@ -717,7 +730,7 @@ public class Block {
      * @param signature
      */
     public void setSignature(byte[] signature){
-        this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
+        this.signature = signature;
         this.encodedBytes = null;
     }
 
@@ -725,23 +738,22 @@ public class Block {
     public String toString(){
         StringBuilder strBlock = new StringBuilder();
         strBlock.append("block: [");
-        strBlock.append(" blockhash: ").append(ByteUtil.toHexString(this.getBlockHash()));
-        strBlock.append(" version: ").append(this.getVersion());
-        Date date = new Date(this.getTimeStamp() * 1000);
-        strBlock.append(" timestamp: ").append(DateUtil.dateToStrLong(date));
-        strBlock.append(" blocknum: ").append(this.getBlockNum());
-        strBlock.append(" previousblockhash: ").append(ByteUtil.toHexString(this.getPreviousBlockHash()));
-        strBlock.append(" immutableblockhash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash()));
-        strBlock.append(" baseTarget: ").append(this.getBaseTarget());
-        strBlock.append(" cumulativeDifficulty: ").append(this.getCumulativeDifficulty());
-        strBlock.append(" generationsignature: ").append(ByteUtil.toHexString(this.getGenerationSignature()));
-        strBlock.append(" transaction: ").append(ByteUtil.toHexString(this.getTxHash()));
-        strBlock.append(" minerbalance: ").append(this.getMinerBalance());
-        strBlock.append(" senderbalance: ").append(this.getSenderBalance());
-        strBlock.append(" receiverbalance: ").append(this.getReceiverBalance());
-        strBlock.append(" sendernonce: ").append(this.getSenderNonce());
-        strBlock.append(" signature: ").append(ByteUtil.toHexString(this.getSignature()));
-        strBlock.append(" minerpubkey: ").append(ByteUtil.toHexString(this.getMinerPubkey()));
+        strBlock.append(" Block hash: ").append(ByteUtil.toHexString(this.getBlockHash()));
+        strBlock.append(" Version: ").append(this.getVersion());
+        strBlock.append(" Timestamp: ").append(this.getTimeStamp());
+        strBlock.append(" Blocknum: ").append(this.getBlockNum());
+        strBlock.append(" Vertical hash: ").append(this.getVerticalHash());
+        strBlock.append(" Horizontal hash: ").append(ByteUtil.toHexString(this.getHorizontalHash()));
+        strBlock.append(" Immutable block hash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash()));
+        strBlock.append(" BaseTarget: ").append(this.getBaseTarget());
+        strBlock.append(" CumulativeDifficulty: ").append(this.getCumulativeDifficulty());
+        strBlock.append(" Generationsignature: ").append(ByteUtil.toHexString(this.getGenerationSignature()));
+        strBlock.append(" Miner balance: ").append(this.getMinerBalance());
+        strBlock.append(" Sender balance: ").append(this.getSenderBalance());
+        strBlock.append(" Receiver balance: ").append(this.getReceiverBalance());
+        strBlock.append(" Sender nonce: ").append(this.getSenderNonce());
+        strBlock.append(" Signature: ").append(ByteUtil.toHexString(this.getSignature()));
+        strBlock.append(" Minerpubkey: ").append(ByteUtil.toHexString(this.getMinerPubkey()));
         strBlock.append("]");
         return strBlock.toString();
     }
