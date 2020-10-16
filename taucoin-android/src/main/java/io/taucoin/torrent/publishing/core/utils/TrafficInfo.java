@@ -30,47 +30,58 @@ public class TrafficInfo {
     /**
      * Get traffic
      */
-    public static long getTrafficUsed(Context context) {
+    public static NetworkStatistics getTrafficUsed(Context context) {
         if (context == null) {
-            return -1;
+            return null;
         }
-        long traffic = -1;
         try {
             PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             if (packageInfo == null) {
-                return -1;
+                return null;
             }
             int uid = packageInfo.applicationInfo.uid;
-            traffic = getTraffic(uid);
+            NetworkStatistics statistics = getTraffic(uid);
 
-            if (traffic == 0 || traffic == -1) {
-                traffic = getTrafficApi25(uid);
+            if (null == statistics) {
+                statistics = getTrafficApi25(uid);
             }
+            return statistics;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return traffic;
+        return null;
     }
 
     /**traffic
      * Specify uid to get
      */
-    private static long getTraffic(int uid) {
-        long traffic = -1;
+    private static NetworkStatistics getTraffic(int uid) {
+        long txBytes = -1;
+        long rxBytes = -1;
         try {
-            traffic = (TrafficStats.getUidTxBytes(uid)) + (TrafficStats.getUidRxBytes(uid));
-            if (traffic == -1 || traffic == 0 || traffic == -2) {
-                traffic = getTrafficUsedByFile(uid);
+            rxBytes = TrafficStats.getUidRxBytes(uid);
+            txBytes = TrafficStats.getUidTxBytes(uid);
+            if (rxBytes == -1 && txBytes == -1) {
+                return getTrafficUsedByFile(uid);
             }
         } catch (Exception ignore) {
         }
-        return traffic;
+        if(rxBytes == -1 && txBytes == -1){
+            return null;
+        }else{
+            if(rxBytes == -1){
+                rxBytes = 0;
+            }else if(txBytes == -1){
+                txBytes = 0;
+            }
+        }
+        return new NetworkStatistics(txBytes, rxBytes);
     }
 
     /**
      * Failed to read traffic data for miui8, read system file directly
      */
-    private static long getTrafficUsedByFile(int uid) {
+    private static NetworkStatistics getTrafficUsedByFile(int uid) {
         long receive = -1;
         File receiveFile = new File(String.format("/proc/uid_stat/%s/tcp_rcv", uid));
         BufferedReader buffer = null;
@@ -106,12 +117,12 @@ public class TrafficInfo {
         }
 
         if (receive == -1 && send == -1) {
-            return -1;
+            return null;
         }
 
         receive = (receive == -1) ? 0 : receive;
         send = (send == -1) ? 0 : send;
-        return (receive + send);
+        return new NetworkStatistics(send, receive);
     }
 
     /**
@@ -119,8 +130,9 @@ public class TrafficInfo {
      * @param uid uid
      * @return long
      */
-    private static long getTrafficApi25(int uid) {
-        long traffic = 0;
+    private static NetworkStatistics getTrafficApi25(int uid) {
+        long receive = 0;
+        long send = 0;
         try {
             Method methodGetStatsService = TrafficStats.class.getDeclaredMethod("getStatsService");
             Class classINetworkStatsService = Class.forName("android.net.INetworkStatsService");
@@ -141,19 +153,25 @@ public class TrafficInfo {
                 if ("rxBytes".equals(f.getName())) {
                     long[] rxBytes = (long[]) f.get(netWorkStats);
                     for (int i = 0; i < rxBytes.length; i++) {
-                        traffic = traffic + rxBytes[i];
+                        receive += rxBytes[i];
                     }
 
                 } else if ("txBytes".equals(f.getName())) {
                     long[] txBytes = (long[]) f.get(netWorkStats);
                     for (int i = 0; i < txBytes.length; i++) {
-                        traffic = traffic + txBytes[i];
+                        send += txBytes[i];
                     }
                 }
             }
         } catch (Exception e) {
-            traffic = -1;
+            receive = -1;
+            send = -1;
         }
-        return traffic;
+        if (receive == -1 && send == -1) {
+            return null;
+        }
+        receive = (receive == -1) ? 0 : receive;
+        send = (send == -1) ? 0 : send;
+        return new NetworkStatistics(send, receive);
     }
 }

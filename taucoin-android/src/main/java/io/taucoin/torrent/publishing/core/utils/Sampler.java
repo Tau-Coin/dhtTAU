@@ -43,8 +43,8 @@ public class Sampler {
     }
 
     public double sampleCPU() {
-        long cpuTime;
-        long appTime;
+        long cpuTime = 0;
+        long appTime = 0;
         double sampleValue = 0.0D;
         try {
             if (appStatFile == null) {
@@ -58,12 +58,17 @@ public class Sampler {
             }
             if (procStatFile != null) {
                 String procStatString = procStatFile.readLine();
-                String[] procStats = procStatString.split(" ");
-                cpuTime = Long.parseLong(procStats[2]) + Long.parseLong(procStats[3])
-                        + Long.parseLong(procStats[4]) + Long.parseLong(procStats[5])
-                        + Long.parseLong(procStats[6]) + Long.parseLong(procStats[7])
-                        + Long.parseLong(procStats[8]);
-            } else {
+                if (StringUtil.isNotEmpty(procStatString)) {
+                    String[] procStats = procStatString.split(" ");
+                    if (procStats.length > 8) {
+                        cpuTime = Long.parseLong(procStats[2]) + Long.parseLong(procStats[3])
+                                + Long.parseLong(procStats[4]) + Long.parseLong(procStats[5])
+                                + Long.parseLong(procStats[6]) + Long.parseLong(procStats[7])
+                                + Long.parseLong(procStats[8]);
+                    }
+                }
+            }
+            if (cpuTime == 0) {
                 Date date = new Date();
                 cpuTime = date.getTime();
             }

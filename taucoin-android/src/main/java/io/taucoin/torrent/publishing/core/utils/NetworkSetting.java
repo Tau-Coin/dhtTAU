@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import io.taucoin.torrent.SessionStats;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -20,6 +19,9 @@ public class NetworkSetting {
     private static final long meteredLimited = 50 * 1024 * 1024; // 50MB
     private static final long speed_sample = 60; // 单位s
     private static final boolean autoMode = true;
+    private static final long NO_SESSIONS = 0;
+    private static final long MIN_SESSIONS = 1;
+    private static final long MAX_SESSIONS = 32;
 
     private static SettingsRepository settingsRepo;
     static {
@@ -63,13 +65,13 @@ public class NetworkSetting {
                 false);
     }
 
-    public synchronized static void updateSpeed(@NonNull SessionStats newStats) {
+    public synchronized static void updateSpeed(@NonNull NetworkStatistics statistics) {
         Context context = MainApplication.getInstance();
         if (!SystemServiceManager.getInstance(context).isNetworkMetered()) {
             clearSpeedList();
            return;
         }
-        long total = newStats.totalDownload() + newStats.totalUpload();
+        long total = statistics.getRxBytes() + statistics.getTxBytes();
         long size = TrafficUtil.parseIncrementalSize(TrafficUtil.getMeteredType(), total);
         List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_metered_speed_list),
                 Long.class);
@@ -119,5 +121,53 @@ public class NetworkSetting {
     public static long getMeteredSpeedLimit() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_speed_limit));
+    }
+
+    public static long getDHTSessions() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_sessions),
+                0);
+    }
+
+    public static void clearDHTSessions() {
+        updateDHTSessions(0);
+    }
+
+    public static void updateDHTSessions(long sessions) {
+        Context context = MainApplication.getInstance();
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_sessions),
+                sessions);
+    }
+
+    /**
+     * 计算DHT Session个数
+     */
+    public static long calculateDHTSessions() {
+        long sessions = getDHTSessions();
+        Context context = MainApplication.getInstance();
+        long meteredLimit = meteredLimit();
+        // 当前网络为计费网络，并且有流量控制
+        if (SystemServiceManager.getInstance(context).isNetworkMetered() && meteredLimit != 0) {
+            long currentSpeed = NetworkSetting.getMeteredSpeed();
+            long speedLimit = NetworkSetting.getMeteredSpeedLimit();
+            if (speedLimit > 0) {
+                if (currentSpeed > speedLimit) {
+                    if (sessions > MIN_SESSIONS) {
+                        sessions --;
+                    }
+                } else {
+                    if (sessions < MAX_SESSIONS) {
+                        sessions ++;
+                    }
+                }
+            } else {
+                // 超出流量控制范围
+                sessions = NO_SESSIONS;
+            }
+        } else {
+            // 不限制DHT Sessions
+            sessions = MAX_SESSIONS;
+        }
+        return sessions;
     }
 }

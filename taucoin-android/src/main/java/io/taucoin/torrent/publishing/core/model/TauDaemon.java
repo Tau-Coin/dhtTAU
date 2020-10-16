@@ -26,7 +26,6 @@ import io.taucoin.core.AccountState;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.SessionStats;
-import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -65,6 +64,7 @@ public class TauDaemon {
     private SystemServiceManager systemServiceManager;
     private ExecutorService exec = Executors.newSingleThreadExecutor();
     private TauListenHandler tauListenHandler;
+    private TauInfoProvider tauInfoProvider;
     private volatile boolean isRunning = false;
     private volatile String seed;
 
@@ -88,6 +88,7 @@ public class TauDaemon {
         settingsRepo = RepositoryHelper.getSettingsRepository(appContext);
         systemServiceManager = SystemServiceManager.getInstance(appContext);
         tauListenHandler = new TauListenHandler(appContext, this);
+        tauInfoProvider = TauInfoProvider.getInstance(this);
 
         AndroidLeveldbFactory androidLeveldbFactory = new AndroidLeveldbFactory();
         String repoPath = appContext.getApplicationInfo().dataDir;
@@ -100,6 +101,8 @@ public class TauDaemon {
 
         switchPowerReceiver();
         switchConnectionReceiver();
+        // 清空DHT Sessions
+        NetworkSetting.clearDHTSessions();
     }
 
     /**
@@ -214,7 +217,6 @@ public class TauDaemon {
                 logger.debug("Tau start successfully");
                 isRunning = true;
                 rescheduleTauBySettings();
-                TrafficUtil.resetTrafficTotalOld();
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
@@ -222,12 +224,12 @@ public class TauDaemon {
 
         @Override
         public void onSessionStats(@NonNull SessionStats newStats) {
-            logger.debug("onSessionStats totalDownload::{}, totalUpload::{}",
-                    Formatter.formatFileSize(appContext, newStats.totalDownload()),
-                    Formatter.formatFileSize(appContext, newStats.totalUpload()));
-            NetworkSetting.updateSpeed(newStats);
-            TrafficUtil.saveTrafficTotal(newStats);
-            rescheduleTauBySettings();
+            super.onSessionStats(newStats);
+            logger.debug("onSessionStats::{}, TrafficTotal::{}", Formatter.formatFileSize(appContext,
+                    newStats.totalDownload + newStats.totalUpload),
+                    Formatter.formatFileSize(appContext,
+                            TrafficUtil.getTrafficDownloadTotal() +
+                                    TrafficUtil.getTrafficUploadTotal()));
         }
 
         @Override
@@ -260,6 +262,9 @@ public class TauDaemon {
             return;
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribe(this::handleSettingsChanged));
+        disposables.add(tauInfoProvider.observeTrafficStatistics()
+                .subscribeOn(Schedulers.newThread())
+                .subscribe());
         tauController.start(sessionSettings);
     }
 
@@ -334,6 +339,7 @@ public class TauDaemon {
     private void handleSettingsChanged(String key) {
         if (key.equals(appContext.getString(R.string.pref_key_internet_state))) {
             logger.info("SettingsChanged, internet state::{}", settingsRepo.internetState());
+            rescheduleTauBySettings();
             enableServerMode(settingsRepo.serverMode());
         } else if (key.equals(appContext.getString(R.string.pref_key_charging_state))) {
             logger.info("SettingsChanged, charging state::{}", settingsRepo.chargingState());
@@ -349,26 +355,22 @@ public class TauDaemon {
     /**
      * 根据当前设置重新调度Tau
      */
-    private synchronized void rescheduleTauBySettings() {
+    synchronized void rescheduleTauBySettings() {
         if (!isRunning){
             return;
         }
-        logger.info("rescheduleTauBySettings Auto Mode::{}", NetworkSetting.autoMode());
-        if (systemServiceManager.isNetworkMetered()) {
-            long currentSpeed = NetworkSetting.getMeteredSpeed();
-            long speedLimit = NetworkSetting.getMeteredSpeedLimit();
-            if (speedLimit > 0) {
-                if (currentSpeed > speedLimit) {
-                    // TODO: DHT信号0
-                } else {
-                    // TODO: DHT信号1
-                }
-            } else {
-                // TODO: DHT禁用网络
-            }
-        } else {
-            // TODO: DHT不限制网速
+        boolean internetState = settingsRepo.internetState();
+        long sessions = 0;
+        // 判断有无网络连接
+        if (settingsRepo.internetState()) {
+            sessions = NetworkSetting.calculateDHTSessions();
         }
+        // TODO：通知DHT Controller有无网络连接和DHT Sessions个数
+        NetworkSetting.updateDHTSessions(sessions);
+        logger.info("rescheduleTauBySettings Auto Mode::{}, internetState::{}, DHTSessions::{}",
+                NetworkSetting.autoMode(),
+                internetState,
+                sessions);
     }
 
     /**

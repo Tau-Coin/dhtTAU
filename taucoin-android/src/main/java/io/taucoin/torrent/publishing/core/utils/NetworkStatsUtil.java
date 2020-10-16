@@ -35,25 +35,24 @@ public class NetworkStatsUtil {
         }
     }
 
-    public static long getSummaryTotal(Context context) {
+    public static NetworkStatistics getSummaryTotal(Context context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return -1;
+            return null;
         }
         if (context == null) {
-            return -1;
+            return null;
         }
-        long summaryTotal = -1;
         try {
             PackageInfo packageInfo = context.getPackageManager().getPackageInfo(
                     context.getPackageName(), 0);
             if (packageInfo == null) {
-                return -1;
+                return null;
             }
             int uid = packageInfo.applicationInfo.uid;
-            summaryTotal = getSummaryTotal(uid);
+            return getSummaryTotal(uid);
         } catch (Exception ignore) {
         }
-        return summaryTotal;
+        return null;
     }
 
     public boolean hasPermissionToReadNetworkStats(FragmentActivity activity) {
@@ -78,10 +77,10 @@ public class NetworkStatsUtil {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private static long getSummaryTotal(int uid) {
+    private static NetworkStatistics getSummaryTotal(int uid) {
         init();
-        long summaryMobile = -1;
-        long summaryWifi = -1;
+        long rxBytes = 0;
+        long txBytes = 0;
         try {
             NetworkStats summaryStats;
             NetworkStats.Bucket summaryBucket = new NetworkStats.Bucket();
@@ -96,8 +95,8 @@ public class NetworkStatsUtil {
                 summaryStats.getNextBucket(summaryBucket);
                 int summaryUid = summaryBucket.getUid();
                 if (uid == summaryUid) {
-                    summaryMobile += summaryBucket.getRxBytes();
-                    summaryMobile += summaryBucket.getTxBytes();
+                    rxBytes += summaryBucket.getRxBytes();
+                    txBytes += summaryBucket.getTxBytes();
                 }
             } while (summaryStats.hasNextBucket());
             summaryStats.close();
@@ -108,30 +107,16 @@ public class NetworkStatsUtil {
                 summaryStats.getNextBucket(summaryBucket);
                 int summaryUid = summaryBucket.getUid();
                 if (uid == summaryUid) {
-                    summaryWifi += summaryBucket.getRxBytes();
-                    summaryWifi += summaryBucket.getTxBytes();
+                    rxBytes += summaryBucket.getRxBytes();
+                    txBytes += summaryBucket.getTxBytes();
                 }
             } while (summaryStats.hasNextBucket());
             summaryStats.close();
+            return new NetworkStatistics(txBytes, rxBytes);
         }catch (Exception e) {
             logger.error("networkStatsManager.querySummary is error", e);
         }
-        if(summaryMobile == -1 && summaryWifi == -1){
-            return -1;
-        }else{
-            if(summaryMobile == -1){
-                summaryMobile = 0;
-            }else if(summaryWifi == -1){
-                summaryWifi = 0;
-            }
-        }
-        long summaryTotal = summaryMobile + summaryWifi;
-        Context context = MainApplication.getInstance();
-        logger.debug("uid:{}, mobile:{}({}), wifi:{}({}), total:{}({})", uid,
-                Formatter.formatFileSize(context, summaryMobile), summaryMobile,
-                Formatter.formatFileSize(context, summaryWifi), summaryWifi,
-                Formatter.formatFileSize(context, summaryTotal), summaryTotal);
-        return summaryTotal;
+        return null;
     }
 
     private static long getTimesDayMorning() {

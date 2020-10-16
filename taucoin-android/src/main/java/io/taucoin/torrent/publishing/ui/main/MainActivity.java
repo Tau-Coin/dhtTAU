@@ -3,14 +3,12 @@ package io.taucoin.torrent.publishing.ui.main;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import androidx.core.view.MenuItemCompat;
-import io.taucoin.torrent.SessionStats;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +32,8 @@ import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
+import io.taucoin.torrent.publishing.core.utils.Formatter;
+import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
@@ -145,7 +145,7 @@ public class MainActivity extends BaseActivity {
                 R.string.close_navigation_drawer);
         binding.drawerLayout.addDrawerListener(toggle);
 
-        updateDHTStats(null);
+        updateDHTStats();
 
         initFabSpeedDial();
     }
@@ -179,30 +179,17 @@ public class MainActivity extends BaseActivity {
     }
 
     /**
-     * 订阅DHT的状态
-     */
-    private void subscribeDHTStatus() {
-        disposables.add(infoProvider.observeSessionStats()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::updateDHTStats));
-    }
-
-    /**
      * 更新DHT的状态
      */
-    private void updateDHTStats(SessionStats sessionStats) {
-        long dhtNodes = 0;
-        if(sessionStats != null){
-            dhtNodes = sessionStats.dhtNodes();
-        }
+    private void updateDHTStats() {
+        long sessions = NetworkSetting.getDHTSessions();
         long downloadTotal = TrafficUtil.getTrafficDownloadTotal();
         long uploadTotal = TrafficUtil.getTrafficUploadTotal();
         String downloadTotalStr = Formatter.formatFileSize(this, downloadTotal).toUpperCase();
         String uploadTotalStr = Formatter.formatFileSize(this, uploadTotal).toUpperCase();
-        logger.info("dhtNodes::{}, downloadTotalStr::{}, uploadTotalStr::{}", dhtNodes,
+        logger.info("DHTSessions::{}, downloadTotalStr::{}, uploadTotalStr::{}", sessions,
                 downloadTotalStr, uploadTotalStr);
-        binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, dhtNodes));
+        binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, sessions));
         binding.drawer.itemDownloadData.setRightText(getString(R.string.drawer_daily_data,
                 downloadTotalStr));
         binding.drawer.itemUploadData.setRightText(getString(R.string.drawer_daily_data,
@@ -254,7 +241,6 @@ public class MainActivity extends BaseActivity {
     public void onStart() {
         super.onStart();
         subscribeCurrentUser();
-        subscribeDHTStatus();
         subscribeCPUAndMemStatistics();
         subscribeNeedStartDaemon();
         subscribeUnreadNotificationNum();
@@ -270,6 +256,7 @@ public class MainActivity extends BaseActivity {
                             statistics.cpuUsageRate + ""));
                     binding.drawer.itemMemSize.setRightText(getString(R.string.drawer_mem_data,
                             Formatter.formatFileSize(this, statistics.totalMemory)));
+                    updateDHTStats();
                 }));
     }
 

@@ -12,7 +12,10 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposables;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.core.utils.EmulatorUtil;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
+import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
+import io.taucoin.torrent.publishing.core.utils.NetworkStatistics;
 import io.taucoin.torrent.publishing.core.utils.NetworkStatsUtil;
 import io.taucoin.torrent.publishing.core.utils.Sampler;
 import io.taucoin.torrent.publishing.core.utils.TrafficInfo;
@@ -24,8 +27,7 @@ import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 public class TauInfoProvider {
     private static final String TAG = TauInfoProvider.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
-    private static final int CPU_MEM_STATISTICS_PERIOD = 3 * 1000;
-    private static final int TRAFFIC_STATISTICS_PERIOD = 1 * 1000;
+    private static final int STATISTICS_PERIOD = 1000;
 
     private static volatile TauInfoProvider INSTANCE;
     private TauDaemon daemon;
@@ -60,6 +62,7 @@ public class TauInfoProvider {
      * 观察torrent SessionStats的工作流
      * @return Flowable
      */
+    @Deprecated
     public Flowable<SessionStats> observeSessionStats() {
         return makeSessionStatsFlowable();
     }
@@ -92,24 +95,33 @@ public class TauInfoProvider {
     private Flowable<SessionStats> makeTrafficStatisticsFlowable() {
         return Flowable.create((emitter) -> {
             try {
+                boolean isEmulator = EmulatorUtil.isEmulator();
                 while (!emitter.isCancelled()){
                     Context context = MainApplication.getInstance();
-                    long summaryTotal = NetworkStatsUtil.getSummaryTotal(context);
-                    if (summaryTotal != -1) {
-//                        TrafficUtil.saveTrafficSummaryTotal(summaryTotal);
-                        logger.debug("saveTrafficSummaryTotal::{}",
-                                Formatter.formatFileSize(context, summaryTotal));
-                    } else {
-                        long traffic = TrafficInfo.getTrafficUsed(context);
-                        traffic = traffic >= 0 ? traffic : 0;
-//                        TrafficUtil.saveTrafficTotal(traffic);
-//                        logger.debug("saveTrafficTotal::{}, traffic::{}",
-//                                Formatter.formatFileSize(context, TrafficUtil.getTrafficTotal()),
-//                                Formatter.formatFileSize(context, traffic));
+                    NetworkStatistics statistics = null;
+                    if (!isEmulator) {
+                        statistics = NetworkStatsUtil.getSummaryTotal(context);
                     }
-                    Thread.sleep(TRAFFIC_STATISTICS_PERIOD);
+                    logger.debug("Network statistical methods:: {}", null == statistics ?
+                            "TrafficInfo" : "NetworkStatsUtil");
+                    if (null == statistics) {
+                        statistics = TrafficInfo.getTrafficUsed(context);
+                    }
+                    if (statistics != null) {
+                        NetworkSetting.updateSpeed(statistics);
+                        TrafficUtil.saveTrafficTotal(statistics);
+                        daemon.rescheduleTauBySettings();
+                        logger.debug("Network statistical result:: rxBytes::{}({}), txBytes::{}({})",
+                                Formatter.formatFileSize(context, statistics.getRxBytes()),
+                                statistics.getRxBytes(),
+                                Formatter.formatFileSize(context, statistics.getTxBytes()),
+                                statistics.getTxBytes());
+                    }
+                    Thread.sleep(STATISTICS_PERIOD);
                 }
-            } catch (Exception ignore) {}
+            } catch (Exception e) {
+                logger.error("makeTrafficStatisticsFlowable is error", e);
+            }
         }, BackpressureStrategy.LATEST);
     }
 
@@ -151,7 +163,7 @@ public class TauInfoProvider {
                             Formatter.formatFileSize(context, statistics.totalMemory));
                     if (!emitter.isCancelled()) {
                         emitter.onNext(statistics);
-                        Thread.sleep(CPU_MEM_STATISTICS_PERIOD);
+                        Thread.sleep(STATISTICS_PERIOD);
                     }
                 }
             } catch (Exception ignore) {

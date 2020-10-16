@@ -5,7 +5,6 @@ import android.content.Context;
 import java.util.Date;
 
 import androidx.annotation.NonNull;
-import io.taucoin.torrent.SessionStats;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -29,12 +28,12 @@ public class TrafficUtil {
         settingsRepo = RepositoryHelper.getSettingsRepository(context);
     }
 
-    public static void saveTrafficTotal(@NonNull SessionStats newStats) {
+    public static void saveTrafficTotal(@NonNull NetworkStatistics statistics) {
         Context context = MainApplication.getInstance();
-        saveTrafficTotal(TRAFFIC_DOWN, newStats.totalDownload());
-        saveTrafficTotal(TRAFFIC_UP, newStats.totalUpload());
+        saveTrafficTotal(TRAFFIC_DOWN, statistics.getRxBytes());
+        saveTrafficTotal(TRAFFIC_UP, statistics.getTxBytes());
         if (SystemServiceManager.getInstance(context).isNetworkMetered()) {
-            long total = newStats.totalDownload() + newStats.totalUpload();
+            long total = statistics.getRxBytes() + statistics.getTxBytes();
             saveTrafficTotal(TRAFFIC_METERED, total);
         }
     }
@@ -54,7 +53,7 @@ public class TrafficUtil {
     public static long parseIncrementalSize(String trafficType, long byteSize) {
         resetTrafficInfo();
         String trafficValueOld = TRAFFIC_VALUE_OLD + trafficType;
-        long oldTraffic = settingsRepo.getLongValue(trafficValueOld);
+        long oldTraffic = settingsRepo.getLongValue(trafficValueOld, -1);
         if (oldTraffic >= 0 && byteSize > oldTraffic) {
             byteSize = byteSize - oldTraffic;
         } else {
@@ -63,10 +62,10 @@ public class TrafficUtil {
         return byteSize;
     }
 
-    public static void resetTrafficTotalOld() {
-        settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_DOWN, 0);
-        settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_UP, 0);
-        settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_METERED, 0);
+    private static void resetTrafficTotalOld() {
+        settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_DOWN, -1);
+        settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_UP, -1);
+        settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_METERED, -1);
     }
 
     private synchronized static void resetTrafficInfo() {
@@ -77,6 +76,7 @@ public class TrafficUtil {
             settingsRepo.setLongValue(TRAFFIC_VALUE + TRAFFIC_DOWN, 0);
             settingsRepo.setLongValue(TRAFFIC_VALUE + TRAFFIC_UP, 0);
             settingsRepo.setLongValue(TRAFFIC_VALUE + TRAFFIC_METERED, 0);
+            resetTrafficTotalOld();
         }
     }
 
