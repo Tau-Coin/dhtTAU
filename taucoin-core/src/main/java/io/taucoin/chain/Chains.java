@@ -2836,20 +2836,20 @@ public class Chains implements DHT.GetDHTItemCallback{
         // set state
         AccountState minerState = miningTrack.getAccount(chainID.getData(),
                 AccountManager.getInstance().getKeyPair().first);
-        block.setMinerBalance(minerState.getBalance().longValue());
+        block.setMinerBalance(minerState.getBalance());
 
         if (null != tx) {
             AccountState senderState = miningTrack.getAccount(chainID.getData(),
                     tx.getSenderPubkey());
-            block.setSenderBalance(senderState.getBalance().longValue());
-            block.setSenderNonce(senderState.getNonce().longValue());
+            block.setSenderBalance(senderState.getBalance());
+            block.setSenderNonce(senderState.getNonce());
 
             if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
 
                 AccountState receiverState = miningTrack.getAccount(chainID.getData(),
                         ((WiringCoinsTx)tx).getReceiver());
 
-                block.setReceiverBalance(receiverState.getBalance().longValue());
+                block.setReceiverBalance(receiverState.getBalance());
             }
         }
 

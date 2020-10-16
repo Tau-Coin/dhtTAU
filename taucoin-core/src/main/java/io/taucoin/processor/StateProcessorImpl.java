@@ -235,14 +235,9 @@ public class StateProcessorImpl implements StateProcessor {
                 AccountState minerState = stateDB.getAccount(this.chainID, miner);
                 AccountState senderState = stateDB.getAccount(this.chainID, sender);
 
-                long minerBalance = block.getMinerBalance();
-                long senderBalance = block.getSenderBalance();
-                long senderNonce = block.getSenderNonce();
-                long receiverBalance = block.getReceiverBalance();
-
                 // if not existed , update it
                 if (null == senderState) {
-                    senderState = new AccountState(BigInteger.valueOf(senderBalance), BigInteger.valueOf(senderNonce));
+                    senderState = new AccountState(block.getSenderBalance(), block.getSenderNonce());
 //                if (tx.getTxData().getMsgType() == MsgType.IdentityAnnouncement) {
 //                    senderState.setIdentity(tx.getTxData().getIdentityAnnouncementName());
 //                }
@@ -250,7 +245,7 @@ public class StateProcessorImpl implements StateProcessor {
                     // sender账户存在，则不用管miner和receiver与sender是同一账户的情况
                     // if account is existed, but nonce is null, update nonce
                     if (0 == senderState.getNonce().longValue()) {
-                        senderState.setNonce(BigInteger.valueOf(senderNonce));
+                        senderState.setNonce(block.getSenderNonce());
                     }
 
                     if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
@@ -260,7 +255,7 @@ public class StateProcessorImpl implements StateProcessor {
                         // receiver账户状态不存在与receiver == sender，两种情况不会同时发生
                         if (null == receiverState) {
                             // 执行到这里，说明receiver != sender
-                            receiverState = new AccountState(BigInteger.valueOf(receiverBalance), BigInteger.ZERO);
+                            receiverState = new AccountState(block.getReceiverBalance(), BigInteger.ZERO);
                             stateDB.updateAccount(this.chainID, ((WiringCoinsTx)tx).getReceiver(), receiverState);
                         }
                     }
@@ -271,7 +266,7 @@ public class StateProcessorImpl implements StateProcessor {
 
                 // if miner != sender && null, update miner
                 if (!Arrays.areEqual(sender, block.getMinerPubkey()) && null == minerState) {
-                    minerState = new AccountState(BigInteger.valueOf(minerBalance), BigInteger.ZERO);
+                    minerState = new AccountState(block.getMinerBalance(), BigInteger.ZERO);
                     stateDB.updateAccount(this.chainID, miner, minerState);
                 }
             }

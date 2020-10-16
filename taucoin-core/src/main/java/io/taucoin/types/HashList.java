@@ -1,57 +1,49 @@
 package io.taucoin.types;
 
-import com.frostwire.jlibtorrent.Entry;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import io.taucoin.param.ChainParam;
-import io.taucoin.util.ByteUtil;
+import io.taucoin.util.RLP;
+import io.taucoin.util.RLPList;
 
 public class HashList {
-    List<byte[]> hashList;
+    private List<byte[]> hashList;
+    private byte[] rlpEncoded;
 
     public HashList(List<byte[]> hashList) {
         this.hashList = hashList;
     }
 
     public HashList(byte[] encode) {
-        Entry entry = Entry.bdecode(encode);
-        List<Entry> entryList = entry.list();
-
-        this.hashList = new ArrayList<>();
-        if (null != entryList) {
-            for (Entry entryItem: entryList) {
-                ArrayList<Long> list = ByteUtil.stringToLongArrayList(entryItem.toString());
-                if (null != list) {
-                    byte[] hash = ByteUtil.longArrayToBytes(list, ChainParam.HashLength);
-                    if (null != hash) {
-                        this.hashList.add(hash);
-                    }
-                }
-//                this.hashList.add(ByteUtil.longArrayToBytes(ByteUtil.stringToLongArrayList(entryItem.toString()), ChainParam.HashLength));
-            }
-        }
+        this.rlpEncoded = encode;
     }
 
     public List<byte[]> getHashList() {
         return this.hashList;
     }
 
-    public byte[] getEncoded(){
-        List list = new ArrayList();
-        if (null != this.hashList) {
-            for (byte[] hash: this.hashList) {
-                ArrayList<Long> longList = ByteUtil.unAlignByteArrayToSignLongArray(hash, ChainParam.HashLongArrayLength);
-                if (null != longList) {
-                    list.add(longList);
-                } else {
-                    return null;
-                }
-            }
+    private void parseRLP() {
+        RLPList params = RLP.decode2(this.rlpEncoded);
+        RLPList list = (RLPList) params.get(0);
+        this.hashList = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            this.hashList.add(list.get(i).getRLPData());
         }
-        Entry entry = Entry.fromList(list);
+    }
 
-        return entry.bencode();
+    public byte[] getEncoded(){
+        if (null != this.hashList && this.hashList.size() > 1) {
+            byte[][] encodeList = new byte[this.hashList.size()][];
+
+            int i = 0;
+            for (byte[] hash: this.hashList) {
+                encodeList[i] = RLP.encodeElement(hash);
+                i++;
+            }
+
+            return RLP.encodeList(encodeList);
+        }
+
+        return null;
     }
 }
