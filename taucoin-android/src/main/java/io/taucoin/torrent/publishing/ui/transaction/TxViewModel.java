@@ -10,6 +10,7 @@ import com.frostwire.jlibtorrent.Ed25519;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -198,13 +199,14 @@ public class TxViewModel extends AndroidViewModel {
             Transaction transaction;
             if(tx.txType == TypesConfig.TxType.WCoinsType.ordinal()){
                 byte[] receiverPk = ByteUtil.toByte(tx.receiverPk);
-                transaction = new WiringCoinsTx(1, chainID, timestamp, tx.fee, tx.txType, senderPk,
-                        nonce, receiverPk, tx.amount, tx.memo);
+                transaction = new WiringCoinsTx(1, chainID, timestamp, BigInteger.valueOf(tx.fee),
+                        tx.txType, senderPk, BigInteger.valueOf(nonce), receiverPk,
+                        BigInteger.valueOf(tx.amount), tx.memo.getBytes());
             } else {
                 // DHT PUT
                 byte[] forumNoteHash = daemon.putForumNote(tx.memo);
-                transaction = new ForumNoteTx(1, chainID, timestamp, tx.fee, tx.txType,
-                        senderPk, nonce, forumNoteHash);
+                transaction = new ForumNoteTx(1, chainID, timestamp, BigInteger.valueOf(tx.fee), tx.txType,
+                        senderPk, BigInteger.valueOf(nonce), forumNoteHash);
             }
             transaction.signTransactionWithSeed(senderSeed);
             // 把交易数据transaction.getEncoded()提交给链端

@@ -167,7 +167,7 @@ class TauListenHandler {
     private void handleTransactionData(@NonNull Transaction txMsg, boolean isRollback, boolean isSync) {
         String txID = ByteUtil.toHexString(txMsg.getTxID());
         String chainID = Utils.toUTF8String(txMsg.getChainID());
-        long fee = txMsg.getTxFee();
+        long fee = txMsg.getTxFee().longValue();
         final long txType = txMsg.getTxType();
         Tx tx = new Tx(txID, chainID, fee, txType);
         tx.senderPk = ByteUtil.toHexString(txMsg.getSenderPubkey());
@@ -193,7 +193,7 @@ class TauListenHandler {
 
             // 添加交易
             tx.receiverPk = ByteUtil.toHexString(wiringTx.getReceiver());
-            tx.amount = wiringTx.getAmount();
+            tx.amount = wiringTx.getAmount().longValue();
             txRepo.addTransaction(tx);
             logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
         } else if (txType == TypesConfig.TxType.GenesisType.ordinal()){

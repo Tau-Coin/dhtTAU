@@ -154,10 +154,14 @@ public class NetworkSetting {
                 if (currentSpeed > speedLimit) {
                     if (sessions > MIN_SESSIONS) {
                         sessions --;
+                    } else {
+                        sessions = MIN_SESSIONS;
                     }
                 } else {
                     if (sessions < MAX_SESSIONS) {
                         sessions ++;
+                    } else {
+                        sessions = MAX_SESSIONS;
                     }
                 }
             } else {

@@ -25,17 +25,14 @@ import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.torrent.SessionSettings;
-import io.taucoin.torrent.SessionStats;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
-import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
@@ -220,16 +217,6 @@ public class TauDaemon {
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
-        }
-
-        @Override
-        public void onSessionStats(@NonNull SessionStats newStats) {
-            super.onSessionStats(newStats);
-            logger.debug("onSessionStats::{}, TrafficTotal::{}", Formatter.formatFileSize(appContext,
-                    newStats.totalDownload + newStats.totalUpload),
-                    Formatter.formatFileSize(appContext,
-                            TrafficUtil.getTrafficDownloadTotal() +
-                                    TrafficUtil.getTrafficUploadTotal()));
         }
 
         @Override
