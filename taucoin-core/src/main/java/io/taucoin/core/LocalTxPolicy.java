@@ -8,7 +8,7 @@ import java.util.Comparator;
 
 public class LocalTxPolicy implements Comparator<LocalTxEntry> {
 
-    private static final Logger log = LoggerFactory.getLogger("LocalTxPolicy");
+    private static final Logger logger = LoggerFactory.getLogger("LocalTxPolicy");
 
     @Override
     public int compare(LocalTxEntry entry1, LocalTxEntry entry2) {

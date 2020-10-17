@@ -71,18 +71,18 @@ public class StateProcessorImpl implements StateProcessor {
                 }
 
                 // check nonce
-                if (sendState.getNonce().longValue() + 1 != tx.getNonce()) {
+                if (sendState.getNonce().longValue() + 1 != tx.getNonce().longValue()) {
                     logger.error("Account:{} nonce mismatch!", Hex.toHexString(sender));
                     return INVALID_BLOCK;
                 }
 
-                long fee = tx.getTxFee();
+                BigInteger fee = tx.getTxFee();
 
                 if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
                     // check balance
-                    long amount = ((WiringCoinsTx)tx).getAmount();
-                    long cost = amount + fee;
-                    if (sendState.getBalance().longValue() < cost) {
+                    BigInteger amount = ((WiringCoinsTx)tx).getAmount();
+                    BigInteger cost = amount.add(fee);
+                    if (sendState.getBalance().compareTo(cost) < 0) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
                                 cost, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
                         return INVALID_BLOCK;
@@ -91,20 +91,20 @@ public class StateProcessorImpl implements StateProcessor {
                     //Execute the transaction
                     // miner
                     AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-                    minerState.addBalance(BigInteger.valueOf(fee));
+                    minerState.addBalance(fee);
                     stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
                     // sender
-                    sendState.subBalance(BigInteger.valueOf(cost));
+                    sendState.subBalance(cost);
                     sendState.increaseNonce();
                     stateDB.updateAccount(chainID, sender, sendState);
                     // receiver
                     byte[] receiver = ((WiringCoinsTx)tx).getReceiver();
                     AccountState receiverState = stateDB.getAccount(chainID, receiver);
-                    receiverState.addBalance(BigInteger.valueOf(amount));
+                    receiverState.addBalance(amount);
                     stateDB.updateAccount(chainID, receiver, receiverState);
                 } else if (TypesConfig.TxType.FNoteType.ordinal() == tx.getTxType()) {
                     // check balance
-                    if (sendState.getBalance().longValue() < fee) {
+                    if (sendState.getBalance().compareTo(fee) < 0) {
                         logger.error("No enough balance: require: {}, sender's balance: {}, txid: {}, sender:{}",
                                 fee, sendState.getBalance(), Hex.toHexString(tx.getTxID()), Hex.toHexString(sender));
                         return INVALID_BLOCK;
@@ -113,10 +113,10 @@ public class StateProcessorImpl implements StateProcessor {
                     //Execute the transaction
                     // miner
                     AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
-                    minerState.addBalance(BigInteger.valueOf(fee));
+                    minerState.addBalance(fee);
                     stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
                     // sender
-                    sendState.subBalance(BigInteger.valueOf(fee));
+                    sendState.subBalance(fee);
                     sendState.increaseNonce();
                     stateDB.updateAccount(this.chainID, sender, sendState);
                 } else {
@@ -302,34 +302,34 @@ public class StateProcessorImpl implements StateProcessor {
                 }
 
                 Block block = blockContainer.getBlock();
-                long fee = tx.getTxFee();
+                BigInteger fee = tx.getTxFee();
 
                 if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
-                    long amount = ((WiringCoinsTx)tx).getAmount();
-                    long cost = amount + fee;
+                    BigInteger amount = ((WiringCoinsTx)tx).getAmount();
+                    BigInteger cost = amount.add(fee);
 
                     // roll back the transaction
                     // miner
                     AccountState minerState = stateDB.getAccount(this.chainID, block.getMinerPubkey());
-                    minerState.subBalance(BigInteger.valueOf(fee));
+                    minerState.subBalance(fee);
                     stateDB.updateAccount(this.chainID, block.getMinerPubkey(), minerState);
                     // sender
-                    sendState.addBalance(BigInteger.valueOf(cost));
+                    sendState.addBalance(cost);
                     sendState.reduceNonce();
                     stateDB.updateAccount(this.chainID, sender, sendState);
                     // receiver
                     byte[] receiver = ((WiringCoinsTx)tx).getReceiver();
                     AccountState receiverState = stateDB.getAccount(this.chainID, receiver);
-                    receiverState.subBalance(BigInteger.valueOf(amount));
+                    receiverState.subBalance(amount);
                     stateDB.updateAccount(this.chainID, receiver, receiverState);
                 } else {
                     // roll back the transaction
                     // miner
                     AccountState minerState = stateDB.getAccount(chainID, block.getMinerPubkey());
-                    minerState.subBalance(BigInteger.valueOf(fee));
+                    minerState.subBalance(fee);
                     stateDB.updateAccount(chainID, block.getMinerPubkey(), minerState);
                     // sender
-                    sendState.addBalance(BigInteger.valueOf(fee));
+                    sendState.addBalance(fee);
                     sendState.reduceNonce();
                     stateDB.updateAccount(chainID, sender, sendState);
                 }

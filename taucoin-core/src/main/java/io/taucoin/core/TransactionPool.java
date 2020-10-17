@@ -3,6 +3,7 @@ package io.taucoin.core;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 
@@ -130,7 +131,7 @@ public interface TransactionPool {
      * get maximum fee in pool
      * @return max tx fee in pool
      */
-    long getMaxFee();
+    BigInteger getMaxFee();
 
     /**
      * remove a transaction from pool

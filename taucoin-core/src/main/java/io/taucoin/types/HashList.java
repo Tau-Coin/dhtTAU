@@ -10,8 +10,11 @@ public class HashList {
     private List<byte[]> hashList;
     private byte[] rlpEncoded;
 
+    private boolean parsed = false;
+
     public HashList(List<byte[]> hashList) {
         this.hashList = hashList;
+        this.parsed = true;
     }
 
     public HashList(byte[] encode) {
@@ -19,16 +22,26 @@ public class HashList {
     }
 
     public List<byte[]> getHashList() {
+        if (!parsed) {
+            parseRLP();
+        }
+
         return this.hashList;
     }
 
     private void parseRLP() {
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
+
         this.hashList = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
-            this.hashList.add(list.get(i).getRLPData());
+            byte[] hashByte = list.get(i).getRLPData();
+            if (null != hashByte) {
+                this.hashList.add(hashByte);
+            }
         }
+
+        this.parsed = true;
     }
 
     public byte[] getEncoded(){

@@ -6,16 +6,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 public class MemoryPoolEntry {
 
-    private static final Logger log = LoggerFactory.getLogger(MemoryPoolEntry.class);
+    private static final Logger logger = LoggerFactory.getLogger(MemoryPoolEntry.class);
 
     public byte[] txid;
-    public long fee;
+    public BigInteger fee;
 
-    public MemoryPoolEntry(byte[] txid, long fee) {
+    public MemoryPoolEntry(byte[] txid, BigInteger fee) {
         this.txid = txid;
         this.fee = fee;
     }

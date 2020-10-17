@@ -3243,7 +3243,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     if (this.txMapForSync.get(dataIdentifier.getChainID()).containsKey(key)) {
 
                         Transaction tx = this.txMapForSync.get(dataIdentifier.getChainID()).get(key);
-
++
                         if (null != tx) {
                             BlockContainer blockContainer = new BlockContainer(block, tx);
 

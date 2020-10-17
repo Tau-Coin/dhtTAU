@@ -379,7 +379,7 @@ public class StateDBImpl implements StateDB {
     @Override
     public void putTxIntoSelfTxPool(byte[] chainID, Transaction tx) throws DBException {
         try {
-            db.put(PrefixKey.txPoolTxKey(chainID, tx.getSenderPubkey(), tx.getNonce()), tx.getEncoded());
+            db.put(PrefixKey.txPoolTxKey(chainID, tx.getSenderPubkey(), tx.getNonce().longValue()), tx.getEncoded());
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
@@ -582,7 +582,7 @@ public class StateDBImpl implements StateDB {
      *
      * @param chainID chain ID
      * @param pubKey public key
-     * @return nonce or null
+     * @return nonce or zero
      * @throws DBException database exception
      */
     @Override

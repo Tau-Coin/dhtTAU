@@ -105,7 +105,7 @@ public class TransactionPoolImpl implements TransactionPool {
                 long currentNonce = getNonce(userPubKey);
                 for (Transaction transaction: transactionSet) {
                     // put transactions that are not on chain into pool
-                    if (transaction.getNonce() > currentNonce) {
+                    if (transaction.getNonce().longValue() > currentNonce) {
                         locals.offer(LocalTxEntry.with(transaction));
                     }
                 }
@@ -176,7 +176,7 @@ public class TransactionPoolImpl implements TransactionPool {
 
         long currentNonce = getNonce(this.userPubKey);
 
-        if (tx.getNonce() > currentNonce) {
+        if (tx.getNonce().longValue() > currentNonce) {
             // put into pool
             all.put(new ByteArrayWrapper(tx.getTxID()), tx);
 
@@ -269,7 +269,7 @@ public class TransactionPoolImpl implements TransactionPool {
             Transaction tx = getTransactionByTxid(localTxEntry.txid);
             if (null != tx) {
                 long current = getNonce(tx.getSenderPubkey());
-                if (tx.getNonce() == current + 1) {
+                if (tx.getNonce().longValue() == current + 1) {
                     return tx;
                 }
             } else {
@@ -348,7 +348,7 @@ public class TransactionPoolImpl implements TransactionPool {
 
         // check nonce
         long currentNonce = getNonce(pubKey);
-        if (tx.getNonce() != currentNonce + 1) {
+        if (tx.getNonce().longValue() != currentNonce + 1) {
             logger.error("ChainID:[{}]-[{}] Nonce mismatch.",
                     new String(this.chainID), Hex.toHexString(tx.getTxID()));
             return;
@@ -367,7 +367,7 @@ public class TransactionPoolImpl implements TransactionPool {
                 //
                 Transaction transaction = getTransactionByTxid(txid);
                 if (null != transaction) {
-                    if (transaction.getTxFee() >= tx.getTxFee()) {
+                    if (transaction.getTxFee().compareTo(tx.getTxFee()) >= 0) {
                         logger.info("ChainID:[{}]-Tx[{}] fee is too little.",
                                 new String(this.chainID), Hex.toHexString(tx.getTxID()));
                         return;
@@ -394,17 +394,17 @@ public class TransactionPoolImpl implements TransactionPool {
     private synchronized boolean typeOrBalanceError(Transaction tx) {
         try {
             if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
-                long cost = ((WiringCoinsTx)tx).getAmount() + tx.getTxFee();
+                BigInteger cost = ((WiringCoinsTx)tx).getAmount().add(tx.getTxFee());
                 AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
-                if (accountState.getBalance().longValue() < cost) {
+                if (accountState.getBalance().compareTo(cost) < 0) {
                     logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
                             new String(this.chainID), Hex.toHexString(tx.getTxID()));
                     return true;
                 }
             } else if (TypesConfig.TxType.FNoteType.ordinal() == tx.getTxType()) {
-                long cost = tx.getTxFee();
+                BigInteger cost = tx.getTxFee();
                 AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
-                if (accountState.getBalance().longValue() < cost) {
+                if (accountState.getBalance().compareTo(cost) < 0) {
                     logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
                             new String(this.chainID), Hex.toHexString(tx.getTxID()));
                     return true;
@@ -519,7 +519,7 @@ public class TransactionPoolImpl implements TransactionPool {
      * @return max tx fee in pool
      */
     @Override
-    public synchronized long getMaxFee() {
+    public synchronized BigInteger getMaxFee() {
         MemoryPoolEntry entry = remotes.peek();
 
         while (null != entry) {
@@ -534,7 +534,7 @@ public class TransactionPoolImpl implements TransactionPool {
             entry = remotes.peek();
         }
 
-        return 0;
+        return BigInteger.ZERO;
     }
 
     /**
@@ -723,7 +723,7 @@ public class TransactionPoolImpl implements TransactionPool {
                 if (null != tx) {
                     // check nonce
                     AccountState accountState = this.stateDB.getAccount(this.chainID, tx.getSenderPubkey());
-                    if (accountState.getNonce().longValue() + 1 != tx.getNonce()) {
+                    if (accountState.getNonce().longValue() + 1 != tx.getNonce().longValue()) {
                         logger.error("Chain ID[{}]: tx[{}] Nonce is discontinuity.",
                                 new String(this.chainID), Hex.toHexString(tx.getTxID()));
                         removeRemote(tx);
@@ -731,16 +731,16 @@ public class TransactionPoolImpl implements TransactionPool {
 
                     // check type and balance
                     if (TypesConfig.TxType.WCoinsType.ordinal() == tx.getTxType()) {
-                        long cost = ((WiringCoinsTx)tx).getAmount() + tx.getTxFee();
+                        BigInteger cost = ((WiringCoinsTx)tx).getAmount().add(tx.getTxFee());
 
-                        if (accountState.getBalance().longValue() < cost) {
+                        if (accountState.getBalance().compareTo(cost) < 0) {
                             logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
                                     new String(this.chainID), Hex.toHexString(tx.getTxID()));
                             removeRemote(tx);
                         }
                     } else if (TypesConfig.TxType.FNoteType.ordinal() == tx.getTxType()) {
-                        long cost = tx.getTxFee();
-                        if (accountState.getBalance().longValue() < cost) {
+                        BigInteger cost = tx.getTxFee();
+                        if (accountState.getBalance().compareTo(cost) < 0) {
                             logger.error("Chain ID[{}]: tx[{}] Balance is not enough.",
                                     new String(this.chainID), Hex.toHexString(tx.getTxID()));
                             removeRemote(tx);

@@ -16,7 +16,7 @@ public class MemoryPoolPolicy implements Comparator<MemoryPoolEntry> {
             return 0;
         }
 
-        if (entry1.fee > entry2.fee ) {
+        if (entry1.fee.compareTo(entry2.fee) > 0 ) {
             return -1;
         }
 

@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 public class LocalTxEntry {
 
-    private static final Logger log = LoggerFactory.getLogger("LocalTxEntry");
+    private static final Logger logger = LoggerFactory.getLogger("LocalTxEntry");
 
     public byte[] txid;
     public long timestamp;
@@ -24,7 +24,7 @@ public class LocalTxEntry {
     }
 
     public static LocalTxEntry with(Transaction tx) {
-        return new LocalTxEntry(tx.getTxID(), tx.getTimeStamp(), tx.getNonce());
+        return new LocalTxEntry(tx.getTxID(), tx.getTimeStamp(), tx.getNonce().longValue());
     }
 
     @Override
