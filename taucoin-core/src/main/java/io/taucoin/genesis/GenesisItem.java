@@ -22,8 +22,10 @@ import io.taucoin.param.ChainParam;
 import io.taucoin.util.*;
 
 public class GenesisItem {
+
     private BigInteger balance;
     private BigInteger power;
+
     private byte[] rlpEncoded = null;
     private boolean isParse;
 
@@ -44,7 +46,7 @@ public class GenesisItem {
      */
     public GenesisItem(BigInteger balance){
         this.balance = balance;
-        this.power  = ChainParam.DefaultGeneisisPower;
+        this.power = ChainParam.DefaultGeneisisPower;
         isParse = true;
     }
 
@@ -59,10 +61,12 @@ public class GenesisItem {
      */
     public byte[] getEncoded(){
         if(rlpEncoded == null){
-            byte[] balance = RLP.encodeElement(this.balance.toByteArray());
-            byte[] power = RLP.encodeElement(this.power.toByteArray());
-            rlpEncoded = RLP.encodeList(balance,power);
+            byte[] balance = RLP.encodeBigInteger(this.balance);
+            byte[] power = RLP.encodeBigInteger(this.power);
+
+            rlpEncoded = RLP.encodeList(balance, power);
         }
+
         return rlpEncoded;
     }
 
@@ -79,7 +83,7 @@ public class GenesisItem {
     private void parseRLP(){
         if(isParse){
             return;
-        }else {
+        } else {
             RLPList items = RLP.decode2(this.rlpEncoded);
             RLPList item = (RLPList)items.get(0);
             this.balance = new BigInteger(item.get(0).getRLPData());
