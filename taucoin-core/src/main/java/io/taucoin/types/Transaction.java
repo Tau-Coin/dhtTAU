@@ -17,20 +17,17 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 package io.taucoin.types;
 
 import io.taucoin.param.ChainParam;
-import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
 
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public abstract class Transaction {
 
@@ -38,24 +35,27 @@ public abstract class Transaction {
 
     // Transaction字段
     protected long version;
-    protected String chainID;    //String encoding: UTF-8
     protected long timestamp;
-    protected long txFee;
+    protected byte[] chainID;
+
+    protected BigInteger txFee;
     protected long txType;
-    protected ArrayList<Long> senderPubkey; //Pubkey - 32 bytes, 4 longs
-    protected long nonce;
-    protected ArrayList<Long> signature;    //Signature - 64 bytes, 8 longs
+
+    protected byte[] senderPubkey; //Pubkey - 32 bytes
+    protected BigInteger nonce;
+    protected byte[] signature;    //Signature - 64 bytes
 
     // 中间结果，暂存内存，不上链
     protected byte[] encodedBytes;
     protected byte[] sigEncodedBytes;
+
     protected byte[] txHash;
     protected boolean isParsed;
 
     public static enum TxIndex {
         Version, 
-        ChainID, 
         Timestamp, 
+        ChainID, 
         TxFee, 
         TxType, 
         Sender,
@@ -67,52 +67,66 @@ public abstract class Transaction {
     /**
      * construct complete tx with signature.
      * @param version
-     * @param chainID
      * @param timestamp
+     * @param chainID
      * @param txFee
      * @param txType
      * @param sender
      * @param nonce
      * @param signature
      */
-    public Transaction(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
-            long nonce, byte[] signature){
+    public Transaction(long version, long timestamp, byte[] chainID, 
+                    BigInteger txFee, long txType,
+                    byte[] sender, BigInteger nonce, byte[] signature){
+
         if(sender.length != ChainParam.SenderLength) {
             throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
         }
         if(signature.length != ChainParam.SignatureLength) {
             throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
         }
+
         this.version = version;
-        this.chainID = new String(chainID, UTF_8);
         this.timestamp = timestamp;
+        this.chainID = chainID;
+
         this.txFee = txFee;
         this.txType = txType;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
+
+        this.senderPubkey = sender;
         this.nonce = nonce;
-        this.signature = ByteUtil.byteArrayToSignLongArray(signature, ChainParam.SignLongArrayLength);
+        this.signature = signature;
     }
 
     /**
      * construct complete tx without signature.
      * @param version
-     * @param chainID
      * @param timestamp
+     * @param chainID
      * @param txFee
      * @param txType
      * @param sender
      * @param nonce
      */
-    public Transaction(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, long nonce){
+    public Transaction(long version, long timestamp, byte[] chainID, 
+                    BigInteger txFee, long txType,
+                    byte[] sender, BigInteger nonce){
+
         if(sender.length != ChainParam.SenderLength) {
             throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
         }
+        if(signature.length != ChainParam.SignatureLength) {
+            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
+        }
+
         this.version = version;
-        this.chainID = new String(chainID);
         this.timestamp = timestamp;
+        this.chainID = chainID;
+
         this.txFee = txFee;
         this.txType = txType;
-        this.senderPubkey = ByteUtil.byteArrayToSignLongArray(sender, ChainParam.PubkeyLongArrayLength);
+
+        this.senderPubkey = sender;
         this.nonce = nonce;
     }
 
@@ -131,16 +145,7 @@ public abstract class Transaction {
      */
     public long getVersion() {
         if(!isParsed) parseEncodedBytes();
-        return version;
-    }
-
-    /**
-     * get chainid tx belongs to.
-     * @return
-     */
-    public byte[] getChainID() {
-        if(!isParsed) parseEncodedBytes();
-        return chainID.getBytes(UTF_8);
+        return this.version;
     }
 
     /**
@@ -149,16 +154,25 @@ public abstract class Transaction {
      */
     public long getTimeStamp() {
         if(!isParsed) parseEncodedBytes();
-        return timestamp;
+        return this.timestamp;
+    }
+
+    /**
+     * get chainid tx belongs to.
+     * @return
+     */
+    public byte[] getChainID() {
+        if(!isParsed) parseEncodedBytes();
+        return this.chainID;
     }
 
     /**
      * get tx fee, > 0 in 1st version
      * @return
      */
-    public long getTxFee() {
+    public BigInteger getTxFee() {
         if(!isParsed) parseEncodedBytes();
-        return txFee;
+        return this.txFee;
     }
 
     /**
@@ -167,7 +181,7 @@ public abstract class Transaction {
      */
     public long getTxType() {
         if(!isParsed) parseEncodedBytes();
-        return txType;
+        return this.txType;
     }
 
     /**
@@ -176,16 +190,16 @@ public abstract class Transaction {
      */
     public byte[] getSenderPubkey() {
         if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(senderPubkey, ChainParam.PubkeyLength);
+        return this.senderPubkey;
     }
 
     /**
      * get tx nonce.
      * @return
      */
-    public long getNonce() {
+    public BigInteger  getNonce() {
         if(!isParsed) parseEncodedBytes();
-        return nonce;
+        return this.nonce;
     }
 
     /**
@@ -194,7 +208,7 @@ public abstract class Transaction {
      */
     public byte[] getSignature() {
         if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(signature, ChainParam.SignatureLength);
+        return this.signature;
     }
 
     /**
@@ -202,7 +216,7 @@ public abstract class Transaction {
      * @param signature
      */
     public void setSignature(byte[] signature) {
-        this.signature = ByteUtil.byteArrayToSignLongArray(signature,8);
+        this.signature = signature;
     }
 
     /**
@@ -228,7 +242,7 @@ public abstract class Transaction {
         // create private key from seed
         Pair<byte[], byte[]> keys = Ed25519.createKeypair(seed);
         byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.getSenderPubkey(), keys.second);
-        this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
+        this.signature = sig;
         return sig;
     }
 
@@ -239,7 +253,7 @@ public abstract class Transaction {
      */
     public byte[] signTransactionWithPriKey(byte[] prikey) {
         byte[] sig = Ed25519.sign(this.getTransactionSigMsg(), this.getSenderPubkey(), prikey);
-        this.signature = ByteUtil.byteArrayToSignLongArray(sig, 8);
+        this.signature = sig;
         return sig;
     }
 
@@ -261,8 +275,8 @@ public abstract class Transaction {
      */
     public boolean isTxParamValidate(){
         if(!isParsed) parseEncodedBytes();
-        if(timestamp > System.currentTimeMillis() / 1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
-        if(nonce < 0) return false;
+        if(this.timestamp > System.currentTimeMillis() / 1000 + ChainParam.BlockTimeDrift || timestamp < 0) return false;
+        if(this.nonce.compareTo(BigInteger.ZERO) < 0) return false;
         return true;
     }
 
@@ -271,10 +285,10 @@ public abstract class Transaction {
      * @return
      */
     public byte[] getTxID(){
-        if(txHash == null){
-           txHash = HashUtil.sha1hash(this.getEncoded());
+        if(this.txHash == null){
+           this.txHash = HashUtil.sha1hash(this.getEncoded());
         }
-        return txHash;
+        return this.txHash;
     }
 
     /**
@@ -293,11 +307,4 @@ public abstract class Transaction {
      * parse transaction bytes field to flat block field.
      */
     public abstract void parseEncodedBytes();
-
-    /**
-     * encoding transaction to long[].
-     * @return
-     */
-    public abstract List getTxLongArray();
-
 }

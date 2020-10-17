@@ -20,15 +20,16 @@ import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.param.ChainParam;
 
 import io.taucoin.util.ByteUtil;
-import io.taucoin.util.DateUtil;
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 import com.frostwire.jlibtorrent.Ed25519;
+
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +97,8 @@ public class Block {
      * @param baseTarget:block mining base target(pot).
      * @param cumulativeDifficulty:chain difficulty.
      * @param generationSignature:block mining random number.
-     * @param txHash:block transaction hash.
+     * @param verticalHash: 代表历史区块的ImmutableHash.
+     * @param horizontalHash:交易, Messages Immutable Hash.
      * @param minerBalance:block miner coin balance.
      * @param senderBalance:transaction sender balance.
      * @param receiverBalance:transaction receiver balance.
@@ -163,7 +165,8 @@ public class Block {
      * @param baseTarget:block mining base target(pot).
      * @param cumulativeDifficulty:chain difficulty.
      * @param generationSignature:block mining random number.
-     * @param txHash:block transaction hash.
+     * @param verticalHash: 代表历史区块的ImmutableHash.
+     * @param horizontalHash:交易, Messages Immutable Hash.
      * @param minerBalance:block miner coin balance.
      * @param senderBalance:transaction sender balance.
      * @param receiverBalance:transaction receiver balance.
@@ -277,7 +280,7 @@ public class Block {
 
             byte[] verticalHash = RLP.encodeElement(this.verticalHash);
             byte[] horizontalHash = RLP.encodeElement(this.horizontalHash);
-            byte[] immutableblockhash = RLP.encodeElement(this.immutableBlockHash);
+            byte[] immutableBlockHash = RLP.encodeElement(this.immutableBlockHash);
 
             byte[] baseTarget = RLP.encodeBigInteger(this.baseTarget);
             byte[] cumulativeDifficulty = RLP.encodeBigInteger(this.cumulativeDifficulty);
@@ -324,7 +327,7 @@ public class Block {
 
             byte[] verticalHash = RLP.encodeElement(this.verticalHash);
             byte[] horizontalHash = RLP.encodeElement(this.horizontalHash);
-            byte[] immutableblockhash = RLP.encodeElement(this.immutableBlockHash);
+            byte[] immutableBlockHash = RLP.encodeElement(this.immutableBlockHash);
 
             byte[] baseTarget = RLP.encodeBigInteger(this.baseTarget);
             byte[] cumulativeDifficulty = RLP.encodeBigInteger(this.cumulativeDifficulty);
@@ -355,8 +358,8 @@ public class Block {
             return;
         } else {
 
-            RLPList list = RLP.decode2(this.encodedBytes);
-            RLPList block = (RLPList) list.get(0);
+            RLPList blockList = RLP.decode2(this.encodedBytes);
+            RLPList block = (RLPList) blockList.get(0);
 
             this.version = ByteUtil.byteArrayToLong(block.get(BlockIndex.Version.ordinal()).getRLPData());
             this.timestamp = ByteUtil.byteArrayToLong(block.get(BlockIndex.Timestamp.ordinal()).getRLPData());
@@ -733,26 +736,37 @@ public class Block {
 
     @Override
     public String toString(){
+
         StringBuilder strBlock = new StringBuilder();
+
         strBlock.append("block: [");
+
         strBlock.append(" Block hash: ").append(ByteUtil.toHexString(this.getBlockHash()));
+
         strBlock.append(" Version: ").append(this.getVersion());
         strBlock.append(" Timestamp: ").append(this.getTimeStamp());
         strBlock.append(" Blocknum: ").append(this.getBlockNum());
+
         strBlock.append(" Vertical hash: ").append(this.getVerticalHash());
         strBlock.append(" Horizontal hash: ").append(ByteUtil.toHexString(this.getHorizontalHash()));
         strBlock.append(" Immutable block hash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash()));
+
         strBlock.append(" BaseTarget: ").append(this.getBaseTarget());
         strBlock.append(" CumulativeDifficulty: ").append(this.getCumulativeDifficulty());
         strBlock.append(" Generationsignature: ").append(ByteUtil.toHexString(this.getGenerationSignature()));
+
         strBlock.append(" Miner balance: ").append(this.getMinerBalance());
         strBlock.append(" Sender balance: ").append(this.getSenderBalance());
         strBlock.append(" Receiver balance: ").append(this.getReceiverBalance());
         strBlock.append(" Sender nonce: ").append(this.getSenderNonce());
+
         strBlock.append(" Signature: ").append(ByteUtil.toHexString(this.getSignature()));
         strBlock.append(" Minerpubkey: ").append(ByteUtil.toHexString(this.getMinerPubkey()));
+
         strBlock.append("]");
+
         return strBlock.toString();
+
     }
 
 }

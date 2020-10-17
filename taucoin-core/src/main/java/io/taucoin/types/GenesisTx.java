@@ -20,31 +20,22 @@ import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
-
-import com.frostwire.jlibtorrent.Entry;
+import io.taucoin.util.RLP;
+import io.taucoin.util.RLPList;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
-import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class GenesisTx extends Transaction {
 
     private static final Logger logger = LoggerFactory.getLogger("GenesisTx");
 
-    /*
-     * 1. jlibtorrent, libtorrent仅支持:String, Long, List, Map结构
-     * 2. genesisMsg本质上需要记录多个账户(pubkey, item: balance + power)
-     * 3. pubkey本质上是long list，但是jlibtorrent和libtorrent的map仅支持String类型
-     * 4. 为了保证pubkey的本质，还是采用list来处理,一个账户共6个long
-     * 5. 前4个long代表一个账户的pubkey，最后两个long代表一个账户的状态
-     */
-    private ArrayList<ArrayList<Long>> genesisMsg; // Genesis msg tx -> Tau QA
+    private HashMap<ByteArrayWrapper, GenesisItem> genesisMsg;
 
     /**
      * construct complete tx with signature.
@@ -58,13 +49,14 @@ public class GenesisTx extends Transaction {
      * @param genesisMsg
      * @param signature
      */
-    public GenesisTx(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
-            long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] signature){
+    public GenesisTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType, byte[] sender, 
+            BigInteger nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] signature){
 
         //父类构造函数
-        super(version, chainID, timestamp, txFee, txType, sender, nonce, signature);
+        super(version, timestamp, chainID, txFee, txType, sender, nonce, signature);
 
-        this.genesisMsg = genesisMapTrans(genesisMsg);
+        //this.genesisMsg = genesisMapTrans(genesisMsg);
+        this.genesisMsg = genesisMsg;
 
         isParsed = true;
 
@@ -81,13 +73,14 @@ public class GenesisTx extends Transaction {
      * @param nonce
      * @param genesisMsg
      */
-    public GenesisTx(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
-            long nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg){
+    public GenesisTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType, byte[] sender, 
+            BigInteger nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg){
 
         //父类构造函数
-        super(version, chainID, timestamp, txFee, txType, sender, nonce);
+        super(version, timestamp, chainID, txFee, txType, sender, nonce);
 
-        this.genesisMsg = genesisMapTrans(genesisMsg);
+        //this.genesisMsg = genesisMapTrans(genesisMsg);
+        this.genesisMsg = genesisMsg;
 
         isParsed = true;
     }
@@ -106,21 +99,30 @@ public class GenesisTx extends Transaction {
      */
     @Override
     public byte[] getEncoded() {
+
         if(encodedBytes == null) {
-            List list = new ArrayList();
-            list.add(new Entry(this.version));
-            list.add(this.chainID);
-            list.add(new Entry(this.timestamp));
-            list.add(new Entry(this.txFee));
-            list.add(new Entry(this.txType));
-            list.add(this.senderPubkey);
-            list.add(new Entry(this.nonce));
-            list.add(this.signature);
-            list.add(this.genesisMsg);
-            Entry entry = Entry.fromList(list);
-            this.encodedBytes = entry.bencode();
+
+            byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
+            byte[] chainID = RLP.encodeElement(this.chainID);
+
+            byte[] txFee = RLP.encodeBigInteger(this.txFee);
+            byte[] txType = RLP.encodeElement(ByteUtil.longToBytes(this.txType));
+
+            byte[] senderPubkey = RLP.encodeElement(this.senderPubkey);
+            byte[] nonce = RLP.encodeBigInteger(this.nonce);
+            byte[] signature = RLP.encodeElement(this.signature);
+
+            byte[] genesisMsg = rlpEncodedGM(this.genesisMsg);
+
+            this.encodedBytes = RLP.encodeList(version, timestamp, chainID,
+                                txFee, txType,
+                                senderPubkey, nonce, signature,
+                                genesisMsg);
         }
+
         return this.encodedBytes;
+
     }
 
     /**
@@ -129,81 +131,43 @@ public class GenesisTx extends Transaction {
      */
     @Override
     public byte[] getSigEncodedBytes() {
+
         if(sigEncodedBytes == null) {
-            List list = new ArrayList();
-            list.add(new Entry(this.version));
-            list.add(this.chainID);
-            list.add(new Entry(this.timestamp));
-            list.add(new Entry(this.txFee));
-            list.add(new Entry(this.txType));
-            list.add(this.senderPubkey);
-            list.add(new Entry(this.nonce));
-            list.add(this.genesisMsg);
-            Entry entry = Entry.fromList(list);
-            this.sigEncodedBytes = entry.bencode();
+
+            byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
+            byte[] chainID = RLP.encodeElement(this.chainID);
+
+            byte[] txFee = RLP.encodeBigInteger(this.txFee);
+            byte[] txType = RLP.encodeElement(ByteUtil.longToBytes(this.txType));
+
+            byte[] senderPubkey = RLP.encodeElement(this.senderPubkey);
+            byte[] nonce = RLP.encodeBigInteger(this.nonce);
+
+            byte[] genesisMsg = rlpEncodedGM(this.genesisMsg);
+
+            this.sigEncodedBytes = RLP.encodeList(version, timestamp, chainID,
+                                   txFee, txType,
+                                   senderPubkey, nonce,
+                                   genesisMsg);
         }
+
         return sigEncodedBytes;
+
     }
 
     /**
-     * encoding transaction to long[].
-     * @return
+     * rlp encode genesisMsg
+     *
      */
-    @Override
-    public List getTxLongArray() {
-        List list = new ArrayList();
-        list.add(this.version);
-        list.add(this.chainID);
-        list.add(this.timestamp);
-        list.add(this.txFee);
-        list.add(this.senderPubkey);
-        list.add(this.nonce);
-        list.add(this.signature);
-        list.add(this.genesisMsg);
-        return list;
-    }
 
-    /**
-     * parse transaction bytes field to flat block field.
-     */
-    @Override
-    public void parseEncodedBytes(){
-        if(isParsed) {
-            return;
-        } else {
-            Entry entry = Entry.bdecode(this.encodedBytes);
-            List<Entry> entrylist = entry.list();
+    public static byte[] rlpEncodedGM(HashMap<ByteArrayWrapper, GenesisItem> genesisMsg) {
 
-            if(entrylist.size() != (TxIndex.TxData.ordinal() + 1)) {
-                logger.error("GenesisTx decoded entry size error {}", entrylist.size());
-            }
+        byte[][][] rlpEncodeGMList = new byte[genesisMsg.size()][2][];
 
-            try {
-                this.version = entrylist.get(TxIndex.Version.ordinal()).integer();
-                this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString().replace("'","");
-                this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
-                this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
-                this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();
-                this.senderPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
-                this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
-                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
-                this.genesisMsg = ByteUtil.stringToLong2ArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                return;
-            }
-            isParsed = true;
-        }
-    }
-
-    /**
-     * genesis Msg transform 
-     * @param genesisMsg
-     */
-    private ArrayList<ArrayList<Long>> genesisMapTrans(HashMap<ByteArrayWrapper, GenesisItem> genesisMsg) {
-
-        ArrayList<ArrayList<Long>> accounts = new ArrayList<>();
         Iterator<ByteArrayWrapper> accountItor = genesisMsg.keySet().iterator();
+
+        int index = 0;
 
         while(accountItor.hasNext()) {
 
@@ -213,21 +177,67 @@ public class GenesisTx extends Transaction {
             // key -> arraylist
             // Check
             if(key.getData().length != ChainParam.PubkeyLength) {
-                throw new IllegalArgumentException("Genesis key be : "+ChainParam.PubkeyLength + " bytes");
+                throw new IllegalArgumentException("Genesis key be : "+ ChainParam.PubkeyLength + " bytes");
             }
-            ArrayList<Long> account = ByteUtil.byteArrayToSignLongArray(key.getData(), ChainParam.PubkeyLongArrayLength);
-            account.add(value.getBalance().longValue());
-            account.add(value.getPower().longValue());
+            
+            rlpEncodeGMList[index][0] = RLP.encodeElement(key.getData());
+            rlpEncodeGMList[index][1] = value.getEncoded();
 
-            accounts.add(account);
 		}
 
-        return accounts;
+        return RLP.encode(rlpEncodeGMList);
+    }
+
+    /**
+     * rlp decode genesisMsg
+     *
+     */
+
+    public static HashMap<ByteArrayWrapper, GenesisItem> rlpDecodedGM(byte[] genesisMsgBytes) {
+
+        HashMap<ByteArrayWrapper, GenesisItem> genesisMsg =  new HashMap<ByteArrayWrapper, GenesisItem>();
+        RLPList gmList0 = RLP.decode2(genesisMsgBytes);
+        RLPList gmList1 = (RLPList) gmList0.get(0);
+
+        for(int i = 0; i < gmList1.size(); i++) {
+            byte[] key = RLP.decode2(gmList1.get(i).getRLPData()).get(0).getRLPData();
+            byte[] value = RLP.decode2(gmList1.get(i).getRLPData()).get(1).getRLPData();
+
+            genesisMsg.put(new ByteArrayWrapper(key), new GenesisItem(value));
+        }
+
+        return genesisMsg;
+    }
+    /**
+     * parse transaction bytes field to flat block field.
+     */
+    @Override
+    public void parseEncodedBytes(){
+        if(isParsed) {
+            return;
+        } else {
+
+            RLPList txList = RLP.decode2(this.encodedBytes);
+            RLPList genesisTx = (RLPList) txList.get(0);
+
+            this.version = ByteUtil.byteArrayToLong(genesisTx.get(TxIndex.Version.ordinal()).getRLPData());
+            this.timestamp = ByteUtil.byteArrayToLong(genesisTx.get(TxIndex.Timestamp.ordinal()).getRLPData());
+            this.chainID = genesisTx.get(TxIndex.ChainID.ordinal()).getRLPData();
+
+            this.txFee = new BigInteger(genesisTx.get(TxIndex.TxFee.ordinal()).getRLPData());
+            this.txType = ByteUtil.byteArrayToLong(genesisTx.get(TxIndex.TxType.ordinal()).getRLPData());
+            this.senderPubkey = genesisTx.get(TxIndex.Sender.ordinal()).getRLPData();
+            this.nonce = new BigInteger(genesisTx.get(TxIndex.Nonce.ordinal()).getRLPData());
+
+            this.signature = genesisTx.get(TxIndex.Signature.ordinal()).getRLPData();
+            this.genesisMsg = rlpDecodedGM(genesisTx.get(TxIndex.TxData.ordinal()).getRLPData());
+
+            isParsed = true;
+        }
     }
 
     /**
      * construct genesis msg K-V
-     * @param ed25519pub
      * @param item
      * @return
      */
@@ -240,10 +250,8 @@ public class GenesisTx extends Transaction {
         if(pubkey.getData().length != ChainParam.PubkeyLength) {
             throw new IllegalArgumentException("Genesis key be : "+ChainParam.PubkeyLength + " bytes");
         }
-        ArrayList<Long> account = ByteUtil.byteArrayToSignLongArray(pubkey.getData(), ChainParam.PubkeyLongArrayLength);
-        account.add(item.getBalance().longValue());
-        account.add(item.getPower().longValue());
-        this.genesisMsg.add(account);
+
+        this.genesisMsg.put(pubkey, item);
 
         encodedBytes = null;
         sigEncodedBytes = null;
@@ -254,38 +262,28 @@ public class GenesisTx extends Transaction {
      * @return
      */
     public HashMap<ByteArrayWrapper, GenesisItem> getGenesisAccounts() {
-
-        HashMap<ByteArrayWrapper, GenesisItem> accounts = new HashMap<ByteArrayWrapper, GenesisItem>();
-
-        for(ArrayList<Long> account: this.genesisMsg) {
-
-            // key -> ByteArrayWrapper
-            byte[] keybytes = ByteUtil.longArrayToBytes(account, ChainParam.PubkeyLength);
-            ByteArrayWrapper key = new ByteArrayWrapper(keybytes);
-
-            // value -> GenesisItem
-            BigInteger balance = new BigInteger(account.get(4).toString());
-            BigInteger power = new BigInteger(account.get(5).toString());
-            GenesisItem value = new GenesisItem(balance, power);
-
-            accounts.put(key, value);
-		}
-
-        return accounts;
+        return  this.genesisMsg;
     }
 
     @Override
     public String toString(){
+
         StringBuilder strTx = new StringBuilder();
-        strTx.append("transaction: [");
-        strTx.append(" txhash: ").append(ByteUtil.toHexString(this.getTxID()));
-        strTx.append(" version: ").append(this.getVersion());
-        strTx.append(" chainID: ").append(new String(this.getChainID()));
-        strTx.append(" timestamp: ").append(this.getTimeStamp());
-        strTx.append(" txFee: ").append(this.getTxFee());
-        strTx.append(" txType: ").append(this.getTxType());
-        strTx.append(" sender: ").append(ByteUtil.toHexString(this.getSenderPubkey()));
-        strTx.append(" nonce: ").append(this.getNonce());
+
+        strTx.append("Transaction: [");
+
+        strTx.append(" Txhash: ").append(ByteUtil.toHexString(this.getTxID()));
+
+        strTx.append(" Version: ").append(this.getVersion());
+        strTx.append(" Timestamp: ").append(this.getTimeStamp());
+        strTx.append(" ChainID: ").append(new String(this.getChainID()));
+
+        strTx.append(" TxFee: ").append(this.getTxFee());
+        strTx.append(" TxType: ").append(this.getTxType());
+
+        strTx.append(" Sender: ").append(ByteUtil.toHexString(this.getSenderPubkey()));
+        strTx.append(" Nonce: ").append(this.getNonce());
+
         HashMap<ByteArrayWrapper, GenesisItem> accounts = getGenesisAccounts();
         Iterator<ByteArrayWrapper> accountItor = accounts.keySet().iterator();
         while(accountItor.hasNext()) {
@@ -295,8 +293,10 @@ public class GenesisTx extends Transaction {
             strTx.append(" balance: ").append(value.getBalance().longValue());
             strTx.append(" power: ").append(value.getPower().longValue());
 		}
+
         strTx.append(" signature: ").append(ByteUtil.toHexString(this.getSignature()));
         strTx.append("]");
+
         return strTx.toString();
     }
 

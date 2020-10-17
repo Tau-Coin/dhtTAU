@@ -18,20 +18,19 @@ package io.taucoin.types;
 
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.RLP;
+import io.taucoin.util.RLPList;
 
-import com.frostwire.jlibtorrent.Entry;
-import java.util.ArrayList;
-import java.util.List;
+import java.math.BigInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ForumNoteTx extends Transaction {
 
     private static final Logger logger = LoggerFactory.getLogger("ForumNoteTx");
 
-    private ArrayList<Long> forumNoteHash;    // Forum note tx - 20 bytes, 3 longs
+    private byte[] forumNoteHash;    // Forum note tx - 20 bytes
 
     /**
      * construct complete tx with signature.
@@ -45,18 +44,18 @@ public class ForumNoteTx extends Transaction {
      * @param forumNoteHash
      * @param signature
      */
-    public ForumNoteTx(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender, 
-            long nonce, byte[] forumNoteHash, byte[] signature){
+    public ForumNoteTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType, byte[] sender,
+                       BigInteger nonce, byte[] forumNoteHash, byte[] signature){
 
         //父类构造函数
-        super(version, chainID, timestamp, txFee, txType, sender, nonce, signature);
+        super(version, timestamp, chainID, txFee, txType, sender, nonce, signature);
 
         //Check
         if(forumNoteHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("ForumNoteHashshould be : "+ChainParam.HashLength + " bytes");
         }
 
-        this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
+        this.forumNoteHash = forumNoteHash;
 
         isParsed = true;
     }
@@ -72,16 +71,18 @@ public class ForumNoteTx extends Transaction {
      * @param nonce
      * @param forumNoteHash
      */
-    public ForumNoteTx(long version, byte[] chainID, long timestamp, long txFee, long txType, byte[] sender,
-            long nonce, byte[] forumNoteHash){
+    public ForumNoteTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType, byte[] sender,
+                       BigInteger nonce, byte[] forumNoteHash){
 
         //父类构造函数
-        super(version, chainID, timestamp, txFee, txType, sender, nonce);
+        super(version, timestamp, chainID, txFee, txType, sender, nonce);
+
         //Check
         if(forumNoteHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("ForumNoteHashshould be : "+ChainParam.HashLength + " bytes");
         }
-        this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
+
+        this.forumNoteHash = forumNoteHash;
 
         isParsed = true;
     }
@@ -99,20 +100,28 @@ public class ForumNoteTx extends Transaction {
      * @return
      */
     public byte[] getEncoded() {
+
         if(encodedBytes == null) {
-            List list = new ArrayList();
-            list.add(new Entry(this.version));
-            list.add(this.chainID);
-            list.add(new Entry(this.timestamp));
-            list.add(new Entry(this.txFee));
-            list.add(new Entry(this.txType));
-            list.add(this.senderPubkey);
-            list.add(new Entry(this.nonce));
-            list.add(this.signature);
-            list.add(this.forumNoteHash);
-            Entry entry = Entry.fromList(list);
-            this.encodedBytes = entry.bencode();
+
+            byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
+            byte[] chainID = RLP.encodeElement(this.chainID);
+
+            byte[] txFee = RLP.encodeBigInteger(this.txFee);
+            byte[] txType = RLP.encodeElement(ByteUtil.longToBytes(this.txType));
+
+            byte[] senderPubkey = RLP.encodeElement(this.senderPubkey);
+            byte[] nonce = RLP.encodeBigInteger(this.nonce);
+            byte[] signature = RLP.encodeElement(this.signature);
+
+            byte[] forumNoteHash = RLP.encodeElement(this.forumNoteHash);
+
+            this.encodedBytes = RLP.encodeList(version, timestamp, chainID,
+                    txFee, txType,
+                    senderPubkey, nonce, signature,
+                    forumNoteHash);
         }
+
         return this.encodedBytes;
     }
 
@@ -121,38 +130,29 @@ public class ForumNoteTx extends Transaction {
      * @return
      */
     public byte[] getSigEncodedBytes() {
-        if(sigEncodedBytes == null) {
-            List list = new ArrayList();
-            list.add(new Entry(this.version));
-            list.add(this.chainID);
-            list.add(new Entry(this.timestamp));
-            list.add(new Entry(this.txFee));
-            list.add(new Entry(this.txType));
-            list.add(this.senderPubkey);
-            list.add(new Entry(this.nonce));
-            list.add(this.forumNoteHash);
-            Entry entry = Entry.fromList(list);
-            this.sigEncodedBytes = entry.bencode();
-        }
-        return sigEncodedBytes;
-    }
 
-    /**
-     * encoding transaction to long[].
-     * @return
-     */
-    @Override
-    public List getTxLongArray() {
-        List list = new ArrayList();
-        list.add(this.version);
-        list.add(this.chainID);
-        list.add(this.timestamp);
-        list.add(this.txFee);
-        list.add(this.senderPubkey);
-        list.add(this.nonce);
-        list.add(this.signature);
-        list.add(this.forumNoteHash);
-        return list;
+        if(sigEncodedBytes == null) {
+
+            byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
+            byte[] chainID = RLP.encodeElement(this.chainID);
+
+            byte[] txFee = RLP.encodeBigInteger(this.txFee);
+            byte[] txType = RLP.encodeElement(ByteUtil.longToBytes(this.txType));
+
+            byte[] senderPubkey = RLP.encodeElement(this.senderPubkey);
+            byte[] nonce = RLP.encodeBigInteger(this.nonce);
+
+            byte[] forumNoteHash = RLP.encodeElement(this.forumNoteHash);
+
+            this.sigEncodedBytes = RLP.encodeList(version, timestamp, chainID,
+                    txFee, txType,
+                    senderPubkey, nonce,
+                    forumNoteHash);
+
+        }
+
+        return sigEncodedBytes;
     }
 
     /**
@@ -163,27 +163,21 @@ public class ForumNoteTx extends Transaction {
         if(isParsed) {
             return;
         } else {
-            Entry entry = Entry.bdecode(this.encodedBytes);
-            List<Entry> entrylist = entry.list();
+            RLPList txList = RLP.decode2(this.encodedBytes);
+            RLPList forumNoteTx = (RLPList) txList.get(0);
 
-            if(entrylist.size() != (TxIndex.TxData.ordinal() + 1)) {
-                logger.error("ForumNoteTx decoded entry size error {}", entrylist.size());
-            }
+            this.version = ByteUtil.byteArrayToLong(forumNoteTx.get(TxIndex.Version.ordinal()).getRLPData());
+            this.timestamp = ByteUtil.byteArrayToLong(forumNoteTx.get(TxIndex.Timestamp.ordinal()).getRLPData());
+            this.chainID = forumNoteTx.get(TxIndex.ChainID.ordinal()).getRLPData();
 
-            try {
-                this.version = entrylist.get(TxIndex.Version.ordinal()).integer();
-                this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString().replace("'", "");
-                this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
-                this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
-                this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();
-                this.senderPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
-                this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
-                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
-                this.forumNoteHash = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
-            } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                    return;
-            }
+            this.txFee = new BigInteger(forumNoteTx.get(TxIndex.TxFee.ordinal()).getRLPData());
+            this.txType = ByteUtil.byteArrayToLong(forumNoteTx.get(TxIndex.TxType.ordinal()).getRLPData());
+            this.senderPubkey = forumNoteTx.get(TxIndex.Sender.ordinal()).getRLPData();
+            this.nonce = new BigInteger(forumNoteTx.get(TxIndex.Nonce.ordinal()).getRLPData());
+
+            this.signature = forumNoteTx.get(TxIndex.Signature.ordinal()).getRLPData();
+
+            this.forumNoteHash = forumNoteTx.get(TxIndex.TxData.ordinal()).getRLPData();
 
             isParsed = true;
         }
@@ -201,7 +195,8 @@ public class ForumNoteTx extends Transaction {
         if(forumNoteHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("ForumNoteHashshould be : "+ChainParam.HashLength + " bytes");
         }
-        this.forumNoteHash = ByteUtil.unAlignByteArrayToSignLongArray(forumNoteHash, ChainParam.HashLongArrayLength);
+
+        this.forumNoteHash = forumNoteHash;
         encodedBytes = null;
         sigEncodedBytes = null;
     }
@@ -215,24 +210,34 @@ public class ForumNoteTx extends Transaction {
             logger.error("Forum note transaction get note error, tx type is {}", txType);
         } 
         if(!isParsed) parseEncodedBytes();
-        return ByteUtil.longArrayToBytes(forumNoteHash, ChainParam.HashLength);
+        return this.forumNoteHash;
     }
 
     @Override
     public String toString(){
+
         StringBuilder strTx = new StringBuilder();
-        strTx.append("transaction: [");
-        strTx.append(" txhash: ").append(ByteUtil.toHexString(this.getTxID()));
-        strTx.append(" version: ").append(this.getVersion());
-        strTx.append(" chainID: ").append(new String(this.getChainID()));
-        strTx.append(" timestamp: ").append(this.getTimeStamp());
-        strTx.append(" txFee: ").append(this.getTxFee());
-        strTx.append(" txType: ").append(this.getTxType());
-        strTx.append(" sender: ").append(ByteUtil.toHexString(this.getSenderPubkey()));
-        strTx.append(" nonce: ").append(this.getNonce());
-        strTx.append(" forumNoteHash: ").append(this.getNonce());
-        strTx.append(" signature: ").append(ByteUtil.toHexString(this.getSignature()));
+
+        strTx.append("Transaction: [");
+
+        strTx.append(" Txhash: ").append(ByteUtil.toHexString(this.getTxID()));
+
+        strTx.append(" Version: ").append(this.getVersion());
+        strTx.append(" Timestamp: ").append(this.getTimeStamp());
+        strTx.append(" ChainID: ").append(new String(this.getChainID()));
+
+        strTx.append(" TxFee: ").append(this.getTxFee());
+        strTx.append(" TxType: ").append(this.getTxType());
+
+        strTx.append(" Sender: ").append(ByteUtil.toHexString(this.getSenderPubkey()));
+        strTx.append(" Nonce: ").append(this.getNonce());
+
+        strTx.append(" ForumNoteHash: ").append(this.getNonce());
+
+        strTx.append(" Signature: ").append(ByteUtil.toHexString(this.getSignature()));
         strTx.append("]");
+
         return strTx.toString();
+
     }
 }

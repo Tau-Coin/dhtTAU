@@ -18,11 +18,11 @@ package io.taucoin.types;
 
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.RLP;
+import io.taucoin.util.RLPList;
 
-import com.frostwire.jlibtorrent.Entry;
+import java.math.BigInteger;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +30,9 @@ public class WiringCoinsTx extends Transaction {
 
     private static final Logger logger = LoggerFactory.getLogger("WiringCoinsTx");
 
-    private ArrayList<Long> receiverPubkey;   // wiring coins tx, pubkey - 32 bytes, 4 longs
-    private long amount;      // Wiring coins tx
-
-    private String memo;      // Wiring coins tx
+    private byte[] receiverPubkey;  // wiring coins tx, pubkey - 32 bytes
+    private BigInteger amount;      // Wiring coins tx
+    private byte[] memo;            // Wiring coins tx
 
     /**
      * construct complete tx with signature.
@@ -49,17 +48,18 @@ public class WiringCoinsTx extends Transaction {
      * @param memo
      * @param signature
      */
-    public WiringCoinsTx(long version, byte[] chainID, long timestamp, long txFee, long txType,
-                        byte[] sender, long nonce, byte[] receiver, long amount, String memo, byte[] signature) {
+    public WiringCoinsTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType,
+                        byte[] sender, BigInteger nonce, byte[] receiver, BigInteger amount, byte[] memo, byte[] signature) {
 
         //父类构造函数
-        super(version, chainID, timestamp, txFee, txType, sender, nonce, signature);
+        super(version, timestamp, chainID, txFee, txType, sender, nonce, signature);
 
         //Check
         if(receiver.length != ChainParam.SenderLength) {
             throw new IllegalArgumentException("Receiver should be : " + ChainParam.SenderLength + " bytes");
         }
-        this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
+
+        this.receiverPubkey = receiver;
         this.amount = amount;
         this.memo = memo;
 
@@ -79,17 +79,18 @@ public class WiringCoinsTx extends Transaction {
      * @param amount
      * @param memo
      */
-    public WiringCoinsTx(long version, byte[] chainID, long timestamp, long txFee, long txType,
-                         byte[] sender, long nonce, byte[] receiver, long amount, String memo) {
+    public WiringCoinsTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType,
+                         byte[] sender, BigInteger nonce, byte[] receiver, BigInteger amount, byte[] memo) {
 
         //父类构造函数
-        super(version, chainID, timestamp, txFee, txType, sender, nonce);
+        super(version, timestamp, chainID, txFee, txType, sender, nonce);
 
         //Check
         if(receiver.length != ChainParam.SenderLength) {
             throw new IllegalArgumentException("Receiver should be : " + ChainParam.SenderLength + " bytes");
         }
-        this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
+
+        this.receiverPubkey = receiver;
         this.amount = amount;
         this.memo = memo;
 
@@ -111,22 +112,30 @@ public class WiringCoinsTx extends Transaction {
      */
     @Override
     public byte[] getEncoded() {
+
         if(encodedBytes == null) {
-            List list = new ArrayList();
-            list.add(new Entry(this.version));
-            list.add(this.chainID);
-            list.add(new Entry(this.timestamp));
-            list.add(new Entry(this.txFee));
-            list.add(new Entry(this.txType));
-            list.add(this.senderPubkey);
-            list.add(new Entry(this.nonce));
-            list.add(this.signature);
-            list.add(this.receiverPubkey);
-            list.add(new Entry(this.amount));
-            list.add(this.memo);
-            Entry entry = Entry.fromList(list);
-            this.encodedBytes = entry.bencode();
+
+            byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
+            byte[] chainID = RLP.encodeElement(this.chainID);
+
+            byte[] txFee = RLP.encodeBigInteger(this.txFee);
+            byte[] txType = RLP.encodeElement(ByteUtil.longToBytes(this.txType));
+
+            byte[] senderPubkey = RLP.encodeElement(this.senderPubkey);
+            byte[] nonce = RLP.encodeBigInteger(this.nonce);
+            byte[] signature = RLP.encodeElement(this.signature);
+
+            byte[] recevierPubkey = RLP.encodeElement(this.receiverPubkey);
+            byte[] amount = RLP.encodeBigInteger(this.amount);
+            byte[] memo = RLP.encodeElement(this.memo);
+
+            this.encodedBytes = RLP.encodeList(version, timestamp, chainID,
+                    txFee, txType,
+                    senderPubkey, nonce, signature,
+                    recevierPubkey, amount, memo);
         }
+
         return this.encodedBytes;
     }
 
@@ -136,43 +145,30 @@ public class WiringCoinsTx extends Transaction {
      */
     @Override
     public byte[] getSigEncodedBytes() {
-        if(sigEncodedBytes == null) {
-            List list = new ArrayList();
-            list.add(new Entry(this.version));
-            list.add(this.chainID);
-            list.add(new Entry(this.timestamp));
-            list.add(new Entry(this.txFee));
-            list.add(new Entry(this.txType));
-            list.add(this.senderPubkey);
-            list.add(this.nonce);
-            list.add(this.receiverPubkey);
-            list.add(new Entry(this.amount));
-            list.add(this.memo);
-            Entry entry = Entry.fromList(list);
-            this.sigEncodedBytes = entry.bencode();
-        }
-        return sigEncodedBytes;
-    }
 
-    /**
-     * encoding transaction to long.
-     * @return
-     */
-    @Override
-    public List getTxLongArray() {
-        List list = new ArrayList();
-        list.add(this.version);
-        list.add(this.chainID);
-        list.add(this.timestamp);
-        list.add(this.txFee);
-        list.add(this.txType);
-        list.add(this.senderPubkey);
-        list.add(this.nonce);
-        list.add(this.signature);
-        list.add(this.receiverPubkey);
-        list.add(this.amount);
-        list.add(this.memo);
-        return list;
+        if(sigEncodedBytes == null) {
+
+            byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
+            byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
+            byte[] chainID = RLP.encodeElement(this.chainID);
+
+            byte[] txFee = RLP.encodeBigInteger(this.txFee);
+            byte[] txType = RLP.encodeElement(ByteUtil.longToBytes(this.txType));
+
+            byte[] senderPubkey = RLP.encodeElement(this.senderPubkey);
+            byte[] nonce = RLP.encodeBigInteger(this.nonce);
+
+            byte[] recevierPubkey = RLP.encodeElement(this.receiverPubkey);
+            byte[] amount = RLP.encodeBigInteger(this.amount);
+            byte[] memo = RLP.encodeElement(this.memo);
+
+            this.encodedBytes = RLP.encodeList(version, timestamp, chainID,
+                    txFee, txType,
+                    senderPubkey, nonce,
+                    recevierPubkey, amount, memo);
+        }
+
+        return sigEncodedBytes;
     }
 
     /**
@@ -183,29 +179,24 @@ public class WiringCoinsTx extends Transaction {
         if(isParsed) {
             return;
         } else {
-            Entry entry = Entry.bdecode(this.encodedBytes);
-            List<Entry> entrylist = entry.list();
+            RLPList txList = RLP.decode2(this.encodedBytes);
+            RLPList wiringCoinsTx = (RLPList) txList.get(0);
 
-            if(entrylist.size() != (TxIndex.TxData.ordinal() + 3)) {
-                logger.error("Wiring coins tx decoded entry size error {}", entrylist.size());
-            }
+            this.version = ByteUtil.byteArrayToLong(wiringCoinsTx.get(TxIndex.Version.ordinal()).getRLPData());
+            this.timestamp = ByteUtil.byteArrayToLong(wiringCoinsTx.get(TxIndex.Timestamp.ordinal()).getRLPData());
+            this.chainID = wiringCoinsTx.get(TxIndex.ChainID.ordinal()).getRLPData();
 
-            try {
-                this.version = entrylist.get(TxIndex.Version.ordinal()).integer();
-                this.chainID = entrylist.get(TxIndex.ChainID.ordinal()).toString().replace("'", "");
-                this.timestamp = entrylist.get(TxIndex.Timestamp.ordinal()).integer();
-                this.txFee = entrylist.get(TxIndex.TxFee.ordinal()).integer();
-                this.txType = entrylist.get(TxIndex.TxType.ordinal()).integer();
-                this.senderPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Sender.ordinal()).toString());
-                this.nonce = entrylist.get(TxIndex.Nonce.ordinal()).integer();
-                this.signature = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.Signature.ordinal()).toString());
-                this.receiverPubkey = ByteUtil.stringToLongArrayList(entrylist.get(TxIndex.TxData.ordinal()).toString());
-                this.amount = entrylist.get(TxIndex.TxData.ordinal() + 1).integer();
-                this.memo = entrylist.get(TxIndex.TxData.ordinal() + 2).toString().replace("'", "");
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                return;
-            }
+            this.txFee = new BigInteger(wiringCoinsTx.get(TxIndex.TxFee.ordinal()).getRLPData());
+            this.txType = ByteUtil.byteArrayToLong(wiringCoinsTx.get(TxIndex.TxType.ordinal()).getRLPData());
+            this.senderPubkey = wiringCoinsTx.get(TxIndex.Sender.ordinal()).getRLPData();
+            this.nonce = new BigInteger(wiringCoinsTx.get(TxIndex.Nonce.ordinal()).getRLPData());
+
+            this.signature = wiringCoinsTx.get(TxIndex.Signature.ordinal()).getRLPData();
+
+            this.receiverPubkey = wiringCoinsTx.get(TxIndex.TxData.ordinal()).getRLPData();
+            this.amount = new BigInteger(wiringCoinsTx.get(TxIndex.TxData.ordinal() + 1).getRLPData());
+            this.memo = wiringCoinsTx.get(TxIndex.TxData.ordinal() + 2).getRLPData();
+
             isParsed = true;
         }
     }
@@ -222,7 +213,7 @@ public class WiringCoinsTx extends Transaction {
         if(receiver.length != ChainParam.SenderLength) {
             throw new IllegalArgumentException("Receiver should be : " + ChainParam.SenderLength + " bytes");
         }
-        this.receiverPubkey = ByteUtil.byteArrayToSignLongArray(receiver, ChainParam.PubkeyLongArrayLength);
+        this.receiverPubkey = receiver;
         encodedBytes = null;
         sigEncodedBytes = null;
     }
@@ -231,7 +222,7 @@ public class WiringCoinsTx extends Transaction {
      * set wiring amount.
      * @return
      */
-    public void setAmount(long amount){
+    public void setAmount(BigInteger amount){
         if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Forum note transaction set amount error, tx type is {}", txType);
         } 
@@ -250,14 +241,14 @@ public class WiringCoinsTx extends Transaction {
         } 
         if(!isParsed) parseEncodedBytes();
 
-        return ByteUtil.longArrayToBytes(receiverPubkey, ChainParam.PubkeyLength);
+        return this.receiverPubkey;
     }
 
     /**
      * get wire amount.
      * @return
      */
-    public long getAmount(){
+    public BigInteger getAmount(){
         if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Wiring transaction get amount error, tx type is {}", txType);
         } 
@@ -269,7 +260,7 @@ public class WiringCoinsTx extends Transaction {
      * get wire memo.
      * @return
      */
-    public String getMemo(){
+    public byte[] getMemo(){
         if(txType != TypesConfig.TxType.WCoinsType.ordinal()) {
             logger.error("Wiring transaction get memo error, tx type is {}", txType);
         } 
@@ -278,22 +269,32 @@ public class WiringCoinsTx extends Transaction {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
+
         StringBuilder strTx = new StringBuilder();
-        strTx.append("transaction: [");
-        strTx.append(" txhash: ").append(ByteUtil.toHexString(this.getTxID()));
-        strTx.append(" version: ").append(this.getVersion());
-        strTx.append(" chainID: ").append(new String(this.getChainID()));
-        strTx.append(" timestamp: ").append(this.getTimeStamp());
-        strTx.append(" txFee: ").append(this.getTxFee());
-        strTx.append(" txType: ").append(this.getTxType());
-        strTx.append(" sender: ").append(ByteUtil.toHexString(this.getSenderPubkey()));
-        strTx.append(" nonce: ").append(this.getNonce());
-        strTx.append(" receiver: ").append(ByteUtil.toHexString(this.getReceiver()));
-        strTx.append(" amount: ").append(this.getAmount());
-        strTx.append(" memo: ").append(this.getMemo());
-        strTx.append(" signature: ").append(ByteUtil.toHexString(this.getSignature()));
+
+        strTx.append("Transaction: [");
+
+        strTx.append(" Txhash: ").append(ByteUtil.toHexString(this.getTxID()));
+
+        strTx.append(" Version: ").append(this.getVersion());
+        strTx.append(" Timestamp: ").append(this.getTimeStamp());
+        strTx.append(" ChainID: ").append(new String(this.getChainID()));
+
+        strTx.append(" TxFee: ").append(this.getTxFee());
+        strTx.append(" TxType: ").append(this.getTxType());
+
+        strTx.append(" Sender: ").append(ByteUtil.toHexString(this.getSenderPubkey()));
+        strTx.append(" Nonce: ").append(this.getNonce());
+
+        strTx.append(" Receiver: ").append(ByteUtil.toHexString(this.getReceiver()));
+        strTx.append(" Amount: ").append(this.getAmount());
+        strTx.append(" Memo: ").append(this.getMemo());
+
+        strTx.append(" Signature: ").append(ByteUtil.toHexString(this.getSignature()));
         strTx.append("]");
+
         return strTx.toString();
+
     }
 }
