@@ -49,7 +49,7 @@ public class GenesisConfig {
     public static final BigInteger DefaultCummulativeDifficulty
             = BigInteger.ZERO;
 
-    public static final long DefaultGenesisTxFee = 0;
+    public static final BigInteger DefaultGenesisTxFee = BigInteger.ZERO;
 
     // genesis block fields
     private long version;
@@ -108,16 +108,13 @@ public class GenesisConfig {
         byte[] tauChainID = TauGenesisTransaction.ChainID;
         Pair<byte[], byte[]> senderKey = AccountManager.getInstance().getKeyPair();
 
-        // Note: 'senderNonce' is always 0 according to requirement.
-        final long senderNonce = 0;
-
         this.communityName = communityName;
         long timeStamp = System.currentTimeMillis() / 1000;
         byte[] chainID = chainID(communityName, senderKey.first, timeStamp);
 
         // create genesis transaction
         this.genesisTx = new GenesisTx(1L, chainID, timeStamp, DefaultGenesisTxFee,
-                0L, senderKey.first, senderNonce, genesisItems);
+                senderKey.first, BigInteger.ZERO, genesisItems);
         this.genesisTx.signTransactionWithPriKey(senderKey.second);
 
         this.version = 1L;
