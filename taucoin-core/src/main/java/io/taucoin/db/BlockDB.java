@@ -3,8 +3,11 @@ package io.taucoin.db;
 import io.taucoin.types.BlockContainer;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
+import io.taucoin.types.HashList;
+import io.taucoin.types.HorizontalItem;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TransactionFactory;
+import io.taucoin.types.VerticalItem;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +94,51 @@ public class BlockDB implements BlockStore {
     }
 
     /**
+     * save hash list item
+     * @param chainID chain ID
+     * @param hashList hash list
+     * @throws DBException database exception
+     */
+    private void saveHashListItem(byte[] chainID, HashList hashList) throws DBException {
+        try {
+            if (null != hashList) {
+                db.put(PrefixKey.hashListKey(chainID, hashList.getHash()), hashList.getEncoded());
+            }
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
+     * get hash list item by hash
+     * @param chainID chain ID
+     * @param hash hash
+     * @return hash list item
+     * @throws DBException database exception
+     */
+    private HashList getHashListItemByHash(byte[] chainID, byte[] hash) throws DBException {
+        if (null == hash) {
+            logger.error("Chain ID[{}], hash is null", new String(chainID));
+            return null;
+        }
+
+        byte[] encode;
+        try {
+            encode = db.get(PrefixKey.hashListKey(chainID, hash));
+        } catch (Exception e) {
+            logger.error("GetTransactionByHash:" + e.getMessage(), e);
+            throw new DBException(e.getMessage());
+        }
+
+        if (null != encode) {
+            return new HashList(encode);
+        }
+
+        logger.info("ChainID[{}]:Cannot find hash list by hash:{}", new String(chainID), Hex.toHexString(hash));
+        return null;
+    }
+
+    /**
      * get block by hash
      * @param chainID chain ID
      * @param hash block hash
@@ -138,17 +186,44 @@ public class BlockDB implements BlockStore {
         Block block = getBlockByHash(chainID, hash);
         if (null != block) {
             BlockContainer blockContainer = new BlockContainer(block);
-            if (null != block.getTxHash()) {
-                Transaction tx = getTransactionByHash(chainID, block.getTxHash());
-                if (null != tx) {
-                    blockContainer.setTx(tx);
+
+            if (null != block.getHorizontalHash()) {
+                HorizontalItem horizontalItem = (HorizontalItem) getHashListItemByHash(chainID,
+                        block.getHorizontalHash());
+                if (null != horizontalItem) {
+                    blockContainer.setHorizontalItem(horizontalItem);
+
+                    byte[] txHash = horizontalItem.getTxHash();
+                    if (null != txHash) {
+                        Transaction tx = getTransactionByHash(chainID, txHash);
+                        if (null != tx) {
+                            blockContainer.setTx(tx);
+                        } else {
+                            return null;
+                        }
+                    }
+                } else {
+                    logger.info("ChainID[{}]:Cannot find horizontal item by hash:{}",
+                            new String(chainID), Hex.toHexString(block.getHorizontalHash()));
+                    return null;
+                }
+            }
+
+            if (null != block.getVerticalHash()) {
+                VerticalItem verticalItem = (VerticalItem) getHashListItemByHash(chainID,
+                        block.getVerticalHash());
+                if (null != verticalItem) {
+                    blockContainer.setVerticalItem(verticalItem);
+                } else {
+                    logger.info("ChainID[{}]:Cannot find vertical item by hash:{}",
+                            new String(chainID), Hex.toHexString(block.getVerticalHash()));
+                    return null;
                 }
             }
 
             return blockContainer;
         }
 
-        logger.info("ChainID[{}]:Cannot find block container by hash:{}", new String(chainID), Hex.toHexString(hash));
         return null;
     }
 
@@ -582,7 +657,7 @@ public class BlockDB implements BlockStore {
     @Override
     public void removeChainBlockInfo(byte[] chainID) throws DBException {
         try {
-            db.removeWithKeyPrefix(PrefixKey.blockPrefix(chainID));
+            db.removeWithKeyPrefix(PrefixKey.blockInfoPrefix(chainID));
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
@@ -596,99 +671,99 @@ public class BlockDB implements BlockStore {
      * @return fork block or null otherwise
      * @throws DBException database exception
      */
-    @Override
-    public Block getForkPointBlock(byte[] chainID, Block block) throws DBException {
-
-        // if on main chain
-        byte[] infoEncode;
-        try {
-            infoEncode = db.get(PrefixKey.blockInfoKey(chainID, block.getBlockNum()));
-        } catch (Exception e) {
-            throw new DBException(e.getMessage());
-        }
-
-        if (null != infoEncode) {
-            BlockInfos blockInfos = new BlockInfos(infoEncode);
-            List<BlockInfo> list = blockInfos.getBlockInfoList();
-
-            for (BlockInfo blockInfo : list) {
-                if (Arrays.equals(blockInfo.getHash(), block.getBlockHash()) && blockInfo.isMainChain()) {
-                    // return itself
-                    return block;
-                }
-            }
-        } else {
-            logger.info("ChainID[{}]: Cannot find block info with current block.", new String(chainID));
-        }
-
-        byte[] encode;
-        try {
-            encode = db.get(PrefixKey.blockKey(chainID, block.getPreviousBlockHash()));
-        } catch (Exception e) {
-            throw new DBException(e.getMessage());
-        }
-
-        // if previous is null, return
-        if (null == encode) {
-            logger.error("ChainID[{}]: Cannot find previous block, hash[{}]",
-                    new String(chainID), Hex.toHexString(block.getPreviousBlockHash()));
-            return null;
-        }
-
-        Block previousBlock = new Block(encode);
-        while (true) {
-            try {
-                infoEncode = db.get(PrefixKey.blockInfoKey(chainID, previousBlock.getBlockNum()));
-            } catch (Exception e) {
-                throw new DBException(e.getMessage());
-            }
-
-            if (null == infoEncode) {
-                logger.error("ChainID[{}]: Cannot find block info with this block number:{}",
-                        new String(chainID), previousBlock.getBlockNum());
-                return null;
-            }
-            BlockInfos blockInfos = new BlockInfos(infoEncode);
-            List<BlockInfo> list = blockInfos.getBlockInfoList();
-            boolean found = false;
-            for (BlockInfo blockInfo : list) {
-                if (Arrays.equals(blockInfo.getHash(), previousBlock.getBlockHash())) {
-                    // found block
-                    found = true;
-                    if (blockInfo.isMainChain()) {
-                        // if this block is on main chain, got it
-                        return previousBlock;
-                    } else {
-                        // if this block is not on main chain, look ahead
-                        try {
-                            encode = db.get(PrefixKey.blockKey(chainID, previousBlock.getPreviousBlockHash()));
-                        } catch (Exception e) {
-                            throw new DBException(e.getMessage());
-                        }
-
-                        // if previous is null, return
-                        if (null == encode) {
-                            logger.error("ChainID[{}]: Cannot find previous block, hash[{}].",
-                                    new String(chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
-                            return null;
-                        }
-
-                        logger.info("ChainID[{}]: Seek previous block hash[{}].",
-                                new String(chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
-                        previousBlock = new Block(encode);
-                        break;
-                    }
-                }
-            }
-
-            // if not found this block info in this height
-            if (!found) {
-                logger.error("ChainID[{}]: Cannot find block info, hash[{}]",
-                        new String(chainID), Hex.toHexString(previousBlock.getBlockHash()));
-                return null;
-            }
-        }
-    }
+//    @Override
+//    public Block getForkPointBlock(byte[] chainID, Block block) throws DBException {
+//
+//        // if on main chain
+//        byte[] infoEncode;
+//        try {
+//            infoEncode = db.get(PrefixKey.blockInfoKey(chainID, block.getBlockNum()));
+//        } catch (Exception e) {
+//            throw new DBException(e.getMessage());
+//        }
+//
+//        if (null != infoEncode) {
+//            BlockInfos blockInfos = new BlockInfos(infoEncode);
+//            List<BlockInfo> list = blockInfos.getBlockInfoList();
+//
+//            for (BlockInfo blockInfo : list) {
+//                if (Arrays.equals(blockInfo.getHash(), block.getBlockHash()) && blockInfo.isMainChain()) {
+//                    // return itself
+//                    return block;
+//                }
+//            }
+//        } else {
+//            logger.info("ChainID[{}]: Cannot find block info with current block.", new String(chainID));
+//        }
+//
+//        byte[] encode;
+//        try {
+//            encode = db.get(PrefixKey.blockKey(chainID, block.getPreviousBlockHash()));
+//        } catch (Exception e) {
+//            throw new DBException(e.getMessage());
+//        }
+//
+//        // if previous is null, return
+//        if (null == encode) {
+//            logger.error("ChainID[{}]: Cannot find previous block, hash[{}]",
+//                    new String(chainID), Hex.toHexString(block.getPreviousBlockHash()));
+//            return null;
+//        }
+//
+//        Block previousBlock = new Block(encode);
+//        while (true) {
+//            try {
+//                infoEncode = db.get(PrefixKey.blockInfoKey(chainID, previousBlock.getBlockNum()));
+//            } catch (Exception e) {
+//                throw new DBException(e.getMessage());
+//            }
+//
+//            if (null == infoEncode) {
+//                logger.error("ChainID[{}]: Cannot find block info with this block number:{}",
+//                        new String(chainID), previousBlock.getBlockNum());
+//                return null;
+//            }
+//            BlockInfos blockInfos = new BlockInfos(infoEncode);
+//            List<BlockInfo> list = blockInfos.getBlockInfoList();
+//            boolean found = false;
+//            for (BlockInfo blockInfo : list) {
+//                if (Arrays.equals(blockInfo.getHash(), previousBlock.getBlockHash())) {
+//                    // found block
+//                    found = true;
+//                    if (blockInfo.isMainChain()) {
+//                        // if this block is on main chain, got it
+//                        return previousBlock;
+//                    } else {
+//                        // if this block is not on main chain, look ahead
+//                        try {
+//                            encode = db.get(PrefixKey.blockKey(chainID, previousBlock.getPreviousBlockHash()));
+//                        } catch (Exception e) {
+//                            throw new DBException(e.getMessage());
+//                        }
+//
+//                        // if previous is null, return
+//                        if (null == encode) {
+//                            logger.error("ChainID[{}]: Cannot find previous block, hash[{}].",
+//                                    new String(chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
+//                            return null;
+//                        }
+//
+//                        logger.info("ChainID[{}]: Seek previous block hash[{}].",
+//                                new String(chainID), Hex.toHexString(previousBlock.getPreviousBlockHash()));
+//                        previousBlock = new Block(encode);
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            // if not found this block info in this height
+//            if (!found) {
+//                logger.error("ChainID[{}]: Cannot find block info, hash[{}]",
+//                        new String(chainID), Hex.toHexString(previousBlock.getBlockHash()));
+//                return null;
+//            }
+//        }
+//    }
 
     /**
      * get fork point block between chain 1 and chain 2
@@ -699,49 +774,49 @@ public class BlockDB implements BlockStore {
      * @return fork point block or null if not found
      * @throws DBException database exception
      */
-    @Override
-    public Block getForkPointBlock(byte[] chainID, Block chain1Block, Block chain2Block) throws DBException {
-
-        // 1. First ensure that you are one the save level
-        long currentLevel = Math.max(chain1Block.getBlockNum(), chain2Block.getBlockNum());
-
-        Block chain1Line = chain1Block;
-        if (chain1Block.getBlockNum() > chain2Block.getBlockNum()) {
-
-            while (currentLevel > chain2Block.getBlockNum()) {
-                chain1Line = getBlockByHash(chainID, chain1Line.getPreviousBlockHash());
-                if (chain1Line == null)
-                    return null;
-                --currentLevel;
-            }
-        }
-
-        Block chain2Line = chain2Block;
-        if (chain2Block.getBlockNum() > chain1Block.getBlockNum()) {
-
-            while (currentLevel > chain1Block.getBlockNum()) {
-                chain2Line = getBlockByHash(chainID, chain2Line.getPreviousBlockHash());
-                if (chain2Line == null)
-                    return null;
-                --currentLevel;
-            }
-        }
-
-        // 2. Loop back on each level until common block
-        while (!Arrays.equals(chain2Line.getBlockHash(), chain1Line.getBlockHash())) {
-            chain2Line = getBlockByHash(chainID, chain2Line.getPreviousBlockHash());
-            chain1Line = getBlockByHash(chainID, chain1Line.getPreviousBlockHash());
-
-            if (chain1Line == null || chain2Line == null)
-                return null;
-        }
-
-        if (Arrays.equals(chain2Line.getBlockHash(), chain1Line.getBlockHash())) {
-            return chain1Block;
-        }
-
-        return null;
-    }
+//    @Override
+//    public Block getForkPointBlock(byte[] chainID, Block chain1Block, Block chain2Block) throws DBException {
+//
+//        // 1. First ensure that you are one the save level
+//        long currentLevel = Math.max(chain1Block.getBlockNum(), chain2Block.getBlockNum());
+//
+//        Block chain1Line = chain1Block;
+//        if (chain1Block.getBlockNum() > chain2Block.getBlockNum()) {
+//
+//            while (currentLevel > chain2Block.getBlockNum()) {
+//                chain1Line = getBlockByHash(chainID, chain1Line.getPreviousBlockHash());
+//                if (chain1Line == null)
+//                    return null;
+//                --currentLevel;
+//            }
+//        }
+//
+//        Block chain2Line = chain2Block;
+//        if (chain2Block.getBlockNum() > chain1Block.getBlockNum()) {
+//
+//            while (currentLevel > chain1Block.getBlockNum()) {
+//                chain2Line = getBlockByHash(chainID, chain2Line.getPreviousBlockHash());
+//                if (chain2Line == null)
+//                    return null;
+//                --currentLevel;
+//            }
+//        }
+//
+//        // 2. Loop back on each level until common block
+//        while (!Arrays.equals(chain2Line.getBlockHash(), chain1Line.getBlockHash())) {
+//            chain2Line = getBlockByHash(chainID, chain2Line.getPreviousBlockHash());
+//            chain1Line = getBlockByHash(chainID, chain1Line.getPreviousBlockHash());
+//
+//            if (chain1Line == null || chain2Line == null)
+//                return null;
+//        }
+//
+//        if (Arrays.equals(chain2Line.getBlockHash(), chain1Line.getBlockHash())) {
+//            return chain1Block;
+//        }
+//
+//        return null;
+//    }
 
     /**
      * get fork block info
@@ -754,53 +829,53 @@ public class BlockDB implements BlockStore {
      * @return true if find fork info, false otherwise
      * @throws DBException database exception
      */
-    @Override
-    public boolean getForkBlocksInfo(byte[] chainID, Block forkBlock, Block bestBlock,
-                                     List<Block> undoBlocks, List<Block> newBlocks) throws DBException {
-
-        // 1. First ensure that you are one the save level
-        long currentLevel = Math.max(bestBlock.getBlockNum(), forkBlock.getBlockNum());
-
-        Block forkLine = forkBlock;
-        if (forkBlock.getBlockNum() > bestBlock.getBlockNum()) {
-
-            while (currentLevel > bestBlock.getBlockNum()) {
-                newBlocks.add(forkLine);
-
-                forkLine = getBlockByHash(chainID, forkLine.getPreviousBlockHash());
-                if (forkLine == null)
-                    return false;
-                --currentLevel;
-            }
-        }
-
-        Block bestLine = bestBlock;
-        if (bestBlock.getBlockNum() > forkBlock.getBlockNum()) {
-
-            while (currentLevel > forkBlock.getBlockNum()) {
-                undoBlocks.add(bestLine);
-
-                bestLine = getBlockByHash(chainID, bestLine.getPreviousBlockHash());
-                --currentLevel;
-            }
-        }
-
-        // 2. Loop back on each level until common block
-        while (!Arrays.equals(bestLine.getBlockHash(), forkLine.getBlockHash())) {
-            newBlocks.add(forkLine);
-            undoBlocks.add(bestLine);
-
-            bestLine = getBlockByHash(chainID, bestLine.getPreviousBlockHash());
-            forkLine = getBlockByHash(chainID, forkLine.getPreviousBlockHash());
-
-            if (forkLine == null)
-                return false;
-
-            --currentLevel;
-        }
-
-        return true;
-    }
+//    @Override
+//    public boolean getForkBlocksInfo(byte[] chainID, Block forkBlock, Block bestBlock,
+//                                     List<Block> undoBlocks, List<Block> newBlocks) throws DBException {
+//
+//        // 1. First ensure that you are one the save level
+//        long currentLevel = Math.max(bestBlock.getBlockNum(), forkBlock.getBlockNum());
+//
+//        Block forkLine = forkBlock;
+//        if (forkBlock.getBlockNum() > bestBlock.getBlockNum()) {
+//
+//            while (currentLevel > bestBlock.getBlockNum()) {
+//                newBlocks.add(forkLine);
+//
+//                forkLine = getBlockByHash(chainID, forkLine.getPreviousBlockHash());
+//                if (forkLine == null)
+//                    return false;
+//                --currentLevel;
+//            }
+//        }
+//
+//        Block bestLine = bestBlock;
+//        if (bestBlock.getBlockNum() > forkBlock.getBlockNum()) {
+//
+//            while (currentLevel > forkBlock.getBlockNum()) {
+//                undoBlocks.add(bestLine);
+//
+//                bestLine = getBlockByHash(chainID, bestLine.getPreviousBlockHash());
+//                --currentLevel;
+//            }
+//        }
+//
+//        // 2. Loop back on each level until common block
+//        while (!Arrays.equals(bestLine.getBlockHash(), forkLine.getBlockHash())) {
+//            newBlocks.add(forkLine);
+//            undoBlocks.add(bestLine);
+//
+//            bestLine = getBlockByHash(chainID, bestLine.getPreviousBlockHash());
+//            forkLine = getBlockByHash(chainID, forkLine.getPreviousBlockHash());
+//
+//            if (forkLine == null)
+//                return false;
+//
+//            --currentLevel;
+//        }
+//
+//        return true;
+//    }
 
     /**
      * get fork block container info
@@ -873,20 +948,20 @@ public class BlockDB implements BlockStore {
      * @param newBlocks  move to main chain
      * @throws DBException database exception
      */
-    @Override
-    public void reBranchBlocks(byte[] chainID, List<Block> undoBlocks, List<Block> newBlocks) throws DBException {
-        if (undoBlocks != null) {
-            for (Block block : undoBlocks) {
-                saveBlockInfo(chainID, block, false);
-            }
-        }
-
-        if (newBlocks != null) {
-            for (Block block : newBlocks) {
-                saveBlockInfo(chainID, block, true);
-            }
-        }
-    }
+//    @Override
+//    public void reBranchBlocks(byte[] chainID, List<Block> undoBlocks, List<Block> newBlocks) throws DBException {
+//        if (undoBlocks != null) {
+//            for (Block block : undoBlocks) {
+//                saveBlockInfo(chainID, block, false);
+//            }
+//        }
+//
+//        if (newBlocks != null) {
+//            for (Block block : newBlocks) {
+//                saveBlockInfo(chainID, block, true);
+//            }
+//        }
+//    }
 
     /**
      * re-branch blocks with block containers

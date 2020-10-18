@@ -8,6 +8,7 @@ public class PrefixKey {
     private static final byte[] block = "B-".getBytes();
     private static final byte[] bestBlock = "b-".getBytes();
     public static final byte[] chain = "C-".getBytes();
+    public static final byte[] hashList = "H-".getBytes();
     private static final byte[] blockInfo = "I-".getBytes();
     private static final byte[] immutablePointBlockHash = "i-".getBytes();
     private static final byte[] mutableRange = "M-".getBytes();
@@ -194,6 +195,32 @@ public class PrefixKey {
         System.arraycopy(chainID, 0, key, 0, chainID.length);
         System.arraycopy(block, 0, key, chainID.length, block.length);
         System.arraycopy(hash, 0, key, chainID.length + block.length, hash.length);
+        return key;
+    }
+
+    /**
+     * hash list item prefix: chainID + 'hashList'
+     * @param chainID chain ID
+     * @return prefix
+     */
+    public static byte[] hashListPrefix(byte[] chainID) {
+        byte[] prefix = new byte[chainID.length + hashList.length];
+        System.arraycopy(chainID, 0, prefix, 0, chainID.length);
+        System.arraycopy(hashList, 0, prefix, chainID.length, hashList.length);
+        return prefix;
+    }
+
+    /**
+     * hash list item key: chainID + 'hashList' + hash
+     * @param chainID chain ID
+     * @param hash hash list item hash
+     * @return key
+     */
+    public static byte[] hashListKey(byte[] chainID, byte[] hash) {
+        byte[] key = new byte[chainID.length + hashList.length + hash.length];
+        System.arraycopy(chainID, 0, key, 0, chainID.length);
+        System.arraycopy(hashList, 0, key, chainID.length, hashList.length);
+        System.arraycopy(hash, 0, key, chainID.length + hashList.length, hash.length);
         return key;
     }
 

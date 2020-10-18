@@ -150,7 +150,7 @@ public interface BlockStore {
      * @return fork block or null otherwise
      * @throws DBException database exception
      */
-    Block getForkPointBlock(byte[] chainID, Block block) throws DBException;
+//    Block getForkPointBlock(byte[] chainID, Block block) throws DBException;
 
     /**
      * get fork point block between chain 1 and chain 2
@@ -160,7 +160,7 @@ public interface BlockStore {
      * @return fork point block or null if not found
      * @throws DBException database exception
      */
-    Block getForkPointBlock(byte[] chainID, Block chain1Block, Block chain2Block) throws DBException;
+//    Block getForkPointBlock(byte[] chainID, Block chain1Block, Block chain2Block) throws DBException;
 
     /**
      * get fork block info
@@ -172,11 +172,11 @@ public interface BlockStore {
      * @return true if find fork info, false otherwise
      * @throws DBException database exception
      */
-    boolean getForkBlocksInfo(byte[] chainID,
-                              Block forkBlock,
-                              Block bestBlock,
-                              List<Block> undoBlocks,
-                              List<Block> newBlocks) throws DBException;
+//    boolean getForkBlocksInfo(byte[] chainID,
+//                              Block forkBlock,
+//                              Block bestBlock,
+//                              List<Block> undoBlocks,
+//                              List<Block> newBlocks) throws DBException;
 
     /**
      * get fork block container info
@@ -201,7 +201,7 @@ public interface BlockStore {
      * @param newBlocks move to main chain
      * @throws DBException database exception
      */
-    void reBranchBlocks(byte[] chainID, List<Block> undoBlocks, List<Block> newBlocks) throws DBException;
+//    void reBranchBlocks(byte[] chainID, List<Block> undoBlocks, List<Block> newBlocks) throws DBException;
 
     /**
      * re-branch blocks with block containers

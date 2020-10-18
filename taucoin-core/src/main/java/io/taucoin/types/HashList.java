@@ -3,11 +3,14 @@ package io.taucoin.types;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 public class HashList {
     private List<byte[]> hashList;
+
+    private byte[] hash;
     private byte[] rlpEncoded;
 
     private boolean parsed = false;
@@ -45,18 +48,34 @@ public class HashList {
     }
 
     public byte[] getEncoded(){
-        if (null != this.hashList && this.hashList.size() > 1) {
-            byte[][] encodeList = new byte[this.hashList.size()][];
+        if (null == rlpEncoded) {
+            if (null != this.hashList && this.hashList.size() > 1) {
+                byte[][] encodeList = new byte[this.hashList.size()][];
 
-            int i = 0;
-            for (byte[] hash: this.hashList) {
-                encodeList[i] = RLP.encodeElement(hash);
-                i++;
+                int i = 0;
+                for (byte[] hash : this.hashList) {
+                    encodeList[i] = RLP.encodeElement(hash);
+                    i++;
+                }
+
+                rlpEncoded = RLP.encodeList(encodeList);
             }
-
-            return RLP.encodeList(encodeList);
         }
 
-        return null;
+        return rlpEncoded;
     }
+
+    /**
+     * get hash list item hash
+     * @return hash
+     */
+    public byte[] getHash(){
+        if(null != this.hash) {
+            this.hash = HashUtil.sha1hash(this.getEncoded());
+        }
+
+        return this.hash;
+    }
+
+
 }
