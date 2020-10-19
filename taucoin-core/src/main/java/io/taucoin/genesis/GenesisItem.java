@@ -23,6 +23,7 @@ import io.taucoin.util.*;
 
 public class GenesisItem {
 
+    private byte[] account;
     private BigInteger balance;
     private BigInteger power;
 
@@ -34,7 +35,8 @@ public class GenesisItem {
      * @param balance
      * @param power
      */
-    public GenesisItem(BigInteger balance,BigInteger power) {
+    public GenesisItem(byte[] account, BigInteger balance, BigInteger power) {
+        this.account = account;
         this.balance = balance;
         this.power = power;
         isParse = true;
@@ -44,7 +46,8 @@ public class GenesisItem {
      * genesis default account power to ensure block chain smoothly.
      * @param balance
      */
-    public GenesisItem(BigInteger balance){
+    public GenesisItem(byte[] account, BigInteger balance){
+        this.account = account;
         this.balance = balance;
         this.power = ChainParam.DefaultGeneisisPower;
         isParse = true;
@@ -61,35 +64,47 @@ public class GenesisItem {
      */
     public byte[] getEncoded(){
         if(rlpEncoded == null){
+
+            byte[] account = RLP.encodeElement(this.account);
             byte[] balance = RLP.encodeBigInteger(this.balance);
             byte[] power = RLP.encodeBigInteger(this.power);
 
-            rlpEncoded = RLP.encodeList(balance, power);
+            rlpEncoded = RLP.encodeList(account, balance, power);
         }
 
         return rlpEncoded;
-    }
-
-    public BigInteger getBalance() {
-        if(!isParse) parseRLP();
-        return balance;
-    }
-
-    public BigInteger getPower(){
-        if(!isParse) parseRLP();
-        return power;
     }
 
     private void parseRLP(){
         if(isParse){
             return;
         } else {
+
             RLPList items = RLP.decode2(this.rlpEncoded);
             RLPList item = (RLPList)items.get(0);
-            this.balance = new BigInteger(item.get(0).getRLPData());
-            byte[] powers = item.get(1).getRLPData()==null? BigInteger.ZERO.toByteArray():item.get(1).getRLPData();
-            this.power = new BigInteger(powers);
+
+            this.account = item.get(0).getRLPData();
+            this.balance = new BigInteger(item.get(1).getRLPData());
+            this.power = new BigInteger(item.get(2).getRLPData());
+
             isParse = true;
         }
     }
+
+    public byte[] getAccount() {
+        if(!isParse) parseRLP();
+        return this.account;
+    }
+
+
+    public BigInteger getBalance() {
+        if(!isParse) parseRLP();
+        return this.balance;
+    }
+
+    public BigInteger getPower(){
+        if(!isParse) parseRLP();
+        return this.power;
+    }
+
 }

@@ -15,7 +15,6 @@ import io.taucoin.genesis.GenesisItem;
 import io.taucoin.genesis.TauGenesisConfig;
 import io.taucoin.genesis.TauGenesisTransaction;
 import io.taucoin.listener.TauListener;
-import io.taucoin.param.ChainParam;
 import io.taucoin.processor.StateProcessor;
 import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.torrent.DHT;
@@ -200,13 +199,12 @@ public class ChainManager {
      * Create new community.
      *
      * @param communityName community name
-     * @param genesisItems airdrop accounts balance and power
+     * @param genesisItem airdrop accounts balance and power
      * @return boolean true indicates creating successfully, or else false.
      */
     public boolean createNewCommunity(String communityName,
-            HashMap<ByteArrayWrapper, GenesisItem> genesisItems) {
-
-        GenesisConfig config = new GenesisConfig(communityName, genesisItems);
+            ArrayList<GenesisItem> genesisItem) {
+        GenesisConfig config = new GenesisConfig(communityName, genesisItem);
         return createNewCommunity(config);
     }
 
@@ -238,8 +236,8 @@ public class ChainManager {
             return false;
         }
 
-        HashMap<ByteArrayWrapper, GenesisItem> map = ((GenesisTx) tx).getGenesisAccounts();
-        if (null == map || map.size() <= 0) {
+        ArrayList<GenesisItem> gmList = ((GenesisTx) tx).getGenesisAccounts();
+        if (null == gmList || gmList.size() <= 0) {
             logger.error("Genesis account is empty.");
             return false;
         }
@@ -252,8 +250,8 @@ public class ChainManager {
             // follow chain
             List<byte[]> peerList = new ArrayList<>();
 
-            for (Map.Entry<ByteArrayWrapper, GenesisItem> entry : map.entrySet()) {
-                byte[] pubKey = entry.getKey().getData();
+            for (GenesisItem entry : gmList) {
+                byte[] pubKey = entry.getAccount();
                 logger.info("create new community pubkey: {}", Hex.toHexString(pubKey));
                 peerList.add(pubKey);
             }

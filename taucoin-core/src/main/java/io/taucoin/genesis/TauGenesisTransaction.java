@@ -7,7 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.lang.reflect.Array;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public final class TauGenesisTransaction extends GenesisTx {
@@ -37,32 +39,24 @@ public final class TauGenesisTransaction extends GenesisTx {
     private static final String sPrivKey
             = "f008065e3ff567d4471231a4a0609e118b28f0639f9768d3f8bb123f8f0b38706ade0527cb0dd1e57ad0003fbf8e5af51c0bf0471e639b4920ab49ac17ff88f1";
 
-    private static final HashMap<ByteArrayWrapper, GenesisItem> sGensisItems
-            = new HashMap<ByteArrayWrapper, GenesisItem>();
+    private static final ArrayList<GenesisItem> sGensisItems
+            = new ArrayList<>();
 
     static {
-        sGensisItems.put(
-            new ByteArrayWrapper(
-                    Hex.decode("63ec42130442c91e23d56dc73708e06eb164883ab74c9813764c3fd0e2042dc4")),
-            new GenesisItem(new BigInteger("10000000", 10), new BigInteger("100", 10))
+        sGensisItems.add(
+            new GenesisItem("63ec42130442c91e23d56dc73708e06eb164883ab74c9813764c3fd0e2042dc4".getBytes(), new BigInteger("10000000", 10), new BigInteger("100", 10))
         );
 
-        sGensisItems.put(
-            new ByteArrayWrapper(
-                    Hex.decode("809df518ee450ded0a659aeb4bc5bec636e2cff012fc88d343b7419af974bb81")),
-            new GenesisItem(new BigInteger("10000000", 10), new BigInteger("100", 10))
+        sGensisItems.add(
+            new GenesisItem("809df518ee450ded0a659aeb4bc5bec636e2cff012fc88d343b7419af974bb81".getBytes(), new BigInteger("10000000", 10), new BigInteger("100", 10))
         );
 
-        sGensisItems.put(
-            new ByteArrayWrapper(
-                    Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9")),
-            new GenesisItem(new BigInteger("10000000", 10), new BigInteger("100", 10))
+        sGensisItems.add(
+            new GenesisItem("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9".getBytes(), new BigInteger("10000000", 10), new BigInteger("100", 10))
         );
 
-        sGensisItems.put(
-            new ByteArrayWrapper(
-                    Hex.decode("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124")),
-            new GenesisItem(new BigInteger("10000000", 10), new BigInteger("100", 10))
+        sGensisItems.add(
+            new GenesisItem("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124".getBytes(), new BigInteger("10000000", 10), new BigInteger("100", 10))
         );
     }
 

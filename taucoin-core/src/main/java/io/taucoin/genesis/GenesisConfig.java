@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -102,10 +103,9 @@ public class GenesisConfig {
      * This constructor is only used for creating new community. 
      */
     public GenesisConfig(String communityName,
-            HashMap<ByteArrayWrapper, GenesisItem> genesisItems) {
+            ArrayList<GenesisItem> genesisItems) {
 
         // First of all, get account state from TAU blockchain.
-        byte[] tauChainID = TauGenesisTransaction.ChainID;
         Pair<byte[], byte[]> senderKey = AccountManager.getInstance().getKeyPair();
 
         this.communityName = communityName;
