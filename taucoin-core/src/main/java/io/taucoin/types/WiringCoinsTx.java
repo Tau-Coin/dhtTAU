@@ -40,7 +40,6 @@ public class WiringCoinsTx extends Transaction {
      * @param chainID
      * @param timestamp
      * @param txFee
-     * @param txType
      * @param sender
      * @param nonce
      * @param receiver
@@ -48,11 +47,11 @@ public class WiringCoinsTx extends Transaction {
      * @param memo
      * @param signature
      */
-    public WiringCoinsTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType,
+    public WiringCoinsTx(long version, byte[] chainID, long timestamp, BigInteger txFee,
                         byte[] sender, BigInteger nonce, byte[] receiver, BigInteger amount, byte[] memo, byte[] signature) {
 
         //父类构造函数
-        super(version, timestamp, chainID, txFee, txType, sender, nonce, signature);
+        super(version, timestamp, chainID, txFee, TypesConfig.TxType.WCoinsType.ordinal(), sender, nonce, signature);
 
         //Check
         if(receiver.length != ChainParam.SenderLength) {
@@ -72,18 +71,17 @@ public class WiringCoinsTx extends Transaction {
      * @param chainID
      * @param timestamp
      * @param txFee
-     * @param txType
      * @param sender
      * @param nonce
      * @param receiver
      * @param amount
      * @param memo
      */
-    public WiringCoinsTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType,
+    public WiringCoinsTx(long version, byte[] chainID, long timestamp, BigInteger txFee,
                          byte[] sender, BigInteger nonce, byte[] receiver, BigInteger amount, byte[] memo) {
 
         //父类构造函数
-        super(version, timestamp, chainID, txFee, txType, sender, nonce);
+        super(version, timestamp, chainID, txFee, TypesConfig.TxType.WCoinsType.ordinal(), sender, nonce);
 
         //Check
         if(receiver.length != ChainParam.SenderLength) {

@@ -20,7 +20,7 @@ package io.taucoin.types;
  * types config parameters.
  */
 public class TypesConfig {
-    public static enum TxType {
+    public enum TxType {
         GenesisType, FNoteType, WCoinsType
     }
 }

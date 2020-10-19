@@ -38,17 +38,16 @@ public class ForumNoteTx extends Transaction {
      * @param chainID
      * @param timestamp
      * @param txFee
-     * @param txType
      * @param sender
      * @param nonce
      * @param forumNoteHash
      * @param signature
      */
-    public ForumNoteTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType, byte[] sender,
+    public ForumNoteTx(long version, byte[] chainID, long timestamp, BigInteger txFee, byte[] sender,
                        BigInteger nonce, byte[] forumNoteHash, byte[] signature){
 
         //父类构造函数
-        super(version, timestamp, chainID, txFee, txType, sender, nonce, signature);
+        super(version, timestamp, chainID, txFee, TypesConfig.TxType.FNoteType.ordinal(), sender, nonce, signature);
 
         //Check
         if(forumNoteHash.length != ChainParam.HashLength) {
@@ -66,16 +65,15 @@ public class ForumNoteTx extends Transaction {
      * @param chainID
      * @param timestamp
      * @param txFee
-     * @param txType
      * @param sender
      * @param nonce
      * @param forumNoteHash
      */
-    public ForumNoteTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType, byte[] sender,
+    public ForumNoteTx(long version, byte[] chainID, long timestamp, BigInteger txFee, byte[] sender,
                        BigInteger nonce, byte[] forumNoteHash){
 
         //父类构造函数
-        super(version, timestamp, chainID, txFee, txType, sender, nonce);
+        super(version, timestamp, chainID, txFee, TypesConfig.TxType.FNoteType.ordinal(), sender, nonce);
 
         //Check
         if(forumNoteHash.length != ChainParam.HashLength) {

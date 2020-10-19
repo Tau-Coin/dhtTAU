@@ -18,9 +18,14 @@ package io.taucoin.types;
 
 import com.frostwire.jlibtorrent.Entry;
 
+import java.math.BigInteger;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.taucoin.util.ByteUtil;
+import io.taucoin.util.RLP;
+import io.taucoin.util.RLPList;
 
 public class TransactionFactory {
 
@@ -28,9 +33,10 @@ public class TransactionFactory {
 
     public static Transaction parseTransaction(byte[] encodedTx) {
 
-        Entry entry = Entry.bdecode(encodedTx);
-        List<Entry> entrylist = entry.list();
-        long txType = entrylist.get(Transaction.TxIndex.TxType.ordinal()).integer();
+        RLPList txList = RLP.decode2(encodedTx);
+        RLPList tx = (RLPList) txList.get(0);
+
+        long txType = ByteUtil.byteArrayToLong(tx.get(Transaction.TxIndex.TxType.ordinal()).getRLPData());
 
         if (txType == TypesConfig.TxType.GenesisType.ordinal()) {
             return new GenesisTx(encodedTx);

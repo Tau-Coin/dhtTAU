@@ -630,7 +630,7 @@ public class Block {
      * @param horizontalHash
      */
     public void setHorizontalHash(byte[] horizontalHash) {
-        this.verticalHash = verticalHash;
+        this.horizontalHash = horizontalHash;
         this.encodedBytes = null;
         this.sigEncodedBytes = null;
     }

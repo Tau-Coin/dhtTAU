@@ -49,11 +49,11 @@ public class GenesisTx extends Transaction {
      * @param genesisMsg
      * @param signature
      */
-    public GenesisTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType, byte[] sender, 
+    public GenesisTx(long version, byte[] chainID, long timestamp, BigInteger txFee, byte[] sender,
             BigInteger nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg, byte[] signature){
 
         //父类构造函数
-        super(version, timestamp, chainID, txFee, txType, sender, nonce, signature);
+        super(version, timestamp, chainID, txFee, TypesConfig.TxType.GenesisType.ordinal(), sender, nonce, signature);
 
         //this.genesisMsg = genesisMapTrans(genesisMsg);
         this.genesisMsg = genesisMsg;
@@ -73,11 +73,11 @@ public class GenesisTx extends Transaction {
      * @param nonce
      * @param genesisMsg
      */
-    public GenesisTx(long version, byte[] chainID, long timestamp, BigInteger txFee, long txType, byte[] sender, 
+    public GenesisTx(long version, byte[] chainID, long timestamp, BigInteger txFee, byte[] sender,
             BigInteger nonce, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg){
 
         //父类构造函数
-        super(version, timestamp, chainID, txFee, txType, sender, nonce);
+        super(version, timestamp, chainID, txFee, TypesConfig.TxType.GenesisType.ordinal(), sender, nonce);
 
         //this.genesisMsg = genesisMapTrans(genesisMsg);
         this.genesisMsg = genesisMsg;
