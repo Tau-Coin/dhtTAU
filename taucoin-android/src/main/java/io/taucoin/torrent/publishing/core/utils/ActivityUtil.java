@@ -326,7 +326,7 @@ public class ActivityUtil {
      * @param subject
      */
     private static void shareText(AppCompatActivity activity, String title,
-                                  String text, String subject) {
+                                 String text, String subject) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);
         intent.setType("text/plain");

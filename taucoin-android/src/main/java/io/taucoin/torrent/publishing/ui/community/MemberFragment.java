@@ -125,20 +125,20 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
 
     @Override
     public void onShareClicked(MemberAndUser member) {
-        showShareDialog(member);
+        showShareDialog();
     }
 
     /**
      * 显示联系平台的对话框
      */
-    private void showShareDialog(MemberAndUser member) {
+    private void showShareDialog() {
         // 获取10个社区成员的公钥
         disposables.add(communityViewModel.getCommunityMembersLimit(chainID, Constants.CHAIN_LINK_BS_LIMIT)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
                     ActivityUtil.shareText(activity, getString(R.string.contacts_share_link_via),
-                            communityInviteLink, member.publicKey);
+                            communityInviteLink);
                 }));
     }
 }

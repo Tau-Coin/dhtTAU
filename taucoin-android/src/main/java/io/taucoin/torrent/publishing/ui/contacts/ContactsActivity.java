@@ -271,19 +271,19 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
 
     @Override
     public void onShareClicked(UserAndMember user) {
-        showShareDialog(user);
+        showShareDialog();
     }
 
     /**
      * 显示联系平台的对话框
      */
-    private void showShareDialog(UserAndMember user) {
+    private void showShareDialog() {
         disposables.add(communityViewModel.getCommunityMembersLimit(chainID, Constants.CHAIN_LINK_BS_LIMIT)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
                     ActivityUtil.shareText(this, getString(R.string.contacts_share_link_via),
-                            communityInviteLink, user.publicKey);
+                            communityInviteLink);
                 }));
     }
 

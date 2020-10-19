@@ -12,10 +12,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
@@ -49,10 +52,12 @@ import io.taucoin.util.ByteUtil;
 public class TauDaemon {
     private static final String TAG = TauDaemon.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
+    private static final long NETWORK_JITTER_INTERVAL = 3 * 1000; // 网络抖动时间间隔
 
     private Context appContext;
     private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private Disposable networkJitter; // 网络抖动定时任务资源
     private PowerReceiver powerReceiver = new PowerReceiver();
     private ConnectionReceiver connectionReceiver = new ConnectionReceiver();
     private TauController tauController;
@@ -265,6 +270,9 @@ public class TauDaemon {
         disposables.clear();
         tauListenHandler.destroy();
         tauController.stop();
+        if (networkJitter != null && !networkJitter.isDisposed()) {
+            networkJitter.dispose();
+        }
     }
 
     /**
@@ -346,17 +354,36 @@ public class TauDaemon {
         if (!isRunning){
             return;
         }
-        boolean internetState = settingsRepo.internetState();
-        long sessions = 0;
         // 判断有无网络连接
         if (settingsRepo.internetState()) {
-            sessions = NetworkSetting.calculateDHTSessions();
+            long sessions = NetworkSetting.calculateDHTSessions();
+            rescheduleTauBySessions(sessions);
+        } else {
+            if (null == networkJitter || networkJitter.isDisposed()) {
+                return;
+            }
+            networkJitter = Observable.timer(NETWORK_JITTER_INTERVAL, TimeUnit.MILLISECONDS)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(seconds -> rescheduleTauBySessions(NetworkSetting.getDHTSessions()));
+        }
+    }
+
+    /**
+     * 根据当前设置计算出的DHT Sessions数重新调度Tau
+     */
+    private void rescheduleTauBySessions(long sessions) {
+        if (networkJitter != null && !networkJitter.isDisposed()) {
+            networkJitter.dispose();
+        }
+        if (!isRunning){
+            return;
         }
         // TODO：通知DHT Controller有无网络连接和DHT Sessions个数
         NetworkSetting.updateDHTSessions(sessions);
         logger.info("rescheduleTauBySettings Auto Mode::{}, internetState::{}, DHTSessions::{}",
                 NetworkSetting.autoMode(),
-                internetState,
+                settingsRepo.internetState(),
                 sessions);
     }
 
