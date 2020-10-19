@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -49,7 +49,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
-import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -153,10 +152,10 @@ public class CommunityViewModel extends AndroidViewModel {
     GenesisConfig createGenesisConfig(@NonNull Community community){
         byte[] publicKey = ByteUtil.toByte(community.publicKey);
         BigInteger totalCoin = BigInteger.valueOf(community.totalCoin);
-        HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
-        GenesisItem item = new GenesisItem(totalCoin);
-        genesisMsg.put(new ByteArrayWrapper(publicKey), item);
-        return new GenesisConfig(community.communityName, genesisMsg);
+        GenesisItem item = new GenesisItem(publicKey, totalCoin);
+        ArrayList<GenesisItem> list = new ArrayList<>();
+        list.add(item);
+        return new GenesisConfig(community.communityName, list);
     }
 
     /**

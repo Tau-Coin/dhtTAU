@@ -5,7 +5,7 @@ import android.content.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import io.reactivex.BackpressureStrategy;
@@ -30,7 +30,6 @@ import io.taucoin.types.Block;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.WiringCoinsTx;
-import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -198,10 +197,10 @@ class TauListenHandler {
             logger.info("Add transaction to local, txID::{}, txType::{}", txID, tx.txType);
         } else if (txType == TypesConfig.TxType.GenesisType.ordinal()){
             GenesisTx genesisTx = (GenesisTx) txMsg;
-            Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = genesisTx.getGenesisAccounts();
-            if(genesisMsgKV != null){
-                for (ByteArrayWrapper key: genesisMsgKV.keySet()) {
-                    String publicKey = ByteUtil.toHexString(key.getData());
+            ArrayList<GenesisItem> list = genesisTx.getGenesisAccounts();
+            if(list != null){
+                for (GenesisItem key: list) {
+                    String publicKey = ByteUtil.toHexString(key.getAccount());
                     saveUserInfo(publicKey, 0);
                     addMemberInfo(chainID, publicKey, isSync);
                 }
@@ -224,10 +223,10 @@ class TauListenHandler {
             addMemberInfo(txMsg.getChainID(), tx.getReceiver(), false);
         }else if (txType == TypesConfig.TxType.GenesisType.ordinal()){
             GenesisTx genesisTx = (GenesisTx) txMsg;
-            Map<ByteArrayWrapper, GenesisItem> genesisMsgKV = genesisTx.getGenesisAccounts();
-            if(genesisMsgKV != null){
-                for (ByteArrayWrapper key: genesisMsgKV.keySet()) {
-                    String publicKey = ByteUtil.toHexString(key.getData());
+            ArrayList<GenesisItem> list = genesisTx.getGenesisAccounts();
+            if(list != null){
+                for (GenesisItem key: list) {
+                    String publicKey = ByteUtil.toHexString(key.getAccount());
                     addMemberInfo(chainID, publicKey, false);
                 }
             }

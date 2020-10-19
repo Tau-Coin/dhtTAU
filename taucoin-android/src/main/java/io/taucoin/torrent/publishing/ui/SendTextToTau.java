@@ -12,6 +12,7 @@ import io.taucoin.torrent.publishing.core.utils.ToastUtils;
  * Adds "TAU" item in share dialog.
  */
 
+@Deprecated
 public class SendTextToTau extends BaseActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {

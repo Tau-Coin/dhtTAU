@@ -20,12 +20,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.databinding.FragmentMemberBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -127,31 +125,20 @@ public class MemberFragment extends BaseFragment implements MemberListAdapter.Cl
 
     @Override
     public void onShareClicked(MemberAndUser member) {
-        String currentUserPk = MainApplication.getInstance().getPublicKey();
-        if(StringUtil.isEquals(currentUserPk, member.publicKey)){
-            showShareDialog(member, false);
-        }else{
-            showProgressDialog();
-            disposables.add(communityViewModel.getCommunityNumInCommon(currentUserPk, member.publicKey)
-                    .subscribeOn(Schedulers.newThread())
-                    .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
-                        closeProgressDialog();
-                        showShareDialog(member, list.size() > 0);
-                    }));
-        }
+        showShareDialog(member);
     }
 
     /**
      * 显示联系平台的对话框
      */
-    private void showShareDialog(MemberAndUser member, boolean isShareTau) {
+    private void showShareDialog(MemberAndUser member) {
         // 获取10个社区成员的公钥
         disposables.add(communityViewModel.getCommunityMembersLimit(chainID, Constants.CHAIN_LINK_BS_LIMIT)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
                     ActivityUtil.shareText(activity, getString(R.string.contacts_share_link_via),
-                            communityInviteLink, member.publicKey, isShareTau);
+                            communityInviteLink, member.publicKey);
                 }));
     }
 }

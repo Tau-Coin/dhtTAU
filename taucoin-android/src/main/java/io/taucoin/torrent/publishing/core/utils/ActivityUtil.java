@@ -47,7 +47,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.ui.SendTextToTau;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 
 /**
@@ -316,11 +315,7 @@ public class ActivityUtil {
      * @param text
      */
     public static void shareText(AppCompatActivity activity, String title, String text) {
-        shareText(activity, title, text, null, false);
-    }
-
-    public static void shareText(AppCompatActivity activity, String title, String text, boolean isShowTau) {
-        shareText(activity, title, text, null, isShowTau);
+        shareText(activity, title, text, null);
     }
 
     /**
@@ -329,11 +324,9 @@ public class ActivityUtil {
      * @param title
      * @param text
      * @param subject
-     * @param isShowTau
      */
-    public static void shareText(AppCompatActivity activity, String title,
-                                 String text, String subject, boolean isShowTau) {
-        Utils.enableComponent(activity, SendTextToTau.class, isShowTau);
+    private static void shareText(AppCompatActivity activity, String title,
+                                  String text, String subject) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);
         intent.setType("text/plain");

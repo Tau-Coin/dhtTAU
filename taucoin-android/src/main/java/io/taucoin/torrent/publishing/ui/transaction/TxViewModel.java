@@ -200,12 +200,12 @@ public class TxViewModel extends AndroidViewModel {
             if(tx.txType == TypesConfig.TxType.WCoinsType.ordinal()){
                 byte[] receiverPk = ByteUtil.toByte(tx.receiverPk);
                 transaction = new WiringCoinsTx(1, chainID, timestamp, BigInteger.valueOf(tx.fee),
-                        tx.txType, senderPk, BigInteger.valueOf(nonce), receiverPk,
+                        senderPk, BigInteger.valueOf(nonce), receiverPk,
                         BigInteger.valueOf(tx.amount), tx.memo.getBytes());
             } else {
                 // DHT PUT
                 byte[] forumNoteHash = daemon.putForumNote(tx.memo);
-                transaction = new ForumNoteTx(1, chainID, timestamp, BigInteger.valueOf(tx.fee), tx.txType,
+                transaction = new ForumNoteTx(1, chainID, timestamp, BigInteger.valueOf(tx.fee),
                         senderPk, BigInteger.valueOf(nonce), forumNoteHash);
             }
             transaction.signTransactionWithSeed(senderSeed);
