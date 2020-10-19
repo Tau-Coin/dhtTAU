@@ -24,6 +24,10 @@ public class HashList {
         this.rlpEncoded = encode;
     }
 
+    /**
+     * get hash list
+     * @return hash list
+     */
     public List<byte[]> getHashList() {
         if (!parsed) {
             parseRLP();
@@ -32,6 +36,9 @@ public class HashList {
         return this.hashList;
     }
 
+    /**
+     * parse rlp encode
+     */
     private void parseRLP() {
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
@@ -47,6 +54,10 @@ public class HashList {
         this.parsed = true;
     }
 
+    /**
+     * get encoded hash list
+     * @return encode
+     */
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
             if (null != this.hashList && this.hashList.size() > 1) {

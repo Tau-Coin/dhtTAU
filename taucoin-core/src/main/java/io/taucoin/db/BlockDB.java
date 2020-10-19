@@ -413,14 +413,39 @@ public class BlockDB implements BlockStore {
         }
 
         BlockContainer blockContainer = new BlockContainer(block);
-        if (null != block.getTxHash()) {
-            Transaction tx = getTransactionByHash(chainID, block.getTxHash());
 
-            if (null == tx) {
+        if (null != block.getHorizontalHash()) {
+            HorizontalItem horizontalItem = (HorizontalItem) getHashListItemByHash(chainID,
+                    block.getHorizontalHash());
+            if (null != horizontalItem) {
+                blockContainer.setHorizontalItem(horizontalItem);
+
+                byte[] txHash = horizontalItem.getTxHash();
+                if (null != txHash) {
+                    Transaction tx = getTransactionByHash(chainID, txHash);
+                    if (null != tx) {
+                        blockContainer.setTx(tx);
+                    } else {
+                        return null;
+                    }
+                }
+            } else {
+                logger.info("ChainID[{}]:Cannot find horizontal item by hash:{}",
+                        new String(chainID), Hex.toHexString(block.getHorizontalHash()));
                 return null;
             }
+        }
 
-            blockContainer.setTx(tx);
+        if (null != block.getVerticalHash()) {
+            VerticalItem verticalItem = (VerticalItem) getHashListItemByHash(chainID,
+                    block.getVerticalHash());
+            if (null != verticalItem) {
+                blockContainer.setVerticalItem(verticalItem);
+            } else {
+                logger.info("ChainID[{}]:Cannot find vertical item by hash:{}",
+                        new String(chainID), Hex.toHexString(block.getVerticalHash()));
+                return null;
+            }
         }
 
         return blockContainer;
@@ -545,9 +570,11 @@ public class BlockDB implements BlockStore {
             throw new DBException(e.getMessage());
         }
 
+        saveHashListItem(chainID, blockContainer.getHorizontalItem());
+        saveHashListItem(chainID, blockContainer.getVerticalItem());
+
         // save tx
-        Transaction tx = blockContainer.getTx();
-        saveTransaction(chainID, tx);
+        saveTransaction(chainID, blockContainer.getTx());
 
         // save block info
         saveBlockInfo(chainID, block, isMainChain);
@@ -582,8 +609,19 @@ public class BlockDB implements BlockStore {
                     // delete tx
                     Block block = getBlockByHash(chainID, list.get(i).getHash());
                     if (null != block) {
-                        if (null != block.getTxHash()) {
-                            db.delete(PrefixKey.txKey(chainID, block.getTxHash()));
+                        if (null != block.getVerticalHash()) {
+                            db.delete(PrefixKey.hashListKey(chainID, block.getVerticalHash()));
+                        }
+
+                        if (null != block.getHorizontalHash()) {
+                            HashList hashList = getHashListItemByHash(chainID, block.getHorizontalHash());
+                            if (null != hashList) {
+                                HorizontalItem horizontalItem = (HorizontalItem) hashList;
+                                if (null != horizontalItem.getTxHash()) {
+                                    db.delete(PrefixKey.txKey(chainID, horizontalItem.getTxHash()));
+                                }
+                                db.delete(PrefixKey.hashListKey(chainID, block.getHorizontalHash()));
+                            }
                         }
                     }
                     // delete non-main chain block
@@ -905,7 +943,7 @@ public class BlockDB implements BlockStore {
             while (currentLevel > bestBlockContainer.getBlock().getBlockNum()) {
                 newBlockContainers.add(forkLine);
 
-                forkLine = getBlockContainerByHash(chainID, forkLine.getBlock().getPreviousBlockHash());
+                forkLine = getBlockContainerByHash(chainID, forkLine.getVerticalItem().getPreviousHash());
                 if (forkLine == null)
                     return false;
                 --currentLevel;
@@ -918,7 +956,7 @@ public class BlockDB implements BlockStore {
             while (currentLevel > forkBlockContainer.getBlock().getBlockNum()) {
                 undoBlockContainers.add(bestLine);
 
-                bestLine = getBlockContainerByHash(chainID, bestLine.getBlock().getPreviousBlockHash());
+                bestLine = getBlockContainerByHash(chainID, bestLine.getVerticalItem().getPreviousHash());
                 --currentLevel;
             }
         }
@@ -928,8 +966,8 @@ public class BlockDB implements BlockStore {
             newBlockContainers.add(forkLine);
             undoBlockContainers.add(bestLine);
 
-            bestLine = getBlockContainerByHash(chainID, bestLine.getBlock().getPreviousBlockHash());
-            forkLine = getBlockContainerByHash(chainID, forkLine.getBlock().getPreviousBlockHash());
+            bestLine = getBlockContainerByHash(chainID, bestLine.getVerticalItem().getPreviousHash());
+            forkLine = getBlockContainerByHash(chainID, forkLine.getVerticalItem().getPreviousHash());
 
             if (forkLine == null)
                 return false;

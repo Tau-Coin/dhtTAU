@@ -40,7 +40,6 @@ import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.types.Block;
 import io.taucoin.types.BlockContainer;
-import io.taucoin.types.HashList;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TransactionFactory;
 import io.taucoin.types.TypesConfig;
@@ -98,8 +97,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     // the best block container of current chain
     private final Map<ByteArrayWrapper, BlockContainer> bestBlockContainers = Collections.synchronizedMap(new HashMap<>());
 
-    // the synced block of current chain
-    private final Map<ByteArrayWrapper, Block> syncBlocks = Collections.synchronizedMap(new HashMap<>());
+    // the synced block container of current chain
+    private final Map<ByteArrayWrapper, BlockContainer> syncBlockContainers = Collections.synchronizedMap(new HashMap<>());
 
     // 时间记录器，用于处理定时事件
     private final Map<ByteArrayWrapper, Long> timeRecorders = Collections.synchronizedMap(new HashMap<>());
@@ -303,7 +302,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (null != syncBlockHash) {
             logger.info("Chain ID[{}]: Sync block hash[{}]",
                     new String(chainID), Hex.toHexString(syncBlockHash));
-            this.syncBlocks.put(wChainID, this.blockStore.getBlockByHash(chainID, syncBlockHash));
+            this.syncBlockContainers.put(wChainID, this.blockStore.getBlockContainerByHash(chainID, syncBlockHash));
         }
 
         // init peer manager
@@ -326,15 +325,15 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (null != bestBlockContainer && bestBlockContainer.getBlock().getBlockNum() > 0) {
             // get priority peers in mutable range
             priorityPeers.add(new ByteArrayWrapper(bestBlockContainer.getBlock().getMinerPubkey()));
-            byte[] previousHash = bestBlockContainer.getBlock().getPreviousBlockHash();
+            byte[] previousHash = bestBlockContainer.getVerticalItem().getPreviousHash();
             for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
-                Block block = this.blockStore.getBlockByHash(chainID, previousHash);
-                if (null != block) {
-                    if (block.getBlockNum() <= 0) {
+                BlockContainer blockContainer = this.blockStore.getBlockContainerByHash(chainID, previousHash);
+                if (null != blockContainer) {
+                    if (blockContainer.getBlock().getBlockNum() <= 0) {
                         break;
                     }
-                    priorityPeers.add(new ByteArrayWrapper(block.getMinerPubkey()));
-                    previousHash = block.getPreviousBlockHash();
+                    priorityPeers.add(new ByteArrayWrapper(blockContainer.getBlock().getMinerPubkey()));
+                    previousHash = blockContainer.getVerticalItem().getPreviousHash();
                 } else {
                     break;
                 }
@@ -449,7 +448,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         // init best block and sync block
         this.bestBlockContainers.remove(chainID);
 
-        this.syncBlocks.remove(chainID);
+        this.syncBlockContainers.remove(chainID);
 
         this.peerManagers.remove(chainID);
 
@@ -779,13 +778,13 @@ public class Chains implements DHT.GetDHTItemCallback{
         while (referenceBlockContainer.getBlock().getBlockNum() >
                 this.bestBlockContainers.get(chainID).getBlock().getBlockNum()) {
             TryResult result = tryToGetBlockContainerFromCache(chainID,
-                    referenceBlockContainer.getBlock().getPreviousBlockHash(), previousBlockContainer);
+                    referenceBlockContainer.getVerticalItem().getPreviousHash(), previousBlockContainer);
 
             if (TryResult.SUCCESS == result) {
                 logger.debug("Chain ID[{}] Got in cache block hash[{}] previous block[{}]",
                         new String(chainID.getData()),
                         Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                        Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                        Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                 referenceBlockContainer = previousBlockContainer;
                 previousBlockContainer = new BlockContainer();
@@ -793,7 +792,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 logger.debug("Chain ID[{}] Got failed in cache block hash[{}] previous block[{}]",
                         new String(chainID.getData()),
                         Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                        Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                        Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                 return result;
             }
@@ -1012,7 +1011,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null != blockContainer) {
                     publishBlockContainer(blockContainer);
 
-                    previousHash = blockContainer.getBlock().getPreviousBlockHash();
+                    previousHash = blockContainer.getVerticalItem().getPreviousHash();
                     if (blockContainer.getBlock().getBlockNum() == 0) {
                         break;
                     }
@@ -1042,7 +1041,8 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @return true if uncompleted, false otherwise
      */
     private boolean isSyncUncompleted(ByteArrayWrapper chainID) {
-        return null != this.syncBlocks.get(chainID) && this.syncBlocks.get(chainID).getBlockNum() > 0;
+        return null != this.syncBlockContainers.get(chainID) &&
+                this.syncBlockContainers.get(chainID).getBlock().getBlockNum() > 0;
     }
 
     /**
@@ -1051,10 +1051,10 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private void requestSyncBlock(ByteArrayWrapper chainID) {
         logger.debug("Request sync block hash:{}, current block number:{}",
-                Hex.toHexString(this.syncBlocks.get(chainID).getPreviousBlockHash()),
-                this.syncBlocks.get(chainID).getBlockNum());
+                Hex.toHexString(this.syncBlockContainers.get(chainID).getVerticalItem().getPreviousHash()),
+                this.syncBlockContainers.get(chainID).getBlock().getBlockNum());
         this.syncCounter.put(chainID, 0);
-        requestBlockForSync(chainID, this.syncBlocks.get(chainID).getPreviousBlockHash());
+        requestBlockForSync(chainID, this.syncBlockContainers.get(chainID).getVerticalItem().getPreviousHash());
     }
 
     /**
@@ -1064,7 +1064,7 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void tryToSync(ByteArrayWrapper chainID) throws DBException {
         // 合法性判断
         while (isSyncUncompleted(chainID)) {
-            ByteArrayWrapper key = new ByteArrayWrapper(this.syncBlocks.get(chainID).getPreviousBlockHash());
+            ByteArrayWrapper key = new ByteArrayWrapper(this.syncBlockContainers.get(chainID).getVerticalItem().getPreviousHash());
             BlockContainer blockContainer = this.blockContainerMapForSync.get(chainID).get(key);
 
             if (null != blockContainer) {
@@ -1117,7 +1117,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
             this.tauListener.onSyncBlock(chainID.getData(), blockContainer);
 
-            this.syncBlocks.put(chainID, blockContainer.getBlock());
+            this.syncBlockContainers.put(chainID, blockContainer);
 
             this.peerManagers.get(chainID).addOldBlockPeer(blockContainer.getBlock().getMinerPubkey());
         }
@@ -1178,7 +1178,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private TryResult reBranch(ByteArrayWrapper chainID, BlockContainer targetBlockContainer) throws DBException {
 
-        byte[] previousHash = targetBlockContainer.getBlock().getPreviousBlockHash();
+        byte[] previousHash = targetBlockContainer.getVerticalItem().getPreviousHash();
         List<BlockContainer> containerList = new ArrayList<>();
 
         containerList.add(targetBlockContainer);
@@ -1203,7 +1203,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         Hex.toHexString(key.getData()));
                 // 如果有返回，但是数据不为空
                 containerList.add(previousBlockContainer);
-                previousHash = previousBlockContainer.getBlock().getPreviousBlockHash();
+                previousHash = previousBlockContainer.getVerticalItem().getPreviousHash();
 
                 if (previousBlockContainer.getBlock().getBlockNum() <= 0) {
                     break;
@@ -1496,7 +1496,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         track.commit();
 
         this.bestBlockContainers.put(chainID, blockContainer);
-        this.syncBlocks.put(chainID, blockContainer.getBlock());
+        this.syncBlockContainers.put(chainID, blockContainer);
 
         publishBestBlock(chainID);
 
@@ -1603,13 +1603,13 @@ public class Chains implements DHT.GetDHTItemCallback{
         while (referenceBlockContainer.getBlock().getBlockNum() >
                 this.bestBlockContainers.get(chainID).getBlock().getBlockNum()) {
             TryResult result = tryToGetBlockContainerFromCache(chainID,
-                    referenceBlockContainer.getBlock().getPreviousBlockHash(), previousBlockContainer);
+                    referenceBlockContainer.getVerticalItem().getPreviousHash(), previousBlockContainer);
 
             if (TryResult.SUCCESS == result) {
                 logger.debug("Chain ID[{}] Got in cache block hash[{}] previous block[{}]",
                         new String(chainID.getData()),
                         Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                        Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                        Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                 referenceBlockContainer = previousBlockContainer;
                 previousBlockContainer = new BlockContainer();
@@ -1617,7 +1617,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 logger.debug("Chain ID[{}] Got failed in cache block hash[{}] previous block[{}]",
                         new String(chainID.getData()),
                         Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                        Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                        Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                 return result;
             }
@@ -1643,13 +1643,13 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 while (referenceBlockContainer.getBlock().getBlockNum() > immutableBlockNumber3) {
                     TryResult result = tryToGetBlockContainerFromCache(chainID,
-                            referenceBlockContainer.getBlock().getPreviousBlockHash(), preBlockContainer);
+                            referenceBlockContainer.getVerticalItem().getPreviousHash(), preBlockContainer);
 
                     if (TryResult.SUCCESS == result) {
                         logger.debug("Chain ID[{}] Got in cache block hash[{}] previous block[{}]",
                                 new String(chainID.getData()),
                                 Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                                Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                                Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                         referenceBlockContainer = preBlockContainer;
                         preBlockContainer = new BlockContainer();
@@ -1657,7 +1657,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         logger.debug("Chain ID[{}] Got failed in cache block hash[{}] previous block[{}]",
                                 new String(chainID.getData()),
                                 Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                                Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                                Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                         return result;
                     }
@@ -1702,13 +1702,13 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 while (referenceBlockContainer.getBlock().getBlockNum() > immutableBlockNumber2) {
                     TryResult result = tryToGetBlockContainerFromCache(chainID,
-                            referenceBlockContainer.getBlock().getPreviousBlockHash(), preBlockContainer);
+                            referenceBlockContainer.getVerticalItem().getPreviousHash(), preBlockContainer);
 
                     if (TryResult.SUCCESS == result) {
                         logger.debug("Chain ID[{}] Got in cache block hash[{}] previous block[{}]",
                                 new String(chainID.getData()),
                                 Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                                Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                                Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                         referenceBlockContainer = preBlockContainer;
                         preBlockContainer = new BlockContainer();
@@ -1716,7 +1716,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         logger.debug("Chain ID[{}] Got failed in cache block hash[{}] previous block[{}]",
                                 new String(chainID.getData()),
                                 Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                                Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                                Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                         return result;
                     }
@@ -1801,13 +1801,13 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 while (referenceBlockContainer.getBlock().getBlockNum() > immutableBlockNumber1) {
                     TryResult result = tryToGetBlockContainerFromCache(chainID,
-                            referenceBlockContainer.getBlock().getPreviousBlockHash(), preBlockContainer);
+                            referenceBlockContainer.getVerticalItem().getPreviousHash(), preBlockContainer);
 
                     if (TryResult.SUCCESS == result) {
                         logger.debug("Chain ID[{}] Got in cache block hash[{}] previous block[{}]",
                                 new String(chainID.getData()),
                                 Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                                Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                                Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                         referenceBlockContainer = preBlockContainer;
                         preBlockContainer = new BlockContainer();
@@ -1815,7 +1815,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         logger.debug("Chain ID[{}] Got failed in cache block hash[{}] previous block[{}]",
                                 new String(chainID.getData()),
                                 Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                                Hex.toHexString(referenceBlockContainer.getBlock().getPreviousBlockHash()));
+                                Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
 
                         return result;
                     }
@@ -2458,7 +2458,7 @@ public class Chains implements DHT.GetDHTItemCallback{
     private boolean tryToConnect(ByteArrayWrapper chainID, final BlockContainer blockContainer, StateDB stateDB) {
         // if main chain
         if (Arrays.equals(this.bestBlockContainers.get(chainID).getBlock().getBlockHash(),
-                blockContainer.getBlock().getPreviousBlockHash())) {
+                blockContainer.getVerticalItem().getPreviousHash())) {
             // main chain
             // 自己挖的块，不必再做检查
 //            if (!isValidBlockContainer(chainID, blockContainer, stateDB)) {
@@ -2492,72 +2492,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
-     * check if a block valid
-     * @param chainID chain ID
-     * @param block block to check
-     * @param stateDB state db
-     * @return try result
-     */
-    private TryResult isValidBlock(ByteArrayWrapper chainID, Block block, StateDB stateDB) throws DBException {
-//        // 是否本链
-//        if (!Arrays.equals(chainID.getData(), block.getChainID())) {
-//            logger.error("ChainID[{}]: ChainID mismatch!", new String(chainID.getData()));
-//            return false;
-//        }
-
-        byte[] immutableBlockHash;
-
-        // if current block number is larger than mutable range
-        if (block.getBlockNum() >= ChainParam.MUTABLE_RANGE) {
-            immutableBlockHash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(),
-                    block.getBlockNum() - ChainParam.MUTABLE_RANGE);
-        } else {
-            immutableBlockHash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(), 0);
-        }
-
-        if (null == immutableBlockHash) {
-            return TryResult.REQUEST;
-        }
-
-        if (!Arrays.equals(immutableBlockHash, block.getImmutableBlockHash())) {
-            logger.error("ChainID[{}]: Block[{}] immutable block hash mismatch!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-            return TryResult.ERROR;
-        }
-
-        // 时间戳检查
-        if (block.getTimeStamp() > System.currentTimeMillis() / 1000) {
-            logger.error("ChainID[{}]: Block[{}] Time is in the future!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-            return TryResult.ERROR;
-        }
-
-        // 区块内部自检
-        if (!block.isBlockParamValidate()) {
-            logger.error("ChainID[{}]: Block[{}] Validate block param error!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-            return TryResult.ERROR;
-        }
-
-        // 区块签名检查
-        if (!block.verifyBlockSig()) {
-            logger.error("ChainID[{}]: Block[{}] Bad Signature!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-            return TryResult.ERROR;
-        }
-
-        // 是否孤块
-        if (!this.blockStore.isBlockOnChain(chainID.getData(), block.getPreviousBlockHash())) {
-            logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
-            return TryResult.ERROR;
-        }
-
-        // POT共识验证
-        return verifyPOT(chainID, block, stateDB);
-    }
-
-    /**
      * check if a block container valid
      * @param chainID chain ID
      * @param blockContainer block container
@@ -2566,21 +2500,77 @@ public class Chains implements DHT.GetDHTItemCallback{
      */
     private TryResult isValidBlockContainer(ByteArrayWrapper chainID,
                                           BlockContainer blockContainer, StateDB stateDB) throws DBException {
-        return isValidBlock(chainID, blockContainer.getBlock(), stateDB);
+//                // 是否本链
+//        if (!Arrays.equals(chainID.getData(), block.getChainID())) {
+//            logger.error("ChainID[{}]: ChainID mismatch!", new String(chainID.getData()));
+//            return false;
+//        }
+
+        byte[] immutableBlockHash;
+
+        // if current block number is larger than mutable range
+        if (blockContainer.getBlock().getBlockNum() >= ChainParam.MUTABLE_RANGE) {
+            immutableBlockHash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(),
+                    blockContainer.getBlock().getBlockNum() - ChainParam.MUTABLE_RANGE);
+        } else {
+            immutableBlockHash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(), 0);
+        }
+
+        if (null == immutableBlockHash) {
+            return TryResult.REQUEST;
+        }
+
+        if (!Arrays.equals(immutableBlockHash, blockContainer.getBlock().getImmutableBlockHash())) {
+            logger.error("ChainID[{}]: Block[{}] immutable block hash mismatch!",
+                    new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
+            return TryResult.ERROR;
+        }
+
+        // 时间戳检查
+        if (blockContainer.getBlock().getTimeStamp() > System.currentTimeMillis() / 1000) {
+            logger.error("ChainID[{}]: Block[{}] Time is in the future!",
+                    new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
+            return TryResult.ERROR;
+        }
+
+        // 区块内部自检
+        if (!blockContainer.getBlock().isBlockParamValidate()) {
+            logger.error("ChainID[{}]: Block[{}] Validate block param error!",
+                    new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
+            return TryResult.ERROR;
+        }
+
+        // 区块签名检查
+        if (!blockContainer.getBlock().verifyBlockSig()) {
+            logger.error("ChainID[{}]: Block[{}] Bad Signature!",
+                    new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
+            return TryResult.ERROR;
+        }
+
+        // 是否孤块
+        if (!this.blockStore.isBlockOnChain(chainID.getData(), blockContainer.getVerticalItem().getPreviousHash())) {
+            logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
+                    new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
+            return TryResult.ERROR;
+        }
+
+        // POT共识验证
+        return verifyPOT(chainID, blockContainer, stateDB);
     }
 
     /**
      * check pot consensus
      * @param chainID chain ID
-     * @param block block to check
+     * @param blockContainer block container to check
      * @param stateDB state db
      * @return try result
      */
-    private TryResult verifyPOT(ByteArrayWrapper chainID, Block block, StateDB stateDB) throws DBException {
+    private TryResult verifyPOT(ByteArrayWrapper chainID, BlockContainer blockContainer, StateDB stateDB) throws DBException {
+        byte[] blockHash = blockContainer.getBlock().getBlockHash();
 
         ProofOfTransaction pot = this.pots.get(chainID);
 
-        byte[] pubKey = block.getMinerPubkey();
+        byte[] pubKey = blockContainer.getBlock().getMinerPubkey();
 
         BigInteger power = stateDB.getNonce(chainID.getData(), pubKey);
         if (null == power) {
@@ -2591,18 +2581,19 @@ public class Chains implements DHT.GetDHTItemCallback{
         logger.info("Chain ID[{}]: Address: {}, mining power: {}",
                 new String(chainID.getData()), Hex.toHexString(pubKey), power);
 
-        Block parentBlock = this.blockStore.getBlockByHash(chainID.getData(), block.getPreviousBlockHash());
-        if (null == parentBlock) {
+        BlockContainer parentBlockContainer = this.blockStore.getBlockContainerByHash(chainID.getData(),
+                blockContainer.getVerticalItem().getPreviousHash());
+        if (null == parentBlockContainer) {
             logger.error("ChainID[{}]: Block[{}] Cannot find parent!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                    new String(chainID.getData()), Hex.toHexString(blockHash));
             return TryResult.ERROR;
         }
 
         // check base target
         Block ancestor3 = null;
-        if (parentBlock.getBlockNum() > 3) {
-            Block ancestor1 = this.blockStore.getBlockByHash(chainID.getData(),
-                    parentBlock.getPreviousBlockHash());
+        if (parentBlockContainer.getBlock().getBlockNum() > 3) {
+            BlockContainer ancestor1 = this.blockStore.getBlockContainerByHash(chainID.getData(),
+                    parentBlockContainer.getVerticalItem().getPreviousHash());
             if (null == ancestor1) {
                 if (isSyncUncompleted(chainID)) {
                     requestSyncBlock(chainID);
@@ -2611,8 +2602,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                 return TryResult.ERROR;
             }
 
-            Block ancestor2 = this.blockStore.getBlockByHash(chainID.getData(),
-                    ancestor1.getPreviousBlockHash());
+            BlockContainer ancestor2 = this.blockStore.getBlockContainerByHash(chainID.getData(),
+                    ancestor1.getVerticalItem().getPreviousHash());
             if (null == ancestor2) {
                 if (isSyncUncompleted(chainID)) {
                     requestSyncBlock(chainID);
@@ -2622,7 +2613,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
 
             ancestor3 = this.blockStore.getBlockByHash(chainID.getData(),
-                    ancestor2.getPreviousBlockHash());
+                    ancestor2.getVerticalItem().getPreviousHash());
             if (null == ancestor3) {
                 if (isSyncUncompleted(chainID)) {
                     requestSyncBlock(chainID);
@@ -2632,37 +2623,37 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
         }
 
-        BigInteger baseTarget = pot.calculateRequiredBaseTarget(parentBlock, ancestor3);
-        if (0 != baseTarget.compareTo(block.getBaseTarget())) {
+        BigInteger baseTarget = pot.calculateRequiredBaseTarget(parentBlockContainer.getBlock(), ancestor3);
+        if (0 != baseTarget.compareTo(blockContainer.getBlock().getBaseTarget())) {
             logger.error("ChainID[{}]: Block[{}] base target error!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                    new String(chainID.getData()), Hex.toHexString(blockHash));
             return TryResult.ERROR;
         }
 
         // check generation signature
-        byte[] genSig = pot.calculateGenerationSignature(parentBlock.getGenerationSignature(), pubKey);
-        if (!Arrays.equals(genSig, block.getGenerationSignature())) {
+        byte[] genSig = pot.calculateGenerationSignature(parentBlockContainer.getBlock().getGenerationSignature(), pubKey);
+        if (!Arrays.equals(genSig, blockContainer.getBlock().getGenerationSignature())) {
             logger.error("ChainID[{}]: Block[{}] generation signature error!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                    new String(chainID.getData()), Hex.toHexString(blockHash));
             return TryResult.ERROR;
         }
 
         // check cumulative difficulty
         BigInteger culDifficulty = pot.calculateCumulativeDifficulty(
-                parentBlock.getCumulativeDifficulty(), baseTarget);
-        if (0 != culDifficulty.compareTo(block.getCumulativeDifficulty())) {
+                parentBlockContainer.getBlock().getCumulativeDifficulty(), baseTarget);
+        if (0 != culDifficulty.compareTo(blockContainer.getBlock().getCumulativeDifficulty())) {
             logger.error("ChainID[{}]: Block[{}] Cumulative difficulty error!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                    new String(chainID.getData()), Hex.toHexString(blockHash));
             return TryResult.ERROR;
         }
 
         BigInteger hit = pot.calculateRandomHit(genSig);
-        long timeInterval = block.getTimeStamp() - parentBlock.getTimeStamp();
+        long timeInterval = blockContainer.getBlock().getTimeStamp() - parentBlockContainer.getBlock().getTimeStamp();
 
         // verify hit
         if (!pot.verifyHit(hit, baseTarget, power, timeInterval)) {
             logger.error("ChainID[{}]: The block[{}] does not meet the pot consensus!!",
-                    new String(chainID.getData()), Hex.toHexString(block.getBlockHash()));
+                    new String(chainID.getData()), Hex.toHexString(blockHash));
             return TryResult.ERROR;
         }
 
@@ -2705,8 +2696,8 @@ public class Chains implements DHT.GetDHTItemCallback{
         // check base target
         Block ancestor3 = null;
         if (bestBlockContainer.getBlock().getBlockNum() > 3) {
-            Block ancestor1 = this.blockStore.getBlockByHash(chainID.getData(),
-                    bestBlockContainer.getBlock().getPreviousBlockHash());
+            BlockContainer ancestor1 = this.blockStore.getBlockContainerByHash(chainID.getData(),
+                    bestBlockContainer.getVerticalItem().getPreviousHash());
             if (null == ancestor1) {
                 if (isSyncUncompleted(chainID)) {
                     requestSyncBlock(chainID);
@@ -2715,8 +2706,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                 return TryResult.ERROR;
             }
 
-            Block ancestor2 = this.blockStore.getBlockByHash(chainID.getData(),
-                    ancestor1.getPreviousBlockHash());
+            BlockContainer ancestor2 = this.blockStore.getBlockContainerByHash(chainID.getData(),
+                    ancestor1.getVerticalItem().getPreviousHash());
             if (null == ancestor2) {
                 if (isSyncUncompleted(chainID)) {
                     requestSyncBlock(chainID);
@@ -2726,7 +2717,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
 
             ancestor3 = this.blockStore.getBlockByHash(chainID.getData(),
-                    ancestor2.getPreviousBlockHash());
+                    ancestor2.getVerticalItem().getPreviousHash());
             if (null == ancestor3) {
                 if (isSyncUncompleted(chainID)) {
                     requestSyncBlock(chainID);
@@ -2766,14 +2757,14 @@ public class Chains implements DHT.GetDHTItemCallback{
         Block ancestor3 = null;
 
         if (bestBlockContainer.getBlock().getBlockNum() > 3) {
-            Block ancestor1 = this.blockStore.getBlockByHash(chainID.getData(),
-                    bestBlockContainer.getBlock().getPreviousBlockHash());
+            BlockContainer ancestor1 = this.blockStore.getBlockContainerByHash(chainID.getData(),
+                    bestBlockContainer.getVerticalItem().getPreviousHash());
 
-            Block ancestor2 = this.blockStore.getBlockByHash(chainID.getData(),
-                    ancestor1.getPreviousBlockHash());
+            BlockContainer ancestor2 = this.blockStore.getBlockContainerByHash(chainID.getData(),
+                    ancestor1.getVerticalItem().getPreviousHash());
 
             ancestor3 = this.blockStore.getBlockByHash(chainID.getData(),
-                    ancestor2.getPreviousBlockHash());
+                    ancestor2.getVerticalItem().getPreviousHash());
         }
 
         BigInteger baseTarget = pot.calculateRequiredBaseTarget(bestBlockContainer.getBlock(), ancestor3);
@@ -2814,13 +2805,13 @@ public class Chains implements DHT.GetDHTItemCallback{
         Block block;
         logger.debug("-------------Previous hash:{}", Hex.toHexString(bestBlockContainer.getBlock().getBlockHash()));
         if (null != tx) {
-            block = new Block((byte) 1, System.currentTimeMillis() / 1000,
+            block = new Block(1, System.currentTimeMillis() / 1000,
                     bestBlockContainer.getBlock().getBlockNum() + 1,
                     bestBlockContainer.getBlock().getBlockHash(), immutableBlockHash,
                     baseTarget, cumulativeDifficulty, generationSignature, tx.getTxID(),
                     0, 0, 0, 0, keyPair.first);
         } else {
-            block = new Block((byte) 1, System.currentTimeMillis() / 1000,
+            block = new Block(1, System.currentTimeMillis() / 1000,
                     bestBlockContainer.getBlock().getBlockNum() + 1,
                     bestBlockContainer.getBlock().getBlockHash(), immutableBlockHash,
                     baseTarget, cumulativeDifficulty, generationSignature, null,
