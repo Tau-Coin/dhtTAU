@@ -88,10 +88,18 @@ public class TauInfoProvider {
         }, BackpressureStrategy.LATEST);
     }
 
+    /**
+     * 观察流量统计
+     * @return
+     */
     Flowable<SessionStats> observeTrafficStatistics() {
         return makeTrafficStatisticsFlowable();
     }
 
+    /**
+     * 创建流量统计流
+     * @return
+     */
     private Flowable<SessionStats> makeTrafficStatisticsFlowable() {
         return Flowable.create((emitter) -> {
             try {
@@ -108,16 +116,17 @@ public class TauInfoProvider {
                         statistics = TrafficInfo.getTrafficUsed(context);
                     }
                     if (statistics != null) {
-                        NetworkSetting.updateSpeed(statistics);
+                        NetworkSetting.updateSpeedSample(statistics);
                         TrafficUtil.saveTrafficTotal(statistics);
-                        daemon.rescheduleTauBySettings();
+                        daemon.rescheduleDHTBySettings();
                         logger.debug("Network statistical result:: rxBytes::{}({}), txBytes::{}({})",
                                 Formatter.formatFileSize(context, statistics.getRxBytes()),
                                 statistics.getRxBytes(),
                                 Formatter.formatFileSize(context, statistics.getTxBytes()),
                                 statistics.getTxBytes());
+
+                        Thread.sleep(STATISTICS_PERIOD);
                     }
-                    Thread.sleep(STATISTICS_PERIOD);
                 }
             } catch (Exception e) {
                 logger.error("makeTrafficStatisticsFlowable is error", e);

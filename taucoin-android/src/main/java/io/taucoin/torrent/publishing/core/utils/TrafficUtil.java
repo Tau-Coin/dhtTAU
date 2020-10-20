@@ -28,29 +28,42 @@ public class TrafficUtil {
         settingsRepo = RepositoryHelper.getSettingsRepository(context);
     }
 
+    /**
+     * 保存当前流量总量（统计入口）
+     * @param statistics 当前网络数据总量
+     */
     public static void saveTrafficTotal(@NonNull NetworkStatistics statistics) {
-        Context context = MainApplication.getInstance();
         saveTrafficTotal(TRAFFIC_DOWN, statistics.getRxBytes());
         saveTrafficTotal(TRAFFIC_UP, statistics.getTxBytes());
-        if (SystemServiceManager.getInstance(context).isNetworkMetered()) {
+        // 如果是计费网络，统计当天计费网络使用总量
+        if (SystemServiceManager.getInstance().isNetworkMetered()) {
             long total = statistics.getRxBytes() + statistics.getTxBytes();
             saveTrafficTotal(TRAFFIC_METERED, total);
         }
     }
 
+    /**
+     * 根据流量类型，计算增量流量，更新流量统计值
+     * @param trafficType
+     * @param byteSize
+     */
     private static void saveTrafficTotal(String trafficType, long byteSize) {
-        Context context = MainApplication.getInstance();
-        SettingsRepository settingsRepo = RepositoryHelper.getSettingsRepository(context);
         resetTrafficInfo();
         String trafficValueOld = TRAFFIC_VALUE_OLD + trafficType;
-        long incrementalSize = parseIncrementalSize(trafficType, byteSize);
+        long incrementalSize = calculateIncrementalSize(trafficType, byteSize);
         settingsRepo.setLongValue(trafficValueOld, byteSize);
         String trafficValue = TRAFFIC_VALUE + trafficType;
         long trafficTotal = incrementalSize + settingsRepo.getLongValue(trafficValue);
         settingsRepo.setLongValue(trafficValue, trafficTotal);
     }
 
-    public static long parseIncrementalSize(String trafficType, long byteSize) {
+    /**
+     * 计算增量大小
+     * @param trafficType
+     * @param byteSize
+     * @return
+     */
+    static long calculateIncrementalSize(String trafficType, long byteSize) {
         resetTrafficInfo();
         String trafficValueOld = TRAFFIC_VALUE_OLD + trafficType;
         long oldTraffic = settingsRepo.getLongValue(trafficValueOld, -1);
@@ -62,12 +75,18 @@ public class TrafficUtil {
         return byteSize;
     }
 
+    /**
+     * 重置上一次本地流量统计信息
+     */
     private static void resetTrafficTotalOld() {
         settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_DOWN, -1);
         settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_UP, -1);
         settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_METERED, -1);
     }
 
+    /**
+     * 重置本地流量统计信息
+     */
     private synchronized static void resetTrafficInfo() {
         long currentTrafficTime = new Date().getTime();
         long oldTrafficTime = settingsRepo.getLongValue(TRAFFIC_TIME);
@@ -80,24 +99,44 @@ public class TrafficUtil {
         }
     }
 
+    /**
+     * 获取当天计费网络流量值
+     * @return
+     */
     public static long getMeteredTrafficTotal() {
         resetTrafficInfo();
         return settingsRepo.getLongValue(TRAFFIC_VALUE + TRAFFIC_METERED);
     }
 
+    /**
+     * 获取计费网络类型
+     * @return
+     */
     public static String getMeteredType() {
         return TRAFFIC_METERED;
     }
 
+    /**
+     * 获取计费网络本地存储Key
+     * @return
+     */
     public static String getMeteredKey() {
         return TRAFFIC_VALUE + TRAFFIC_METERED;
     }
 
+    /**
+     * 获取当天下行网络流量值
+     * @return
+     */
     public static long getTrafficDownloadTotal() {
         resetTrafficInfo();
         return settingsRepo.getLongValue(TRAFFIC_VALUE + TRAFFIC_DOWN);
     }
 
+    /**
+     * 获取当天上行网络流量值
+     * @return
+     */
     public static long getTrafficUploadTotal() {
         resetTrafficInfo();
         return settingsRepo.getLongValue(TRAFFIC_VALUE + TRAFFIC_UP);

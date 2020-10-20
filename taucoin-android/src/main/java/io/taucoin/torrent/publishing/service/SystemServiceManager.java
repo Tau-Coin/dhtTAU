@@ -8,7 +8,7 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.PowerManager;
 
-import androidx.annotation.NonNull;
+import io.taucoin.torrent.publishing.MainApplication;
 
 /**
  * 系统服务管理
@@ -18,17 +18,17 @@ public class SystemServiceManager {
     private PowerManager powerManager;
     private Context appContext;
     private static volatile SystemServiceManager instance;
-    private SystemServiceManager(Context appContext){
-        this.appContext = appContext;
+    private SystemServiceManager(){
+        this.appContext = MainApplication.getInstance();;
         connectivityManager = (ConnectivityManager) appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         powerManager = (PowerManager) appContext.getSystemService(Context.POWER_SERVICE);
     }
 
-    public static SystemServiceManager getInstance(@NonNull Context appContext) {
+    public static SystemServiceManager getInstance() {
         if (instance == null) {
             synchronized (SystemServiceManager.class) {
                 if (instance == null)
-                    instance = new SystemServiceManager(appContext);
+                    instance = new SystemServiceManager();
             }
         }
         return instance;

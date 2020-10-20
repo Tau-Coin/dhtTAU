@@ -1,8 +1,8 @@
 package io.taucoin.torrent.publishing.core.utils;
 
 public class NetworkStatistics {
-    private long txBytes;
-    private long rxBytes;
+    private long txBytes; // 发送
+    private long rxBytes; // 接受
 
     NetworkStatistics(long txBytes, long rxBytes) {
         this.txBytes = txBytes;

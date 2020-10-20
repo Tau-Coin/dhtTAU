@@ -91,7 +91,7 @@ public class DashboardActivity extends BaseActivity implements View.OnClickListe
             binding.ivMeteredLimited.setVisibility(View.GONE);
             binding.llMeteredLimit.setEnabled(false);
             if (isUpdate) {
-                NetworkSetting.setMeteredLimit();
+                NetworkSetting.setAutoModeMeteredLimit();
             }
         } else {
             binding.ivMeteredLimited.setVisibility(View.VISIBLE);
@@ -143,6 +143,7 @@ public class DashboardActivity extends BaseActivity implements View.OnClickListe
                     logger.info("Metered limit selected::{}, {}, {}", checkedId, duration, limit);
                     handleSettingsChanged(TrafficUtil.getMeteredKey());
                     NetworkSetting.updateMeteredSpeedLimit();
+                    handleSettingsChanged(getString(R.string.pref_key_metered_speed_limit));
                 })
                 .create();
         dialog.show();

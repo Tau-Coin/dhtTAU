@@ -88,7 +88,7 @@ public class TauDaemon {
     private TauDaemon(@NonNull Context appContext) {
         this.appContext = appContext;
         settingsRepo = RepositoryHelper.getSettingsRepository(appContext);
-        systemServiceManager = SystemServiceManager.getInstance(appContext);
+        systemServiceManager = SystemServiceManager.getInstance();
         tauListenHandler = new TauListenHandler(appContext, this);
         tauInfoProvider = TauInfoProvider.getInstance(this);
 
@@ -218,7 +218,7 @@ public class TauDaemon {
             if (success) {
                 logger.debug("Tau start successfully");
                 isRunning = true;
-                rescheduleTauBySettings();
+                rescheduleDHTBySettings();
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
@@ -334,7 +334,7 @@ public class TauDaemon {
     private void handleSettingsChanged(String key) {
         if (key.equals(appContext.getString(R.string.pref_key_internet_state))) {
             logger.info("SettingsChanged, internet state::{}", settingsRepo.internetState());
-            rescheduleTauBySettings();
+            rescheduleDHTBySettings();
             enableServerMode(settingsRepo.serverMode());
         } else if (key.equals(appContext.getString(R.string.pref_key_charging_state))) {
             logger.info("SettingsChanged, charging state::{}", settingsRepo.chargingState());
@@ -348,16 +348,22 @@ public class TauDaemon {
     }
 
     /**
-     * 根据当前设置重新调度Tau
+     * 根据当前设置重新调度DHT
      */
-    synchronized void rescheduleTauBySettings() {
+    synchronized void rescheduleDHTBySettings() {
         if (!isRunning){
             return;
         }
         // 判断有无网络连接
         if (settingsRepo.internetState()) {
-            long sessions = NetworkSetting.calculateDHTSessions();
-            rescheduleTauBySessions(sessions);
+            if (networkJitter != null && !networkJitter.isDisposed()) {
+                networkJitter.dispose();
+                long sessions = NetworkSetting.getDHTSessions();
+                rescheduleDHTBySessions(sessions, true);
+            } else {
+                long sessions = NetworkSetting.calculateDHTSessions();
+                rescheduleDHTBySessions(sessions, false);
+            }
         } else {
             if (null == networkJitter || networkJitter.isDisposed()) {
                 return;
@@ -365,18 +371,15 @@ public class TauDaemon {
             networkJitter = Observable.timer(NETWORK_JITTER_INTERVAL, TimeUnit.MILLISECONDS)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
-                    .subscribe(seconds -> rescheduleTauBySessions(NetworkSetting.getDHTSessions()));
+                    .subscribe(seconds -> rescheduleDHTBySessions(0, true));
         }
     }
 
     /**
-     * 根据当前设置计算出的DHT Sessions数重新调度Tau
+     * 根据当前设置计算出的DHT Sessions数重新调度DHT
      */
-    private void rescheduleTauBySessions(long sessions) {
-        if (networkJitter != null && !networkJitter.isDisposed()) {
-            networkJitter.dispose();
-        }
-        if (!isRunning){
+    private void rescheduleDHTBySessions(long sessions, boolean restart) {
+        if (!isRunning) {
             return;
         }
         // TODO：通知DHT Controller有无网络连接和DHT Sessions个数

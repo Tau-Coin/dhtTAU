@@ -13,7 +13,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
 
 /**
- * 流量统计工具类
+ * 网络流量设置相关工具类
  */
 public class NetworkSetting {
     private static final long meteredLimited = 50 * 1024 * 1024; // 50MB
@@ -29,50 +29,78 @@ public class NetworkSetting {
         settingsRepo = RepositoryHelper.getSettingsRepository(context);
     }
 
+    /**
+     * 返回是否是自动模式
+     * @return
+     */
     public static boolean autoMode() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getBooleanValue(context.getString(R.string.pref_key_auto_mode), autoMode);
     }
 
+    /**
+     * 设置是否为自动模式
+     * @param autoMode
+     */
     public static void setAutoMode(boolean autoMode) {
         Context context = MainApplication.getInstance();
         settingsRepo.setBooleanValue(context.getString(R.string.pref_key_auto_mode), autoMode);
     }
 
+    /**
+     * 获取计费网络流量限制值
+     * @return long
+     */
     public static long meteredLimit() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_limit), meteredLimited);
     }
 
+    /**
+     * 设置计费网络流量限制值
+     * @param limited
+     */
     public static void setMeteredLimit(long limited) {
         Context context = MainApplication.getInstance();
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_limit), limited);
     }
 
-    public static void setMeteredLimit() {
+    /**
+     * 设置自动模式计费网络流量限制值
+     */
+    public static void setAutoModeMeteredLimit() {
         Context context = MainApplication.getInstance();
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_limit), meteredLimited);
     }
 
+    /**
+     * 设置当前是否为计费网络
+     */
     public static void setMeteredNetwork(boolean isMetered) {
         Context context = MainApplication.getInstance();
         settingsRepo.setBooleanValue(context.getString(R.string.pref_key_is_metered_network), isMetered);
     }
 
+    /**
+     * 返回当前是否为计费网络
+     */
     public static boolean isMeteredNetwork() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getBooleanValue(context.getString(R.string.pref_key_is_metered_network),
                 false);
     }
 
-    public synchronized static void updateSpeed(@NonNull NetworkStatistics statistics) {
+    /**
+     * 更新网络速度采样值
+     */
+    public synchronized static void updateSpeedSample(@NonNull NetworkStatistics statistics) {
         Context context = MainApplication.getInstance();
-        if (!SystemServiceManager.getInstance(context).isNetworkMetered()) {
+        if (!SystemServiceManager.getInstance().isNetworkMetered()) {
             clearSpeedList();
            return;
         }
         long total = statistics.getRxBytes() + statistics.getTxBytes();
-        long size = TrafficUtil.parseIncrementalSize(TrafficUtil.getMeteredType(), total);
+        long size = TrafficUtil.calculateIncrementalSize(TrafficUtil.getMeteredType(), total);
         List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_metered_speed_list),
                 Long.class);
         if (list.size() >= speed_sample) {
@@ -84,12 +112,18 @@ public class NetworkSetting {
         updateMeteredSpeedLimit();
     }
 
+    /**
+     * 清除网络速度采样值列表
+     */
     public static void clearSpeedList() {
         Context context = MainApplication.getInstance();
         settingsRepo.setListData(context.getString(R.string.pref_key_metered_speed_list),
                 new ArrayList<>());
     }
 
+    /**
+     * 获取计费网络网速
+     */
     public static long getMeteredSpeed() {
         Context context = MainApplication.getInstance();
         List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_metered_speed_list),
@@ -104,6 +138,9 @@ public class NetworkSetting {
         return totalSpeed / list.size();
     }
 
+    /**
+     * 更新计费网络网速限制值
+     */
     public static void updateMeteredSpeedLimit() {
         Context context = MainApplication.getInstance();
         long usage = TrafficUtil.getMeteredTrafficTotal();
@@ -118,21 +155,33 @@ public class NetworkSetting {
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_speed_limit), speedLimit);
     }
 
+    /**
+     * 获取计费网络网速限制值
+     */
     public static long getMeteredSpeedLimit() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_speed_limit));
     }
 
+    /**
+     * 获取DHT Sessions数
+     */
     public static long getDHTSessions() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getLongValue(context.getString(R.string.pref_key_sessions),
                 0);
     }
 
+    /**
+     * 清除DHT Sessions数
+     */
     public static void clearDHTSessions() {
         updateDHTSessions(0);
     }
 
+    /**
+     * 更新DHT Sessions数
+     */
     public static void updateDHTSessions(long sessions) {
         Context context = MainApplication.getInstance();
         settingsRepo.setLongValue(context.getString(R.string.pref_key_sessions),
@@ -144,10 +193,9 @@ public class NetworkSetting {
      */
     public static long calculateDHTSessions() {
         long sessions = getDHTSessions();
-        Context context = MainApplication.getInstance();
         long meteredLimit = meteredLimit();
         // 当前网络为计费网络，并且有流量控制
-        if (SystemServiceManager.getInstance(context).isNetworkMetered() && meteredLimit != 0) {
+        if (SystemServiceManager.getInstance().isNetworkMetered() && meteredLimit != 0) {
             long currentSpeed = NetworkSetting.getMeteredSpeed();
             long speedLimit = NetworkSetting.getMeteredSpeedLimit();
             if (speedLimit > 0) {
