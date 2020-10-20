@@ -9,7 +9,6 @@ public class BlockContainer {
     public BlockContainer() {
     }
 
-    // TODO:: del
     public BlockContainer(Block block) {
         this.block = block;
     }

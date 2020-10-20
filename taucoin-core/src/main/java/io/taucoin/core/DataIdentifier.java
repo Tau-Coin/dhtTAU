@@ -6,7 +6,7 @@ public class DataIdentifier {
     ByteArrayWrapper chainID;
     DataType dataType;
     ByteArrayWrapper hash; // block hash, txid or pubKey
-    ByteArrayWrapper txBlockHash; // the block hash to which tx belongs
+    ByteArrayWrapper blockHash; // the block hash to which this item belongs
 
     public DataIdentifier(ByteArrayWrapper chainID, DataType dataType) {
         this.chainID = chainID;
@@ -19,11 +19,11 @@ public class DataIdentifier {
         this.hash = hash;
     }
 
-    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper hash, ByteArrayWrapper txBlockHash) {
+    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper hash, ByteArrayWrapper blockHash) {
         this.chainID = chainID;
         this.dataType = dataType;
         this.hash = hash;
-        this.txBlockHash = txBlockHash;
+        this.blockHash = blockHash;
     }
 
     public ByteArrayWrapper getChainID() {
@@ -38,7 +38,7 @@ public class DataIdentifier {
         return hash;
     }
 
-    public ByteArrayWrapper getTxBlockHash() {
-        return txBlockHash;
+    public ByteArrayWrapper getBlockHash() {
+        return blockHash;
     }
 }

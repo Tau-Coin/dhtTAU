@@ -13,6 +13,7 @@ public class HorizontalItem extends HashList {
 
     /**
      * get tx hash
+     * tx hash放在第一个位置
      * @return tx hash
      */
     public byte[] getTxHash() {

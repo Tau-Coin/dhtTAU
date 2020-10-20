@@ -13,6 +13,7 @@ public class VerticalItem extends HashList {
 
     /**
      * get previous hash
+     * previous hash放在第一个位置
      * @return previous block hash
      */
     public byte[] getPreviousHash() {
