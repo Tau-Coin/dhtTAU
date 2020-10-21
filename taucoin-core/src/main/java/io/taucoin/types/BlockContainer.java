@@ -13,12 +13,6 @@ public class BlockContainer {
         this.block = block;
     }
 
-    // TODO:: del
-    public BlockContainer(Block block, Transaction tx) {
-        this.block = block;
-        this.tx = tx;
-    }
-
     public BlockContainer(Block block, VerticalItem verticalItem) {
         this.block = block;
         this.verticalItem = verticalItem;
@@ -29,10 +23,6 @@ public class BlockContainer {
         this.verticalItem = verticalItem;
         this.horizontalItem = horizontalItem;
         this.tx = tx;
-    }
-
-    public static BlockContainer with(BlockContainer blockContainer) {
-        return new BlockContainer(blockContainer.block, blockContainer.tx);
     }
 
     public Block getBlock() {
@@ -67,12 +57,4 @@ public class BlockContainer {
         this.horizontalItem = horizontalItem;
     }
 
-    public boolean isEmpty() {
-        return null == block;
-    }
-
-    public void copy(BlockContainer blockContainer) {
-        this.block = blockContainer.block;
-        this.tx = blockContainer.tx;
-    }
 }

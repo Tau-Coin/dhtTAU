@@ -1,5 +1,6 @@
 package io.taucoin.types;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class HorizontalItem extends HashList {
@@ -9,6 +10,18 @@ public class HorizontalItem extends HashList {
 
     public HorizontalItem(byte[] encode) {
         super(encode);
+    }
+
+    /**
+     * create horizontal item with tx hash
+     * @param txHash tx hash
+     * @return horizontal item
+     */
+    public static HorizontalItem with(byte[] txHash) {
+        List<byte[]> list = new ArrayList<>();
+        list.add(txHash);
+
+        return new HorizontalItem(list);
     }
 
     /**

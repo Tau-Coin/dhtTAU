@@ -18,6 +18,7 @@ import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static io.taucoin.core.ImportResult.*;
@@ -168,18 +169,17 @@ public class StateProcessorImpl implements StateProcessor {
             */
 
 
-            HashMap<ByteArrayWrapper, GenesisItem> map = ((GenesisTx)tx).getGenesisAccounts();
-            if (null != map) {
-                for (HashMap.Entry<ByteArrayWrapper, GenesisItem> entry : map.entrySet()) {
-                    byte[] pubKey = entry.getKey().getData();
+            ArrayList<GenesisItem> list = ((GenesisTx)tx).getGenesisAccounts();
+            if (null != list) {
+                for (GenesisItem item: list) {
+                    byte[] pubKey = item.getAccount();
                     AccountState accountState = stateDB.getAccount(this.chainID, pubKey);
                     if (null == accountState) {
-                        accountState = new AccountState(entry.getValue().getBalance(),
-                                entry.getValue().getPower());
+                        accountState = new AccountState(item.getBalance(), item.getPower());
                         stateDB.updateAccount(this.chainID, pubKey, accountState);
                     } else {
                         if (0 == accountState.getNonce().longValue()) {
-                            accountState.setNonce(entry.getValue().getPower());
+                            accountState.setNonce(item.getPower());
                             stateDB.updateAccount(this.chainID, pubKey, accountState);
                         }
                     }

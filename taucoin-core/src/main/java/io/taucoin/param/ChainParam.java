@@ -53,6 +53,8 @@ public class ChainParam {
     public static final int MUTABLE_RANGE = 288; // 1 days
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
 
+    public static final int MAX_HASH_NUMBER = 48;
+
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
 
