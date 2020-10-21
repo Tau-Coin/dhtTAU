@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 taucoin developer
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
@@ -87,10 +87,10 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 			byte[] privateKey = keypair.second;
 
         	long balance = 0;
-			long nonce = 0;
+			BigInteger nonce = BigInteger.ZERO;
         	try{
 				balance = chainmanager.getAccountState(chainID,publicKey).getBalance().longValue();
-				nonce = chainmanager.getAccountState(chainID,publicKey).getNonce().longValue() + 1;
+				nonce = chainmanager.getAccountState(chainID,publicKey).getNonce().add(BigInteger.ONE);
 			}catch (Exception e){
 
 			}
@@ -118,13 +118,13 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 				return response;
 			}
 
-			int txfee = fee.intValue();
+			BigInteger txfee = fee;
 
 			// type = 0: genesis tx, 1: forum note transaction, 2: wiring coins transaction
 			if(TypesConfig.TxType.GenesisType.ordinal() == type){
 				logger.info("geneis tx");
 				// genesismsg
-				HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
+				ArrayList<GenesisItem> genesisMsg = new ArrayList<>();
 				List<String> gadds = new ArrayList<String>();
 				if (obj.containsKey("gadds") && !((List)obj.get("gadds")).equals("")) {
 					gadds = (List) obj.get("gadds");
@@ -134,12 +134,12 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 				Iterator ita = gadds.iterator();
 				while(ita.hasNext()){
 					logger.info("geneis account: {}", (String)ita.next());
-					ByteArrayWrapper account = new ByteArrayWrapper(((String)ita.next()).getBytes());
-					GenesisItem state = new GenesisItem(BigInteger.valueOf(10000000), BigInteger.valueOf(100));
-					genesisMsg.put(account, state);
+					byte[] account = ((String)ita.next()).getBytes();
+					GenesisItem genesisItem = new GenesisItem(account, BigInteger.valueOf(10000000), BigInteger.valueOf(100));
+					genesisMsg.add(genesisItem);
 				}
 
-				tx = new GenesisTx(version, chainID, timeStamp, txfee, type, publicKey, nonce, genesisMsg);
+				tx = new GenesisTx(version, chainID, timeStamp, txfee, publicKey, nonce, genesisMsg);
 
 				tx.signTransactionWithPriKey(privateKey);
 
@@ -147,7 +147,7 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 				// msg
 				// tx construct
 				String forumNoteHash = obj.getAsString("fnhash");
-				tx = new ForumNoteTx(version, chainID, timeStamp, txfee, type, publicKey, nonce, forumNoteHash.getBytes());
+				tx = new ForumNoteTx(version, chainID, timeStamp, txfee, publicKey, nonce, forumNoteHash.getBytes());
 				tx.signTransactionWithPriKey(privateKey);
 
 			} else if(TypesConfig.TxType.WCoinsType.ordinal() == type) {
@@ -166,19 +166,19 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
 				}
 
 				// amount
-        		long value = 0L;
+        		BigInteger value = BigInteger.ZERO;
         		if (obj.containsKey("value") && ((long)obj.get("value")) > 0) {
-            		value = (long) obj.get("value");
+            		value = (BigInteger) obj.get("value");
         		}
 
 				// memo
-        		String memo = "";
-        		if (obj.containsKey("memo") && !((String)obj.get("memo")).equals("")) {
-            		memo = (String) obj.get("memo");
+        		byte[] memo = null;
+        		if (obj.containsKey("memo") && !((byte [])obj.get("memo")).equals(null)) {
+            		memo = (byte []) obj.get("memo");
         		}
 
 				// tx construct
-				tx = new WiringCoinsTx(version, chainID, timeStamp, txfee, type, publicKey, nonce, to, value, memo);
+				tx = new WiringCoinsTx(version, chainID, timeStamp, txfee, publicKey, nonce, to, value, memo);
 				tx.signTransactionWithPriKey(privateKey);
         	}
 

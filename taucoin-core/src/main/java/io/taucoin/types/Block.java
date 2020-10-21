@@ -1,19 +1,18 @@
-/**
-Copyright 2020 taucoin developer
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
-(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
-publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
-OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+/*
+ * Copyright 2020 taucoin developer
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
+ * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+ * TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+ * OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package io.taucoin.types;
 
 import io.taucoin.genesis.GenesisConfig;
@@ -91,14 +90,12 @@ public class Block {
      * @param version: current block version.
      * @param timestamp: unix timestamp block was created.
      * @param blockNum: block index number start with 0.
-     * @param verticalHash: the historical block hashes.
-     * @param horizontalHash: tx, messages immutable hash.
+     * @param verticalHash: 代表历史区块的ImmutableHash.
+     * @param horizontalHash:交易, Messages Immutable Hash.
      * @param immutableBlockHash: the chain immutable point block hash.
      * @param baseTarget:block mining base target(pot).
      * @param cumulativeDifficulty:chain difficulty.
      * @param generationSignature:block mining random number.
-     * @param verticalHash: 代表历史区块的ImmutableHash.
-     * @param horizontalHash:交易, Messages Immutable Hash.
      * @param minerBalance:block miner coin balance.
      * @param senderBalance:transaction sender balance.
      * @param receiverBalance:transaction receiver balance.
@@ -112,12 +109,6 @@ public class Block {
             byte[] signature,byte[] minerPubkey){
 
         // Check - 可以在构造之前检查
-        if (verticalHash.length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Vertical blocks hash should be : " + ChainParam.HashLength + " bytes");
-        }
-        if (horizontalHash.length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Horizontal blocks hash should be : " + ChainParam.HashLength + " bytes");
-        }
         if (immutableBlockHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("Immutable block hash should be : " + ChainParam.HashLength + " bytes");
         }
@@ -159,14 +150,12 @@ public class Block {
      * @param version: current block version.
      * @param timestamp: unix timestamp block was created.
      * @param blockNum: block index number start with 0.
-     * @param verticalHash: the historical block hashes.
-     * @param horizontalHash: tx, messages immutable hash.
+     * @param verticalHash: 代表历史区块的ImmutableHash.
+     * @param horizontalHash:交易, Messages Immutable Hash.
      * @param immutableBlockHash: the chain immutable point block hash.
      * @param baseTarget:block mining base target(pot).
      * @param cumulativeDifficulty:chain difficulty.
      * @param generationSignature:block mining random number.
-     * @param verticalHash: 代表历史区块的ImmutableHash.
-     * @param horizontalHash:交易, Messages Immutable Hash.
      * @param minerBalance:block miner coin balance.
      * @param senderBalance:transaction sender balance.
      * @param receiverBalance:transaction receiver balance.
@@ -179,12 +168,6 @@ public class Block {
             byte[] minerPubkey){
 
         // Check - 可以在构造之前检查
-        if (verticalHash.length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Vertical blocks hash should be : " + ChainParam.HashLength + " bytes");
-        }
-        if (horizontalHash.length != ChainParam.HashLength) {
-            throw new IllegalArgumentException("Horizontal blocks hash should be : " + ChainParam.HashLength + " bytes");
-        }
         if (immutableBlockHash.length != ChainParam.HashLength) {
             throw new IllegalArgumentException("Immutable block hash should be : " + ChainParam.HashLength + " bytes");
         }
@@ -387,7 +370,7 @@ public class Block {
 
     /**
      * get block version.
-     * @return
+     * @return version
      */
     public long getVersion() {
         if(!isParsed) parseEncodedBytes();
@@ -396,7 +379,7 @@ public class Block {
 
     /**
      * get timestamp.
-     * @return
+     * @return timestamp
      */
     public long getTimeStamp() {
         if(!isParsed) parseEncodedBytes();
