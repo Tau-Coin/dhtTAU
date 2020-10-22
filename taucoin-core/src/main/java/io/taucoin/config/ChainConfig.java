@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -61,7 +62,7 @@ public class ChainConfig {
      */
     public ChainConfig(long version, String communityName, int blockTimeInterval,
             byte[] genesisMinerPubkey, long genesisTimeStamp, byte[] generationSignature,
-            HashMap<ByteArrayWrapper, GenesisItem> genesisMsg) {
+            ArrayList<GenesisItem> genesisMsg) {
 
         this.version = version;
         this.communityName = communityName;
@@ -80,7 +81,7 @@ public class ChainConfig {
 
         // TODO: create genesis transaction
         this.msg = new GenesisTx(this.version, this.chainID, this.genesisTimeStamp,
-                0, 0L, this.genesisMinerPubkey, 0L, genesisMsg);
+                BigInteger.ZERO, this.genesisMinerPubkey, BigInteger.ZERO, genesisMsg);
     }
 
     public ChainConfig(String communityName, HashMap<ByteArrayWrapper, GenesisItem> genesisMsg) {

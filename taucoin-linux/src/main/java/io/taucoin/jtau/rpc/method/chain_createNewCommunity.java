@@ -20,7 +20,6 @@ import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.genesis.GenesisItem;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.util.ByteArrayWrapper;
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
@@ -74,7 +73,7 @@ public class chain_createNewCommunity extends JsonRpcServerMethod {
 			logger.info("name: {}, coins: {}, power: {}", name, coins, power);
 
             // genesismsg
-			HashMap<ByteArrayWrapper, GenesisItem> genesisMsg = new HashMap<>();
+			ArrayList<GenesisItem> genesisMsg = new ArrayList<>();
 			List<String> gadds = new ArrayList<String>();
 			if (obj.containsKey("gadds") && !((List)obj.get("gadds")).equals("")) {
 				gadds = (List) obj.get("gadds");
@@ -85,9 +84,8 @@ public class chain_createNewCommunity extends JsonRpcServerMethod {
 			while(ita.hasNext()){
 				String account = (String)ita.next();
 				logger.info("geneis account: {}", account);
-				ByteArrayWrapper accountBytes = new ByteArrayWrapper(Hex.decode(account));
-				GenesisItem state = new GenesisItem(BigInteger.valueOf(coins), BigInteger.valueOf(power));
-				genesisMsg.put(accountBytes, state);
+				GenesisItem state = new GenesisItem(Hex.decode(account), BigInteger.valueOf(coins), BigInteger.valueOf(power));
+				genesisMsg.add(state);
 			}
 
 			// get chainmanager and send tx	
