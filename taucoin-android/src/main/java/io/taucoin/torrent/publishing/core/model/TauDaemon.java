@@ -27,7 +27,6 @@ import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
 import io.taucoin.genesis.GenesisConfig;
-import io.taucoin.torrent.SessionSettings;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -61,7 +60,6 @@ public class TauDaemon {
     private PowerReceiver powerReceiver = new PowerReceiver();
     private ConnectionReceiver connectionReceiver = new ConnectionReceiver();
     private TauController tauController;
-    private SessionSettings sessionSettings;
     private PowerManager.WakeLock wakeLock;
     private SystemServiceManager systemServiceManager;
     private ExecutorService exec = Executors.newSingleThreadExecutor();
@@ -97,9 +95,6 @@ public class TauDaemon {
         logger.info("TauController repoPath::{}", repoPath);
         tauController = new TauController(repoPath, androidLeveldbFactory);
         tauController.registerListener(daemonListener);
-        sessionSettings = new SessionSettings.Builder()
-                .setDHTMaxItems(SessionSettings.TauDHTMaxItems)
-                .build();
 
         switchPowerReceiver();
         switchConnectionReceiver();
@@ -218,7 +213,6 @@ public class TauDaemon {
             if (success) {
                 logger.debug("Tau start successfully");
                 isRunning = true;
-                rescheduleDHTBySettings();
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
@@ -257,7 +251,8 @@ public class TauDaemon {
         disposables.add(tauInfoProvider.observeTrafficStatistics()
                 .subscribeOn(Schedulers.newThread())
                 .subscribe());
-        tauController.start(sessionSettings);
+        rescheduleDHTBySettings();
+        tauController.start(NetworkSetting.getDHTSessions());
     }
 
     /**
@@ -351,21 +346,18 @@ public class TauDaemon {
      * 根据当前设置重新调度DHT
      */
     synchronized void rescheduleDHTBySettings() {
-        if (!isRunning){
-            return;
-        }
         // 判断有无网络连接
+        int lastSessions = NetworkSetting.getDHTSessions();
         if (settingsRepo.internetState()) {
             if (networkJitter != null && !networkJitter.isDisposed()) {
                 networkJitter.dispose();
-                long sessions = NetworkSetting.getDHTSessions();
-                rescheduleDHTBySessions(sessions, true);
+                rescheduleDHTBySessions(lastSessions, true);
             } else {
-                long sessions = NetworkSetting.calculateDHTSessions();
-                rescheduleDHTBySessions(sessions, false);
+                int sessions = NetworkSetting.calculateDHTSessions();
+                rescheduleDHTBySessions(sessions - lastSessions, false);
             }
         } else {
-            if (null == networkJitter || networkJitter.isDisposed()) {
+            if ((networkJitter != null && !networkJitter.isDisposed()) || lastSessions == 0) {
                 return;
             }
             networkJitter = Observable.timer(NETWORK_JITTER_INTERVAL, TimeUnit.MILLISECONDS)
@@ -378,16 +370,31 @@ public class TauDaemon {
     /**
      * 根据当前设置计算出的DHT Sessions数重新调度DHT
      */
-    private void rescheduleDHTBySessions(long sessions, boolean restart) {
+    private void rescheduleDHTBySessions(int sessions, boolean restart) {
         if (!isRunning) {
             return;
         }
-        // TODO：通知DHT Controller有无网络连接和DHT Sessions个数
-        NetworkSetting.updateDHTSessions(sessions);
-        logger.info("rescheduleTauBySettings Auto Mode::{}, internetState::{}, DHTSessions::{}",
+        // 通知DHT Controller有无网络连接和DHT Sessions个数
+        boolean isSuccess = false;
+        if (restart) {
+            isSuccess = tauController.restartSessions(sessions);
+        } else {
+            if (sessions < 0) {
+                isSuccess = tauController.decreaseSession();
+            } else {
+                isSuccess = tauController.increaseSession();
+            }
+        }
+        // 调度成功才更新本地sessions值
+        if (isSuccess) {
+            NetworkSetting.updateDHTSessions(sessions);
+        }
+        logger.info("rescheduleTauBySettings Auto Mode::{}, internetState::{}," +
+                        "DHTSessions::{}, reschedule result::{}",
                 NetworkSetting.autoMode(),
                 settingsRepo.internetState(),
-                sessions);
+                NetworkSetting.getDHTSessions(),
+                isSuccess);
     }
 
     /**

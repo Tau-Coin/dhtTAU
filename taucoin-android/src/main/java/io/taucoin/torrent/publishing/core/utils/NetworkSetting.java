@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import io.taucoin.dht.session.SessionController;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -19,9 +20,6 @@ public class NetworkSetting {
     private static final long meteredLimited = 50 * 1024 * 1024; // 50MB
     private static final long speed_sample = 60; // 单位s
     private static final boolean autoMode = true;
-    private static final long NO_SESSIONS = 0;
-    private static final long MIN_SESSIONS = 1;
-    private static final long MAX_SESSIONS = 32;
 
     private static SettingsRepository settingsRepo;
     static {
@@ -166,9 +164,9 @@ public class NetworkSetting {
     /**
      * 获取DHT Sessions数
      */
-    public static long getDHTSessions() {
+    public static int getDHTSessions() {
         Context context = MainApplication.getInstance();
-        return settingsRepo.getLongValue(context.getString(R.string.pref_key_sessions),
+        return settingsRepo.getIntValue(context.getString(R.string.pref_key_sessions),
                 0);
     }
 
@@ -182,17 +180,17 @@ public class NetworkSetting {
     /**
      * 更新DHT Sessions数
      */
-    public static void updateDHTSessions(long sessions) {
+    public static void updateDHTSessions(int sessions) {
         Context context = MainApplication.getInstance();
-        settingsRepo.setLongValue(context.getString(R.string.pref_key_sessions),
+        settingsRepo.setIntValue(context.getString(R.string.pref_key_sessions),
                 sessions);
     }
 
     /**
      * 计算DHT Session个数
      */
-    public static long calculateDHTSessions() {
-        long sessions = getDHTSessions();
+    public static int calculateDHTSessions() {
+        int sessions = getDHTSessions();
         long meteredLimit = meteredLimit();
         // 当前网络为计费网络，并且有流量控制
         if (SystemServiceManager.getInstance().isNetworkMetered() && meteredLimit != 0) {
@@ -200,25 +198,25 @@ public class NetworkSetting {
             long speedLimit = NetworkSetting.getMeteredSpeedLimit();
             if (speedLimit > 0) {
                 if (currentSpeed > speedLimit) {
-                    if (sessions > MIN_SESSIONS) {
+                    if (sessions > SessionController.MIN_SESSIONS + 1) {
                         sessions --;
                     } else {
-                        sessions = MIN_SESSIONS;
+                        sessions = SessionController.MIN_SESSIONS + 1;
                     }
                 } else {
-                    if (sessions < MAX_SESSIONS) {
+                    if (sessions < SessionController.MAX_SESSIONS) {
                         sessions ++;
                     } else {
-                        sessions = MAX_SESSIONS;
+                        sessions = SessionController.MAX_SESSIONS;
                     }
                 }
             } else {
                 // 超出流量控制范围
-                sessions = NO_SESSIONS;
+                sessions = SessionController.MIN_SESSIONS;
             }
         } else {
             // 不限制DHT Sessions
-            sessions = MAX_SESSIONS;
+            sessions = SessionController.MAX_SESSIONS;
         }
         return sessions;
     }

@@ -121,6 +121,13 @@ public interface SettingsRepository {
 
     void setLongValue(String key, long value);
 
+
+    int getIntValue(String key);
+
+    int getIntValue(String key, int defValue);
+
+    void setIntValue(String key, int value);
+
     boolean getBooleanValue(String key);
 
     boolean getBooleanValue(String key, boolean defValue);

@@ -100,35 +100,33 @@ class TauListenHandler {
      */
     private void handleBlockData(byte[] bytes_chainID, BlockContainer blockContainer,
                                  boolean isRollback, boolean isSync) {
-        if(!blockContainer.isEmpty()){
-            Disposable disposable = Flowable.create(emitter -> {
-                String chainID = Utils.toUTF8String(bytes_chainID);
-                Block block = blockContainer.getBlock();
-                logger.debug("handleBlockData:: chainID::{}，blockNum::{}, blockHash::{}", chainID,
-                        block.getBlockNum(), ByteUtil.toHexString(block.getBlockHash()));
-                // 更新社区信息
-                saveCommunityInfo(chainID, block, isSync);
-                Transaction txMsg = blockContainer.getTx();
-                // 更新矿工的信息
-                saveUserInfo(block.getMinerPubkey(), block.getTimeStamp());
-                if(txMsg != null){
-                    String txID = ByteUtil.toHexString(txMsg.getTxID());
-                    Tx tx = txRepo.getTxByTxID(txID);
-                    // 本地不存在此交易
-                    if(null == tx){
-                        handleTransactionData(txMsg, isRollback, isSync);
-                    }else{
-                        tx.txStatus = isRollback ? 0 : 1;
-                        txRepo.updateTransaction(tx);
-                        handleMemberInfo(txMsg);
-                    }
+        Disposable disposable = Flowable.create(emitter -> {
+            String chainID = Utils.toUTF8String(bytes_chainID);
+            Block block = blockContainer.getBlock();
+            logger.debug("handleBlockData:: chainID::{}，blockNum::{}, blockHash::{}", chainID,
+                    block.getBlockNum(), ByteUtil.toHexString(block.getBlockHash()));
+            // 更新社区信息
+            saveCommunityInfo(chainID, block, isSync);
+            Transaction txMsg = blockContainer.getTx();
+            // 更新矿工的信息
+            saveUserInfo(block.getMinerPubkey(), block.getTimeStamp());
+            if(txMsg != null){
+                String txID = ByteUtil.toHexString(txMsg.getTxID());
+                Tx tx = txRepo.getTxByTxID(txID);
+                // 本地不存在此交易
+                if(null == tx){
+                    handleTransactionData(txMsg, isRollback, isSync);
+                }else{
+                    tx.txStatus = isRollback ? 0 : 1;
+                    txRepo.updateTransaction(tx);
+                    handleMemberInfo(txMsg);
                 }
-                emitter.onComplete();
-            }, BackpressureStrategy.LATEST)
-                    .subscribeOn(Schedulers.io())
-                    .subscribe();
-            disposables.add(disposable);
-        }
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        disposables.add(disposable);
     }
 
     /**

@@ -8,8 +8,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import androidx.core.view.MenuItemCompat;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,10 +49,8 @@ import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
-import io.taucoin.torrent.publishing.ui.customviews.BadgeActionProvider;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.download.DownloadViewModel;
-import io.taucoin.torrent.publishing.ui.notify.NotificationActivity;
 import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
 import io.taucoin.torrent.publishing.ui.setting.DashboardActivity;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
@@ -81,9 +77,7 @@ public class MainActivity extends BaseActivity {
     private Subject<Integer> mBackClick = PublishSubject.create();
     private CommonDialog seedDialog;
     private CommonDialog linkDialog;
-    private BadgeActionProvider actionProvider;
     private User user;
-    private int unreadNum;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -243,7 +237,6 @@ public class MainActivity extends BaseActivity {
         subscribeCurrentUser();
         subscribeCPUAndMemStatistics();
         subscribeNeedStartDaemon();
-        subscribeUnreadNotificationNum();
 //        downloadViewModel.checkAppVersion(this);
     }
 
@@ -258,14 +251,6 @@ public class MainActivity extends BaseActivity {
                             Formatter.formatFileSize(this, statistics.totalMemory)));
                     updateDHTStats();
                 }));
-    }
-
-    private void subscribeUnreadNotificationNum() {
-        disposables.add(notificationViewModel.queryUnreadNotificationsNum()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(num -> unreadNum = num, e -> unreadNum = 0));
-        ;
     }
 
     private void handleClipboardContent() {
@@ -426,27 +411,12 @@ public class MainActivity extends BaseActivity {
             }));
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if(unreadNum >= 10){
-            actionProvider.setText("···");
-        }else{
-            actionProvider.setBadge(unreadNum);
-        }
-        actionProvider.setVisibility(unreadNum > 0);
-    }
-
     /**
      *  创建右上角Menu
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        MenuItem menuItem = menu.findItem(R.id.menu_alert);
-        actionProvider = (BadgeActionProvider) MenuItemCompat.getActionProvider(menuItem);
-        actionProvider.setOnClickListener(0, what ->
-                ActivityUtil.startActivity(this, NotificationActivity.class));
         return true;
     }
 

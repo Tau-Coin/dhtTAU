@@ -191,6 +191,22 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     }
 
     @Override
+    public int getIntValue(String key) {
+        return pref.getInt(key, 0);
+    }
+
+    @Override
+    public int getIntValue(String key, int defValue) {
+        return pref.getInt(key, defValue);
+    }
+
+    @Override
+    public void setIntValue(String key, int value) {
+        pref.edit().putInt(key, value)
+                .apply();
+    }
+
+    @Override
     public boolean getBooleanValue(String key) {
         return pref.getBoolean(key, false);
     }
