@@ -12,7 +12,7 @@ import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
-import io.taucoin.util.ByteUtil;
+import io.taucoin.types.HashList;
 
 public class dht_putGenesisHashInTipBlockChannel extends JsonRpcServerMethod {
 
@@ -24,7 +24,7 @@ public class dht_putGenesisHashInTipBlockChannel extends JsonRpcServerMethod {
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
 
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
-        byte[] encode = ByteUtil.getHashEncoded(Hex.decode("9738450c31228d0e4b8c29e4677515e30c2e64e6"));
+        byte[] encode = HashList.with(Hex.decode("9738450c31228d0e4b8c29e4677515e30c2e64e6")).getEncoded();
         byte[] salt = "TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d#blkTip".getBytes();
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second, encode, salt);

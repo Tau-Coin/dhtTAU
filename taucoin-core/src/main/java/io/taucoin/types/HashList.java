@@ -25,6 +25,18 @@ public class HashList {
     }
 
     /**
+     * create a hash list with one hash
+     * @param hash hash
+     * @return hash list
+     */
+    public static HashList with(byte[] hash) {
+        List<byte[]> list = new ArrayList<>();
+        list.add(hash);
+
+        return new HashList(list);
+    }
+
+    /**
      * get hash list
      * @return hash list
      */
@@ -34,6 +46,19 @@ public class HashList {
         }
 
         return this.hashList;
+    }
+
+    /**
+     * get first hash
+     * @return first hash
+     */
+    public byte[] getFirstHash() {
+        List<byte[]> list = getHashList();
+        if (null != list && !list.isEmpty()) {
+            return list.get(0);
+        }
+
+        return null;
     }
 
     /**

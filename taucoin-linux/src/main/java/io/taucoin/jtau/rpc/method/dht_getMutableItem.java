@@ -2,11 +2,9 @@ package io.taucoin.jtau.rpc.method;
 
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.TorrentDHTEngine;
-import io.taucoin.util.ByteUtil;
+import io.taucoin.types.HashList;
 
-import com.frostwire.jlibtorrent.Entry;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response;
@@ -15,9 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
 import java.util.List;
-import java.util.ArrayList;
 
 import static io.taucoin.torrent.DHT.*;
 
@@ -52,7 +48,7 @@ public class dht_getMutableItem extends JsonRpcServerMethod {
                 result= "Get mutable item, nothing !";
             } else {
                 try {
-                    byte[] hash = ByteUtil.getHashFromEncode(item);
+                    byte[] hash = new HashList(item).getFirstHash();
                     if (null != hash) {
                         result = "Hash: " + Hex.toHexString(hash);
                     } else {

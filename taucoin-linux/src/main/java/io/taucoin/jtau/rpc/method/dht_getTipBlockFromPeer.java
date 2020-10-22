@@ -11,13 +11,12 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 
-import io.taucoin.chain.Chains;
 import io.taucoin.chain.Salt;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.torrent.DHT;
 import io.taucoin.torrent.TorrentDHTEngine;
-import io.taucoin.util.ByteUtil;
+import io.taucoin.types.HashList;
 
 public class dht_getTipBlockFromPeer extends JsonRpcServerMethod {
 
@@ -50,7 +49,7 @@ public class dht_getTipBlockFromPeer extends JsonRpcServerMethod {
                 result= "Get mutable item, nothing !";
             } else {
                 try {
-                    byte[] hash = ByteUtil.getHashFromEncode(item);
+                    byte[] hash = new HashList(item).getFirstHash();
                     if (null != hash) {
                         result = "Hash: " + Hex.toHexString(hash);
                     } else {

@@ -2505,7 +2505,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
         byte[] salt = Salt.makeBlockDemandSalt(chainID.getData());
-        byte[] encode = ByteUtil.getHashEncoded(blockHash);
+        byte[] encode = HashList.with(blockHash).getEncoded();
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                     keyPair.second, encode, salt);
@@ -2523,7 +2523,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
         byte[] salt = Salt.makeTxDemandSalt(chainID.getData());
-        byte[] encode = ByteUtil.getHashEncoded(txHash);
+        byte[] encode = HashList.with(txHash).getEncoded();
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                     keyPair.second, encode, salt);
@@ -2554,12 +2554,24 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
+     * publish hash list
+     * @param hashList hash list
+     */
+    private void publishHashList(HashList hashList) {
+        if (null != hashList) {
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(hashList.getEncoded());
+            TorrentDHTEngine.getInstance().distribute(immutableItem);
+        }
+    }
+
+    /**
      * publish block container
      * @param blockContainer block container
      */
     private void publishBlockContainer(BlockContainer blockContainer) {
-        // TODO:: items
         publishTransaction(blockContainer.getTx());
+        publishHashList(blockContainer.getHorizontalItem());
+        publishHashList(blockContainer.getVerticalItem());
         publishBlock(blockContainer.getBlock());
     }
 
@@ -2576,7 +2588,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             // put mutable item
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
             byte[] salt = this.blockTipSalts.get(chainID);
-            byte[] encode = ByteUtil.getHashEncoded(bestBlockContainer.getBlock().getBlockHash());
+            byte[] encode =HashList.with(bestBlockContainer.getBlock().getBlockHash()).getEncoded();
             if (null != encode) {
                 DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
                         encode, salt);
@@ -2613,7 +2625,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
             byte[] salt = this.txTipSalts.get(chainID);
-            byte[] encode = ByteUtil.getHashEncoded(tx.getTxID());
+            byte[] encode = HashList.with(tx.getTxID()).getEncoded();
             if (null != encode) {
                 DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
                         encode, salt);
@@ -2698,6 +2710,18 @@ public class Chains implements DHT.GetDHTItemCallback{
             logger.error("ChainID[{}]: Block[{}] immutable block hash mismatch!",
                     new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
             return TryResult.ERROR;
+        }
+
+        HashListResult hashListResult = getPreviousHashList(chainID, blockContainer);
+        if (TryResult.SUCCESS == hashListResult.tryResult) {
+            VerticalItem verticalItem = new VerticalItem(hashListResult.hashList);
+            if (!Arrays.equals(verticalItem.getHash(), blockContainer.getVerticalItem().getHash())) {
+                logger.error("ChainID[{}]: Block[{}] vertical item hash mismatch!",
+                        new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
+                return TryResult.ERROR;
+            }
+        } else {
+            return hashListResult.tryResult;
         }
 
         // 时间戳检查
@@ -2916,16 +2940,6 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
 
         return TryResult.SUCCESS;
-    }
-
-    private static class BlockContainerResult {
-        TryResult tryResult;
-        BlockContainer blockContainer;
-    }
-
-    private static class HashListResult {
-        TryResult tryResult;
-        List<byte[]> hashList;
     }
 
     /**
@@ -3164,6 +3178,16 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
     }
 
+    private static class BlockContainerResult {
+        TryResult tryResult;
+        BlockContainer blockContainer;
+    }
+
+    private static class HashListResult {
+        TryResult tryResult;
+        List<byte[]> hashList;
+    }
+
     @Override
     public void onDHTItemGot(byte[] item, Object cbData) {
 
@@ -3211,7 +3235,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 logger.info("Block Tip: Address:{}, success rate: {} / {} = {}",
                         dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
 
-                byte[] hash = ByteUtil.getHashFromEncode(item);
+                byte[] hash = new HashList(item).getFirstHash();
                 if (null != hash) {
                     logger.debug("Request tip block hash[{}] from peer[{}]", Hex.toHexString(hash),
                             dataIdentifier.getHash().toString());
@@ -3529,7 +3553,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 logger.info("Block Demand: Address:{}, success rate: {} / {} = {}",
                         dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
 
-                byte[] hash = ByteUtil.getHashFromEncode(item);
+                byte[] hash = new HashList(item).getFirstHash();
                 if (null != hash) {
                     logger.debug("Got a demand block hash:{}", Hex.toHexString(hash));
                     requestBlockDemand(dataIdentifier.getChainID(), hash);
@@ -3543,7 +3567,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     return;
                 }
 
-                byte[] hash = ByteUtil.getHashFromEncode(item);
+                byte[] hash = new HashList(item).getFirstHash();
                 if (null != hash) {
                     logger.debug("Got a demand tx hash:{}", Hex.toHexString(hash));
                     requestTxDemand(dataIdentifier.getChainID(), hash);
@@ -3557,7 +3581,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     return;
                 }
 
-                byte[] hash = ByteUtil.getHashFromEncode(item);
+                byte[] hash = new HashList(item).getFirstHash();
                 if (null != hash) {
                     requestBlockForVoting(dataIdentifier.getChainID(), hash);
                 }
@@ -3583,7 +3607,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     return;
                 }
 
-                byte[] hash = ByteUtil.getHashFromEncode(item);
+                byte[] hash = new HashList(item).getFirstHash();
                 if (null != hash) {
                     requestTxForPool(dataIdentifier.getChainID(), hash);
                 }
