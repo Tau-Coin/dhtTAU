@@ -5,8 +5,7 @@ import io.taucoin.chain.ChainManager;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.TauListener;
-import io.taucoin.torrent.SessionSettings;
-import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.dht.DHTEngine;
 import io.taucoin.util.Repo;
 
 import com.frostwire.jlibtorrent.Pair;
@@ -32,8 +31,8 @@ public class TauController {
     // AccountManager manages the key pair for the miner.
     private AccountManager accountManager = AccountManager.getInstance();
 
-    // Communicate with torrent dht by TorrentDHTEngine;
-    TorrentDHTEngine torrentDHTEngine = TorrentDHTEngine.getInstance();
+    // Communicate with torrent dht by DHTEngine;
+    DHTEngine dhtEngine = DHTEngine.getInstance();
 
     private ChainManager chainManager;
 
@@ -49,8 +48,8 @@ public class TauController {
         // set the root directory.
         Repo.setRepoPath(repoPath);
 
-        // Add TauListener into TorrentDHTEngine.
-        this.torrentDHTEngine.setTauListener(compositeTauListener);
+        // Add TauListener into DHTEngine.
+        this.dhtEngine.setTauListener(compositeTauListener);
 
         // create chain manager.
         // ChainManager is responsibling for opening database and
@@ -78,14 +77,14 @@ public class TauController {
     /**
      * Start all the blockchain core components.
      *
-     * @param settings SessionSettings
+     * @param sessionsQuota sessions quoto
      */
-    public void start(SessionSettings settings) {
+    public void start(int sessionsQuota) {
 
         registerListener(new StartListener(this, compositeTauListener));
 
         // First of all, start torrent engine.
-        torrentDHTEngine.start(settings);
+        dhtEngine.start(sessionsQuota);
 
         // And then start chain manager.
         // chain manager will start followed and mined blockchains.
@@ -103,7 +102,16 @@ public class TauController {
         chainManager.stop();
 
         // Lastly, stop torrent engine
-        torrentDHTEngine.stop();
+        dhtEngine.stop();
+    }
+
+    /**
+     * Restart dht sessions.
+     *
+     * @param sessionsQuota sessions quota
+     */
+    public boolean restartSessions(int sessionsQuota) {
+        return dhtEngine.restart(sessionsQuota);
     }
 
     /**
@@ -186,15 +194,6 @@ public class TauController {
      */
     public void stopMining(byte[] chainID) {
         this.chainManager.stopMining(chainID);
-    }
-
-    /**
-     * Get SessionManager from torrect session context.
-     *
-     * @return SessionManager
-     */
-    public SessionManager getSessionManager() {
-        return torrentDHTEngine.getSessionManager();
     }
 
     public static class StartListener extends StartstopListener {

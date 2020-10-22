@@ -76,7 +76,15 @@ public class DHTEngine {
      * @param quota sessions quota
      */
     public boolean start(int quota) {
-        return sessionController.start(quota);
+        boolean ok = sessionController.start(quota);
+
+        if (ok) {
+            tauListener.onDHTStarted(true, "");
+        } else {
+            tauListener.onDHTStarted(false, "listen failed");
+        }
+
+        return ok;
     }
 
     /**
@@ -84,6 +92,7 @@ public class DHTEngine {
      */
     public void stop() {
         sessionController.stop();
+        tauListener.onDHTStopped();
     }
 
     /**
