@@ -21,8 +21,8 @@ public class SessionController {
 
     private static final Logger logger = LoggerFactory.getLogger("SessionController");
 
-    private static final int MIN_SESSIONS = 0;
-    private static final int MAX_SESSIONS = 64;
+    public static final int MIN_SESSIONS = 0;
+    public static final int MAX_SESSIONS = 64;
 
     // This list stores all the tau sessions.
     private List<TauSession> sessionsList = Collections.synchronizedList(

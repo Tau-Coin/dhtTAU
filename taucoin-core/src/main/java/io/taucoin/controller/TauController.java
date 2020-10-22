@@ -115,6 +115,33 @@ public class TauController {
     }
 
     /**
+     * Increase dht session.
+     *
+     * @return boolean true indicates starting successfully, or else false.
+     */
+    public boolean increaseSession() {
+        return dhtEngine.increaseSession();
+    }
+
+    /**
+     * Decrease dht session.
+     *
+     * @return boolean true indicates decreasing successfully, or else false.
+     */
+    public boolean decreaseSession() {
+        return dhtEngine.decreaseSession();
+    }
+
+    /**
+     * Get dht engine.
+     *
+     * @return DHTEngine
+     */
+    public DHTEngine getDHTEngine() {
+        return dhtEngine;
+    }
+
+    /**
      * Register TauListener.
      *
      * @param listener TauListener implementation.
