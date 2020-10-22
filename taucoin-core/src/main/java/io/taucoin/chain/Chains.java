@@ -36,8 +36,8 @@ import io.taucoin.listener.TauListener;
 import io.taucoin.param.ChainParam;
 import io.taucoin.processor.StateProcessor;
 import io.taucoin.processor.StateProcessorImpl;
-import io.taucoin.torrent.DHT;
-import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.dht.DHT;
+import io.taucoin.dht.DHTEngine;
 import io.taucoin.types.Block;
 import io.taucoin.types.BlockContainer;
 import io.taucoin.types.HashList;
@@ -2282,7 +2282,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.TIP_BLOCK_FROM_PEER_FOR_MINING, new ByteArrayWrapper(peer));
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2295,7 +2295,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.BLOCK_DEMAND_FROM_PEER,
                 new ByteArrayWrapper(peer));
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2308,7 +2308,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_REQUEST_FOR_MINING,
                 new ByteArrayWrapper(blockHash));
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2322,7 +2322,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_BLOCK_REQUEST_FOR_SYNC, new ByteArrayWrapper(blockHash));
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2334,7 +2334,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         byte[] salt = Salt.makeTxDemandSalt(chainID.getData());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_DEMAND_FROM_PEER);
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2348,7 +2348,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_TX_REQUEST_FOR_MINING, new ByteArrayWrapper(txid), blockHash);
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2362,7 +2362,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_TX_REQUEST_FOR_SYNC, new ByteArrayWrapper(txid), blockHash);
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2376,7 +2376,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_VERTICAL_ITEM_REQUEST_FOR_MINING, new ByteArrayWrapper(hash), blockHash);
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2390,7 +2390,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_VERTICAL_ITEM_REQUEST_FOR_SYNC, new ByteArrayWrapper(item), blockHash);
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2404,7 +2404,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_MINING, new ByteArrayWrapper(hash), blockHash);
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2418,7 +2418,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
                 DataType.HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_SYNC, new ByteArrayWrapper(item), blockHash);
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2430,7 +2430,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         byte[] salt = this.txTipSalts.get(chainID);
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_TX_FOR_MINING);
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2442,7 +2442,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TX_REQUEST_FOR_MINING);
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2454,7 +2454,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         byte[] salt = this.blockTipSalts.get(chainID);
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_BLOCK_FROM_PEER_FOR_VOTING);
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2466,7 +2466,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(blockHash);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_REQUEST_FOR_VOTING);
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2479,7 +2479,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_BLOCK_DEMAND,
                 new ByteArrayWrapper(blockHash));
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2492,7 +2492,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_TX_DEMAND,
                 new ByteArrayWrapper(txid));
 
-        TorrentDHTEngine.getInstance().request(spec, this, dataIdentifier);
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
     /**
@@ -2509,7 +2509,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                     keyPair.second, encode, salt);
-            TorrentDHTEngine.getInstance().distribute(mutableItem);
+            DHTEngine.getInstance().distribute(mutableItem);
         }
     }
 
@@ -2527,7 +2527,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                     keyPair.second, encode, salt);
-            TorrentDHTEngine.getInstance().distribute(mutableItem);
+            DHTEngine.getInstance().distribute(mutableItem);
         }
     }
 
@@ -2538,7 +2538,7 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void publishBlock(Block block) {
         if (null != block) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(block.getEncoded());
-            TorrentDHTEngine.getInstance().distribute(immutableItem);
+            DHTEngine.getInstance().distribute(immutableItem);
         }
     }
 
@@ -2549,7 +2549,7 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void publishTransaction(Transaction tx) {
         if (null != tx) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
-            TorrentDHTEngine.getInstance().distribute(immutableItem);
+            DHTEngine.getInstance().distribute(immutableItem);
         }
     }
 
@@ -2560,7 +2560,7 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void publishHashList(HashList hashList) {
         if (null != hashList) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(hashList.getEncoded());
-            TorrentDHTEngine.getInstance().distribute(immutableItem);
+            DHTEngine.getInstance().distribute(immutableItem);
         }
     }
 
@@ -2592,7 +2592,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             if (null != encode) {
                 DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
                         encode, salt);
-                TorrentDHTEngine.getInstance().distribute(mutableItem);
+                DHTEngine.getInstance().distribute(mutableItem);
             }
         }
     }
@@ -2618,7 +2618,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (null != tx) {
             // put immutable tx first
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
-            TorrentDHTEngine.getInstance().distribute(immutableItem);
+            DHTEngine.getInstance().distribute(immutableItem);
 
             // put mutable item
 
@@ -2629,7 +2629,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             if (null != encode) {
                 DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
                         encode, salt);
-                TorrentDHTEngine.getInstance().distribute(mutableItem);
+                DHTEngine.getInstance().distribute(mutableItem);
             }
         }
     }
