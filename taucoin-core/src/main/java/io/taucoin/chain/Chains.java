@@ -1677,9 +1677,9 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         // 此时投票区块高度即可能大于，也可能小于或者等于本地tip block高度
 
+        BlockContainer referenceBlockContainer = blockContainer;
         // 若大于，先对齐区块号
         // 1. 高度差先缩小到mutable range之内
-        BlockContainer referenceBlockContainer = blockContainer;
         while (referenceBlockContainer.getBlock().getBlockNum() - this.bestBlockContainers.get(chainID).
                 getBlock().getBlockNum() >= ChainParam.MUTABLE_RANGE) {
             BlockContainerResult result = tryToGetBlockContainerFromCache(chainID,
@@ -2183,6 +2183,91 @@ public class Chains implements DHT.GetDHTItemCallback{
         }
 
         return TryResult.SUCCESS;
+    }
+
+    /**
+     * 获取不大于目标高度mutable range高度的block container
+     * @param chainID chain ID
+     * @param blockContainer block container
+     * @param number block number
+     * @return result
+     */
+    private BlockContainerResult tryToGetBlockContainerWithinMutableRange(ByteArrayWrapper chainID, BlockContainer blockContainer, long number) {
+
+        while (blockContainer.getBlock().getBlockNum() - number >= ChainParam.MUTABLE_RANGE) {
+            BlockContainerResult result = tryToGetBlockContainerFromCache(chainID,
+                    blockContainer.getBlock().getImmutableBlockHash());
+
+            if (TryResult.SUCCESS == result.tryResult) {
+                logger.debug("Chain ID[{}] Got in cache block hash[{}] immutable block[{}]",
+                        new String(chainID.getData()),
+                        Hex.toHexString(blockContainer.getBlock().getBlockHash()),
+                        Hex.toHexString(blockContainer.getBlock().getImmutableBlockHash()));
+
+                blockContainer = result.blockContainer;
+            } else {
+                logger.debug("Chain ID[{}] Got failed in cache block hash[{}] immutable block[{}]",
+                        new String(chainID.getData()),
+                        Hex.toHexString(blockContainer.getBlock().getBlockHash()),
+                        Hex.toHexString(blockContainer.getBlock().getImmutableBlockHash()));
+
+                return result;
+            }
+        }
+
+        BlockContainerResult result = new BlockContainerResult();
+        if (blockContainer.getBlock().getBlockNum() < number) {
+            result.tryResult = TryResult.ERROR;
+        } else {
+            result.tryResult = TryResult.SUCCESS;
+            result.blockContainer = blockContainer;
+        }
+
+        return result;
+    }
+
+    /**
+     * 获取目标高度上的block container
+     * @param chainID chain ID
+     * @param blockContainer block container
+     * @param number target number
+     * @return result
+     */
+    private BlockContainerResult tryToGetBlockContainerOfTargetNumber(ByteArrayWrapper chainID, BlockContainer blockContainer, long number) {
+
+        if (blockContainer.getBlock().getBlockNum() < number ||
+                (blockContainer.getBlock().getBlockNum() - number >= ChainParam.MUTABLE_RANGE)) {
+            BlockContainerResult result = new BlockContainerResult();
+            result.tryResult = TryResult.ERROR;
+            return result;
+        }
+
+        while (blockContainer.getBlock().getBlockNum() > number) {
+            BlockContainerResult result = tryToGetBlockContainerFromCache(chainID,
+                    blockContainer.getVerticalItem().getPreviousHash());
+
+            if (TryResult.SUCCESS == result.tryResult) {
+                logger.debug("Chain ID[{}] Got in cache block hash[{}] previous block[{}]",
+                        new String(chainID.getData()),
+                        Hex.toHexString(blockContainer.getBlock().getBlockHash()),
+                        Hex.toHexString(blockContainer.getVerticalItem().getPreviousHash()));
+
+                blockContainer = result.blockContainer;
+            } else {
+                logger.debug("Chain ID[{}] Got failed in cache block hash[{}] previous block[{}]",
+                        new String(chainID.getData()),
+                        Hex.toHexString(blockContainer.getBlock().getBlockHash()),
+                        Hex.toHexString(blockContainer.getVerticalItem().getPreviousHash()));
+
+                return result;
+            }
+        }
+
+        BlockContainerResult result = new BlockContainerResult();
+        result.tryResult = TryResult.SUCCESS;
+        result.blockContainer = blockContainer;
+
+        return result;
     }
 
     /**
