@@ -11,8 +11,7 @@ import io.taucoin.account.AccountManager;
 import io.taucoin.chain.Salt;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.torrent.DHT;
-import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.dht.DHT;
 import io.taucoin.types.HashList;
 
 public class dht_putTauGenesisBlockHashInDemand extends JsonRpcServerMethod {
@@ -29,7 +28,7 @@ public class dht_putTauGenesisBlockHashInDemand extends JsonRpcServerMethod {
         byte[] salt = Salt.makeBlockDemandSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second, encode, salt);
-            TorrentDHTEngine.getInstance().dhtPut(mutableItem);
+            dhtPut(mutableItem);
             return new JSONRPC2Response("ok", req.getID());
         } else {
             return new JSONRPC2Response("Null", req.getID());

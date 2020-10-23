@@ -9,9 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import io.taucoin.controller.TauController;
+import io.taucoin.dht.DHTReqResult;
 import io.taucoin.types.Transaction;
 
 import java.math.BigInteger;
+
+import static io.taucoin.dht.DHT.*;
 
 /**
  * Method handler for json rpc.
@@ -137,6 +140,116 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
 		//tx =chain.createTransaction();
 
         //tx.signTransaction(senderPrivkey);
+        return null;
+    }
+
+    protected void dhtPut(ImmutableItem item) {
+        tauController.getDHTEngine().distribute(item);
+    }
+
+    protected void dhtPut(MutableItem item) {
+        tauController.getDHTEngine().distribute(item);
+    }
+
+    private static class CallbackContext {
+
+        private boolean got;
+        private byte[] result;
+
+        public CallbackContext() {
+            this.got = false;
+            this.result = null;
+        }
+
+        public void setGot() {
+            this.got = true;
+        }
+
+        public boolean isGot() {
+            return got;
+        }
+
+        public void setResult(byte[] result) {
+             this.result = result;
+        }
+
+        public byte[] getResult() {
+             return result;
+        }
+
+    }
+
+    protected byte[] dhtGet(GetImmutableItemSpec spec) {
+
+        final Object signal = new Object();
+        CallbackContext context = new CallbackContext();
+
+        GetDHTItemCallback cb = new GetDHTItemCallback() {
+            @Override
+            public void onDHTItemGot(byte[] item, Object cbData) {
+                synchronized (signal) {
+                    CallbackContext ctx = (CallbackContext)cbData;
+                    ctx.setGot();
+                    ctx.setResult(item);
+                    signal.notify();
+                }
+            }
+        };
+
+        DHTReqResult ok = tauController.getDHTEngine().request(
+                spec, cb, context);
+
+        if (ok == DHTReqResult.Success) {
+            synchronized (signal) {
+                while (!context.isGot()) {
+                    try {
+                        signal.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            return context.getResult();
+        }
+
+        return null;
+    }
+
+    protected byte[] dhtGet(GetMutableItemSpec spec) {
+
+        final Object signal = new Object();
+        CallbackContext context = new CallbackContext();
+
+        GetDHTItemCallback cb = new GetDHTItemCallback() {
+            @Override
+            public void onDHTItemGot(byte[] item, Object cbData) {
+                synchronized (signal) {
+                    CallbackContext ctx = (CallbackContext)cbData;
+                    ctx.setGot();
+                    ctx.setResult(item);
+                    signal.notify();
+                }
+            }
+        };
+
+        DHTReqResult ok = tauController.getDHTEngine().request(
+                spec, cb, context);
+
+        if (ok == DHTReqResult.Success) {
+            synchronized (signal) {
+                while (!context.isGot()) {
+                    try {
+                        signal.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            return context.getResult();
+        }
+
         return null;
     }
 }

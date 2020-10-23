@@ -9,6 +9,9 @@ public class Config {
     // default http json rpc server listening port.
     public static final int DEFAULT_RPC_PORT= 9088;
 
+    // default dht sessions quota
+    public static final int DEFAULT_SESSIONS_QUOTA = 32;
+
     // json rpc server listening port.
     private int rpcPort;
 
@@ -18,6 +21,9 @@ public class Config {
     // key seed to generate key pair.
     private byte[] keySeed;
 
+    // sessions quota
+    private int sessionsQuota;
+
     /**
      * Config constructor.
      */
@@ -26,6 +32,7 @@ public class Config {
         this.rpcPort = DEFAULT_RPC_PORT;
         this.keySeed = null;
         this.dataDir = Repo.getDefaultDataDir();
+        this.sessionsQuota = DEFAULT_SESSIONS_QUOTA;
     }
 
     /**
@@ -80,6 +87,24 @@ public class Config {
      */
     public void setKeySeed(byte[] seed) {
         this.keySeed = seed;
+    }
+
+    /**
+     * Get dht sessions quota.
+     *
+     * @return int
+     */
+    public int getSessionsQuota() {
+        return this.sessionsQuota;
+    }
+
+    /**
+     * Set dht sessions quota.
+     *
+     * @param quota
+     */
+    public void setSessionsQuota(int quota) {
+        this.sessionsQuota = quota;
     }
 
     @Override

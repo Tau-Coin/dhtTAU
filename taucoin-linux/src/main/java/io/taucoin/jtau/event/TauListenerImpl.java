@@ -2,7 +2,7 @@ package io.taucoin.jtau.event;
 
 import io.taucoin.controller.TauController;
 import io.taucoin.listener.TauListener;
-import io.taucoin.torrent.SessionStats;
+import io.taucoin.dht.SessionStats;
 import io.taucoin.types.Block;
 import io.taucoin.types.BlockContainer;
 

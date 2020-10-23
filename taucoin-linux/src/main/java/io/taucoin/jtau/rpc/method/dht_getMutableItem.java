@@ -2,7 +2,6 @@ package io.taucoin.jtau.rpc.method;
 
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.types.HashList;
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
@@ -15,7 +14,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 
-import static io.taucoin.torrent.DHT.*;
+import static io.taucoin.dht.DHT.*;
 
 public class dht_getMutableItem extends JsonRpcServerMethod {
 
@@ -38,8 +37,7 @@ public class dht_getMutableItem extends JsonRpcServerMethod {
             byte[] salt = ((String)(params.get(1))).getBytes();
 
 			// get immutable item
-            byte[] item = TorrentDHTEngine.getInstance().dhtGet(
-                    new GetMutableItemSpec(pubkey, salt, 20));
+            byte[] item = dhtGet(new GetMutableItemSpec(pubkey, salt, 20));
 
 			// make response
 			String result = "";

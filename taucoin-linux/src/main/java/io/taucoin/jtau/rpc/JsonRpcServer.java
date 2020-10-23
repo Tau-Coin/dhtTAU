@@ -52,7 +52,6 @@ public final class JsonRpcServer {
 
         // register all rpc methods.
         // methods about dht
-        this.dispatcher.register(new dht_nodesCount(this.tauController));
         this.dispatcher.register(new dht_getImmutableItem(this.tauController));
         this.dispatcher.register(new dht_getMutableItem(this.tauController));
         this.dispatcher.register(new dht_getTipBlockFromPeer(this.tauController));

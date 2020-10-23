@@ -3,7 +3,6 @@ package io.taucoin.jtau.rpc.method;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.param.ChainParam;
-import io.taucoin.torrent.TorrentDHTEngine;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TransactionFactory;
@@ -22,7 +21,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.ArrayList;
 
-import static io.taucoin.torrent.DHT.*;
+import static io.taucoin.dht.DHT.*;
 
 public class dht_getImmutableItem extends JsonRpcServerMethod {
 
@@ -44,8 +43,7 @@ public class dht_getImmutableItem extends JsonRpcServerMethod {
             String type = (String)(params.get(1));
 
 			// get immutable item
-            byte[] item = TorrentDHTEngine.getInstance().dhtGet(
-                    new GetImmutableItemSpec(hash, 20));
+            byte[] item = dhtGet(new GetImmutableItemSpec(hash, 20));
 
             // make response
             String result = "";

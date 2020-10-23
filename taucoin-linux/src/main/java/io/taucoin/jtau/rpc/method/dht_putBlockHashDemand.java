@@ -14,8 +14,7 @@ import io.taucoin.account.AccountManager;
 import io.taucoin.chain.Chains;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.torrent.DHT;
-import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.dht.DHT;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 

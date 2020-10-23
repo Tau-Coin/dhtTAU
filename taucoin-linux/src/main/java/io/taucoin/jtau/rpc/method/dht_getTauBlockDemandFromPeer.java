@@ -12,8 +12,7 @@ import java.util.List;
 import io.taucoin.chain.Salt;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.torrent.DHT;
-import io.taucoin.torrent.TorrentDHTEngine;
+import io.taucoin.dht.DHT;
 import io.taucoin.types.HashList;
 
 public class dht_getTauBlockDemandFromPeer extends JsonRpcServerMethod {
@@ -35,8 +34,7 @@ public class dht_getTauBlockDemandFromPeer extends JsonRpcServerMethod {
             byte[] salt = Salt.makeBlockDemandSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
 
             // get immutable item
-            byte[] item = TorrentDHTEngine.getInstance().dhtGet(
-                    new DHT.GetMutableItemSpec(pubkey, salt, 20));
+            byte[] item = dhtGet(new DHT.GetMutableItemSpec(pubkey, salt, 20));
 
             // make response
             String result = "";

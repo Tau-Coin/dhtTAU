@@ -1,6 +1,6 @@
 package io.taucoin.torrent.publishing.core.model;
 
-import io.taucoin.torrent.SessionStats;
+import io.taucoin.dht.SessionStats;
 
 import androidx.annotation.NonNull;
 import io.taucoin.listener.TauListener;

@@ -1,4 +1,4 @@
-package io.taucoin.torrent;
+package io.taucoin.dht;
 
 public class SessionStats {
 

@@ -2,7 +2,7 @@ package io.taucoin.torrent.publishing.core.model;
 
 import android.content.Context;
 
-import io.taucoin.torrent.SessionStats;
+import io.taucoin.dht.SessionStats;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

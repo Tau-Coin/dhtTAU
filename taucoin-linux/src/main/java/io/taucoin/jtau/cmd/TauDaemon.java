@@ -4,7 +4,6 @@ import io.taucoin.controller.TauController;
 import io.taucoin.db.KeyValueDataBase;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.listener.TauListener;
-import io.taucoin.torrent.SessionSettings;
 import io.taucoin.jtau.config.Config;
 import io.taucoin.jtau.db.RocksDatabaseFactory;
 import io.taucoin.jtau.event.TauListenerImpl;
@@ -33,9 +32,6 @@ public class TauDaemon implements Runnable {
     // rpc server
     private JsonRpcServer jsonRpcServer;
     private Thread rpcServerThread;
-
-    // torrent session settings
-    private SessionSettings sessionSettings;
 
     // blocks this daemon thread
     private final Object signal = new Object();
@@ -73,12 +69,6 @@ public class TauDaemon implements Runnable {
                 }
             }
         });
-
-        // new torrent session settings
-        this.sessionSettings = new SessionSettings.Builder()
-                .setDHTMaxItems(SessionSettings.TauDHTMaxItems)
-                .enablePrivateNetwork(false)
-                .build();
     }
 
     @Override
@@ -135,7 +125,7 @@ public class TauDaemon implements Runnable {
     }
 
     private void startTau() {
-        this.tauController.start(this.sessionSettings);
+        this.tauController.start(this.config.getSessionsQuota());
     }
 
     private void startRpcServer() {

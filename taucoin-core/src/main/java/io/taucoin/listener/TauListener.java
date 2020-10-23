@@ -1,6 +1,6 @@
 package io.taucoin.listener;
 
-import io.taucoin.torrent.SessionStats;
+import io.taucoin.dht.SessionStats;
 import io.taucoin.types.Block;
 import io.taucoin.types.BlockContainer;
 
