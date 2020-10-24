@@ -128,6 +128,7 @@ public class TauInfoProvider {
                         Thread.sleep(STATISTICS_PERIOD);
                     }
                 }
+            } catch (InterruptedException ignore) {
             } catch (Exception e) {
                 logger.error("makeTrafficStatisticsFlowable is error", e);
             }

@@ -351,10 +351,10 @@ public class TauDaemon {
         if (settingsRepo.internetState()) {
             if (networkJitter != null && !networkJitter.isDisposed()) {
                 networkJitter.dispose();
-                rescheduleDHTBySessions(lastSessions, true);
+                rescheduleDHTBySessions(lastSessions, lastSessions, true);
             } else {
                 int sessions = NetworkSetting.calculateDHTSessions();
-                rescheduleDHTBySessions(sessions - lastSessions, false);
+                rescheduleDHTBySessions(lastSessions, sessions, false);
             }
         } else {
             if ((networkJitter != null && !networkJitter.isDisposed()) || lastSessions == 0) {
@@ -363,14 +363,14 @@ public class TauDaemon {
             networkJitter = Observable.timer(NETWORK_JITTER_INTERVAL, TimeUnit.MILLISECONDS)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
-                    .subscribe(seconds -> rescheduleDHTBySessions(0, true));
+                    .subscribe(seconds -> rescheduleDHTBySessions(lastSessions, 0, true));
         }
     }
 
     /**
      * 根据当前设置计算出的DHT Sessions数重新调度DHT
      */
-    private void rescheduleDHTBySessions(int sessions, boolean restart) {
+    private void rescheduleDHTBySessions(int lastSessions, int sessions, boolean restart) {
         if (!isRunning) {
             return;
         }
@@ -379,17 +379,19 @@ public class TauDaemon {
         if (restart) {
             isSuccess = tauController.restartSessions(sessions);
         } else {
-            if (sessions < 0) {
+            if (sessions - lastSessions < 0) {
                 isSuccess = tauController.decreaseSession();
-            } else {
+            } else if (sessions - lastSessions > 0) {
                 isSuccess = tauController.increaseSession();
+            } else {
+                logger.info("rescheduleTauBySettings: Don't do anything about it");
             }
         }
         // 调度成功才更新本地sessions值
         if (isSuccess) {
             NetworkSetting.updateDHTSessions(sessions);
         }
-        logger.info("rescheduleTauBySettings Auto Mode::{}, internetState::{}," +
+        logger.info("rescheduleTauBySettings Auto Mode::{}, internetState::{}, " +
                         "DHTSessions::{}, reschedule result::{}",
                 NetworkSetting.autoMode(),
                 settingsRepo.internetState(),
