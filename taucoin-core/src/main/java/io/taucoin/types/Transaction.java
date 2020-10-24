@@ -115,9 +115,6 @@ public abstract class Transaction {
         if(sender.length != ChainParam.SenderLength) {
             throw new IllegalArgumentException("Sender address should be : "+ChainParam.SenderLength + " bytes");
         }
-        if(signature.length != ChainParam.SignatureLength) {
-            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
-        }
 
         this.version = version;
         this.timestamp = timestamp;

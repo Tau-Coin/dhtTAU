@@ -44,20 +44,22 @@ public final class TauGenesisConfig extends GenesisConfig {
 
     private TauGenesisConfig() {
 
+        /*
         super(1L, TimeStamp, GenesisConfig.DefaultBaseTarget,
                 GenesisConfig.DefaultCummulativeDifficulty,
                 Hex.decode(PubKey), Hex.decode(Signature),
                 TauGenesisTransaction.getInstance());
+         */
 
         // The following code is used to generate block signature
-        /*
+
         super(1L, TimeStamp, GenesisConfig.DefaultBaseTarget,
                 GenesisConfig.DefaultCummulativeDifficulty,
                 Hex.decode(PubKey), null,
                 TauGenesisTransaction.getInstance());
         this.genesisBlock.signBlock(Hex.decode(sPrivKey));
         logger.info("blk signature:" + Hex.toHexString(this.genesisBlock.getSignature()));
-        */
-        logger.info("verify signature result:" + this.genesisBlock.verifyBlockSig());
+
+        //logger.info("verify signature result:" + this.genesisBlock.verifyBlockSig());
     }
 }

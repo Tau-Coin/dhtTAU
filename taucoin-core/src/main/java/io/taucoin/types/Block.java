@@ -213,9 +213,6 @@ public class Block {
         if (cf.getPubkey().length != ChainParam.PubkeyLength) {
             throw new IllegalArgumentException("Miner pubkey should be : " + ChainParam.PubkeyLength + " bytes");
         }
-        if (cf.getSignature().length != ChainParam.SignatureLength) {
-            throw new IllegalArgumentException("Signature should be : " + ChainParam.SignatureLength + " bytes");
-        }
 
         this.version = cf.getVersion();
         this.timestamp = cf.getTimeStamp();

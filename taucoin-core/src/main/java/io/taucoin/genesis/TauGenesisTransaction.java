@@ -81,15 +81,18 @@ public final class TauGenesisTransaction extends GenesisTx {
 
     private TauGenesisTransaction() {
 
+        /*
         super(1L, ChainID, TimeStamp, BigInteger.ZERO, Hex.decode(Sender),
                 BigInteger.ONE, sGensisItems, Hex.decode(Signature));
+         */
 
         // The following code is used to generate tx signature
-        /*
-        super(1L, ChainID, TimeStamp, 0L, 0L, Hex.decode(Sender), 1L, sGensisItems);
+
+        super(1L, ChainID, TimeStamp, BigInteger.ZERO, Hex.decode(Sender),
+                BigInteger.ONE, sGensisItems);
         signTransactionWithPriKey(Hex.decode(sPrivKey));
         logger.info("signature:" + Hex.toHexString(getSignature()));
-         */
-        logger.info("verify signature result:" + verifyTransactionSig());
+
+        //logger.info("verify signature result:" + verifyTransactionSig());
     }
 }
