@@ -2186,6 +2186,54 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
+     * check if immutable block hash of a block is on main chain
+     * @param chainID chain ID
+     * @param blockContainer block container
+     * @return result
+     * @throws DBException data base exception
+     */
+    private IfOnMainChainResult checkIfImmutableBlockOnMainChain(ByteArrayWrapper chainID, BlockContainer blockContainer) throws DBException {
+        IfOnMainChainResult ifOnMainChainResult = new IfOnMainChainResult();
+        ifOnMainChainResult.tryResult = TryResult.SUCCESS;
+
+        byte[] immutableBlockHash = blockContainer.getBlock().getImmutableBlockHash();
+
+        long immutableBlockNumber = 0;
+        if (blockContainer.getBlock().getBlockNum() > ChainParam.MUTABLE_RANGE) {
+            immutableBlockNumber = blockContainer.getBlock().getBlockNum() - ChainParam.MUTABLE_RANGE;
+        }
+
+        byte[] hash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(), immutableBlockNumber);
+
+        if (null == hash) {
+            // 在此高度没有主链信息
+            if (isSyncUncompleted(chainID)) {
+                logger.debug("Chain ID[{}] Need to sync in height:{}",
+                        new String(chainID.getData()), immutableBlockNumber);
+                requestSyncBlock(chainID);
+                ifOnMainChainResult.tryResult = TryResult.REQUEST;
+            } else {
+                logger.debug("Chain ID[{}] Cannot find main chain info in height:{}",
+                        new String(chainID.getData()), immutableBlockNumber);
+                ifOnMainChainResult.tryResult = TryResult.ERROR;
+            }
+        } else {
+            if (Arrays.equals(hash, immutableBlockHash)) {
+                // 在immutable point哈希一致，说明在主链上
+                logger.debug("Chain ID[{}] Immutable block hash[{}] is on main chain",
+                        new String(chainID.getData()), Hex.toHexString(immutableBlockHash));
+                ifOnMainChainResult.isOnMainChain = true;
+            } else {
+                logger.debug("Chain ID[{}] Immutable block hash[{}] is not on main chain",
+                        new String(chainID.getData()), Hex.toHexString(immutableBlockHash));
+                ifOnMainChainResult.isOnMainChain = false;
+            }
+        }
+
+        return ifOnMainChainResult;
+    }
+
+    /**
      * 获取不大于目标高度mutable range高度的block container
      * @param chainID chain ID
      * @param blockContainer block container
@@ -3261,6 +3309,11 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (this.enableMineForTest.containsKey(key)) {
             this.enableMineForTest.put(key, false);
         }
+    }
+
+    private static class IfOnMainChainResult {
+        TryResult tryResult;
+        boolean isOnMainChain;
     }
 
     private static class BlockContainerResult {
