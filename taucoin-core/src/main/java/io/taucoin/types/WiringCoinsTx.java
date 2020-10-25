@@ -160,7 +160,7 @@ public class WiringCoinsTx extends Transaction {
             byte[] amount = RLP.encodeBigInteger(this.amount);
             byte[] memo = RLP.encodeElement(this.memo);
 
-            this.encodedBytes = RLP.encodeList(version, timestamp, chainID,
+            this.sigEncodedBytes = RLP.encodeList(version, timestamp, chainID,
                     txFee, txType,
                     senderPubkey, nonce,
                     recevierPubkey, amount, memo);
