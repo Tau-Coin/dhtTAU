@@ -20,6 +20,7 @@ import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.dht.DHT;
 import io.taucoin.dht.DHTEngine;
 import io.taucoin.types.HashList;
+import io.taucoin.types.HorizontalItem;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
@@ -218,7 +219,7 @@ public class ChainManager {
         byte[] chainID = cf.getChainID();
         
         Block genesis = cf.getBlock();
-        BlockContainer genesisContainer = new BlockContainer(genesis, null);
+        BlockContainer genesisContainer = new BlockContainer(genesis, null, HorizontalItem.with(genesis.getHorizontalHash()), cf.getTransaction());
 
         // load genesis state
         if (!loadGenesisState(chainID, genesisContainer)) {

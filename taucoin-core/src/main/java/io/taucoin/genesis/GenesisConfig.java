@@ -17,14 +17,10 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 package io.taucoin.genesis;
 
 import io.taucoin.account.AccountManager;
-import io.taucoin.core.AccountState;
-import io.taucoin.chain.ChainManager;
-import io.taucoin.genesis.GenesisItem;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
-import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 
@@ -35,7 +31,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -55,6 +50,7 @@ public class GenesisConfig {
     // genesis block fields
     private long version;
     private long timeStamp;
+    private byte[] horizontalHash;
     private BigInteger baseTarget;
     private BigInteger cummulativeDifficulty;
     private byte[] generationSignature;
@@ -87,10 +83,9 @@ public class GenesisConfig {
         // generationSignature = hash(previous block generationSignature + pubkey)
         // here previous block generationSignature is null.
         this.generationSignature = HashUtil.sha1hash(this.pubkey);
-
         this.signature = signature;
-
         this.genesisTx = genesisTx;
+        this.horizontalHash = HashUtil.sha1hash(this.genesisTx.getTxID());
         this.communityName = TauGenesisTransaction.CommunityName;
 
         // construct genesis block
@@ -119,6 +114,9 @@ public class GenesisConfig {
 
         this.version = 1L;
         this.timeStamp = System.currentTimeMillis() / 1000;
+
+        this.horizontalHash = HashUtil.sha1hash(this.genesisTx.getTxID());
+
         this.baseTarget = DefaultBaseTarget;
         this.cummulativeDifficulty = DefaultCummulativeDifficulty;
 
@@ -186,6 +184,14 @@ public class GenesisConfig {
      */
     public long getBlockNumber() {
         return 0L;
+    }
+
+    /**
+     * get genesis horizontalHash.
+     * @return
+     */
+    public byte[] getHorizontalHash() {
+        return horizontalHash;
     }
 
     /**

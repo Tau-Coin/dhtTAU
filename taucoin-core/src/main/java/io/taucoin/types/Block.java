@@ -31,6 +31,7 @@ import java.security.NoSuchAlgorithmException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 public class Block {
         
@@ -219,7 +220,7 @@ public class Block {
         this.blockNum = 0L;
 
         this.verticalHash = null;
-        this.horizontalHash = cf.getTransaction().getTxID();
+        this.horizontalHash = cf.getHorizontalHash();
         this.immutableBlockHash = null;
 
         this.baseTarget = cf.getBaseTarget();
@@ -252,7 +253,7 @@ public class Block {
      */
     public byte[] getEncoded(){
 
-        if(encodedBytes == null) {
+        if(this.encodedBytes == null) {
 
             byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
             byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
@@ -281,7 +282,7 @@ public class Block {
                                 signature, minerPubkey);
         }
 
-        return encodedBytes;
+        return this.encodedBytes;
     }
 
     /**
@@ -299,7 +300,7 @@ public class Block {
      */
     public byte[] getSigEncodedBytes(){
 
-        if (sigEncodedBytes == null) {
+        if (this.sigEncodedBytes == null) {
 
             byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
             byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
@@ -320,10 +321,10 @@ public class Block {
 
             byte[] minerPubkey = RLP.encodeElement(this.minerPubkey);
 
-            this.encodedBytes = RLP.encodeList(version, timestamp, blockNum,
+            this.sigEncodedBytes = RLP.encodeList(version, timestamp, blockNum,
                                 verticalHash, horizontalHash, immutableBlockHash,
                                 baseTarget, cumulativeDifficulty, generationSignature,
-                                minerBalance, senderBalance, receiverBalance,  senderNonce,
+                                minerBalance, senderBalance, receiverBalance, senderNonce,
                                 minerPubkey);
         }
 
@@ -337,7 +338,6 @@ public class Block {
         if (isParsed) {
             return;
         } else {
-
             RLPList blockList = RLP.decode2(this.encodedBytes);
             RLPList block = (RLPList) blockList.get(0);
 
