@@ -220,7 +220,7 @@ public class Block {
         this.blockNum = 0L;
 
         this.verticalHash = null;
-        this.horizontalHash = cf.getTransaction().getTxID();
+        this.horizontalHash = cf.getHorizontalHash();
         this.immutableBlockHash = null;
 
         this.baseTarget = cf.getBaseTarget();
