@@ -219,7 +219,7 @@ public class ChainManager {
         byte[] chainID = cf.getChainID();
         
         Block genesis = cf.getBlock();
-        BlockContainer genesisContainer = new BlockContainer(genesis, null, HorizontalItem.with(genesis.getHorizontalHash()), cf.getTransaction());
+        BlockContainer genesisContainer = new BlockContainer(genesis, null, HorizontalItem.with(cf.getTransaction().getTxID()), cf.getTransaction());
 
         // load genesis state
         if (!loadGenesisState(chainID, genesisContainer)) {
