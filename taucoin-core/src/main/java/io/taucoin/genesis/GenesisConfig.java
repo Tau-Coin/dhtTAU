@@ -86,7 +86,7 @@ public class GenesisConfig {
         this.generationSignature = HashUtil.sha1hash(this.pubkey);
         this.signature = signature;
         this.genesisTx = genesisTx;
-        HorizontalItem item = new HorizontalItem(this.genesisTx.getTxID());
+        HorizontalItem item = HorizontalItem.with(this.genesisTx.getTxID());
         this.horizontalHash = item.getHash();
         this.communityName = TauGenesisTransaction.CommunityName;
 
@@ -117,7 +117,7 @@ public class GenesisConfig {
         this.version = 1L;
         this.timeStamp = System.currentTimeMillis() / 1000;
 
-        HorizontalItem item = new HorizontalItem(this.genesisTx.getTxID());
+        HorizontalItem item = HorizontalItem.with(this.genesisTx.getTxID());
         this.horizontalHash = item.getHash();
 
         this.baseTarget = DefaultBaseTarget;
