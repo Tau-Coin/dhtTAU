@@ -110,13 +110,13 @@ public class BlockDB implements BlockStore {
     }
 
     /**
-     * get hash list item by hash
+     * get horizontal item by hash
      * @param chainID chain ID
      * @param hash hash
-     * @return hash list item
+     * @return horizontal item
      * @throws DBException database exception
      */
-    private HashList getHashListItemByHash(byte[] chainID, byte[] hash) throws DBException {
+    private HorizontalItem getHorizontalItemByHash(byte[] chainID, byte[] hash) throws DBException {
         if (null == hash) {
             logger.error("Chain ID[{}], hash is null", new String(chainID));
             return null;
@@ -126,15 +126,44 @@ public class BlockDB implements BlockStore {
         try {
             encode = db.get(PrefixKey.hashListKey(chainID, hash));
         } catch (Exception e) {
-            logger.error("GetTransactionByHash:" + e.getMessage(), e);
+            logger.error("getHorizontalItemByHash:" + e.getMessage(), e);
             throw new DBException(e.getMessage());
         }
 
         if (null != encode) {
-            return new HashList(encode);
+            return new HorizontalItem(encode);
         }
 
-        logger.info("ChainID[{}]:Cannot find hash list by hash:{}", new String(chainID), Hex.toHexString(hash));
+        logger.info("ChainID[{}]:Cannot find horizontal item by hash:{}", new String(chainID), Hex.toHexString(hash));
+        return null;
+    }
+
+    /**
+     * get vertical item by hash
+     * @param chainID chain ID
+     * @param hash hash
+     * @return vertical item
+     * @throws DBException database exception
+     */
+    private VerticalItem getVerticalItemByHash(byte[] chainID, byte[] hash) throws DBException {
+        if (null == hash) {
+            logger.error("Chain ID[{}], hash is null", new String(chainID));
+            return null;
+        }
+
+        byte[] encode;
+        try {
+            encode = db.get(PrefixKey.hashListKey(chainID, hash));
+        } catch (Exception e) {
+            logger.error("getVerticalItemByHash:" + e.getMessage(), e);
+            throw new DBException(e.getMessage());
+        }
+
+        if (null != encode) {
+            return new VerticalItem(encode);
+        }
+
+        logger.info("ChainID[{}]:Cannot find vertical item by hash:{}", new String(chainID), Hex.toHexString(hash));
         return null;
     }
 
@@ -188,8 +217,7 @@ public class BlockDB implements BlockStore {
             BlockContainer blockContainer = new BlockContainer(block);
 
             if (null != block.getHorizontalHash()) {
-                HorizontalItem horizontalItem = (HorizontalItem) getHashListItemByHash(chainID,
-                        block.getHorizontalHash());
+                HorizontalItem horizontalItem = getHorizontalItemByHash(chainID, block.getHorizontalHash());
                 if (null != horizontalItem) {
                     blockContainer.setHorizontalItem(horizontalItem);
 
@@ -210,8 +238,7 @@ public class BlockDB implements BlockStore {
             }
 
             if (null != block.getVerticalHash()) {
-                VerticalItem verticalItem = (VerticalItem) getHashListItemByHash(chainID,
-                        block.getVerticalHash());
+                VerticalItem verticalItem = getVerticalItemByHash(chainID, block.getVerticalHash());
                 if (null != verticalItem) {
                     blockContainer.setVerticalItem(verticalItem);
                 } else {
@@ -415,8 +442,7 @@ public class BlockDB implements BlockStore {
         BlockContainer blockContainer = new BlockContainer(block);
 
         if (null != block.getHorizontalHash()) {
-            HorizontalItem horizontalItem = (HorizontalItem) getHashListItemByHash(chainID,
-                    block.getHorizontalHash());
+            HorizontalItem horizontalItem = getHorizontalItemByHash(chainID, block.getHorizontalHash());
             if (null != horizontalItem) {
                 blockContainer.setHorizontalItem(horizontalItem);
 
@@ -437,8 +463,7 @@ public class BlockDB implements BlockStore {
         }
 
         if (null != block.getVerticalHash()) {
-            VerticalItem verticalItem = (VerticalItem) getHashListItemByHash(chainID,
-                    block.getVerticalHash());
+            VerticalItem verticalItem = getVerticalItemByHash(chainID, block.getVerticalHash());
             if (null != verticalItem) {
                 blockContainer.setVerticalItem(verticalItem);
             } else {
@@ -614,9 +639,8 @@ public class BlockDB implements BlockStore {
                         }
 
                         if (null != block.getHorizontalHash()) {
-                            HashList hashList = getHashListItemByHash(chainID, block.getHorizontalHash());
-                            if (null != hashList) {
-                                HorizontalItem horizontalItem = (HorizontalItem) hashList;
+                            HorizontalItem horizontalItem = getHorizontalItemByHash(chainID, block.getHorizontalHash());
+                            if (null != horizontalItem) {
                                 if (null != horizontalItem.getTxHash()) {
                                     db.delete(PrefixKey.txKey(chainID, horizontalItem.getTxHash()));
                                 }
