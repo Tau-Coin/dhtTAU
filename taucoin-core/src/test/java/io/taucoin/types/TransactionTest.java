@@ -16,19 +16,15 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.types;
 import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Pair;
 
 import io.taucoin.genesis.GenesisItem;
-import  io.taucoin.types.ForumNoteTx;
 import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 
-import io.taucoin.types.GenesisTx;
-import io.taucoin.types.WiringCoinsTx;
-import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 
@@ -36,16 +32,23 @@ public class TransactionTest {
     private static final long version = 1;
     private static final byte[] chainid = "TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes();
     private static final long timestamp = 1597998963;
-    private static final BigInteger txFee = BigInteger.valueOf(200L);
-    private static final byte[] sender = ByteUtil.toByte("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124");
-    private static final BigInteger nonce = BigInteger.valueOf(104);
-    private static final byte[] seed = Ed25519.createSeed();
+    private static final BigInteger txFee = BigInteger.valueOf(210L);
+    private static final BigInteger nonce = BigInteger.valueOf(10000L);
+
+    private  static final byte[] seed;
+    private  static final byte[] sender;
+
+    static {
+        seed = Ed25519.createSeed();
+        Pair<byte[], byte[]> keys = Ed25519.createKeypair(seed);
+        sender = keys.first;
+    }
 
     @Test
     public void createGenesisTx(){
 
-        BigInteger abalance = new BigInteger("ffffffffffff", 16);
-        BigInteger anonce = new BigInteger("ff", 16);
+        BigInteger abalance = BigInteger.valueOf(30000L);
+        BigInteger anonce = BigInteger.valueOf(30000L);
         GenesisItem item = new GenesisItem(sender, abalance, anonce);
 
         ArrayList<GenesisItem> genesisMsg = new ArrayList<>();
@@ -57,7 +60,7 @@ public class TransactionTest {
         System.out.println("verison: " + tx.getVersion());
         System.out.println("chainid: " + new String(tx.getChainID()));
         System.out.println("timestamp: " + tx.getTimeStamp());
-        System.out.println("txfee: " + tx.getTxFee());
+        System.out.println("txfee: " + tx.getTxFee().toString());
         System.out.println("txType: " + tx.getTxType());
         System.out.println("sender: " + ByteUtil.toHexString(tx.getSenderPubkey()));
         System.out.println("nonce: " + tx.getNonce());
@@ -66,12 +69,37 @@ public class TransactionTest {
         int index = 0;
         while(index < genesisMsgReturned.size()) {
             GenesisItem value = genesisMsgReturned.get(index);
-            System.out.println("Account: " + value.getAccount());
+            System.out.println("Account: " + Hex.toHexString(value.getAccount()));
             System.out.println("Balance: " + value.getBalance());
             System.out.println("Power: " + value.getPower());
             index++;
         }
         System.out.println("Signature: " + ByteUtil.toHexString(tx.getSignature()));
+        System.out.println("Signature bool: " + tx.verifyTransactionSig());
+        System.out.println("GenesisTx String: "+ Hex.toHexString(tx.getEncoded()));
+
+        System.out.println("=======================================================");
+
+        GenesisTx dtx = new GenesisTx(tx.getEncoded());
+        System.out.println("verison: " + dtx.getVersion());
+        System.out.println("chainid: " + new String(dtx.getChainID()));
+        System.out.println("timestamp: " + dtx.getTimeStamp());
+        System.out.println("txfee: " + dtx.getTxFee().toString());
+        System.out.println("txType: " + dtx.getTxType());
+        System.out.println("sender: " + ByteUtil.toHexString(dtx.getSenderPubkey()));
+        System.out.println("nonce: " + dtx.getNonce());
+
+        ArrayList<GenesisItem> genesisMsgDecode = dtx.getGenesisAccounts();
+        index = 0;
+        while(index < genesisMsgDecode.size()) {
+            GenesisItem value = genesisMsgDecode.get(index);
+            System.out.println("Account: " + Hex.toHexString(value.getAccount()));
+            System.out.println("Balance: " + value.getBalance());
+            System.out.println("Power: " + value.getPower());
+            index++;
+        }
+
+        System.out.println("Signature: " + ByteUtil.toHexString(dtx.getSignature()));
     }
 
     @Test
@@ -89,6 +117,21 @@ public class TransactionTest {
         System.out.println("nonce: " + tx.getNonce());
         System.out.println("forum msg hash: " + ByteUtil.toHexString(tx.getForumNoteHash()));
         System.out.println("Signature: " + ByteUtil.toHexString(tx.getSignature()));
+        System.out.println("Signature bool: " + tx.verifyTransactionSig());
+        System.out.println("ForumNoteTx String: "+ Hex.toHexString(tx.getEncoded()));
+
+        System.out.println("=======================================================");
+
+        ForumNoteTx dtx = new ForumNoteTx(tx.getEncoded());
+        System.out.println("verison: " + dtx.getVersion());
+        System.out.println("chainid: " + new String(dtx.getChainID()));
+        System.out.println("timestamp: " + dtx.getTimeStamp());
+        System.out.println("txfee: " + dtx.getTxFee());
+        System.out.println("txType: " + dtx.getTxType());
+        System.out.println("sender: " + ByteUtil.toHexString(dtx.getSenderPubkey()));
+        System.out.println("nonce: " + dtx.getNonce());
+        System.out.println("forum msg hash: " + ByteUtil.toHexString(dtx.getForumNoteHash()));
+        System.out.println("Signature: " + ByteUtil.toHexString(dtx.getSignature()));
     }
 
     @Test
@@ -110,7 +153,28 @@ public class TransactionTest {
         System.out.println("amount: " + tx.getAmount());
         System.out.println("Signature: " + ByteUtil.toHexString(tx.getSignature()));
         System.out.println("Sigmsg: " + ByteUtil.toHexString(tx.getTransactionSigMsg()));
+
+        System.out.println("WiringCoinsTx String: "+ Hex.toHexString(tx.getEncoded()));
         System.out.println("Signature bool: " + tx.verifyTransactionSig());
 
+        System.out.println("=======================================================");
+
+        WiringCoinsTx dtx = new WiringCoinsTx(tx.getEncoded());
+
+        System.out.println("verison: " + dtx.getVersion());
+        System.out.println("chainid: " + new String(dtx.getChainID()));
+        System.out.println("timestamp: " + dtx.getTimeStamp());
+        System.out.println("txfee: " + dtx.getTxFee());
+        System.out.println("txType: " + dtx.getTxType());
+        System.out.println("sender: " + ByteUtil.toHexString(dtx.getSenderPubkey()));
+        System.out.println("nonce: " + dtx.getNonce());
+        System.out.println("txHash: " + ByteUtil.toHexString(dtx.getTxID()));
+        System.out.println("receiver: " + ByteUtil.toHexString(dtx.getReceiver()));
+        System.out.println("amount: " + dtx.getAmount());
+        System.out.println("Signature: " + ByteUtil.toHexString(dtx.getSignature()));
+        System.out.println("Sigmsg: " + ByteUtil.toHexString(dtx.getTransactionSigMsg()));
+
+        System.out.println("WiringCoinsTx String: "+ Hex.toHexString(dtx.getEncoded()));
+        System.out.println("Signature bool: " + dtx.verifyTransactionSig());
     }
 }

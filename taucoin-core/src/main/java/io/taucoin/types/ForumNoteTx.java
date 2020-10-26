@@ -168,10 +168,11 @@ public class ForumNoteTx extends Transaction {
             this.timestamp = ByteUtil.byteArrayToLong(forumNoteTx.get(TxIndex.Timestamp.ordinal()).getRLPData());
             this.chainID = forumNoteTx.get(TxIndex.ChainID.ordinal()).getRLPData();
 
-            this.txFee = new BigInteger(forumNoteTx.get(TxIndex.TxFee.ordinal()).getRLPData());
+            this.txFee = new BigInteger(1, forumNoteTx.get(TxIndex.TxFee.ordinal()).getRLPData());
             this.txType = ByteUtil.byteArrayToLong(forumNoteTx.get(TxIndex.TxType.ordinal()).getRLPData());
+
             this.senderPubkey = forumNoteTx.get(TxIndex.Sender.ordinal()).getRLPData();
-            this.nonce = new BigInteger(forumNoteTx.get(TxIndex.Nonce.ordinal()).getRLPData());
+            this.nonce = new BigInteger(1, forumNoteTx.get(TxIndex.Nonce.ordinal()).getRLPData());
 
             this.signature = forumNoteTx.get(TxIndex.Signature.ordinal()).getRLPData();
 

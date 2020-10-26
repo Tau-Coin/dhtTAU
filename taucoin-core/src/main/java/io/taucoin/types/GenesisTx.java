@@ -17,8 +17,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 package io.taucoin.types;
 
 import io.taucoin.genesis.GenesisItem;
-import io.taucoin.param.ChainParam;
-import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -28,7 +26,7 @@ import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.spongycastle.util.encoders.Hex;
 
 public class GenesisTx extends Transaction {
 
@@ -97,13 +95,14 @@ public class GenesisTx extends Transaction {
     @Override
     public byte[] getEncoded() {
 
-        if(encodedBytes == null) {
+        if(this.encodedBytes == null) {
 
             byte[] version = RLP.encodeElement(ByteUtil.longToBytes(this.version));
             byte[] timestamp = RLP.encodeElement(ByteUtil.longToBytes(this.timestamp));
             byte[] chainID = RLP.encodeElement(this.chainID);
 
             byte[] txFee = RLP.encodeBigInteger(this.txFee);
+            System.out.println("1 1 1 Encode TxFee: "+ Hex.toHexString(txFee));
             byte[] txType = RLP.encodeElement(ByteUtil.longToBytes(this.txType));
 
             byte[] senderPubkey = RLP.encodeElement(this.senderPubkey);
@@ -198,7 +197,6 @@ public class GenesisTx extends Transaction {
         if(isParsed) {
             return;
         } else {
-
             RLPList txList = RLP.decode2(this.encodedBytes);
             RLPList genesisTx = (RLPList) txList.get(0);
 
@@ -206,10 +204,10 @@ public class GenesisTx extends Transaction {
             this.timestamp = ByteUtil.byteArrayToLong(genesisTx.get(TxIndex.Timestamp.ordinal()).getRLPData());
             this.chainID = genesisTx.get(TxIndex.ChainID.ordinal()).getRLPData();
 
-            this.txFee = new BigInteger(genesisTx.get(TxIndex.TxFee.ordinal()).getRLPData());
+            this.txFee = new BigInteger(1, genesisTx.get(TxIndex.TxFee.ordinal()).getRLPData());
             this.txType = ByteUtil.byteArrayToLong(genesisTx.get(TxIndex.TxType.ordinal()).getRLPData());
             this.senderPubkey = genesisTx.get(TxIndex.Sender.ordinal()).getRLPData();
-            this.nonce = new BigInteger(genesisTx.get(TxIndex.Nonce.ordinal()).getRLPData());
+            this.nonce = new BigInteger(1, genesisTx.get(TxIndex.Nonce.ordinal()).getRLPData());
 
             this.signature = genesisTx.get(TxIndex.Signature.ordinal()).getRLPData();
             this.genesisMsg = rlpDecodedGM(genesisTx.get(TxIndex.TxData.ordinal()).getRLPData());

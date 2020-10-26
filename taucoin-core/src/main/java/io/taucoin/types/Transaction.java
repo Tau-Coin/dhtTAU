@@ -194,7 +194,7 @@ public abstract class Transaction {
      * get tx nonce.
      * @return
      */
-    public BigInteger  getNonce() {
+    public BigInteger getNonce() {
         if(!isParsed) parseEncodedBytes();
         return this.nonce;
     }

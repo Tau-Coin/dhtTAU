@@ -184,15 +184,15 @@ public class WiringCoinsTx extends Transaction {
             this.timestamp = ByteUtil.byteArrayToLong(wiringCoinsTx.get(TxIndex.Timestamp.ordinal()).getRLPData());
             this.chainID = wiringCoinsTx.get(TxIndex.ChainID.ordinal()).getRLPData();
 
-            this.txFee = new BigInteger(wiringCoinsTx.get(TxIndex.TxFee.ordinal()).getRLPData());
+            this.txFee = new BigInteger(1, wiringCoinsTx.get(TxIndex.TxFee.ordinal()).getRLPData());
             this.txType = ByteUtil.byteArrayToLong(wiringCoinsTx.get(TxIndex.TxType.ordinal()).getRLPData());
             this.senderPubkey = wiringCoinsTx.get(TxIndex.Sender.ordinal()).getRLPData();
-            this.nonce = new BigInteger(wiringCoinsTx.get(TxIndex.Nonce.ordinal()).getRLPData());
+            this.nonce = new BigInteger(1, wiringCoinsTx.get(TxIndex.Nonce.ordinal()).getRLPData());
 
             this.signature = wiringCoinsTx.get(TxIndex.Signature.ordinal()).getRLPData();
 
             this.receiverPubkey = wiringCoinsTx.get(TxIndex.TxData.ordinal()).getRLPData();
-            this.amount = new BigInteger(wiringCoinsTx.get(TxIndex.TxData.ordinal() + 1).getRLPData());
+            this.amount = new BigInteger(1, wiringCoinsTx.get(TxIndex.TxData.ordinal() + 1).getRLPData());
             this.memo = wiringCoinsTx.get(TxIndex.TxData.ordinal() + 2).getRLPData();
 
             isParsed = true;
