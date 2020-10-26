@@ -72,44 +72,42 @@ public class BlockTest {
 
         byte[] signBytes = block.signBlock(keys.second);
         block.setSignature(signBytes);
-        encodedBytes= block.getEncoded();
+        encodedBytes = block.getEncoded();
         System.out.println(Hex.toHexString(encodedBytes));
-        boolean ret1 = block.isBlockParamValidate();
-        System.out.println("param validate ?: "+ret1);
-    }
+        boolean ret = block.isBlockParamValidate();
+        System.out.println("param validate ?: " + ret);
+
+        System.out.println("============================================================");
 
 
-    @Test
-    public void decodeBlock() {
+        encodedBytes = block.getEncoded();
+        Block dblock = new Block(encodedBytes);
 
-        encodedBytes = ByteUtil.toByte("f8f588000000000000000188000000005f313caa88000000000000000194c5897865e8cd75d4aec7fe9583a869c8b962921c94c5897865e8cd75d4aec7fe9583a869c8b962921c94b7516c32e5ff8144bb919a141ce051de00b09b018721d0369d0369780194178f0713ef498e88def4156a9425e8469cdb0bf1865af3107a40008701111f0ad378008702d79883d20000820384b840e27ef98bc44045603fee5f879511fc42109f65a9a61e5ba4451863c410bbad51264d12153e886a69d092bfefe3e2addd29a27b6699057099397255bf5b624209a00f9bd4c6f800cebb45b0f860192aec7e85878729f840b5f26f2be1b00a1f07b1");
-        Block block = new Block(encodedBytes);
+        System.out.println("Block hash get: " + ByteUtil.toHexString(dblock.getBlockHash()));
 
-        System.out.println("Block hash get: " + ByteUtil.toHexString(block.getBlockHash()));
+        System.out.println("Version: " + dblock.getVersion());
+        System.out.println("Timestamp: " + dblock.getTimeStamp());
 
-        System.out.println("Version: " + block.getVersion());
-        System.out.println("Timestamp: " + block.getTimeStamp());
+        System.out.println("Vertical block hash get: " + ByteUtil.toHexString(dblock.getVerticalHash()));
+        System.out.println("Horizontal hash get: " + ByteUtil.toHexString(dblock.getHorizontalHash()));
+        System.out.println("Immutable block hash get: " + ByteUtil.toHexString(dblock.getImmutableBlockHash()));
 
-        System.out.println("Vertical block hash get: " + ByteUtil.toHexString(block.getVerticalHash()));
-        System.out.println("Horizontal hash get: " + ByteUtil.toHexString(block.getHorizontalHash()));
-        System.out.println("Immutable block hash get: " + ByteUtil.toHexString(block.getImmutableBlockHash()));
+        System.out.println("Basetarget: " + dblock.getBaseTarget());
+        System.out.println("Cummulativediff: " + dblock.getCumulativeDifficulty());
+        System.out.println("Genersation signature: " + ByteUtil.toHexString(dblock.getGenerationSignature()));
 
-        System.out.println("Basetarget: " + block.getBaseTarget());
-        System.out.println("Cummulativediff: " + block.getCumulativeDifficulty());
-        System.out.println("Genersation signature: " + ByteUtil.toHexString(block.getGenerationSignature()));
+        System.out.println("Miner Balance: " + dblock.getMinerBalance());
+        System.out.println("Sender Balance: " + dblock.getSenderBalance());
+        System.out.println("Receiver Balance: " + dblock.getReceiverBalance());
+        System.out.println("Sender nonce: " + dblock.getSenderNonce());
 
-        System.out.println("Miner Balance: " + block.getMinerBalance());
-        System.out.println("Sender Balance: " + block.getSenderBalance());
-        System.out.println("Receiver Balance: " + block.getReceiverBalance());
-        System.out.println("Sender nonce: " + block.getSenderNonce());
+        System.out.println("Miner pubkey: " + ByteUtil.toHexString(dblock.getMinerPubkey()));
+        System.out.println("Signature: " + ByteUtil.toHexString(dblock.getSignature()));
 
-        System.out.println("Miner pubkey: " + ByteUtil.toHexString(block.getMinerPubkey()));
-        System.out.println("Signature: " + ByteUtil.toHexString(block.getSignature()));
+        System.out.println("Signature bool: " + dblock.verifyBlockSig());
 
-        System.out.println("Signature bool: " + block.verifyBlockSig());
-
-        boolean ret1 = block.isBlockParamValidate();
-        System.out.println("param validate ?: "+ret1);
+        boolean dret = dblock.isBlockParamValidate();
+        System.out.println("param validate ?: " + dret);
     }
 
 }
