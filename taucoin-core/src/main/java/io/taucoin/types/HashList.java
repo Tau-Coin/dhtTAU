@@ -85,7 +85,7 @@ public class HashList {
      */
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
-            if (null != this.hashList && this.hashList.size() > 1) {
+            if (null != this.hashList && this.hashList.size() > 0) {
                 byte[][] encodeList = new byte[this.hashList.size()][];
 
                 int i = 0;
