@@ -106,7 +106,7 @@ public class HashList {
      * @return hash
      */
     public byte[] getHash(){
-        if(null != this.hash) {
+        if(null == this.hash) {
             this.hash = HashUtil.sha1hash(this.getEncoded());
         }
 
