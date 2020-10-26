@@ -204,10 +204,12 @@ public class GenesisTx extends Transaction {
             this.timestamp = ByteUtil.byteArrayToLong(genesisTx.get(TxIndex.Timestamp.ordinal()).getRLPData());
             this.chainID = genesisTx.get(TxIndex.ChainID.ordinal()).getRLPData();
 
-            this.txFee = new BigInteger(1, genesisTx.get(TxIndex.TxFee.ordinal()).getRLPData());
+            this.txFee = genesisTx.get(TxIndex.TxFee.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                    : new BigInteger(1, genesisTx.get(TxIndex.TxFee.ordinal()).getRLPData());
             this.txType = ByteUtil.byteArrayToLong(genesisTx.get(TxIndex.TxType.ordinal()).getRLPData());
             this.senderPubkey = genesisTx.get(TxIndex.Sender.ordinal()).getRLPData();
-            this.nonce = new BigInteger(1, genesisTx.get(TxIndex.Nonce.ordinal()).getRLPData());
+            this.nonce = genesisTx.get(TxIndex.Nonce.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                    : new BigInteger(1, genesisTx.get(TxIndex.Nonce.ordinal()).getRLPData());
 
             this.signature = genesisTx.get(TxIndex.Signature.ordinal()).getRLPData();
             this.genesisMsg = rlpDecodedGM(genesisTx.get(TxIndex.TxData.ordinal()).getRLPData());

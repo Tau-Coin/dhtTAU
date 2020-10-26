@@ -349,14 +349,20 @@ public class Block {
             this.horizontalHash = block.get(BlockIndex.HHash.ordinal()).getRLPData();
             this.immutableBlockHash = block.get(BlockIndex.IMBHash.ordinal()).getRLPData();
 
-            this.baseTarget = new BigInteger(1, block.get(BlockIndex.BaseTarget.ordinal()).getRLPData());
-            this.cumulativeDifficulty = new BigInteger(1, block.get(BlockIndex.CDifficulty.ordinal()).getRLPData());
+            this.baseTarget = block.get(BlockIndex.BaseTarget.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                                : new BigInteger(1, block.get(BlockIndex.BaseTarget.ordinal()).getRLPData());
+            this.cumulativeDifficulty = block.get(BlockIndex.CDifficulty.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                    : new BigInteger(1, block.get(BlockIndex.CDifficulty.ordinal()).getRLPData());
             this.generationSignature = block.get(BlockIndex.GSignature.ordinal()).getRLPData();
 
-            this.minerBalance = new BigInteger(1, block.get(BlockIndex.MBalance.ordinal()).getRLPData());
-            this.senderBalance = new BigInteger(1, block.get(BlockIndex.SBalance.ordinal()).getRLPData());
-            this.receiverBalance = new BigInteger(1, block.get(BlockIndex.RBalance.ordinal()).getRLPData());
-            this.senderNonce = new BigInteger(1, block.get(BlockIndex.SNonce.ordinal()).getRLPData());
+            this.minerBalance = block.get(BlockIndex.MBalance.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                    : new BigInteger(1, block.get(BlockIndex.MBalance.ordinal()).getRLPData());
+            this.senderBalance = block.get(BlockIndex.SBalance.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                    : new BigInteger(1, block.get(BlockIndex.SBalance.ordinal()).getRLPData());
+            this.receiverBalance =  block.get(BlockIndex.RBalance.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                    : new BigInteger(1, block.get(BlockIndex.RBalance.ordinal()).getRLPData());
+            this.senderNonce = block.get(BlockIndex.SNonce.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                    : new BigInteger(1, block.get(BlockIndex.SNonce.ordinal()).getRLPData());
 
             this.signature = block.get(BlockIndex.Signature.ordinal()).getRLPData();
             this.minerPubkey = block.get(BlockIndex.MPubkey.ordinal()).getRLPData();

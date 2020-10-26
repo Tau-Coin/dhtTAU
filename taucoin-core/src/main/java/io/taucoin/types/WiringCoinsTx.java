@@ -184,10 +184,13 @@ public class WiringCoinsTx extends Transaction {
             this.timestamp = ByteUtil.byteArrayToLong(wiringCoinsTx.get(TxIndex.Timestamp.ordinal()).getRLPData());
             this.chainID = wiringCoinsTx.get(TxIndex.ChainID.ordinal()).getRLPData();
 
-            this.txFee = new BigInteger(1, wiringCoinsTx.get(TxIndex.TxFee.ordinal()).getRLPData());
+            this.txFee = wiringCoinsTx.get(TxIndex.TxFee.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                    : new BigInteger(1, wiringCoinsTx.get(TxIndex.TxFee.ordinal()).getRLPData());
             this.txType = ByteUtil.byteArrayToLong(wiringCoinsTx.get(TxIndex.TxType.ordinal()).getRLPData());
+
             this.senderPubkey = wiringCoinsTx.get(TxIndex.Sender.ordinal()).getRLPData();
-            this.nonce = new BigInteger(1, wiringCoinsTx.get(TxIndex.Nonce.ordinal()).getRLPData());
+            this.nonce = wiringCoinsTx.get(TxIndex.Nonce.ordinal()).getRLPData() == null ? BigInteger.ZERO
+                    : new BigInteger(1, wiringCoinsTx.get(TxIndex.Nonce.ordinal()).getRLPData());
 
             this.signature = wiringCoinsTx.get(TxIndex.Signature.ordinal()).getRLPData();
 
