@@ -20,6 +20,7 @@ import io.taucoin.account.AccountManager;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import io.taucoin.types.GenesisTx;
+import io.taucoin.types.HorizontalItem;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
@@ -85,7 +86,8 @@ public class GenesisConfig {
         this.generationSignature = HashUtil.sha1hash(this.pubkey);
         this.signature = signature;
         this.genesisTx = genesisTx;
-        this.horizontalHash = HashUtil.sha1hash(this.genesisTx.getTxID());
+        HorizontalItem item = new HorizontalItem(this.genesisTx.getTxID());
+        this.horizontalHash = item.getHash();
         this.communityName = TauGenesisTransaction.CommunityName;
 
         // construct genesis block
@@ -115,7 +117,8 @@ public class GenesisConfig {
         this.version = 1L;
         this.timeStamp = System.currentTimeMillis() / 1000;
 
-        this.horizontalHash = HashUtil.sha1hash(this.genesisTx.getTxID());
+        HorizontalItem item = new HorizontalItem(this.genesisTx.getTxID());
+        this.horizontalHash = item.getHash();
 
         this.baseTarget = DefaultBaseTarget;
         this.cummulativeDifficulty = DefaultCummulativeDifficulty;
