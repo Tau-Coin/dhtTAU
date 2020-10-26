@@ -21,6 +21,8 @@ public class SessionController {
 
     private static final Logger logger = LoggerFactory.getLogger("SessionController");
 
+    private static final int LISTEN_PORT = 6881;
+
     public static final int MIN_SESSIONS = 0;
     public static final int MAX_SESSIONS = 64;
 
@@ -70,7 +72,9 @@ public class SessionController {
         synchronized (lock) {
             // create tau sessions and workers.
             for (int i = 0; i < quota; i++) {
-                SessionSettings.Builder builder = new SessionSettings.Builder();
+                SessionSettings.Builder builder = new SessionSettings.Builder()
+                        .setNetworkInterfaces(NetworkInterfacePolicy
+                                .networkInterfaces(i));
                 TauSession s = new TauSession(builder.build());
                 Worker w = new Worker(i, s, inputQueue, counter);
 
@@ -135,7 +139,10 @@ public class SessionController {
             return false;
         }
 
-        SessionSettings.Builder builder = new SessionSettings.Builder();
+        SessionSettings.Builder builder = new SessionSettings.Builder()
+                        .setNetworkInterfaces(NetworkInterfacePolicy
+                                .networkInterfaces(sessionsList.size()));
+
         TauSession s = new TauSession(builder.build());
         Worker w = new Worker(sessionsList.size(), s, inputQueue, counter);
 
@@ -174,5 +181,13 @@ public class SessionController {
 
     public int sessions() {
         return sessionsList.size();
+    }
+
+    private static final class NetworkInterfacePolicy {
+
+        public static String networkInterfaces(int index) {
+            int port = LISTEN_PORT + index;
+            return "0.0.0.0:" + port;
+        }
     }
 }

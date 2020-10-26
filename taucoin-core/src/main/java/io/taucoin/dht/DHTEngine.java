@@ -79,8 +79,10 @@ public class DHTEngine {
         boolean ok = sessionController.start(quota);
 
         if (ok) {
+            logger.info("dht sessions start successfully");
             tauListener.onDHTStarted(true, "");
         } else {
+            logger.error("dht sessions start failed");
             tauListener.onDHTStarted(false, "listen failed");
         }
 

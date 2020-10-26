@@ -129,11 +129,13 @@ class Worker {
 
         // Firstly, interrupt worker thread.
         worker.interrupt();
+        /*
         try {
             worker.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+         */
         worker = null;
 
         // And then stop session manager.
