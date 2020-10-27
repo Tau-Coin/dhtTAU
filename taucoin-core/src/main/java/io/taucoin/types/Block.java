@@ -733,7 +733,7 @@ public class Block {
         strBlock.append(" Timestamp: ").append(this.getTimeStamp());
         strBlock.append(" Blocknum: ").append(this.getBlockNum());
 
-        strBlock.append(" Vertical hash: ").append(this.getVerticalHash());
+        strBlock.append(" Vertical hash: ").append(ByteUtil.toHexString(this.getVerticalHash()));
         strBlock.append(" Horizontal hash: ").append(ByteUtil.toHexString(this.getHorizontalHash()));
         strBlock.append(" Immutable block hash: ").append(ByteUtil.toHexString(this.getImmutableBlockHash()));
 

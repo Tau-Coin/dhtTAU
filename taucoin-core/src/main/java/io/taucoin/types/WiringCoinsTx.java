@@ -280,7 +280,7 @@ public class WiringCoinsTx extends Transaction {
 
         strTx.append(" Version: ").append(this.getVersion());
         strTx.append(" Timestamp: ").append(this.getTimeStamp());
-        strTx.append(" ChainID: ").append(new String(this.getChainID()));
+        strTx.append(" ChainID: ").append(ByteUtil.toHexString(this.getChainID()));
 
         strTx.append(" TxFee: ").append(this.getTxFee());
         strTx.append(" TxType: ").append(this.getTxType());
