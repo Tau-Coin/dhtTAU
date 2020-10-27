@@ -49,8 +49,12 @@ public class Utils {
         return new Entry(e);
     }
 
-    public static byte[] preformattedEntryToBytes(Entry entry) {
-        byte_vector bv = entry.swig().preformatted_bytes();
+    public static byte[] preformattedEntryToBytes(Entry item) {
+        if (item == null || item.swig().type() != entry.data_type.preformatted_t) {
+            return null;
+        }
+
+        byte_vector bv = item.swig().preformatted_bytes();
         return Vectors.byte_vector2bytes(bv);
     }
 }
