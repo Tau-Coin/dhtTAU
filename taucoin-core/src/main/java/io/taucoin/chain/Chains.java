@@ -2696,7 +2696,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             return TryResult.ERROR;
         }
 
-        HashListResult hashListResult = getPreviousHashList(chainID, blockContainer);
+        HashListResult hashListResult = getPreviousHashList(chainID, this.bestBlockContainers.get(chainID));
         if (TryResult.SUCCESS == hashListResult.tryResult) {
             VerticalItem verticalItem = new VerticalItem(hashListResult.hashList);
             if (!Arrays.equals(verticalItem.getHash(), blockContainer.getVerticalItem().getHash())) {
@@ -2929,30 +2929,40 @@ public class Chains implements DHT.GetDHTItemCallback{
     /**
      * get previous hash list
      * @param chainID chain ID
-     * @param blockContainer block container
+     * @param previousBlockContainer previous block container
      * @return hash list
      * @throws DBException database exception
      */
-    private HashListResult getPreviousHashList(ByteArrayWrapper chainID, BlockContainer blockContainer) throws DBException {
+    private HashListResult getPreviousHashList(ByteArrayWrapper chainID, BlockContainer previousBlockContainer) throws DBException {
         HashListResult hashListResult = new HashListResult();
         hashListResult.tryResult = TryResult.SUCCESS;
         hashListResult.hashList = new ArrayList<>();
 
-        BlockContainer preBlockContainer = blockContainer;
         int size = ChainParam.MAX_HASH_NUMBER;
-        while (size > 0 && preBlockContainer.getBlock().getBlockNum() > 0) {
-            hashListResult.hashList.add(preBlockContainer.getVerticalItem().getPreviousHash());
+        while (size > 0 && previousBlockContainer.getBlock().getBlockNum() >= 0) {
+            hashListResult.hashList.add(previousBlockContainer.getBlock().getBlockHash());
 
-            preBlockContainer = this.blockStore.getBlockContainerByHash(chainID.getData(),
-                    preBlockContainer.getVerticalItem().getPreviousHash());
-            if (null == preBlockContainer) {
-                if (isSyncUncompleted(chainID)) {
-                    requestSyncBlock(chainID);
-                    hashListResult.tryResult = TryResult.REQUEST;
+            VerticalItem verticalItem = previousBlockContainer.getVerticalItem();
+            if (null != verticalItem) {
+                if (null != verticalItem.getPreviousHash()) {
+                    previousBlockContainer = this.blockStore.getBlockContainerByHash(chainID.getData(),
+                            verticalItem.getPreviousHash());
+                    if (null == previousBlockContainer) {
+                        if (isSyncUncompleted(chainID)) {
+                            requestSyncBlock(chainID);
+                            hashListResult.tryResult = TryResult.REQUEST;
+                        } else {
+                            hashListResult.tryResult = TryResult.ERROR;
+                        }
+                        break;
+                    }
                 } else {
-                    hashListResult.tryResult = TryResult.ERROR;
+                    break;
                 }
+            } else {
+                break;
             }
+
             size--;
         }
 
