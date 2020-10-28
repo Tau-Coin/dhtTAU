@@ -59,8 +59,13 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 记录等待停止follow的chain ID集合
     private final Set<ByteArrayWrapper> unFollowChainIDs = Collections.synchronizedSet(new HashSet<>());
 
+    private final double THRESHOLD = 0.8;
+
+    // 循环间隔最小时间
+    private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
+
     // 循环间隔时间
-    private final int LOOP_INTERVAL_TIME = 50; // 50 ms
+    private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
     // mutable item salt: block tip channel
     private final Map<ByteArrayWrapper, byte[]> blockTipSalts = Collections.synchronizedMap(new HashMap<>());
@@ -233,8 +238,10 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 chainIDs.clear();
 
+                adjustIntervalTime();
+
                 try {
-                    Thread.sleep(LOOP_INTERVAL_TIME);
+                    Thread.sleep(this.loopIntervalTime);
                 } catch (InterruptedException e) {
                     logger.info(e.getMessage(), e);
                     Thread.currentThread().interrupt();
@@ -247,6 +254,34 @@ public class Chains implements DHT.GetDHTItemCallback{
             catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
+        }
+    }
+
+    /**
+     * 调整间隔时间
+     */
+    private void adjustIntervalTime() {
+        int size = DHTEngine.getInstance().queueOccupation();
+        if ((double)size / DHTEngine.DHTQueueCapability > THRESHOLD) {
+            increaseIntervalTime();
+        } else {
+            decreaseIntervalTime();
+        }
+    }
+
+    /**
+     * 增加间隔时间
+     */
+    private void increaseIntervalTime() {
+        this.loopIntervalTime = this.loopIntervalTime * 2;
+    }
+
+    /**
+     * 减少间隔时间
+     */
+    private void decreaseIntervalTime() {
+        if (this.loopIntervalTime > this.MIN_LOOP_INTERVAL_TIME) {
+            this.loopIntervalTime = this.loopIntervalTime / 2;
         }
     }
 
@@ -719,7 +754,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
 
             try {
-                Thread.sleep(LOOP_INTERVAL_TIME);
+                Thread.sleep(this.loopIntervalTime);
             } catch (InterruptedException e) {
                 logger.info(e.getMessage(), e);
                 Thread.currentThread().interrupt();
@@ -1423,12 +1458,12 @@ public class Chains implements DHT.GetDHTItemCallback{
                     requestTipBlockForVotingFromPeer(chainID, peer);
                     counter--;
 
-                    try {
-                        Thread.sleep(LOOP_INTERVAL_TIME);
-                    } catch (InterruptedException e) {
-                        logger.info(new String(chainID.getData()) + ":" + e.getMessage(), e);
-                        Thread.currentThread().interrupt();
-                    }
+//                    try {
+//                        Thread.sleep(LOOP_INTERVAL_TIME);
+//                    } catch (InterruptedException e) {
+//                        logger.info(new String(chainID.getData()) + ":" + e.getMessage(), e);
+//                        Thread.currentThread().interrupt();
+//                    }
                 }
             }
 
