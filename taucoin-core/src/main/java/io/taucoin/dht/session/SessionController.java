@@ -24,8 +24,6 @@ public class SessionController {
 
     private static final int LISTEN_PORT = 6881;
 
-    private static final long INTERVAL = 100; // milliseconds.
-
     public static final int MIN_SESSIONS = 0;
     public static final int MAX_SESSIONS = 64;
 
@@ -75,7 +73,9 @@ public class SessionController {
         synchronized (lock) {
             // create tau sessions and workers.
             for (int i = 0; i < quota; i++) {
-                SessionSettings.Builder builder = new SessionSettings.Builder();
+                SessionSettings.Builder builder = new SessionSettings.Builder()
+                        .setNetworkInterfaces(NetworkInterfacePolicy
+                                .networkInterfaces(i));
                 TauSession s = new TauSession(builder.build());
                 Worker w = new Worker(i, s, inputQueue, counter);
 
@@ -95,15 +95,6 @@ public class SessionController {
                 logger.error("starting worker failed");
                 ret = false;
                 stop();
-                break;
-            }
-
-            try {
-                Thread.sleep(INTERVAL);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                Utils.printStacktraceToLogger(logger, e);
-                ret = false;
                 break;
             }
         }
@@ -149,7 +140,10 @@ public class SessionController {
             return false;
         }
 
-        SessionSettings.Builder builder = new SessionSettings.Builder();
+        SessionSettings.Builder builder = new SessionSettings.Builder()
+                .setNetworkInterfaces(NetworkInterfacePolicy
+                        .networkInterfaces(sessionsList.size()));
+
         TauSession s = new TauSession(builder.build());
         Worker w = new Worker(sessionsList.size(), s, inputQueue, counter);
 

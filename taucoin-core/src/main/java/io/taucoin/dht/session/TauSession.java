@@ -188,7 +188,7 @@ class TauSession {
             //        + ", type:" + getEntryType(entry));
 
             if (!Utils.isEntryUndefined(entry)) {
-                data = Utils.preformattedEntryToBytes(entry);
+                data = Utils.stringEntryToBytes(entry);
             }
         }
 
@@ -219,6 +219,7 @@ class TauSession {
         //logger.trace("mutable item got:" + result.item.toString()
         //        + ", type:" + getEntryType(result.item));
 
-        return Utils.preformattedEntryToBytes(result.item);
+        logger.info("mutable item type:" + result.item.swig().type());
+        return Utils.stringEntryToBytes(result.item);
     }
 }

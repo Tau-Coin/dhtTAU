@@ -57,4 +57,18 @@ public class Utils {
         byte_vector bv = item.swig().preformatted_bytes();
         return Vectors.byte_vector2bytes(bv);
     }
+
+    public static Entry fromStringBytes(byte[] data) {
+        entry e = entry.from_string_bytes(Vectors.bytes2byte_vector(data));
+        return new Entry(e);
+    }
+
+    public static byte[] stringEntryToBytes(Entry item) {
+        if (item == null || item.swig().type() != entry.data_type.string_t) {
+            return null;
+        }
+
+        byte_vector bv = item.swig().string_bytes();
+        return Vectors.byte_vector2bytes(bv);
+    }
 }

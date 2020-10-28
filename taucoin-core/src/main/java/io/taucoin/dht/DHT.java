@@ -31,7 +31,7 @@ public final class DHT {
 
         public ImmutableItem(byte[] data) {
             this.entryBytes = data;
-            this.entry = Utils.fromPreformattedBytes(data);
+            this.entry = Utils.fromStringBytes(data);
         }
 
         @Override
@@ -75,7 +75,7 @@ public final class DHT {
             this.publicKey = publicKey;
             this.privateKey = privateKey;
             this.entryBytes = data;
-            this.entry = Utils.fromPreformattedBytes(data);
+            this.entry = Utils.fromStringBytes(data);
             this.salt = salt;
         }
 

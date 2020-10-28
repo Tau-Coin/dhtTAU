@@ -18,6 +18,13 @@ class Worker {
     // The time interval for dht operation.
     private static final long DHTOPInterval = 1000; // milliseconds.
 
+    // Note: when multi-session is started in different thread,
+    // application is crashed at 'aesni_ecb_encrypt'.
+    // Often the AES algorithm can't be parallelised, because it is inherently
+    // serial. So start multi mession serially.
+    private static final Object StartLock = new Object();
+    private static final long SessionStartInterval = 100; // milliseconds.
+
     // Instance index;
     private int index;
 
@@ -41,10 +48,22 @@ class Worker {
 
         @Override
         public void run() {
-            boolean result = session.start();
+            boolean result = false;
+
+            synchronized(StartLock) {
+                result = session.start();
+
+                // maybe wait for a while.
+                try {
+                    Thread.sleep(SessionStartInterval);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    Utils.printStacktraceToLogger(logger, e);
+                }
+            }
 
             // notify starting result.
-            synchronized (signal) {
+            synchronized(signal) {
                 startingResultReceived = true;
                 startingResult = result;
                 signal.notify();
