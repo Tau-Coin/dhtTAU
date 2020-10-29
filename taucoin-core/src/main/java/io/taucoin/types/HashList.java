@@ -71,9 +71,7 @@ public class HashList {
         this.hashList = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             byte[] hashByte = list.get(i).getRLPData();
-            if (null != hashByte) {
-                this.hashList.add(hashByte);
-            }
+            this.hashList.add(hashByte);
         }
 
         this.parsed = true;
@@ -107,7 +105,7 @@ public class HashList {
      */
     public byte[] getHash(){
         if(null == this.hash) {
-            this.hash = HashUtil.sha1hash(this.getEncoded());
+            this.hash = HashUtil.bencodeHash(this.getEncoded());
         }
 
         return this.hash;
