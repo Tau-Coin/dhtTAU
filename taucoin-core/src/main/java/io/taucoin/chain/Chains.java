@@ -2220,7 +2220,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 blockContainerResult.tryResult = TryResult.ERROR;
             } else {
                 // 发现现成的数据
-                logger.debug("Find in block container cache:{}", Hex.toHexString(blockHash));
+                logger.info("Find in block container cache:{}", Hex.toHexString(blockHash));
                 blockContainerResult.blockContainer = blockContainer;
             }
         } else {
@@ -2237,6 +2237,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             if (null != verticalItem) {
                                 blockContainer.setVerticalItem(verticalItem);
                             } else {
+                                this.verticalItemMap.get(chainID).remove(verticalKey);
                                 blockContainerResult.tryResult = TryResult.ERROR;
                             }
                         } else {
@@ -2259,6 +2260,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                         if (null != tx) {
                                             blockContainer.setTx(tx);
                                         } else {
+                                            this.txMap.get(chainID).remove(txKey);
                                             blockContainerResult.tryResult = TryResult.ERROR;
                                         }
                                     } else {
@@ -2269,6 +2271,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                     blockContainerResult.tryResult = TryResult.ERROR;
                                 }
                             } else {
+                                this.horizontalItemMap.get(chainID).remove(horizontalKey);
                                 blockContainerResult.tryResult = TryResult.ERROR;
                             }
                         } else {
@@ -2277,10 +2280,11 @@ public class Chains implements DHT.GetDHTItemCallback{
                         }
                     }
                 } else {
+                    this.blockMap.get(chainID).remove(blockKey);
                     blockContainerResult.tryResult = TryResult.ERROR;
                 }
             } else {
-                logger.debug("Request block :{}", Hex.toHexString(blockHash));
+                logger.info("Request block :{}", Hex.toHexString(blockHash));
                 requestBlockForMining(chainID, blockHash);
                 blockContainerResult.tryResult = TryResult.REQUEST;
             }
@@ -2793,7 +2797,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     new String(chainID.getData()), Hex.toHexString(pubKey));
             return TryResult.ERROR;
         }
-        logger.info("Chain ID[{}]: Address: {}, mining power: {}",
+        logger.debug("Chain ID[{}]: Address: {}, mining power: {}",
                 new String(chainID.getData()), Hex.toHexString(pubKey), power);
 
         BlockContainer parentBlockContainer = this.blockStore.getBlockContainerByHash(chainID.getData(),
@@ -2952,7 +2956,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         long timeInterval = pot.calculateMiningTimeInterval(hit, baseTarget, power);
         if ((System.currentTimeMillis() / 1000 - bestBlockContainer.getBlock().getTimeStamp()) < timeInterval) {
-            logger.info("Chain ID[{}]: It's not the time for the block.", new String(chainID.getData()));
+            logger.debug("Chain ID[{}]: It's not the time for the block.", new String(chainID.getData()));
             return TryResult.ERROR;
         }
 
@@ -3426,8 +3430,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_VERTICAL_ITEM_REQUEST_FOR_MINING: {
                 if (null == item) {
-                    logger.error("HISTORY_VERTICAL_ITEM_REQUEST_FOR_MINING is empty, hash:{}",
-                            Hex.toHexString(dataIdentifier.getHash().getData()));
+                    logger.error("HISTORY_VERTICAL_ITEM_REQUEST_FOR_MINING is empty, hash:{}, block hash:{}",
+                            Hex.toHexString(dataIdentifier.getHash().getData()), dataIdentifier.getBlockHash().toString());
 
                     // 向dht请求
                     publishBlockDemand(dataIdentifier.getChainID(), dataIdentifier.getBlockHash().getData());
@@ -3478,8 +3482,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_MINING: {
                 if (null == item) {
-                    logger.error("HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_MINING is empty, hash:{}",
-                            Hex.toHexString(dataIdentifier.getHash().getData()));
+                    logger.error("HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_MINING is empty, hash:{}, block hash:{}",
+                            Hex.toHexString(dataIdentifier.getHash().getData()), dataIdentifier.getBlockHash().toString());
 
                     // 向dht请求
                     publishBlockDemand(dataIdentifier.getChainID(), dataIdentifier.getBlockHash().getData());
@@ -3811,8 +3815,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_VERTICAL_ITEM_REQUEST_FOR_SYNC: {
                 if (null == item) {
-                    logger.error("HISTORY_VERTICAL_ITEM_REQUEST_FOR_SYNC is empty, hash:{}",
-                            Hex.toHexString(dataIdentifier.getHash().getData()));
+                    logger.error("HISTORY_VERTICAL_ITEM_REQUEST_FOR_SYNC is empty, hash:{}, block hash:{}",
+                            Hex.toHexString(dataIdentifier.getHash().getData()), dataIdentifier.getBlockHash().toString());
 
                     // 向dht请求
                     publishBlockDemand(dataIdentifier.getChainID(), dataIdentifier.getBlockHash().getData());
@@ -3870,8 +3874,8 @@ public class Chains implements DHT.GetDHTItemCallback{
             }
             case HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_SYNC: {
                 if (null == item) {
-                    logger.error("HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_SYNC is empty, hash:{}",
-                            Hex.toHexString(dataIdentifier.getHash().getData()));
+                    logger.error("HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_SYNC is empty, hash:{}, block hash:{}",
+                            Hex.toHexString(dataIdentifier.getHash().getData()), dataIdentifier.getBlockHash().toString());
 
                     // 向dht请求
                     publishBlockDemand(dataIdentifier.getChainID(), dataIdentifier.getBlockHash().getData());
