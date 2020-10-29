@@ -25,6 +25,7 @@ import io.taucoin.util.RLPList;
 
 import com.frostwire.jlibtorrent.Ed25519;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -511,8 +512,20 @@ public class Block {
      * @return
      */
     public byte[] getBlockHash(){
+        String bencodeLen = this.getEncoded().length + ":";
+        byte[] prefix = null;
+        try {
+            prefix = bencodeLen.getBytes("ASCII");
+        } catch (UnsupportedEncodingException e) {
+            logger.error(e.toString());
+        }
+
+        byte[] getPrefix = new byte[prefix.length + this.getEncoded().length];
+        System.arraycopy(prefix, 0, getPrefix, 0, prefix.length);
+        System.arraycopy(this.getEncoded(), 0, getPrefix, prefix.length, this.getEncoded().length);
+
         if(blockHash == null){
-            blockHash = HashUtil.sha1hash(this.getEncoded());
+            blockHash = HashUtil.sha1hash(getPrefix);
         }
         return blockHash;
     }

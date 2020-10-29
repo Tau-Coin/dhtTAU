@@ -22,6 +22,7 @@ import io.taucoin.util.HashUtil;
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -282,8 +283,21 @@ public abstract class Transaction {
      * @return
      */
     public byte[] getTxID(){
+
+        String bencodeLen = this.getEncoded().length + ":";
+        byte[] prefix = null;
+        try {
+            prefix = bencodeLen.getBytes("ASCII");
+        } catch (UnsupportedEncodingException e) {
+            logger.error(e.toString());
+        }
+
+        byte[] getPrefix = new byte[prefix.length + this.getEncoded().length];
+        System.arraycopy(prefix, 0, getPrefix, 0, prefix.length);
+        System.arraycopy(this.getEncoded(), 0, getPrefix, prefix.length, this.getEncoded().length);
+
         if(this.txHash == null){
-           this.txHash = HashUtil.sha1hash(this.getEncoded());
+           this.txHash = HashUtil.sha1hash(getPrefix);
         }
         return this.txHash;
     }

@@ -76,14 +76,15 @@ public class BlockTest {
         System.out.println(Hex.toHexString(encodedBytes));
         boolean ret = block.isBlockParamValidate();
         System.out.println("param validate ?: " + ret);
+        System.out.println("0 Block hash get: " + ByteUtil.toHexString(block.getBlockHash()));
 
         System.out.println("============================================================");
 
 
         encodedBytes = block.getEncoded();
         Block dblock = new Block(encodedBytes);
-
-        System.out.println("Block hash get: " + ByteUtil.toHexString(dblock.getBlockHash()));
+        System.out.println("Block : " + encodedBytes.length);
+        System.out.println("1 Block hash get: " + ByteUtil.toHexString(dblock.getBlockHash()));
 
         System.out.println("Version: " + dblock.getVersion());
         System.out.println("Timestamp: " + dblock.getTimeStamp());
