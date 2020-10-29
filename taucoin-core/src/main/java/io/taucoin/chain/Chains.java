@@ -1034,11 +1034,10 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 if (null != blockContainer) {
                     publishBlockContainer(blockContainer);
-
-                    previousHash = blockContainer.getVerticalItem().getPreviousHash();
                     if (blockContainer.getBlock().getBlockNum() == 0) {
                         break;
                     }
+                    previousHash = blockContainer.getVerticalItem().getPreviousHash();
                 } else {
                     logger.debug("Chain ID:{} Cannot find block hash in local:{}",
                             new String(chainID.getData()), Hex.toHexString(previousHash));
@@ -1227,11 +1226,10 @@ public class Chains implements DHT.GetDHTItemCallback{
                 BlockContainer previousBlockContainer = result.blockContainer;
                 // 如果有返回，但是数据不为空
                 containerList.add(previousBlockContainer);
-                previousHash = previousBlockContainer.getVerticalItem().getPreviousHash();
-
                 if (previousBlockContainer.getBlock().getBlockNum() <= 0) {
                     break;
                 }
+                previousHash = previousBlockContainer.getVerticalItem().getPreviousHash();
             } else if (TryResult.ERROR == result.tryResult) {
                 // 如果有返回数据，但是数据为空
                 return TryResult.ERROR;

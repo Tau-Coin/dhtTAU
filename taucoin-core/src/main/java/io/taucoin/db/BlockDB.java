@@ -987,6 +987,10 @@ public class BlockDB implements BlockStore {
 
         // 2. Loop back on each level until common block
         while (!Arrays.equals(bestLine.getBlock().getBlockHash(), forkLine.getBlock().getBlockHash())) {
+            if (0 == forkLine.getBlock().getBlockNum()) {
+                return false;
+            }
+
             newBlockContainers.add(forkLine);
             undoBlockContainers.add(bestLine);
 
