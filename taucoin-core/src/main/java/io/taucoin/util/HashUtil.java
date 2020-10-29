@@ -20,6 +20,10 @@ import com.frostwire.jlibtorrent.swig.sha1_hash;
 import com.frostwire.jlibtorrent.Vectors;
 import com.frostwire.jlibtorrent.swig.byte_vector;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -29,6 +33,8 @@ import java.security.NoSuchAlgorithmException;
  * com.frostwire.jlibtorrent.Sha1Hash
  */
 public class HashUtil {
+    private static final Logger logger = LoggerFactory.getLogger("HashUtil");
+
     public static byte[] sha1hash(byte[] bytes){
        MessageDigest digest;
        try {
@@ -39,5 +45,23 @@ public class HashUtil {
        byte_vector bvs = Vectors.bytes2byte_vector(digest.digest(bytes));
        sha1_hash hash = new sha1_hash(bvs);
        return  Vectors.byte_vector2bytes(hash.to_bytes());
+    }
+
+    public static byte[] bencodeHash(byte[] bytes){
+
+        String bencodeLen = bytes.length + ":";
+        byte[] prefix = null;
+        try {
+            prefix = bencodeLen.getBytes("ASCII");
+        } catch (UnsupportedEncodingException e) {
+            logger.error(e.toString());
+        }
+
+        byte[] getPrefixBytes = new byte[prefix.length + bytes.length];
+        System.arraycopy(prefix, 0, getPrefixBytes, 0, prefix.length);
+        System.arraycopy(bytes, 0, getPrefixBytes, prefix.length, bytes.length);
+
+        return HashUtil.sha1hash(getPrefixBytes);
+
     }
 }

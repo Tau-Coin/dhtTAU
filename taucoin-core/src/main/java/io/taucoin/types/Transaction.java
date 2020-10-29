@@ -283,23 +283,7 @@ public abstract class Transaction {
      * @return
      */
     public byte[] getTxID(){
-
-        String bencodeLen = this.getEncoded().length + ":";
-        byte[] prefix = null;
-        try {
-            prefix = bencodeLen.getBytes("ASCII");
-        } catch (UnsupportedEncodingException e) {
-            logger.error(e.toString());
-        }
-
-        byte[] getPrefix = new byte[prefix.length + this.getEncoded().length];
-        System.arraycopy(prefix, 0, getPrefix, 0, prefix.length);
-        System.arraycopy(this.getEncoded(), 0, getPrefix, prefix.length, this.getEncoded().length);
-
-        if(this.txHash == null){
-           this.txHash = HashUtil.sha1hash(getPrefix);
-        }
-        return this.txHash;
+        return HashUtil.bencodeHash(this.getEncoded());
     }
 
     /**
