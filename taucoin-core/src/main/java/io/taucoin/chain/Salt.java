@@ -23,31 +23,16 @@ public class Salt {
     }
 
     /**
-     * make block tip salt
+     * make tip salt
      * @param chainID chain ID
-     * @return block tip salt
+     * @return tip salt
      */
-    public static byte[] makeBlockTipSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.BLOCK_TIP_CHANNEL.length];
+    public static byte[] makeTipSalt(byte[] chainID) {
+        byte[] salt = new byte[chainID.length + ChainParam.TIP_CHANNEL.length];
 
         System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.BLOCK_TIP_CHANNEL, 0, salt, chainID.length,
-                ChainParam.BLOCK_TIP_CHANNEL.length);
-
-        return salt;
-    }
-
-    /**
-     * make tx salt
-     * @param chainID chain ID
-     * @return tx tip salt
-     */
-    public static byte[] makeTxTipSalt(byte[] chainID) {
-        byte[] salt = new byte[chainID.length + ChainParam.TX_TIP_CHANNEL.length];
-
-        System.arraycopy(chainID, 0, salt, 0, chainID.length);
-        System.arraycopy(ChainParam.TX_TIP_CHANNEL, 0, salt, chainID.length,
-                ChainParam.TX_TIP_CHANNEL.length);
+        System.arraycopy(ChainParam.TIP_CHANNEL, 0, salt, chainID.length,
+                ChainParam.TIP_CHANNEL.length);
 
         return salt;
     }

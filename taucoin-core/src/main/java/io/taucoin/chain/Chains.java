@@ -44,6 +44,7 @@ import io.taucoin.types.DemandItem;
 import io.taucoin.types.HashList;
 import io.taucoin.types.HorizontalItem;
 import io.taucoin.types.LocalDemand;
+import io.taucoin.types.TipItem;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TransactionFactory;
 import io.taucoin.types.TypesConfig;
@@ -68,17 +69,8 @@ public class Chains implements DHT.GetDHTItemCallback{
     // 循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
-    // mutable item salt: block tip channel
-    private final Map<ByteArrayWrapper, byte[]> blockTipSalts = Collections.synchronizedMap(new HashMap<>());
-
-//    // mutable item salt: block request channel
-//    private final Map<ByteArrayWrapper, byte[]> blockDemandSalts = Collections.synchronizedMap(new HashMap<>());
-
-    // mutable item salt: tx tip channel
-    private final Map<ByteArrayWrapper, byte[]> txTipSalts = Collections.synchronizedMap(new HashMap<>());
-
-//    // mutable item salt: tx request channel
-//    private final Map<ByteArrayWrapper, byte[]> txDemandSalts = Collections.synchronizedMap(new HashMap<>());
+    // mutable item salt: tip channel
+    private final Map<ByteArrayWrapper, byte[]> tipSalts = Collections.synchronizedMap(new HashMap<>());
 
     // multi-chain thread.
     private Thread multiChainThread;
@@ -185,9 +177,9 @@ public class Chains implements DHT.GetDHTItemCallback{
     private final Map<ByteArrayWrapper, Boolean> enableMineForTest = Collections.synchronizedMap(new HashMap<>());
 
     // for test
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>>  blockTipSucceed = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>> tipSuccess = Collections.synchronizedMap(new HashMap<>());
 
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>>  blockTipFail = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>> tipFailure = Collections.synchronizedMap(new HashMap<>());
 
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Long>> demandSuccess = Collections.synchronizedMap(new HashMap<>());
 
@@ -331,13 +323,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             return true;
         }
 
-        this.blockTipSalts.put(wChainID, Salt.makeBlockTipSalt(chainID));
-
-//        this.blockDemandSalts.put(wChainID, makeBlockDemandSalt(chainID));
-
-        this.txTipSalts.put(wChainID, Salt.makeTxTipSalt(chainID));
-
-//        this.txDemandSalts.put(wChainID, makeTxDemandSalt(chainID));
+        this.tipSalts.put(wChainID, Salt.makeTipSalt(chainID));
 
         this.timeRecorders.put(wChainID, 0L);
 
@@ -468,9 +454,9 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.enableMineForTest.put(wChainID, true);
 
         // for test
-        this.blockTipSucceed.put(wChainID, new HashMap<>());
+        this.tipSuccess.put(wChainID, new HashMap<>());
 
-        this.blockTipFail.put(wChainID, new HashMap<>());
+        this.tipFailure.put(wChainID, new HashMap<>());
 
         this.demandSuccess.put(wChainID, new HashMap<>());
 
@@ -500,13 +486,8 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void removeChainComponent(ByteArrayWrapper chainID) {
-        this.blockTipSalts.remove(chainID);
 
-//        this.blockDemandSalts.remove(chainID);
-
-        this.txTipSalts.remove(chainID);
-
-//        this.txDemandSalts.remove(chainID);
+        this.tipSalts.remove(chainID);
 
         this.timeRecorders.remove(chainID);
 
@@ -575,9 +556,9 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.enableMineForTest.remove(chainID);
 
         // for test
-        this.blockTipSucceed.remove(chainID);
+        this.tipSuccess.remove(chainID);
 
-        this.blockTipFail.remove(chainID);
+        this.tipFailure.remove(chainID);
 
         this.demandSuccess.remove(chainID);
 
@@ -646,7 +627,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 } else {
                     // 没有数据则请求数据
                     byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
-                    requestTipBlockFromPeer(chainID, peer);
+                    requestTipItemFromPeer(chainID, peer);
                 }
             }
 
@@ -685,7 +666,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
                                 logger.debug("Chain ID:{} get a peer:{}",
                                         new String(chainID.getData()), Hex.toHexString(peer));
-                                requestTipBlockFromPeer(chainID, peer);
+                                requestTipItemFromPeer(chainID, peer);
                             }
                         }
                     }
@@ -724,34 +705,8 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     // 定时操作，检查是否到时间
                     if (System.currentTimeMillis() / 1000 - this.timeRecorders.get(chainID) >= ChainParam.DEFAULT_BLOCK_TIME) {
-                        // 2.6 传播最佳区块
-                        publishBestBlock(chainID);
-
-                        // 2.7 传播最佳交易
-                        publishBestTx(chainID);
-
-//                    // 2.8 随机挑选logN个peer
-//                    int counter = this.peerManagers.get(chainID).getPeerNumber();
-//                    counter = (int)Math.log(counter);
-//                    if (counter < 1) {
-//                        counter = 1;
-//                    }
-//
-//                    for (int i = 0; i < counter; i++) {
-//
-//                        byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
-//                        logger.debug("Chain ID:{} get a peer:{}",
-//                                new String(chainID.getData()), Hex.toHexString(peer));
-//
-//                        // 2.8.1 请求最佳交易
-//                        requestTipTxForMining(chainID, peer);
-//
-//                        // 2.8.2 请求远端区块需求
-//                        requestDemandBlockFromPeer(chainID, peer);
-//
-//                        // 2.8.3 请求远端交易需求
-//                        requestDemandTxFromPeer(chainID, peer);
-//                    }
+                        // 2.6 传播最佳区块或交易
+                        publishTipItem(chainID);
 
                         //设定新时间起点
                         this.timeRecorders.put(chainID, System.currentTimeMillis() / 1000);
@@ -759,7 +714,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
                     // 2.8.1 请求最佳交易
-                    requestTipTxForMining(chainID, peer);
+//                    requestTipTxForMining(chainID, peer);
 
                     // 2.8.2 请求远端需求
                     requestDemandFromPeer(chainID, peer);
@@ -790,7 +745,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (this.blockContainerMap.get(chainID).isEmpty()) {
             // 随机挑选一个peer请求最难链
             byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
-            requestTipBlockFromPeer(chainID, peer);
+            requestTipItemFromPeer(chainID, peer);
         } else {
 
             boolean clearContainer = true;
@@ -1228,7 +1183,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     this.tauListener.onNewBlock(chainID.getData(), blockContainer);
 
-                    publishBestBlock(chainID);
+                    publishTipItem(chainID);
                 }
             }
         }
@@ -1359,7 +1314,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         setBestBlockContainer(chainID, targetBlockContainer);
 
-        publishBestBlock(chainID);
+        publishTipItem(chainID);
 
         // 提取相关peer
         Set<ByteArrayWrapper> accounts = extractAccountFromBlockContainer(undoBlockContainers);
@@ -1588,7 +1543,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         this.bestBlockContainers.put(chainID, blockContainer);
         this.syncBlockContainers.put(chainID, blockContainer);
 
-        publishBestBlock(chainID);
+        publishTipItem(chainID);
 
         Set<ByteArrayWrapper> accounts= extractAccountFromBlockContainer(blockContainer);
         for (ByteArrayWrapper account: accounts) {
@@ -2333,15 +2288,15 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
-     * request tip block hash from peer
+     * request tip item hash from peer
      * @param chainID chain ID
      * @param peer peer
      */
-    private void requestTipBlockFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        byte[] salt = this.blockTipSalts.get(chainID);
+    private void requestTipItemFromPeer(ByteArrayWrapper chainID, byte[] peer) {
+        byte[] salt = this.tipSalts.get(chainID);
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID,
-                DataType.TIP_BLOCK_FROM_PEER_FOR_MINING, new ByteArrayWrapper(peer));
+                DataType.TIP_ITEM_FROM_PEER_FOR_MINING, new ByteArrayWrapper(peer));
         DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
@@ -2470,18 +2425,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
-     * request tip tx for mining
-     * @param chainID chain ID
-     * @param peer peer
-     */
-    private void requestTipTxForMining(ByteArrayWrapper chainID, byte[] peer) {
-        byte[] salt = this.txTipSalts.get(chainID);
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_TX_FOR_MINING);
-        DHTEngine.getInstance().request(spec, this, dataIdentifier);
-    }
-
-    /**
      * request tx for pool
      * @param chainID chain ID
      * @param txid tx hash
@@ -2499,7 +2442,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param peer peer
      */
     private void requestTipBlockForVotingFromPeer(ByteArrayWrapper chainID, byte[] peer) {
-        byte[] salt = this.blockTipSalts.get(chainID);
+        byte[] salt = this.tipSalts.get(chainID);
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer, salt);
         DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.TIP_BLOCK_FROM_PEER_FOR_VOTING);
         DHTEngine.getInstance().request(spec, this, dataIdentifier);
@@ -2632,61 +2575,36 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
-     * publish tip block on main chain to dht
+     * publish tip item: best block and best tx
      * @param chainID chain ID
      */
-    private void publishBestBlock(ByteArrayWrapper chainID) {
-        BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
+    private void publishTipItem(ByteArrayWrapper chainID) {
+        byte[] blockHash = null;
+        byte[] txHash = null;
 
+        BlockContainer bestBlockContainer = this.bestBlockContainers.get(chainID);
         if (null != bestBlockContainer) {
             publishBlockContainer(bestBlockContainer);
-
-            // put mutable item
-            Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
-            byte[] salt = this.blockTipSalts.get(chainID);
-            byte[] encode =HashList.with(bestBlockContainer.getBlock().getBlockHash()).getEncoded();
-            if (null != encode) {
-                DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                        encode, salt);
-                DHTEngine.getInstance().distribute(mutableItem);
-            }
+            blockHash = bestBlockContainer.getBlock().getBlockHash();
         }
-    }
 
-    /**
-     * publish tip block on main chain to dht
-     * @param chainID chain ID
-     */
-    private void publishBestTx(ByteArrayWrapper chainID) {
         Transaction tx = this.txPools.get(chainID).getBestTransaction();
         if (null != tx) {
-            // put mutable tx
-            publishTipTransaction(chainID, tx);
+            publishTransaction(tx);
+
+            txHash = tx.getTxID();
         }
-    }
 
-    /**
-     * put a tx in mutable item
-     * @param chainID chain ID
-     * @param tx tx to publish
-     */
-    private void publishTipTransaction(ByteArrayWrapper chainID, Transaction tx) {
-        if (null != tx) {
-            // put immutable tx first
-            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(tx.getEncoded());
-            DHTEngine.getInstance().distribute(immutableItem);
+        TipItem tipItem = TipItem.with(blockHash, txHash);
 
-            // put mutable item
-
-            Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
-
-            byte[] salt = this.txTipSalts.get(chainID);
-            byte[] encode = HashList.with(tx.getTxID()).getEncoded();
-            if (null != encode) {
-                DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                        encode, salt);
-                DHTEngine.getInstance().distribute(mutableItem);
-            }
+        // put mutable item
+        Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+        byte[] salt = this.tipSalts.get(chainID);
+        byte[] encode = tipItem.getEncoded();
+        if (null != encode) {
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
+                    encode, salt);
+            DHTEngine.getInstance().distribute(mutableItem);
         }
     }
 
@@ -3264,20 +3182,20 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         DataIdentifier dataIdentifier = (DataIdentifier) cbData;
         switch (dataIdentifier.getDataType()) {
-            case TIP_BLOCK_FROM_PEER_FOR_MINING: {
+            case TIP_ITEM_FROM_PEER_FOR_MINING: {
                 if (null == item) {
-                    logger.error("TIP_BLOCK_FROM_PEER_FOR_MINING from peer[{}] is empty.",
+                    logger.error("TIP_ITEM_FROM_PEER_FOR_MINING from peer[{}] is empty.",
                             dataIdentifier.getHash().toString());
 
-                    Long count = this.blockTipFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                    Long count = this.tipFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
                     if (null == count) {
                         count = 1L;
                     } else {
                         count++;
                     }
-                    this.blockTipFail.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
+                    this.tipFailure.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
 
-                    Long total = this.blockTipSucceed.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                    Long total = this.tipSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
                     if (null == total) {
                         total = count;
                     } else {
@@ -3289,15 +3207,15 @@ public class Chains implements DHT.GetDHTItemCallback{
                     return;
                 }
 
-                Long count = this.blockTipSucceed.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                Long count = this.tipSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
                 if (null == count) {
                     count = 1L;
                 } else {
                     count++;
                 }
-                this.blockTipSucceed.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
+                this.tipSuccess.get(dataIdentifier.getChainID()).put(dataIdentifier.getHash(), count);
 
-                Long total = this.blockTipFail.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
+                Long total = this.tipFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getHash());
                 if (null == total) {
                     total = count;
                 } else {
@@ -3306,11 +3224,20 @@ public class Chains implements DHT.GetDHTItemCallback{
                 logger.info("Block Tip: Address:{}, success rate: {} / {} = {}",
                         dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
 
-                byte[] hash = new HashList(item).getFirstHash();
-                if (null != hash) {
-                    logger.debug("Request tip block hash[{}] from peer[{}]", Hex.toHexString(hash),
+                TipItem tipItem = new TipItem(item);
+
+                byte[] blockHash = tipItem.getBlockHash();
+                if (null != blockHash) {
+                    logger.debug("Request tip block hash[{}] from peer[{}]", Hex.toHexString(blockHash),
                             dataIdentifier.getHash().toString());
-                    requestBlockForMining(dataIdentifier.getChainID(), hash);
+                    requestBlockForMining(dataIdentifier.getChainID(), blockHash);
+                }
+
+                byte[] txHash = tipItem.getTxHash();
+                if (null != txHash) {
+                    logger.debug("Request tip tx hash[{}] from peer[{}]", Hex.toHexString(txHash),
+                            dataIdentifier.getHash().toString());
+                    requestTxForPool(dataIdentifier.getChainID(), txHash);
                 }
 
                 break;
@@ -3683,7 +3610,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                     return;
                 }
 
-                byte[] hash = new HashList(item).getFirstHash();
+                TipItem tipItem = new TipItem(item);
+                byte[] hash = tipItem.getBlockHash();
                 if (null != hash) {
                     requestBlockForVoting(dataIdentifier.getChainID(), hash);
                 }
@@ -3707,19 +3635,6 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 Block block = new Block(item);
                 this.votingBlocks.get(dataIdentifier.getChainID()).add(block);
-
-                break;
-            }
-            case TIP_TX_FOR_MINING: {
-                if (null == item) {
-                    logger.error("TIP_TX_FOR_MINING is empty");
-                    return;
-                }
-
-                byte[] hash = new HashList(item).getFirstHash();
-                if (null != hash) {
-                    requestTxForPool(dataIdentifier.getChainID(), hash);
-                }
 
                 break;
             }

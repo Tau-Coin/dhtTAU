@@ -59,14 +59,11 @@ public class ChainParam {
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
 
     /**********CHANNEL**********/
+    // tip
+    public static final byte[] TIP_CHANNEL = "#T".getBytes();
+
     // demand
     public static final byte[] DEMAND_CHANNEL = "#D".getBytes();
-
-    // mutable item salt suffix: block tip
-    public static final byte[] BLOCK_TIP_CHANNEL = "#BT".getBytes();
-
-    // mutable item salt suffix: tx tip
-    public static final byte[] TX_TIP_CHANNEL = "#TT".getBytes();
 
     public static final int HashLongArrayLength = 3;
 

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.taucoin.chain.Salt;
@@ -16,12 +17,13 @@ import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.dht.DHT;
 import io.taucoin.types.HashList;
+import io.taucoin.types.TipItem;
 
-public class dht_getTipBlockFromPeer extends JsonRpcServerMethod {
+public class dht_getTipItemFromPeer extends JsonRpcServerMethod {
 
     private static final Logger logger = LoggerFactory.getLogger("rpc");
 
-    public dht_getTipBlockFromPeer(TauController tauController) {
+    public dht_getTipItemFromPeer(TauController tauController) {
         super(tauController);
     }
 
@@ -35,26 +37,30 @@ public class dht_getTipBlockFromPeer extends JsonRpcServerMethod {
             // get pubkey
             byte[] pubkey = Hex.decode((String)(params.get(0)));
             // get salt
-            byte[] salt = Salt.makeBlockTipSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
+            byte[] salt = Salt.makeTipSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
 
             // get immutable item
             byte[] item = dhtGet(new DHT.GetMutableItemSpec(pubkey, salt, 20));
 
             // make response
-            String result = "";
+            ArrayList<String> result = new ArrayList<>();
 
             if (item == null) {
-                result= "Get mutable item, nothing !";
+                result.add("Get mutable item, nothing !");
             } else {
                 try {
-                    byte[] hash = new HashList(item).getFirstHash();
-                    if (null != hash) {
-                        result = "Hash: " + Hex.toHexString(hash);
-                    } else {
-                        result = "empty";
+                    TipItem tipItem = new TipItem(item);
+                    byte[] blockHash = tipItem.getBlockHash();
+                    if (null != blockHash) {
+                        result.add("Block Hash: " + Hex.toHexString(blockHash));
+                    }
+
+                    byte[] txHash = tipItem.getTxHash();
+                    if (null != txHash) {
+                        result.add("Tx Hash: " + Hex.toHexString(txHash));
                     }
                 } catch (Exception e) {
-                    result = e.toString();
+                    result.add(e.toString());
                     e.printStackTrace();
                 }
             }

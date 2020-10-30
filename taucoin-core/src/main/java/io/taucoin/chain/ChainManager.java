@@ -21,6 +21,7 @@ import io.taucoin.dht.DHT;
 import io.taucoin.dht.DHTEngine;
 import io.taucoin.types.HashList;
 import io.taucoin.types.HorizontalItem;
+import io.taucoin.types.TipItem;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
@@ -317,12 +318,12 @@ public class ChainManager {
             DHTEngine.getInstance().distribute(immutableItem);
 
             // put mutable item
-            byte[] blockSalt = Salt.makeBlockTipSalt(chainID);
+            byte[] salt = Salt.makeTipSalt(chainID);
             Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
-            byte[] encode = HashList.with(blockContainer.getBlock().getBlockHash()).getEncoded();
+            byte[] encode = TipItem.with(blockContainer.getBlock().getBlockHash(), null).getEncoded();
             if (null != encode) {
                 DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first, keyPair.second,
-                        encode, blockSalt);
+                        encode, salt);
                 DHTEngine.getInstance().distribute(mutableItem);
             }
         }
