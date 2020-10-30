@@ -2474,45 +2474,6 @@ public class Chains implements DHT.GetDHTItemCallback{
     }
 
     /**
-     * request tx that others demand
-     * @param chainID chain ID
-     * @param txid tx hash
-     */
-    private void requestTxDemand(ByteArrayWrapper chainID, byte[] txid) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(txid);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_TX_DEMAND,
-                new ByteArrayWrapper(txid));
-
-        DHTEngine.getInstance().request(spec, this, dataIdentifier);
-    }
-
-    /**
-     * request horizontal item that others demand
-     * @param chainID chain ID
-     * @param horizontalHash horizontal hash
-     */
-    private void requestHorizontalItemDemand(ByteArrayWrapper chainID, byte[] horizontalHash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(horizontalHash);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_HORIZONTAL_ITEM_DEMAND,
-                new ByteArrayWrapper(horizontalHash));
-
-        DHTEngine.getInstance().request(spec, this, dataIdentifier);
-    }
-
-    /**
-     * request vertical item that others demand
-     * @param chainID chain ID
-     * @param verticalHash vertical hash
-     */
-    private void requestVerticalItemDemand(ByteArrayWrapper chainID, byte[] verticalHash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(verticalHash);
-        DataIdentifier dataIdentifier = new DataIdentifier(chainID, DataType.HISTORY_VERTICAL_ITEM_DEMAND,
-                new ByteArrayWrapper(verticalHash));
-
-        DHTEngine.getInstance().request(spec, this, dataIdentifier);
-    }
-
-    /**
      * publish block hash that demand
      * @param chainID chain ID
      * @param localDemand local demand
@@ -3586,19 +3547,19 @@ public class Chains implements DHT.GetDHTItemCallback{
                     byte[] txHash = demandItem.getTxHash();
                     if (null != txHash) {
                         logger.info("Got a demand tx hash:{}", Hex.toHexString(txHash));
-                        requestTxDemand(dataIdentifier.getChainID(), txHash);
+                        this.txHashMapFromDemand.get(dataIdentifier.getChainID()).add(new ByteArrayWrapper(txHash));
                     }
 
                     byte[] horizontalHash = demandItem.getHorizontalHash();
                     if (null != horizontalHash) {
                         logger.info("Got a demand horizontal hash:{}", Hex.toHexString(horizontalHash));
-                        requestHorizontalItemDemand(dataIdentifier.getChainID(), horizontalHash);
+                        this.horizontalHashMapFromDemand.get(dataIdentifier.getChainID()).add(new ByteArrayWrapper(horizontalHash));
                     }
 
                     byte[] verticalHash = demandItem.getVerticalHash();
                     if (null != verticalHash) {
                         logger.info("Got a demand vertical hash:{}", Hex.toHexString(verticalHash));
-                        requestVerticalItemDemand(dataIdentifier.getChainID(), verticalHash);
+                        this.verticalHashMapFromDemand.get(dataIdentifier.getChainID()).add(new ByteArrayWrapper(verticalHash));
                     }
                 }
 
@@ -3964,30 +3925,6 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == item) {
                     logger.debug("HISTORY_BLOCK_DEMAND is empty");
                     this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
-                }
-
-                break;
-            }
-            case HISTORY_TX_DEMAND: {
-                if (null == item) {
-                    logger.debug("HISTORY_TX_DEMAND is empty");
-                    this.txHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
-                }
-
-                break;
-            }
-            case HISTORY_HORIZONTAL_ITEM_DEMAND: {
-                if (null == item) {
-                    logger.debug("HISTORY_HORIZONTAL_ITEM_DEMAND is empty");
-                    this.horizontalHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
-                }
-
-                break;
-            }
-            case HISTORY_VERTICAL_ITEM_DEMAND: {
-                if (null == item) {
-                    logger.debug("HISTORY_VERTICAL_ITEM_DEMAND is empty");
-                    this.verticalHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getHash());
                 }
 
                 break;
