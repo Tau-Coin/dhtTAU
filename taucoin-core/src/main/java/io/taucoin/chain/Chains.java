@@ -3162,7 +3162,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     } else {
                         total += count;
                     }
-                    logger.info("Block Tip: Address:{}, failure rate: {} / {} = {}",
+                    logger.info("Tip Item: Address:{}, failure rate: {} / {} = {}",
                             dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
 
                     return;
@@ -3182,23 +3182,25 @@ public class Chains implements DHT.GetDHTItemCallback{
                 } else {
                     total += count;
                 }
-                logger.info("Block Tip: Address:{}, success rate: {} / {} = {}",
+                logger.info("Tip Item: Address:{}, success rate: {} / {} = {}",
                         dataIdentifier.getHash().toString(), count, total, ((float)count / (float)total));
 
                 TipItem tipItem = new TipItem(item);
 
-                byte[] blockHash = tipItem.getBlockHash();
-                if (null != blockHash) {
-                    logger.debug("Request tip block hash[{}] from peer[{}]", Hex.toHexString(blockHash),
-                            dataIdentifier.getHash().toString());
-                    requestBlockForMining(dataIdentifier.getChainID(), blockHash);
-                }
+                if (tipItem.validate()) {
+                    byte[] blockHash = tipItem.getBlockHash();
+                    if (null != blockHash) {
+                        logger.debug("Request tip block hash[{}] from peer[{}]", Hex.toHexString(blockHash),
+                                dataIdentifier.getHash().toString());
+                        requestBlockForMining(dataIdentifier.getChainID(), blockHash);
+                    }
 
-                byte[] txHash = tipItem.getTxHash();
-                if (null != txHash) {
-                    logger.debug("Request tip tx hash[{}] from peer[{}]", Hex.toHexString(txHash),
-                            dataIdentifier.getHash().toString());
-                    requestTxForPool(dataIdentifier.getChainID(), txHash);
+                    byte[] txHash = tipItem.getTxHash();
+                    if (null != txHash) {
+                        logger.debug("Request tip tx hash[{}] from peer[{}]", Hex.toHexString(txHash),
+                                dataIdentifier.getHash().toString());
+                        requestTxForPool(dataIdentifier.getChainID(), txHash);
+                    }
                 }
 
                 break;
@@ -3244,7 +3246,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             // 在block container集合里插入空标志
                             this.blockContainerMap.get(dataIdentifier.getChainID()).
                                     put(dataIdentifier.getHash(), null);
-                            success = false;;
+                            success = false;
                         }
                     } else {
                         requestVerticalItemForMining(dataIdentifier.getChainID(),
@@ -3274,7 +3276,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                         // 在block container集合里插入空标志
                                         this.blockContainerMap.get(dataIdentifier.getChainID()).
                                                 put(dataIdentifier.getHash(), null);
-                                        success = false;;
+                                        success = false;
                                     }
                                 } else {
                                     // 缓存没有，则请求
@@ -3288,7 +3290,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             // 在block container集合里插入空标志
                             this.blockContainerMap.get(dataIdentifier.getChainID()).
                                     put(dataIdentifier.getHash(), null);
-                            success = false;;
+                            success = false;
                         }
                     } else {
                         requestHorizontalItemForMining(dataIdentifier.getChainID(),
@@ -3572,9 +3574,11 @@ public class Chains implements DHT.GetDHTItemCallback{
                 }
 
                 TipItem tipItem = new TipItem(item);
-                byte[] hash = tipItem.getBlockHash();
-                if (null != hash) {
-                    requestBlockForVoting(dataIdentifier.getChainID(), hash);
+                if (tipItem.validate()) {
+                    byte[] hash = tipItem.getBlockHash();
+                    if (null != hash) {
+                        requestBlockForVoting(dataIdentifier.getChainID(), hash);
+                    }
                 }
 
                 break;
@@ -3662,7 +3666,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             // 在block container集合里插入空标志
                             this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                                     put(dataIdentifier.getHash(), null);
-                            success = false;;
+                            success = false;
                         }
                     } else {
                         requestVerticalItemForSync(dataIdentifier.getChainID(),
@@ -3692,7 +3696,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                         // 在block container集合里插入空标志
                                         this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                                                 put(dataIdentifier.getHash(), null);
-                                        success = false;;
+                                        success = false;
                                     }
                                 } else {
                                     // 缓存没有，则请求
@@ -3706,7 +3710,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             // 在block container集合里插入空标志
                             this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
                                     put(dataIdentifier.getHash(), null);
-                            success = false;;
+                            success = false;
                         }
                     } else {
                         requestHorizontalItemForSync(dataIdentifier.getChainID(),

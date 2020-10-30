@@ -50,14 +50,16 @@ public class dht_getTipItemFromPeer extends JsonRpcServerMethod {
             } else {
                 try {
                     TipItem tipItem = new TipItem(item);
-                    byte[] blockHash = tipItem.getBlockHash();
-                    if (null != blockHash) {
-                        result.add("Block Hash: " + Hex.toHexString(blockHash));
-                    }
+                    if (tipItem.validate()) {
+                        byte[] blockHash = tipItem.getBlockHash();
+                        if (null != blockHash) {
+                            result.add("Block Hash: " + Hex.toHexString(blockHash));
+                        }
 
-                    byte[] txHash = tipItem.getTxHash();
-                    if (null != txHash) {
-                        result.add("Tx Hash: " + Hex.toHexString(txHash));
+                        byte[] txHash = tipItem.getTxHash();
+                        if (null != txHash) {
+                            result.add("Tx Hash: " + Hex.toHexString(txHash));
+                        }
                     }
                 } catch (Exception e) {
                     result.add(e.toString());
