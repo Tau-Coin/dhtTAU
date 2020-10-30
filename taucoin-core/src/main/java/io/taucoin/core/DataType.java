@@ -8,11 +8,12 @@ public enum DataType {
     HISTORY_VERTICAL_ITEM_REQUEST_FOR_MINING, // immutable vertical item
     HISTORY_TX_REQUEST_FOR_MINING, // immutable tx
 
-    BLOCK_DEMAND_FROM_PEER, // mutable item: request block hash
-    TX_DEMAND_FROM_PEER, // mutable item: request tx hash
+    DEMAND_FROM_PEER, // mutable item: request demand hash
 
     HISTORY_BLOCK_DEMAND, // immutable item: get block
     HISTORY_TX_DEMAND, // immutable item: get tx
+    HISTORY_HORIZONTAL_ITEM_DEMAND, // immutable item: get horizontal item
+    HISTORY_VERTICAL_ITEM_DEMAND, // immutable item: get vertical item
 
     HISTORY_BLOCK_REQUEST_FOR_SYNC, // immutable block for sync
     HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_SYNC, // immutable horizontal item for sync

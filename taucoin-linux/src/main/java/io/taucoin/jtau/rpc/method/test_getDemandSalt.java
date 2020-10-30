@@ -21,7 +21,7 @@ public class test_getDemandSalt extends JsonRpcServerMethod {
     @Override
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
         // get salt
-        byte[] salt = Salt.makeBlockDemandSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
+        byte[] salt = Salt.makeDemandSalt("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes());
 
         JSONRPC2Response response = new JSONRPC2Response(Hex.toHexString(salt), req.getID());
         return response;

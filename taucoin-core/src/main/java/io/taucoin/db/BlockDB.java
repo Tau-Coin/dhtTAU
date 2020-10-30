@@ -116,7 +116,7 @@ public class BlockDB implements BlockStore {
      * @return horizontal item
      * @throws DBException database exception
      */
-    private HorizontalItem getHorizontalItemByHash(byte[] chainID, byte[] hash) throws DBException {
+    public HorizontalItem getHorizontalItemByHash(byte[] chainID, byte[] hash) throws DBException {
         if (null == hash) {
             logger.error("Chain ID[{}], hash is null", new String(chainID));
             return null;
@@ -145,7 +145,7 @@ public class BlockDB implements BlockStore {
      * @return vertical item
      * @throws DBException database exception
      */
-    private VerticalItem getVerticalItemByHash(byte[] chainID, byte[] hash) throws DBException {
+    public VerticalItem getVerticalItemByHash(byte[] chainID, byte[] hash) throws DBException {
         if (null == hash) {
             logger.error("Chain ID[{}], hash is null", new String(chainID));
             return null;

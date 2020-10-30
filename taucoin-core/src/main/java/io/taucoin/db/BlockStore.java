@@ -2,7 +2,9 @@ package io.taucoin.db;
 
 import io.taucoin.types.BlockContainer;
 import io.taucoin.types.Block;
+import io.taucoin.types.HorizontalItem;
 import io.taucoin.types.Transaction;
+import io.taucoin.types.VerticalItem;
 
 import java.util.List;
 import java.util.Set;
@@ -39,6 +41,24 @@ public interface BlockStore {
      * @throws DBException database exception
      */
     Block getBlockByHash(byte[] chainID, byte[] hash) throws DBException;
+
+    /**
+     * get horizontal item by hash
+     * @param chainID chain ID
+     * @param hash hash
+     * @return horizontal item
+     * @throws DBException database exception
+     */
+    HorizontalItem getHorizontalItemByHash(byte[] chainID, byte[] hash) throws DBException;
+
+    /**
+     * get vertical item by hash
+     * @param chainID chain ID
+     * @param hash hash
+     * @return vertical item
+     * @throws DBException database exception
+     */
+    VerticalItem getVerticalItemByHash(byte[] chainID, byte[] hash) throws DBException;
 
     /**
      * get block container by hash

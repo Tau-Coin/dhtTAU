@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.method.*;
 
-import java.net.InetAddress;
-
 /**
  * Taucoin blockchain json rpc server.
  * You can use any json rpc client to access this service.
@@ -84,8 +82,7 @@ public final class JsonRpcServer {
 
         // test
         this.dispatcher.register(new dht_putGenesisHashInTipBlockChannel(this.tauController));
-        this.dispatcher.register(new dht_getTauBlockDemandFromPeer(this.tauController));
-        this.dispatcher.register(new dht_putTauGenesisBlockHashInDemand(this.tauController));
+        this.dispatcher.register(new dht_getTauDemandFromPeer(this.tauController));
         this.dispatcher.register(new test_getDemandSalt(this.tauController));
     }
 

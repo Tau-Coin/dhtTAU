@@ -1,6 +1,5 @@
 package io.taucoin.jtau.rpc.method;
 
-import com.frostwire.jlibtorrent.Pair;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response;
@@ -10,13 +9,11 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 
-import io.taucoin.account.AccountManager;
 import io.taucoin.chain.Chains;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.dht.DHT;
+import io.taucoin.types.LocalDemand;
 import io.taucoin.util.ByteArrayWrapper;
-import io.taucoin.util.ByteUtil;
 
 public class dht_putBlockHashDemand extends JsonRpcServerMethod {
     public dht_putBlockHashDemand(TauController tauController) {
@@ -32,7 +29,9 @@ public class dht_putBlockHashDemand extends JsonRpcServerMethod {
         } else {
             // get sha1 hash
             byte[] hash = Hex.decode((String) (params.get(0)));
-            Chains.publishBlockDemand(new ByteArrayWrapper("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes()), hash);
+            LocalDemand localDemand = new LocalDemand();
+            localDemand.setBlockHash(hash);
+            Chains.publishDemand(new ByteArrayWrapper("TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes()), localDemand);
             JSONRPC2Response response = new JSONRPC2Response("ok", req.getID());
             return response;
         }
