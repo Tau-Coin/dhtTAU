@@ -1,6 +1,9 @@
 package io.taucoin.types;
 
+import org.spongycastle.util.encoders.Hex;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import io.taucoin.util.HashUtil;
@@ -111,5 +114,17 @@ public class HashList {
         return this.hash;
     }
 
+    @Override
+    public String toString() {
+        List<String> list = new ArrayList<>();
+        list.add("Hash:" + Hex.toHexString(getHash()));
+        if (null != this.hashList) {
+            int i = 0;
+            for (byte[] hash: this.hashList) {
+                list.add("[" + i + "]: " + Hex.toHexString(hash));
+            }
+        }
 
+        return "HashList{" + list + '}';
+    }
 }

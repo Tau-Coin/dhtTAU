@@ -5,6 +5,7 @@ import io.taucoin.account.AccountManager;
 import io.taucoin.core.AccountState;
 import io.taucoin.core.ImportResult;
 import io.taucoin.core.TransactionPool;
+import io.taucoin.db.BlockStore;
 import io.taucoin.types.BlockContainer;
 import io.taucoin.db.BlockDB;
 import io.taucoin.db.KeyValueDataBaseFactory;
@@ -393,39 +394,10 @@ public class ChainManager {
         return chainIDs;
     }
 
-    /**
-     * get block by hash
-     * @param chainid: chain id
-     * @param blockHash: hash of wanted block
-     * @return
-     */
-    public Block getBlockByHash(byte[] chainid, byte[] blockHash) throws Exception {
-
-        Block block = null;
-        try {
-            block = this.blockDB.getBlockByHash(chainid, blockHash);
-        } catch (Exception e) {
-            throw e;
-        }
-        return block;
+    public BlockStore getBlockStore() {
+        return this.blockDB;
     }
 
-    /**
-     * get transaction by hash
-     * @param chainid: chain id
-     * @param txHash: hash of wanted transaction
-     * @return
-     */
-    public Transaction getTransactionByHash(byte[] chainid, byte[] txHash) throws Exception {
-
-        Transaction tx = null;
-        try {
-            tx = this.blockDB.getTransactionByHash(chainid, txHash);
-        } catch (Exception e) {
-            throw e;
-        }
-        return tx;
-    }
     /**
      * get transaction pool
      * @param chainid: chain id
@@ -440,23 +412,6 @@ public class ChainManager {
         }
 
         return list;
-    }
-
-    /**
-     * get block by num
-     * @param chainid: chain id
-     * @param blockNum: number of wanted block
-     * @return
-     */
-    public Block getBlockByNumber(byte[] chainid, long blockNum) throws Exception {
-
-        Block block = null;
-        try {
-            block = this.blockDB.getMainChainBlockByNumber(chainid, blockNum);
-        } catch (Exception e) {
-            throw e;
-        }
-        return block;
     }
 
     /**

@@ -62,6 +62,8 @@ public final class JsonRpcServer {
         this.dispatcher.register(new chain_getBestBlock(this.tauController));
         this.dispatcher.register(new chain_getBlockByHash(this.tauController));
         this.dispatcher.register(new chain_getBlockByNumber(this.tauController));
+        this.dispatcher.register(new chain_getHorizontalItemByHash(this.tauController));
+        this.dispatcher.register(new chain_getVerticalItemByHash(this.tauController));
 
         this.dispatcher.register(new chain_getTransactionByHash(this.tauController));
         this.dispatcher.register(new chain_getTransactionsInPool(this.tauController));

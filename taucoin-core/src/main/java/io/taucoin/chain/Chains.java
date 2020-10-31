@@ -712,17 +712,14 @@ public class Chains implements DHT.GetDHTItemCallback{
                         this.timeRecorders.put(chainID, System.currentTimeMillis() / 1000);
                     }
 
+                    // 2.7 请求远端需求
                     byte[] peer = this.peerManagers.get(chainID).getBlockPeerRandomly();
-                    // 2.8.1 请求最佳交易
-//                    requestTipTxForMining(chainID, peer);
-
-                    // 2.8.2 请求远端需求
                     requestDemandFromPeer(chainID, peer);
 
-                    // 2.9 回应远端需求
+                    // 2.8 回应远端需求
                     responseDemand(chainID);
 
-                    // 2.10 尝试缓存瘦身
+                    // 2.9 尝试缓存瘦身
                     tryToSlimDownCache(chainID);
                 }
             }

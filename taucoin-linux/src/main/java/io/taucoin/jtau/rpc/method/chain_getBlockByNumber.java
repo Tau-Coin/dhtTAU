@@ -53,7 +53,7 @@ public class chain_getBlockByNumber extends JsonRpcServerMethod {
             String result = "";
             try {
                 logger.info("chainid: {}, blockNum: {}", chainid, blockNum);
-                Block block = chainmanager.getBlockByNumber(chainid, blockNum);
+                Block block = chainmanager.getBlockStore().getMainChainBlockByNumber(chainid, blockNum);
                 if(null == block) {
                     result = "No "+ blockNum+ " block is empty";
                 } else {

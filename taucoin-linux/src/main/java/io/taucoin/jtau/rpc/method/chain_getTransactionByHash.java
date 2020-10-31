@@ -52,7 +52,7 @@ public class chain_getTransactionByHash extends JsonRpcServerMethod {
 		    ChainManager chainmanager = tauController.getChainManager();
             String result = "";
             try {
-                Transaction tx = chainmanager.getTransactionByHash(chainid, txHash);
+                Transaction tx = chainmanager.getBlockStore().getTransactionByHash(chainid, txHash);
                 result = tx.toString();
             } catch (Exception e) {
                 return new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, req.getID());

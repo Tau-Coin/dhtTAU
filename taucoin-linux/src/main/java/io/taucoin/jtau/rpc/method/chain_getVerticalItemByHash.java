@@ -16,26 +16,27 @@
  */
 package io.taucoin.jtau.rpc.method;
 
-import io.taucoin.chain.ChainManager;
-import io.taucoin.controller.TauController;
-import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.types.Block;
-import io.taucoin.util.ByteUtil;
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response;
 import com.thetransactioncompany.jsonrpc2.server.MessageContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class chain_getBlockByHash extends JsonRpcServerMethod {
+import io.taucoin.chain.ChainManager;
+import io.taucoin.controller.TauController;
+import io.taucoin.jtau.rpc.JsonRpcServerMethod;
+import io.taucoin.types.VerticalItem;
+import io.taucoin.util.ByteUtil;
+
+public class chain_getVerticalItemByHash extends JsonRpcServerMethod {
 
     private static final Logger logger = LoggerFactory.getLogger("rpc");
 
-    public chain_getBlockByHash (TauController tauController) {
+    public chain_getVerticalItemByHash(TauController tauController) {
         super(tauController);
     }
 
@@ -47,16 +48,16 @@ public class chain_getBlockByHash extends JsonRpcServerMethod {
 
 			// get chainid, block hash
             byte[] chainid = ((String)(params.get(0))).getBytes();
-            byte[] blockHash = ByteUtil.toByte((String)(params.get(1)));
+            byte[] hash = ByteUtil.toByte((String)(params.get(1)));
 
 		    ChainManager chainmanager = tauController.getChainManager();
 		    String result = "";
 		    try {
-                Block block = chainmanager.getBlockStore().getBlockByHash(chainid, blockHash);
-                if(null == block) {
-                    result = "Hash "+ blockHash+ " block is empty";
+		        VerticalItem verticalItem = chainmanager.getBlockStore().getVerticalItemByHash(chainid, hash);
+                if(null == verticalItem) {
+                    result = "Vertical item is empty";
                 } else {
-                    result = block.toString();
+                    result = verticalItem.toString();
                 }
             } catch (Exception e) {
                 return new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, req.getID());
