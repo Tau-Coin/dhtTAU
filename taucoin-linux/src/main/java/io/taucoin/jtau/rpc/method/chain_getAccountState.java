@@ -36,22 +36,26 @@ public class chain_getAccountState extends JsonRpcServerMethod {
 
 			// get account state
 			ChainManager chainmanager = tauController.getChainManager();
-			AccountState account= null;
+
+            // make response
+            ArrayList<String> result = new ArrayList<>();
 
             try {
-				account= chainmanager.getAccountState(chainid, pubkey);
+                AccountState account= chainmanager.getStateDB().getAccount(chainid, pubkey);
+
+				if (null != account) {
+                    BigInteger balance = account.getBalance();
+                    BigInteger nonce = account.getNonce();
+                    result.add("Balance: " + balance.toString());
+                    result.add("Nonce: " + nonce.toString());
+                } else {
+				    result.add("Cannot get account info.");
+                }
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
                 return new JSONRPC2Response(JSONRPC2Error.INVALID_PARAMS, req.getID());
             }
 
-			BigInteger balance= account.getBalance();
-			BigInteger nonce= account.getNonce();
-
-			// make response
-			ArrayList<String> result = new ArrayList<String>();
-			result.add("Balance: "+ balance.toString());
-			result.add("Nonce: "+ nonce.toString());
             JSONRPC2Response response = new JSONRPC2Response(result, req.getID());
             return response;
         }

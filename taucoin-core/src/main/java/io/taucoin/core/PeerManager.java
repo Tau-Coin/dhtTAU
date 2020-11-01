@@ -1,5 +1,6 @@
 package io.taucoin.core;
 
+import io.taucoin.account.AccountManager;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -167,6 +168,11 @@ public class PeerManager {
         Iterator<ByteArrayWrapper> iterator = this.blockPeers.iterator();
         peer = iterator.next().getData();
         iterator.remove();
+
+        // TODO:: for test
+        if (Arrays.equals(peer, AccountManager.getInstance().getKeyPair().first)) {
+            return getBlockPeerRandomly();
+        }
 
         return peer;
     }

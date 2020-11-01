@@ -791,6 +791,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                 referenceBlockContainer, this.bestBlockContainers.get(chainID).getBlock().getBlockNum());
         if (TryResult.SUCCESS == blockContainerResult1.tryResult) {
             referenceBlockContainer = blockContainerResult1.blockContainer;
+            logger.info("Got block container [{}] from cache successfully",
+                    Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()));
         } else {
             return blockContainerResult1.tryResult;
         }
@@ -800,6 +802,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                 referenceBlockContainer, this.bestBlockContainers.get(chainID).getBlock().getBlockNum());
         if (TryResult.SUCCESS == blockContainerResult2.tryResult) {
             referenceBlockContainer = blockContainerResult2.blockContainer;
+            logger.info("Got block container [{}] from cache successfully",
+                    Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()));
         } else {
             return blockContainerResult2.tryResult;
         }
@@ -2232,6 +2236,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 blockContainerResult.tryResult = TryResult.ERROR;
                             }
                         } else {
+                            logger.info("Request vertical item hash:{} from block:{}",
+                                    Hex.toHexString(block.getVerticalHash()), Hex.toHexString(blockHash));
                             requestVerticalItemForMining(chainID, block.getVerticalHash(), blockKey);
                             blockContainerResult.tryResult = TryResult.REQUEST;
                         }
@@ -2255,6 +2261,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                                             blockContainerResult.tryResult = TryResult.ERROR;
                                         }
                                     } else {
+                                        logger.info("Request tx hash:{} from block:{}",
+                                                Hex.toHexString(block.getHorizontalHash()), Hex.toHexString(blockHash));
                                         requestTxForMining(chainID, horizontalItem.getTxHash(), blockKey);
                                         blockContainerResult.tryResult = TryResult.REQUEST;
                                     }
@@ -2266,6 +2274,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 blockContainerResult.tryResult = TryResult.ERROR;
                             }
                         } else {
+                            logger.info("Request horizontal item hash:{} from block:{}",
+                                    Hex.toHexString(block.getHorizontalHash()), Hex.toHexString(blockHash));
                             requestHorizontalItemForMining(chainID, block.getHorizontalHash(), blockKey);
                             blockContainerResult.tryResult = TryResult.REQUEST;
                         }
@@ -3413,6 +3423,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             }
                         }
 
+                        logger.info("Got block container [{}] completely.", dataIdentifier.getBlockHash().toString());
                         this.blockContainerMap.get(dataIdentifier.getChainID()).
                                 put(dataIdentifier.getBlockHash(), blockContainer);
                     }

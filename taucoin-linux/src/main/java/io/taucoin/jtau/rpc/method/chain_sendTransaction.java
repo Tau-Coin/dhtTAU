@@ -25,7 +25,6 @@ import io.taucoin.types.Transaction;
 import io.taucoin.types.ForumNoteTx;
 import io.taucoin.types.WiringCoinsTx;
 import io.taucoin.types.TypesConfig;
-import io.taucoin.util.ByteArrayWrapper;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
@@ -40,7 +39,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -89,8 +87,8 @@ public class chain_sendTransaction extends JsonRpcServerMethod {
         	long balance = 0;
 			BigInteger nonce = BigInteger.ZERO;
         	try{
-				balance = chainmanager.getAccountState(chainID,publicKey).getBalance().longValue();
-				nonce = chainmanager.getAccountState(chainID,publicKey).getNonce().add(BigInteger.ONE);
+				balance = chainmanager.getStateDB().getAccount(chainID,publicKey).getBalance().longValue();
+				nonce = chainmanager.getStateDB().getAccount(chainID,publicKey).getNonce().add(BigInteger.ONE);
 			}catch (Exception e){
 
 			}

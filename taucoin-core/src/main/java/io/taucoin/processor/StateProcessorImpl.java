@@ -10,16 +10,14 @@ import io.taucoin.types.Block;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.WiringCoinsTx;
-import io.taucoin.util.ByteArrayWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 
 import static io.taucoin.core.ImportResult.*;
 
@@ -154,6 +152,12 @@ public class StateProcessorImpl implements StateProcessor {
                 logger.error("Tx validate fail!");
                 return INVALID_BLOCK;
             }
+
+            if (!Arrays.equals(this.chainID, tx.getChainID())) {
+                logger.error("Tx[{}] chain id mismatch.", Hex.toHexString(tx.getTxID()));
+                return INVALID_BLOCK;
+            }
+
             // TODO:: verify
             /*
             if (!tx.verifyTransactionSig()) {
@@ -169,16 +173,21 @@ public class StateProcessorImpl implements StateProcessor {
             */
 
 
+            logger.error("-----------------------genesis tx chain ID:{}", new String(tx.getChainID()));
             ArrayList<GenesisItem> list = ((GenesisTx)tx).getGenesisAccounts();
             if (null != list) {
                 for (GenesisItem item: list) {
                     byte[] pubKey = item.getAccount();
                     AccountState accountState = stateDB.getAccount(this.chainID, pubKey);
                     if (null == accountState) {
+                        logger.info("Load genesis account state, pubKey:{}, balance:{}, power:{}",
+                                Hex.toHexString(pubKey), item.getBalance(), item.getPower());
                         accountState = new AccountState(item.getBalance(), item.getPower());
                         stateDB.updateAccount(this.chainID, pubKey, accountState);
                     } else {
                         if (0 == accountState.getNonce().longValue()) {
+                            logger.info("Load genesis account nonce, pubKey:{}, balance:{}, power:{}",
+                                    Hex.toHexString(pubKey), accountState.getBalance(), item.getPower());
                             accountState.setNonce(item.getPower());
                             stateDB.updateAccount(this.chainID, pubKey, accountState);
                         }
@@ -218,6 +227,12 @@ public class StateProcessorImpl implements StateProcessor {
             Transaction tx = blockContainer.getTx();
 
             if (null != tx) {
+
+                if (!Arrays.equals(this.chainID, tx.getChainID())) {
+                    logger.error("Tx[{}] chain id mismatch.", Hex.toHexString(tx.getTxID()));
+                    return INVALID_BLOCK;
+                }
+
                 // TODO:: type match?
                 if (!tx.isTxParamValidate()) {
                     logger.error("Tx validate fail!");
@@ -265,7 +280,7 @@ public class StateProcessorImpl implements StateProcessor {
                 stateDB.updateAccount(this.chainID, sender, senderState);
 
                 // if miner != sender && null, update miner
-                if (!Arrays.areEqual(sender, block.getMinerPubkey()) && null == minerState) {
+                if (!Arrays.equals(sender, block.getMinerPubkey()) && null == minerState) {
                     minerState = new AccountState(block.getMinerBalance(), BigInteger.ZERO);
                     stateDB.updateAccount(this.chainID, miner, minerState);
                 }

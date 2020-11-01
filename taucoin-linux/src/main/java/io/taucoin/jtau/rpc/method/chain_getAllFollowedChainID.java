@@ -2,20 +2,15 @@ package io.taucoin.jtau.rpc.method;
 
 import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
-import io.taucoin.core.AccountState;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.util.ByteArrayWrapper;
 
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request;
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response;
 import com.thetransactioncompany.jsonrpc2.server.MessageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 

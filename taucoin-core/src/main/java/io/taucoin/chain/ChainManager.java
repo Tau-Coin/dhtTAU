@@ -348,26 +348,6 @@ public class ChainManager {
     }
 
     /**
-     * get account state according to chainid and pubkey
-     * @param chainid
-     * @param pubkey
-     * @return
-     * todo
-     */
-    public AccountState getAccountState(byte[] chainid, byte[] pubkey) throws Exception {
-
-        AccountState account= null;
-
-        try{
-            account= this.stateDB.getAccount(chainid, pubkey);
-        } catch (Exception e) {
-            throw e;
-        }
-
-        return account;
-    }
-
-    /**
      * get best block
      * @return
      * todo
@@ -396,6 +376,10 @@ public class ChainManager {
 
     public BlockStore getBlockStore() {
         return this.blockDB;
+    }
+
+    public StateDB getStateDB() {
+        return this.stateDB;
     }
 
     /**
