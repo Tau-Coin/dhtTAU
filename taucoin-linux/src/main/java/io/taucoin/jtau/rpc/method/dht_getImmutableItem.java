@@ -4,8 +4,10 @@ import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
+import io.taucoin.types.HorizontalItem;
 import io.taucoin.types.Transaction;
 import io.taucoin.types.TransactionFactory;
+import io.taucoin.types.VerticalItem;
 import io.taucoin.util.ByteUtil;
 
 import com.frostwire.jlibtorrent.Entry;
@@ -58,6 +60,12 @@ public class dht_getImmutableItem extends JsonRpcServerMethod {
                     } else if ("tx".equals(type)){
                         Transaction tx = TransactionFactory.parseTransaction(item);
                         result = tx.toString();
+                    } else if ("horizontal".equals(type)){
+                        HorizontalItem horizontalItem = new HorizontalItem(item);
+                        result = horizontalItem.toString();
+                    } else if ("vertical".equals(type)){
+                        VerticalItem verticalItem = new VerticalItem(item);
+                        result = verticalItem.toString();
                     }
                 } catch (Exception e) {
                     result = e.toString();
