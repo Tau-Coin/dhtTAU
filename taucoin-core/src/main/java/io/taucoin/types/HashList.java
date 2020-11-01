@@ -118,10 +118,12 @@ public class HashList {
     public String toString() {
         List<String> list = new ArrayList<>();
         list.add("Hash:" + Hex.toHexString(getHash()));
-        if (null != this.hashList) {
+        List<byte[]> hashList = getHashList();
+        if (null != hashList) {
             int i = 0;
-            for (byte[] hash: this.hashList) {
+            for (byte[] hash: hashList) {
                 list.add("[" + i + "]: " + Hex.toHexString(hash));
+                i++;
             }
         }
 
