@@ -314,6 +314,13 @@ public class ChainManager {
                 DHTEngine.getInstance().distribute(immutableItem);
             }
 
+            if (null != blockContainer.getHorizontalItem()) {
+                // put horizontal item
+                DHT.ImmutableItem immutableItem =
+                        new DHT.ImmutableItem(blockContainer.getHorizontalItem().getEncoded());
+                DHTEngine.getInstance().distribute(immutableItem);
+            }
+
             // put immutable block
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(blockContainer.getBlock().getEncoded());
             DHTEngine.getInstance().distribute(immutableItem);
