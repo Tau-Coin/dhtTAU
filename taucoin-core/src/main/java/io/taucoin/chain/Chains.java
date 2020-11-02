@@ -252,9 +252,23 @@ public class Chains implements DHT.GetDHTItemCallback{
             catch (DBException e) {
                 this.tauListener.onTauError("Data Base Exception!");
                 logger.error(e.getMessage(), e);
+
+                try {
+                    Thread.sleep(this.MIN_LOOP_INTERVAL_TIME);
+                } catch (InterruptedException ex) {
+                    logger.info(ex.getMessage(), ex);
+                    Thread.currentThread().interrupt();
+                }
             }
             catch (Exception e) {
                 logger.error(e.getMessage(), e);
+
+                try {
+                    Thread.sleep(this.MIN_LOOP_INTERVAL_TIME);
+                } catch (InterruptedException ex) {
+                    logger.info(ex.getMessage(), ex);
+                    Thread.currentThread().interrupt();
+                }
             }
         }
     }
