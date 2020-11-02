@@ -173,6 +173,7 @@ public class StateProcessorImpl implements StateProcessor {
             */
 
 
+            logger.error("========1==========Txid:{}, tx:{}", Hex.toHexString(tx.getTxID()), Hex.toHexString(tx.getEncoded()));
             logger.error("-----------------------genesis tx chain ID:{}", new String(tx.getChainID()));
             ArrayList<GenesisItem> list = ((GenesisTx)tx).getGenesisAccounts();
             if (null != list) {

@@ -1082,7 +1082,7 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void requestSyncBlock(ByteArrayWrapper chainID) {
-        logger.debug("Request sync block hash:{}, current block number:{}",
+        logger.debug("Request sync block hash:{}, current sync block number:{}",
                 Hex.toHexString(this.syncBlockContainers.get(chainID).getVerticalItem().getPreviousHash()),
                 this.syncBlockContainers.get(chainID).getBlock().getBlockNum());
         this.syncCounter.put(chainID, 0);
@@ -3508,7 +3508,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 }
                             } else {
                                 // 缓存没有，则请求
-                                requestTxForMining(dataIdentifier.getChainID(), horizontalItem.getTxHash(), dataIdentifier.getHash());
+                                requestTxForMining(dataIdentifier.getChainID(),
+                                        horizontalItem.getTxHash(), dataIdentifier.getBlockHash());
                                 return;
                             }
                         }
@@ -3765,6 +3766,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                     // 数据非空
                     Transaction tx = TransactionFactory.parseTransaction(item);
+                    logger.error("==================Txid:{}, tx:{}", Hex.toHexString(tx.getTxID()), Hex.toHexString(item));
 
                     byte[] txHash = this.localDemandMap.get(dataIdentifier.getChainID()).getTxHash();
                     if (null != txHash && Arrays.equals(txHash, dataIdentifier.getHash().getData())) {
@@ -3935,7 +3937,8 @@ public class Chains implements DHT.GetDHTItemCallback{
                                 }
                             } else {
                                 // 缓存没有，则请求
-                                requestTxForSync(dataIdentifier.getChainID(), horizontalItem.getTxHash(), dataIdentifier.getHash());
+                                requestTxForSync(dataIdentifier.getChainID(),
+                                        horizontalItem.getTxHash(), dataIdentifier.getBlockHash());
                                 return;
                             }
                         }
