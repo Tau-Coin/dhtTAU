@@ -20,14 +20,12 @@ import io.taucoin.processor.StateProcessor;
 import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.dht.DHT;
 import io.taucoin.dht.DHTEngine;
-import io.taucoin.types.HashList;
 import io.taucoin.types.HorizontalItem;
 import io.taucoin.types.TipItem;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.types.GenesisTx;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteArrayWrapper;
-import io.taucoin.util.ByteUtil;
 import io.taucoin.util.Repo;
 import io.taucoin.types.Block;
 

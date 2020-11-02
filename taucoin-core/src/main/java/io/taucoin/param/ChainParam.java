@@ -53,17 +53,17 @@ public class ChainParam {
     public static final int MUTABLE_RANGE = 288; // 1 days
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
 
-    public static final int MAX_HASH_NUMBER = 48;
+    public static final int MAX_HASH_NUMBER = 47;
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
 
     /**********CHANNEL**********/
     // tip
-    public static final byte[] TIP_CHANNEL = "#T".getBytes();
+    public static final byte[] TIP_CHANNEL = "#TC".getBytes();
 
     // demand
-    public static final byte[] DEMAND_CHANNEL = "#D".getBytes();
+    public static final byte[] DEMAND_CHANNEL = "#DC".getBytes();
 
     public static final int HashLongArrayLength = 3;
 
