@@ -1114,7 +1114,6 @@ public class RLP {
         byte[] data;
         int copyPos;
         if (totalLength < SIZE_THRESHOLD) {
-
             data = new byte[1 + totalLength];
             data[0] = (byte) (OFFSET_SHORT_LIST + totalLength);
             copyPos = 1;

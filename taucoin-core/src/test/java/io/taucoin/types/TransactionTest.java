@@ -33,7 +33,7 @@ public class TransactionTest {
     private static final byte[] chainid = "TAUcoin#c84b1332519aa8020e48438eb3caa9b482798c9d".getBytes();
     private static final long timestamp = 1597998963;
     private static final BigInteger txFee = BigInteger.valueOf(210L);
-    private static final BigInteger nonce = BigInteger.valueOf(10000L);
+    private static final BigInteger nonce = BigInteger.valueOf(10000000L);
 
     private  static final byte[] seed;
     private  static final byte[] sender;
@@ -47,8 +47,8 @@ public class TransactionTest {
     @Test
     public void createGenesisTx(){
 
-        BigInteger abalance = BigInteger.valueOf(30000L);
-        BigInteger anonce = BigInteger.valueOf(30000L);
+        BigInteger abalance = BigInteger.valueOf(10000000L);
+        BigInteger anonce = BigInteger.valueOf(1000000L);
         GenesisItem item = new GenesisItem(sender, abalance, anonce);
 
         ArrayList<GenesisItem> genesisMsg = new ArrayList<>();
@@ -137,7 +137,7 @@ public class TransactionTest {
     @Test
     public void createWiringCoinsTx(){
         byte[] receiver = ByteUtil.toByte("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9");
-        BigInteger amount = BigInteger.valueOf(10000L);
+        BigInteger amount = BigInteger.valueOf(10000000L);
         byte[] memo = "test".getBytes();
         WiringCoinsTx tx = new WiringCoinsTx(version, chainid, timestamp, txFee, sender, nonce, receiver, amount, memo);
         tx.signTransactionWithSeed(seed);

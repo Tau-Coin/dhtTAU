@@ -16,6 +16,8 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package io.taucoin.genesis;
 
+import org.spongycastle.util.encoders.Hex;
+
 import java.math.BigInteger;
 
 import io.taucoin.param.ChainParam;
@@ -84,8 +86,8 @@ public class GenesisItem {
             RLPList item = (RLPList)items.get(0);
 
             this.account = item.get(0).getRLPData();
-            this.balance = new BigInteger(item.get(1).getRLPData());
-            this.power = new BigInteger(item.get(2).getRLPData());
+            this.balance = new BigInteger(1, item.get(1).getRLPData());
+            this.power = new BigInteger(1, item.get(2).getRLPData());
 
             isParse = true;
         }

@@ -45,19 +45,19 @@ public final class TauGenesisTransaction extends GenesisTx {
 
     static {
         sGensisItems.add(
-            new GenesisItem(ByteUtil.toByte("63ec42130442c91e23d56dc73708e06eb164883ab74c9813764c3fd0e2042dc4"), new BigInteger("10000000", 10), new BigInteger("100", 10))
+            new GenesisItem(ByteUtil.toByte("63ec42130442c91e23d56dc73708e06eb164883ab74c9813764c3fd0e2042dc4"), BigInteger.valueOf(10000000L), new BigInteger("100", 10))
         );
 
         sGensisItems.add(
-            new GenesisItem(ByteUtil.toByte("809df518ee450ded0a659aeb4bc5bec636e2cff012fc88d343b7419af974bb81"), new BigInteger("10000000", 10), new BigInteger("100", 10))
+            new GenesisItem(ByteUtil.toByte("809df518ee450ded0a659aeb4bc5bec636e2cff012fc88d343b7419af974bb81"), BigInteger.valueOf(10000000L), new BigInteger("100", 10))
         );
 
         sGensisItems.add(
-            new GenesisItem(ByteUtil.toByte("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9"), new BigInteger("10000000", 10), new BigInteger("100", 10))
+            new GenesisItem(ByteUtil.toByte("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9"), BigInteger.valueOf(10000000L), new BigInteger("100", 10))
         );
 
         sGensisItems.add(
-            new GenesisItem(ByteUtil.toByte("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124"), new BigInteger("10000000", 10), new BigInteger("100", 10))
+            new GenesisItem(ByteUtil.toByte("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124"), BigInteger.valueOf(10000000L), new BigInteger("100", 10))
         );
     }
 
@@ -92,7 +92,7 @@ public final class TauGenesisTransaction extends GenesisTx {
         super(1L, ChainID, TimeStamp, BigInteger.ZERO, Hex.decode(Sender),
                 BigInteger.ONE, sGensisItems);
         signTransactionWithPriKey(Hex.decode(sPrivKey));
-        logger.info("signature:" + Hex.toHexString(getSignature()));
+        logger.info(" 3 genesis tx:" + Hex.toHexString(getEncoded()));
 
         //logger.info("verify signature result:" + verifyTransactionSig());
     }

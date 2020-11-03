@@ -102,7 +102,6 @@ public class GenesisTx extends Transaction {
             byte[] chainID = RLP.encodeElement(this.chainID);
 
             byte[] txFee = RLP.encodeBigInteger(this.txFee);
-            System.out.println("1 1 1 Encode TxFee: "+ Hex.toHexString(txFee));
             byte[] txType = RLP.encodeElement(ByteUtil.longToBytes(this.txType));
 
             byte[] senderPubkey = RLP.encodeElement(this.senderPubkey);

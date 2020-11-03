@@ -41,7 +41,7 @@ public class BlockTest {
         byte[] seed = Ed25519.createSeed();
         Pair<byte[], byte[]> keys = Ed25519.createKeypair(seed);
         byte[] pubkey = keys.first;
-        BigInteger mBalance = BigInteger.valueOf(100000000000000L);
+        BigInteger mBalance = BigInteger.valueOf(10000000L);
         BigInteger sBalance = BigInteger.valueOf(300300000000000L);
         BigInteger rBalance = BigInteger.valueOf(800000000000000L);
         BigInteger sNonce = BigInteger.valueOf(900L);
