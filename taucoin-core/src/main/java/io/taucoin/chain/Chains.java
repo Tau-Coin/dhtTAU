@@ -2259,14 +2259,14 @@ public class Chains implements DHT.GetDHTItemCallback{
             if (this.blockMap.get(chainID).containsKey(blockKey)) {
                 Block block = this.blockMap.get(chainID).get(blockKey);
                 if (null != block) {
-                    BlockContainer blockContainer = new BlockContainer(block);
+                    blockContainerResult.blockContainer =  new BlockContainer(block);
 
                     if (null != block.getVerticalHash()) {
                         ByteArrayWrapper verticalKey = new ByteArrayWrapper(block.getVerticalHash());
                         if (this.verticalItemMap.get(chainID).containsKey(verticalKey)) {
                             VerticalItem verticalItem = this.verticalItemMap.get(chainID).get(verticalKey);
                             if (null != verticalItem) {
-                                blockContainer.setVerticalItem(verticalItem);
+                                blockContainerResult.blockContainer.setVerticalItem(verticalItem);
                             } else {
                                 this.verticalItemMap.get(chainID).remove(verticalKey);
                                 blockContainerResult.tryResult = TryResult.ERROR;
@@ -2284,14 +2284,14 @@ public class Chains implements DHT.GetDHTItemCallback{
                         if (this.horizontalItemMap.get(chainID).containsKey(horizontalKey)) {
                             HorizontalItem horizontalItem = this.horizontalItemMap.get(chainID).get(horizontalKey);
                             if (null != horizontalItem) {
-                                blockContainer.setHorizontalItem(horizontalItem);
+                                blockContainerResult.blockContainer.setHorizontalItem(horizontalItem);
 
                                 if (null != horizontalItem.getTxHash()) {
                                     ByteArrayWrapper txKey = new ByteArrayWrapper(horizontalItem.getTxHash());
                                     if (this.txMap.get(chainID).containsKey(txKey)) {
                                         Transaction tx = this.txMap.get(chainID).get(txKey);
                                         if (null != tx) {
-                                            blockContainer.setTx(tx);
+                                            blockContainerResult.blockContainer.setTx(tx);
                                         } else {
                                             this.txMap.get(chainID).remove(txKey);
                                             blockContainerResult.tryResult = TryResult.ERROR;
