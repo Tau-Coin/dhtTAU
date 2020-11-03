@@ -899,6 +899,26 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void tryToSlimDownCache(ByteArrayWrapper chainID) {
+        // block container
+        if (this.blockContainerMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
+            logger.info("Chain ID:{}: Remove block container cache.", new String(chainID.getData()));
+            Map<ByteArrayWrapper, BlockContainer> oldBlockContainerMap = this.blockContainerMap.get(chainID);
+            Map<ByteArrayWrapper, BlockContainer> newBlockContainerMap = new HashMap<>(ChainParam.WARNING_RANGE);
+
+            int i = 0;
+            for (Map.Entry<ByteArrayWrapper, BlockContainer> entry: oldBlockContainerMap.entrySet()) {
+                newBlockContainerMap.put(entry.getKey(), entry.getValue());
+
+                if (i >= ChainParam.WARNING_RANGE) {
+                    break;
+                }
+
+                i++;
+            }
+
+            this.blockContainerMap.put(chainID, newBlockContainerMap);
+            oldBlockContainerMap.clear();
+        }
 
         // block
         if (this.blockMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
@@ -2140,16 +2160,16 @@ public class Chains implements DHT.GetDHTItemCallback{
                     blockContainer.getBlock().getImmutableBlockHash());
 
             if (TryResult.SUCCESS == result.tryResult) {
-                logger.debug("Chain ID[{}] Got in cache block hash[{}] immutable block[{}]",
+                blockContainer = result.blockContainer;
+
+                logger.debug("Chain ID[{}] Got block number[{}] hash[{}] in cache, immutable block hash[{}]",
                         new String(chainID.getData()),
+                        blockContainer.getBlock().getBlockNum(),
                         Hex.toHexString(blockContainer.getBlock().getBlockHash()),
                         Hex.toHexString(blockContainer.getBlock().getImmutableBlockHash()));
-
-                blockContainer = result.blockContainer;
             } else {
-                logger.debug("Chain ID[{}] Got failed in cache block hash[{}] immutable block[{}]",
+                logger.debug("Chain ID[{}] Fail to get block[{}] in cache",
                         new String(chainID.getData()),
-                        Hex.toHexString(blockContainer.getBlock().getBlockHash()),
                         Hex.toHexString(blockContainer.getBlock().getImmutableBlockHash()));
 
                 return result;
@@ -2188,16 +2208,17 @@ public class Chains implements DHT.GetDHTItemCallback{
                     blockContainer.getVerticalItem().getPreviousHash());
 
             if (TryResult.SUCCESS == result.tryResult) {
-                logger.debug("Chain ID[{}] Got in cache block hash[{}] previous block[{}]",
+                blockContainer = result.blockContainer;
+
+                logger.debug("Chain ID[{}] Got block number[{}] hash[{}] in cache, previous block hash[{}]",
                         new String(chainID.getData()),
+                        blockContainer.getBlock().getBlockNum(),
                         Hex.toHexString(blockContainer.getBlock().getBlockHash()),
                         Hex.toHexString(blockContainer.getVerticalItem().getPreviousHash()));
-
-                blockContainer = result.blockContainer;
             } else {
-                logger.debug("Chain ID[{}] Got failed in cache block hash[{}] previous block[{}]",
+                logger.debug("Chain ID[{}] Fail to get block number[{}] hash[{}] in cache",
                         new String(chainID.getData()),
-                        Hex.toHexString(blockContainer.getBlock().getBlockHash()),
+                        blockContainer.getBlock().getBlockNum() - 1,
                         Hex.toHexString(blockContainer.getVerticalItem().getPreviousHash()));
 
                 return result;
@@ -2226,6 +2247,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (this.blockContainerMap.get(chainID).containsKey(blockKey)) {
             BlockContainer blockContainer = this.blockContainerMap.get(chainID).get(blockKey);
             if (null == blockContainer) {
+                this.blockContainerMap.get(chainID).remove(blockKey);
                 blockContainerResult.tryResult = TryResult.ERROR;
             } else {
                 // 发现现成的数据
