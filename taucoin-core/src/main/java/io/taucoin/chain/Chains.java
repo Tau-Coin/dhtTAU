@@ -863,7 +863,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                             this.votingFlag.put(chainID, true);
                                         } else {
                                             // fork point out of warning range, maybe it's an attack chain
-                                            logger.debug("++ctx-----------------------an attack chain.....");
+                                            logger.debug("----------------an attack chain----------------");
                                         }
                                     } else {
                                         return ifOnMainChainResult2.tryResult;
@@ -1657,56 +1657,21 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (this.bestBlockContainers.get(chainID).getBlock().getBlockNum()  > referenceBlockContainer.getBlock().getBlockNum()) {
             long num = this.bestBlockContainers.get(chainID).getBlock().getBlockNum() - referenceBlockContainer.getBlock().getBlockNum();
 
-            if (num > ChainParam.WARNING_RANGE) {
-                // fork point out of warning range, maybe it's an attack chain
-                logger.debug("++ctx-----------------------an attack chain.....");
-            } else if (num > 2 * ChainParam.MUTABLE_RANGE) {
-                // 2 * mutable range ~ 3 * mutable range
-                // 先与tip - 3 * mutable range高度对齐
+            // 投票出来的，一个个追踪过去
 
-                long immutableBlockNumber3 = 0;
+            // 若reference block container高度与best block container高度差为(0, mutable range],
+            // 则移动reference block container与之对齐再判断
+            if (this.bestBlockContainers.get(chainID).getBlock().getBlockNum() -
+                    referenceBlockContainer.getBlock().getBlockNum() <= ChainParam.MUTABLE_RANGE) {
+
+                long blockNumber = 0;
                 if (this.bestBlockContainers.get(chainID).getBlock().getBlockNum() > ChainParam.MUTABLE_RANGE) {
-                    immutableBlockNumber3 = this.bestBlockContainers.get(chainID).getBlock().getBlockNum() - 3 * ChainParam.MUTABLE_RANGE;
+                    blockNumber = this.bestBlockContainers.get(chainID).getBlock().getBlockNum() - ChainParam.MUTABLE_RANGE;
                 }
 
-                BlockContainerResult blockContainerResult3 = tryToGetBlockContainerOfGivenNumber(chainID,
-                        referenceBlockContainer, immutableBlockNumber3);
-                if (TryResult.SUCCESS == blockContainerResult3.tryResult) {
-                    referenceBlockContainer = blockContainerResult3.blockContainer;
-                    logger.info("Got block container [{}] from cache successfully",
-                            Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()));
-                } else {
-                    return blockContainerResult3.tryResult;
-                }
-
-                byte[] blockHash = referenceBlockContainer.getBlock().getBlockHash();
-                IfOnMainChainResult ifOnMainChainResult = checkIfHashMatchMainChainHash(chainID,
-                        blockHash, immutableBlockNumber3);
-                if (TryResult.SUCCESS == ifOnMainChainResult.tryResult) {
-                    if (ifOnMainChainResult.isOnMainChain) {
-                        // 在immutable point2哈希一致，说明分叉点在1-3*mutable range之内
-                        logger.debug("Chain ID[{}] Block hash3[{}] fork in mutable range",
-                                new String(chainID.getData()), Hex.toHexString(blockHash));
-                        // be as a new chain when fork point between mutable range and warning range
-                        resetChain(chainID);
-                    } else {
-                        // fork point out of warning range, maybe it's an attack chain
-                        logger.debug("++ctx-----------------------an attack chain.....");
-                    }
-                } else {
-                    return ifOnMainChainResult.tryResult;
-                }
-            } else if (num > ChainParam.MUTABLE_RANGE) {
-                // mutable range ~ 2 * mutable range
-                // 先与tip - 2 * mutable range高度对齐
-
-                long immutableBlockNumber2 = 0;
-                if (this.bestBlockContainers.get(chainID).getBlock().getBlockNum() > ChainParam.MUTABLE_RANGE) {
-                    immutableBlockNumber2 = this.bestBlockContainers.get(chainID).getBlock().getBlockNum() - 2 * ChainParam.MUTABLE_RANGE;
-                }
-
+                // 获取与tip - mutable range对应高度的block container
                 BlockContainerResult blockContainerResult = tryToGetBlockContainerOfGivenNumber(chainID,
-                        referenceBlockContainer, immutableBlockNumber2);
+                        referenceBlockContainer, blockNumber);
                 if (TryResult.SUCCESS == blockContainerResult.tryResult) {
                     referenceBlockContainer = blockContainerResult.blockContainer;
                 } else {
@@ -1715,67 +1680,12 @@ public class Chains implements DHT.GetDHTItemCallback{
 
                 byte[] blockHash = referenceBlockContainer.getBlock().getBlockHash();
                 IfOnMainChainResult ifOnMainChainResult = checkIfHashMatchMainChainHash(chainID,
-                        blockHash, immutableBlockNumber2);
-                if (TryResult.SUCCESS == ifOnMainChainResult.tryResult) {
-                    if (ifOnMainChainResult.isOnMainChain) {
-                        // 在immutable point2哈希一致，说明分叉点在1-3*mutable range之内
-                        logger.debug("Chain ID[{}] Block hash2[{}] fork in mutable range",
-                                new String(chainID.getData()), Hex.toHexString(blockHash));
-                        // be as a new chain when fork point between mutable range and warning range
-                        resetChain(chainID);
-                    } else {
-                        // 分叉点在mutable range之外，判断是否在3倍的mutable range之内
-
-                        BlockContainerResult result2 = tryToGetBlockContainerFromCache(chainID, blockHash);
-
-                        if (TryResult.SUCCESS == result2.tryResult) {
-                            BlockContainer blockContainer2 = result2.blockContainer;
-
-                            IfOnMainChainResult ifOnMainChainResult1 = checkIfImmutableBlockOnMainChain(chainID, blockContainer2);
-                            if (TryResult.SUCCESS == ifOnMainChainResult1.tryResult) {
-                                if (ifOnMainChainResult1.isOnMainChain) {
-                                    // 在immutable point2哈希一致，说明分叉点在1-3*mutable range之内
-                                    // be as a new chain when fork point between mutable range and warning range
-                                    resetChain(chainID);
-                                } else {
-                                    // fork point out of warning range, maybe it's an attack chain
-                                    logger.debug("++ctx-----------------------an attack chain.....");
-                                }
-                            } else {
-                                return ifOnMainChainResult1.tryResult;
-                            }
-                        } else {
-                            return result2.tryResult;
-                        }
-                    }
-                } else {
-                    return ifOnMainChainResult.tryResult;
-                }
-            } else {
-                // mutable range以内
-                // 先与tip - mutable range高度对齐
-
-                long immutableBlockNumber1 = 0;
-                if (this.bestBlockContainers.get(chainID).getBlock().getBlockNum() > ChainParam.MUTABLE_RANGE) {
-                    immutableBlockNumber1 = this.bestBlockContainers.get(chainID).getBlock().getBlockNum() - ChainParam.MUTABLE_RANGE;
-                }
-
-                BlockContainerResult blockContainerResult = tryToGetBlockContainerOfGivenNumber(chainID,
-                        referenceBlockContainer, immutableBlockNumber1);
-                if (TryResult.SUCCESS == blockContainerResult.tryResult) {
-                    referenceBlockContainer = blockContainerResult.blockContainer;
-                } else {
-                    return blockContainerResult.tryResult;
-                }
-
-                byte[] immutableBlockHash1 = referenceBlockContainer.getBlock().getBlockHash();
-                IfOnMainChainResult ifOnMainChainResult = checkIfHashMatchMainChainHash(chainID,
-                        immutableBlockHash1, immutableBlockNumber1);
+                        blockHash, blockNumber);
                 if (TryResult.SUCCESS == ifOnMainChainResult.tryResult) {
                     if (ifOnMainChainResult.isOnMainChain) {
                         // 在immutable point哈希一致，说明分叉点在mutable range之内
-                        logger.debug("Chain ID[{}] Block hash1[{}] fork in mutable range",
-                                new String(chainID.getData()), Hex.toHexString(immutableBlockHash1));
+                        logger.debug("Chain ID[{}] Block hash[{}] fork in mutable range",
+                                new String(chainID.getData()), Hex.toHexString(blockHash));
                         // change to more difficult chain
                         TryResult result = reBranch(chainID, blockContainer);
                         if (TryResult.SUCCESS == result) {
@@ -1784,148 +1694,111 @@ public class Chains implements DHT.GetDHTItemCallback{
                             chooseBestBlockAsTipAfterVoting(chainID);
                         }
                         return result;
-                    } else {
-                        // 分叉点在mutable range之外，判断是否在3倍的mutable range之内
-                        // 获取参考点前面第1个immutable block container
-
-                        BlockContainerResult result1 = tryToGetBlockContainerFromCache(chainID, immutableBlockHash1);
-
-                        if (TryResult.SUCCESS == result1.tryResult) {
-                            BlockContainer blockContainer1 = result1.blockContainer;
-                            // 如果有返回，但是数据不为空，继续找第二个immutable block
-                            // 获取前面第2个immutable block hash
-                            byte[] immutableBlockHash2 = blockContainer1.getBlock().getImmutableBlockHash();
-
-                            long immutableBlockNumber2 = 0;
-                            if (blockContainer1.getBlock().getBlockNum() > ChainParam.MUTABLE_RANGE) {
-                                immutableBlockNumber2 = blockContainer1.getBlock().getBlockNum() - ChainParam.MUTABLE_RANGE;
-                            }
-
-                            byte[] hash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(), immutableBlockNumber2);
-                            if (null == hash) {
-                                // 在此高度没有主链信息
-                                if (isSyncUncompleted(chainID)) {
-                                    logger.debug("Chain ID[{}] Need to sync in height2:{}",
-                                            new String(chainID.getData()), immutableBlockNumber2);
-                                    requestSyncBlock(chainID);
-                                    return TryResult.REQUEST;
-                                } else {
-                                    logger.debug("Chain ID[{}] Cannot find main chain info in height2:{}",
-                                            new String(chainID.getData()), immutableBlockNumber2);
-                                    return TryResult.ERROR;
-                                }
-                            } else {
-                                if (Arrays.equals(hash, immutableBlockHash2)) {
-                                    // 在immutable point2哈希一致，说明分叉点在1-3*mutable range之内
-                                    logger.debug("Chain ID[{}] Block hash2[{}] fork in mutable range",
-                                            new String(chainID.getData()), Hex.toHexString(immutableBlockHash2));
-                                    // be as a new chain when fork point between mutable range and warning range
-                                    resetChain(chainID);
-                                } else {
-                                    // 不在主链上，继续查看第3个immutable block hash
-                                    // 先获取前面第2个mutable point block container
-
-                                    BlockContainerResult result2 = tryToGetBlockContainerFromCache(chainID, immutableBlockHash2);
-
-                                    if (TryResult.SUCCESS == result2.tryResult) {
-                                        BlockContainer blockContainer2 = result2.blockContainer;
-                                        // 查看第3个immutable block hash
-                                        byte[] immutableBlockHash3 = blockContainer2.
-                                                getBlock().getImmutableBlockHash();
-
-                                        long immutableBlockNumber3 = 0;
-                                        if (blockContainer2.getBlock().getBlockNum() > ChainParam.MUTABLE_RANGE) {
-                                            immutableBlockNumber3 = blockContainer2.getBlock().getBlockNum() - ChainParam.MUTABLE_RANGE;
-                                        }
-
-                                        hash = this.blockStore.getMainChainBlockHashByNumber(chainID.getData(), immutableBlockNumber3);
-                                        if (null == hash) {
-                                            // 在此高度没有主链信息
-                                            if (isSyncUncompleted(chainID)) {
-                                                logger.debug("Chain ID[{}] Need to sync in height3:{}",
-                                                        new String(chainID.getData()), immutableBlockNumber3);
-                                                requestSyncBlock(chainID);
-                                                return TryResult.REQUEST;
-                                            } else {
-                                                logger.debug("Chain ID[{}] Cannot find main chain info in height3:{}",
-                                                        new String(chainID.getData()), immutableBlockNumber3);
-                                                return TryResult.ERROR;
-                                            }
-                                        } else {
-                                            if (Arrays.equals(hash, immutableBlockHash3)) {
-                                                // 在immutable point3哈希一致，说明分叉点在1-3*mutable range之内
-                                                logger.debug("Chain ID[{}] Block hash3[{}] fork in mutable range",
-                                                        new String(chainID.getData()), Hex.toHexString(immutableBlockHash3));
-                                                // be as a new chain when fork point between mutable range and warning range
-                                                resetChain(chainID);
-                                            } else {
-                                                // fork point out of warning range, maybe it's an attack chain
-                                                logger.debug("++ctx-----------------------an attack chain.....");
-                                            }
-                                        }
-                                    } else {
-                                        return result2.tryResult;
-                                    }
-                                }
-                            }
-                        } else {
-                            return result1.tryResult;
-                        }
                     }
                 } else {
                     return ifOnMainChainResult.tryResult;
                 }
             }
+
+            // 若reference block container高度与best block container高度差为(mutable range, 2 * mutable range],
+            // 则移动reference block container与之对齐再判断
+            if (this.bestBlockContainers.get(chainID).getBlock().getBlockNum() -
+                    referenceBlockContainer.getBlock().getBlockNum() <= 2 * ChainParam.MUTABLE_RANGE) {
+
+                long blockNumber = 0;
+                if (this.bestBlockContainers.get(chainID).getBlock().getBlockNum() > 2 * ChainParam.MUTABLE_RANGE) {
+                    blockNumber = this.bestBlockContainers.get(chainID).getBlock().getBlockNum() - 2 * ChainParam.MUTABLE_RANGE;
+                }
+
+                BlockContainerResult blockContainerResult = tryToGetBlockContainerOfGivenNumber(chainID,
+                        referenceBlockContainer, blockNumber);
+                if (TryResult.SUCCESS == blockContainerResult.tryResult) {
+                    referenceBlockContainer = blockContainerResult.blockContainer;
+                } else {
+                    return blockContainerResult.tryResult;
+                }
+
+                byte[] blockHash = referenceBlockContainer.getBlock().getBlockHash();
+                IfOnMainChainResult ifOnMainChainResult = checkIfHashMatchMainChainHash(chainID,
+                        blockHash, blockNumber);
+                if (TryResult.SUCCESS == ifOnMainChainResult.tryResult) {
+                    if (ifOnMainChainResult.isOnMainChain) {
+                        // 在immutable point2哈希一致，说明分叉点在1-3*mutable range之内
+                        logger.debug("Chain ID[{}] Block hash[{}] fork in mutable range",
+                                new String(chainID.getData()), Hex.toHexString(blockHash));
+                        // be as a new chain when fork point between mutable range and warning range
+                        resetChain(chainID);
+
+                        return TryResult.SUCCESS;
+                    }
+                } else {
+                    return ifOnMainChainResult.tryResult;
+                }
+            }
+
+            // 若reference block container高度与best block container高度差为(2 * mutable range, warning range],
+            // 则移动reference block container与之对齐再判断
+            if (this.bestBlockContainers.get(chainID).getBlock().getBlockNum() -
+                    referenceBlockContainer.getBlock().getBlockNum() <= ChainParam.WARNING_RANGE) {
+
+                long blockNumber = 0;
+                if (this.bestBlockContainers.get(chainID).getBlock().getBlockNum() > ChainParam.WARNING_RANGE) {
+                    blockNumber = this.bestBlockContainers.get(chainID).getBlock().getBlockNum() - ChainParam.WARNING_RANGE;
+                }
+
+                BlockContainerResult blockContainerResult = tryToGetBlockContainerOfGivenNumber(chainID,
+                        referenceBlockContainer, blockNumber);
+                if (TryResult.SUCCESS == blockContainerResult.tryResult) {
+                    referenceBlockContainer = blockContainerResult.blockContainer;
+                } else {
+                    return blockContainerResult.tryResult;
+                }
+
+                byte[] blockHash = referenceBlockContainer.getBlock().getBlockHash();
+                IfOnMainChainResult ifOnMainChainResult = checkIfHashMatchMainChainHash(chainID,
+                        blockHash, blockNumber);
+                if (TryResult.SUCCESS == ifOnMainChainResult.tryResult) {
+                    if (ifOnMainChainResult.isOnMainChain) {
+                        // 在immutable point3哈希一致，说明分叉点在1-3*mutable range之内
+                        logger.debug("Chain ID[{}] Block hash[{}] fork in mutable range",
+                                new String(chainID.getData()), Hex.toHexString(blockHash));
+                        // be as a new chain when fork point between mutable range and warning range
+                        resetChain(chainID);
+
+                        return TryResult.SUCCESS;
+                    }
+                } else {
+                    return ifOnMainChainResult.tryResult;
+                }
+            }
+
+            // fork point out of warning range or no fork point, maybe it's an attack chain
+            logger.debug("----------------an attack chain----------------");
         } else {
             // 若大于，先对齐区块号
             // 1. 高度差先缩小到mutable range之内
-            while (referenceBlockContainer.getBlock().getBlockNum() - this.bestBlockContainers.get(chainID).
-                    getBlock().getBlockNum() >= ChainParam.MUTABLE_RANGE) {
-                BlockContainerResult result = tryToGetBlockContainerFromCache(chainID,
-                        referenceBlockContainer.getBlock().getImmutableBlockHash());
-
-                if (TryResult.SUCCESS == result.tryResult) {
-                    logger.debug("Chain ID[{}] Got in cache block hash[{}] immutable block[{}]",
-                            new String(chainID.getData()),
-                            Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                            Hex.toHexString(referenceBlockContainer.getBlock().getImmutableBlockHash()));
-
-                    referenceBlockContainer = result.blockContainer;
-                } else {
-                    logger.debug("Chain ID[{}] Got failed in cache block hash[{}] immutable block[{}]",
-                            new String(chainID.getData()),
-                            Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                            Hex.toHexString(referenceBlockContainer.getBlock().getImmutableBlockHash()));
-
-                    return result.tryResult;
-                }
+            BlockContainerResult blockContainerResult1 = tryToGetBlockContainerWithinMutableRange(chainID,
+                    referenceBlockContainer, this.bestBlockContainers.get(chainID).getBlock().getBlockNum());
+            if (TryResult.SUCCESS == blockContainerResult1.tryResult) {
+                referenceBlockContainer = blockContainerResult1.blockContainer;
+                logger.info("Got block container [{}] from cache successfully",
+                        Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()));
+            } else {
+                return blockContainerResult1.tryResult;
             }
 
             // 2. 在mutable range范围内高度对齐
-            while (referenceBlockContainer.getBlock().getBlockNum() >
-                    this.bestBlockContainers.get(chainID).getBlock().getBlockNum()) {
-                BlockContainerResult result = tryToGetBlockContainerFromCache(chainID,
-                        referenceBlockContainer.getVerticalItem().getPreviousHash());
-
-                if (TryResult.SUCCESS == result.tryResult) {
-                    logger.debug("Chain ID[{}] Got in cache block hash[{}] previous block[{}]",
-                            new String(chainID.getData()),
-                            Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                            Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
-
-                    referenceBlockContainer = result.blockContainer;
-                } else {
-                    logger.debug("Chain ID[{}] Got failed in cache block hash[{}] previous block[{}]",
-                            new String(chainID.getData()),
-                            Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()),
-                            Hex.toHexString(referenceBlockContainer.getVerticalItem().getPreviousHash()));
-
-                    return result.tryResult;
-                }
+            BlockContainerResult blockContainerResult2 = tryToGetBlockContainerOfGivenNumber(chainID,
+                    referenceBlockContainer, this.bestBlockContainers.get(chainID).getBlock().getBlockNum());
+            if (TryResult.SUCCESS == blockContainerResult2.tryResult) {
+                referenceBlockContainer = blockContainerResult2.blockContainer;
+                logger.info("Got block container [{}] from cache successfully",
+                        Hex.toHexString(referenceBlockContainer.getBlock().getBlockHash()));
+            } else {
+                return blockContainerResult2.tryResult;
             }
 
             // 3. 相等的情况
-            // TODO:: 检查是否存在相应高度区块
             BlockInfo blockInfo = this.blockStore.getBlockInfoByHash(chainID.getData(),
                     referenceBlockContainer.getBlock().getBlockHash());
 
@@ -1975,7 +1848,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                                                 resetChain(chainID);
                                             } else {
                                                 // fork point out of warning range, maybe it's an attack chain
-                                                logger.debug("++ctx-----------------------an attack chain.....");
+                                                logger.debug("----------------an attack chain----------------");
                                             }
                                         } else {
                                             return ifOnMainChainResult2.tryResult;
@@ -2643,18 +2516,25 @@ public class Chains implements DHT.GetDHTItemCallback{
             return TryResult.ERROR;
         }
 
-        // TODO: to get previous block container
-//        HashListResult hashListResult = getPreviousHashList(chainID, blockContainer);
-//        if (TryResult.SUCCESS == hashListResult.tryResult) {
-//            VerticalItem verticalItem = new VerticalItem(hashListResult.hashList);
-//            if (!Arrays.equals(verticalItem.getHash(), blockContainer.getVerticalItem().getHash())) {
-//                logger.error("ChainID[{}]: Block[{}] vertical item hash mismatch!",
-//                        new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
-//                return TryResult.ERROR;
-//            }
-//        } else {
-//            return hashListResult.tryResult;
-//        }
+        BlockContainer previousBlockContainer = this.blockStore.getBlockContainerByHash(chainID.getData(),
+                blockContainer.getVerticalItem().getPreviousHash());
+        if (null == previousBlockContainer) {
+            logger.error("Fail to get previous block container, hash:{}",
+                    Hex.toHexString(blockContainer.getVerticalItem().getPreviousHash()));
+            return TryResult.ERROR;
+        }
+
+        HashListResult hashListResult = getPreviousHashList(chainID, previousBlockContainer);
+        if (TryResult.SUCCESS == hashListResult.tryResult) {
+            VerticalItem verticalItem = new VerticalItem(hashListResult.hashList);
+            if (!Arrays.equals(verticalItem.getHash(), blockContainer.getVerticalItem().getHash())) {
+                logger.error("ChainID[{}]: Block[{}] vertical item hash mismatch!",
+                        new String(chainID.getData()), Hex.toHexString(blockContainer.getBlock().getBlockHash()));
+                return TryResult.ERROR;
+            }
+        } else {
+            return hashListResult.tryResult;
+        }
 
         // 时间戳检查
         if (blockContainer.getBlock().getTimeStamp() > System.currentTimeMillis() / 1000) {

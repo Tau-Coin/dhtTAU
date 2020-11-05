@@ -169,11 +169,6 @@ public class PeerManager {
         peer = iterator.next().getData();
         iterator.remove();
 
-        // TODO:: for test
-        if (Arrays.equals(peer, AccountManager.getInstance().getKeyPair().first)) {
-            return getBlockPeerRandomly();
-        }
-
         return peer;
     }
 
