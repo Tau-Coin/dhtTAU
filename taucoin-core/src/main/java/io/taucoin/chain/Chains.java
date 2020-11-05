@@ -3694,8 +3694,13 @@ public class Chains implements DHT.GetDHTItemCallback{
                     int counter = this.syncCounter.get(dataIdentifier.getChainID()) + 1;
                     this.syncCounter.put(dataIdentifier.getChainID(), counter);
 
-                    if (counter < ChainParam.MUTABLE_RANGE && null != verticalItem.getPreviousHash()) {
-                        requestBlockForSync(dataIdentifier.getChainID(), verticalItem.getPreviousHash());
+                    if (counter < ChainParam.MUTABLE_RANGE) {
+                        List<byte[]> hashList = verticalItem.getHashList();
+                        if (null != hashList) {
+                            for (byte[] hash: hashList) {
+                                requestBlockForSync(dataIdentifier.getChainID(), hash);
+                            }
+                        }
                     }
 
                     if (null != block) {
