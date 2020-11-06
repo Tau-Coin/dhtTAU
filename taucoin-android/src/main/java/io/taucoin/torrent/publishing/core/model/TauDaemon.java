@@ -26,6 +26,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
+import io.taucoin.dht.session.SessionController;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
@@ -351,7 +352,12 @@ public class TauDaemon {
         if (settingsRepo.internetState()) {
             if (networkJitter != null && !networkJitter.isDisposed()) {
                 networkJitter.dispose();
-                rescheduleDHTBySessions(lastSessions, lastSessions, true);
+                int sessions = lastSessions;
+                if (NetworkSetting.isMeteredNetwork()
+                        && sessions == SessionController.MAX_SESSIONS) {
+                    sessions = 1;
+                }
+                rescheduleDHTBySessions(lastSessions, sessions, true);
             } else {
                 int sessions = NetworkSetting.calculateDHTSessions();
                 rescheduleDHTBySessions(lastSessions, sessions, false);
@@ -378,25 +384,26 @@ public class TauDaemon {
         boolean isSuccess = false;
         if (restart) {
             isSuccess = tauController.restartSessions(sessions);
+            logger.debug("rescheduleTauBySettings: restartSessions");
         } else {
             if (sessions - lastSessions < 0) {
                 isSuccess = tauController.decreaseSession();
+                logger.debug("rescheduleTauBySettings: decreaseSession");
             } else if (sessions - lastSessions > 0) {
                 isSuccess = tauController.increaseSession();
+                logger.debug("rescheduleTauBySettings: increaseSession");
             } else {
-                logger.info("rescheduleTauBySettings: Don't do anything about it");
+                logger.debug("rescheduleTauBySettings: Don't do anything about it");
             }
         }
         // 调度成功才更新本地sessions值
-        if (isSuccess) {
+//        if (isSuccess) {
             NetworkSetting.updateDHTSessions(sessions);
-        }
-        logger.info("rescheduleTauBySettings Auto Mode::{}, internetState::{}, " +
+//        }
+        logger.debug("rescheduleTauBySettings Auto Mode::{}, internetState::{}, " +
                         "DHTSessions::{}, reschedule result::{}",
                 NetworkSetting.autoMode(),
-                settingsRepo.internetState(),
-                NetworkSetting.getDHTSessions(),
-                isSuccess);
+                settingsRepo.internetState(), sessions, isSuccess);
     }
 
     /**
@@ -483,7 +490,7 @@ public class TauDaemon {
      */
     public long getUserPower(String chainID, String publicKey) {
         try {
-            AccountState accountState = tauController.getChainManager().getAccountState(
+            AccountState accountState = tauController.getChainManager().getStateDB().getAccount(
                     chainID.getBytes(), ByteUtil.toByte(publicKey));
             if (accountState != null) {
                 return accountState.getNonce().longValue();
@@ -500,7 +507,7 @@ public class TauDaemon {
      */
     public long getUserBalance(String chainID, String publicKey) {
         try {
-            AccountState accountState = tauController.getChainManager().getAccountState(
+            AccountState accountState = tauController.getChainManager().getStateDB().getAccount(
                     chainID.getBytes(), ByteUtil.toByte(publicKey));
             if (accountState != null) {
                 return accountState.getBalance().longValue();

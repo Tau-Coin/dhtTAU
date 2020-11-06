@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.service.SystemServiceManager;
 
 /**
  * 流量统计工具类
@@ -36,7 +35,7 @@ public class TrafficUtil {
         saveTrafficTotal(TRAFFIC_DOWN, statistics.getRxBytes());
         saveTrafficTotal(TRAFFIC_UP, statistics.getTxBytes());
         // 如果是计费网络，统计当天计费网络使用总量
-        if (SystemServiceManager.getInstance().isNetworkMetered()) {
+        if (NetworkSetting.isMeteredNetwork()) {
             long total = statistics.getRxBytes() + statistics.getTxBytes();
             saveTrafficTotal(TRAFFIC_METERED, total);
         }

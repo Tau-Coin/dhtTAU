@@ -126,6 +126,9 @@ public class TauInfoProvider {
                                 statistics.getTxBytes());
 
                         Thread.sleep(STATISTICS_PERIOD);
+                    } else {
+                        logger.warn("Network statistical: Unable to get traffic data");
+                        break;
                     }
                 }
             } catch (InterruptedException ignore) {

@@ -9,7 +9,6 @@ ext {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    api files('libs/jlibtorrent-1.2.7.0.jar')
 
     api "org.slf4j:slf4j-api:${slf4jVersion}"
     api "org.slf4j:slf4j-log4j12:${slf4jVersion}"
