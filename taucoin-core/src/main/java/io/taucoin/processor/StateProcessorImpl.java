@@ -158,19 +158,17 @@ public class StateProcessorImpl implements StateProcessor {
                 return INVALID_BLOCK;
             }
 
-            // TODO:: verify
-            /*
             if (!tx.verifyTransactionSig()) {
                 logger.error("Bad Signature.");
-                return false;
+                return INVALID_BLOCK;
             }
 
             // if genesis block -> msg type == error
-            if (block.getBlockNum() != 0 || MsgType.GenesisMsg == tx.getTxData().getMsgType()) {
+            if (blockContainer.getBlock().getBlockNum() != 0 || tx.getTxType() != TypesConfig.TxType.GenesisType.ordinal()) {
                 logger.error("Genesis type error!");
-                return false;
+                return INVALID_BLOCK;
             }
-            */
+
 
             ArrayList<GenesisItem> list = ((GenesisTx)tx).getGenesisAccounts();
             if (null != list) {
@@ -232,7 +230,11 @@ public class StateProcessorImpl implements StateProcessor {
                     return INVALID_BLOCK;
                 }
 
-                // TODO:: type match?
+                if (tx.getTxType() == TypesConfig.TxType.GenesisType.ordinal()) {
+                    logger.error("Tx type error!");
+                    return INVALID_BLOCK;
+                }
+
                 if (!tx.isTxParamValidate()) {
                     logger.error("Tx validate fail!");
                     return INVALID_BLOCK;
