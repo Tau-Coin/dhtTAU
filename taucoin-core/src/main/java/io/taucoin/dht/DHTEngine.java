@@ -95,6 +95,7 @@ public class DHTEngine {
      * Stop dht engine.
      */
     public void stop() {
+        requestQueue.clear();
         sessionController.stop();
         tauListener.onDHTStopped();
     }
