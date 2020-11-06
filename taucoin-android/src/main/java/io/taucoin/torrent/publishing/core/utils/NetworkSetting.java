@@ -11,7 +11,6 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.service.SystemServiceManager;
 
 /**
  * 网络流量设置相关工具类
@@ -93,7 +92,7 @@ public class NetworkSetting {
      */
     public synchronized static void updateSpeedSample(@NonNull NetworkStatistics statistics) {
         Context context = MainApplication.getInstance();
-        if (!SystemServiceManager.getInstance().isNetworkMetered()) {
+        if (!isMeteredNetwork()) {
             clearSpeedList();
            return;
         }
@@ -193,7 +192,7 @@ public class NetworkSetting {
         int sessions = getDHTSessions();
         long meteredLimit = meteredLimit();
         // 当前网络为计费网络，并且有流量控制
-        if (SystemServiceManager.getInstance().isNetworkMetered() && meteredLimit != 0) {
+        if (isMeteredNetwork() && meteredLimit != 0) {
             long currentSpeed = NetworkSetting.getMeteredSpeed();
             long speedLimit = NetworkSetting.getMeteredSpeedLimit();
             if (speedLimit > 0) {

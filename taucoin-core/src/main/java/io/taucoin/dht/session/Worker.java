@@ -44,6 +44,8 @@ class Worker {
     private volatile boolean startingResult = false;
     private volatile boolean startingResultReceived = false;
 
+    private volatile boolean stopRequested = false;
+
     private Runnable task = new Runnable() {
 
         @Override
@@ -69,11 +71,15 @@ class Worker {
                 signal.notify();
             }
 
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted() && !stopRequested) {
                 Object req = null;
 
                 try {
                     Thread.sleep(DHTOPInterval);
+
+                    if (stopRequested) {
+                        break;
+                    }
 
                     // TODO: comments
                     req = inputQueue.take();
@@ -146,6 +152,7 @@ class Worker {
             return;
         }
 
+        stopRequested = true;
         // Firstly, interrupt worker thread.
         worker.interrupt();
         /*

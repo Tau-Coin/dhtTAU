@@ -184,6 +184,18 @@ public class SessionController {
         return sessionsList.size();
     }
 
+    public List<SessionInfo> getSessionInfos() {
+        List<SessionInfo> ret = new ArrayList<>();
+
+        for (int i = 0; i < sessionsList.size(); i++) {
+            SessionInfo si = new SessionInfo(i, sessionsList.get(i).nids(),
+                    sessionsList.get(i).dhtNodes());
+            ret.add(si);
+        }
+
+        return ret;
+    }
+
     private static final class NetworkInterfacePolicy {
 
         public static String networkInterfaces(int index) {

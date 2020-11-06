@@ -20,6 +20,7 @@ import io.taucoin.torrent.publishing.core.model.TauDaemonListener;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
+import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
@@ -126,6 +127,7 @@ public class TauService extends Service {
         isAlreadyRunning.set(false);
         stopForeground(true);
         stopSelf();
+        AppUtil.appSafeExit();
     }
 
     /**
@@ -163,5 +165,6 @@ public class TauService extends Service {
     public void onDestroy() {
         super.onDestroy();
         logger.info("Stop {}", TAG);
+        AppUtil.killProcess();
     }
 }

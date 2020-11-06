@@ -149,4 +149,10 @@ public class AppUtil {
         }
         return isFileExists;
     }
+
+    public static void killProcess() {
+        int myPid = android.os.Process.myPid();
+        android.os.Process.killProcess(myPid);
+        System.exit(0);
+    }
 }
