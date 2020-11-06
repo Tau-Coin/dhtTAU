@@ -36,6 +36,8 @@ class TauSession {
             AlertType.LISTEN_SUCCEEDED.swig(),
             AlertType.LISTEN_FAILED.swig(),
             AlertType.DHT_PUT.swig(),
+            AlertType.DHT_LOG.swig(),
+            //AlertType.DHT_PKT.swig(),
     };
 
     private AlertListener torrentListener = new AlertListener() {
@@ -76,6 +78,11 @@ class TauSession {
             } else if (type == AlertType.DHT_PUT) {
                 DhtPutAlert a = (DhtPutAlert) alert;
                 logger.info(a.message());
+            } else if (type == AlertType.DHT_LOG) {
+                if (EnableTorrentLog) {
+                    DhtLogAlert a = (DhtLogAlert) alert;
+                    logger.info(a.message());
+                }
             }
         }
     };
