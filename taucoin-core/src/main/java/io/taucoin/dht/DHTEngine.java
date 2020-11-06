@@ -2,6 +2,7 @@ package io.taucoin.dht;
 
 import io.taucoin.dht.metrics.Counter;
 import io.taucoin.dht.session.SessionController;
+import io.taucoin.dht.session.SessionInfo;
 import io.taucoin.listener.TauListener;
 
 import com.hybhub.util.concurrent.ConcurrentSetBlockingQueue;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.List;
 
 import static io.taucoin.dht.DHT.*;
 import static io.taucoin.dht.DHTReqResult.*;
@@ -122,6 +124,10 @@ public class DHTEngine {
      */
     public boolean decreaseSession() {
         return sessionController.decrease();
+    }
+
+    public List<SessionInfo> getSessionInfos() {
+        return sessionController.getSessionInfos();
     }
 
     /**

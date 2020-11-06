@@ -8,6 +8,9 @@ import com.frostwire.jlibtorrent.swig.entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.Map;
+
 import static io.taucoin.dht.DHT.*;
 
 /**
@@ -22,6 +25,9 @@ class TauSession {
 
     // Torrent session manager.
     private SessionManager sessionManager;
+
+    // node id(s)
+    private String nids = null;
 
     // Torrent session settings.
     private SessionSettings settings;
@@ -140,6 +146,32 @@ class TauSession {
     }
 
     /**
+     * Get node id(s).
+     *
+     * @return String
+     */
+    public String nids() {
+        if (nids != null) {
+            return nids;
+        }
+
+        // get nids
+        nids = getNodeIds();
+        logger.info("node ids:" + nids);
+
+        return nids;
+    }
+
+    /**
+     * Get account of dht nodes online.
+     *
+     * @return long
+     */
+    public long dhtNodes() {
+        return sessionManager.dhtNodes();
+    }
+
+    /**
      * Put immutable item.
      *
      * @param item immutable item
@@ -221,5 +253,50 @@ class TauSession {
 
         logger.info("mutable item type:" + result.item.swig().type());
         return Utils.stringEntryToBytes(result.item);
+    }
+
+    private String getNodeIds() {
+        byte[] state = new SessionHandle(sessionManager.swig())
+                .saveState(SessionHandle.SAVE_DHT_STATE);
+        if (state == null) {
+            return null;
+        }
+
+        Entry e = Entry.bdecode(state);
+        if (e == null) {
+            return null;
+        }
+
+        Map<String, Entry> map = e.dictionary();
+        if (map == null) {
+            return null;
+        }
+        Entry dhtState = map.get("dht state");
+        if (dhtState == null) {
+            return null;
+        }
+
+        Map<String, Entry> dhtMap = dhtState.dictionary();
+        if (dhtMap == null) {
+            return null;
+        }
+        Entry nidList = dhtMap.get("node-id");
+        if (nidList == null) {
+            return null;
+        }
+        List<Entry> nids = nidList.list();
+        if (nids == null) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < nids.size(); i++) {
+            sb.append(nids.get(i).toString());
+            if (i != nids.size() - 1) {
+                sb.append(",");
+            }
+        }
+
+        return sb.toString();
     }
 }
