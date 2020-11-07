@@ -17,8 +17,13 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
  */
 public class NetworkSetting {
     private static final long meteredLimited = 50 * 1024 * 1024; // 50MB
+    private static final long maxSpeedLimited = 50 * 1024;       // 50KB
+    // 网速在限制内浮动范围，超过限制，立即减sessions - 1
+    private static final long speedRange = 512;                  // 0.5KB
     private static final long speed_sample = 60; // 单位s
     private static final boolean autoMode = true;
+    private static final int minSessions = SessionController.MIN_SESSIONS;
+    private static final int maxSessions = 20;
 
     private static SettingsRepository settingsRepo;
     static {
@@ -92,19 +97,25 @@ public class NetworkSetting {
      */
     public synchronized static void updateSpeedSample(@NonNull NetworkStatistics statistics) {
         Context context = MainApplication.getInstance();
-        if (!isMeteredNetwork()) {
-            clearSpeedList();
-           return;
-        }
         long total = statistics.getRxBytes() + statistics.getTxBytes();
-        long size = TrafficUtil.calculateIncrementalSize(TrafficUtil.getMeteredType(), total);
-        List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_metered_speed_list),
+        long size;
+        long meteredSize = TrafficUtil.calculateIncrementalSize(TrafficUtil.getMeteredType(), total);
+        if (!isMeteredNetwork()) {
+            long upTotalSize = TrafficUtil.calculateIncrementalSize(TrafficUtil.getUpType(),
+                    statistics.getTxBytes());
+            long downTotalSize = TrafficUtil.calculateIncrementalSize(TrafficUtil.getDownType(),
+                    statistics.getRxBytes());
+            size = upTotalSize + downTotalSize - meteredSize;
+        } else {
+            size = meteredSize;
+        }
+        List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
                 Long.class);
         if (list.size() >= speed_sample) {
             list.remove(0);
         }
         list.add(size);
-        settingsRepo.setListData(context.getString(R.string.pref_key_metered_speed_list), list);
+        settingsRepo.setListData(context.getString(R.string.pref_key_current_speed_list), list);
 
         updateMeteredSpeedLimit();
     }
@@ -114,16 +125,16 @@ public class NetworkSetting {
      */
     public static void clearSpeedList() {
         Context context = MainApplication.getInstance();
-        settingsRepo.setListData(context.getString(R.string.pref_key_metered_speed_list),
+        settingsRepo.setListData(context.getString(R.string.pref_key_current_speed_list),
                 new ArrayList<>());
     }
 
     /**
-     * 获取计费网络网速
+     * 获取当前网络网速
      */
-    public static long getMeteredSpeed() {
+    public static long getCurrentSpeed() {
         Context context = MainApplication.getInstance();
-        List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_metered_speed_list),
+        List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
                 Long.class);
         long totalSpeed = 0;
         for (long speed : list) {
@@ -189,33 +200,42 @@ public class NetworkSetting {
      * 计算DHT Session个数
      */
     public static int calculateDHTSessions() {
-        int sessions = getDHTSessions();
+        int sessions;
         long meteredLimit = meteredLimit();
         // 当前网络为计费网络，并且有流量控制
         if (isMeteredNetwork() && meteredLimit != 0) {
-            long currentSpeed = NetworkSetting.getMeteredSpeed();
             long speedLimit = NetworkSetting.getMeteredSpeedLimit();
-            if (speedLimit > 0) {
-                if (currentSpeed > speedLimit) {
-                    if (sessions > SessionController.MIN_SESSIONS + 1) {
-                        sessions --;
-                    } else {
-                        sessions = SessionController.MIN_SESSIONS + 1;
-                    }
+            sessions = calculateDHTSessions(speedLimit);
+        } else {
+            // 当前网络为非计费网络，并且有固定流量控制
+            sessions = calculateDHTSessions(maxSpeedLimited);
+        }
+        return sessions;
+    }
+
+    /**
+     * 根据网速限制计算DHT Session个数
+     */
+    private static int calculateDHTSessions(long speedLimit) {
+        long currentSpeed = NetworkSetting.getCurrentSpeed();
+        int sessions = getDHTSessions();
+        if (speedLimit > 0) {
+            if (currentSpeed > speedLimit) {
+                if (sessions > minSessions + 1) {
+                    sessions --;
                 } else {
-                    if (sessions < SessionController.MAX_SESSIONS) {
-                        sessions ++;
-                    } else {
-                        sessions = SessionController.MAX_SESSIONS;
-                    }
+                    sessions = minSessions + 1;
                 }
-            } else {
-                // 超出流量控制范围
-                sessions = SessionController.MIN_SESSIONS;
+            } else if (currentSpeed < speedLimit - speedRange){
+                if (sessions < maxSessions) {
+                    sessions ++;
+                } else {
+                    sessions = maxSessions;
+                }
             }
         } else {
-            // 不限制DHT Sessions
-            sessions = SessionController.MAX_SESSIONS;
+            // 超出流量控制范围
+            sessions = minSessions;
         }
         return sessions;
     }

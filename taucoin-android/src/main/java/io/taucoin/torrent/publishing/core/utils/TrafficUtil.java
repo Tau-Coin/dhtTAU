@@ -115,6 +115,14 @@ public class TrafficUtil {
         return TRAFFIC_METERED;
     }
 
+    public static String getUpType() {
+        return TRAFFIC_UP;
+    }
+
+    public static String getDownType() {
+        return TRAFFIC_DOWN;
+    }
+
     /**
      * 获取计费网络本地存储Key
      * @return

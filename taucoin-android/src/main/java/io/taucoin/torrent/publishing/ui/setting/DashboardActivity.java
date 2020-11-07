@@ -178,8 +178,8 @@ public class DashboardActivity extends BaseActivity implements View.OnClickListe
             binding.tvMeteredNetworkUsage.setText(getString(R.string.setting_metered_network_limit,
                     Formatter.formatFileSize(this, meteredTotal).toUpperCase(),
                     meteredLimitedStr));
-        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_metered_speed_list))) {
-            long meteredSpeed = NetworkSetting.getMeteredSpeed();
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_current_speed_list))) {
+            long meteredSpeed = NetworkSetting.getCurrentSpeed();
             binding.tvMeteredNetworkSpeed.setText(getString(R.string.setting_metered_network_limit_speed,
                     Formatter.formatFileSize(this, meteredSpeed).toUpperCase()));
         }else if(StringUtil.isEquals(key, getString(R.string.pref_key_metered_speed_limit))) {

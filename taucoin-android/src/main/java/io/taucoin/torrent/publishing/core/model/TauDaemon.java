@@ -315,6 +315,7 @@ public class TauDaemon {
     private void switchConnectionReceiver() {
         settingsRepo.internetState(systemServiceManager.isHaveNetwork());
         NetworkSetting.setMeteredNetwork(systemServiceManager.isNetworkMetered());
+        NetworkSetting.clearSpeedList();
         try {
             appContext.unregisterReceiver(connectionReceiver);
         } catch (IllegalArgumentException ignore) {
@@ -337,9 +338,7 @@ public class TauDaemon {
             enableServerMode(settingsRepo.serverMode());
         } else if (key.equals(appContext.getString(R.string.pref_key_is_metered_network))) {
             logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
-            if (!NetworkSetting.isMeteredNetwork()) {
-                NetworkSetting.clearSpeedList();
-            }
+            NetworkSetting.clearSpeedList();
         }
     }
 
@@ -352,12 +351,12 @@ public class TauDaemon {
         if (settingsRepo.internetState()) {
             if (networkJitter != null && !networkJitter.isDisposed()) {
                 networkJitter.dispose();
-                int sessions = lastSessions;
-                if (NetworkSetting.isMeteredNetwork()
-                        && sessions == SessionController.MAX_SESSIONS) {
-                    sessions = 1;
-                }
-                rescheduleDHTBySessions(lastSessions, sessions, true);
+//                int sessions = lastSessions;
+//                if (NetworkSetting.isMeteredNetwork()
+//                        && sessions == SessionController.MAX_SESSIONS) {
+//                    sessions = 1;
+//                }
+                rescheduleDHTBySessions(lastSessions, lastSessions, true);
             } else {
                 int sessions = NetworkSetting.calculateDHTSessions();
                 rescheduleDHTBySessions(lastSessions, sessions, false);
