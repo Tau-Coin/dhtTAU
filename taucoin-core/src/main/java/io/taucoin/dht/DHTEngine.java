@@ -24,7 +24,7 @@ public class DHTEngine {
     private static final Logger logger = LoggerFactory.getLogger("DHTEngine");
 
     // Dht blocking queue limit.
-    public static final int DHTQueueCapability = 10000;
+    public static final int DHTQueueCapability = 10;
 
     private static volatile DHTEngine INSTANCE;
 
