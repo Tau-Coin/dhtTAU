@@ -314,8 +314,8 @@ public class TauDaemon {
      */
     private void switchConnectionReceiver() {
         settingsRepo.internetState(systemServiceManager.isHaveNetwork());
-        NetworkSetting.setMeteredNetwork(systemServiceManager.isNetworkMetered());
         NetworkSetting.clearSpeedList();
+        NetworkSetting.setMeteredNetwork(systemServiceManager.isNetworkMetered());
         try {
             appContext.unregisterReceiver(connectionReceiver);
         } catch (IllegalArgumentException ignore) {
@@ -338,7 +338,6 @@ public class TauDaemon {
             enableServerMode(settingsRepo.serverMode());
         } else if (key.equals(appContext.getString(R.string.pref_key_is_metered_network))) {
             logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
-            NetworkSetting.clearSpeedList();
         }
     }
 

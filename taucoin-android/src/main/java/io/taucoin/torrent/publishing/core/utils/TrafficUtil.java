@@ -35,9 +35,12 @@ public class TrafficUtil {
         saveTrafficTotal(TRAFFIC_DOWN, statistics.getRxBytes());
         saveTrafficTotal(TRAFFIC_UP, statistics.getTxBytes());
         // 如果是计费网络，统计当天计费网络使用总量
+        long total = statistics.getRxBytes() + statistics.getTxBytes();
         if (NetworkSetting.isMeteredNetwork()) {
-            long total = statistics.getRxBytes() + statistics.getTxBytes();
             saveTrafficTotal(TRAFFIC_METERED, total);
+        } else {
+            String trafficValueOld = TRAFFIC_VALUE_OLD + TRAFFIC_METERED;
+            settingsRepo.setLongValue(trafficValueOld, total);
         }
     }
 

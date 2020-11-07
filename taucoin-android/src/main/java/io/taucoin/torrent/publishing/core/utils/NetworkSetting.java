@@ -23,7 +23,7 @@ public class NetworkSetting {
     private static final long speed_sample = 60; // 单位s
     private static final boolean autoMode = true;
     private static final int minSessions = SessionController.MIN_SESSIONS;
-    private static final int maxSessions = 20;
+    private static final int maxSessions = 2;
 
     private static SettingsRepository settingsRepo;
     static {
@@ -99,15 +99,14 @@ public class NetworkSetting {
         Context context = MainApplication.getInstance();
         long total = statistics.getRxBytes() + statistics.getTxBytes();
         long size;
-        long meteredSize = TrafficUtil.calculateIncrementalSize(TrafficUtil.getMeteredType(), total);
         if (!isMeteredNetwork()) {
             long upTotalSize = TrafficUtil.calculateIncrementalSize(TrafficUtil.getUpType(),
                     statistics.getTxBytes());
             long downTotalSize = TrafficUtil.calculateIncrementalSize(TrafficUtil.getDownType(),
                     statistics.getRxBytes());
-            size = upTotalSize + downTotalSize - meteredSize;
+            size = upTotalSize + downTotalSize;
         } else {
-            size = meteredSize;
+            size = TrafficUtil.calculateIncrementalSize(TrafficUtil.getMeteredType(), total);
         }
         List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
                 Long.class);

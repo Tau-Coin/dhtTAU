@@ -37,6 +37,10 @@ public class ConnectionReceiver extends BroadcastReceiver {
                     info != null ? info.getType() : null,
                     info != null ? info.getTypeName() : null,
                     connectivityManager.isActiveNetworkMetered());
+            boolean isMetered = info != null && connectivityManager.isActiveNetworkMetered();
+            if (NetworkSetting.isMeteredNetwork() == isMetered) {
+                NetworkSetting.clearSpeedList();
+            }
             NetworkSetting.setMeteredNetwork(info != null && connectivityManager.isActiveNetworkMetered());
             if (info != null && (info.getType() == ConnectivityManager.TYPE_WIFI ||
                     info.getType() == ConnectivityManager.TYPE_MOBILE)
