@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -126,7 +127,7 @@ public class Chains implements DHT.GetDHTItemCallback{
     private final Map<ByteArrayWrapper, Set<Transaction>> txMapForPool = Collections.synchronizedMap(new HashMap<>());
 
     // 区块容器数据集合: {key: chain ID, value: {key: block hash, value: block container} }，用于结果查询
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, BlockContainer>> blockContainerMap = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LinkedHashMap<ByteArrayWrapper, BlockContainer>> blockContainerMap = Collections.synchronizedMap(new HashMap<>());
 
     // 区块数据集合: {key: chain ID, value: {key: block hash, value: block} }，用于缓存block，满载后清理
     private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Block>> blockMap = Collections.synchronizedMap(new HashMap<>());
@@ -433,7 +434,7 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.txMapForPool.put(wChainID, new HashSet<>());
 
-        this.blockContainerMap.put(wChainID, new HashMap<>());
+        this.blockContainerMap.put(wChainID, new LinkedHashMap<>());
 
         this.blockMap.put(wChainID, new HashMap<>());
 
@@ -903,7 +904,7 @@ public class Chains implements DHT.GetDHTItemCallback{
         if (this.blockContainerMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
             logger.info("Chain ID:{}: Remove block container cache.", new String(chainID.getData()));
             Map<ByteArrayWrapper, BlockContainer> oldBlockContainerMap = this.blockContainerMap.get(chainID);
-            Map<ByteArrayWrapper, BlockContainer> newBlockContainerMap = new HashMap<>(ChainParam.WARNING_RANGE);
+            LinkedHashMap<ByteArrayWrapper, BlockContainer> newBlockContainerMap = new LinkedHashMap<>(ChainParam.WARNING_RANGE);
 
             int i = 0;
             for (Map.Entry<ByteArrayWrapper, BlockContainer> entry: oldBlockContainerMap.entrySet()) {
