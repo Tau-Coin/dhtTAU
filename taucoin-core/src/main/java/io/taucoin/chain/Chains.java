@@ -1033,27 +1033,32 @@ public class Chains implements DHT.GetDHTItemCallback{
     private void responseDemand(ByteArrayWrapper chainID) throws DBException {
         // block
         for (ByteArrayWrapper blockHash : this.blockHashMapFromDemand.get(chainID)) {
-
-            byte[] previousHash = blockHash.getData();
-            logger.debug("Chain ID:{} Response from block hash:{}",
-                    new String(chainID.getData()), Hex.toHexString(previousHash));
-
-            for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
-                BlockContainer blockContainer = this.blockStore.
-                        getBlockContainerByHash(chainID.getData(), previousHash);
-
-                if (null != blockContainer) {
-                    publishBlockContainer(blockContainer);
-                    if (blockContainer.getBlock().getBlockNum() == 0) {
-                        break;
-                    }
-                    previousHash = blockContainer.getVerticalItem().getPreviousHash();
-                } else {
-                    logger.debug("Chain ID:{} Cannot find block hash in local:{}",
-                            new String(chainID.getData()), Hex.toHexString(previousHash));
-                    break;
-                }
+            BlockContainer blockContainer = this.blockStore.
+                    getBlockContainerByHash(chainID.getData(), blockHash.getData());
+            if (null != blockContainer) {
+                publishBlockContainer(blockContainer);
             }
+
+//            byte[] previousHash = blockHash.getData();
+//            logger.debug("Chain ID:{} Response from block hash:{}",
+//                    new String(chainID.getData()), Hex.toHexString(previousHash));
+//
+//            for (int i = 0; i < ChainParam.MUTABLE_RANGE; i++) {
+//                BlockContainer blockContainer = this.blockStore.
+//                        getBlockContainerByHash(chainID.getData(), previousHash);
+//
+//                if (null != blockContainer) {
+//                    publishBlockContainer(blockContainer);
+//                    if (blockContainer.getBlock().getBlockNum() == 0) {
+//                        break;
+//                    }
+//                    previousHash = blockContainer.getVerticalItem().getPreviousHash();
+//                } else {
+//                    logger.debug("Chain ID:{} Cannot find block hash in local:{}",
+//                            new String(chainID.getData()), Hex.toHexString(previousHash));
+//                    break;
+//                }
+//            }
         }
 
         // tx
