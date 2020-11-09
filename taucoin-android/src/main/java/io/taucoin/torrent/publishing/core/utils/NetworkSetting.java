@@ -23,7 +23,7 @@ public class NetworkSetting {
     private static final long speed_sample = 60; // 单位s
     private static final boolean autoMode = true;
     private static final int minSessions = SessionController.MIN_SESSIONS;
-    private static final int maxSessions = 10;
+    private static final int maxSessions = SessionController.MAX_SESSIONS;
 
     private static SettingsRepository settingsRepo;
     static {
