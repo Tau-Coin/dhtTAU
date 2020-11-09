@@ -23,6 +23,7 @@ import io.taucoin.core.AccountState;
 import io.taucoin.core.DataIdentifier;
 import io.taucoin.core.DataType;
 import io.taucoin.core.ImportResult;
+import io.taucoin.core.LRUCache;
 import io.taucoin.core.PeerManager;
 import io.taucoin.core.ProofOfTransaction;
 import io.taucoin.core.TransactionPool;
@@ -127,37 +128,37 @@ public class Chains implements DHT.GetDHTItemCallback{
     private final Map<ByteArrayWrapper, Set<Transaction>> txMapForPool = Collections.synchronizedMap(new HashMap<>());
 
     // 区块容器数据集合: {key: chain ID, value: {key: block hash, value: block container} }，用于结果查询
-    private final Map<ByteArrayWrapper, LinkedHashMap<ByteArrayWrapper, BlockContainer>> blockContainerMap = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.BlockContainerCache> blockContainerMap = Collections.synchronizedMap(new HashMap<>());
 
     // 区块数据集合: {key: chain ID, value: {key: block hash, value: block} }，用于缓存block，满载后清理
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Block>> blockMap = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.BlockCache> blockMap = Collections.synchronizedMap(new HashMap<>());
 
     // 交易数据集合: {key: chain ID, value: {key: tx hash, value: Transaction} }， 用于缓存tx，满载后清理
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Transaction>> txMap = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.TxCache> txMap = Collections.synchronizedMap(new HashMap<>());
 
     // horizontal item数据集合: {key: chain ID, value: {key: hash, value: horizontal item} }，用于缓存horizontal item，满载后清理
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, HorizontalItem>> horizontalItemMap = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.HorizontalItemCache> horizontalItemMap = Collections.synchronizedMap(new HashMap<>());
 
     // vertical item数据集合: {key: chain ID, value: {key: hash, value: vertical item} }，用于缓存vertical item，满载后清理
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, VerticalItem>> verticalItemMap = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.VerticalItemCache> verticalItemMap = Collections.synchronizedMap(new HashMap<>());
 
     // 同步计数器，控制一次同步数量
     private final Map<ByteArrayWrapper, Integer> syncCounter = Collections.synchronizedMap(new HashMap<>());
 
     // 同步所用区块容器数据集合: {key: chain ID, value: {key: block hash, value: block container} }
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, BlockContainer>> blockContainerMapForSync = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.BlockContainerCache> blockContainerMapForSync = Collections.synchronizedMap(new HashMap<>());
 
     // 同步所用区块数据集合: {key: chain ID, value: {key: block hash, value: block} }
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Block>> blockMapForSync = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.BlockCache> blockMapForSync = Collections.synchronizedMap(new HashMap<>());
 
     // 同步所用交易数据集合: {key: chain ID, value: {key: tx hash, value: Transaction} }
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, Transaction>> txMapForSync = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.TxCache> txMapForSync = Collections.synchronizedMap(new HashMap<>());
 
     // 同步horizontal item数据集合: {key: chain ID, value: {key: hash, value: horizontal item} }，用于缓存horizontal item，满载后清理
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, HorizontalItem>> horizontalItemMapForSync = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.HorizontalItemCache> horizontalItemMapForSync = Collections.synchronizedMap(new HashMap<>());
 
     // 同步vertical item数据集合: {key: chain ID, value: {key: hash, value: vertical item} }，用于缓存vertical item，满载后清理
-    private final Map<ByteArrayWrapper, Map<ByteArrayWrapper, VerticalItem>> verticalItemMapForSync = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, LRUCache.VerticalItemCache> verticalItemMapForSync = Collections.synchronizedMap(new HashMap<>());
 
     // 远端请求区块哈希数据集合: {key: chain ID, value: block hash set}
     private final Map<ByteArrayWrapper, LocalDemand> localDemandMap = Collections.synchronizedMap(new HashMap<>());
@@ -434,27 +435,27 @@ public class Chains implements DHT.GetDHTItemCallback{
 
         this.txMapForPool.put(wChainID, new HashSet<>());
 
-        this.blockContainerMap.put(wChainID, new LinkedHashMap<>());
+        this.blockContainerMap.put(wChainID, new LRUCache.BlockContainerCache(ChainParam.WARNING_RANGE, false));
 
-        this.blockMap.put(wChainID, new HashMap<>());
+        this.blockMap.put(wChainID, new LRUCache.BlockCache(ChainParam.WARNING_RANGE));
 
-        this.txMap.put(wChainID, new HashMap<>());
+        this.txMap.put(wChainID, new LRUCache.TxCache(ChainParam.WARNING_RANGE));
 
-        this.horizontalItemMap.put(wChainID, new HashMap<>());
+        this.horizontalItemMap.put(wChainID, new LRUCache.HorizontalItemCache(ChainParam.WARNING_RANGE));
 
-        this.verticalItemMap.put(wChainID, new HashMap<>());
-
-        this.blockContainerMapForSync.put(wChainID, new HashMap<>());
+        this.verticalItemMap.put(wChainID, new LRUCache.VerticalItemCache(ChainParam.WARNING_RANGE));
 
         this.syncCounter.put(wChainID, 0);
 
-        this.blockMapForSync.put(wChainID, new HashMap<>());
+        this.blockContainerMapForSync.put(wChainID, new LRUCache.BlockContainerCache(ChainParam.MUTABLE_RANGE));
 
-        this.txMapForSync.put(wChainID, new HashMap<>());
+        this.blockMapForSync.put(wChainID, new LRUCache.BlockCache(ChainParam.MUTABLE_RANGE));
 
-        this.horizontalItemMapForSync.put(wChainID, new HashMap<>());
+        this.txMapForSync.put(wChainID, new LRUCache.TxCache(ChainParam.MUTABLE_RANGE));
 
-        this.verticalItemMapForSync.put(wChainID, new HashMap<>());
+        this.horizontalItemMapForSync.put(wChainID, new LRUCache.HorizontalItemCache(ChainParam.MUTABLE_RANGE));
+
+        this.verticalItemMapForSync.put(wChainID, new LRUCache.VerticalItemCache(ChainParam.MUTABLE_RANGE));
 
         this.localDemandMap.put(wChainID, new LocalDemand());
 
@@ -735,7 +736,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     responseDemand(chainID);
 
                     // 2.9 尝试缓存瘦身
-                    tryToSlimDownCache(chainID);
+//                    tryToSlimDownCache(chainID);
                 }
             }
 
@@ -760,9 +761,10 @@ public class Chains implements DHT.GetDHTItemCallback{
             requestTipItemFromPeer(chainID, peer);
         } else {
 
-            boolean clearContainer = true;
-            for (Map.Entry<ByteArrayWrapper, BlockContainer> entry : this.blockContainerMap.get(chainID).entrySet()) {
-                BlockContainer blockContainer = entry.getValue();
+            Iterator<Map.Entry<ByteArrayWrapper, BlockContainer>> iterator =
+                    this.blockContainerMap.get(chainID).entrySet().iterator();
+            while (iterator.hasNext()) {
+                BlockContainer blockContainer = iterator.next().getValue();
 
                 if (null != blockContainer && blockContainer.getBlock().getCumulativeDifficulty().
                         compareTo(this.bestBlockContainers.get(chainID).getBlock().
@@ -770,16 +772,15 @@ public class Chains implements DHT.GetDHTItemCallback{
                     logger.debug("Block[{}] is greater than best block.",
                             Hex.toHexString(blockContainer.getBlock().getBlockHash()));
                     // 是否需要清除数据，以备下一轮（处理完成或者处理出错，都将清理数据）
-                    if (TryResult.REQUEST == tryToReBranch(chainID, blockContainer)) {
-                        clearContainer = false;
+                    if (TryResult.REQUEST != tryToReBranch(chainID, blockContainer)) {
+                        logger.debug("Clear block container map.");
+                        this.blockContainerMap.get(chainID).clear();
                     }
-                    break;
-                }
-            }
 
-            if (clearContainer) {
-                logger.debug("Clear block container map.");
-                this.blockContainerMap.get(chainID).clear();
+                    break;
+                } else {
+                    iterator.remove();
+                }
             }
         }
     }
@@ -900,130 +901,6 @@ public class Chains implements DHT.GetDHTItemCallback{
      * @param chainID chain ID
      */
     private void tryToSlimDownCache(ByteArrayWrapper chainID) {
-        // block container
-        if (this.blockContainerMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
-            logger.info("Chain ID:{}: Remove block container cache.", new String(chainID.getData()));
-            Map<ByteArrayWrapper, BlockContainer> oldBlockContainerMap = this.blockContainerMap.get(chainID);
-            LinkedHashMap<ByteArrayWrapper, BlockContainer> newBlockContainerMap = new LinkedHashMap<>(ChainParam.WARNING_RANGE);
-
-            int i = 0;
-            for (Map.Entry<ByteArrayWrapper, BlockContainer> entry: oldBlockContainerMap.entrySet()) {
-                newBlockContainerMap.put(entry.getKey(), entry.getValue());
-
-                if (i >= ChainParam.WARNING_RANGE) {
-                    break;
-                }
-
-                i++;
-            }
-
-            this.blockContainerMap.put(chainID, newBlockContainerMap);
-            oldBlockContainerMap.clear();
-        }
-
-        // block
-        if (this.blockMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
-            logger.info("Chain ID:{}: Remove block cache.", new String(chainID.getData()));
-            Map<ByteArrayWrapper, Block> oldBlockMap = this.blockMap.get(chainID);
-            Map<ByteArrayWrapper, Block> newBlockMap = new HashMap<>(ChainParam.WARNING_RANGE);
-
-            int i = 0;
-            for (Map.Entry<ByteArrayWrapper, Block> entry: oldBlockMap.entrySet()) {
-                newBlockMap.put(entry.getKey(), entry.getValue());
-
-                if (i >= ChainParam.WARNING_RANGE) {
-                    break;
-                }
-
-                i++;
-            }
-
-            this.blockMap.put(chainID, newBlockMap);
-            oldBlockMap.clear();
-        }
-
-        // tx
-        if (this.txMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
-            logger.info("Chain ID:{}: Remove tx cache.", new String(chainID.getData()));
-            Map<ByteArrayWrapper, Transaction> oldTxs = this.txMap.get(chainID);
-            Map<ByteArrayWrapper, Transaction> newTxs = new HashMap<>(ChainParam.WARNING_RANGE);
-
-            int i = 0;
-            for (Map.Entry<ByteArrayWrapper, Transaction> entry: oldTxs.entrySet()) {
-                newTxs.put(entry.getKey(), entry.getValue());
-
-                if (i >= ChainParam.WARNING_RANGE) {
-                    break;
-                }
-
-                i++;
-            }
-
-            this.txMap.put(chainID, newTxs);
-            oldTxs.clear();
-        }
-
-        // vertical item
-        if (this.verticalItemMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
-            logger.info("Chain ID:{}: Remove vertical item cache.", new String(chainID.getData()));
-            Map<ByteArrayWrapper, VerticalItem> oldItems = this.verticalItemMap.get(chainID);
-            Map<ByteArrayWrapper, VerticalItem> newItems = new HashMap<>(ChainParam.WARNING_RANGE);
-
-            int i = 0;
-            for (Map.Entry<ByteArrayWrapper, VerticalItem> entry: oldItems.entrySet()) {
-                newItems.put(entry.getKey(), entry.getValue());
-
-                if (i >= ChainParam.WARNING_RANGE) {
-                    break;
-                }
-
-                i++;
-            }
-
-            this.verticalItemMap.put(chainID, newItems);
-            oldItems.clear();
-        }
-
-        // horizontal item
-        if (this.horizontalItemMap.get(chainID).size() > 2 * ChainParam.WARNING_RANGE) {
-            logger.info("Chain ID:{}: Remove horizontal item cache.", new String(chainID.getData()));
-            Map<ByteArrayWrapper, HorizontalItem> oldItems = this.horizontalItemMap.get(chainID);
-            Map<ByteArrayWrapper, HorizontalItem> newItems = new HashMap<>(ChainParam.WARNING_RANGE);
-
-            int i = 0;
-            for (Map.Entry<ByteArrayWrapper, HorizontalItem> entry: oldItems.entrySet()) {
-                newItems.put(entry.getKey(), entry.getValue());
-
-                if (i >= ChainParam.WARNING_RANGE) {
-                    break;
-                }
-
-                i++;
-            }
-
-            this.horizontalItemMap.put(chainID, newItems);
-            oldItems.clear();
-        }
-
-        if (this.blockContainerMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
-            this.blockContainerMapForSync.get(chainID).clear();
-        }
-
-        if (this.blockMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
-            this.blockMapForSync.get(chainID).clear();
-        }
-
-        if (this.txMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
-            this.txMapForSync.get(chainID).clear();
-        }
-
-        if (this.verticalItemMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
-            this.verticalItemMapForSync.get(chainID).clear();
-        }
-
-        if (this.horizontalItemMapForSync.get(chainID).size() > ChainParam.MUTABLE_RANGE) {
-            this.horizontalItemMapForSync.get(chainID).clear();
-        }
     }
 
     /**
