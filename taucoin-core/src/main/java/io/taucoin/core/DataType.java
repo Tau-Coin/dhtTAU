@@ -22,4 +22,7 @@ public enum DataType {
     HISTORY_BLOCK_REQUEST_FOR_VOTING, // immutable block for voting
 
     TX_REQUEST_FOR_MINING, // immutable tx for pool
+
+    PERSONAL_INFO_HASH, // personal information hash
+    PERSONAL_INFO, // personal information
 }

@@ -36,4 +36,20 @@ public class Salt {
 
         return salt;
     }
+
+    /**
+     * make personal info salt
+     * @param chainID chain ID
+     * @return personal info salt
+     */
+    public static byte[] makePersonalInfoSalt(byte[] chainID) {
+        byte[] salt = new byte[chainID.length + ChainParam.PERSONAL_INFO_CHANNEL.length];
+
+        System.arraycopy(chainID, 0, salt, 0, chainID.length);
+        System.arraycopy(ChainParam.PERSONAL_INFO_CHANNEL, 0, salt, chainID.length,
+                ChainParam.PERSONAL_INFO_CHANNEL.length);
+
+        return salt;
+    }
+
 }

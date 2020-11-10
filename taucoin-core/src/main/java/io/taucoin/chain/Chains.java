@@ -3146,6 +3146,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     }
 
                     VerticalItem verticalItem = new VerticalItem(item);
+                    logger.info("Got vertical item, hash:{}", dataIdentifier.getHash().toString());
                     // 放入缓存
                     this.verticalItemMap.get(dataIdentifier.getChainID()).
                             put(dataIdentifier.getHash(), verticalItem);

@@ -60,10 +60,13 @@ public class ChainParam {
 
     /**********CHANNEL**********/
     // tip
-    public static final byte[] TIP_CHANNEL = "#TC".getBytes();
+    public static final byte[] TIP_CHANNEL = "#T".getBytes();
 
     // demand
-    public static final byte[] DEMAND_CHANNEL = "#DC".getBytes();
+    public static final byte[] DEMAND_CHANNEL = "#D".getBytes();
+
+    // personal info
+    public static final byte[] PERSONAL_INFO_CHANNEL = "#PI".getBytes();
 
     public static final int HashLongArrayLength = 3;
 

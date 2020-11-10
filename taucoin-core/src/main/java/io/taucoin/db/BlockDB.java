@@ -102,6 +102,7 @@ public class BlockDB implements BlockStore {
     private void saveHashListItem(byte[] chainID, HashList hashList) throws DBException {
         try {
             if (null != hashList) {
+                logger.info("Save item hash:{}", Hex.toHexString(hashList.getHash()));
                 db.put(PrefixKey.hashListKey(chainID, hashList.getHash()), hashList.getEncoded());
             }
         } catch (Exception e) {
