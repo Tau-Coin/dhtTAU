@@ -2,6 +2,10 @@ package io.taucoin.torrent.publishing.core.utils;
 
 import android.content.Context;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,12 +20,13 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
  * 网络流量设置相关工具类
  */
 public class NetworkSetting {
-    private static final long meteredLimited = 50 * 1024 * 1024; // 50MB
+    private static final Logger logger = LoggerFactory.getLogger("NetworkSetting");
+    private static final int meteredLimited; // 单位MB
+    private static final int wifiLimited;   // 单位MB
     private static final long maxSpeedLimited = 50 * 1024;       // 50KB
     // 网速在限制内浮动范围，超过限制，立即减sessions - 1
     private static final long speedRange = 512;                  // 0.5KB
     private static final long speed_sample = 60; // 单位s
-    private static final boolean autoMode = true;
     private static final int minSessions = SessionController.MIN_SESSIONS;
     private static final int maxSessions = SessionController.MAX_SESSIONS;
 
@@ -29,50 +34,44 @@ public class NetworkSetting {
     static {
         Context context = MainApplication.getInstance();
         settingsRepo = RepositoryHelper.getSettingsRepository(context);
-    }
-
-    /**
-     * 返回是否是自动模式
-     * @return
-     */
-    public static boolean autoMode() {
-        Context context = MainApplication.getInstance();
-        return settingsRepo.getBooleanValue(context.getString(R.string.pref_key_auto_mode), autoMode);
-    }
-
-    /**
-     * 设置是否为自动模式
-     * @param autoMode
-     */
-    public static void setAutoMode(boolean autoMode) {
-        Context context = MainApplication.getInstance();
-        settingsRepo.setBooleanValue(context.getString(R.string.pref_key_auto_mode), autoMode);
+        meteredLimited = context.getResources().getIntArray(R.array.metered_limit)[0];
+        wifiLimited = context.getResources().getIntArray(R.array.wifi_limit)[0];
     }
 
     /**
      * 获取计费网络流量限制值
      * @return long
      */
-    public static long meteredLimit() {
+    public static int getMeteredLimit() {
         Context context = MainApplication.getInstance();
-        return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_limit), meteredLimited);
+        return settingsRepo.getIntValue(context.getString(R.string.pref_key_metered_limit), meteredLimited);
     }
 
     /**
      * 设置计费网络流量限制值
      * @param limited
      */
-    public static void setMeteredLimit(long limited) {
+    public static void setMeteredLimit(int limited) {
         Context context = MainApplication.getInstance();
-        settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_limit), limited);
+        settingsRepo.setIntValue(context.getString(R.string.pref_key_metered_limit), limited);
     }
 
     /**
-     * 设置自动模式计费网络流量限制值
+     * 获取WiFi网络流量限制值
+     * @return long
      */
-    public static void setAutoModeMeteredLimit() {
+    public static int getWiFiLimit() {
         Context context = MainApplication.getInstance();
-        settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_limit), meteredLimited);
+        return settingsRepo.getIntValue(context.getString(R.string.pref_key_wifi_limit), wifiLimited);
+    }
+
+    /**
+     * 设置WiFi网络流量限制值
+     * @param limited
+     */
+    public static void setWiFiLimit(int limited) {
+        Context context = MainApplication.getInstance();
+        settingsRepo.setIntValue(context.getString(R.string.pref_key_wifi_limit), limited);
     }
 
     /**
@@ -151,12 +150,16 @@ public class NetworkSetting {
     public static void updateMeteredSpeedLimit() {
         Context context = MainApplication.getInstance();
         long usage = TrafficUtil.getMeteredTrafficTotal();
-        long limit =  meteredLimit();
+        long limit =  getMeteredLimit();
         long speedLimit = 0;
-        if (limit > usage) {
+
+        BigInteger bigUnit = new BigInteger("1024");
+        BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
+        BigInteger bigUsage = BigInteger.valueOf(usage);
+        if (bigLimit.compareTo(bigUsage) > 0) {
             long todayLastSeconds = DateUtil.getTodayLastSeconds();
             if (todayLastSeconds > 0) {
-                speedLimit = (limit - usage) / todayLastSeconds;
+                speedLimit = bigLimit.subtract(bigUsage).longValue() / todayLastSeconds;
             }
         }
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_speed_limit), speedLimit);
@@ -168,6 +171,36 @@ public class NetworkSetting {
     public static long getMeteredSpeedLimit() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_speed_limit));
+    }
+
+    /**
+     * 更新WiFi网络网速限制值
+     */
+    public static void updateWiFiSpeedLimit() {
+        Context context = MainApplication.getInstance();
+        long total = TrafficUtil.getTrafficUploadTotal() + TrafficUtil.getTrafficDownloadTotal();
+        long usage = total - TrafficUtil.getMeteredTrafficTotal();
+        long limit =  getWiFiLimit();
+        long speedLimit = 0;
+
+        BigInteger bigUnit = new BigInteger("1024");
+        BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
+        BigInteger bigUsage = BigInteger.valueOf(usage);
+        if (bigLimit.compareTo(bigUsage) > 0) {
+            long todayLastSeconds = DateUtil.getTodayLastSeconds();
+            if (todayLastSeconds > 0) {
+                speedLimit = bigLimit.subtract(bigUsage).longValue() / todayLastSeconds;
+            }
+        }
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_speed_limit), speedLimit);
+    }
+
+    /**
+     * 获取WiFi网络网速限制值
+     */
+    public static long getWiFiSpeedLimit() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_wifi_speed_limit));
     }
 
     /**
@@ -200,7 +233,7 @@ public class NetworkSetting {
      */
     public static int calculateDHTSessions() {
         int sessions;
-        long meteredLimit = meteredLimit();
+        long meteredLimit = getMeteredLimit();
         // 当前网络为计费网络，并且有流量控制
         if (isMeteredNetwork() && meteredLimit != 0) {
             long speedLimit = NetworkSetting.getMeteredSpeedLimit();

@@ -11,10 +11,11 @@
     <string name="pref_key_do_not_show_ban_dialog" translatable="false">pref_key_do_not_show_ban_dialog</string>
     <string name="pref_key_apk_download_id" translatable="false">pref_key_apk_download_id</string>
     <string name="pref_key_need_prompt_user" translatable="false">pref_key_need_prompt_user</string>
-    <string name="pref_key_auto_mode" translatable="false">pref_key_auto_mode</string>
     <string name="pref_key_metered_limit" translatable="false">pref_key_metered_limit</string>
+    <string name="pref_key_wifi_limit" translatable="false">pref_key_wifi_limit</string>
     <string name="pref_key_current_speed_list" translatable="false">pref_key_current_speed_list</string>
     <string name="pref_key_metered_speed_limit" translatable="false">pref_key_metered_speed_limit</string>
+    <string name="pref_key_wifi_speed_limit" translatable="false">pref_key_wifi_speed_limit</string>
     <string name="pref_key_is_metered_network" translatable="false">pref_key_is_metered_network</string>
     <string name="pref_key_sessions" translatable="false">pref_key_sessions</string>
 </resources>

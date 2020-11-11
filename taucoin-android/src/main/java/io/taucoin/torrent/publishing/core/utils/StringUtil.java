@@ -112,7 +112,7 @@ public class StringUtil {
 
     public static double toDouble(String num) {
         try{
-            return Double.valueOf(num);
+            return Double.parseDouble(num);
         }catch (Exception e){
             return 0;
         }
@@ -128,7 +128,7 @@ public class StringUtil {
 
     public static int getIntText(TextView view) {
         try{
-            return Integer.valueOf(getText(view));
+            return Integer.parseInt(getText(view));
         }catch (Exception e){
             return 0;
         }
@@ -144,7 +144,7 @@ public class StringUtil {
 
     public static int getIntTag(View view) {
         try{
-            return Integer.valueOf(getTag(view));
+            return Integer.parseInt(getTag(view));
         }catch (Exception e){
             return 0;
         }
@@ -152,7 +152,7 @@ public class StringUtil {
 
     public static int getIntString(String data) {
         try{
-            return Integer.valueOf(data);
+            return Integer.parseInt(data);
         }catch (Exception e){
             return 0;
         }
@@ -160,7 +160,7 @@ public class StringUtil {
 
     public static long getLongString(String data) {
         try{
-            return Long.valueOf(data);
+            return Long.parseLong(data);
         }catch (Exception e){
             return 0;
         }
@@ -168,7 +168,7 @@ public class StringUtil {
 
     public static double getDoubleString(String data) {
         try{
-            return Double.valueOf(data);
+            return Double.parseDouble(data);
         }catch (Exception e){
             return 0;
         }

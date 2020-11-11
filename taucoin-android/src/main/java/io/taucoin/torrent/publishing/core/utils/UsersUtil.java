@@ -49,7 +49,7 @@ public class UsersUtil {
         if(StringUtil.isNotEmpty(name) && name.length() > 11){
             String midHideName = name.substring(0, 3);
             midHideName += "***";
-            midHideName += getDefaultName(name);
+            midHideName += name.substring(name.length() - 8);
             return midHideName;
         }
         return name;

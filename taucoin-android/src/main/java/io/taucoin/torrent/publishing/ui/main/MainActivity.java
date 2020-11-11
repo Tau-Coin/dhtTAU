@@ -52,7 +52,7 @@ import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.download.DownloadViewModel;
 import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
-import io.taucoin.torrent.publishing.ui.setting.DashboardActivity;
+import io.taucoin.torrent.publishing.ui.setting.DataCostActivity;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
@@ -325,8 +325,8 @@ public class MainActivity extends BaseActivity {
             case R.id.item_share:
                 ActivityUtil.shareText(this, getString(R.string.app_share), Constants.APP_SHARE_URL);
                 break;
-            case R.id.item_dashboard:
-                ActivityUtil.startActivity(this, DashboardActivity.class);
+            case R.id.item_data_cost:
+                ActivityUtil.startActivity(this, DataCostActivity.class);
                 break;
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START);

@@ -93,7 +93,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.setting.DashboardActivity"
+            android:name=".ui.setting.DataCostActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity

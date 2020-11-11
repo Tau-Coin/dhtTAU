@@ -398,9 +398,8 @@ public class TauDaemon {
 //        if (isSuccess) {
             NetworkSetting.updateDHTSessions(sessions);
 //        }
-        logger.debug("rescheduleTauBySettings Auto Mode::{}, internetState::{}, " +
+        logger.debug("rescheduleTauBySettings internetState::{}, " +
                         "DHTSessions::{}, reschedule result::{}",
-                NetworkSetting.autoMode(),
                 settingsRepo.internetState(), sessions, isSuccess);
     }
 

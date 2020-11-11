@@ -188,6 +188,124 @@
                         app:rightText="@string/setting_help"/>
 
                 </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/color_white"
+                    android:layout_marginTop="10dp"
+                    android:paddingTop="5dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="0dp">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="20dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_server_mode"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <Switch
+                            android:id="@+id/switch_server_mode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true"/>
+
+                    </LinearLayout>
+
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="20dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_charging"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_charging"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/common_on"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                    </LinearLayout>
+
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="20dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_internet"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_internet"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/common_on"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                    </LinearLayout>
+
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="20dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_wake_lock"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_wake_lock"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/common_on"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
 
         </ScrollView>

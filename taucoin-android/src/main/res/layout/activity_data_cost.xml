@@ -34,152 +34,55 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/color_white"
-                    android:paddingTop="20dp"
+                    android:paddingTop="15dp"
                     android:paddingStart="20dp"
                     android:paddingEnd="0dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/primary_light"
-                        android:text="@string/setting_network"
-                        android:includeFontPadding="false"
-                        android:textStyle="bold"
-                        android:textAppearance="@style/TextAppearanceBody1"/>
-
-                    <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_marginTop="5dp"
                         android:gravity="center_vertical">
 
                         <TextView
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/primary_light"
+                            android:text="@string/setting_metered_network_title"
                             android:includeFontPadding="false"
-                            android:text="@string/setting_auto_mode"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
-
-                        <Switch
-                            android:id="@+id/switch_auto_mode"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="true"/>
-
-                    </LinearLayout>
-
-                    <include layout="@layout/view_line"/>
-
-                    <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_marginTop="5dp"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:includeFontPadding="false"
-                            android:text="@string/setting_metered_network_type"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
-
-                        <TextView
-                            android:id="@+id/tv_metered_network_type"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/gray_dark"
-                            android:layout_marginEnd="5dp"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
-
-                    </LinearLayout>
-
-                    <include layout="@layout/view_line"/>
-
-                    <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_marginTop="5dp"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:includeFontPadding="false"
-                            android:text="@string/setting_metered_network_speed"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
-
-                        <TextView
-                            android:id="@+id/tv_metered_network_speed"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/gray_dark"
-                            android:layout_marginEnd="5dp"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/color_white"
-                    android:layout_marginTop="10dp"
-                    android:paddingTop="20dp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="0dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/primary_light"
-                        android:text="@string/setting_metered_network_title"
-                        android:includeFontPadding="false"
-                        android:textStyle="bold"
-                        android:textAppearance="@style/TextAppearanceBody1"/>
-
-                    <LinearLayout
-                        android:id="@+id/ll_metered_limit"
-                        android:orientation="horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
-                        android:onClick="@{listener::onClick}"
-                        android:layout_marginTop="5dp"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:includeFontPadding="false"
-                            android:text="@string/setting_metered_network_usage"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
-
-                        <TextView
-                            android:id="@+id/tv_metered_network_usage"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/gray_dark"
-                            android:layout_marginEnd="5dp"
+                            android:textStyle="bold"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <ImageView
-                            android:id="@+id/iv_metered_limited"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
+                            android:visibility="invisible"
+                            android:id="@+id/iv_metered_state"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_marginEnd="20dp"
                             android:contentDescription="@null"
-                            android:src="@mipmap/icon_arrow"/>
+                            android:src="@mipmap/icon_star_yellow"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_daily_quota"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rv_metered_daily_quota"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
                     </LinearLayout>
 
                     <include layout="@layout/view_line"/>
@@ -189,7 +92,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:layout_marginEnd="20dp"
-                        android:layout_marginTop="5dp"
                         android:gravity="center_vertical">
 
                         <TextView
@@ -197,11 +99,11 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:includeFontPadding="false"
-                            android:text="@string/setting_metered_network_speed_limit"
+                            android:text="@string/setting_network_speed_limit"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <TextView
-                            android:id="@+id/tv_metered_network_speed_limit"
+                            android:id="@+id/tv_metered_speed_limit"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
@@ -209,40 +111,98 @@
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                     </LinearLayout>
-                </LinearLayout>
 
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginTop="0dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_network_current_speed"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_metered_current_speed"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/gray_dark"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
 
                 <LinearLayout
                     android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/color_white"
-                    android:layout_marginTop="10dp"
-                    android:paddingTop="5dp"
+                    android:layout_marginTop="15dp"
+                    android:paddingTop="15dp"
                     android:paddingStart="20dp"
                     android:paddingEnd="0dp">
 
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
+                        android:layout_height="wrap_content"
                         android:gravity="center_vertical">
 
                         <TextView
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/primary_light"
+                            android:text="@string/setting_wifi_network_title"
                             android:includeFontPadding="false"
-                            android:text="@string/setting_server_mode"
+                            android:textStyle="bold"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
-                        <Switch
-                            android:id="@+id/switch_server_mode"
+                        <ImageView
+                            android:visibility="invisible"
+                            android:id="@+id/iv_wifi_state"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_marginEnd="20dp"
+                            android:contentDescription="@null"
+                            android:src="@mipmap/icon_star_yellow"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:checked="true"/>
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_daily_quota"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
 
+                        <RadioGroup
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rv_wifi_daily_quota"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                        </RadioGroup>
                     </LinearLayout>
 
                     <include layout="@layout/view_line"/>
@@ -259,15 +219,14 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:includeFontPadding="false"
-                            android:text="@string/setting_charging"
+                            android:text="@string/setting_network_speed_limit"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <TextView
-                            android:id="@+id/tv_charging"
+                            android:id="@+id/tv_wifi_speed_limit"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
-                            android:text="@string/common_on"
                             android:layout_marginEnd="5dp"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
@@ -280,6 +239,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
                         android:layout_marginEnd="20dp"
+                        android:layout_marginTop="0dp"
                         android:gravity="center_vertical">
 
                         <TextView
@@ -287,47 +247,19 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:includeFontPadding="false"
-                            android:text="@string/setting_internet"
+                            android:text="@string/setting_network_current_speed"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <TextView
-                            android:id="@+id/tv_internet"
+                            android:id="@+id/tv_wifi_current_speed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
-                            android:text="@string/common_on"
                             android:layout_marginEnd="5dp"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                     </LinearLayout>
 
-                    <include layout="@layout/view_line"/>
-
-                    <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:includeFontPadding="false"
-                            android:text="@string/setting_wake_lock"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
-
-                        <TextView
-                            android:id="@+id/tv_wake_lock"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/gray_dark"
-                            android:text="@string/common_on"
-                            android:layout_marginEnd="5dp"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
-
-                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>

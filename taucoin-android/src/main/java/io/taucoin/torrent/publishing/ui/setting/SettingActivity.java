@@ -12,8 +12,11 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -31,6 +34,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private static final Logger logger = LoggerFactory.getLogger("SettingActivity");
     private ActivitySettingBinding binding;
     private UserViewModel viewModel;
+    private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
 
     @Override
@@ -40,6 +44,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         viewModel = provider.get(UserViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_setting);
         binding.setListener(this);
+        settingsRepo = RepositoryHelper.getSettingsRepository(getApplicationContext());
         initView();
     }
 
@@ -72,6 +77,19 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 }
             }
         });
+
+        binding.switchServerMode.setChecked(settingsRepo.serverMode());
+        handleSettingsChanged(getString(R.string.pref_key_internet_state));
+        handleSettingsChanged(getString(R.string.pref_key_charging_state));
+        handleSettingsChanged(getString(R.string.pref_key_wake_lock));
+
+        binding.switchServerMode.setOnCheckedChangeListener((buttonView, isChecked) ->
+                settingsRepo.serverMode(isChecked));
+
+        Disposable disposable = settingsRepo.observeSettingsChanged()
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::handleSettingsChanged);
     }
 
     /**
@@ -105,6 +123,19 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         binding.etUsername.setText(userName);
         binding.etUsername.setTag(userName);
         disposables.clear();
+    }
+
+    private void handleSettingsChanged(String key) {
+        if (StringUtil.isEquals(key, getString(R.string.pref_key_internet_state))) {
+            boolean internetState = settingsRepo.internetState();
+            binding.tvInternet.setText(internetState ? R.string.common_on : R.string.common_off);
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_charging_state))) {
+            boolean chargingState = settingsRepo.chargingState();
+            binding.tvCharging.setText(chargingState ? R.string.common_on : R.string.common_off);
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_wake_lock))) {
+            boolean wakeLock = settingsRepo.wakeLock();
+            binding.tvWakeLock.setText(wakeLock ? R.string.common_on : R.string.common_off);
+        }
     }
 
     @Override
