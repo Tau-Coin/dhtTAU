@@ -28,7 +28,7 @@
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_import_seed"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="50dp"
                 android:onClick="@{listener::onClick}"
                 app:leftImage="@mipmap/icon_import"
                 app:rightText="@string/user_import_seed"/>
@@ -42,7 +42,7 @@
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_export_seed"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="50dp"
                 android:onClick="@{listener::onClick}"
                 app:leftImage="@mipmap/icon_export"
                 app:rightText="@string/user_export_seed"/>
@@ -56,7 +56,7 @@
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_generate_seed"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="50dp"
                 android:onClick="@{listener::onClick}"
                 app:leftImage="@mipmap/icon_generate"
                 app:rightText="@string/user_generate_seed"/>
@@ -69,7 +69,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:paddingTop="20dp"
+            android:paddingTop="15dp"
             android:paddingStart="20dp"
             android:paddingEnd="0dp"
             android:paddingBottom="0dp">
@@ -80,7 +80,7 @@
                 android:text="@string/user_seeds_history"
                 android:textAppearance="@style/TextAppearanceBody1"
                 android:textColor="@color/primary"
-                android:paddingBottom="20dp"
+                android:paddingBottom="10dp"
                 android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView

@@ -233,13 +233,12 @@ public class NetworkSetting {
      */
     public static int calculateDHTSessions() {
         int sessions;
-        long meteredLimit = getMeteredLimit();
-        // 当前网络为计费网络，并且有流量控制
-        if (isMeteredNetwork() && meteredLimit != 0) {
+        // 当前网络为计费网络
+        if (isMeteredNetwork()) {
             long speedLimit = NetworkSetting.getMeteredSpeedLimit();
             sessions = calculateDHTSessions(speedLimit);
         } else {
-            // 当前网络为非计费网络，并且有固定流量控制
+            // 当前网络为非计费网络
             sessions = calculateDHTSessions(maxSpeedLimited);
         }
         return sessions;

@@ -1,5 +1,6 @@
 package io.taucoin.torrent.publishing.ui.user;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -11,8 +12,10 @@ import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.ItemHistoryListBinding;
 import io.taucoin.torrent.publishing.ui.Selectable;
@@ -96,8 +99,13 @@ public class HistoryListAdapter extends ListAdapter<User, HistoryListAdapter.Vie
             binding.tvName.setText(showName);
             String publicKey = UsersUtil.getMidHideName(user.publicKey);
             binding.tvPublicKey.setText(publicKey);
+            int nameColor = user.isCurrentUser ? R.color.primary : R.color.text_primary;
+            int pkColor = user.isCurrentUser ? R.color.primary : R.color.gray_dark;
+            Context context = binding.getRoot().getContext();
+            binding.tvName.setTextColor(context.getResources().getColor(nameColor));
+            binding.tvPublicKey.setTextColor(context.getResources().getColor(pkColor));
             binding.getRoot().setOnClickListener(view->{
-                if(listener != null){
+                if(listener != null && !user.isCurrentUser){
                     listener.onItemClicked(user);
                 }
             });

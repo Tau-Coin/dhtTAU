@@ -57,8 +57,8 @@
                         <ImageView
                             android:visibility="invisible"
                             android:id="@+id/iv_metered_state"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:layout_marginEnd="20dp"
                             android:contentDescription="@null"
                             android:src="@mipmap/icon_star_yellow"/>
@@ -171,8 +171,8 @@
                         <ImageView
                             android:visibility="invisible"
                             android:id="@+id/iv_wifi_state"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:layout_marginEnd="20dp"
                             android:contentDescription="@null"
                             android:src="@mipmap/icon_star_yellow"/>
