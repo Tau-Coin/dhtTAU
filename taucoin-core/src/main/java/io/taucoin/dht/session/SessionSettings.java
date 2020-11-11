@@ -93,9 +93,9 @@ final class SessionSettings {
             sp.set_str(settings_pack.string_types.listen_interfaces.swigValue(),
                     networkInterfaces);
             sp.set_bool(settings_pack.bool_types.enable_ip_notifier.swigValue(), false);
-            sp.set_int(settings_pack.int_types.upload_rate_limit.swigValue(), 512);
-            sp.set_int(settings_pack.int_types.download_rate_limit.swigValue(), 512);
-            sp.set_int(settings_pack.int_types.dht_upload_rate_limit.swigValue(), 512);
+            //sp.set_int(settings_pack.int_types.upload_rate_limit.swigValue(), 512);
+            //sp.set_int(settings_pack.int_types.download_rate_limit.swigValue(), 512);
+            //sp.set_int(settings_pack.int_types.dht_upload_rate_limit.swigValue(), 512);
             //sp.set_int(settings_pack.int_types.dht_download_rate_limit.swigValue(), 512);
         } else {
             sp.set_str(settings_pack.string_types.dht_bootstrap_nodes.swigValue(),
@@ -109,8 +109,8 @@ final class SessionSettings {
 
         dht_settings ds = new dht_settings();
         ds.setMax_dht_items(this.maxDhtItems);
-        ds.setUpload_rate_limit(512);
-        ds.setRead_only(true);
+        //ds.setUpload_rate_limit(512);
+        //ds.setRead_only(true);
         if (this.privateNetwork) {
             // For private network, unrestrict dht entries to one per IP.
             ds.setRestrict_routing_ips(false);
