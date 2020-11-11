@@ -132,6 +132,15 @@ public class DHTEngine {
     }
 
     /**
+     * Set read only mode for all sessions.
+     *
+     * @param value
+     */
+    public void setReadOnly(boolean value) {
+        sessionController.setReadOnly(value);
+    }
+
+    /**
      * Put immutable item asynchronously.
      *
      * @param item immutable item.

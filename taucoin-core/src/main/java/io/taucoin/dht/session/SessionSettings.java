@@ -109,8 +109,12 @@ final class SessionSettings {
 
         dht_settings ds = new dht_settings();
         ds.setMax_dht_items(this.maxDhtItems);
-        //ds.setUpload_rate_limit(512);
-        //ds.setRead_only(true);
+        ds.setMax_peers_reply(0);
+        ds.setMax_fail_count(10);
+        ds.setMax_torrents(0);
+        ds.setMax_peers(0);
+        ds.setMax_torrent_search_reply(0);
+
         if (this.privateNetwork) {
             // For private network, unrestrict dht entries to one per IP.
             ds.setRestrict_routing_ips(false);

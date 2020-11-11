@@ -24,7 +24,7 @@ public class SessionController {
 
     private static final int LISTEN_PORT = 6881;
 
-    public static final int MIN_SESSIONS = 0;
+    public static final int MIN_SESSIONS = 1;
     public static final int MAX_SESSIONS = 64;
 
     // This list stores all the tau sessions.
@@ -182,6 +182,17 @@ public class SessionController {
 
     public int sessions() {
         return sessionsList.size();
+    }
+
+    /**
+     * Set read only mode for all sessions.
+     *
+     * @param value
+     */
+    public void setReadOnly(boolean value) {
+        for (TauSession s : sessionsList) {
+            s.setReadOnly(value);
+        }
     }
 
     public List<SessionInfo> getSessionInfos() {
