@@ -26,7 +26,7 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityMembersBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
+import io.taucoin.torrent.publishing.ui.peers.ConnectedPeersActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.CommunityQRCodeActivity;
 
 /**
@@ -115,9 +115,9 @@ public class MembersActivity extends BaseActivity {
         }
         if (item.getItemId() == R.id.member_add) {
             Intent intent = new Intent();
-            intent.putExtra(IntentExtra.TYPE, ContactsActivity.PAGE_ADD_MEMBERS);
+            intent.putExtra(IntentExtra.TYPE, ConnectedPeersActivity.PAGE_ADD_MEMBERS);
             intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-            ActivityUtil.startActivity(intent, this, ContactsActivity.class);
+            ActivityUtil.startActivity(intent, this, ConnectedPeersActivity.class);
         } else if (item.getItemId() == R.id.member_ban) {
             communityViewModel.setCommunityBlacklist(chainID, true);
         } else if (item.getItemId() == R.id.community_qr_code) {

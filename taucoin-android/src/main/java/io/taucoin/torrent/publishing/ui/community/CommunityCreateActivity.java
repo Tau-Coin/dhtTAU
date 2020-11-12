@@ -28,8 +28,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.peers.ConnectedPeersActivity;
 
 /**
  * 群组/社区创建页面
@@ -124,9 +124,9 @@ public class CommunityCreateActivity extends BaseActivity {
                     dialog.cancel();
                     onBackPressed();
                     Intent intent = new Intent();
-                    intent.putExtra(IntentExtra.TYPE, ContactsActivity.PAGE_ADD_MEMBERS);
+                    intent.putExtra(IntentExtra.TYPE, ConnectedPeersActivity.PAGE_ADD_MEMBERS);
                     intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-                    ActivityUtil.startActivity(intent, this, ContactsActivity.class);
+                    ActivityUtil.startActivity(intent, this, ConnectedPeersActivity.class);
                 }).create();
         successDialog.setOnCancelListener(dialog -> {
             dialog.dismiss();

@@ -25,6 +25,7 @@ import android.os.Environment;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -105,16 +106,46 @@ public class FileUtil {
         return bitmap;
     }
 
-    public static void saveFilesDirBitmap(String filename, Bitmap bitmap){
+    public static void saveFilesDirBitmap(String filename, Bitmap bitmap) throws Exception{
+        FileOutputStream fos = null;
         try {
-            Context context = MainApplication.getInstance();
-            FileOutputStream fos = context.openFileOutput(filename, Context.MODE_PRIVATE);
-            bitmap.compress(Bitmap.CompressFormat.PNG,100,fos);
-            fos.close();
-        }  catch (Exception e) {
-            e.printStackTrace();
+            File file = new File(filename);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            fos = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG,80, fos);
+
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
+
+    /**
+     * Get QRCode directory
+     * @return  path
+     */
+    public static String getQRCodeFilePath() {
+        Context context = MainApplication.getInstance();
+        File file = context.getExternalFilesDir(null);
+        String path;
+        if(file != null && file.exists()){
+            path = file.getAbsolutePath();
+        }else{
+            path = Environment.getExternalStorageDirectory() + File.separator + BuildConfig.APPLICATION_ID;
+        }
+        path = path + File.separator + "qr";
+        createDir(path);
+
+        return path + File.separator;
+    }
+
     /**
      * Get download directory
      * @return  path

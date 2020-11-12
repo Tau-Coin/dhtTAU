@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.ui.peers.ConnectedPeersActivity;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
@@ -26,7 +27,6 @@ import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityTransactionCreateBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 
 /**
  * 交易创建页面页面
@@ -162,8 +162,8 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
                 break;
             case R.id.iv_select_pk:
                 Intent intent = new Intent();
-                intent.putExtra(IntentExtra.TYPE, ContactsActivity.PAGE_SELECT_CONTACT);
-                ActivityUtil.startActivityForResult(intent, this, ContactsActivity.class, REQUEST_CODE);
+                intent.putExtra(IntentExtra.TYPE, ConnectedPeersActivity.PAGE_SELECT_CONTACT);
+                ActivityUtil.startActivityForResult(intent, this, ConnectedPeersActivity.class, REQUEST_CODE);
                 break;
         }
     }

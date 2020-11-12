@@ -321,23 +321,7 @@ public class CommunityViewModel extends AndroidViewModel {
      * @param chatName chatName
      * @param friendPk friend's PK
      */
-    public void createChat(TxViewModel txViewModel, String chatName, String friendPk) {
-        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
-            return;
-        }
-        observeDaemonRunning = daemon.observeDaemonRunning()
-                .subscribeOn(Schedulers.io())
-                .subscribe((isRunning) -> {
-                    if (isRunning) {
-                        createNewChat(txViewModel, chatName, friendPk);
-                        if (observeDaemonRunning != null) {
-                            observeDaemonRunning.dispose();
-                        }
-                    }
-                });
-    }
-
-    private void createNewChat(TxViewModel txViewModel, String chatName, String friendPk) {
+    public void createChat(String chatName, String friendPk) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
@@ -354,13 +338,6 @@ public class CommunityViewModel extends AndroidViewModel {
                         Constants.TOTAL_COIN.longValue(), Constants.BLOCK_IN_AVG);
                 // TauController:创建Community社区
                 result = createCommunity(community, null);
-                if(result.isSuccess()){
-                    // 社区创建完成，直接给要聊天的朋友空投币
-                    String msg = txViewModel.airdropToFriend(community.chainID, friendPk);
-                    if(StringUtil.isNotEmpty(msg)){
-                        result.setFailMsg(msg);
-                    }
-                }
                 result.setMsg(community.chainID);
             }catch (Exception e){
                 result.setFailMsg(e.getMessage());

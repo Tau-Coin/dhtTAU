@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.ui.contacts;
+package io.taucoin.torrent.publishing.ui.peers;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -25,36 +25,37 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
-import io.taucoin.torrent.publishing.databinding.ActivityContactsBinding;
+import io.taucoin.torrent.publishing.databinding.ActivityConnectedPeersBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 import io.taucoin.util.ByteUtil;
 
 /**
- * 联系人页面
+ * 连接的对等点
  */
-public class ContactsActivity extends BaseActivity implements ContactListAdapter.ClickListener {
+public class ConnectedPeersActivity extends BaseActivity implements PeersListAdapter.ClickListener {
     public static final int PAGE_CONTACT_LIST = 0;
     public static final int PAGE_SELECT_CONTACT = 1;
     public static final int PAGE_ADD_MEMBERS = 2;
-    private ActivityContactsBinding binding;
+    private ActivityConnectedPeersBinding binding;
     private UserViewModel userViewModel;
     private CommunityViewModel communityViewModel;
     private TxViewModel txViewModel;
-    private ContactListAdapter adapter;
+    private PeersListAdapter adapter;
     private CommonDialog commonDialog;
     private CompositeDisposable disposables = new CompositeDisposable();
     // 联系人列表资源
@@ -68,7 +69,7 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_contacts);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_connected_peers);
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
         txViewModel = provider.get(TxViewModel.class);
@@ -92,11 +93,11 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
      */
     private void initView() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.contacts_title);
+        binding.toolbarInclude.toolbar.setTitle(R.string.drawer_connected_peers);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        adapter = new ContactListAdapter(this, page, order);
+        adapter = new PeersListAdapter(this, page, order);
         /*
          * A RecyclerView by default creates another copy of the ViewHolder in order to
          * fade the views into each other. This causes the problem because the old ViewHolder gets
@@ -136,10 +137,12 @@ public class ContactsActivity extends BaseActivity implements ContactListAdapter
     private void initFabSpeedDial() {
         // 自定义点击事件
         binding.fabButton.getMainFab().setOnClickListener(v -> {
-            showAddPublicKeyDialog();
+//            showAddPublicKeyDialog();
+            ActivityUtil.startActivity(this, UserQRCodeActivity.class);
         });
         binding.llInviteFriends.setOnClickListener(v -> {
-            showAddPublicKeyDialog();
+//            showAddPublicKeyDialog();
+            ActivityUtil.startActivity(this, UserQRCodeActivity.class);
         });
     }
 

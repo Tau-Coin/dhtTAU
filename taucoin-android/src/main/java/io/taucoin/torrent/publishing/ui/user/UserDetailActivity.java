@@ -32,7 +32,6 @@ import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
-import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 
 /**
  * 用户详情
@@ -42,7 +41,6 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
     private ActivityUserDetailBinding binding;
     private UserViewModel userViewModel;
     private CommunityViewModel communityViewModel;
-    private TxViewModel txViewModel;
     private UserCommunityListAdapter adapter;
     private CommonDialog commonDialog;
     private String publicKey;
@@ -54,7 +52,6 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         userViewModel = provider.get(UserViewModel.class);
         communityViewModel = provider.get(CommunityViewModel.class);
         communityViewModel.observeNeedStartDaemon();
-        txViewModel = provider.get(TxViewModel.class);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_user_detail);
         binding.setListener(this);
         initView();
@@ -205,7 +202,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         contactsBinding.tvSubmit.setOnClickListener(v -> {
             String chatName = ViewUtils.getText(contactsBinding.etChatName);
             showProgressDialog();
-            communityViewModel.createChat(txViewModel, chatName, user.publicKey);
+            communityViewModel.createChat(chatName, user.publicKey);
         });
 
         commonDialog = new CommonDialog.Builder(this)

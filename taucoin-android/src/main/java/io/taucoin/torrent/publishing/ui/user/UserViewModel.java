@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.ui.user;
 
 import android.app.Application;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -34,7 +35,9 @@ import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.FileUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
@@ -55,6 +58,7 @@ import io.taucoin.util.ByteUtil;
 public class UserViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("UserViewModel");
+    private static final String QR_CODE_NAME = "QRCode.jpg";
     private UserRepository userRepo;
     private SettingsRepository settingsRepo;
     private TxRepository txRepo;
@@ -453,5 +457,33 @@ public class UserViewModel extends AndroidViewModel {
                 .setContentView(binding.getRoot())
                 .create();
         commonDialog.show();
+    }
+
+    /**
+     * 分享QRCOde
+     */
+    public void shareQRCode(AppCompatActivity activity, View view) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            view.setDrawingCacheEnabled(true);
+            view.buildDrawingCache();
+            Bitmap bitmap = view.getDrawingCache();
+            if (bitmap != null) {
+                String fileName = FileUtil.getQRCodeFilePath() + QR_CODE_NAME ;
+                logger.debug("shareQRCode fileName::{}", fileName);
+                try {
+                    FileUtil.saveFilesDirBitmap(fileName, bitmap);
+                    ActivityUtil.shareFile(activity, fileName, view.getContext().getString(R.string.contacts_exchange_qr));
+                } catch (Exception e) {
+                    logger.error("shareQRCode error", e);
+                }
+            } else {
+                logger.debug("shareQRCode bitmap = null");
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
+        disposables.add(disposable);
     }
 }

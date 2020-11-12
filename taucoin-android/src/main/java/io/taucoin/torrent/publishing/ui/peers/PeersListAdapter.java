@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.ui.contacts;
+package io.taucoin.torrent.publishing.ui.peers;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -25,13 +25,13 @@ import io.taucoin.torrent.publishing.databinding.ItemContactListBinding;
 /**
  * 显示的联系人列表的Adapter
  */
-public class ContactListAdapter extends PagedListAdapter<UserAndMember, ContactListAdapter.ViewHolder> {
+public class PeersListAdapter extends PagedListAdapter<UserAndMember, PeersListAdapter.ViewHolder> {
     private ClickListener listener;
     private List<String> selectedList = new ArrayList<>();
     private int page;
     private int order;
 
-    ContactListAdapter(ClickListener listener, int type, int order) {
+    PeersListAdapter(ClickListener listener, int type, int order) {
         super(diffCallback);
         this.listener = listener;
         this.page = type;
@@ -84,11 +84,11 @@ public class ContactListAdapter extends PagedListAdapter<UserAndMember, ContactL
             if(null == holder || null == user){
                 return;
             }
-            holder.binding.cbSelect.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS
+            holder.binding.cbSelect.setVisibility(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS
                     ? View.VISIBLE : View.GONE);
-            holder.binding.ivShare.setVisibility(type == ContactsActivity.PAGE_ADD_MEMBERS
+            holder.binding.ivShare.setVisibility(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS
                     ? View.VISIBLE : View.GONE);
-            if(type == ContactsActivity.PAGE_ADD_MEMBERS){
+            if(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS){
                 holder.binding.cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
                     selectedList.remove(user.publicKey);
                     if(isChecked){

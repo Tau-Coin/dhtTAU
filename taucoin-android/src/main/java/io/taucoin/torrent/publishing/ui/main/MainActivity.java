@@ -48,10 +48,10 @@ import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.contacts.ContactsActivity;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.download.DownloadViewModel;
 import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
+import io.taucoin.torrent.publishing.ui.peers.ConnectedPeersActivity;
 import io.taucoin.torrent.publishing.ui.setting.DataCostActivity;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
@@ -317,7 +317,7 @@ public class MainActivity extends BaseActivity {
                 ActivityUtil.startActivity(this, CommunityCreateActivity.class);
                 break;
             case R.id.item_contacts:
-                ActivityUtil.startActivity(this, ContactsActivity.class);
+                ActivityUtil.startActivity(this, ConnectedPeersActivity.class);
                 break;
             case R.id.item_setting:
                 ActivityUtil.startActivity(this, SettingActivity.class);
