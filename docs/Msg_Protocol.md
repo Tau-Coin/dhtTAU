@@ -4,7 +4,7 @@
 
 1. #### Personal Info Channel
 
-   ​	Salt: F8(PubKey A)，即其公钥的前八个字节
+   ​	Salt: "Personal_Channel"
 
    ​	Mutable Item -> Personal Info Struct:
 
@@ -24,7 +24,7 @@
 
 ​			{
 
-​				PeerListRoot,
+​				NextPeerListRoot,
 
 ​				Peer1,
 
@@ -38,7 +38,7 @@
 
 2. #### Msg Channel
 
-   ​	Salt: F8(PubKey A) + F8(PubKey B)
+   ​	Salt: PubKey B
 
    ​	Mutable Item -> Msg Root Hash
 

@@ -58,7 +58,7 @@ public class ChainParam {
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
 
-    /**********CHANNEL**********/
+    /**********CHANNEL SALT**********/
     // tip
     public static final byte[] TIP_CHANNEL = "#T".getBytes();
 
@@ -66,7 +66,7 @@ public class ChainParam {
     public static final byte[] DEMAND_CHANNEL = "#D".getBytes();
 
     // personal info
-    public static final byte[] PERSONAL_INFO_CHANNEL = "#PI".getBytes();
+    public static final byte[] PERSONAL_INFO_SALT = "Personal_Channel".getBytes();
 
     public static final int HashLongArrayLength = 3;
 
