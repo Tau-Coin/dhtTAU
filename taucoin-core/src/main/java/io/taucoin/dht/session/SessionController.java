@@ -57,7 +57,7 @@ public class SessionController {
     public SessionController(BlockingQueue inputQueue, Counter counter) {
         this.inputQueue = inputQueue;
         this.counter = counter;
-        this.regulator = regulator;
+        this.regulator = new Regulator();
     }
 
     /**
