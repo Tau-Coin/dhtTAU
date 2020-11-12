@@ -10,11 +10,11 @@
 
       {	
 
-   ​		UserName,
+   ​		Username,
 
-   ​		IcoRootHash,
+   ​		IconRoot,
 
-   ​    	PeerListRoot
+   ​    	PeersRoot
 
    ​	}
 
@@ -24,7 +24,7 @@
 
 ​			{
 
-​				NextPeerListRoot,
+​				NextPeersRoot,
 
 ​				Peer1,
 
