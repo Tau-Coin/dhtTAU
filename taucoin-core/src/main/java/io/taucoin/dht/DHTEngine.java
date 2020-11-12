@@ -141,6 +141,24 @@ public class DHTEngine {
     }
 
     /**
+     * Regulate time interval for dht putting and getting operation.
+     *
+     * @param interval time interval(milliseconds)
+     */
+    public void regulateDHTOPInterval(long interval) {
+        sessionController.regulateDHTOPInterval(interval);
+    }
+
+    /**
+     * Get time interval for dht putting and getting operation.
+     *
+     * @return time interval(milliseconds)
+     */
+    public long getDHTOPInterval() {
+        return sessionController.getDHTOPInterval();
+    }
+
+    /**
      * Put immutable item asynchronously.
      *
      * @param item immutable item.

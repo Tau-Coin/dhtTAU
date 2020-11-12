@@ -41,6 +41,9 @@ public class SessionController {
     // counter for dht immutable and mutable item request
     private Counter counter;
 
+    // Parameters regulator for dht middleware.
+    private Regulator regulator;
+
     // Lock to ensure the operation atomicity
     // between 'sessionsList' and 'sessionToWokerMap'
     private final Object lock = new Object();
@@ -54,6 +57,7 @@ public class SessionController {
     public SessionController(BlockingQueue inputQueue, Counter counter) {
         this.inputQueue = inputQueue;
         this.counter = counter;
+        this.regulator = regulator;
     }
 
     /**
@@ -77,7 +81,7 @@ public class SessionController {
                         .setNetworkInterfaces(NetworkInterfacePolicy
                                 .networkInterfaces(i));
                 TauSession s = new TauSession(builder.build());
-                Worker w = new Worker(i, s, inputQueue, counter);
+                Worker w = new Worker(i, s, inputQueue, counter, regulator);
 
                 sessionToWorkerMap.put(s, w);
                 sessionsList.add(s);
@@ -145,7 +149,7 @@ public class SessionController {
                         .networkInterfaces(sessionsList.size()));
 
         TauSession s = new TauSession(builder.build());
-        Worker w = new Worker(sessionsList.size(), s, inputQueue, counter);
+        Worker w = new Worker(sessionsList.size(), s, inputQueue, counter, regulator);
 
         if (w.start()) {
             synchronized (lock) {
@@ -205,6 +209,27 @@ public class SessionController {
         }
 
         return ret;
+    }
+
+    /**
+     * Regulate time interval for dht putting and getting operation.
+     *
+     * @param interval time interval(milliseconds)
+     */
+    public void regulateDHTOPInterval(long interval) {
+        if (interval < Regulator.DEFAULT_DHTOPInterval) {
+            interval = Regulator.DEFAULT_DHTOPInterval;
+        }
+        regulator.setDHTOPInterval(interval);
+    }
+
+    /**
+     * Get time interval for dht putting and getting operation.
+     *
+     * @return time interval(milliseconds)
+     */
+    public long getDHTOPInterval() {
+        return regulator.getDHTOPInterval();
     }
 
     private static final class NetworkInterfacePolicy {

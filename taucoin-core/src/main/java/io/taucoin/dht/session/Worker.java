@@ -15,9 +15,6 @@ import static io.taucoin.dht.DHT.*;
  */
 class Worker {
 
-    // The time interval for dht operation.
-    private static final long DHTOPInterval = 1000; // milliseconds.
-
     // Note: when multi-session is started in different thread,
     // application is crashed at 'aesni_ecb_encrypt'.
     // Often the AES algorithm can't be parallelised, because it is inherently
@@ -38,6 +35,9 @@ class Worker {
 
     // metrics counter for dht immutable and mutable item request
     private Counter counter;
+
+    // Parameters regulator for dht middleware.
+    private Regulator regulator;
 
     // Components for waiting the result of starting TauSession.
     private final Object signal = new Object();
@@ -75,7 +75,7 @@ class Worker {
                 Object req = null;
 
                 try {
-                    Thread.sleep(DHTOPInterval);
+                    Thread.sleep(regulator.getDHTOPInterval());
 
                     if (stopRequested) {
                         break;
@@ -106,12 +106,13 @@ class Worker {
      */
     public Worker(int index, TauSession session,
             BlockingQueue<Object> inputQueue,
-            Counter counter) {
+            Counter counter, Regulator regulator) {
 
         this.index = index;
         this.session = session;
         this.inputQueue = inputQueue;
         this.counter = counter;
+        this.regulator = regulator;
 
         logger = LoggerFactory.getLogger("Session[" + index + "]");
         this.session.setLogger(logger);
