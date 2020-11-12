@@ -14,7 +14,7 @@
 
    ​		IconRoot,
 
-   ​    	PeersRoot
+   ​    	PeerListRoot
 
    ​	}
 
@@ -24,7 +24,7 @@
 
 ​			{
 
-​				NextPeersRoot,
+​				NextPeerListRoot,
 
 ​				Peer1,
 
