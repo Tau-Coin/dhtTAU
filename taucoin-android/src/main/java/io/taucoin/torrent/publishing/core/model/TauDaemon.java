@@ -353,11 +353,13 @@ public class TauDaemon {
                     logger.info("rescheduleDHTBySettings restartSessions::{}",
                             NetworkSetting.getDHTSessions());
                 } else {
-                    long dhtOPInterval = tauController.getDHTEngine().getDHTOPInterval();
-                    dhtOPInterval = NetworkSetting.calculateDHTInterval(dhtOPInterval);
-                    tauController.getDHTEngine().regulateDHTOPInterval(dhtOPInterval);
-                    logger.info("rescheduleDHTBySettings regulateDHTOPInterval::{}",
-                            dhtOPInterval);
+                    int regulateValue = NetworkSetting.calculateRegulateValue();
+                    if (regulateValue > 0) {
+                        tauController.getDHTEngine().increaseDHTOPInterval();
+                    } else if (regulateValue < 0) {
+                        tauController.getDHTEngine().decreaseDHTOPInterval();
+                    }
+                    logger.info("rescheduleDHTBySettings regulateValue::{}", regulateValue);
                 }
             }
         } catch (Exception e) {

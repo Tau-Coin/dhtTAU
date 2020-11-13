@@ -20,8 +20,7 @@ public class NetworkSetting {
     private static final int wifiLimited;                       // 单位MB
     // 网速在限制内浮动范围
     private static final long speedRange = 512;                 // 0.5KB
-    private static final long speed_sample = 5;                 // 单位s
-    private static final BigInteger defaultDHTOPInterval = new BigInteger("1000"); // 单位ms
+    private static final long speed_sample = 60;                // 单位s
 
     private static SettingsRepository settingsRepo;
     static {
@@ -223,9 +222,9 @@ public class NetworkSetting {
     }
 
     /**
-     * 计算DHT操作的时间间隔
+     * 计算DHT操作的调节值
      */
-    public static long calculateDHTInterval(long dhtOPInterval) {
+    public static int calculateRegulateValue() {
         long speedLimit;
         if (isMeteredNetwork()) {
             // 当前网络为计费网络
@@ -234,29 +233,24 @@ public class NetworkSetting {
             // 当前网络为非计费网络
             speedLimit = NetworkSetting.getWiFiSpeedLimit();
         }
-        return calculateDHTInterval(dhtOPInterval, speedLimit);
+        return calculateRegulateValue(speedLimit);
     }
 
     /**
-     * 根据网速限制计算DHT操作的时间间隔
+     * 根据网速限制计算DHT操作的调节值
      */
-    private static long calculateDHTInterval(long dhtOPInterval, long speedLimit) {
+    private static int calculateRegulateValue(long speedLimit) {
         long currentSpeed = NetworkSetting.getCurrentSpeed();
-        BigInteger bigInterval = BigInteger.valueOf(dhtOPInterval);
         if (speedLimit > 0) {
             if (currentSpeed < speedLimit - speedRange) {
-                if (bigInterval.compareTo(defaultDHTOPInterval.add(defaultDHTOPInterval)) > 0) {
-                    bigInterval = bigInterval.subtract(defaultDHTOPInterval);
-                } else {
-                    bigInterval = defaultDHTOPInterval;
-                }
-            } else if (currentSpeed > speedLimit + speedRange){
-                bigInterval = bigInterval.add(defaultDHTOPInterval);
+                return -1;
+            } else if (currentSpeed > speedLimit){
+                return 1;
             }
         } else {
             // 超出流量控制范围
-            bigInterval = defaultDHTOPInterval;
+            return -1;
         }
-        return bigInterval.longValue();
+        return 0;
     }
 }
