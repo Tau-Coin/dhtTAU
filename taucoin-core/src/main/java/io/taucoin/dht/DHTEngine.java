@@ -159,11 +159,11 @@ public class DHTEngine {
     }
 
     public void increaseDHTOPInterval() {
-        sessionController.increase();
+        sessionController.increaseDHTOPInterval();
     }
 
     public void decreaseDHTOPInterval() {
-        sessionController.decrease();
+        sessionController.decreaseDHTOPInterval();
     }
 
     /**
