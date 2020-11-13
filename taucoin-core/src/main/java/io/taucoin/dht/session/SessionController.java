@@ -232,6 +232,14 @@ public class SessionController {
         return regulator.getDHTOPInterval();
     }
 
+    public void increaseDHTOPInterval() {
+        regulator.increase();
+    }
+
+    public void decreaseDHTOPInterval() {
+        regulator.decrease();
+    }
+
     private static final class NetworkInterfacePolicy {
 
         public static String networkInterfaces(int index) {

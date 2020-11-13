@@ -158,6 +158,14 @@ public class DHTEngine {
         return sessionController.getDHTOPInterval();
     }
 
+    public void increaseDHTOPInterval() {
+        sessionController.increase();
+    }
+
+    public void decreaseDHTOPInterval() {
+        sessionController.decrease();
+    }
+
     /**
      * Put immutable item asynchronously.
      *
