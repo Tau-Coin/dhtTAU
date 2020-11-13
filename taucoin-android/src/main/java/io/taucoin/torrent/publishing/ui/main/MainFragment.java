@@ -25,6 +25,7 @@ import io.taucoin.torrent.publishing.databinding.FragmentMainBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
+import io.taucoin.torrent.publishing.ui.chat.ChatActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
 
@@ -111,8 +112,14 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
      */
     @Override
     public void onItemClicked(@NonNull Community item) {
-        Intent intent = new Intent();
-        intent.putExtra(IntentExtra.CHAIN_ID, item.chainID);
-        ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+        if (item.type == 0) {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.CHAIN_ID, item.chainID);
+            ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+        } else if (item.type == 1) {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.CHAIN_ID, item.chainID);
+            ActivityUtil.startActivity(intent, this, ChatActivity.class);
+        }
     }
 }

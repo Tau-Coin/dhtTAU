@@ -20,7 +20,7 @@ public class NetworkSetting {
     private static final int wifiLimited;                       // 单位MB
     // 网速在限制内浮动范围
     private static final long speedRange = 512;                 // 0.5KB
-    private static final long speed_sample = 60;                // 单位s
+    private static final long speed_sample = 5;                 // 单位s
     private static final BigInteger defaultDHTOPInterval = new BigInteger("1000"); // 单位ms
 
     private static SettingsRepository settingsRepo;
@@ -225,7 +225,7 @@ public class NetworkSetting {
     /**
      * 计算DHT操作的时间间隔
      */
-    public static long calculateDHTInternal(long dhtOPInterval) {
+    public static long calculateDHTInterval(long dhtOPInterval) {
         long speedLimit;
         if (isMeteredNetwork()) {
             // 当前网络为计费网络
@@ -234,13 +234,13 @@ public class NetworkSetting {
             // 当前网络为非计费网络
             speedLimit = NetworkSetting.getWiFiSpeedLimit();
         }
-        return calculateDHTInternal(dhtOPInterval, speedLimit);
+        return calculateDHTInterval(dhtOPInterval, speedLimit);
     }
 
     /**
      * 根据网速限制计算DHT操作的时间间隔
      */
-    private static long calculateDHTInternal(long dhtOPInterval, long speedLimit) {
+    private static long calculateDHTInterval(long dhtOPInterval, long speedLimit) {
         long currentSpeed = NetworkSetting.getCurrentSpeed();
         BigInteger bigInterval = BigInteger.valueOf(dhtOPInterval);
         if (speedLimit > 0) {

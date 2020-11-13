@@ -131,7 +131,7 @@ public class UsersUtil {
                return splits[0];
            }
        }
-       return null;
+       return "";
     }
 
     /**

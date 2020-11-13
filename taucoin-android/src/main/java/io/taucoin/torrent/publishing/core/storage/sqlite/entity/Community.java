@@ -15,9 +15,11 @@ import androidx.room.PrimaryKey;
 public class Community implements Parcelable {
     @NonNull
     @PrimaryKey
-    public String chainID;                  // 社区的chainID
+    public String chainID;                  // 社区的chainID或者chat中朋友的Public Key
     @NonNull
     public String communityName;            // 社区名字
+    @NonNull
+    public int type;                        // 0: 社区， 1: chat
     public long totalBlocks;                // 社区总区块数（不上链）
     public long syncBlock;                  // 已同步到区块数（不上链）
     public boolean isBanned = false;        // 社区是否被用户拉入黑名单（不上链）
@@ -54,6 +56,7 @@ public class Community implements Parcelable {
     protected Community(Parcel in) {
         chainID = in.readString();
         communityName = in.readString();
+        type = in.readInt();
         totalBlocks = in.readLong();
         syncBlock = in.readLong();
         isBanned = in.readByte() != 0;
@@ -67,6 +70,7 @@ public class Community implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(chainID);
         dest.writeString(communityName);
+        dest.writeInt(type);
         dest.writeLong(totalBlocks);
         dest.writeLong(syncBlock);
         dest.writeByte((byte) (isBanned ? 1 : 0));

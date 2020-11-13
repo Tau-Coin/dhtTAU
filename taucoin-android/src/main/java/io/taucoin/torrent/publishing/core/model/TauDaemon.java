@@ -354,7 +354,7 @@ public class TauDaemon {
                             NetworkSetting.getDHTSessions());
                 } else {
                     long dhtOPInterval = tauController.getDHTEngine().getDHTOPInterval();
-                    dhtOPInterval = NetworkSetting.calculateDHTInternal(dhtOPInterval);
+                    dhtOPInterval = NetworkSetting.calculateDHTInterval(dhtOPInterval);
                     tauController.getDHTEngine().regulateDHTOPInterval(dhtOPInterval);
                     logger.info("rescheduleDHTBySettings regulateDHTOPInterval::{}",
                             dhtOPInterval);

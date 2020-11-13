@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_marginStart="7dp">
+
+        <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+            android:id="@+id/left_view"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="7dp"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:textAllCaps="true"
+            android:textColor="@color/color_white"
+            android:textAppearance="@style/TextAppearanceHeadline6"
+            app:borderColor="@color/primary_light"
+            app:borderWidth="0dp"
+            app:radius="7dp"
+            app:isRadiusAutoHalf="true"
+            app:bgColor="@color/primary_light"
+            app:textColorForPressed="@color/color_white" />
+
+        <LinearLayout
+            android:id="@+id/middle_view"
+            android:layout_toEndOf="@+id/left_view"
+            android:layout_toStartOf="@id/right_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_group_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:singleLine="true"
+                android:ellipsize="middle"
+                android:textAppearance="@style/TextAppearanceHeadline6" />
+
+            <TextView
+                android:id="@+id/tv_balance_power"
+                android:layout_width="match_parent"
+                android:layout_height="15dp"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMaxTextSize="14dp"
+                app:autoSizeMinTextSize="2dp"
+                app:autoSizeStepGranularity="0.5dp"
+                android:textAppearance="@style/TextAppearanceBody2" />
+
+            <TextView
+                android:id="@+id/tv_user_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:includeFontPadding="false"
+                android:ellipsize="end"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearanceBody2" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/right_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:gravity="center_vertical|end"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="15dp"
+            android:paddingBottom="2dp"
+            android:minWidth="50dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_msg_last_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="32dp"
+                android:singleLine="true"
+                android:includeFontPadding="false"
+                android:ellipsize="end"
+                android:gravity="center_horizontal"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearanceBody3" />
+
+            <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+                android:id="@+id/read_only"
+                android:layout_width="32dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:textAllCaps="true"
+                android:text="@string/main_read_only"
+                android:textColor="@color/color_white"
+                android:includeFontPadding="false"
+                android:textAppearance="@style/TextAppearanceBody4"
+                android:lineSpacingMultiplier="0.75"
+                android:lineSpacingExtra="0dp"
+                app:borderColor="@color/primary_light"
+                app:borderWidth="0dp"
+                app:radius="5dp"
+                app:isRadiusAutoHalf="true"
+                app:bgColor="@color/primary_light"
+                app:textColorForPressed="@color/color_white" />
+
+        </LinearLayout>
+
+        <include
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_toEndOf="@+id/left_view"
+            android:layout_centerVertical="true"
+            android:layout_alignParentBottom="true"
+            layout="@layout/view_line"/>
+    </RelativeLayout>
+</layout>

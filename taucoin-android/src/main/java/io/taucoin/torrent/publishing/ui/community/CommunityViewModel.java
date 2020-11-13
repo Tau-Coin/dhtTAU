@@ -325,19 +325,18 @@ public class CommunityViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
-                // 处理社区名，如果为空，取显示名的首位
+                // 处理ChatName，如果为空，取显朋友显示名
                 String communityName = chatName;
-                User currentUser = userRepo.getCurrentUser();
-                User friend = userRepo.getUserByPublicKey(friendPk);
-                if(StringUtil.isEmpty(communityName)){
-                    String currentUserName = UsersUtil.getShowName(currentUser);
-                    String friendName = UsersUtil.getShowName(friend);
-                    communityName = currentUserName.substring(0, 1) + friendName.substring(0, 1);
+                if (StringUtil.isEmpty(communityName)) {
+                    User friend = userRepo.getUserByPublicKey(friendPk);
+                    communityName = UsersUtil.getShowName(friend);
                 }
-                Community community = new Community(communityName, currentUser.publicKey,
-                        Constants.TOTAL_COIN.longValue(), Constants.BLOCK_IN_AVG);
-                // TauController:创建Community社区
-                result = createCommunity(community, null);
+                Community community = communityRepo.getCommunityByChainID(friendPk);
+                if (null == community) {
+                    community = new Community(friendPk, communityName);
+                    community.type = 1;
+                }
+                communityRepo.addCommunity(community);
                 result.setMsg(community.chainID);
             }catch (Exception e){
                 result.setFailMsg(e.getMessage());

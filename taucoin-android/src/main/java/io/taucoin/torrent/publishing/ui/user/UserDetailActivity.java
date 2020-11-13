@@ -28,6 +28,7 @@ import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityUserDetailBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.chat.ChatActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
@@ -113,11 +114,8 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
             if (!state.isSuccess()) {
                 ToastUtils.showShortToast(state.getMsg());
             } else {
-                String airdropResult = getString(R.string.contacts_airdrop_successfully,
-                        FmtMicrometer.fmtFeeValue(Constants.AIRDROP_COIN.longValue()));
-                ToastUtils.showShortToast(airdropResult);
                 onBackPressed();
-                openCommunityActivity(state.getMsg());
+                openChatActivity(state.getMsg());
             }
             if (commonDialog != null) {
                 commonDialog.closeDialog();
@@ -177,6 +175,16 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         intent.putExtra(IntentExtra.CHAIN_ID, chainID);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+    }
+
+    /**
+     * 打开聊天页面
+     * @param chainID
+     */
+    private void openChatActivity(String chainID){
+        Intent intent = new Intent();
+        intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+        ActivityUtil.startActivity(intent, this, ChatActivity.class);
     }
 
     /**
