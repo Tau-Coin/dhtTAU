@@ -66,7 +66,7 @@ public class ChainParam {
     public static final byte[] DEMAND_CHANNEL = "#D".getBytes();
 
     // personal info
-    public static final byte[] PERSONAL_INFO_SALT = "Personal_Channel".getBytes();
+    public static final byte[] PERSONAL_INFO_SALT = "PersonalChannel".getBytes();
 
     public static final int HashLongArrayLength = 3;
 

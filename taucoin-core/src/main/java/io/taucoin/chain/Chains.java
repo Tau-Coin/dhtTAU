@@ -3703,7 +3703,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                 break;
             }
             default: {
-                logger.error("Type mismatch.");
+                logger.info("Type mismatch.");
             }
         }
     }
