@@ -2,15 +2,11 @@ package io.taucoin.torrent.publishing.core.utils;
 
 import android.content.Context;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import io.taucoin.dht.session.SessionController;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -20,15 +16,12 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
  * 网络流量设置相关工具类
  */
 public class NetworkSetting {
-    private static final Logger logger = LoggerFactory.getLogger("NetworkSetting");
-    private static final int meteredLimited; // 单位MB
-    private static final int wifiLimited;   // 单位MB
-    private static final long maxSpeedLimited = 50 * 1024;       // 50KB
-    // 网速在限制内浮动范围，超过限制，立即减sessions - 1
-    private static final long speedRange = 512;                  // 0.5KB
-    private static final long speed_sample = 60; // 单位s
-    private static final int minSessions = SessionController.MIN_SESSIONS;
-    private static final int maxSessions = SessionController.MAX_SESSIONS;
+    private static final int meteredLimited;                    // 单位MB
+    private static final int wifiLimited;                       // 单位MB
+    // 网速在限制内浮动范围
+    private static final long speedRange = 512;                 // 0.5KB
+    private static final long speed_sample = 60;                // 单位s
+    private static final BigInteger defaultDHTOPInterval = new BigInteger("1000"); // 单位ms
 
     private static SettingsRepository settingsRepo;
     static {
@@ -116,6 +109,7 @@ public class NetworkSetting {
         settingsRepo.setListData(context.getString(R.string.pref_key_current_speed_list), list);
 
         updateMeteredSpeedLimit();
+        updateWiFiSpeedLimit();
     }
 
     /**
@@ -229,45 +223,40 @@ public class NetworkSetting {
     }
 
     /**
-     * 计算DHT Session个数
+     * 计算DHT操作的时间间隔
      */
-    public static int calculateDHTSessions() {
-        int sessions;
-        // 当前网络为计费网络
+    public static long calculateDHTInternal(long dhtOPInterval) {
+        long speedLimit;
         if (isMeteredNetwork()) {
-            long speedLimit = NetworkSetting.getMeteredSpeedLimit();
-            sessions = calculateDHTSessions(speedLimit);
+            // 当前网络为计费网络
+            speedLimit = NetworkSetting.getMeteredSpeedLimit();
         } else {
             // 当前网络为非计费网络
-            sessions = calculateDHTSessions(maxSpeedLimited);
+            speedLimit = NetworkSetting.getWiFiSpeedLimit();
         }
-        return sessions;
+        return calculateDHTInternal(dhtOPInterval, speedLimit);
     }
 
     /**
-     * 根据网速限制计算DHT Session个数
+     * 根据网速限制计算DHT操作的时间间隔
      */
-    private static int calculateDHTSessions(long speedLimit) {
+    private static long calculateDHTInternal(long dhtOPInterval, long speedLimit) {
         long currentSpeed = NetworkSetting.getCurrentSpeed();
-        int sessions = getDHTSessions();
+        BigInteger bigInterval = BigInteger.valueOf(dhtOPInterval);
         if (speedLimit > 0) {
-            if (currentSpeed > speedLimit) {
-                if (sessions > minSessions + 1) {
-                    sessions --;
+            if (currentSpeed < speedLimit - speedRange) {
+                if (bigInterval.compareTo(defaultDHTOPInterval.add(defaultDHTOPInterval)) > 0) {
+                    bigInterval = bigInterval.subtract(defaultDHTOPInterval);
                 } else {
-                    sessions = minSessions + 1;
+                    bigInterval = defaultDHTOPInterval;
                 }
-            } else if (currentSpeed < speedLimit - speedRange){
-                if (sessions < maxSessions) {
-                    sessions ++;
-                } else {
-                    sessions = maxSessions;
-                }
+            } else if (currentSpeed > speedLimit + speedRange){
+                bigInterval = bigInterval.add(defaultDHTOPInterval);
             }
         } else {
             // 超出流量控制范围
-            sessions = minSessions;
+            bigInterval = defaultDHTOPInterval;
         }
-        return sessions;
+        return bigInterval.longValue();
     }
 }
