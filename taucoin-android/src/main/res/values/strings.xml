@@ -236,6 +236,7 @@
 
     <!-- Strings used for connected peers -->
     <string name="contacts_exchange_qr">Exchange QR</string>
+    <string name="contacts_share_qr_code">Share QR Code to</string>
     <string name="contacts_empty">No contacts！</string>
     <string name="contacts_community_from">From&#160;</string>
     <string name="contacts_community_more">,C/%1$s</string>

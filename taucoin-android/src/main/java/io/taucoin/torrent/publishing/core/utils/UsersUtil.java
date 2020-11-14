@@ -1,15 +1,8 @@
 package io.taucoin.torrent.publishing.core.utils;
 
-import android.content.Context;
-
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import io.taucoin.param.ChainParam;
-import io.taucoin.torrent.publishing.MainApplication;
-import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.ui.constant.Chain;
 
 /**
  * 用户相关逻辑处理类
@@ -79,10 +72,11 @@ public class UsersUtil {
 
     public static String getShowName(String publicKey, String localName) {
         String showName = UsersUtil.getDefaultName(publicKey);
-        if(StringUtil.isNotEmpty(localName)
-                && StringUtil.isNotEquals(localName.trim(), showName.trim())){
-            Context context = MainApplication.getInstance();
-            showName = context.getString(R.string.user_show_name, localName, showName);
+        if(StringUtil.isNotEmpty(localName)){
+//                && StringUtil.isNotEquals(localName.trim(), showName.trim())){
+//            Context context = MainApplication.getInstance();
+//            showName = context.getString(R.string.user_show_name, localName, showName);
+            showName = localName;
         }
         return showName;
     }

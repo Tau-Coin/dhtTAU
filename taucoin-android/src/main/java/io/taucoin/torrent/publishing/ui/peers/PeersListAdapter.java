@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.peers;
 
 import android.content.Context;
+import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -35,6 +37,7 @@ public class PeersListAdapter extends PagedListAdapter<UserAndMember, PeersListA
         super(diffCallback);
         this.listener = listener;
         this.page = type;
+        this.order = order;
     }
 
     void setOrder(int order) {
@@ -88,6 +91,8 @@ public class PeersListAdapter extends PagedListAdapter<UserAndMember, PeersListA
                     ? View.VISIBLE : View.GONE);
             holder.binding.ivShare.setVisibility(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS
                     ? View.VISIBLE : View.GONE);
+            holder.binding.ivShare.setVisibility(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS
+                    ? View.VISIBLE : View.GONE);
             if(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS){
                 holder.binding.cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
                     selectedList.remove(user.publicKey);
@@ -100,12 +105,16 @@ public class PeersListAdapter extends PagedListAdapter<UserAndMember, PeersListA
                 });
                 holder.binding.cbSelect.setChecked(selectedList.contains(user.publicKey));
             }
-            String showName = UsersUtil.getDefaultName(user.publicKey);
-            if(StringUtil.isNotEmpty(user.localName)
-                    && StringUtil.isNotEquals(user.localName, showName)){
-                showName = context.getString(R.string.user_show_name, user.localName, showName);
+            String showName = UsersUtil.getShowName(user, user.publicKey);
+            SpanUtils showNameBuilder = new SpanUtils()
+                    .append(showName);
+            if (showName.startsWith("T")) {
+                showNameBuilder.append(" ")
+                    .append("Connecting")
+                    .setFontSize(12, true)
+                    .setForegroundColor(context.getResources().getColor(R.color.color_red));
             }
-            holder.binding.tvName.setText(showName);
+            holder.binding.tvName.setText(showNameBuilder.create());
             String firstLetters = StringUtil.getFirstLettersOfName(showName);
             holder.binding.leftView.setText(firstLetters);
 

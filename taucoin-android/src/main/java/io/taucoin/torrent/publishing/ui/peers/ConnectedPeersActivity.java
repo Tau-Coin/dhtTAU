@@ -48,7 +48,7 @@ import io.taucoin.util.ByteUtil;
  * 连接的对等点
  */
 public class ConnectedPeersActivity extends BaseActivity implements PeersListAdapter.ClickListener {
-    public static final int PAGE_CONTACT_LIST = 0;
+    public static final int PAGE_PEERS_LIST = 0;
     public static final int PAGE_SELECT_CONTACT = 1;
     public static final int PAGE_ADD_MEMBERS = 2;
     private ActivityConnectedPeersBinding binding;
@@ -85,7 +85,7 @@ public class ConnectedPeersActivity extends BaseActivity implements PeersListAda
      */
     private void initParameter() {
         chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
-        page = getIntent().getIntExtra(IntentExtra.TYPE, PAGE_CONTACT_LIST);
+        page = getIntent().getIntExtra(IntentExtra.TYPE, PAGE_PEERS_LIST);
     }
 
     /**
@@ -214,8 +214,8 @@ public class ConnectedPeersActivity extends BaseActivity implements PeersListAda
         MenuItem menuRankC = menu.findItem(R.id.menu_rank_c);
         MenuItem menuRankA = menu.findItem(R.id.menu_rank_a);
         menuItem.setVisible(page == PAGE_ADD_MEMBERS);
-        menuRankC.setVisible(page == PAGE_CONTACT_LIST && order == 0);
-        menuRankA.setVisible(page == PAGE_CONTACT_LIST && order != 0);
+        menuRankC.setVisible(page == PAGE_PEERS_LIST && order == 0);
+        menuRankA.setVisible(page == PAGE_PEERS_LIST && order != 0);
         return super.onPrepareOptionsMenu(menu);
     }
 

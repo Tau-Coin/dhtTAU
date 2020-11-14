@@ -122,6 +122,9 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 String balance = FmtMicrometer.fmtBalance(community.balance);
                 String power = FmtMicrometer.fmtLong(community.power);
                 binding.tvBalancePower.setText(context.getString(R.string.main_balance_power, balance, power));
+
+                binding.tvUserMessage.setVisibility(StringUtil.isNotEmpty(community.txMemo) ?
+                        View.VISIBLE : View.GONE);
                 binding.tvUserMessage.setText(community.txMemo);
 
                 int bgColor = Utils.getGroupColor(community.chainID);
@@ -134,9 +137,14 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 binding.tvGroupName.setText(community.communityName);
                 String firstLetters = StringUtil.getFirstLettersOfName(community.communityName);
                 binding.leftView.setText(firstLetters);
-
                 int bgColor = Utils.getGroupColor(community.chainID);
                 binding.leftView.setBgColor(bgColor);
+
+                String msg = "Hello " + community.communityName;
+                binding.tvUserMessage.setText(msg);
+                String time = DateUtil.getWeekTime(DateUtil.getTime());
+                binding.tvMsgLastTime.setText(time);
+
                 binding.readOnly.setVisibility(View.INVISIBLE);
             }
             holder.binding.getRoot().setOnClickListener(v -> {
