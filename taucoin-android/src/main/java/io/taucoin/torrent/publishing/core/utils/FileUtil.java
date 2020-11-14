@@ -114,7 +114,7 @@ public class FileUtil {
                 file.createNewFile();
             }
             fos = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG,80, fos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 75, fos);
 
         } finally {
             if (fos != null) {

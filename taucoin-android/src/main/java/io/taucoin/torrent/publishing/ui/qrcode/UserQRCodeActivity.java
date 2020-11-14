@@ -100,7 +100,7 @@ public class UserQRCodeActivity extends BaseActivity implements View.OnClickList
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_share) {
-            userViewModel.shareQRCode(this, binding.rlQrCode);
+            userViewModel.shareQRCode(this, binding.rlQrCode, 240);
         }
         return true;
     }

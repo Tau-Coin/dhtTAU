@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.ui.user;
 import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -462,22 +463,34 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 分享QRCOde
      */
-    public void shareQRCode(AppCompatActivity activity, View view) {
+    public void shareQRCode(AppCompatActivity activity, View view, int size) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
-            view.setDrawingCacheEnabled(true);
-            view.buildDrawingCache();
-            Bitmap bitmap = view.getDrawingCache();
-            if (bitmap != null) {
-                String fileName = FileUtil.getQRCodeFilePath() + QR_CODE_NAME ;
-                logger.debug("shareQRCode fileName::{}", fileName);
-                try {
-                    FileUtil.saveFilesDirBitmap(fileName, bitmap);
-                    ActivityUtil.shareFile(activity, fileName, view.getContext().getString(R.string.contacts_exchange_qr));
-                } catch (Exception e) {
-                    logger.error("shareQRCode error", e);
+            try {
+                view.setDrawingCacheEnabled(true);
+                view.buildDrawingCache();
+                Bitmap bitmap = view.getDrawingCache();
+                logger.debug("shareQRCode bitmap::{}", bitmap);
+                if (bitmap != null) {
+                    Bitmap.createBitmap(bitmap);
+                    int w = bitmap.getWidth();
+                    int h = bitmap.getHeight();
+                    float sx = (float) size / w;
+                    float sy = (float) size / h;
+                    Matrix matrix = new Matrix();
+                    matrix.postScale(sx, sy);
+                    Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0,
+                            w, h, matrix, true);
+                    view.destroyDrawingCache();
+                    String fileName = FileUtil.getQRCodeFilePath() + QR_CODE_NAME;
+
+                    logger.debug("shareQRCode fileName::{}", fileName);
+
+                        FileUtil.saveFilesDirBitmap(fileName, resizeBmp);
+                        ActivityUtil.shareFile(activity, fileName, view.getContext()
+                                .getString(R.string.contacts_share_qr_code));
                 }
-            } else {
-                logger.debug("shareQRCode bitmap = null");
+            } catch (Exception e) {
+                logger.error("shareQRCode error", e);
             }
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
