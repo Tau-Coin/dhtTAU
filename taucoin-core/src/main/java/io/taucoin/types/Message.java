@@ -17,11 +17,11 @@ public class Message {
     private byte[] encode;
     private boolean parsed = false;
 
-    public Message CreateTextMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] contentLink) {
+    public static Message CreateTextMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] contentLink) {
         return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, MessageType.TEXT, contentLink);
     }
 
-    public Message CreatePictureMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] contentLink) {
+    public static Message CreatePictureMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] contentLink) {
         return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, MessageType.PICTURE, contentLink);
     }
 
