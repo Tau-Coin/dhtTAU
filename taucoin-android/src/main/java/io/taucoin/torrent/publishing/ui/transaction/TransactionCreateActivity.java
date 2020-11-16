@@ -13,7 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.ui.peers.ConnectedPeersActivity;
+import io.taucoin.torrent.publishing.ui.friends.FriendsActivity;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
@@ -162,8 +162,8 @@ public class TransactionCreateActivity extends BaseActivity implements View.OnCl
                 break;
             case R.id.iv_select_pk:
                 Intent intent = new Intent();
-                intent.putExtra(IntentExtra.TYPE, ConnectedPeersActivity.PAGE_SELECT_CONTACT);
-                ActivityUtil.startActivityForResult(intent, this, ConnectedPeersActivity.class, REQUEST_CODE);
+                intent.putExtra(IntentExtra.TYPE, FriendsActivity.PAGE_SELECT_CONTACT);
+                ActivityUtil.startActivityForResult(intent, this, FriendsActivity.class, REQUEST_CODE);
                 break;
         }
     }

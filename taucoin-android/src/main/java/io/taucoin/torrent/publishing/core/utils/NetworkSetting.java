@@ -145,17 +145,28 @@ public class NetworkSetting {
         long usage = TrafficUtil.getMeteredTrafficTotal();
         long limit =  getMeteredLimit();
         long speedLimit = 0;
+        long availableData = 0;
 
         BigInteger bigUnit = new BigInteger("1024");
         BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
         BigInteger bigUsage = BigInteger.valueOf(usage);
         if (bigLimit.compareTo(bigUsage) > 0) {
             long todayLastSeconds = DateUtil.getTodayLastSeconds();
+            availableData = bigLimit.subtract(bigUsage).longValue();
             if (todayLastSeconds > 0) {
-                speedLimit = bigLimit.subtract(bigUsage).longValue() / todayLastSeconds;
+                speedLimit = availableData / todayLastSeconds;
             }
         }
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_available_data), availableData);
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_speed_limit), speedLimit);
+    }
+
+    /**
+     * 获取计费网络可用数据
+     */
+    public static long getMeteredAvailableData() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_available_data));
     }
 
     /**
@@ -175,16 +186,19 @@ public class NetworkSetting {
         long usage = total - TrafficUtil.getMeteredTrafficTotal();
         long limit =  getWiFiLimit();
         long speedLimit = 0;
+        long availableData = 0;
 
         BigInteger bigUnit = new BigInteger("1024");
         BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
         BigInteger bigUsage = BigInteger.valueOf(usage);
         if (bigLimit.compareTo(bigUsage) > 0) {
             long todayLastSeconds = DateUtil.getTodayLastSeconds();
+            availableData = bigLimit.subtract(bigUsage).longValue();
             if (todayLastSeconds > 0) {
-                speedLimit = bigLimit.subtract(bigUsage).longValue() / todayLastSeconds;
+                speedLimit = availableData / todayLastSeconds;
             }
         }
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_available_data), availableData);
         settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_speed_limit), speedLimit);
     }
 
@@ -194,6 +208,14 @@ public class NetworkSetting {
     public static long getWiFiSpeedLimit() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getLongValue(context.getString(R.string.pref_key_wifi_speed_limit));
+    }
+
+    /**
+     * 获取WiFi网络可用数据
+     */
+    public static long getWiFiAvailableData() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_wifi_available_data));
     }
 
     /**

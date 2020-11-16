@@ -126,6 +126,14 @@ public class TrafficUtil {
         return TRAFFIC_DOWN;
     }
 
+    public static String getUpKey() {
+        return TRAFFIC_VALUE + TRAFFIC_UP;
+    }
+
+    public static String getDownKey() {
+        return TRAFFIC_VALUE + TRAFFIC_DOWN;
+    }
+
     /**
      * 获取计费网络本地存储Key
      * @return

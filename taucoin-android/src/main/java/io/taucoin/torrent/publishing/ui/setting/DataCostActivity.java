@@ -2,6 +2,8 @@ package io.taucoin.torrent.publishing.ui.setting;
 
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
+
 import com.google.common.primitives.Ints;
 
 import java.util.List;
@@ -18,6 +20,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityDataCostBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 
@@ -52,8 +55,10 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         // 先更新，再显示
         NetworkSetting.updateMeteredSpeedLimit();
         handleSettingsChanged(getString(R.string.pref_key_metered_speed_limit));
+        handleSettingsChanged(getString(R.string.pref_key_metered_available_data));
         NetworkSetting.updateWiFiSpeedLimit();
         handleSettingsChanged(getString(R.string.pref_key_wifi_speed_limit));
+        handleSettingsChanged(getString(R.string.pref_key_wifi_available_data));
 
         LinearLayoutManager layoutManagerMetered = new LinearLayoutManager(this);
         layoutManagerMetered.setOrientation(RecyclerView.HORIZONTAL);
@@ -125,8 +130,24 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             boolean meteredNetwork = NetworkSetting.isMeteredNetwork();
             binding.ivMeteredState.setVisibility(internetState && meteredNetwork ? View.VISIBLE : View.INVISIBLE);
             binding.ivWifiState.setVisibility(internetState && !meteredNetwork ? View.VISIBLE : View.INVISIBLE);
+
+            if (meteredNetwork) {
+                binding.llRoot.removeView(binding.llMetered);
+                binding.llRoot.addView(binding.llMetered, 0);
+            } else {
+                binding.llRoot.removeView(binding.llWifi);
+                binding.llRoot.addView(binding.llWifi, 0);
+            }
         }  else if (key.equals(getString(R.string.pref_key_internet_state))) {
             handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
+        }  else if (key.equals(getString(R.string.pref_key_metered_available_data))) {
+            long availableData = NetworkSetting.getMeteredAvailableData();
+            String availableDataStr = Formatter.formatFileSize(this, availableData).toUpperCase();
+            binding.tvMeteredAvailableData.setText(availableDataStr);
+        }  else if (key.equals(getString(R.string.pref_key_wifi_available_data))) {
+            long availableData = NetworkSetting.getWiFiAvailableData();
+            String availableDataStr = Formatter.formatFileSize(this, availableData).toUpperCase();
+            binding.tvWifiAvailableData.setText(availableDataStr);
         }
     }
 

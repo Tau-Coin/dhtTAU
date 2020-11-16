@@ -77,7 +77,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.peers.ConnectedPeersActivity"
+            android:name=".ui.friends.FriendsActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity

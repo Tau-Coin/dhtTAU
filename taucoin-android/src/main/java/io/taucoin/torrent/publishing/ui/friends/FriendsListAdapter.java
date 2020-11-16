@@ -1,7 +1,6 @@
-package io.taucoin.torrent.publishing.ui.peers;
+package io.taucoin.torrent.publishing.ui.friends;
 
 import android.content.Context;
-import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,13 +26,13 @@ import io.taucoin.torrent.publishing.databinding.ItemContactListBinding;
 /**
  * 显示的联系人列表的Adapter
  */
-public class PeersListAdapter extends PagedListAdapter<UserAndMember, PeersListAdapter.ViewHolder> {
+public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsListAdapter.ViewHolder> {
     private ClickListener listener;
     private List<String> selectedList = new ArrayList<>();
     private int page;
     private int order;
 
-    PeersListAdapter(ClickListener listener, int type, int order) {
+    FriendsListAdapter(ClickListener listener, int type, int order) {
         super(diffCallback);
         this.listener = listener;
         this.page = type;
@@ -87,13 +86,13 @@ public class PeersListAdapter extends PagedListAdapter<UserAndMember, PeersListA
             if(null == holder || null == user){
                 return;
             }
-            holder.binding.cbSelect.setVisibility(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS
+            holder.binding.cbSelect.setVisibility(type == FriendsActivity.PAGE_ADD_MEMBERS
                     ? View.VISIBLE : View.GONE);
-            holder.binding.ivShare.setVisibility(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS
+            holder.binding.ivShare.setVisibility(type == FriendsActivity.PAGE_ADD_MEMBERS
                     ? View.VISIBLE : View.GONE);
-            holder.binding.ivShare.setVisibility(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS
+            holder.binding.ivShare.setVisibility(type == FriendsActivity.PAGE_ADD_MEMBERS
                     ? View.VISIBLE : View.GONE);
-            if(type == ConnectedPeersActivity.PAGE_ADD_MEMBERS){
+            if(type == FriendsActivity.PAGE_ADD_MEMBERS){
                 holder.binding.cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
                     selectedList.remove(user.publicKey);
                     if(isChecked){
@@ -110,7 +109,7 @@ public class PeersListAdapter extends PagedListAdapter<UserAndMember, PeersListA
                     .append(showName);
             if (showName.startsWith("T")) {
                 showNameBuilder.append(" ")
-                    .append("Connecting")
+                    .append(context.getString(R.string.contacts_discovered))
                     .setFontSize(12, true)
                     .setForegroundColor(context.getResources().getColor(R.color.color_red));
             }

@@ -128,7 +128,7 @@
                         android:layout_height="44dp"
                         android:onClick="onClick"
                         app:leftImage="@mipmap/icon_contacts"
-                        app:rightText="@string/drawer_connected_peers"/>
+                        app:rightText="@string/drawer_peers"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_data_cost"

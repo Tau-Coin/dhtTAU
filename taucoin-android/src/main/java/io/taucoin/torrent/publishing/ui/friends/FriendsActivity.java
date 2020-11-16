@@ -1,4 +1,4 @@
-package io.taucoin.torrent.publishing.ui.peers;
+package io.taucoin.torrent.publishing.ui.friends;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -32,7 +32,7 @@ import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
-import io.taucoin.torrent.publishing.databinding.ActivityConnectedPeersBinding;
+import io.taucoin.torrent.publishing.databinding.ActivityFriendsBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
@@ -47,15 +47,15 @@ import io.taucoin.util.ByteUtil;
 /**
  * 连接的对等点
  */
-public class ConnectedPeersActivity extends BaseActivity implements PeersListAdapter.ClickListener {
+public class FriendsActivity extends BaseActivity implements FriendsListAdapter.ClickListener {
     public static final int PAGE_PEERS_LIST = 0;
     public static final int PAGE_SELECT_CONTACT = 1;
     public static final int PAGE_ADD_MEMBERS = 2;
-    private ActivityConnectedPeersBinding binding;
+    private ActivityFriendsBinding binding;
     private UserViewModel userViewModel;
     private CommunityViewModel communityViewModel;
     private TxViewModel txViewModel;
-    private PeersListAdapter adapter;
+    private FriendsListAdapter adapter;
     private CommonDialog commonDialog;
     private CompositeDisposable disposables = new CompositeDisposable();
     // 联系人列表资源
@@ -69,7 +69,7 @@ public class ConnectedPeersActivity extends BaseActivity implements PeersListAda
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_connected_peers);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_friends);
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
         txViewModel = provider.get(TxViewModel.class);
@@ -93,11 +93,11 @@ public class ConnectedPeersActivity extends BaseActivity implements PeersListAda
      */
     private void initView() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.drawer_connected_peers);
+        binding.toolbarInclude.toolbar.setTitle(R.string.drawer_peers);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        adapter = new PeersListAdapter(this, page, order);
+        adapter = new FriendsListAdapter(this, page, order);
         /*
          * A RecyclerView by default creates another copy of the ViewHolder in order to
          * fade the views into each other. This causes the problem because the old ViewHolder gets

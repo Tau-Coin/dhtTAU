@@ -41,7 +41,7 @@
 
     <!-- Strings used for main drawer content -->
     <string name="drawer_new_community">New Community</string>
-    <string name="drawer_connected_peers">Connected Peers</string>
+    <string name="drawer_peers">Friends</string>
     <string name="drawer_setting">Settings</string>
     <string name="drawer_data_cost">Data Cost</string>
     <string name="drawer_share">Share</string>
@@ -131,11 +131,12 @@
     <string name="setting_share_journal">Share All Journal</string>
     <string name="setting_wifi_network_title">WiFi Network</string>
     <string name="setting_metered_network_title">Metered Network</string>
-    <string name="setting_daily_quota">Daily Quota</string>
+    <string name="setting_daily_quota">Daily data limit</string>
     <string name="setting_daily_quota_unit_m">%1$dM</string>
     <string name="setting_daily_quota_unit_g">%1$dG</string>
     <string name="setting_network_current_speed">Current Speed</string>
     <string name="setting_network_speed_limit">Speed Limit</string>
+    <string name="setting_network_available_data">Available Data</string>
     <string name="setting_metered_network_limit_speed">%1$s/s</string>
     <string name="setting_server_mode">Server Mode</string>
     <string name="setting_charging">Charging</string>
@@ -173,7 +174,7 @@
     <string name="user_no_messages_from">No messages from</string>
     <string name="user_until_removed">until removed from the ban list.</string>
     <string name="user_start_chat">Start Chat</string>
-    <string name="user_add_to_contact">Add To Connected Peers</string>
+    <string name="user_add_to_contact">Add To Friends</string>
 
     <string name="copy_seed">Seed copied</string>
     <string name="copy_public_key">Public key copied</string>
@@ -235,7 +236,8 @@
     <string name="foreground_notification">Foreground notification</string>
 
     <!-- Strings used for connected peers -->
-    <string name="contacts_exchange_qr">Exchange QR</string>
+    <string name="contacts_exchange_qr">Exchange QR width friend</string>
+    <string name="contacts_discovered">Discovered</string>
     <string name="contacts_share_qr_code">Share QR Code to</string>
     <string name="contacts_empty">No contacts！</string>
     <string name="contacts_community_from">From&#160;</string>
