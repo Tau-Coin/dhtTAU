@@ -10,6 +10,7 @@ public class Message {
     private MessageVersion version;
     private byte[] timestamp;
     private byte[] previousMsgDAGRoot;
+    private byte[] peerLatestMessageRoot;
     private MessageType type;
     private byte[] contentLink;
 
@@ -17,18 +18,19 @@ public class Message {
     private byte[] encode;
     private boolean parsed = false;
 
-    public static Message CreateTextMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] contentLink) {
-        return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, MessageType.TEXT, contentLink);
+    public static Message CreateTextMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] peerLatestMessageRoot, byte[] contentLink) {
+        return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, peerLatestMessageRoot, MessageType.TEXT, contentLink);
     }
 
-    public static Message CreatePictureMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] contentLink) {
-        return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, MessageType.PICTURE, contentLink);
+    public static Message CreatePictureMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] peerLatestMessageRoot, byte[] contentLink) {
+        return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, peerLatestMessageRoot, MessageType.PICTURE, contentLink);
     }
 
-    public Message(MessageVersion version, byte[] timestamp, byte[] previousMsgDAGRoot, MessageType type, byte[] contentLink) {
+    public Message(MessageVersion version, byte[] timestamp, byte[] previousMsgDAGRoot, byte[] peerLatestMessageRoot, MessageType type, byte[] contentLink) {
         this.version = version;
         this.timestamp = timestamp;
         this.previousMsgDAGRoot = previousMsgDAGRoot;
+        this.peerLatestMessageRoot = peerLatestMessageRoot;
         this.type = type;
         this.contentLink = contentLink;
 
@@ -61,6 +63,14 @@ public class Message {
         }
 
         return previousMsgDAGRoot;
+    }
+
+    public byte[] getPeerLatestMessageRoot() {
+        if (!this.parsed) {
+            parseRLP();
+        }
+
+        return peerLatestMessageRoot;
     }
 
     public MessageType getType() {
@@ -102,14 +112,16 @@ public class Message {
 
         this.previousMsgDAGRoot = messageList.get(2).getRLPData();
 
-        byte[] typeByte = messageList.get(3).getRLPData();
+        this.peerLatestMessageRoot = messageList.get(3).getRLPData();
+
+        byte[] typeByte = messageList.get(4).getRLPData();
         int typeNum = null == typeByte ? 0: new BigInteger(1, typeByte).intValue();
         if (typeNum >= MessageType.UNKNOWN.ordinal()) {
             this.type = MessageType.UNKNOWN;
         }
         this.type = MessageType.values()[typeNum];
 
-        this.contentLink = messageList.get(4).getRLPData();
+        this.contentLink = messageList.get(5).getRLPData();
 
         this.parsed = true;
     }
@@ -119,10 +131,11 @@ public class Message {
             byte[] version = RLP.encodeBigInteger(BigInteger.valueOf(this.version.ordinal()));
             byte[] timestamp = RLP.encodeElement(this.timestamp);
             byte[] previousMsgDAGRoot = RLP.encodeElement(this.previousMsgDAGRoot);
+            byte[] peerLatestMessageRoot = RLP.encodeElement(this.peerLatestMessageRoot);
             byte[] type = RLP.encodeBigInteger(BigInteger.valueOf(this.type.ordinal()));
             byte[] contentLink = RLP.encodeElement(this.contentLink);
 
-            this.encode = RLP.encodeList(version, timestamp, previousMsgDAGRoot, type, contentLink);
+            this.encode = RLP.encodeList(version, timestamp, previousMsgDAGRoot, peerLatestMessageRoot, type, contentLink);
         }
 
         return this.encode;
