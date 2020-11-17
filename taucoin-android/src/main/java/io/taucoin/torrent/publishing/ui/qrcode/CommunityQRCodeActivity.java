@@ -20,7 +20,7 @@ import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.databinding.ActivityQrCodeBinding;
+import io.taucoin.torrent.publishing.databinding.ActivityCommunityQrCodeBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
@@ -31,14 +31,14 @@ import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 public class CommunityQRCodeActivity extends BaseActivity implements View.OnClickListener {
 
     private CompositeDisposable disposables = new CompositeDisposable();
-    private ActivityQrCodeBinding binding;
+    private ActivityCommunityQrCodeBinding binding;
     private CommunityViewModel communityViewModel;
     private String chainID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_qr_code);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_community_qr_code);
         binding.setListener(this);
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);

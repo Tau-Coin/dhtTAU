@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.ui.qrcode;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -60,11 +61,11 @@ public class UserQRCodeActivity extends BaseActivity implements View.OnClickList
         if(StringUtil.isEmpty(publicKey)){
             return;
         }
+        binding.tvQrCode.setText(Html.fromHtml(getString(R.string.qr_code_two_steps)));
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
         binding.toolbarInclude.toolbar.setTitle(R.string.contacts_exchange_qr);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
-        binding.tvPublicKey.setText(publicKey);
         binding.roundButton.setBgColor(Utils.getGroupColor(publicKey));
 
         Bitmap bitmap = CodeUtils.createQRCode(publicKey, 480);

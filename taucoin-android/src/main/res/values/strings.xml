@@ -261,6 +261,8 @@
 
     <!-- Strings used for QRCode -->
 <!--    <string name="qr_code_title">My Public Key QR Code</string>-->
+    <string name="qr_code_two_steps" formatted="false"><Data><![CDATA[<font color="#f19322">Two steps</font> to exchange QR code:
+    <br/>1、Share your QR to friend<br/>2、Scan friend QR]]></Data></string>
     <string name="qr_code_scan_friend_qr">Scan Friend\'s QR Code</string>
     <string name="qr_code_scan_qr">Scan QR</string>
     <string name="qr_code_scan_cancelled">Cancelled</string>
