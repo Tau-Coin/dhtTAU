@@ -308,7 +308,7 @@ class TauListenHandler {
             // 清除社区状态，totalBlocks, syncBlock数据
             communityRepo.clearCommunityState(chainID);
             // 删除社区成员数据
-//            memberRepo.deleteCommunityMembers(chainID);
+            memberRepo.deleteCommunityMembers(chainID);
             // TODO: 社区交易，常用联系人的用户（社区成员）
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
