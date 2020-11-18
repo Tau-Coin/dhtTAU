@@ -67,13 +67,14 @@ public class Member implements Parcelable {
 
     @Override
     public int hashCode() {
-        return publicKey.hashCode();
+        return publicKey.hashCode() + chainID.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
 
         return o instanceof Member && (o == this || (
-                publicKey.equals(((Member)o).publicKey)));
+                publicKey.equals(((Member)o).publicKey) &&
+                        chainID.equals(((Member)o).chainID)));
     }
 }

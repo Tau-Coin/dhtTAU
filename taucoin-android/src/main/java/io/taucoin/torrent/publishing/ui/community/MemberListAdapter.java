@@ -16,7 +16,7 @@ import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.databinding.ItemContactListBinding;
+import io.taucoin.torrent.publishing.databinding.ItemMemberListBinding;
 
 /**
  * 显示的联系人列表的Adapter
@@ -34,8 +34,8 @@ public class MemberListAdapter extends PagedListAdapter<MemberAndUser,
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        ItemContactListBinding binding = DataBindingUtil.inflate(inflater,
-                R.layout.item_contact_list,
+        ItemMemberListBinding binding = DataBindingUtil.inflate(inflater,
+                R.layout.item_member_list,
                 parent,
                 false);
 
@@ -48,11 +48,11 @@ public class MemberListAdapter extends PagedListAdapter<MemberAndUser,
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        private ItemContactListBinding binding;
+        private ItemMemberListBinding binding;
         private ClickListener listener;
         private Context context;
 
-        ViewHolder(ItemContactListBinding binding, ClickListener listener) {
+        ViewHolder(ItemMemberListBinding binding, ClickListener listener) {
             super(binding.getRoot());
             this.binding = binding;
             this.context = binding.getRoot().getContext();

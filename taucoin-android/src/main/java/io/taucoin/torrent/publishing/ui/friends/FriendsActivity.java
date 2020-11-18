@@ -3,12 +3,9 @@ package io.taucoin.torrent.publishing.ui.friends;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-
-import com.frostwire.jlibtorrent.Ed25519;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
@@ -23,7 +20,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
-import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
+import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
@@ -31,24 +28,20 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityFriendsBinding;
-import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
-import io.taucoin.util.ByteUtil;
 
 /**
  * 连接的对等点
  */
 public class FriendsActivity extends BaseActivity implements FriendsListAdapter.ClickListener {
-    public static final int PAGE_PEERS_LIST = 0;
+    public static final int PAGE_FRIENDS_LIST = 0;
     public static final int PAGE_SELECT_CONTACT = 1;
     public static final int PAGE_ADD_MEMBERS = 2;
     private ActivityFriendsBinding binding;
@@ -56,10 +49,9 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     private CommunityViewModel communityViewModel;
     private TxViewModel txViewModel;
     private FriendsListAdapter adapter;
-    private CommonDialog commonDialog;
     private CompositeDisposable disposables = new CompositeDisposable();
     // 联系人列表资源
-    private LiveData<PagedList<UserAndMember>> pagedListLiveData;
+    private LiveData<PagedList<UserAndFriend>> pagedListLiveData;
     private String chainID;
     // 代表不同的入口页面
     private int page;
@@ -85,7 +77,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
      */
     private void initParameter() {
         chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
-        page = getIntent().getIntExtra(IntentExtra.TYPE, PAGE_PEERS_LIST);
+        page = getIntent().getIntExtra(IntentExtra.TYPE, PAGE_FRIENDS_LIST);
     }
 
     /**
@@ -137,11 +129,9 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     private void initFabSpeedDial() {
         // 自定义点击事件
         binding.fabButton.getMainFab().setOnClickListener(v -> {
-//            showAddPublicKeyDialog();
             ActivityUtil.startActivity(this, UserQRCodeActivity.class);
         });
         binding.llInviteFriends.setOnClickListener(v -> {
-//            showAddPublicKeyDialog();
             ActivityUtil.startActivity(this, UserQRCodeActivity.class);
         });
     }
@@ -150,46 +140,16 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         if (pagedListLiveData != null && !pagedListLiveData.hasObservers()) {
             pagedListLiveData.removeObservers(this);
         }
-        pagedListLiveData = userViewModel.observerUsers(order);
+        pagedListLiveData = userViewModel.observerUsers(order, page == PAGE_FRIENDS_LIST);
         pagedListLiveData.observe(this, list -> {
             adapter.setOrder(order);
             adapter.submitList(list);
-        });
-    }
-    private void subscribeUserViewModel() {
-
-        userViewModel.getAddContactResult().observe(this, isExist -> {
-            closeProgressDialog();
-            if (isExist) {
-                ToastUtils.showShortToast(R.string.contacts_friend_already_exists);
-            } else {
-                ToastUtils.showShortToast(R.string.contacts_add_successfully);
-                if (commonDialog != null) {
-                    commonDialog.closeDialog();
-                }
-            }
-        });
-
-        txViewModel.getAirdropState().observe(this, state -> {
-            closeProgressDialog();
-            if (StringUtil.isNotEmpty(state)) {
-                ToastUtils.showShortToast(state);
-            } else {
-                String airdropResult = getString(R.string.contacts_airdrop_successfully,
-                        FmtMicrometer.fmtFeeValue(Constants.AIRDROP_COIN.longValue()));
-                ToastUtils.showShortToast(airdropResult);
-                onBackPressed();
-            }
-            if (commonDialog != null) {
-                commonDialog.closeDialog();
-            }
         });
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        subscribeUserViewModel();
         subscribeUserList();
     }
 
@@ -214,8 +174,8 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         MenuItem menuRankC = menu.findItem(R.id.menu_rank_c);
         MenuItem menuRankA = menu.findItem(R.id.menu_rank_a);
         menuItem.setVisible(page == PAGE_ADD_MEMBERS);
-        menuRankC.setVisible(page == PAGE_PEERS_LIST && order == 0);
-        menuRankA.setVisible(page == PAGE_PEERS_LIST && order != 0);
+        menuRankC.setVisible(page == PAGE_FRIENDS_LIST && order == 0);
+        menuRankA.setVisible(page == PAGE_FRIENDS_LIST && order != 0);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -259,7 +219,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     }
 
     @Override
-    public void onItemClicked(@NonNull UserAndMember user) {
+    public void onItemClicked(@NonNull UserAndFriend user) {
         if(page == PAGE_SELECT_CONTACT){
             Intent intent = new Intent();
             intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
@@ -273,7 +233,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     }
 
     @Override
-    public void onShareClicked(UserAndMember user) {
+    public void onShareClicked(UserAndFriend user) {
         showShareDialog();
     }
 
@@ -288,49 +248,5 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
                     ActivityUtil.shareText(this, getString(R.string.contacts_share_link_via),
                             communityInviteLink);
                 }));
-    }
-
-    /**
-     * 显示新增朋友公钥的对话框
-     */
-    private void showAddPublicKeyDialog() {
-        ContactsDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this),
-                R.layout.contacts_dialog, null, false);
-        binding.ivClose.setOnClickListener(v -> {
-            if (commonDialog != null) {
-                commonDialog.closeDialog();
-            }
-        });
-        binding.tvSubmit.setOnClickListener(v -> {
-            String publicKey = ViewUtils.getText(binding.etPublicKey);
-            boolean isValid = true;
-            try {
-                if (StringUtil.isEmpty(publicKey) ||
-                        ByteUtil.toByte(publicKey).length != Ed25519.PUBLIC_KEY_SIZE) {
-                    isValid = false;
-                }
-            } catch(Exception e) {
-                isValid = false;
-            }
-            if (!isValid){
-                ToastUtils.showShortToast(R.string.contacts_error_invalid_pk);
-                return;
-            }
-            showProgressDialog();
-            userViewModel.addContact(publicKey);
-        });
-        commonDialog = new CommonDialog.Builder(this)
-                .setContentView(binding.getRoot())
-                .setButtonWidth(240)
-                .create();
-        commonDialog.show();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (commonDialog != null) {
-            commonDialog.closeDialog();
-        }
     }
 }

@@ -8,6 +8,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepositor
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FavoriteRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FavoriteRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
@@ -31,6 +33,7 @@ public class RepositoryHelper {
     private static SettingsRepositoryImpl settingsRepo;
     private static FavoriteRepositoryImpl favoriteRepo;
     private static NotificationRepositoryImpl notificationRepo;
+    private static FriendRepositoryImpl friendRepo;
 
     /**
      * 获取CommunityRepository单例
@@ -132,5 +135,18 @@ public class RepositoryHelper {
                     AppDatabase.getInstance(appContext));
 
         return notificationRepo;
+    }
+
+    /**
+     * 获取FriendRepository单例
+     * @param appContext 上下文
+     * @return FriendRepository
+     */
+    public synchronized static FriendRepository getFriendsRepository(@NonNull Context appContext) {
+        if (friendRepo == null)
+            friendRepo = new FriendRepositoryImpl(appContext,
+                    AppDatabase.getInstance(appContext));
+
+        return friendRepo;
     }
 }

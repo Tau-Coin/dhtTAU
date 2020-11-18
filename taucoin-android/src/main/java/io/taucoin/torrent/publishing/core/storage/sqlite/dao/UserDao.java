@@ -10,7 +10,7 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
+import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
 /**
@@ -22,12 +22,24 @@ public interface UserDao {
     String QUERY_GET_CURRENT_USER_SEED = "SELECT seed FROM Users WHERE isCurrentUser = 1";
     String QUERY_GET_USER_LIST = "SELECT * FROM Users";
     String QUERY_GET_USERS_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 1 and isCurrentUser != 1";
-    String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 0 and isCurrentUser != 1 " +
+    String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT u.*, f.lastCommTime AS lastCommTime, f.state" +
+            " FROM Users u" +
+            " LEFT JOIN Friends f ON u.publicKey = f.friendPK and f.userPK= :userPK" +
+            " where u.isBanned = 0 and u.isCurrentUser != 1" +
+            " ORDER BY :orderName DESC";
+    String QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST = "SELECT u.*, f.lastCommTime AS lastCommTime, f.state AS state" +
+            " FROM Users u" +
+            " LEFT JOIN Friends f ON u.publicKey = f.friendPK and f.userPK= :userPK" +
+            " where u.isBanned = 0 and u.isCurrentUser != 1 and state = 2" +
             " ORDER BY :orderName DESC";
     String QUERY_SET_CURRENT_USER = "UPDATE Users SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
     String QUERY_ADD_USER_BLACKLIST = "UPDATE Users SET isBanned = :isBanned WHERE publicKey = :publicKey";
     String QUERY_SEED_HISTORY_LIST = "SELECT * FROM Users WHERE isBanned = 0 and seed not null";
     String QUERY_USER_BY_PUBLIC_KEY = "SELECT * FROM Users WHERE publicKey = :publicKey";
+    String QUERY_FRIEND_BY_PUBLIC_KEY = "SELECT u.*, f.lastCommTime AS lastCommTime, f.state AS state" +
+            " FROM Users u" +
+            " LEFT JOIN Friends f ON u.publicKey = f.friendPK and f.userPK= :userPK" +
+            " where u.publicKey = :publicKey";
     String QUERY_GET_USER_PKS_IN_BAN_LIST = " (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1) ";
 
     /**
@@ -105,19 +117,16 @@ public interface UserDao {
      */
     @Transaction
     @Query(QUERY_GET_USERS_NOT_IN_BAN_LIST)
-    Flowable<List<UserAndMember>> observeUsersNotInBanList(String orderName);
+    DataSource.Factory<Integer, UserAndFriend> queryUsers(String userPK, String orderName);
+
+    @Transaction
+    @Query(QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST)
+    DataSource.Factory<Integer, UserAndFriend> queryUsersByState(String userPK, String orderName);
 
     /**
-     * 观察不在黑名单的列表中
+     * 获取用户和朋友的信息
      */
     @Transaction
-    @Query(QUERY_GET_USERS_NOT_IN_BAN_LIST)
-    DataSource.Factory<Integer, UserAndMember> queryUsers(String orderName);
-
-    /**
-     * 获取用户和用户所在的社区信息
-     */
-    @Transaction
-    @Query(QUERY_USER_BY_PUBLIC_KEY)
-    UserAndMember getUserAndMember(String publicKey);
+    @Query(QUERY_FRIEND_BY_PUBLIC_KEY)
+    UserAndFriend getUserAndFriend(String userPK, String publicKey);
 }

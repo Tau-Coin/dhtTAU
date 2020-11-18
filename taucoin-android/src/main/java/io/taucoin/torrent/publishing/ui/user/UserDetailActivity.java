@@ -1,5 +1,6 @@
 package io.taucoin.torrent.publishing.ui.user;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
@@ -14,12 +15,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.Constants;
-import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
+import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
-import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -27,12 +26,14 @@ import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityUserDetailBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
+import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.chat.ChatActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 
 /**
  * 用户详情
@@ -44,8 +45,9 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
     private CommunityViewModel communityViewModel;
     private UserCommunityListAdapter adapter;
     private CommonDialog commonDialog;
+    private CommonDialog shareQRDialog;
     private String publicKey;
-    private UserAndMember user;
+    private UserAndFriend user;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,10 +90,6 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
 
         // 获取用户详情数据
         userViewModel.getUserDetail(publicKey);
-
-        if(StringUtil.isEquals(publicKey, MainApplication.getInstance().getPublicKey())){
-            binding.tvStartChat.setVisibility(View.GONE);
-        }
     }
 
     @Override
@@ -99,13 +97,13 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         super.onStart();
         userViewModel.getUserDetail().observe(this, this::showUserInfo);
 
-        userViewModel.getAddContactResult().observe(this, isExist -> {
+        userViewModel.getAddFriendResult().observe(this, isExist -> {
             closeProgressDialog();
             if (isExist) {
                 ToastUtils.showShortToast(R.string.contacts_friend_already_exists);
             } else {
                 binding.tvAddToContact.setVisibility(View.GONE);
-                ToastUtils.showShortToast(R.string.contacts_add_successfully);
+                showShareQRDialog();
             }
         });
 
@@ -123,11 +121,10 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         });
     }
 
-    private void showUserInfo(UserAndMember userInfo) {
-        if(null == userInfo || StringUtil.isEmpty(userInfo.publicKey) ){
-            userInfo = new UserAndMember(publicKey);
-            binding.tvAddToContact.setVisibility(View.VISIBLE);
-        }
+    private void showUserInfo(UserAndFriend userInfo) {
+        binding.tvAddToContact.setVisibility(userInfo.isDiscovered() ? View.VISIBLE : View.GONE);
+        boolean isMine = StringUtil.isEquals(publicKey, MainApplication.getInstance().getPublicKey());
+        binding.tvStartChat.setVisibility(isMine && userInfo.isConnected() ? View.VISIBLE : View.GONE);
         this.user = userInfo;
         String showName = UsersUtil.getCurrentUserName(user);
         binding.tvName.setText(showName);
@@ -143,6 +140,26 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         }
     }
 
+    private void showShareQRDialog() {
+        if (shareQRDialog != null && shareQRDialog.isShowing()) {
+            return;
+        }
+        ViewDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this),
+                R.layout.view_dialog, null, false);
+        binding.tvMsg.setText(R.string.contacts_confirm_shared);
+        binding.tvMsg.setTextColor(getResources().getColor(R.color.color_black));
+        shareQRDialog = new CommonDialog.Builder(this)
+                .setContentView(binding.getRoot())
+                .setHorizontal()
+                .setPositiveButton(R.string.contacts_to_share, (dialog, which) ->
+                        ActivityUtil.startActivity(UserDetailActivity.this, UserQRCodeActivity.class))
+                .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel())
+                .setCanceledOnTouchOutside(false)
+                .create();
+        shareQRDialog.show();
+    }
+
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -153,7 +170,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         switch (v.getId()){
             case R.id.tv_add_to_contact:
                 showProgressDialog();
-                userViewModel.addContact(publicKey);
+                userViewModel.addFriend(publicKey);
                 break;
             case R.id.tv_start_chat:
                 showChatDialog();
@@ -194,6 +211,9 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         if(null == user){
             return;
         }
+        if (commonDialog != null && commonDialog.isShowing()) {
+            return;
+        }
         ContactsDialogBinding contactsBinding = DataBindingUtil.inflate(LayoutInflater.from(this),
                 R.layout.contacts_dialog, null, false);
         String showName = UsersUtil.getShowName(user);
@@ -225,6 +245,9 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         super.onDestroy();
         if (commonDialog != null) {
             commonDialog.closeDialog();
+        }
+        if (shareQRDialog != null) {
+            shareQRDialog.closeDialog();
         }
     }
 }

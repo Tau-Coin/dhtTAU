@@ -14,19 +14,19 @@ import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
+import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.databinding.ItemContactListBinding;
+import io.taucoin.torrent.publishing.databinding.ItemFriendListBinding;
 
 /**
  * 显示的联系人列表的Adapter
  */
-public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsListAdapter.ViewHolder> {
+public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsListAdapter.ViewHolder> {
     private ClickListener listener;
     private List<String> selectedList = new ArrayList<>();
     private int page;
@@ -48,8 +48,8 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsL
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        ItemContactListBinding binding = DataBindingUtil.inflate(inflater,
-                R.layout.item_contact_list,
+        ItemFriendListBinding binding = DataBindingUtil.inflate(inflater,
+                R.layout.item_friend_list,
                 parent,
                 false);
 
@@ -66,13 +66,13 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsL
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        private ItemContactListBinding binding;
+        private ItemFriendListBinding binding;
         private ClickListener listener;
         private Context context;
         private int type;
         private List<String> selectedList;
 
-        ViewHolder(ItemContactListBinding binding, ClickListener listener, int type,
+        ViewHolder(ItemFriendListBinding binding, ClickListener listener, int type,
                    List<String> selectedList) {
             super(binding.getRoot());
             this.binding = binding;
@@ -82,7 +82,7 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsL
             this.selectedList = selectedList;
         }
 
-        void bind(ViewHolder holder, UserAndMember user, int order) {
+        void bind(ViewHolder holder, UserAndFriend user, int order) {
             if(null == holder || null == user){
                 return;
             }
@@ -107,13 +107,25 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsL
             String showName = UsersUtil.getShowName(user, user.publicKey);
             SpanUtils showNameBuilder = new SpanUtils()
                     .append(showName);
-            if (showName.startsWith("T")) {
+            int stateProgress = 100;
+            if (user.isDiscovered()) {
+                stateProgress = 0;
                 showNameBuilder.append(" ")
                     .append(context.getString(R.string.contacts_discovered))
-                    .setFontSize(12, true)
-                    .setForegroundColor(context.getResources().getColor(R.color.color_red));
+                    .setForegroundColor(context.getResources().getColor(R.color.color_red))
+                    .setFontSize(12, true);
+            } else if (user.isAdded()) {
+                stateProgress = 50;
+                showNameBuilder.append(" ")
+                    .append(context.getString(R.string.contacts_added))
+                    .setForegroundColor(context.getResources().getColor(R.color.color_blue))
+                        .setFontSize(12, true);
             }
             holder.binding.tvName.setText(showNameBuilder.create());
+            if (type == FriendsActivity.PAGE_FRIENDS_LIST) {
+                holder.binding.stateProgress.setVisibility(View.VISIBLE);
+                holder.binding.stateProgress.setProgress(stateProgress);
+            }
             String firstLetters = StringUtil.getFirstLettersOfName(showName);
             holder.binding.leftView.setText(firstLetters);
 
@@ -125,6 +137,7 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsL
                 time = DateUtil.formatTime(user.lastCommTime, DateUtil.pattern5);
                 time = context.getResources().getString(R.string.contacts_last_communication, time);
             }
+            holder.binding.tvTime.setVisibility(StringUtil.isEmpty(time) ? View.GONE : View.VISIBLE);
             holder.binding.tvTime.setText(time);
 
             StringBuilder communities = new StringBuilder();
@@ -147,6 +160,8 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsL
                     communities.append(community);
                 }
             }
+            holder.binding.tvCommunities.setVisibility(communities.length() == 0
+                    ? View.GONE : View.VISIBLE);
             holder.binding.tvCommunities.setText(communities.toString());
 
             int bgColor = Utils.getGroupColor(user.publicKey);
@@ -166,12 +181,12 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsL
     }
 
     public interface ClickListener {
-        void onItemClicked(UserAndMember item);
+        void onItemClicked(UserAndFriend item);
         void onSelectClicked();
-        void onShareClicked(UserAndMember item);
+        void onShareClicked(UserAndFriend item);
     }
 
-    static abstract class ItemCallback extends DiffUtil.ItemCallback<UserAndMember> {
+    static abstract class ItemCallback extends DiffUtil.ItemCallback<UserAndFriend> {
         int oldOrder;
         int order;
 
@@ -184,12 +199,12 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndMember, FriendsL
 
     private static final ItemCallback diffCallback = new ItemCallback() {
         @Override
-        public boolean areContentsTheSame(@NonNull UserAndMember oldItem, @NonNull UserAndMember newItem) {
-            return oldItem.equals(newItem) && oldOrder == order;
+        public boolean areContentsTheSame(@NonNull UserAndFriend oldItem, @NonNull UserAndFriend newItem) {
+            return oldItem.equals(newItem) && oldOrder == order && oldItem.state == newItem.state;
         }
 
         @Override
-        public boolean areItemsTheSame(@NonNull UserAndMember oldItem, @NonNull UserAndMember newItem) {
+        public boolean areItemsTheSame(@NonNull UserAndFriend oldItem, @NonNull UserAndFriend newItem) {
             return oldItem.equals(newItem);
         }
     };

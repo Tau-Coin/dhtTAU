@@ -5,7 +5,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
+import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
 /**
@@ -87,12 +87,10 @@ public interface UserRepository {
      * 观察不在黑名单的列表中
      * @param order
      */
-    Flowable<List<UserAndMember>> observeUsersNotInBanList(int order);
-
-    DataSource.Factory<Integer, UserAndMember> queryUsers(int order);
+    DataSource.Factory<Integer, UserAndFriend> queryUsers(String userPK, int order, boolean isAll);
 
     /**
-     * 获取用户和用户所在的社区信息
+     * 获取用户和朋友的信息
      */
-    UserAndMember getUserAndMember(String publicKey);
+    UserAndFriend getUserAndFriend(String userPK, String publicKey);
 }

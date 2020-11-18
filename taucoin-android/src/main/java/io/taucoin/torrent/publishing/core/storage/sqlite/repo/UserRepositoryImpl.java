@@ -7,7 +7,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import io.reactivex.Flowable;
-import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
+import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
@@ -136,20 +136,19 @@ public class UserRepositoryImpl implements UserRepository{
      * @param order
      */
     @Override
-    public Flowable<List<UserAndMember>> observeUsersNotInBanList(int order){
-        return db.userDao().observeUsersNotInBanList(order == 0 ? "lastUpdateTime" : "lastCommTime");
-    }
-
-    @Override
-    public DataSource.Factory<Integer, UserAndMember> queryUsers(int order) {
-        return db.userDao().queryUsers(order == 0 ? "lastUpdateTime" : "lastCommTime");
+    public DataSource.Factory<Integer, UserAndFriend> queryUsers(String userPK, int order, boolean isAll) {
+        if (isAll) {
+            return db.userDao().queryUsers(userPK, order == 0 ? "lastUpdateTime" : "lastCommTime");
+        } else {
+            return db.userDao().queryUsersByState(userPK, order == 0 ? "lastUpdateTime" : "lastCommTime");
+        }
     }
 
     /**
-     * 获取用户和用户所在的社区信息
+     * 获取用户和朋友的信息
      */
     @Override
-    public UserAndMember getUserAndMember(String publicKey){
-        return db.userDao().getUserAndMember(publicKey);
+    public UserAndFriend getUserAndFriend(String userPK, String publicKey){
+        return db.userDao().getUserAndFriend(userPK, publicKey);
     }
 }

@@ -31,9 +31,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.UserAndMember;
+import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
@@ -61,15 +64,16 @@ public class UserViewModel extends AndroidViewModel {
     private static final Logger logger = LoggerFactory.getLogger("UserViewModel");
     private static final String QR_CODE_NAME = "QRCode.jpg";
     private UserRepository userRepo;
+    private FriendRepository friendRepo;
     private SettingsRepository settingsRepo;
     private TxRepository txRepo;
     private MsgRepository msgRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
-    private MutableLiveData<Boolean> addContactResult = new MutableLiveData<>();
+    private MutableLiveData<Boolean> addFriendResult = new MutableLiveData<>();
     private MutableLiveData<Boolean> editNameResult = new MutableLiveData<>();
     private MutableLiveData<List<User>> blackList = new MutableLiveData<>();
-    private MutableLiveData<UserAndMember> userDetail = new MutableLiveData<>();
+    private MutableLiveData<UserAndFriend> userDetail = new MutableLiveData<>();
     private CommonDialog commonDialog;
     public UserViewModel(@NonNull Application application) {
         super(application);
@@ -77,6 +81,7 @@ public class UserViewModel extends AndroidViewModel {
         settingsRepo = RepositoryHelper.getSettingsRepository(getApplication());
         txRepo = RepositoryHelper.getTxRepository(getApplication());
         msgRepo = RepositoryHelper.getMsgRepository(getApplication());
+        friendRepo = RepositoryHelper.getFriendsRepository(getApplication());
     }
 
     @Override
@@ -185,7 +190,7 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 观察当前用户是否变化
      */
-    public MutableLiveData<UserAndMember> getUserDetail() {
+    public MutableLiveData<UserAndFriend> getUserDetail() {
         return userDetail;
     }
 
@@ -213,8 +218,8 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 获取添加联系人的结果
      */
-    public MutableLiveData<Boolean> getAddContactResult() {
-        return addContactResult;
+    public MutableLiveData<Boolean> getAddFriendResult() {
+        return addFriendResult;
     }
 
     /**
@@ -325,45 +330,47 @@ public class UserViewModel extends AndroidViewModel {
     }
 
     /**
-     * 观察不在黑名单的列表中
-     * @param order
-     */
-    public Flowable<List<UserAndMember>> observeUsersNotInBanList(int order) {
-        return userRepo.observeUsersNotInBanList(order);
-    }
-
-    /**
      * 查询收藏
      * @return DataSource
      * @param order
      */
-    DataSource.Factory<Integer, UserAndMember> queryUsers(int order){
-        return userRepo.queryUsers(order);
+    DataSource.Factory<Integer, UserAndFriend> queryUsers(int order, boolean isAll){
+        String userPK = MainApplication.getInstance().getPublicKey();
+        return userRepo.queryUsers(userPK, order, isAll);
     }
 
-    public LiveData<PagedList<UserAndMember>> observerUsers(int order) {
+    public LiveData<PagedList<UserAndFriend>> observerUsers(int order, boolean isAll) {
         return new LivePagedListBuilder<>(
-                queryUsers(order), Page.getPageListConfig()).build();
+                queryUsers(order, isAll), Page.getPageListConfig()).build();
     }
 
     /**
      * 添加联系人
      */
-    public void addContact(String publicKey) {
+    public void addFriend(String publicKey) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             User user = userRepo.getUserByPublicKey(publicKey);
-            boolean isExist = true;
             if(null == user){
                 user = new User(publicKey);
                 userRepo.addUser(user);
+            }
+            String userPK = MainApplication.getInstance().getPublicKey();
+            Friend friend = friendRepo.queryFriend(userPK, publicKey);
+            boolean isExist = true;
+            if (null == friend) {
+                friend = new Friend(userPK, publicKey, 1);
+                friendRepo.addFriend(friend);
                 isExist = false;
+            } else {
+                friend.state = 1;
+                friendRepo.updateFriend(friend);
             }
             emitter.onNext(isExist);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(isExist -> addContactResult.postValue(isExist));
+                .subscribe(isExist -> addFriendResult.postValue(isExist));
         disposables.add(disposable);
     }
 
@@ -380,12 +387,13 @@ public class UserViewModel extends AndroidViewModel {
      * @param publicKey 用户公钥
      */
     public void getUserDetail(String publicKey) {
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<UserAndMember>) emitter -> {
-            UserAndMember userAndMember = userRepo.getUserAndMember(publicKey);
-            if(null == userAndMember){
-                userAndMember = new UserAndMember("");
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<UserAndFriend>) emitter -> {
+            String userPK = MainApplication.getInstance().getPublicKey();
+            UserAndFriend userAndFriend = userRepo.getUserAndFriend(userPK, publicKey);
+            if(null == userAndFriend){
+                userAndFriend = new UserAndFriend("");
             }
-            emitter.onNext(userAndMember);
+            emitter.onNext(userAndFriend);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())

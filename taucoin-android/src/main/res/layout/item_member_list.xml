@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_marginStart="10dp">
+        <CheckBox
+            android:visibility="gone"
+            android:id="@+id/cb_select"
+            android:layout_centerVertical="true"
+            android:layout_width="37dp"
+            android:layout_height="wrap_content"/>
+
+        <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+            android:layout_toEndOf="@+id/cb_select"
+            android:id="@+id/left_view"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="7dp"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:textAllCaps="true"
+            android:textColor="@color/color_white"
+            android:textAppearance="@style/TextAppearanceHeadline6"
+            app:borderColor="@color/primary_light"
+            app:borderWidth="0dp"
+            app:radius="10dp"
+            app:isRadiusAutoHalf="true"
+            app:bgColor="@color/primary_light"
+            app:textColorForPressed="@color/color_white" />
+
+        <LinearLayout
+            android:id="@+id/middle_view"
+            android:layout_toEndOf="@+id/left_view"
+            android:layout_toStartOf="@id/iv_share"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:singleLine="true"
+                android:ellipsize="middle"
+                android:text="123123"
+                android:textAppearance="@style/TextAppearanceHeadline6" />
+
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/tv_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:text="123123"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearanceBody2" />
+
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/tv_communities"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:includeFontPadding="false"
+                android:text="123123"
+                android:ellipsize="end"
+                android:textColor="@color/gray_dark"
+                android:textAppearance="@style/TextAppearanceBody2" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:visibility="gone"
+            android:id="@+id/iv_share"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="20dp"
+            android:src="@mipmap/icon_share"
+            android:contentDescription="@null"/>
+
+        <include
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_toEndOf="@+id/left_view"
+            android:layout_toStartOf="@+id/iv_share"
+            android:layout_centerVertical="true"
+            android:layout_alignParentBottom="true"
+            layout="@layout/view_line"/>
+    </RelativeLayout>
+</layout>
