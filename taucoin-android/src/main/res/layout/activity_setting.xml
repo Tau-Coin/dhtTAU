@@ -211,7 +211,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:includeFontPadding="false"
-                            android:text="@string/setting_server_mode"
+                            android:text="@string/setting_master_node"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <Switch

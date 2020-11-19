@@ -138,7 +138,7 @@
     <string name="setting_network_speed_limit">Speed Limit</string>
     <string name="setting_network_available_data">Available Data</string>
     <string name="setting_metered_network_limit_speed">%1$s/s</string>
-    <string name="setting_server_mode">Server Mode</string>
+    <string name="setting_master_node">Master node</string>
     <string name="setting_charging">Charging</string>
     <string name="setting_internet">Internet</string>
     <string name="setting_wake_lock">Wake Lock</string>
@@ -236,7 +236,7 @@
     <string name="foreground_notification">Foreground notification</string>
 
     <!-- Strings used for connected peers -->
-    <string name="contacts_exchange_qr">Exchange QR width friend</string>
+    <string name="contacts_exchange_qr">Exchange QR with friend</string>
     <string name="contacts_discovered">Discovered</string>
     <string name="contacts_added">Added</string>
     <string name="contacts_share_qr_code">Share QR Code to</string>
@@ -265,8 +265,8 @@
 
     <!-- Strings used for QRCode -->
 <!--    <string name="qr_code_title">My Public Key QR Code</string>-->
-    <string name="qr_code_two_steps" formatted="false"><Data><![CDATA[<font color="#f19322">Two steps</font> to exchange QR code:
-    <br/>1、Share your QR to friend<br/>2、Scan friend QR]]></Data></string>
+    <string name="qr_code_two_steps" formatted="false"><Data><![CDATA[<strong><font color="#f19322">Two steps:</font></strong>
+    <br/><strong>·</strong> Share your QR to friend<br/><strong>·</strong> Scan friend QR]]></Data></string>
     <string name="qr_code_scan_friend_qr">Scan Friend\'s QR Code</string>
     <string name="qr_code_scan_qr">Scan QR</string>
     <string name="qr_code_scan_cancelled">Cancelled</string>
