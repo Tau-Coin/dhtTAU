@@ -12,10 +12,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
@@ -48,6 +51,9 @@ import io.taucoin.util.ByteUtil;
 public class TauDaemon {
     private static final String TAG = TauDaemon.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
+    private static final int initDHTOPInterval = 30 * 1000;
+    private static final int maxSessions = 8;
+    private static final int sessionStartedTime = 10 * 1000;
 
     private Context appContext;
     private SettingsRepository settingsRepo;
@@ -60,6 +66,7 @@ public class TauDaemon {
     private ExecutorService exec = Executors.newSingleThreadExecutor();
     private TauListenHandler tauListenHandler;
     private TauInfoProvider tauInfoProvider;
+    private Disposable sessionStartedDispose; // session启动任务
     private volatile boolean isRunning = false;
     private volatile String seed;
 
@@ -90,6 +97,7 @@ public class TauDaemon {
         logger.info("TauController repoPath::{}", repoPath);
         tauController = new TauController(repoPath, androidLeveldbFactory);
         tauController.registerListener(daemonListener);
+        tauController.getDHTEngine().regulateDHTOPInterval(initDHTOPInterval);
 
         switchPowerReceiver();
         switchConnectionReceiver();
@@ -245,8 +253,9 @@ public class TauDaemon {
                 .subscribeOn(Schedulers.newThread())
                 .subscribe());
         rescheduleDHTBySettings();
-        NetworkSetting.updateDHTSessions(8);
+        resetDHTSessions(1);
         tauController.start(NetworkSetting.getDHTSessions());
+        subscribeSessionStarted();
     }
 
     /**
@@ -257,6 +266,10 @@ public class TauDaemon {
             return;
         isRunning = false;
         disposables.clear();
+        if (sessionStartedDispose != null
+                && !sessionStartedDispose.isDisposed()) {
+            sessionStartedDispose.dispose();
+        }
         tauListenHandler.destroy();
         tauController.stop();
     }
@@ -346,9 +359,7 @@ public class TauDaemon {
             // 判断有无网络连接
             if (settingsRepo.internetState()) {
                 if (isRestart) {
-                    if (!isRunning) {
-                        return;
-                    }
+                    resetDHTSessions(1);
                     tauController.restartSessions(NetworkSetting.getDHTSessions());
                     logger.info("rescheduleDHTBySettings restartSessions::{}",
                             NetworkSetting.getDHTSessions());
@@ -357,14 +368,43 @@ public class TauDaemon {
                     if (regulateValue > 0) {
                         tauController.getDHTEngine().increaseDHTOPInterval();
                     } else if (regulateValue < 0) {
-                        tauController.getDHTEngine().decreaseDHTOPInterval();
+                        if ((sessionStartedDispose != null && !sessionStartedDispose.isDisposed())) {
+                            return;
+                        }
+                        int dhtSessions = NetworkSetting.getDHTSessions();
+                        if (dhtSessions < maxSessions) {
+                            tauController.getDHTEngine().decreaseDHTOPInterval();
+                            tauController.getDHTEngine().increaseSession();
+                            resetDHTSessions(dhtSessions + 1);
+                        }
                     }
-                    logger.info("rescheduleDHTBySettings regulateValue::{}", regulateValue);
+                    logger.info("rescheduleDHTBySettings DHTSessions::{}, DHTOPInterval::{}",
+                            NetworkSetting.getDHTSessions(), tauController.getDHTEngine().getDHTOPInterval());
                 }
             }
         } catch (Exception e) {
             logger.error("rescheduleDHTBySettings errors", e);
         }
+    }
+
+    /**
+     * 重置DHT Sessions个数
+     */
+    private void resetDHTSessions(int dhtSessions) {
+        NetworkSetting.updateDHTSessions(dhtSessions);
+        if (dhtSessions != maxSessions) {
+            subscribeSessionStarted();
+        }
+    }
+
+    /**
+     * 订阅Session启动稳定，sessionStartedTime稳定时间
+     */
+    private void subscribeSessionStarted() {
+        sessionStartedDispose = Observable.timer(sessionStartedTime, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe();
     }
 
     /**
