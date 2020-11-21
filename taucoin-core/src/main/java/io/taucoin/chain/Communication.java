@@ -3,13 +3,23 @@ package io.taucoin.chain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import io.taucoin.db.BlockStore;
+import io.taucoin.db.DBException;
 import io.taucoin.db.StateDB;
 import io.taucoin.dht.DHT;
 import io.taucoin.listener.TauListener;
+import io.taucoin.util.ByteArrayWrapper;
 
 public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
+
+    // 循环间隔最小时间
+    private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
     private final TauListener tauListener;
 
@@ -19,20 +29,49 @@ public class Communication implements DHT.GetDHTItemCallback {
     // state db
     private final StateDB stateDB;
 
+    private final Set<ByteArrayWrapper> peer = new HashSet<>();
+
+    private final Map<ByteArrayWrapper, Long> timeStamp = new HashMap<>();
+
+    private final Map<ByteArrayWrapper, byte[]> rootHash = new HashMap<>();
+
     // Communication thread.
     private Thread communicationThread;
 
-    public Communication(TauListener tauListener, BlockStore blockStore, StateDB stateDB) {
-        this.tauListener = tauListener;
+    public Communication(BlockStore blockStore, StateDB stateDB, TauListener tauListener) {
         this.blockStore = blockStore;
         this.stateDB = stateDB;
+        this.tauListener = tauListener;
     }
 
     /**
      * 死循环
      */
     private void mainLoop() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
 
+            }/* catch (DBException e) {
+                this.tauListener.onTauError("Data Base Exception!");
+                logger.error(e.getMessage(), e);
+
+                try {
+                    Thread.sleep(this.MIN_LOOP_INTERVAL_TIME);
+                } catch (InterruptedException ex) {
+                    logger.info(ex.getMessage(), ex);
+                    Thread.currentThread().interrupt();
+                }
+            }*/ catch (Exception e) {
+                logger.error(e.getMessage(), e);
+
+                try {
+                    Thread.sleep(this.MIN_LOOP_INTERVAL_TIME);
+                } catch (InterruptedException ex) {
+                    logger.info(ex.getMessage(), ex);
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
     }
 
     /**
