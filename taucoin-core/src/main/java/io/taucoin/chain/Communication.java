@@ -1,8 +1,11 @@
 package io.taucoin.chain;
 
+import com.frostwire.jlibtorrent.Pair;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,11 +32,14 @@ public class Communication implements DHT.GetDHTItemCallback {
     // state db
     private final StateDB stateDB;
 
+    // peer
     private final Set<ByteArrayWrapper> peer = new HashSet<>();
 
-    private final Map<ByteArrayWrapper, Long> timeStamp = new HashMap<>();
+    // 最新时间
+    private final Map<Pair<byte[], byte[]>, Long> timeStamp = Collections.synchronizedMap(new HashMap<>());
 
-    private final Map<ByteArrayWrapper, byte[]> rootHash = new HashMap<>();
+    // message root hash
+    private final Map<Pair<byte[], byte[]>, byte[]> rootHash = Collections.synchronizedMap(new HashMap<>());
 
     // Communication thread.
     private Thread communicationThread;
