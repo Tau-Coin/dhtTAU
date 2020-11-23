@@ -21,7 +21,7 @@ public class NetworkSetting {
     // 网速在限制内浮动范围
     private static final BigInteger speedRange = BigInteger.valueOf(512);     // 0.5KB
     private static final BigInteger speedAdjustment = BigInteger.valueOf(3);  // 网速根据前后台调整倍数
-    private static final long speed_sample = 5;                              // 单位s
+    private static final long speed_sample = 10;                              // 单位s
 
     private static SettingsRepository settingsRepo;
     static {
