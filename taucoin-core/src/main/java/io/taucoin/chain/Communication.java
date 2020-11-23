@@ -9,7 +9,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import io.taucoin.db.BlockStore;
 import io.taucoin.db.DBException;
@@ -21,6 +23,9 @@ import io.taucoin.util.ByteArrayWrapper;
 public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
+    // Queue capability.
+    public static final int QueueCapability = 100;
+
     // 循环间隔最小时间
     private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
@@ -31,6 +36,9 @@ public class Communication implements DHT.GetDHTItemCallback {
 
     // state db
     private final StateDB stateDB;
+
+    // queue
+    private final Queue<Object> queue = new ConcurrentLinkedQueue<Object>();
 
     // peer
     private final Set<ByteArrayWrapper> peer = new HashSet<>();
