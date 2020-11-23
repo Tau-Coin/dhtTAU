@@ -103,6 +103,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
                 ToastUtils.showShortToast(R.string.contacts_friend_already_exists);
             } else {
                 binding.tvAddToContact.setVisibility(View.GONE);
+                binding.tvShareQr.setVisibility(View.VISIBLE);
                 showShareQRDialog();
             }
         });
@@ -125,6 +126,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         boolean isMine = StringUtil.isEquals(publicKey, MainApplication.getInstance().getPublicKey());
         binding.tvAddToContact.setVisibility(!isMine && userInfo.isDiscovered() ? View.VISIBLE : View.GONE);
         binding.tvStartChat.setVisibility(!isMine && userInfo.isConnected() ? View.VISIBLE : View.GONE);
+        binding.tvShareQr.setVisibility(!isMine && userInfo.isAdded() ? View.VISIBLE : View.GONE);
         this.user = userInfo;
         String showName = UsersUtil.getCurrentUserName(user);
         binding.tvName.setText(showName);
@@ -174,6 +176,9 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
                 break;
             case R.id.tv_start_chat:
                 showChatDialog();
+                break;
+            case R.id.tv_share_qr:
+                ActivityUtil.startActivity(this, UserQRCodeActivity.class);
                 break;
         }
     }

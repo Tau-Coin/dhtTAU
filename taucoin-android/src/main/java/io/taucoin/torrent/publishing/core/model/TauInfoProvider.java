@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.core.model;
 
 import android.content.Context;
+import android.os.Build;
 
 import io.taucoin.dht.SessionStats;
 
@@ -107,7 +108,7 @@ public class TauInfoProvider {
                 while (!emitter.isCancelled()){
                     Context context = MainApplication.getInstance();
                     NetworkStatistics statistics = null;
-                    if (!isEmulator) {
+                    if (!isEmulator && Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
                         statistics = NetworkStatsUtil.getSummaryTotal(context);
                     }
                     logger.debug("Network statistical methods:: {}", null == statistics ?
