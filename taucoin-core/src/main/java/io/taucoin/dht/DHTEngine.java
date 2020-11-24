@@ -5,12 +5,16 @@ import io.taucoin.dht.session.SessionController;
 import io.taucoin.dht.session.SessionInfo;
 import io.taucoin.listener.TauListener;
 
+import com.frostwire.jlibtorrent.Sha1Hash;
 import com.hybhub.util.concurrent.ConcurrentSetBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static io.taucoin.dht.DHT.*;
 import static io.taucoin.dht.DHTReqResult.*;
@@ -40,6 +44,11 @@ public class DHTEngine {
     private BlockingQueue<Object> requestQueue
             = new ConcurrentSetBlockingQueue<>();
 
+    // Cache map from sha1 hash to putting immutable or mutable item request.
+    private Map<Sha1Hash, Object> putCache = Collections.synchronizedMap(
+            new HashMap<Sha1Hash, Object>());
+
+
     /**
      * Get DHTEngine instance.
      *
@@ -60,7 +69,7 @@ public class DHTEngine {
     // DHTEngine constructor
     private DHTEngine() {
         this.counter = new Counter();
-        this.sessionController = new SessionController(requestQueue, counter);
+        this.sessionController = new SessionController(requestQueue, counter, putCache);
     }
 
     /**
@@ -98,6 +107,7 @@ public class DHTEngine {
         requestQueue.clear();
         sessionController.stop();
         tauListener.onDHTStopped();
+        putCache.clear();
     }
 
     /**
@@ -181,15 +191,58 @@ public class DHTEngine {
         }
 
         // Drop this item if it exists.
-        if (requestQueue.contains(item)) {
+        if (requestQueue.contains(item) || (putCache.get(item.hash()) != null)) {
             logger.trace("duplicate immutable item" + item);
             return Duplicated;
         }
 
+        ImmutableItemDistribution distribution
+                = new ImmutableItemDistribution(item, null, null);
+
         try {
-            requestQueue.put(item);
+            requestQueue.put(distribution);
             logger.trace("immutable item is queued(size:" + requestQueue.size()
-                     + "):" + item);
+                     + "):" + distribution);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // This exception should never happens.
+            // Because queue capability isn't set and
+            // never block current thread.
+        }
+
+        return Success;
+    }
+
+    /**
+     * Put immutable item asynchronously.
+     *
+     * @param item immutable item.
+     * @param cb callback interface
+     * @param cbData callback data
+     * @return boolean true indicates this item is put into queue,
+     *     or else false.
+     */
+    public DHTReqResult distribute(ImmutableItem item, PutDHTItemCallback cb,
+            Object cbData) {
+
+        if (item == null || requestQueue.size() >= DHTQueueCapability) {
+            logger.warn("drop immutable item" + item);
+            return Dropped;
+        }
+
+        // Drop this item if it exists.
+        if (requestQueue.contains(item) || (putCache.get(item.hash()) != null)) {
+            logger.trace("duplicate immutable item" + item);
+            return Duplicated;
+        }
+
+        ImmutableItemDistribution distribution
+                = new ImmutableItemDistribution(item, cb, cbData);
+
+        try {
+            requestQueue.put(distribution);
+            logger.trace("immutable item is queued(size:" + requestQueue.size()
+                     + "):" + distribution);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.
@@ -215,15 +268,58 @@ public class DHTEngine {
         }
 
         // Drop this item if it exists.
-        if (requestQueue.contains(item)) {
+        if (requestQueue.contains(item) || (putCache.get(item.hash()) != null)) {
             logger.trace("duplicate mutable item" + item);
             return Duplicated;
         }
 
+        MutableItemDistribution distribution
+                = new MutableItemDistribution(item, null, null);
+
         try {
-            requestQueue.put(item);
+            requestQueue.put(distribution);
             logger.trace("mutable item is queued(size:" + requestQueue.size()
-                    + "):" + item);
+                    + "):" + distribution);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // This exception should never happens.
+            // Because queue capability isn't set and
+            // never block current thread.
+        }
+
+        return Success;
+    }
+
+    /**
+     * Put mutable item asynchronously.
+     *
+     * @param item mutable item.
+     * @param cb callback interface
+     * @param cbData callback data
+     * @return boolean true indicates this item is put into queue,
+     *     or else false.
+     */
+    public DHTReqResult distribute(MutableItem item, PutDHTItemCallback cb,
+            Object cbData) {
+
+        if (item == null || requestQueue.size() >= DHTQueueCapability) {
+            logger.warn("drop mutable item" + item);
+            return Dropped;
+        }
+
+        // Drop this item if it exists.
+        if (requestQueue.contains(item) || (putCache.get(item.hash()) != null)) {
+            logger.trace("duplicate mutable item" + item);
+            return Duplicated;
+        }
+
+        MutableItemDistribution distribution
+                = new MutableItemDistribution(item, cb, cbData);
+
+        try {
+            requestQueue.put(distribution);
+            logger.trace("mutable item is queued(size:" + requestQueue.size()
+                    + "):" + distribution);
         } catch (InterruptedException e) {
             e.printStackTrace();
             // This exception should never happens.

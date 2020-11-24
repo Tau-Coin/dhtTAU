@@ -3,12 +3,18 @@ package io.taucoin.dht.session;
 import io.taucoin.dht.metrics.Counter;
 import io.taucoin.dht.util.Utils;
 
+import com.frostwire.jlibtorrent.alerts.DhtPutAlert;
+import com.frostwire.jlibtorrent.Sha1Hash;
+import com.frostwire.jlibtorrent.swig.dht_put_alert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.Map;
 
 import static io.taucoin.dht.DHT.*;
+import static io.taucoin.dht.session.TauSession.ItemPutListener;
 
 /**
  * Worker gets and puts immutable and mutable item from and into dht network.
@@ -39,6 +45,9 @@ class Worker {
     // Parameters regulator for dht middleware.
     private Regulator regulator;
 
+    // Cache map from sha1 hash to putting immutable or mutable item request.
+    private Map<Sha1Hash, Object> putCache;
+
     // Components for waiting the result of starting TauSession.
     private final Object signal = new Object();
     private volatile boolean startingResult = false;
@@ -63,6 +72,8 @@ class Worker {
                     Utils.printStacktraceToLogger(logger, e);
                 }
             }
+
+            session.addListener(putListener);
 
             // notify starting result.
             synchronized(signal) {
@@ -106,13 +117,15 @@ class Worker {
      */
     public Worker(int index, TauSession session,
             BlockingQueue<Object> inputQueue,
-            Counter counter, Regulator regulator) {
+            Counter counter, Regulator regulator,
+            Map<Sha1Hash, Object> putCache) {
 
         this.index = index;
         this.session = session;
         this.inputQueue = inputQueue;
         this.counter = counter;
         this.regulator = regulator;
+        this.putCache = putCache;
 
         logger = LoggerFactory.getLogger("Session[" + index + "]");
         this.session.setLogger(logger);
@@ -180,10 +193,10 @@ class Worker {
             requestImmutableItem((ImmutableItemRequest)req);
         } else if (req instanceof MutableItemRequest) {
             requestMutableItem((MutableItemRequest)req);
-        } else if (req instanceof ImmutableItem) {
-            putImmutableItem((ImmutableItem)req);
-        } else if (req instanceof MutableItem) {
-            putMutableItem((MutableItem)req);
+        } else if (req instanceof ImmutableItemDistribution) {
+            putImmutableItem((ImmutableItemDistribution)req);
+        } else if (req instanceof MutableItemDistribution) {
+            putMutableItem((MutableItemDistribution)req);
         }
     }
 
@@ -239,11 +252,86 @@ class Worker {
         req.onDHTItemGot(item);
     }
 
-    private void putImmutableItem(ImmutableItem item) {
-        session.dhtPut(item);
+    private void putImmutableItem(ImmutableItemDistribution d) {
+        Sha1Hash hash = session.dhtPut(d.item);
+
+        // add d into putCache
+        if (hash != null) {
+            putCache.put(d.hash(), d);
+        }
     }
 
-    private void putMutableItem(MutableItem item) {
-        session.dhtPut(item);
+    private void putMutableItem(MutableItemDistribution d) {
+        boolean ret = session.dhtPut(d.item);
+
+        // add d into putCache
+        if (ret) {
+            putCache.put(d.hash(), d);
+        }
     }
+
+    private ItemPutListener putListener = new ItemPutListener() {
+
+        @Override
+        public void onItemPut(DhtPutAlert a) {
+            Sha1Hash target = a.target();
+
+            if (target.isAllZeros()) {
+                handleMutableItemPutCompleted(a);
+            } else {
+                handleImmutableItemPutCompleted(a);
+            }
+        }
+    };
+
+    private void handleImmutableItemPutCompleted(DhtPutAlert a) {
+        Sha1Hash hash = a.target();
+        if (hash == null) {
+            return;
+        }
+
+        // Get put callback from putCache
+        Object distribution = putCache.get(hash);
+        if (distribution == null) {
+            logger.warn("immutable item put completed:not found cache for " + hash);
+            return;
+        }
+
+        ImmutableItemDistribution d = (ImmutableItemDistribution)distribution;
+        dht_put_alert putAlert = a.swig();
+        d.onDHTItemPut(putAlert.getNum_success());
+
+        putCache.remove(hash);
+
+        logger.trace("immutable item put completed:" + hash + ", cache size:" + putCache.size());
+    }
+
+    private void handleMutableItemPutCompleted(DhtPutAlert a) {
+        byte[] publicKey = a.publicKey();
+        byte[] salt = a.salt();
+
+        if (publicKey == null || salt == null) {
+            return;
+        }
+
+        Sha1Hash hash = MutableItem.computeHash(publicKey, salt);
+
+        // Get put callback from putCache
+        Object distribution = putCache.get(hash);
+        if (distribution == null) {
+            logger.warn("mutable item put completed:not found cache for "
+                    + Hex.toHexString(publicKey) + "/" + new String(salt));
+            return;
+        }
+
+        MutableItemDistribution d = (MutableItemDistribution)distribution;
+        dht_put_alert putAlert = a.swig();
+        d.onDHTItemPut(putAlert.getNum_success());
+
+        putCache.remove(hash);
+
+        logger.trace("mutable item put completed:" + Hex.toHexString(publicKey)
+                + "/" + new String(salt) + ", cache size:" + putCache.size());
+    }
+
 }

@@ -1,6 +1,7 @@
 package io.taucoin.dht;
 
 import io.taucoin.dht.util.Utils;
+import io.taucoin.util.ByteUtil;
 import io.taucoin.util.FastByteComparisons;
 import io.taucoin.util.HashUtil;
 
@@ -29,9 +30,16 @@ public final class DHT {
         public Entry entry;
         byte[] entryBytes;
 
+        private Sha1Hash hash;
+
         public ImmutableItem(byte[] data) {
             this.entryBytes = data;
             this.entry = Utils.fromStringBytes(data);
+            this.hash = computeHash();
+        }
+
+        public Sha1Hash hash() {
+            return hash;
         }
 
         @Override
@@ -49,7 +57,6 @@ public final class DHT {
 
         @Override
         public int hashCode() {
-            Sha1Hash hash = new Sha1Hash(HashUtil.sha1hash(entryBytes));
             return hash.hashCode();
         }
 
@@ -61,6 +68,10 @@ public final class DHT {
 
             return entry.toString();
         }
+
+        private Sha1Hash computeHash() {
+            return new Sha1Hash(HashUtil.sha1hash(entry.bencode()));
+        }
      }
 
     public static class MutableItem {
@@ -71,12 +82,15 @@ public final class DHT {
         byte[] entryBytes;
         public byte[] salt;
 
+        private Sha1Hash hash;
+
         public MutableItem(byte[] publicKey, byte[] privateKey, byte[] data, byte[] salt) {
             this.publicKey = publicKey;
             this.privateKey = privateKey;
             this.entryBytes = data;
             this.entry = Utils.fromStringBytes(data);
             this.salt = salt;
+            this.hash = computeHash(this.publicKey, this.salt);
         }
 
         @Override
@@ -92,25 +106,7 @@ public final class DHT {
 
         @Override
         public int hashCode() {
-            MessageDigest digest = null;
-
-            try {
-                digest = MessageDigest.getInstance("SHA-1");
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                // For sha1 this exception should never happens.
-                return 0;
-            }
-
-            digest.update(publicKey);
-            digest.update(privateKey);
-            digest.update(salt);
-            digest.update(entryBytes);
-
-            byte_vector bvs = Vectors.bytes2byte_vector(digest.digest());
-            sha1_hash hash = new sha1_hash(bvs);
-
-            return hash.hash_code();
+            return hash.swig().hash_code();
         }
 
         @Override
@@ -119,11 +115,37 @@ public final class DHT {
 
             sb.append("MutableItem(");
             sb.append("pubkey:" + Hex.toHexString(publicKey));
-            sb.append(",salt:" + Hex.toHexString(salt));
+            sb.append(",salt:" + new String(salt));
             sb.append(",e:" + entry.toString());
             sb.append(")");
 
             return sb.toString();
+        }
+
+        public Sha1Hash hash() {
+            return hash;
+        }
+
+        public static Sha1Hash computeHash(byte[] publicKey, byte[] salt) {
+            MessageDigest digest = null;
+
+            try {
+                digest = MessageDigest.getInstance("SHA-1");
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                // For sha1 this exception should never happens.
+                return null;
+            }
+
+            digest.update(publicKey);
+            //digest.update(privateKey);
+            digest.update(salt);
+            //digest.update(entryBytes);
+
+            byte_vector bvs = Vectors.bytes2byte_vector(digest.digest());
+            sha1_hash hash = new sha1_hash(bvs);
+
+            return new Sha1Hash(hash);
         }
     }
 
@@ -210,6 +232,7 @@ public final class DHT {
 
             digest.update(publicKey);
             digest.update(salt);
+            digest.update(ByteUtil.intToBytes(timeout));
 
             byte_vector bvs = Vectors.bytes2byte_vector(digest.digest());
             sha1_hash hash = new sha1_hash(bvs);
@@ -220,7 +243,7 @@ public final class DHT {
         @Override
         public String toString() {
             return "(" + "pubkey:" + Hex.toHexString(publicKey)
-                + ", salt:" + Hex.toHexString(salt) + ")";
+                + ", salt:" + new String(salt) + ")";
         }
     }
 
@@ -231,6 +254,15 @@ public final class DHT {
          * Note: the implementation of this method must not block current thread.
          */
         void onDHTItemGot(byte[] item, Object cbData);
+    }
+
+    public static interface PutDHTItemCallback {
+
+        /*
+         * This method is called back when dht item(mutable or immutable) is put.
+         * Note: the implementation of this method must not block current thread.
+         */
+        void onDHTItemPut(int success, Object cbData);
     }
 
     /**
@@ -342,4 +374,121 @@ public final class DHT {
             return spec.toString();
         }
     }
+
+    /**
+     * The wrapper of immutable item distribution.
+     */
+    public static class ImmutableItemDistribution {
+
+        public ImmutableItem item;
+
+        public PutDHTItemCallback callback;
+
+        private Object callBackData;
+
+        public ImmutableItemDistribution(ImmutableItem item,
+                PutDHTItemCallback callback, Object cbData) {
+            this.item = item;
+            this.callback = callback;
+            this.callBackData = cbData;
+        }
+
+        public ImmutableItem getItem() {
+            return this.item;
+        }
+
+        public Object getCallbackData() {
+            return this.callBackData;
+        }
+
+        public Sha1Hash hash() {
+            return this.item.hash();
+        }
+
+        public void onDHTItemPut(int success) {
+            if (callback != null) {
+                callback.onDHTItemPut(success, this.callBackData);
+            }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ImmutableItemDistribution)) {
+                return false;
+            }
+
+            ImmutableItemDistribution d = (ImmutableItemDistribution)obj;
+
+            return item.equals(d.item);
+        }
+
+        @Override
+        public int hashCode() {
+            return item.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return item.toString();
+        }
+    }
+
+    /**
+     * The wrapper of mutable item distribution.
+     */
+    public static class MutableItemDistribution {
+
+        public MutableItem item;
+
+        public PutDHTItemCallback callback;
+
+        private Object callBackData;
+
+        public MutableItemDistribution(MutableItem item,
+                PutDHTItemCallback callback, Object cbData) {
+            this.item = item;
+            this.callback = callback;
+            this.callBackData = cbData;
+        }
+
+        public MutableItem getItem() {
+            return this.item;
+        }
+
+        public Object getCallbackData() {
+            return this.callBackData;
+        }
+
+        public Sha1Hash hash() {
+            return this.item.hash();
+        }
+
+        public void onDHTItemPut(int success) {
+            if (callback != null) {
+                callback.onDHTItemPut(success, this.callBackData);
+            }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof MutableItemDistribution)) {
+                return false;
+            }
+
+            MutableItemDistribution d = (MutableItemDistribution)obj;
+
+            return item.equals(d.item);
+        }
+
+        @Override
+        public int hashCode() {
+            return item.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return item.toString();
+        }
+    }
+
 }

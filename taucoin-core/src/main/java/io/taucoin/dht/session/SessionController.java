@@ -3,6 +3,7 @@ package io.taucoin.dht.session;
 import io.taucoin.dht.metrics.Counter;
 import io.taucoin.dht.util.Utils;
 
+import com.frostwire.jlibtorrent.Sha1Hash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,9 @@ public class SessionController {
     // Parameters regulator for dht middleware.
     private Regulator regulator;
 
+    // Cache map from sha1 hash to putting immutable or mutable item request.
+    private Map<Sha1Hash, Object> putCache;
+
     // Lock to ensure the operation atomicity
     // between 'sessionsList' and 'sessionToWokerMap'
     private final Object lock = new Object();
@@ -54,10 +58,12 @@ public class SessionController {
      * @param inputQueue producer input queue
      * @param counter metrics counter
      */
-    public SessionController(BlockingQueue inputQueue, Counter counter) {
+    public SessionController(BlockingQueue inputQueue, Counter counter,
+            Map<Sha1Hash, Object> putCache) {
         this.inputQueue = inputQueue;
         this.counter = counter;
         this.regulator = new Regulator();
+        this.putCache = putCache;
     }
 
     /**
@@ -81,7 +87,7 @@ public class SessionController {
                         .setNetworkInterfaces(NetworkInterfacePolicy
                                 .networkInterfaces(i));
                 TauSession s = new TauSession(builder.build());
-                Worker w = new Worker(i, s, inputQueue, counter, regulator);
+                Worker w = new Worker(i, s, inputQueue, counter, regulator, putCache);
 
                 sessionToWorkerMap.put(s, w);
                 sessionsList.add(s);
@@ -149,7 +155,8 @@ public class SessionController {
                         .networkInterfaces(sessionsList.size()));
 
         TauSession s = new TauSession(builder.build());
-        Worker w = new Worker(sessionsList.size(), s, inputQueue, counter, regulator);
+        Worker w = new Worker(sessionsList.size(), s, inputQueue, counter, regulator,
+                putCache);
 
         if (w.start()) {
             synchronized (lock) {

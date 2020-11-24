@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Map;
 
 import static io.taucoin.dht.DHT.*;
@@ -78,6 +79,7 @@ class TauSession {
             } else if (type == AlertType.DHT_PUT) {
                 DhtPutAlert a = (DhtPutAlert) alert;
                 logger.info(a.message());
+                notifyItemPutEvent(a);
             } else if (type == AlertType.DHT_LOG) {
                 if (EnableTorrentLog) {
                     DhtLogAlert a = (DhtLogAlert) alert;
@@ -91,6 +93,12 @@ class TauSession {
     private final Object signal = new Object();
     private volatile boolean startingResult = false;
     private volatile boolean startingResultReceived = false;
+
+    public static interface ItemPutListener {
+        void onItemPut(DhtPutAlert a);
+    }
+
+    private List<ItemPutListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * TauSession constructor.
@@ -111,6 +119,30 @@ class TauSession {
      */
     public void setLogger(Logger logger) {
         this.logger = logger;
+    }
+
+    /**
+     * Register ItemPutListener
+     *
+     * @param listener
+     */
+    public void addListener(ItemPutListener listener) {
+        listeners.add(listener);
+    }
+
+    /**
+     * Unregister ItemPutListener
+     *
+     * @param listener
+     */
+    public void removeListener(ItemPutListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyItemPutEvent(DhtPutAlert a) {
+        for (ItemPutListener listener : listeners) {
+            listener.onItemPut(a);
+        }
     }
 
     /**
@@ -207,9 +239,11 @@ class TauSession {
     public Sha1Hash dhtPut(ImmutableItem item) {
 
         if (!sessionManager.isRunning()) {
+            logger.warn("Session is not running");
             return null;
         }
 
+        logger.trace("put dht item:" + item);
         return sessionManager.dhtPutItem(item.entry);
     }
 
@@ -218,14 +252,18 @@ class TauSession {
      *
      * @param item mutable item
      */
-    public void dhtPut(MutableItem item) {
+    public boolean dhtPut(MutableItem item) {
 
         if (!sessionManager.isRunning()) {
-            return;
+            logger.warn("Session is not running");
+            return false;
         }
 
+        logger.trace("put dht item:" + item);
         sessionManager.dhtPutItem(item.publicKey, item.privateKey,
                 item.entry, item.salt);
+
+        return true;
     }
 
     /**
