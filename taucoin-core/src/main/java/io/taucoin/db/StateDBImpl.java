@@ -2,7 +2,6 @@ package io.taucoin.db;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import io.taucoin.core.AccountState;
 import io.taucoin.types.Transaction;
@@ -113,14 +112,14 @@ public class StateDBImpl implements StateDB {
         Set<byte[]> ret = new HashSet<>();
         Set<byte[]> set;
         try {
-            set = db.retrieveKeysWithPrefix(PrefixKey.chain);
+            set = db.retrieveKeysWithPrefix(PrefixKey.CHAIN);
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
 
         if (null != set) {
             for(byte[] chainID: set) {
-                ret.add(Arrays.copyOfRange(chainID, PrefixKey.chain.length, chainID.length));
+                ret.add(Arrays.copyOfRange(chainID, PrefixKey.CHAIN.length, chainID.length));
             }
         }
 

@@ -38,7 +38,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     private final StateDB stateDB;
 
     // queue
-    private final Queue<Object> queue = new ConcurrentLinkedQueue<Object>();
+    private final Queue<Object> queue = new ConcurrentLinkedQueue<>();
 
     // peer
     private final Set<ByteArrayWrapper> peer = new HashSet<>();

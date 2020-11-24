@@ -4,19 +4,24 @@ import io.taucoin.util.ByteUtil;
 
 public class PrefixKey {
     // prefix
-    private static final byte[] account = "A-".getBytes();
-    private static final byte[] block = "B-".getBytes();
-    private static final byte[] bestBlock = "b-".getBytes();
-    public static final byte[] chain = "C-".getBytes();
-    public static final byte[] hashList = "H-".getBytes();
-    private static final byte[] blockInfo = "I-".getBytes();
-    private static final byte[] immutablePointBlockHash = "i-".getBytes();
-    private static final byte[] mutableRange = "M-".getBytes();
-    private static final byte[] peer = "P-".getBytes();
-    private static final byte[] syncBlockHash = "s-".getBytes();
-    private static final byte[] txPool = "T-".getBytes();
-    private static final byte[] tx = "t-".getBytes();
-    private static final byte[] votesCountingPointBlockHash = "V-".getBytes();
+    private static final byte[] ACCOUNT = "A-".getBytes();
+    private static final byte[] BLOCK = "B-".getBytes();
+    private static final byte[] BEST_BLOCK = "b-".getBytes();
+    public static final byte[] CHAIN = "C-".getBytes();
+    public static final byte[] HASH_LIST = "H-".getBytes();
+    private static final byte[] BLOCK_INFO = "I-".getBytes();
+    private static final byte[] IMMUTABLE_POINT_BLOCK_HASH = "i-".getBytes();
+    private static final byte[] PEER_LATEST_MESSAGE = "LM-".getBytes();
+    private static final byte[] MUTABLE_RANGE = "M-".getBytes();
+    private static final byte[] MESSAGE = "m-".getBytes();
+    private static final byte[] PEER = "P-".getBytes();
+    private static final byte[] COMMUNICATION_PEER = "CP-".getBytes();
+    private static final byte[] SYNC_BLOCK_HASH = "s-".getBytes();
+    private static final byte[] TX_POOL = "T-".getBytes();
+    private static final byte[] TX = "t-".getBytes();
+    private static final byte[] VOTES_COUNTING_POINT_BLOCK_HASH = "V-".getBytes();
+
+    // key
 
     /**
      * chain key: 'Chain' + chainID
@@ -24,9 +29,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] chainKey(byte[] chainID) {
-        byte[] key = new byte[chain.length + chainID.length];
-        System.arraycopy(chain, 0, key, 0, chain.length);
-        System.arraycopy(chainID, 0, key, chain.length, chainID.length);
+        byte[] key = new byte[CHAIN.length + chainID.length];
+        System.arraycopy(CHAIN, 0, key, 0, CHAIN.length);
+        System.arraycopy(chainID, 0, key, CHAIN.length, chainID.length);
         return key;
     }
 
@@ -36,9 +41,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] bestBlockHashKey(byte[] chainID) {
-        byte[] key = new byte[chainID.length + bestBlock.length];
+        byte[] key = new byte[chainID.length + BEST_BLOCK.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(bestBlock, 0, key, chainID.length, bestBlock.length);
+        System.arraycopy(BEST_BLOCK, 0, key, chainID.length, BEST_BLOCK.length);
         return key;
     }
 
@@ -48,9 +53,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] syncBlockHashKey(byte[] chainID) {
-        byte[] key = new byte[chainID.length + syncBlockHash.length];
+        byte[] key = new byte[chainID.length + SYNC_BLOCK_HASH.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(syncBlockHash, 0, key, chainID.length, syncBlockHash.length);
+        System.arraycopy(SYNC_BLOCK_HASH, 0, key, chainID.length, SYNC_BLOCK_HASH.length);
         return key;
     }
 
@@ -60,9 +65,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] immutablePointBlockHashKey(byte[] chainID) {
-        byte[] key = new byte[chainID.length + immutablePointBlockHash.length];
+        byte[] key = new byte[chainID.length + IMMUTABLE_POINT_BLOCK_HASH.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(immutablePointBlockHash, 0, key, chainID.length, immutablePointBlockHash.length);
+        System.arraycopy(IMMUTABLE_POINT_BLOCK_HASH, 0, key, chainID.length, IMMUTABLE_POINT_BLOCK_HASH.length);
         return key;
     }
 
@@ -72,9 +77,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] votesCountingPointBlockHashKey(byte[] chainID) {
-        byte[] key = new byte[chainID.length + votesCountingPointBlockHash.length];
+        byte[] key = new byte[chainID.length + VOTES_COUNTING_POINT_BLOCK_HASH.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(votesCountingPointBlockHash, 0, key, chainID.length, votesCountingPointBlockHash.length);
+        System.arraycopy(VOTES_COUNTING_POINT_BLOCK_HASH, 0, key, chainID.length, VOTES_COUNTING_POINT_BLOCK_HASH.length);
         return key;
     }
 
@@ -84,9 +89,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] mutableRangeKey(byte[] chainID) {
-        byte[] key = new byte[chainID.length + mutableRange.length];
+        byte[] key = new byte[chainID.length + MUTABLE_RANGE.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(mutableRange, 0, key, chainID.length, mutableRange.length);
+        System.arraycopy(MUTABLE_RANGE, 0, key, chainID.length, MUTABLE_RANGE.length);
         return key;
     }
 
@@ -96,9 +101,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] peerKeyPrefix(byte[] chainID) {
-        byte[] prefix = new byte[chainID.length + peer.length];
+        byte[] prefix = new byte[chainID.length + PEER.length];
         System.arraycopy(chainID, 0, prefix, 0, chainID.length);
-        System.arraycopy(peer, 0, prefix, chainID.length, peer.length);
+        System.arraycopy(PEER, 0, prefix, chainID.length, PEER.length);
         return prefix;
     }
 
@@ -109,10 +114,10 @@ public class PrefixKey {
      * @return
      */
     public static byte[] peerKey(byte[] chainID, byte[] pubkey) {
-        byte[] key = new byte[chainID.length + peer.length + pubkey.length];
+        byte[] key = new byte[chainID.length + PEER.length + pubkey.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(peer, 0, key, chainID.length, peer.length);
-        System.arraycopy(pubkey, 0, key, chainID.length + peer.length, pubkey.length);
+        System.arraycopy(PEER, 0, key, chainID.length, PEER.length);
+        System.arraycopy(pubkey, 0, key, chainID.length + PEER.length, pubkey.length);
         return key;
     }
 
@@ -122,10 +127,10 @@ public class PrefixKey {
      * @return
      */
     public static byte[] txPoolAllTxPrefix(byte[] chainID, byte[] pubKey) {
-        byte[] prefix = new byte[chainID.length + txPool.length + pubKey.length];
+        byte[] prefix = new byte[chainID.length + TX_POOL.length + pubKey.length];
         System.arraycopy(chainID, 0, prefix, 0, chainID.length);
-        System.arraycopy(txPool, 0, prefix, chainID.length, txPool.length);
-        System.arraycopy(pubKey, 0, prefix, chainID.length + txPool.length, pubKey.length);
+        System.arraycopy(TX_POOL, 0, prefix, chainID.length, TX_POOL.length);
+        System.arraycopy(pubKey, 0, prefix, chainID.length + TX_POOL.length, pubKey.length);
         return prefix;
     }
 
@@ -138,11 +143,11 @@ public class PrefixKey {
      */
     public static byte[] txPoolTxKey(byte[] chainID, byte[] pubKey, long nonce) {
         byte[] nonceBytes = ByteUtil.longToBytes(nonce);
-        byte[] key = new byte[chainID.length + txPool.length + pubKey.length + nonceBytes.length];
+        byte[] key = new byte[chainID.length + TX_POOL.length + pubKey.length + nonceBytes.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(txPool, 0, key, chainID.length, txPool.length);
-        System.arraycopy(pubKey, 0, key, chainID.length + txPool.length, pubKey.length);
-        System.arraycopy(nonceBytes, 0, key, chainID.length + txPool.length + pubKey.length, nonceBytes.length);
+        System.arraycopy(TX_POOL, 0, key, chainID.length, TX_POOL.length);
+        System.arraycopy(pubKey, 0, key, chainID.length + TX_POOL.length, pubKey.length);
+        System.arraycopy(nonceBytes, 0, key, chainID.length + TX_POOL.length + pubKey.length, nonceBytes.length);
         return key;
     }
 
@@ -152,9 +157,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] accountPrefix(byte[] chainID) {
-        byte[] prefix = new byte[chainID.length + account.length];
+        byte[] prefix = new byte[chainID.length + ACCOUNT.length];
         System.arraycopy(chainID, 0, prefix, 0, chainID.length);
-        System.arraycopy(account, 0, prefix, chainID.length, account.length);
+        System.arraycopy(ACCOUNT, 0, prefix, chainID.length, ACCOUNT.length);
         return prefix;
     }
 
@@ -165,10 +170,10 @@ public class PrefixKey {
      * @return
      */
     public static byte[] accountKey(byte[] chainID, byte[] pubkey) {
-        byte[] key = new byte[chainID.length + account.length + pubkey.length];
+        byte[] key = new byte[chainID.length + ACCOUNT.length + pubkey.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(account, 0, key, chainID.length, account.length);
-        System.arraycopy(pubkey, 0, key, chainID.length + account.length, pubkey.length);
+        System.arraycopy(ACCOUNT, 0, key, chainID.length, ACCOUNT.length);
+        System.arraycopy(pubkey, 0, key, chainID.length + ACCOUNT.length, pubkey.length);
         return key;
     }
 
@@ -178,9 +183,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] blockPrefix(byte[] chainID) {
-        byte[] prefix = new byte[chainID.length + block.length];
+        byte[] prefix = new byte[chainID.length + BLOCK.length];
         System.arraycopy(chainID, 0, prefix, 0, chainID.length);
-        System.arraycopy(block, 0, prefix, chainID.length, block.length);
+        System.arraycopy(BLOCK, 0, prefix, chainID.length, BLOCK.length);
         return prefix;
     }
 
@@ -191,10 +196,10 @@ public class PrefixKey {
      * @return
      */
     public static byte[] blockKey(byte[] chainID, byte[] hash) {
-        byte[] key = new byte[chainID.length + block.length + hash.length];
+        byte[] key = new byte[chainID.length + BLOCK.length + hash.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(block, 0, key, chainID.length, block.length);
-        System.arraycopy(hash, 0, key, chainID.length + block.length, hash.length);
+        System.arraycopy(BLOCK, 0, key, chainID.length, BLOCK.length);
+        System.arraycopy(hash, 0, key, chainID.length + BLOCK.length, hash.length);
         return key;
     }
 
@@ -204,9 +209,9 @@ public class PrefixKey {
      * @return prefix
      */
     public static byte[] hashListPrefix(byte[] chainID) {
-        byte[] prefix = new byte[chainID.length + hashList.length];
+        byte[] prefix = new byte[chainID.length + HASH_LIST.length];
         System.arraycopy(chainID, 0, prefix, 0, chainID.length);
-        System.arraycopy(hashList, 0, prefix, chainID.length, hashList.length);
+        System.arraycopy(HASH_LIST, 0, prefix, chainID.length, HASH_LIST.length);
         return prefix;
     }
 
@@ -217,10 +222,10 @@ public class PrefixKey {
      * @return key
      */
     public static byte[] hashListKey(byte[] chainID, byte[] hash) {
-        byte[] key = new byte[chainID.length + hashList.length + hash.length];
+        byte[] key = new byte[chainID.length + HASH_LIST.length + hash.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(hashList, 0, key, chainID.length, hashList.length);
-        System.arraycopy(hash, 0, key, chainID.length + hashList.length, hash.length);
+        System.arraycopy(HASH_LIST, 0, key, chainID.length, HASH_LIST.length);
+        System.arraycopy(hash, 0, key, chainID.length + HASH_LIST.length, hash.length);
         return key;
     }
 
@@ -230,9 +235,9 @@ public class PrefixKey {
      * @return
      */
     public static byte[] txPrefix(byte[] chainID) {
-        byte[] prefix = new byte[chainID.length + tx.length];
+        byte[] prefix = new byte[chainID.length + TX.length];
         System.arraycopy(chainID, 0, prefix, 0, chainID.length);
-        System.arraycopy(tx, 0, prefix, chainID.length, tx.length);
+        System.arraycopy(TX, 0, prefix, chainID.length, TX.length);
         return prefix;
     }
 
@@ -243,10 +248,10 @@ public class PrefixKey {
      * @return
      */
     public static byte[] txKey(byte[] chainID, byte[] txid) {
-        byte[] key = new byte[chainID.length + tx.length + txid.length];
+        byte[] key = new byte[chainID.length + TX.length + txid.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(tx, 0, key, chainID.length, tx.length);
-        System.arraycopy(txid, 0, key, chainID.length + tx.length, txid.length);
+        System.arraycopy(TX, 0, key, chainID.length, TX.length);
+        System.arraycopy(txid, 0, key, chainID.length + TX.length, txid.length);
         return key;
     }
 
@@ -256,9 +261,9 @@ public class PrefixKey {
      * @return block info
      */
     public static byte[] blockInfoPrefix(byte[] chainID) {
-        byte[] prefix = new byte[chainID.length + blockInfo.length];
+        byte[] prefix = new byte[chainID.length + BLOCK_INFO.length];
         System.arraycopy(chainID, 0, prefix, 0, chainID.length);
-        System.arraycopy(blockInfo, 0, prefix, chainID.length, blockInfo.length);
+        System.arraycopy(BLOCK_INFO, 0, prefix, chainID.length, BLOCK_INFO.length);
 
         return prefix;
     }
@@ -271,10 +276,70 @@ public class PrefixKey {
      */
     public static byte[] blockInfoKey(byte[] chainID, long number) {
         byte[] numberBytes = ByteUtil.longToBytes(number);
-        byte[] key = new byte[chainID.length + blockInfo.length + numberBytes.length];
+        byte[] key = new byte[chainID.length + BLOCK_INFO.length + numberBytes.length];
         System.arraycopy(chainID, 0, key, 0, chainID.length);
-        System.arraycopy(blockInfo, 0, key, chainID.length, blockInfo.length);
-        System.arraycopy(numberBytes, 0, key, chainID.length + blockInfo.length, numberBytes.length);
+        System.arraycopy(BLOCK_INFO, 0, key, chainID.length, BLOCK_INFO.length);
+        System.arraycopy(numberBytes, 0, key, chainID.length + BLOCK_INFO.length, numberBytes.length);
+        return key;
+    }
+
+    /**
+     * communication peer prefix: COMMUNICATION_PEER
+     * @return perfix
+     */
+    public static byte[] communicationPeerPrefix() {
+        return COMMUNICATION_PEER;
+    }
+
+    /**
+     * communication peer key: COMMUNICATION_PEER + peer pubkey
+     * @param pubkey public key
+     * @return key
+     */
+    public static byte[] communicationPeerKey(byte[] pubkey) {
+        byte[] key = new byte[COMMUNICATION_PEER.length + pubkey.length];
+        System.arraycopy(COMMUNICATION_PEER, 0, key, 0, COMMUNICATION_PEER.length);
+        System.arraycopy(pubkey, 0, key, COMMUNICATION_PEER.length, pubkey.length);
+        return key;
+    }
+
+    /**
+     * message prefix: MESSAGE
+     * @return message prefix
+     */
+    public static byte[] messagePrefix() {
+        return MESSAGE;
+    }
+
+    /**
+     * message key: MESSAGE + hash
+     * @param hash message hash
+     * @return message key
+     */
+    public static byte[] messageKey(byte[] hash) {
+        byte[] key = new byte[MESSAGE.length + hash.length];
+        System.arraycopy(MESSAGE, 0, key, 0, MESSAGE.length);
+        System.arraycopy(hash, 0, key, MESSAGE.length, hash.length);
+        return key;
+    }
+
+    /**
+     * peer latest message prefix: PEER_LATEST_MESSAGE
+     * @return perfix
+     */
+    public static byte[] PeerLatestMessagePrefix() {
+        return PEER_LATEST_MESSAGE;
+    }
+
+    /**
+     * peer latest message key: PEER_LATEST_MESSAGE + peer pubkey
+     * @param pubkey public key
+     * @return key
+     */
+    public static byte[] PeerLatestMessageKey(byte[] pubkey) {
+        byte[] key = new byte[PEER_LATEST_MESSAGE.length + pubkey.length];
+        System.arraycopy(PEER_LATEST_MESSAGE, 0, key, 0, PEER_LATEST_MESSAGE.length);
+        System.arraycopy(pubkey, 0, key, PEER_LATEST_MESSAGE.length, pubkey.length);
         return key;
     }
 
