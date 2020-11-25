@@ -32,7 +32,6 @@ import io.taucoin.torrent.publishing.databinding.ActivityFriendsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
@@ -129,10 +128,10 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     private void initFabSpeedDial() {
         // 自定义点击事件
         binding.fabButton.getMainFab().setOnClickListener(v -> {
-            ActivityUtil.startActivity(this, UserQRCodeActivity.class);
+            ActivityUtil.startActivity(this, ExchangeActivity.class);
         });
         binding.llInviteFriends.setOnClickListener(v -> {
-            ActivityUtil.startActivity(this, UserQRCodeActivity.class);
+            ActivityUtil.startActivity(this, ExchangeActivity.class);
         });
     }
 

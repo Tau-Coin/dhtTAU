@@ -136,12 +136,12 @@
     <string name="setting_daily_quota_unit_g">%1$dG</string>
     <string name="setting_network_current_speed">Current Speed</string>
     <string name="setting_network_speed_limit">Speed Limit</string>
-    <string name="setting_network_available_data">Available Data</string>
+    <string name="setting_network_available_data">Today Remaining Data</string>
     <string name="setting_metered_network_limit_speed">%1$s/s</string>
     <string name="setting_master_node">Master node</string>
     <string name="setting_charging">Charging</string>
     <string name="setting_internet">Internet</string>
-    <string name="setting_wake_lock">Wake Lock</string>
+    <string name="setting_wake_lock">Always Awake</string>
     <string name="setting_metered_limit_select_tips">Using telecom data may incur additional fees.\n
         How much traffic do you want to use per day?</string>
 
@@ -265,9 +265,11 @@
     &nbsp;<font color="#f19322">%2$s</font>&nbsp;%3$s&nbsp;(including %4$s fee).]]></Data></string>
 
     <!-- Strings used for QRCode -->
-<!--    <string name="qr_code_title">My Public Key QR Code</string>-->
-    <string name="qr_code_two_steps" formatted="false"><Data><![CDATA[<strong><font color="#f19322">Two steps:</font></strong>
-    <br/><strong>·</strong> Share your QR to friend<br/><strong>·</strong> Scan friend QR]]></Data></string>
+    <string name="qr_code_title">My Public Key QR Code</string>
+    <string name="qr_code_two_steps">Exchange needs two steps</string>
+    <string name="qr_code_step_one_point">·&#160;</string>
+    <string name="qr_code_step_one">Share QR code to friend</string>
+    <string name="qr_code_step_two">Scan friend’s QR code</string>
     <string name="qr_code_scan_friend_qr">Scan Friend\'s QR Code</string>
     <string name="qr_code_scan_qr">Scan QR</string>
     <string name="qr_code_scan_cancelled">Cancelled</string>

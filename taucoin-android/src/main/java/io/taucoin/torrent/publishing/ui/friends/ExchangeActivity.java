@@ -1,11 +1,8 @@
-package io.taucoin.torrent.publishing.ui.qrcode;
+package io.taucoin.torrent.publishing.ui.friends;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 
 import com.king.zxing.util.CodeUtils;
@@ -22,23 +19,24 @@ import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.databinding.ActivityQrCodeBinding;
+import io.taucoin.torrent.publishing.databinding.ActivityExchangeBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
- * 用户QR Code页面
+ * 和朋友交换二维码页面
  */
-public class UserQRCodeActivity extends BaseActivity implements View.OnClickListener {
+public class ExchangeActivity extends BaseActivity implements View.OnClickListener {
 
     private CompositeDisposable disposables = new CompositeDisposable();
-    private ActivityQrCodeBinding binding;
+    private ActivityExchangeBinding binding;
     private UserViewModel userViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_qr_code);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_exchange);
         binding.setListener(this);
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
@@ -53,9 +51,8 @@ public class UserQRCodeActivity extends BaseActivity implements View.OnClickList
         if(StringUtil.isEmpty(publicKey)){
             return;
         }
-        binding.tvQrCode.setVisibility(View.GONE);
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.qr_code_title);
+        binding.toolbarInclude.toolbar.setTitle(R.string.contacts_exchange_qr);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
         binding.roundButton.setBgColor(Utils.getGroupColor(publicKey));
@@ -63,11 +60,19 @@ public class UserQRCodeActivity extends BaseActivity implements View.OnClickList
         Bitmap bitmap = CodeUtils.createQRCode(publicKey, 480);
         binding.ivQrCode.setImageBitmap(bitmap);
 
-        SpannableStringBuilder scanQrCode = new SpanUtils()
-                .append(getString(R.string.qr_code_scan_friend_qr))
+        SpannableStringBuilder stepOne = new SpanUtils()
+                .append(getString(R.string.qr_code_step_one_point))
+                .append(getString(R.string.qr_code_step_one))
                 .setUnderline()
                 .create();
-        binding.tvScanQrCode.setText(scanQrCode);
+        binding.tvStepOne.setText(stepOne);
+
+        SpannableStringBuilder stepTwo = new SpanUtils()
+                .append(getString(R.string.qr_code_step_one_point))
+                .append(getString(R.string.qr_code_step_two))
+                .setUnderline()
+                .create();
+        binding.tvStepTwo.setText(stepTwo);
 
         disposables.add(userViewModel.observeCurrentUser()
                 .subscribeOn(Schedulers.newThread())
@@ -79,23 +84,10 @@ public class UserQRCodeActivity extends BaseActivity implements View.OnClickList
     }
 
     /**
-     *  创建右上角Menu
+     * 分享二维码
      */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_qr_code, menu);
-        return true;
-    }
-
-    /**
-     * 右上角Menu选项选择事件
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_share) {
-            userViewModel.shareQRCode(this, binding.rlQrCode, 240);
-        }
-        return true;
+    private void shareQRCode() {
+        userViewModel.shareQRCode(this, binding.rlQrCode, 240);
     }
 
     /**
@@ -103,10 +95,15 @@ public class UserQRCodeActivity extends BaseActivity implements View.OnClickList
      */
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.tv_scan_qr_code) {
-            onBackPressed();
-            Intent intent = new Intent();
-            ActivityUtil.startActivity(intent, this, ScanQRCodeActivity.class);
+        switch (v.getId()) {
+            case R.id.tv_step_one:
+                shareQRCode();
+                break;
+            case R.id.tv_step_two:
+                ActivityUtil.startActivity(this, ScanQRCodeActivity.class);
+                break;
+            default:
+                break;
         }
     }
 }
