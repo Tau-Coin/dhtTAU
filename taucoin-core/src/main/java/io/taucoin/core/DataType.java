@@ -23,6 +23,6 @@ public enum DataType {
 
     TX_REQUEST_FOR_MINING, // immutable tx for pool
 
-    PERSONAL_INFO_HASH, // personal information hash
-    PERSONAL_INFO, // personal information
+    GOSSIP_FROM_PEER, // gossip information from peer
+    GOSSIP_LIST, // gossip list
 }

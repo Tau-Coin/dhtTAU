@@ -2,13 +2,15 @@ package io.taucoin.types;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 public class GossipList {
-    private List<GossipItem> gossipList;
+    private byte[] previousGossipListHash;
+    private List<GossipItem> gossipList = new CopyOnWriteArrayList<>();
 
     private byte[] hash;
     private byte[] rlpEncoded;
@@ -22,6 +24,14 @@ public class GossipList {
 
     public GossipList(byte[] encode) {
         this.rlpEncoded = encode;
+    }
+
+    public byte[] getPreviousGossipListHash() {
+        if (!parsed) {
+            parseRLP();
+        }
+
+        return previousGossipListHash;
     }
 
     public List<GossipItem> getGossipList() {
@@ -44,6 +54,13 @@ public class GossipList {
         return this.hash;
     }
 
+    private void parseList(RLPList list) {
+        for (int i = 0; i < list.size(); i++) {
+            byte[] encode = list.get(i).getRLPData();
+            this.gossipList.add(new GossipItem(encode));
+        }
+    }
+
     /**
      * parse rlp encode
      */
@@ -51,13 +68,22 @@ public class GossipList {
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
 
-        this.gossipList = new ArrayList<>();
-        for (int i = 0; i < list.size(); i++) {
-            byte[] encode = list.get(i).getRLPData();
-            this.gossipList.add(new GossipItem(encode));
+        this.previousGossipListHash = list.get(0).getRLPData();
+        if (2 == list.size()) {
+            parseList((RLPList) list.get(1));
         }
 
         this.parsed = true;
+    }
+
+    public byte[] getGossipListEncoded() {
+        byte[][] gossipListEncoded = new byte[this.gossipList.size()][];
+        int i = 0;
+        for (GossipItem gossipItem : this.gossipList) {
+            gossipListEncoded[i] = gossipItem.getEncoded();
+            ++i;
+        }
+        return RLP.encodeList(gossipListEncoded);
     }
 
     /**
@@ -66,17 +92,10 @@ public class GossipList {
      */
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
-            if (null != this.gossipList && !this.gossipList.isEmpty()) {
-                byte[][] encodeList = new byte[this.gossipList.size()][];
+            byte[] previousGossipListHash = RLP.encodeElement(this.previousGossipListHash);
+            byte[] listEncode = getGossipListEncoded();
 
-                int i = 0;
-                for (GossipItem gossipItem : this.gossipList) {
-                    encodeList[i] = RLP.encodeElement(gossipItem.getEncoded());
-                    i++;
-                }
-
-                rlpEncoded = RLP.encodeList(encodeList);
-            }
+            this.rlpEncoded = RLP.encodeList(previousGossipListHash, listEncode);
         }
 
         return rlpEncoded;

@@ -8,6 +8,10 @@ public class DataIdentifier {
     ByteArrayWrapper hash; // block hash, txid or pubKey
     ByteArrayWrapper blockHash; // the block hash to which this item belongs
 
+    public DataIdentifier(DataType dataType) {
+        this.dataType = dataType;
+    }
+
     public DataIdentifier(ByteArrayWrapper chainID, DataType dataType) {
         this.chainID = chainID;
         this.dataType = dataType;

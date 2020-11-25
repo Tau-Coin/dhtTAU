@@ -250,8 +250,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     logger.info(e.getMessage(), e);
                     Thread.currentThread().interrupt();
                 }
-            }
-            catch (DBException e) {
+            } catch (DBException e) {
                 this.tauListener.onTauError("Data Base Exception!");
                 logger.error(e.getMessage(), e);
 
@@ -261,8 +260,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                     logger.info(ex.getMessage(), ex);
                     Thread.currentThread().interrupt();
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 logger.error(e.getMessage(), e);
 
                 try {
