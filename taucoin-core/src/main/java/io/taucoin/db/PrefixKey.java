@@ -8,14 +8,15 @@ public class PrefixKey {
     private static final byte[] BLOCK = "B-".getBytes();
     private static final byte[] BEST_BLOCK = "b-".getBytes();
     public static final byte[] CHAIN = "C-".getBytes();
+    public static final byte[] FRIEND = "F-".getBytes();
     public static final byte[] HASH_LIST = "H-".getBytes();
     private static final byte[] BLOCK_INFO = "I-".getBytes();
     private static final byte[] IMMUTABLE_POINT_BLOCK_HASH = "i-".getBytes();
-    private static final byte[] PEER_LATEST_MESSAGE = "LM-".getBytes();
     private static final byte[] MUTABLE_RANGE = "M-".getBytes();
     private static final byte[] MESSAGE = "m-".getBytes();
     private static final byte[] PEER = "P-".getBytes();
     private static final byte[] COMMUNICATION_PEER = "CP-".getBytes();
+    private static final byte[] FRIEND_MESSAGE_ROOT = "R-".getBytes();
     private static final byte[] SYNC_BLOCK_HASH = "s-".getBytes();
     private static final byte[] TX_POOL = "T-".getBytes();
     private static final byte[] TX = "t-".getBytes();
@@ -284,6 +285,26 @@ public class PrefixKey {
     }
 
     /**
+     * friend prefix: 'FRIEND'
+     * @return prefix
+     */
+    public static byte[] friendPrefix() {
+        return FRIEND;
+    }
+
+    /**
+     * friend key: 'FRIEND' + pubkey
+     * @param pubkey public key
+     * @return key
+     */
+    public static byte[] friendKey(byte[] pubkey) {
+        byte[] key = new byte[FRIEND.length + pubkey.length];
+        System.arraycopy(FRIEND, 0, key, 0, FRIEND.length);
+        System.arraycopy(pubkey, 0, key, FRIEND.length, pubkey.length);
+        return key;
+    }
+
+    /**
      * communication peer prefix: COMMUNICATION_PEER
      * @return perfix
      */
@@ -324,22 +345,22 @@ public class PrefixKey {
     }
 
     /**
-     * peer latest message prefix: PEER_LATEST_MESSAGE
+     * friend latest message root prefix: FRIEND_MESSAGE_ROOT
      * @return perfix
      */
-    public static byte[] PeerLatestMessagePrefix() {
-        return PEER_LATEST_MESSAGE;
+    public static byte[] friendMessageRootPrefix() {
+        return FRIEND_MESSAGE_ROOT;
     }
 
     /**
-     * peer latest message key: PEER_LATEST_MESSAGE + peer pubkey
+     * friend latest message root key: FRIEND_MESSAGE_ROOT + friend pubkey
      * @param pubkey public key
      * @return key
      */
-    public static byte[] PeerLatestMessageKey(byte[] pubkey) {
-        byte[] key = new byte[PEER_LATEST_MESSAGE.length + pubkey.length];
-        System.arraycopy(PEER_LATEST_MESSAGE, 0, key, 0, PEER_LATEST_MESSAGE.length);
-        System.arraycopy(pubkey, 0, key, PEER_LATEST_MESSAGE.length, pubkey.length);
+    public static byte[] friendMessageRootKey(byte[] pubkey) {
+        byte[] key = new byte[FRIEND_MESSAGE_ROOT.length + pubkey.length];
+        System.arraycopy(FRIEND_MESSAGE_ROOT, 0, key, 0, FRIEND_MESSAGE_ROOT.length);
+        System.arraycopy(pubkey, 0, key, FRIEND_MESSAGE_ROOT.length, pubkey.length);
         return key;
     }
 

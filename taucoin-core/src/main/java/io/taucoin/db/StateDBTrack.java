@@ -503,5 +503,75 @@ public class StateDBTrack implements StateDB {
     public void clearAllState(byte[] chainID) {
         throw new UnsupportedOperationException();
     }
+
+    /**
+     * add a new friend
+     *
+     * @param pubkey public key
+     * @throws DBException database exception
+     */
+    @Override
+    public void addFriend(byte[] pubkey) throws DBException {
+        this.stateDB.addFriend(pubkey);
+    }
+
+    /**
+     * get all friends
+     *
+     * @return friend set
+     * @throws DBException database exception
+     */
+    @Override
+    public Set<byte[]> getFriends() throws DBException {
+        return this.stateDB.getFriends();
+    }
+
+    /**
+     * set friend message root hash
+     *
+     * @param pubKey public key
+     * @param hash message root hash
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public void setFriendMessageRoot(byte[] pubKey, byte[] hash) throws DBException {
+        this.stateDB.setFriendMessageRoot(pubKey, hash);
+    }
+
+    /**
+     * get friend message root hash
+     *
+     * @param pubKey public key
+     * @return friend message root hash, null otherwise
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public byte[] getFriendMessageRoot(byte[] pubKey) throws DBException {
+        return this.stateDB.getFriendMessageRoot(pubKey);
+    }
+
+    /**
+     * put a message data into db
+     *
+     * @param hash message hash
+     * @param data message data to put
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public void putMessage(byte[] hash, byte[] data) throws DBException {
+        this.stateDB.putMessage(hash, data);
+    }
+
+    /**
+     * get message by hash
+     *
+     * @param hash
+     * @return message data, null otherwise
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public byte[] getMessageByHash(byte[] hash) throws DBException {
+        return this.stateDB.getMessageByHash(hash);
+    }
 }
 

@@ -5,14 +5,17 @@ import com.frostwire.jlibtorrent.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import io.taucoin.account.AccountManager;
 import io.taucoin.core.DataIdentifier;
 import io.taucoin.core.DataType;
 import io.taucoin.db.BlockStore;
@@ -24,6 +27,7 @@ import io.taucoin.param.ChainParam;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.GossipList;
 import io.taucoin.util.ByteArrayWrapper;
+import io.taucoin.util.ByteUtil;
 
 public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
@@ -50,11 +54,20 @@ public class Communication implements DHT.GetDHTItemCallback {
     // queue
     private final Queue<Object> queue = new ConcurrentLinkedQueue<>();
 
-    // peer set
-    private final Set<ByteArrayWrapper> peer = new HashSet<>();
-
     // gossip item set
     private final Set<GossipItem> gossipItems = new HashSet<>();
+
+    // 我的朋友集合
+    private final Set<ByteArrayWrapper> friends = new HashSet<>();
+
+    // 我的朋友的最新消息的时间戳
+    private final Map<ByteArrayWrapper, Long> friendTimeStamp = Collections.synchronizedMap(new HashMap<>());
+
+    // 我的朋友的最新消息的root
+    private final Map<ByteArrayWrapper, byte[]> friendRoot = Collections.synchronizedMap(new HashMap<>());
+
+    // active friend set
+    private final Set<ByteArrayWrapper> activeFriends = new HashSet<>();
 
     // 最新时间
     private final Map<Pair<byte[], byte[]>, Long> timeStamp = Collections.synchronizedMap(new HashMap<>());
@@ -71,12 +84,83 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.tauListener = tauListener;
     }
 
+    private boolean init() {
+        try {
+            Set<byte[]> friends = this.stateDB.getFriends();
+
+            if (null != friends) {
+                for (byte[] friend: friends) {
+                    ByteArrayWrapper key = new ByteArrayWrapper(friend);
+                    this.friends.add(key);
+
+                    byte[] root = this.stateDB.getFriendMessageRoot(friend);
+                    if (null != root) {
+                        this.friendRoot.put(key, root);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void updateGossipInfo() {
+        Iterator<GossipItem> it = this.gossipItems.iterator();
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+        while (it.hasNext()) {
+            GossipItem gossipItem = it.next();
+            ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
+            ByteArrayWrapper receiver = new ByteArrayWrapper(gossipItem.getReceiver());
+
+            if (Arrays.equals(pubKey, gossipItem.getReceiver())) {
+                Long oldTimeStamp = this.friendTimeStamp.get(sender);
+                long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
+
+                if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
+                    // 加入活跃朋友集合
+                    activeFriends.add(sender);
+
+                    this.friendRoot.put(sender, gossipItem.getMessageRoot());
+                    // 更新时间戳
+                    this.friendTimeStamp.put(sender, timeStamp);
+                }
+            } else {
+                for(ByteArrayWrapper friend: this.friends) {
+                    if (Arrays.equals(friend.getData(), gossipItem.getReceiver())) {
+                        Pair<byte[], byte[]> pair = new Pair<>(gossipItem.getSender(), gossipItem.getReceiver());
+
+                        Long oldTimeStamp = this.timeStamp.get(pair);
+                        long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
+
+                        if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
+                            // 加入活跃朋友集合
+                            activeFriends.add(sender);
+
+                            this.rootHash.put(pair, gossipItem.getMessageRoot());
+                            // 更新时间戳
+                            this.timeStamp.put(pair, timeStamp);
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            it.remove();
+        }
+    }
+
     /**
      * 死循环
      */
     private void mainLoop() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+
+                updateGossipInfo();
 
                 tryToSendAllRequest();
 

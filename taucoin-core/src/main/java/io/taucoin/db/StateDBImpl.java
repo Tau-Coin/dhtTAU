@@ -647,5 +647,110 @@ public class StateDBImpl implements StateDB {
         }
     }
 
+    /**
+     * add a new friend
+     *
+     * @param pubkey public key
+     * @throws DBException database exception
+     */
+    @Override
+    public void addFriend(byte[] pubkey) throws DBException {
+        try {
+            db.put(PrefixKey.friendKey(pubkey), new byte[1]);
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
+     * get all friends
+     *
+     * @return friend set
+     * @throws DBException database exception
+     */
+    @Override
+    public Set<byte[]> getFriends() throws DBException {
+        Set<byte[]> ret = new HashSet<>();
+        byte[] prefix = PrefixKey.friendPrefix();
+
+        Set<byte[]> set;
+        try {
+            set = db.retrieveKeysWithPrefix(prefix);
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+
+        if (null != set) {
+            for(byte[] friend: set) {
+                ret.add(Arrays.copyOfRange(friend, prefix.length, friend.length));
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * set friend message root hash
+     *
+     * @param pubKey public key
+     * @param hash message root hash
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public void setFriendMessageRoot(byte[] pubKey, byte[] hash) throws DBException {
+        try {
+            db.put(PrefixKey.friendMessageRootKey(pubKey), hash);
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
+     * get friend message root hash
+     *
+     * @param pubKey public key
+     * @return friend message root hash, null otherwise
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public byte[] getFriendMessageRoot(byte[] pubKey) throws DBException {
+        try {
+            return db.get(PrefixKey.friendMessageRootKey(pubKey));
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
+     * put a message data into db
+     *
+     * @param hash message hash
+     * @param data message data to put
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public void putMessage(byte[] hash, byte[] data) throws DBException {
+        try {
+            db.put(PrefixKey.messageKey(hash), data);
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
+     * get message by hash
+     *
+     * @param hash message hash
+     * @return message data, null otherwise
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public byte[] getMessageByHash(byte[] hash) throws DBException {
+        try {
+            return db.get(PrefixKey.messageKey(hash));
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
 }
 
