@@ -321,4 +321,7 @@
     <string name="gigabyteShort">GB</string>
     <string name="terabyteShort">TB</string>
     <string name="petabyteShort">PB</string>
+
+    <string name="chat_take_picture">Camera</string>
+    <string name="chat_album">Album</string>
 </resources>

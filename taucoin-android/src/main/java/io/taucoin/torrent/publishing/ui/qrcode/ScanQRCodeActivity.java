@@ -17,7 +17,6 @@ import com.luck.picture.lib.PictureSelector;
 import com.luck.picture.lib.config.PictureConfig;
 import com.luck.picture.lib.config.PictureMimeType;
 import com.luck.picture.lib.entity.LocalMedia;
-import com.luck.picture.lib.language.LanguageConfig;
 
 import java.util.List;
 
@@ -34,7 +33,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
-import io.taucoin.torrent.publishing.core.utils.GlideEngine;
+import io.taucoin.torrent.publishing.core.utils.MediaUtil;
 import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
@@ -201,7 +200,7 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                 ActivityUtil.startActivity(this, UserQRCodeActivity.class);
                 break;
             case R.id.iv_gallery:
-                openGallery();
+                MediaUtil.startOpenGallery(this);
                 break;
             case R.id.surfaceView:
                 isParseImage = false;
@@ -209,21 +208,6 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                 showNoQrCodeView(false);
                 break;
         }
-    }
-
-    /**
-     * 打开相册
-     */
-    private void openGallery(){
-        PictureSelector.create(this)
-                .openGallery(PictureMimeType.ofImage())
-                .setLanguage(LanguageConfig.ENGLISH)
-                .selectionMode(PictureConfig.SINGLE)
-                .isSingleDirectReturn(true)
-                .isCamera(true)
-                .compress(false)
-                .loadImageEngine(GlideEngine.createGlideEngine())
-                .forResult(PictureConfig.CHOOSE_REQUEST);
     }
 
     /**

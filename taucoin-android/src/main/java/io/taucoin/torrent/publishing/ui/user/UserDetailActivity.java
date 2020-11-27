@@ -125,7 +125,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
     private void showUserInfo(UserAndFriend userInfo) {
         boolean isMine = StringUtil.isEquals(publicKey, MainApplication.getInstance().getPublicKey());
         binding.tvAddToContact.setVisibility(!isMine && userInfo.isDiscovered() ? View.VISIBLE : View.GONE);
-        binding.tvStartChat.setVisibility(!isMine && userInfo.isConnected() ? View.VISIBLE : View.GONE);
+        binding.tvStartChat.setVisibility(!isMine && !userInfo.isDiscovered() ? View.VISIBLE : View.GONE);
         binding.tvShareQr.setVisibility(!isMine && userInfo.isConnected() ? View.GONE : View.VISIBLE);
         this.user = userInfo;
         String showName = UsersUtil.getCurrentUserName(user);

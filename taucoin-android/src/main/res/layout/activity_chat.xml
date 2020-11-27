@@ -8,6 +8,7 @@
     </data>
 
     <LinearLayout
+        android:id="@+id/ll_root"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -70,6 +71,20 @@
                 android:background="@drawable/primary_rect_round_bg"
                 android:textColor="@color/color_white"
                 android:textAppearance="@style/TextAppearanceBody1"/>
+
+            <ImageView
+                android:id="@+id/iv_add"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="10dp"
+                android:src="@mipmap/icon_add"
+                android:onClick="@{listener::onClick}"
+                android:contentDescription="@null"/>
         </LinearLayout>
+
+        <io.taucoin.torrent.publishing.ui.customviews.ChatAddView
+            android:id="@+id/chat_add"
+            android:layout_width="match_parent"
+            android:layout_height="280dp" />
     </LinearLayout>
 </layout>
