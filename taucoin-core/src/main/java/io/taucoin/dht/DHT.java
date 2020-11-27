@@ -292,6 +292,10 @@ public final class DHT {
             return this.callBackData;
         }
 
+        public GetDHTItemCallback getCallback() {
+            return this.callback;
+        }
+
         public void onDHTItemGot(byte[] item) {
             if (callback != null) {
                 callback.onDHTItemGot(item, this.callBackData);
@@ -347,6 +351,10 @@ public final class DHT {
             return this.callBackData;
         }
 
+        public GetDHTItemCallback getCallback() {
+            return this.callback;
+        }
+
         public void onDHTItemGot(byte[] item) {
             if (callback != null) {
                 callback.onDHTItemGot(item, this.callBackData);
@@ -399,6 +407,10 @@ public final class DHT {
 
         public Object getCallbackData() {
             return this.callBackData;
+        }
+
+        public PutDHTItemCallback getCallback() {
+            return this.callback;
         }
 
         public Sha1Hash hash() {
@@ -457,6 +469,10 @@ public final class DHT {
 
         public Object getCallbackData() {
             return this.callBackData;
+        }
+
+        public PutDHTItemCallback getCallback() {
+            return this.callback;
         }
 
         public Sha1Hash hash() {
