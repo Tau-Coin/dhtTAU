@@ -5,11 +5,16 @@ import io.taucoin.util.ByteArrayWrapper;
 public class DataIdentifier {
     ByteArrayWrapper chainID;
     DataType dataType;
-    ByteArrayWrapper hash; // block hash, txid or pubKey
+    ByteArrayWrapper key; // block hash, txid or pubKey
     ByteArrayWrapper blockHash; // the block hash to which this item belongs
 
     public DataIdentifier(DataType dataType) {
         this.dataType = dataType;
+    }
+
+    public DataIdentifier(DataType dataType, ByteArrayWrapper key) {
+        this.dataType = dataType;
+        this.key = key;
     }
 
     public DataIdentifier(ByteArrayWrapper chainID, DataType dataType) {
@@ -17,16 +22,16 @@ public class DataIdentifier {
         this.dataType = dataType;
     }
 
-    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper hash) {
+    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper key) {
         this.chainID = chainID;
         this.dataType = dataType;
-        this.hash = hash;
+        this.key = key;
     }
 
-    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper hash, ByteArrayWrapper blockHash) {
+    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper key, ByteArrayWrapper blockHash) {
         this.chainID = chainID;
         this.dataType = dataType;
-        this.hash = hash;
+        this.key = key;
         this.blockHash = blockHash;
     }
 
@@ -38,8 +43,8 @@ public class DataIdentifier {
         return dataType;
     }
 
-    public ByteArrayWrapper getHash() {
-        return hash;
+    public ByteArrayWrapper getKey() {
+        return key;
     }
 
     public ByteArrayWrapper getBlockHash() {

@@ -25,4 +25,7 @@ public enum DataType {
 
     GOSSIP_FROM_PEER, // gossip information from peer
     GOSSIP_LIST, // gossip list
+
+    MESSAGE, // message
+    MESSAGE_CONTENT, // message content
 }

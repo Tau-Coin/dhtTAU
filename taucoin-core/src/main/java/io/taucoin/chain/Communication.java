@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import io.taucoin.account.AccountManager;
 import io.taucoin.core.DataIdentifier;
 import io.taucoin.core.DataType;
-import io.taucoin.db.BlockStore;
+import io.taucoin.db.DBException;
 import io.taucoin.db.StateDB;
 import io.taucoin.dht.DHT;
 import io.taucoin.dht.DHTEngine;
@@ -26,8 +26,10 @@ import io.taucoin.listener.TauListener;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.GossipList;
+import io.taucoin.types.Message;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.HashUtil;
 
 public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
@@ -45,9 +47,6 @@ public class Communication implements DHT.GetDHTItemCallback {
 
     private final TauListener tauListener;
 
-    // block db
-    private final BlockStore blockStore;
-
     // state db
     private final StateDB stateDB;
 
@@ -56,6 +55,12 @@ public class Communication implements DHT.GetDHTItemCallback {
 
     // gossip item set
     private final Set<GossipItem> gossipItems = new HashSet<>();
+
+    // 消息集合（hash <--> Message）
+    private final Map<ByteArrayWrapper, Message> messageMap = Collections.synchronizedMap(new HashMap<>());
+
+    // message content set
+    private final Set<ByteArrayWrapper> messageContentSet = new HashSet<>();
 
     // 我的朋友集合
     private final Set<ByteArrayWrapper> friends = new HashSet<>();
@@ -78,8 +83,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     // Communication thread.
     private Thread communicationThread;
 
-    public Communication(BlockStore blockStore, StateDB stateDB, TauListener tauListener) {
-        this.blockStore = blockStore;
+    public Communication(StateDB stateDB, TauListener tauListener) {
         this.stateDB = stateDB;
         this.tauListener = tauListener;
     }
@@ -113,43 +117,67 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (it.hasNext()) {
             GossipItem gossipItem = it.next();
             ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
-            ByteArrayWrapper receiver = new ByteArrayWrapper(gossipItem.getReceiver());
 
-            if (Arrays.equals(pubKey, gossipItem.getReceiver())) {
-                Long oldTimeStamp = this.friendTimeStamp.get(sender);
-                long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
+            for(ByteArrayWrapper friend: this.friends) {
+                if (Arrays.equals(friend.getData(), gossipItem.getReceiver())) {
+                    Pair<byte[], byte[]> pair = new Pair<>(gossipItem.getSender(), gossipItem.getReceiver());
 
-                if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
-                    // 加入活跃朋友集合
-                    activeFriends.add(sender);
+                    Long oldTimeStamp = this.timeStamp.get(pair);
+                    long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
 
-                    this.friendRoot.put(sender, gossipItem.getMessageRoot());
-                    // 更新时间戳
-                    this.friendTimeStamp.put(sender, timeStamp);
-                }
-            } else {
-                for(ByteArrayWrapper friend: this.friends) {
-                    if (Arrays.equals(friend.getData(), gossipItem.getReceiver())) {
-                        Pair<byte[], byte[]> pair = new Pair<>(gossipItem.getSender(), gossipItem.getReceiver());
-
-                        Long oldTimeStamp = this.timeStamp.get(pair);
-                        long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
-
-                        if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
-                            // 加入活跃朋友集合
-                            activeFriends.add(sender);
-
-                            this.rootHash.put(pair, gossipItem.getMessageRoot());
-                            // 更新时间戳
-                            this.timeStamp.put(pair, timeStamp);
-                        }
-
-                        break;
+                    if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
+                        // 朋友的root帮助记录，由其自己去验证
+                        this.rootHash.put(pair, gossipItem.getMessageRoot());
+                        // 更新时间戳
+                        this.timeStamp.put(pair, timeStamp);
                     }
+
+                    break;
                 }
             }
 
             it.remove();
+        }
+    }
+
+    private void visitActivePeer() {
+        Iterator<ByteArrayWrapper> it = this.activeFriends.iterator();
+        if (it.hasNext()) {
+            requestGossipInfoFromPeer(it.next());
+
+            it.remove();
+        } else {
+            // 没有找到活跃的peer，则自己随机访问自己的朋友
+        }
+    }
+
+    private void dealWithMessage() throws DBException {
+
+        Iterator<ByteArrayWrapper> it = this.messageContentSet.iterator();
+        while (it.hasNext()) {
+            byte[] messageContent = it.next().getData();
+            this.stateDB.putMessage(HashUtil.bencodeHash(messageContent), messageContent);
+            it.remove();
+        }
+
+        Iterator<Map.Entry<ByteArrayWrapper, Message>> iterator = this.messageMap.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Message message = iterator.next().getValue();
+
+            // save
+            this.stateDB.putMessage(message.getHash(), message.getEncoded());
+            // try to find next one
+            byte[] hash = message.getPreviousMsgDAGRoot();
+            if (null == this.stateDB.getMessageByHash(hash)) {
+                Message previousMsg = this.messageMap.get(new ByteArrayWrapper(hash));
+                if (null == previousMsg) {
+                    // request next one
+                    requestMessage(hash);
+                }
+            }
+
+            iterator.remove();
         }
     }
 
@@ -160,7 +188,11 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (!Thread.currentThread().isInterrupted()) {
             try {
 
+                dealWithMessage();
+
                 updateGossipInfo();
+
+                visitActivePeer();
 
                 tryToSendAllRequest();
 
@@ -172,7 +204,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                     logger.info(e.getMessage(), e);
                     Thread.currentThread().interrupt();
                 }
-            }/* catch (DBException e) {
+            } catch (DBException e) {
                 this.tauListener.onTauError("Data Base Exception!");
                 logger.error(e.getMessage(), e);
 
@@ -182,7 +214,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                     logger.info(ex.getMessage(), ex);
                     Thread.currentThread().interrupt();
                 }
-            }*/ catch (Exception e) {
+            } catch (Exception e) {
                 logger.error(e.getMessage(), e);
 
                 try {
@@ -195,16 +227,30 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
     }
 
-    private void requestGossipInfoFromPeer(byte[] pubKey) {
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey, ChainParam.GOSSIP_CHANNEL);
-        DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER);
+    private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
+        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), ChainParam.GOSSIP_CHANNEL);
+        DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
         // TODO:: put into queue
         DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
 
-    private void requestGossipList(byte[] hash) {
+    private void requestGossipList(byte[] hash, ByteArrayWrapper pubKey) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-        DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST);
+        DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST, pubKey);
+        // TODO:: put into queue
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private void requestMessage(byte[] hash) {
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
+        DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE);
+        // TODO:: put into queue
+        DHTEngine.getInstance().request(spec, this, dataIdentifier);
+    }
+
+    private void requestMessageContent(byte[] hash) {
+        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
+        DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE_CONTENT);
         // TODO:: put into queue
         DHTEngine.getInstance().request(spec, this, dataIdentifier);
     }
@@ -309,20 +355,65 @@ public class Communication implements DHT.GetDHTItemCallback {
     public void onDHTItemGot(byte[] item, Object cbData) {
         DataIdentifier dataIdentifier = (DataIdentifier) cbData;
         switch (dataIdentifier.getDataType()) {
+            case MESSAGE: {
+                if (null == item) {
+                    logger.debug("MESSAGE is empty");
+                    return;
+                }
+                Message message = new Message(item);
+                requestMessageContent(message.getPreviousMsgDAGRoot());
+                this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
+
+                break;
+            }
+            case MESSAGE_CONTENT: {
+                if (null == item) {
+                    logger.debug("MESSAGE_CONTENT is empty");
+                    return;
+                }
+
+                this.messageContentSet.add(new ByteArrayWrapper(item));
+
+                break;
+            }
             case GOSSIP_FROM_PEER:
             case GOSSIP_LIST: {
                 if (null == item) {
-                    logger.debug("GOSSIP_FROM_PEER is empty");
+                    logger.debug("GOSSIP_LIST is empty");
                     return;
                 }
 
                 GossipList gossipList = new GossipList(item);
                 if (null != gossipList.getPreviousGossipListHash()) {
-                    requestGossipList(gossipList.getPreviousGossipListHash());
+                    requestGossipList(gossipList.getPreviousGossipListHash(), dataIdentifier.getKey());
                 }
 
                 if (null != gossipList.getGossipList()) {
                     this.gossipItems.addAll(gossipList.getGossipList());
+
+                    // 信任发送方自己给的gossip信息
+                    byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+                    if (Arrays.equals(pubKey, dataIdentifier.getKey().getData())) {
+                        for (GossipItem gossipItem : gossipList.getGossipList()) {
+                            ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
+
+                            if (Arrays.equals(pubKey, gossipItem.getReceiver())) {
+                                Long oldTimeStamp = this.friendTimeStamp.get(sender);
+                                long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
+
+                                if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
+                                    // 加入活跃朋友集合
+                                    activeFriends.add(sender);
+
+                                    // 请求该root
+                                    requestMessage(gossipItem.getMessageRoot());
+                                    this.friendRoot.put(sender, gossipItem.getMessageRoot());
+                                    // 更新时间戳，不更新root，因为gossip不可靠，等亲自访问到节点自己给出的信息再更新
+                                    this.friendTimeStamp.put(sender, timeStamp);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 break;
