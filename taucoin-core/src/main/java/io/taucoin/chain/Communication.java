@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -148,6 +149,25 @@ public class Communication implements DHT.GetDHTItemCallback {
             it.remove();
         } else {
             // 没有找到活跃的peer，则自己随机访问自己的朋友
+            Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
+
+            Random random = new Random(System.currentTimeMillis());
+            int index = random.nextInt(this.friends.size());
+
+            ByteArrayWrapper peer = null;
+            int i = 0;
+            while (iterator.hasNext()) {
+                peer = it.next();
+                if (i == index) {
+                    break;
+                }
+
+                i++;
+            }
+
+            if (null != peer) {
+                requestGossipInfoFromPeer(peer);
+            }
         }
     }
 
@@ -230,29 +250,33 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), ChainParam.GOSSIP_CHANNEL);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
-        // TODO:: put into queue
-        DHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+        this.queue.offer(mutableItemRequest);
     }
 
     private void requestGossipList(byte[] hash, ByteArrayWrapper pubKey) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST, pubKey);
-        // TODO:: put into queue
-        DHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
+        this.queue.offer(immutableItemRequest);
     }
 
     private void requestMessage(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE);
-        // TODO:: put into queue
-        DHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
+        this.queue.offer(immutableItemRequest);
     }
 
     private void requestMessageContent(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE_CONTENT);
-        // TODO:: put into queue
-        DHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+        DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
+        this.queue.offer(immutableItemRequest);
     }
 
     private void process(Object req) {
@@ -274,16 +298,19 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     private void requestImmutableItem(DHT.ImmutableItemRequest req) {
+        DHTEngine.getInstance().request(req.getSpec(), req.getCallback(), req.getCallbackData());
     }
 
     private void requestMutableItem(DHT.MutableItemRequest req) {
-
+        DHTEngine.getInstance().request(req.getSpec(), req.getCallback(), req.getCallbackData());
     }
 
     private void putImmutableItem(DHT.ImmutableItemDistribution d) {
+        DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
     }
 
     private void putMutableItem(DHT.MutableItemDistribution d) {
+        DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
     }
 
     private void tryToSendAllRequest() {
@@ -298,6 +325,10 @@ public class Communication implements DHT.GetDHTItemCallback {
                 }
             }
         }
+    }
+
+    public void publishNewMessage() {
+
     }
 
     /**
@@ -335,6 +366,8 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @return boolean successful or not.
      */
     public boolean start() {
+
+        init();
 
         communicationThread = new Thread(this::mainLoop);
         communicationThread.start();
