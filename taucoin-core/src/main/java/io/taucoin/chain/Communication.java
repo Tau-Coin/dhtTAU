@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
@@ -25,6 +26,7 @@ import io.taucoin.dht.DHT;
 import io.taucoin.dht.DHTEngine;
 import io.taucoin.listener.TauListener;
 import io.taucoin.param.ChainParam;
+import io.taucoin.types.Block;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.GossipList;
 import io.taucoin.types.Message;
@@ -279,6 +281,27 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.queue.offer(immutableItemRequest);
     }
 
+    private void publishMessage(Message message) {
+        if (null != message) {
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(message.getEncoded());
+            // TODO
+            DHTEngine.getInstance().distribute(immutableItem);
+        }
+    }
+
+    private void publishData(byte[] data) {
+        if (null != data) {
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(data);
+            // TODO
+            DHTEngine.getInstance().distribute(immutableItem);
+        }
+    }
+
+    private void publishGossipInfo() {
+        // put mutable item
+        Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+    }
+
     private void process(Object req) {
 
         if (req == null) {
@@ -327,8 +350,8 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
     }
 
-    public void publishNewMessage() {
-
+    public void publishNewMessage(Message message, List<byte[]> data) {
+        publishGossipInfo();
     }
 
     /**
