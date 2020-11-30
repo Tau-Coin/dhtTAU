@@ -14,7 +14,6 @@
         android:layout_height="match_parent">
 
         <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
-            android:background="@color/color_chat_bg"
             android:id="@+id/tx_list"
             android:layout_width="match_parent"
             android:layout_weight="1"
@@ -98,6 +97,10 @@
                 android:src="@mipmap/icon_close"/>
         </RelativeLayout>
 
+        <include
+            android:id="@+id/top_line"
+            layout="@layout/view_line"/>
+
         <LinearLayout
             android:id="@+id/ll_bottom_input"
             android:layout_width="match_parent"
@@ -106,7 +109,7 @@
             android:paddingEnd="10dp"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
-            android:background="@color/color_white"
+            android:background="@color/color_chat_pop"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 

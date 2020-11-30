@@ -1,21 +1,29 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.view.GravityCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -27,6 +35,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
@@ -36,6 +45,7 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityMainDrawerBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
@@ -43,8 +53,9 @@ import io.taucoin.torrent.publishing.databinding.ExternalLinkDialogBinding;
 import io.taucoin.torrent.publishing.databinding.UserDialogBinding;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.chat.ChatFragment;
+import io.taucoin.torrent.publishing.ui.community.CommunityFragment;
 import io.taucoin.torrent.publishing.ui.ExternalLinkActivity;
-import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
@@ -78,19 +89,11 @@ public class MainActivity extends BaseActivity {
     private CommonDialog seedDialog;
     private CommonDialog linkDialog;
     private User user;
+    private boolean isEmptyView = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent = getIntent();
-        String action =  intent.getAction();
-        if (StringUtil.isNotEmpty(action) && StringUtil.isEquals(action,
-                NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP)) {
-            logger.info("MainActivity finished");
-            finish();
-            return;
-        }
-
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
         mainViewModel = provider.get(MainViewModel.class);
@@ -104,8 +107,17 @@ public class MainActivity extends BaseActivity {
         checkCurrentUser();
         initExitApp();
         subscribeAddCommunity();
+    }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        String action =  intent.getAction();
         if (StringUtil.isNotEmpty(action) && StringUtil.isEquals(action,
+                NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP)) {
+            logger.info("MainActivity finished");
+            finish();
+        } else if (StringUtil.isNotEmpty(action) && StringUtil.isEquals(action,
                 ExternalLinkActivity.ACTION_CHAIN_LINK_CLICK)) {
             logger.info("MainActivity::chain link clicked");
             if (intent.hasExtra(IntentExtra.CHAIN_LINK)) {
@@ -115,6 +127,10 @@ public class MainActivity extends BaseActivity {
                     openExternalLink(decode.getDn(), chainLink);
                 }
             }
+        } else if (0 != (Intent.FLAG_ACTIVITY_CLEAR_TOP & intent.getFlags())) {
+            String chainID = intent.getStringExtra(IntentExtra.CHAIN_ID);
+            int type = intent.getIntExtra(IntentExtra.TYPE, -1);
+            updateMainRightFragment(type, chainID);
         }
     }
 
@@ -142,6 +158,12 @@ public class MainActivity extends BaseActivity {
         updateDHTStats();
 
         initFabSpeedDial();
+
+        if (Utils.isTablet()) {
+            updateViewChanged();
+        } else {
+            updateViewWeight(binding.mainRightFragment, 0);
+        }
     }
 
     /**
@@ -206,9 +228,7 @@ public class MainActivity extends BaseActivity {
     private void subscribeAddCommunity(){
         communityViewModel.getAddCommunityState().observe(this, result -> {
             if(result.isSuccess()){
-                Intent intent = new Intent();
-                intent.putExtra(IntentExtra.CHAIN_ID, result.getMsg());
-                ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+                updateMainRightFragment(0, result.getMsg());
             }
         });
     }
@@ -394,6 +414,82 @@ public class MainActivity extends BaseActivity {
         return false;
     }
 
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        updateViewChanged();
+    }
+
+    private void updateViewChanged() {
+        if (Utils.isTablet()) {
+            if (Utils.isLandscape()) {
+                updateViewWeight(binding.rlMainLeft, 3.5F);
+                updateViewWeight(binding.mainRightFragment, 6.5F);
+            } else {
+                if (isEmptyView) {
+                    nextAndBackChange(true);
+                } else {
+                    updateViewWeight(binding.rlMainLeft, 0F);
+                    updateViewWeight(binding.mainRightFragment, 6.5F);
+                }
+            }
+        } else {
+            nextAndBackChange(isEmptyView);
+        }
+    }
+
+    private void updateViewWeight(View view, float weight) {
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams)
+                view.getLayoutParams();
+        layoutParams.weight = weight;
+        view.setLayoutParams(layoutParams);
+    }
+
+    private void nextAndBackChange(boolean isBack) {
+       updateViewWeight(binding.rlMainLeft, isBack ? 1F : 0F);
+       updateViewWeight(binding.mainRightFragment, isBack ? 0F : 1F);
+    }
+
+    public void goBack() {
+        updateMainRightFragment(null);
+    }
+
+    public void updateMainRightFragment(int type, String ID) {
+        Community community = new Community();
+        community.type = type;
+        community.chainID = ID;
+        updateMainRightFragment(community);
+    }
+    /**
+     * 更新主页右面Fragment
+     */
+    public void updateMainRightFragment(Community community) {
+        // 创建修改实例
+        Fragment newFragment = null;
+        Bundle bundle = new Bundle();
+        if (community != null) {
+            if (community.type == 0) {
+                newFragment = new CommunityFragment();
+            } else if (community.type == 1) {
+                newFragment = new ChatFragment();
+            }
+            bundle.putString(IntentExtra.CHAIN_ID, community.chainID);
+        }
+        isEmptyView = null == newFragment;
+        if (null == newFragment) {
+            newFragment = new EmptyFragment();
+        }
+        newFragment.setArguments(bundle);
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction transaction = fm.beginTransaction();
+        // Replace whatever is in the fragment container view with this fragment,
+        // and add the transaction to the back stack
+        transaction.replace(R.id.main_right_fragment, newFragment);
+        transaction.addToBackStack(null);
+        transaction.commitAllowingStateLoss();
+        updateViewChanged();
+    }
+
     /**
      * 打开外部chain link
      * @param chainID
@@ -403,9 +499,7 @@ public class MainActivity extends BaseActivity {
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(community -> {
-                Intent intent = new Intent();
-                intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-                ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+                updateMainRightFragment(0, chainID);
             }, it -> {
                 communityViewModel.addCommunity(chainID, chainLink);
             }));
@@ -435,7 +529,11 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public void onBackPressed() {
-        mBackClick.onNext(1);
+        if (isEmptyView) {
+            mBackClick.onNext(1);
+        } else {
+            goBack();
+        }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -464,5 +562,13 @@ public class MainActivity extends BaseActivity {
         this.finish();
         ToastUtils.cancleToast();
         TauDaemon.getInstance(this).forceStop();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == CommunityFragment.REQUEST_CODE && resultCode == Activity.RESULT_OK){
+            goBack();
+        }
     }
 }

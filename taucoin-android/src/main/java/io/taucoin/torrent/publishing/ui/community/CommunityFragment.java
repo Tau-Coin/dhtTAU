@@ -1,11 +1,12 @@
 package io.taucoin.torrent.publishing.ui.community;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,33 +16,35 @@ import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.viewpager.widget.PagerAdapter;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.databinding.FragmentCommunityBinding;
+import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.CommunityTabFragment;
-import io.taucoin.types.TypesConfig;
-import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.databinding.ActivityCommunityBinding;
-import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.chat.ChatsTabFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.search.SearchActivity;
+import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.torrent.publishing.ui.transaction.TxsTabFragment;
+import io.taucoin.types.TypesConfig;
 
 /**
  * 单个群组页面
  */
-@Deprecated
-public class CommunityActivity extends BaseActivity implements View.OnClickListener {
+public class CommunityFragment extends BaseFragment implements View.OnClickListener {
 
-    private static final int REQUEST_CODE = 100;
-    private ActivityCommunityBinding binding;
+    public static final int REQUEST_CODE = 100;
+    private MainActivity activity;
+    private FragmentCommunityBinding binding;
+    private MyAdapter fragmentAdapter;
     private CommunityViewModel communityViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private String chainID;
@@ -49,36 +52,45 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private int[] titles = new int[]{R.string.community_instant_chat, R.string.community_chain_note,
             R.string.community_wired, R.string.community_queue};
 
+
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_community, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        activity = (MainActivity) getActivity();
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_community);
         binding.setListener(this);
         binding.toolbarInclude.setListener(this);
         initParameter();
         initLayout();
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if (0 != (Intent.FLAG_ACTIVITY_CLEAR_TOP & intent.getFlags())) {
-            finish();
-            String chainID = intent.getStringExtra(IntentExtra.CHAIN_ID);
-            intent = new Intent();
-            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-            ActivityUtil.startActivity(intent, this, CommunityActivity.class);
-        }
-    }
+//    @Override
+//    protected void onNewIntent(Intent intent) {
+//        super.onNewIntent(intent);
+//        if (0 != (Intent.FLAG_ACTIVITY_CLEAR_TOP & intent.getFlags())) {
+//            finish();
+//            String chainID = intent.getStringExtra(IntentExtra.CHAIN_ID);
+//            intent = new Intent();
+//            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+//            ActivityUtil.startActivity(intent, this, CommunityFragment.class);
+//        }
+//    }
 
     /**
      * 初始化参数
      */
     private void initParameter() {
-        if(getIntent() != null){
-            chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
+        if(getArguments() != null){
+            chainID = getArguments().getString(IntentExtra.CHAIN_ID);
         }
     }
 
@@ -88,16 +100,22 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private void initLayout() {
         if(StringUtil.isNotEmpty(chainID)){
             String communityName = UsersUtil.getCommunityName(chainID);
-            binding.toolbarInclude.tvGroupName.setText(Html.fromHtml(communityName));
-            binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats, 0, 0));
+            binding.toolbarInclude.tvTitle.setText(Html.fromHtml(communityName));
+            binding.toolbarInclude.tvSubtitle.setText(getString(R.string.community_users_stats, 0, 0));
         }
-        binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-
-        setSupportActionBar(binding.toolbarInclude.toolbar);
-        binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
-
+        binding.toolbarInclude.ivBack.setOnClickListener(v -> activity.goBack());
+        binding.toolbarInclude.tvSubtitle.setVisibility(View.VISIBLE);
+        binding.toolbarInclude.ivAction.setVisibility(View.VISIBLE);
+        binding.toolbarInclude.ivAction.setOnClickListener(v -> {
+            if(StringUtil.isEmpty(chainID)){
+                return;
+            }
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
+            ActivityUtil.startActivityForResult(intent, activity,
+                    MembersActivity.class, REQUEST_CODE);
+        });
         // 初始化Tab页
-
         // 添加Chat页面
         CommunityTabFragment chatTab = new ChatsTabFragment();
         Bundle chatBundle = new Bundle();
@@ -128,8 +146,8 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         queueTab.setArguments(queueBundle);
         fragmentList.add(queueTab);
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        MyAdapter fragmentAdapter = new MyAdapter(fragmentManager);
+        FragmentManager fragmentManager = activity.getSupportFragmentManager();
+        fragmentAdapter = new MyAdapter(fragmentManager);
         binding.viewPager.setAdapter(fragmentAdapter);
         binding.tabLayout.setupWithViewPager(binding.viewPager);
         binding.viewPager.setOffscreenPageLimit(fragmentList.size());
@@ -142,9 +160,22 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
         super.onStop();
         disposables.clear();
+    }
+
+    @Override
+    public void onDestroyView() {
+        try{
+            // 清除子ViewPager中的Fragment,防止一直在内存里
+            // 需要与FragmentStatePagerAdapter结合使用
+            fragmentList.clear();
+            fragmentAdapter.notifyDataSetChanged();
+        }catch(Exception ignore) {
+        } finally {
+            super.onDestroyView();
+        }
     }
 
     /**
@@ -153,15 +184,16 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
     private void subscribeCommunityViewModel() {
         communityViewModel.getSetBlacklistState().observe(this, state -> {
             if(state){
-                onBackPressed();
+                activity.goBack();
             }
         });
         disposables.add(communityViewModel.getMembersStatistics(chainID)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(statistics ->
-                        binding.toolbarInclude.tvUsersStats.setText(getString(R.string.community_users_stats,
-                                statistics.getMembers(), statistics.getOnline()))));
+                    binding.toolbarInclude.tvSubtitle.setText(getString(R.string.community_users_stats,
+                            statistics.getMembers(), statistics.getOnline())))
+        );
 
         disposables.add(communityViewModel.observerCommunityByChainID(chainID)
                 .subscribeOn(Schedulers.newThread())
@@ -188,35 +220,6 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
 
     }
 
-    /**
-     *  创建右上角Menu
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_community, menu);
-        return true;
-    }
-
-    /**
-     * 右上角Menu选项选择事件
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if(StringUtil.isEmpty(chainID)){
-            return false;
-        }
-        if (item.getItemId() == R.id.community_search) {
-            Intent intent = new Intent();
-            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-            ActivityUtil.startActivity(intent, this, SearchActivity.class);
-        } else if (item.getItemId() == R.id.menu_members) {
-            Intent intent = new Intent();
-            intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-            ActivityUtil.startActivityForResult(intent, this, MembersActivity.class, REQUEST_CODE);
-        }
-        return true;
-    }
-
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.iv_community_state_close) {
@@ -224,7 +227,7 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         }
     }
 
-    public class MyAdapter extends FragmentPagerAdapter {
+    public class MyAdapter extends FragmentStatePagerAdapter {
         MyAdapter(FragmentManager fm) {
             super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         }
@@ -245,13 +248,10 @@ public class CommunityActivity extends BaseActivity implements View.OnClickListe
         public CharSequence getPageTitle(int position) {
             return getResources().getText(titles[position]);
         }
-    }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == REQUEST_CODE && resultCode == RESULT_OK){
-            onBackPressed();
+        @Override
+        public int getItemPosition(@NonNull Object object) {
+            return PagerAdapter.POSITION_NONE;
         }
     }
 }

@@ -36,10 +36,10 @@ import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
 import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.permission.EasyPermissions;
+import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.util.ByteUtil;
 
@@ -167,7 +167,7 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
     private void openCommunityActivity(String chainID) {
         Intent intent = new Intent();
         intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-        ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+        ActivityUtil.startActivity(intent, this, MainActivity.class);
         onBackPressed();
     }
 

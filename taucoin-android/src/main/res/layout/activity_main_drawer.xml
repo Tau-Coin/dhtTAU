@@ -14,31 +14,55 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <RelativeLayout
+            <LinearLayout
+                android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center">
 
-                <include
-                    android:id="@+id/toolbar_include"
-                    layout="@layout/toolbar" />
+                <RelativeLayout
+                    android:id="@+id/rl_main_left"
+                    android:layout_width="0dp"
+                    android:layout_weight="3.5"
+                    android:layout_height="match_parent">
+
+                    <include
+                        android:id="@+id/toolbar_include"
+                        layout="@layout/toolbar" />
+
+                    <androidx.fragment.app.FragmentContainerView
+                        android:id="@+id/main_left_fragment"
+                        android:layout_below="@+id/toolbar_include"
+                        android:name="io.taucoin.torrent.publishing.ui.main.MainFragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <io.taucoin.torrent.publishing.ui.customviews.ThemedSpeedDialView
+                        android:id="@+id/fab_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentBottom="true"
+                        app:sdMainFabClosedSrc="@mipmap/icon_pencil"
+                        app:sdMainFabAnimationRotateAngle="0" />
+
+                    <View
+                        android:layout_below="@+id/toolbar_include"
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:layout_alignParentEnd="true"
+                        android:background="@color/divider"/>
+
+                </RelativeLayout>
 
                 <androidx.fragment.app.FragmentContainerView
-                    android:name="io.taucoin.torrent.publishing.ui.main.MainFragment"
-                    android:id="@+id/main_fragmentContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_below="@+id/toolbar_include" />
+                    android:name="io.taucoin.torrent.publishing.ui.main.EmptyFragment"
+                    android:id="@+id/main_right_fragment"
+                    android:layout_width="0dp"
+                    android:layout_weight="6.5"
+                    android:layout_height="match_parent" />
 
-                <io.taucoin.torrent.publishing.ui.customviews.ThemedSpeedDialView
-                    android:id="@+id/fab_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_alignParentBottom="true"
-                    app:sdMainFabClosedSrc="@mipmap/icon_pencil"
-                    app:sdMainFabAnimationRotateAngle="0" />
-            </RelativeLayout>
+            </LinearLayout>
 
             <com.google.android.material.navigation.NavigationView
                 android:id="@+id/navigation_view"
@@ -48,9 +72,9 @@
                 android:background="?attr/backgroundDialog"
                 android:focusable="true">
 
-                <include
-                    android:id="@+id/drawer"
-                    layout="@layout/main_drawer_content" />
+            <include
+                android:id="@+id/drawer"
+                layout="@layout/main_drawer_content" />
             </com.google.android.material.navigation.NavigationView>
         </androidx.drawerlayout.widget.DrawerLayout>
     </FrameLayout>

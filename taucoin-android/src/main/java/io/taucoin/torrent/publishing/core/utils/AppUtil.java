@@ -16,7 +16,6 @@ import java.util.List;
 import io.taucoin.torrent.publishing.BuildConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.receiver.DownloadCompleteReceiver;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 
 public class AppUtil {
@@ -43,6 +42,9 @@ public class AppUtil {
                 .getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager
                 .getRunningAppProcesses();
+        if (null == appProcesses) {
+            return false;
+        }
         for (android.app.ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
             if (appProcess.processName.equals(context.getPackageName())) {
                 return appProcess.importance == android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
@@ -130,7 +132,7 @@ public class AppUtil {
      */
     public static void appSafeExit() {
         Context context = MainApplication.getInstance();
-        Intent intent = new Intent(context, DownloadCompleteReceiver.class);
+        Intent intent = new Intent(context, NotificationReceiver.class);
         intent.setAction(NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP);
         intent.setComponent(new ComponentName(context.getPackageName(),
                 NotificationReceiver.class.getName()));

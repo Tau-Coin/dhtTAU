@@ -16,7 +16,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:padding="10dp"
-            android:background="@drawable/grey_rect_round_bg_no_border"
+            android:background="@drawable/white_rect_round_bg_big_radius"
             android:contentDescription="@null"/>
         
         <TextView

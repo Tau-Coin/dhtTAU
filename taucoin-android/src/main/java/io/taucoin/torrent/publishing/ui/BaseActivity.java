@@ -1,10 +1,13 @@
 package io.taucoin.torrent.publishing.ui;
 
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.ui.customviews.ProgressManager;
 
@@ -21,9 +24,9 @@ public abstract class BaseActivity extends AppCompatActivity {
         if(isFullScreen){
             setTheme(Utils.getAppTheme(getApplicationContext()));
         }
-        if(isFullScreen || Build.VERSION.SDK_INT < Build.VERSION_CODES.O){
-            ActivityUtil.setRequestedOrientation(this);
-        }
+//        if(isFullScreen || Build.VERSION.SDK_INT < Build.VERSION_CODES.O){
+//            ActivityUtil.setRequestedOrientation(this);
+//        }
         super.onCreate(savedInstanceState);
     }
 

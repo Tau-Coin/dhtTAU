@@ -18,6 +18,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
@@ -164,6 +165,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 ActivityUtil.startActivity(this, JournalActivity.class);
                 break;
             case R.id.item_help:
+                AppUtil.appSafeExit();
                 break;
         }
     }

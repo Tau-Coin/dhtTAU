@@ -34,7 +34,7 @@ import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentChatsTabBinding;
 import io.taucoin.torrent.publishing.databinding.ItemOperationsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
-import io.taucoin.torrent.publishing.ui.CommunityFragment;
+import io.taucoin.torrent.publishing.ui.CommunityTabFragment;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.setting.FavoriteViewModel;
@@ -44,7 +44,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 /**
  * 聊天Tab页
  */
-public class ChatsTabFragment extends CommunityFragment implements MsgListAdapter.ClickListener,
+public class ChatsTabFragment extends CommunityTabFragment implements MsgListAdapter.ClickListener,
         View.OnClickListener {
     private static final Logger logger = LoggerFactory.getLogger("ChatsTabFragment");
     private BaseActivity activity;
@@ -309,6 +309,9 @@ public class ChatsTabFragment extends CommunityFragment implements MsgListAdapte
 
     @Override
     public void handleReadOnly(boolean isReadOnly) {
+        if (null == binding) {
+            return;
+        }
         this.isReadOnly = isReadOnly;
         binding.etMessage.setEnabled(!isReadOnly);
         int drawable = isReadOnly ? R.drawable.grey_rect_round_bg : R.drawable.white_rect_round_bg;

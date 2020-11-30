@@ -3,13 +3,17 @@ package io.taucoin.torrent.publishing.ui.chat;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.Observable;
@@ -21,30 +25,39 @@ import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
-import io.taucoin.torrent.publishing.databinding.ActivityChatBinding;
-import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.databinding.FragmentChatBinding;
+import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.main.MainActivity;
 
 /**
- * 单个Peers聊天页面
+ * 单个朋友聊天页面
  */
-@Deprecated
-public class ChatActivity extends BaseActivity implements View.OnClickListener{
+public class ChatFragment extends BaseFragment implements View.OnClickListener{
 
-    private static final Logger logger = LoggerFactory.getLogger("ChatActivity");
-    private ActivityChatBinding binding;
+    private MainActivity activity;
+    private static final Logger logger = LoggerFactory.getLogger("ChatFragment");
+    private FragmentChatBinding binding;
     private CommunityViewModel communityViewModel;
     private CompositeDisposable disposables = new CompositeDisposable();
     private String friendPK;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_chat, container, false);
+        binding.setListener(this);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        activity = (MainActivity) getActivity();
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_chat);
-        binding.setListener(this);
         initParameter();
         initLayout();
     }
@@ -53,8 +66,8 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener{
      * 初始化参数
      */
     private void initParameter() {
-        if(getIntent() != null){
-            friendPK = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
+        if(getArguments() != null){
+            friendPK = getArguments().getString(IntentExtra.CHAIN_ID);
         }
     }
 
@@ -62,11 +75,7 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener{
      * 初始化布局
      */
     private void initLayout() {
-        binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-
-        setSupportActionBar(binding.toolbarInclude.toolbar);
-        binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
-
+        binding.toolbarInclude.ivBack.setOnClickListener(v -> activity.goBack());
         binding.etMessage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -93,9 +102,9 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener{
         binding.chatAdd.setVisibility(View.GONE);
         binding.chatAdd.setListener((title, icon) -> {
             if (R.string.chat_album == title) {
-                MediaUtil.startOpenGallery(this);
+                MediaUtil.startOpenGallery(activity);
             } else if (R.string.chat_take_picture == title) {
-                MediaUtil.startOpenCamera(this);
+                MediaUtil.startOpenCamera(activity);
             }
         });
     }
@@ -107,15 +116,15 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener{
     }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
         super.onStop();
         disposables.clear();
     }
 
     @Override
-    protected void onDestroy() {
-        if(KeyboardUtils.isSoftInputVisible(this)){
-            KeyboardUtils.hideSoftInput(this);
+    public void onDestroy() {
+        if(KeyboardUtils.isSoftInputVisible(activity)){
+            KeyboardUtils.hideSoftInput(activity);
         }
         super.onDestroy();
     }
@@ -128,7 +137,7 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener{
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(community -> {
-                    binding.toolbarInclude.toolbar.setTitle(community.communityName);
+                    binding.toolbarInclude.tvTitle.setText(community.communityName);
                 }));
 
     }
@@ -152,7 +161,7 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener{
      */
     private void showOrHideChatAddView(boolean isShow) {
         if (isShow) {
-            KeyboardUtils.hideSoftInput(this);
+            KeyboardUtils.hideSoftInput(activity);
         }
         disposables.add(Observable.timer(50, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())

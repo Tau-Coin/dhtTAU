@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
-import io.taucoin.torrent.publishing.ui.CommunityFragment;
+import io.taucoin.torrent.publishing.ui.CommunityTabFragment;
 import io.taucoin.torrent.publishing.ui.setting.FavoriteViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.types.TypesConfig;
@@ -42,7 +42,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 /**
  * 交易Tab页
  */
-public class TxsTabFragment extends CommunityFragment implements TxListAdapter.ClickListener,
+public class TxsTabFragment extends CommunityTabFragment implements TxListAdapter.ClickListener,
         View.OnClickListener {
 
     private static final Logger logger = LoggerFactory.getLogger("TxsTabFragment");
@@ -264,6 +264,9 @@ public class TxsTabFragment extends CommunityFragment implements TxListAdapter.C
 
     @Override
     public void handleReadOnly(boolean isReadOnly) {
+        if (null == binding) {
+            return;
+        }
         this.isReadOnly = isReadOnly;
         int color = isReadOnly ? R.color.gray_light : R.color.primary;
         binding.fabButton.setMainFabClosedBackgroundColor(getResources().getColor(color));

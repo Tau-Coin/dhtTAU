@@ -1,6 +1,5 @@
 package io.taucoin.torrent.publishing.ui.user;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
@@ -28,11 +27,10 @@ import io.taucoin.torrent.publishing.databinding.ActivityUserDetailBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
-import io.taucoin.torrent.publishing.ui.chat.ChatActivity;
-import io.taucoin.torrent.publishing.ui.community.CommunityActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 
 /**
@@ -196,7 +194,8 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         Intent intent = new Intent();
         intent.putExtra(IntentExtra.CHAIN_ID, chainID);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        ActivityUtil.startActivity(intent, this, CommunityActivity.class);
+        intent.putExtra(IntentExtra.TYPE, 0);
+        ActivityUtil.startActivity(intent, this, MainActivity.class);
     }
 
     /**
@@ -206,7 +205,9 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
     private void openChatActivity(String chainID){
         Intent intent = new Intent();
         intent.putExtra(IntentExtra.CHAIN_ID, chainID);
-        ActivityUtil.startActivity(intent, this, ChatActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra(IntentExtra.TYPE, 1);
+        ActivityUtil.startActivity(intent, this, MainActivity.class);
     }
 
     /**

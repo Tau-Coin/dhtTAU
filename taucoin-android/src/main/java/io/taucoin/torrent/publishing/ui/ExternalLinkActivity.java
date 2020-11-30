@@ -1,6 +1,5 @@
 package io.taucoin.torrent.publishing.ui;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -27,7 +26,7 @@ public class ExternalLinkActivity extends BaseActivity {
             ChainLinkUtil.ChainLink decode = ChainLinkUtil.decode(chainLink);
             if(decode.isValid()){
                 Intent mainIntent = new Intent(this.getApplicationContext(), MainActivity.class);
-                mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 mainIntent.setAction(ACTION_CHAIN_LINK_CLICK);
                 mainIntent.putExtra(IntentExtra.CHAIN_LINK, chainLink);
                 this.startActivity(mainIntent);

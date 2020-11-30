@@ -55,7 +55,8 @@
     <color name="color_white">#FFFFFF</color>
     <color name="color_bg">#F5F5F5</color>
     <color name="color_pay_bg">#F0F0F0</color>
-    <color name="color_chat_bg">#FCF3EA</color>
+    <color name="color_chat_pop">#F7F7F7</color>
+    <color name="color_chat_bg">#F3F3F3</color>
 
     <color name="color_red">#FF0000</color>
     <color name="color_red_light">#FF4E55</color>
