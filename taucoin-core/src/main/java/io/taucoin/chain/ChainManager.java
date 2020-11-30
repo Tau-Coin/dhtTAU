@@ -21,6 +21,7 @@ import io.taucoin.processor.StateProcessorImpl;
 import io.taucoin.dht.DHT;
 import io.taucoin.dht.DHTEngine;
 import io.taucoin.types.HorizontalItem;
+import io.taucoin.types.Message;
 import io.taucoin.types.TipItem;
 import io.taucoin.types.TypesConfig;
 import io.taucoin.types.GenesisTx;
@@ -46,6 +47,8 @@ public class ChainManager {
     private static final Logger logger = LoggerFactory.getLogger("ChainManager");
 
     private Chains chains;
+
+    private Communication communication;
 
     private TauListener listener;
 
@@ -76,6 +79,7 @@ public class ChainManager {
         this.blockDB = new BlockDB(dbFactory.newDatabase());
 
         chains = new Chains(this.blockDB, this.stateDB, this.listener);
+        communication = new Communication(this.stateDB, this.listener);
     }
 
     public void openChainDB() throws Exception {
@@ -129,6 +133,8 @@ public class ChainManager {
             }
 
             chains.start();
+
+            communication.start();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             // notify starting blockchains exception.
@@ -146,6 +152,9 @@ public class ChainManager {
     public void stop() {
         // stop chains
         chains.stop();
+
+        communication.stop();
+
         // close db
         closeChainDB();
 
@@ -427,4 +436,39 @@ public class ChainManager {
     public void stopMining(byte[] chainID) {
         this.chains.stopMining(chainID);
     }
+
+    /**
+     * 向朋友发布新消息
+     * @param friend 朋友公钥
+     * @param message 新消息
+     * @param data 新消息的其它相关数据，比如可能有多级文字或者图片结构，这些数据会一起发布到dht
+     */
+    public void publishNewMessage(byte[] friend, Message message, List<byte[]> data) {
+        this.communication.publishNewMessage(friend, message, data);
+    }
+
+    /**
+     * 添加新朋友
+     * @param pubKey public key
+     */
+    public void addNewFriend(byte[] pubKey) {
+        this.communication.addNewFriend(pubKey);
+    }
+
+    /**
+     * 删除朋友
+     * @param pubKey public key
+     */
+    public void delFriend(byte[] pubKey) {
+        this.communication.delFriend(pubKey);
+    }
+
+    /**
+     * 获取所有的朋友
+     * @return friend list
+     */
+    public List<byte[]> getAllFriends() {
+        return this.communication.getAllFriends();
+    }
+
 }

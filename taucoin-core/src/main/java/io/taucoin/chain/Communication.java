@@ -5,6 +5,7 @@ import com.frostwire.jlibtorrent.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import io.taucoin.param.ChainParam;
 import io.taucoin.types.Block;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.GossipList;
+import io.taucoin.types.GossipType;
 import io.taucoin.types.Message;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
@@ -114,12 +116,38 @@ public class Communication implements DHT.GetDHTItemCallback {
         return true;
     }
 
+    private List<GossipItem> getGossipList() {
+        List<GossipItem> list = new ArrayList<>();
+
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+        // TODO:: 过滤条件考虑
+        for (ByteArrayWrapper friend: this.friends) {
+            Long timeStamp = this.friendTimeStamp.get(friend);
+            byte[] root = this.friendRoot.get(friend);
+
+            list.add(new GossipItem(pubKey, friend.getData(), ByteUtil.longToBytes(timeStamp), GossipType.MSG, root));
+        }
+
+        for (Map.Entry<Pair<byte[], byte[]>, Long> entry : this.timeStamp.entrySet()) {
+            if (this.friends.contains(new ByteArrayWrapper(entry.getKey().second))) {
+                byte[] root = this.rootHash.get(entry.getKey());
+                if (null != root) {
+                    list.add(new GossipItem(entry.getKey().first, entry.getKey().second,
+                            ByteUtil.longToBytes(entry.getValue()), GossipType.MSG, root));
+                }
+            }
+        }
+
+
+        return list;
+    }
+
     private void updateGossipInfo() {
         Iterator<GossipItem> it = this.gossipItems.iterator();
-        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
         while (it.hasNext()) {
             GossipItem gossipItem = it.next();
-            ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
             for(ByteArrayWrapper friend: this.friends) {
                 if (Arrays.equals(friend.getData(), gossipItem.getReceiver())) {
@@ -152,23 +180,25 @@ public class Communication implements DHT.GetDHTItemCallback {
         } else {
             // 没有找到活跃的peer，则自己随机访问自己的朋友
             Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
+            if (iterator.hasNext()) {
 
-            Random random = new Random(System.currentTimeMillis());
-            int index = random.nextInt(this.friends.size());
+                Random random = new Random(System.currentTimeMillis());
+                int index = random.nextInt(this.friends.size());
 
-            ByteArrayWrapper peer = null;
-            int i = 0;
-            while (iterator.hasNext()) {
-                peer = it.next();
-                if (i == index) {
-                    break;
+                ByteArrayWrapper peer = null;
+                int i = 0;
+                while (iterator.hasNext()) {
+                    peer = it.next();
+                    if (i == index) {
+                        break;
+                    }
+
+                    i++;
                 }
 
-                i++;
-            }
-
-            if (null != peer) {
-                requestGossipInfoFromPeer(peer);
+                if (null != peer) {
+                    requestGossipInfoFromPeer(peer);
+                }
             }
         }
     }
@@ -284,22 +314,64 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void publishMessage(Message message) {
         if (null != message) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(message.getEncoded());
-            // TODO
-            DHTEngine.getInstance().distribute(immutableItem);
+
+            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
+            this.queue.offer(immutableItemDistribution);
+        }
+    }
+
+    public void publishData(List<byte[]> list) {
+        if (null != list) {
+            for (byte[] data: list) {
+                publishData(data);
+            }
         }
     }
 
     private void publishData(byte[] data) {
         if (null != data) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(data);
-            // TODO
-            DHTEngine.getInstance().distribute(immutableItem);
+
+            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
+            this.queue.offer(immutableItemDistribution);
+        }
+    }
+
+    private void publishGossipList(GossipList gossipList) {
+        if (null != gossipList) {
+            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(gossipList.getEncoded());
+
+            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
+            this.queue.offer(immutableItemDistribution);
         }
     }
 
     private void publishGossipInfo() {
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+
+        List<GossipItem> gossipItemList = getGossipList();
+        byte[] previousGossipListHash = null;
+        while (gossipItemList.size() > ChainParam.GOSSIP_SIZE) {
+            List<GossipItem> list = new ArrayList<>();
+            Iterator<GossipItem> it = gossipItemList.iterator();
+
+            int i = 0;
+            while (i <= ChainParam.GOSSIP_SIZE) {
+                list.add(it.next());
+                it.remove();
+                i ++;
+            }
+
+            GossipList gossipList = new GossipList(previousGossipListHash, list);
+
+            publishGossipList(gossipList);
+
+            previousGossipListHash = gossipList.getHash();
+        }
+
+        GossipList gossipList = new GossipList(previousGossipListHash, gossipItemList);
+        publishGossipList(gossipList);
     }
 
     private void process(Object req) {
@@ -350,7 +422,16 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
     }
 
-    public void publishNewMessage(Message message, List<byte[]> data) {
+    private void updateFriendMessageInfo(byte[] friend, Message message) {
+        ByteArrayWrapper key = new ByteArrayWrapper(friend);
+        this.friendTimeStamp.put(key, ByteUtil.byteArrayToLong(message.getTimestamp()));
+        this.friendRoot.put(key, message.getHash());
+    }
+
+    public void publishNewMessage(byte[] friend, Message message, List<byte[]> data) {
+        updateFriendMessageInfo(friend, message);
+        publishMessage(message);
+        publishData(data);
         publishGossipInfo();
     }
 
@@ -382,6 +463,42 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
     }
 
+
+    public void addNewFriend(byte[] pubKey) {
+        this.friends.add(new ByteArrayWrapper(pubKey));
+    }
+
+    public void delFriend(byte[] pubKey) {
+        ByteArrayWrapper key = new ByteArrayWrapper(pubKey);
+        this.friends.remove(key);
+        this.friendTimeStamp.remove(key);
+        this.friendRoot.remove(key);
+
+        Iterator<Map.Entry<Pair<byte[], byte[]>, Long>> iterator = this.timeStamp.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Pair<byte[], byte[]>, Long> entry = iterator.next();
+            if (Arrays.equals(pubKey, entry.getKey().second)) {
+                iterator.remove();
+            }
+        }
+
+        Iterator<Map.Entry<Pair<byte[], byte[]>, byte[]>> it = this.rootHash.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Pair<byte[], byte[]>, byte[]> entry = it.next();
+            if (Arrays.equals(pubKey, entry.getKey().second)) {
+                it.remove();
+            }
+        }
+    }
+
+    public List<byte[]> getAllFriends() {
+        List<byte[]> list = new ArrayList<>();
+        for (ByteArrayWrapper friend: this.friends) {
+            list.add(friend.getData());
+        }
+
+        return list;
+    }
 
     /**
      * Start thread

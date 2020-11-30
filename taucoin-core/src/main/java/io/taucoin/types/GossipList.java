@@ -17,7 +17,8 @@ public class GossipList {
 
     private boolean parsed = false;
 
-    public GossipList(List<GossipItem> gossipList) {
+    public GossipList(byte[] previousGossipListHash, List<GossipItem> gossipList) {
+        this.previousGossipListHash = previousGossipListHash;
         this.gossipList = gossipList;
         this.parsed = true;
     }
