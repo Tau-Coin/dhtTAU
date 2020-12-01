@@ -26,7 +26,7 @@ public class Message {
         return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, friendLatestMessageRoot, MessageType.PICTURE, contentLink);
     }
 
-    public Message(MessageVersion version, byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, MessageType type, byte[] contentLink) {
+    private Message(MessageVersion version, byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, MessageType type, byte[] contentLink) {
         this.version = version;
         this.timestamp = timestamp;
         this.previousMsgDAGRoot = previousMsgDAGRoot;

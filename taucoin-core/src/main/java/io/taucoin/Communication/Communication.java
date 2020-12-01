@@ -1,4 +1,4 @@
-package io.taucoin.chain;
+package io.taucoin.Communication;
 
 import com.frostwire.jlibtorrent.Pair;
 
@@ -22,12 +22,11 @@ import io.taucoin.account.AccountManager;
 import io.taucoin.core.DataIdentifier;
 import io.taucoin.core.DataType;
 import io.taucoin.db.DBException;
-import io.taucoin.db.StateDB;
+import io.taucoin.db.MessageDB;
 import io.taucoin.dht.DHT;
 import io.taucoin.dht.DHTEngine;
-import io.taucoin.listener.TauListener;
+import io.taucoin.listener.MsgListener;
 import io.taucoin.param.ChainParam;
-import io.taucoin.types.Block;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.GossipList;
 import io.taucoin.types.GossipType;
@@ -50,10 +49,10 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
-    private final TauListener tauListener;
+    private final MsgListener msgListener;
 
-    // state db
-    private final StateDB stateDB;
+    // message db
+    private final MessageDB messageDB;
 
     // queue
     private final Queue<Object> queue = new ConcurrentLinkedQueue<>();
@@ -63,6 +62,9 @@ public class Communication implements DHT.GetDHTItemCallback {
 
     // 消息集合（hash <--> Message）
     private final Map<ByteArrayWrapper, Message> messageMap = Collections.synchronizedMap(new HashMap<>());
+
+    // 消息发送者对照表（Message hash <--> Sender）
+    private final Map<ByteArrayWrapper, ByteArrayWrapper> messageSenderMap = Collections.synchronizedMap(new HashMap<>());
 
     // message content set
     private final Set<ByteArrayWrapper> messageContentSet = new HashSet<>();
@@ -88,21 +90,21 @@ public class Communication implements DHT.GetDHTItemCallback {
     // Communication thread.
     private Thread communicationThread;
 
-    public Communication(StateDB stateDB, TauListener tauListener) {
-        this.stateDB = stateDB;
-        this.tauListener = tauListener;
+    public Communication(MessageDB messageDB, MsgListener msgListener) {
+        this.messageDB = messageDB;
+        this.msgListener = msgListener;
     }
 
     private boolean init() {
         try {
-            Set<byte[]> friends = this.stateDB.getFriends();
+            Set<byte[]> friends = this.messageDB.getFriends();
 
             if (null != friends) {
                 for (byte[] friend: friends) {
                     ByteArrayWrapper key = new ByteArrayWrapper(friend);
                     this.friends.add(key);
 
-                    byte[] root = this.stateDB.getFriendMessageRoot(friend);
+                    byte[] root = this.messageDB.getFriendMessageRoot(friend);
                     if (null != root) {
                         this.friendRoot.put(key, root);
                     }
@@ -208,7 +210,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         Iterator<ByteArrayWrapper> it = this.messageContentSet.iterator();
         while (it.hasNext()) {
             byte[] messageContent = it.next().getData();
-            this.stateDB.putMessage(HashUtil.bencodeHash(messageContent), messageContent);
+            this.messageDB.putMessage(HashUtil.bencodeHash(messageContent), messageContent);
             it.remove();
         }
 
@@ -216,19 +218,25 @@ public class Communication implements DHT.GetDHTItemCallback {
 
         while (iterator.hasNext()) {
             Message message = iterator.next().getValue();
+            ByteArrayWrapper msgHash = new ByteArrayWrapper(message.getHash());
+            ByteArrayWrapper sender = this.messageSenderMap.get(msgHash);
 
             // save
-            this.stateDB.putMessage(message.getHash(), message.getEncoded());
+            this.messageDB.putMessage(message.getHash(), message.getEncoded());
+
+            this.msgListener.onNewMessage(sender.getData(), message);
+
             // try to find next one
             byte[] hash = message.getPreviousMsgDAGRoot();
-            if (null == this.stateDB.getMessageByHash(hash)) {
+            if (null == this.messageDB.getMessageByHash(hash)) {
                 Message previousMsg = this.messageMap.get(new ByteArrayWrapper(hash));
                 if (null == previousMsg) {
                     // request next one
-                    requestMessage(hash);
+                    requestMessage(hash, sender);
                 }
             }
 
+            this.messageSenderMap.remove(msgHash);
             iterator.remove();
         }
     }
@@ -257,7 +265,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                     Thread.currentThread().interrupt();
                 }
             } catch (DBException e) {
-                this.tauListener.onTauError("Data Base Exception!");
+                this.msgListener.onMsgError("Data Base Exception!");
                 logger.error(e.getMessage(), e);
 
                 try {
@@ -295,9 +303,9 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.queue.offer(immutableItemRequest);
     }
 
-    private void requestMessage(byte[] hash) {
+    private void requestMessage(byte[] hash, ByteArrayWrapper pubKey) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-        DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE);
+        DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey);
 
         DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
         this.queue.offer(immutableItemRequest);
@@ -464,11 +472,13 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
 
-    public void addNewFriend(byte[] pubKey) {
+    public void addNewFriend(byte[] pubKey) throws DBException {
         this.friends.add(new ByteArrayWrapper(pubKey));
+
+        this.messageDB.addFriend(pubKey);
     }
 
-    public void delFriend(byte[] pubKey) {
+    public void delFriend(byte[] pubKey) throws DBException {
         ByteArrayWrapper key = new ByteArrayWrapper(pubKey);
         this.friends.remove(key);
         this.friendTimeStamp.remove(key);
@@ -489,6 +499,9 @@ public class Communication implements DHT.GetDHTItemCallback {
                 it.remove();
             }
         }
+
+
+        this.messageDB.delFriend(pubKey);
     }
 
     public List<byte[]> getAllFriends() {
@@ -507,7 +520,9 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     public boolean start() {
 
-        init();
+        if (!init()) {
+            return false;
+        }
 
         communicationThread = new Thread(this::mainLoop);
         communicationThread.start();
@@ -533,9 +548,11 @@ public class Communication implements DHT.GetDHTItemCallback {
                     logger.debug("MESSAGE is empty");
                     return;
                 }
+
                 Message message = new Message(item);
                 requestMessageContent(message.getPreviousMsgDAGRoot());
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
+                this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getKey());
 
                 break;
             }
@@ -579,7 +596,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                                     activeFriends.add(sender);
 
                                     // 请求该root
-                                    requestMessage(gossipItem.getMessageRoot());
+                                    requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getKey());
                                     this.friendRoot.put(sender, gossipItem.getMessageRoot());
                                     // 更新时间戳，不更新root，因为gossip不可靠，等亲自访问到节点自己给出的信息再更新
                                     this.friendTimeStamp.put(sender, timeStamp);

@@ -1,15 +1,18 @@
 package io.taucoin.controller;
 
+import io.taucoin.Communication.CommunicationManager;
 import io.taucoin.account.AccountManager;
 import io.taucoin.chain.ChainManager;
 import io.taucoin.db.KeyValueDataBaseFactory;
+import io.taucoin.listener.CompositeMsgListener;
 import io.taucoin.listener.CompositeTauListener;
+import io.taucoin.listener.MsgListener;
 import io.taucoin.listener.TauListener;
 import io.taucoin.dht.DHTEngine;
 import io.taucoin.util.Repo;
 
 import com.frostwire.jlibtorrent.Pair;
-import com.frostwire.jlibtorrent.SessionManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +31,9 @@ public class TauController {
     private CompositeTauListener compositeTauListener
             = new CompositeTauListener();
 
+    private CompositeMsgListener compositeMsgListener
+            = new CompositeMsgListener();
+
     // AccountManager manages the key pair for the miner.
     private AccountManager accountManager = AccountManager.getInstance();
 
@@ -35,6 +41,7 @@ public class TauController {
     DHTEngine dhtEngine = DHTEngine.getInstance();
 
     private ChainManager chainManager;
+    private CommunicationManager communicationManager;
 
     /**
      * TauController constructor.
@@ -55,6 +62,8 @@ public class TauController {
         // ChainManager is responsibling for opening database and
         // loading the prebuilt blockchain data.
         this.chainManager = new ChainManager(compositeTauListener, dbFactory);
+
+        this.communicationManager = new CommunicationManager(compositeMsgListener, dbFactory);
     }
 
     /**
@@ -89,6 +98,8 @@ public class TauController {
         // And then start chain manager.
         // chain manager will start followed and mined blockchains.
         chainManager.start();
+
+        communicationManager.start();
     }
 
     /**
@@ -160,6 +171,24 @@ public class TauController {
     }
 
     /**
+     * Register MsgListenter.
+     *
+     * @param listener MsgListenter implementation.
+     */
+    public void registerMsgListener(MsgListener listener) {
+        this.compositeMsgListener.addListener(listener);
+    }
+
+    /**
+     * Unregister MsgListenter.
+     *
+     * @param listener MsgListenter implementation.
+     */
+    public void unregisterMsgListener(MsgListener listener) {
+        this.compositeMsgListener.removeListener(listener);
+    }
+
+    /**
      * Update key pair for the miner.
      *
      * @param key pair of public key and private key.
@@ -185,6 +214,15 @@ public class TauController {
      */
     public ChainManager getChainManager() {
         return this.chainManager;
+    }
+
+    /**
+     * Get CommunicationManager reference.
+     *
+     * @return CommunicationManager
+     */
+    public CommunicationManager getCommunicationManager() {
+        return this.communicationManager;
     }
 
     /**

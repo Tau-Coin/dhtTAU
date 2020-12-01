@@ -69,7 +69,7 @@ public class ChainParam {
     // personal info
     public static final byte[] PERSONAL_INFO_SALT = "PersonalChannel".getBytes();
 
-    public static final byte[] GOSSIP_CHANNEL = "GOSSIP".getBytes();
+    public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST".getBytes();
 
     public static final int HashLongArrayLength = 3;
 

@@ -300,51 +300,5 @@ public interface StateDB {
      */
     void clearAllState(byte[] chainID) throws DBException;
 
-    /**
-     * add a new friend
-     * @param pubkey public key
-     * @throws DBException database exception
-     */
-    void addFriend(byte[] pubkey) throws DBException;
-
-    /**
-     * get all friends
-     * @return friend set
-     * @throws DBException database exception
-     */
-    Set<byte[]> getFriends() throws DBException;
-
-    /**
-     * set friend message root hash
-     * @param pubKey public key
-     * @param hash message root hash
-     * @throws DBException database exception database exception
-     */
-    void setFriendMessageRoot(byte[] pubKey, byte[] hash) throws DBException;
-
-    /**
-     * get friend message root hash
-     * @param pubKey public key
-     * @return friend message root hash, null otherwise
-     * @throws DBException database exception database exception
-     */
-    byte[] getFriendMessageRoot(byte[] pubKey) throws DBException;
-
-    /**
-     * put a message data into db
-     * @param hash message hash
-     * @param data message data to put
-     * @throws DBException database exception database exception
-     */
-    void putMessage(byte[] hash, byte[] data) throws DBException;
-
-    /**
-     * get message by hash
-     * @param hash message hash
-     * @return message data, null otherwise
-     * @throws DBException database exception database exception
-     */
-    byte[] getMessageByHash(byte[] hash) throws DBException;
-
 }
 
