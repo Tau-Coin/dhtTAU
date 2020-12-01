@@ -11,6 +11,7 @@ import io.taucoin.db.MessageDB;
 import io.taucoin.db.MessageDBImpl;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.types.Message;
+import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.Repo;
 
 public class CommunicationManager {
@@ -66,9 +67,10 @@ public class CommunicationManager {
      * @param friend 朋友公钥
      * @param message 新消息
      * @param data 新消息的其它相关数据，比如可能有多级文字或者图片结构，这些数据会一起发布到dht
+     * @return true:接受该消息， false:拒绝该消息
      */
-    public void publishNewMessage(byte[] friend, Message message, List<byte[]> data) {
-        this.communication.publishNewMessage(friend, message, data);
+    public boolean publishNewMessage(byte[] friend, Message message, List<byte[]> data) {
+        return this.communication.publishNewMessage(friend, message, data);
     }
 
     /**
@@ -101,6 +103,39 @@ public class CommunicationManager {
      */
     public List<byte[]> getAllFriends() {
         return this.communication.getAllFriends();
+    }
+
+    /**
+     * 获取队列容量
+     * @return 容量
+     */
+    public int getQueueCapability() {
+        return this.communication.getQueueCapability();
+    }
+
+    /**
+     * 获取队列当前大小
+     * @return 队列大小
+     */
+    public int getQueueSize() {
+        return this.communication.getQueueSize();
+    }
+
+    /**
+     * get my latest msg root
+     * @return root
+     */
+    public byte[] getMyLatestMsgRoot() {
+        return this.communication.getMyLatestMsgRoot();
+    }
+
+    /**
+     * 获取朋友最新的root
+     * @param pubKey public key
+     * @return root
+     */
+    public byte[] getFriendLatestRoot(byte[] pubKey) {
+        return this.communication.getFriendLatestRoot(pubKey);
     }
 
 }

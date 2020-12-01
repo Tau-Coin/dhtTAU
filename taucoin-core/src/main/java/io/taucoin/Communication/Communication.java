@@ -57,6 +57,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     // queue
     private final Queue<Object> queue = new ConcurrentLinkedQueue<>();
 
+    private byte[] myLatestMsgRoot = null;
+
     // gossip item set
     private final Set<GossipItem> gossipItems = new HashSet<>();
 
@@ -97,6 +99,10 @@ public class Communication implements DHT.GetDHTItemCallback {
 
     private boolean init() {
         try {
+            // get my latest msg root
+            this.myLatestMsgRoot = this.messageDB.getFriendMessageRoot(AccountManager.getInstance().getKeyPair().first);
+
+            // get friend latest msg root
             Set<byte[]> friends = this.messageDB.getFriends();
 
             if (null != friends) {
@@ -436,11 +442,34 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.friendRoot.put(key, message.getHash());
     }
 
-    public void publishNewMessage(byte[] friend, Message message, List<byte[]> data) {
-        updateFriendMessageInfo(friend, message);
-        publishMessage(message);
-        publishData(data);
-        publishGossipInfo();
+    private void updateMyLatestRoot(byte[] hash) throws DBException {
+        this.myLatestMsgRoot = hash;
+        this.messageDB.setFriendMessageRoot(AccountManager.getInstance().getKeyPair().first, hash);
+    }
+
+    /**
+     * 向朋友发布新消息
+     * @param friend 朋友公钥
+     * @param message 新消息
+     * @param data 新消息的其它相关数据，比如可能有多级文字或者图片结构，这些数据会一起发布到dht
+     * @return true:接受该消息， false:拒绝该消息
+     */
+    public boolean publishNewMessage(byte[] friend, Message message, List<byte[]> data) {
+        if (this.queue.size() <= QueueCapability) {
+            try {
+                updateMyLatestRoot(message.getHash());
+                updateFriendMessageInfo(friend, message);
+                publishMessage(message);
+                publishData(data);
+                publishGossipInfo();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -511,6 +540,39 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
 
         return list;
+    }
+
+    /**
+     * 获取队列容量
+     * @return 容量
+     */
+    public int getQueueCapability() {
+        return QueueCapability;
+    }
+
+    /**
+     * 获取队列当前大小
+     * @return 队列大小
+     */
+    public int getQueueSize() {
+        return this.queue.size();
+    }
+
+    /**
+     * get my latest msg root
+     * @return root
+     */
+    public byte[] getMyLatestMsgRoot() {
+        return this.myLatestMsgRoot;
+    }
+
+    /**
+     * 获取朋友最新的root
+     * @param pubKey public key
+     * @return root
+     */
+    public byte[] getFriendLatestRoot(byte[] pubKey) {
+        return this.friendRoot.get(new ByteArrayWrapper(pubKey));
     }
 
     /**
