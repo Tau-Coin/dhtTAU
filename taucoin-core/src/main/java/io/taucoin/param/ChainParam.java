@@ -66,10 +66,11 @@ public class ChainParam {
     // demand
     public static final byte[] DEMAND_CHANNEL = "#D".getBytes();
 
-    // personal info
-    public static final byte[] PERSONAL_INFO_SALT = "PersonalChannel".getBytes();
-
+    // gossip
     public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST".getBytes();
+
+    // one day
+    public static final int ONE_DAY = 24 * 60 * 60;
 
     public static final int HashLongArrayLength = 3;
 
