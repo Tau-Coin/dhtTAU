@@ -12,7 +12,6 @@ import com.frostwire.jlibtorrent.swig.sha1_hash;
 import com.frostwire.jlibtorrent.Vectors;
 import org.spongycastle.util.encoders.Hex;
 
-import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
