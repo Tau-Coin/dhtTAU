@@ -38,12 +38,13 @@ import io.taucoin.util.HashUtil;
 public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
-    // Queue capability.
+    // 对UI使用的, Queue capability.
     public static final int QueueCapability = 100;
 
+    // 对中间层的门槛
     private final double THRESHOLD = 0.8;
 
-    // 循环间隔最小时间
+    // 主循环间隔最小时间
     private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
     // 循环间隔时间
@@ -54,7 +55,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     // message db
     private final MessageDB messageDB;
 
-    // queue
+    // UI使用的请求queue
     private final Queue<Object> queue = new ConcurrentLinkedQueue<>();
 
     // gossip item set
@@ -449,7 +450,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.queue.offer(immutableItemRequest);
     }
 
-    private void requestImmutableData(byte[] hash) {
+    public void requestImmutableData(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.IMMUTABLE_DATA);
 

@@ -73,6 +73,14 @@ public class CommunicationManager {
     }
 
     /**
+     * 请求message相关的数据，包括message/message content/各级图片/文本等，拿到数据后会放到message db
+     * @param hash data hash
+     */
+    public void requestMessageData(byte[] hash) {
+        this.communication.requestImmutableData(hash);
+    }
+
+    /**
      * 添加新朋友
      * @param pubKey public key
      */

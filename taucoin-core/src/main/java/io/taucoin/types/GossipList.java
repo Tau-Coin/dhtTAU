@@ -8,6 +8,7 @@ import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
+// gossip list是gossip mutable item的具体内容
 public class GossipList {
     private byte[] previousGossipListHash;
     private List<GossipItem> gossipList = new CopyOnWriteArrayList<>();
