@@ -126,6 +126,38 @@ public class MessageDBImpl implements MessageDB {
     }
 
     /**
+     * set message to friend root hash
+     *
+     * @param pubKey public key
+     * @param hash   message root hash
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public void setMessageToFriendRoot(byte[] pubKey, byte[] hash) throws DBException {
+        try {
+            db.put(PrefixKey.messageToFriendRootKey(pubKey), hash);
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
+     * get message to friend root hash
+     *
+     * @param pubKey public key
+     * @return friend message root hash, null otherwise
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public byte[] getMessageToFriendRoot(byte[] pubKey) throws DBException {
+        try {
+            return db.get(PrefixKey.messageToFriendRootKey(pubKey));
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
      * put a message data into db
      *
      * @param hash message hash

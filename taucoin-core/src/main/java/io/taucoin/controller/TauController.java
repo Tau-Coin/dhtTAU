@@ -1,6 +1,6 @@
 package io.taucoin.controller;
 
-import io.taucoin.Communication.CommunicationManager;
+import io.taucoin.communication.CommunicationManager;
 import io.taucoin.account.AccountManager;
 import io.taucoin.chain.ChainManager;
 import io.taucoin.db.KeyValueDataBaseFactory;

@@ -1,4 +1,4 @@
-package io.taucoin.Communication;
+package io.taucoin.communication;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,17 +11,16 @@ import io.taucoin.db.MessageDB;
 import io.taucoin.db.MessageDBImpl;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.types.Message;
-import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.Repo;
 
 public class CommunicationManager {
     private static final Logger logger = LoggerFactory.getLogger("CommunicationManager");
 
-    private Communication communication;
+    private final Communication communication;
 
     private MsgListener listener;
 
-    private MessageDB messageDB;
+    private final MessageDB messageDB;
 
     // message db path
     private static final String MSG_PATH = "msg";
@@ -123,10 +122,11 @@ public class CommunicationManager {
 
     /**
      * get my latest msg root
+     * @param pubKey public key
      * @return root
      */
-    public byte[] getMyLatestMsgRoot() {
-        return this.communication.getMyLatestMsgRoot();
+    public byte[] getMyLatestMsgRoot(byte[] pubKey) {
+        return this.communication.getMyLatestMsgRoot(pubKey);
     }
 
     /**

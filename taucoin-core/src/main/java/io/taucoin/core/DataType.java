@@ -28,4 +28,6 @@ public enum DataType {
 
     MESSAGE, // message
     MESSAGE_CONTENT, // message content
+
+    IMMUTABLE_DATA, // immutable data
 }

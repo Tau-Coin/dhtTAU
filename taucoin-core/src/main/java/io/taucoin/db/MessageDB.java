@@ -54,6 +54,22 @@ public interface MessageDB {
     byte[] getFriendMessageRoot(byte[] pubKey) throws DBException;
 
     /**
+     * set message to friend root hash
+     * @param pubKey public key
+     * @param hash message root hash
+     * @throws DBException database exception database exception
+     */
+    void setMessageToFriendRoot(byte[] pubKey, byte[] hash) throws DBException;
+
+    /**
+     * get message to friend root hash
+     * @param pubKey public key
+     * @return friend message root hash, null otherwise
+     * @throws DBException database exception database exception
+     */
+    byte[] getMessageToFriendRoot(byte[] pubKey) throws DBException;
+
+    /**
      * put a message data into db
      * @param hash message hash
      * @param data message data to put

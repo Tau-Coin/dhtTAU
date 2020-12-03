@@ -17,6 +17,7 @@ public class PrefixKey {
     private static final byte[] PEER = "P-".getBytes();
     private static final byte[] COMMUNICATION_PEER = "CP-".getBytes();
     private static final byte[] FRIEND_MESSAGE_ROOT = "R-".getBytes();
+    private static final byte[] MESSAGE_ROOT_TO_FRIEND = "RT-".getBytes();
     private static final byte[] SYNC_BLOCK_HASH = "s-".getBytes();
     private static final byte[] TX_POOL = "T-".getBytes();
     private static final byte[] TX = "t-".getBytes();
@@ -361,6 +362,26 @@ public class PrefixKey {
         byte[] key = new byte[FRIEND_MESSAGE_ROOT.length + pubkey.length];
         System.arraycopy(FRIEND_MESSAGE_ROOT, 0, key, 0, FRIEND_MESSAGE_ROOT.length);
         System.arraycopy(pubkey, 0, key, FRIEND_MESSAGE_ROOT.length, pubkey.length);
+        return key;
+    }
+
+    /**
+     * latest message to friend root prefix: MESSAGE_ROOT_TO_FRIEND
+     * @return perfix
+     */
+    public static byte[] messageToFriendRootPrefix() {
+        return MESSAGE_ROOT_TO_FRIEND;
+    }
+
+    /**
+     * latest message to friend root key: MESSAGE_ROOT_TO_FRIEND + friend pubkey
+     * @param pubkey public key
+     * @return key
+     */
+    public static byte[] messageToFriendRootKey(byte[] pubkey) {
+        byte[] key = new byte[MESSAGE_ROOT_TO_FRIEND.length + pubkey.length];
+        System.arraycopy(MESSAGE_ROOT_TO_FRIEND, 0, key, 0, MESSAGE_ROOT_TO_FRIEND.length);
+        System.arraycopy(pubkey, 0, key, MESSAGE_ROOT_TO_FRIEND.length, pubkey.length);
         return key;
     }
 
