@@ -1,7 +1,6 @@
 package io.taucoin.jtau.cmd;
 
 import io.taucoin.controller.TauController;
-import io.taucoin.db.KeyValueDataBase;
 import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.listener.TauListener;
 import io.taucoin.jtau.config.Config;

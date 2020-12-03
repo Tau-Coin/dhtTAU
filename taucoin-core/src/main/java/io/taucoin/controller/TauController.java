@@ -47,8 +47,7 @@ public class TauController {
      * TauController constructor.
      *
      * @param repoPath the directory where data is stored.
-     * @param db key-value database factory implementation.
-     * @param enableRpc enable rpc server or not.
+     * @param dbFactory key-value database factory implementation.
      */
     public TauController(String repoPath, KeyValueDataBaseFactory dbFactory) {
 
@@ -71,8 +70,7 @@ public class TauController {
      *
      * @param repoPath the directory where data is stored.
      * @param keySeed seed to generate the pair of public key and private key.
-     * @param db key-value database factory implementation.
-     * @param enableRpc enable rpc server or not.
+     * @param dbFactory key-value database factory implementation.
      */
     public TauController(String repoPath, byte[] keySeed,
             KeyValueDataBaseFactory dbFactory) {
