@@ -3,3 +3,6 @@
 
 ### Build doc
 [dhtTAU - Build documentation](https://github.com/Tau-Coin/dhtTAU/blob/master/docs/build.md)
+
+### License
+This software is avaliable under the MIT License.
