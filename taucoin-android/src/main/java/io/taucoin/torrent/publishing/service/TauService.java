@@ -54,6 +54,7 @@ public class TauService extends Service {
         userRepo = RepositoryHelper.getUserRepository(getApplicationContext());
         daemon = TauDaemon.getInstance(getApplicationContext());
         TauNotifier.makeForegroundNotify(this);
+        LibJpegManager.init();
     }
 
     @Override

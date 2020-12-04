@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/gray_dark"
+            android:textAppearance="@style/TextAppearanceBody3" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="10dp"
+            android:gravity="bottom">
+
+            <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+                android:id="@+id/round_button"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:gravity="center_vertical|center"
+                android:textColor="@color/color_white"
+                android:textAppearance="@style/TextAppearanceHeadline6"
+                app:borderColor="@color/primary_light"
+                app:borderWidth="0dp"
+                app:radius="7dp"
+                app:isRadiusAutoHalf="true"
+                app:bgColor="@color/primary_light"
+                app:textColorForPressed="@color/color_white" />
+
+            <LinearLayout
+                android:id="@+id/middle_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@mipmap/icon_chat_bg"
+                android:layout_marginEnd="60dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginBottom="3dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:orientation="vertical">
+
+                <io.taucoin.torrent.publishing.ui.customviews.HashImageView
+                    android:id="@+id/tv_image"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxHeight="150dp"
+                    android:textAppearance="@style/TextAppearanceBody2" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+</layout>

@@ -25,6 +25,8 @@ public interface CommunityRepository {
 //
     Community getCommunityByChainID(@NonNull String chainID);
 
+    Community getChatByFriendPk(@NonNull String friendPk);
+
     /**
      * 观察不在黑名单的社区列表数据变化
      * @return 被观察的社区数据列表

@@ -33,6 +33,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
@@ -75,6 +76,8 @@ public class UserViewModel extends AndroidViewModel {
     private MutableLiveData<List<User>> blackList = new MutableLiveData<>();
     private MutableLiveData<UserAndFriend> userDetail = new MutableLiveData<>();
     private CommonDialog commonDialog;
+    private TauDaemon daemon;
+    private Disposable observeDaemonRunning;
     public UserViewModel(@NonNull Application application) {
         super(application);
         userRepo = RepositoryHelper.getUserRepository(getApplication());
@@ -82,6 +85,14 @@ public class UserViewModel extends AndroidViewModel {
         txRepo = RepositoryHelper.getTxRepository(getApplication());
         msgRepo = RepositoryHelper.getMsgRepository(getApplication());
         friendRepo = RepositoryHelper.getFriendsRepository(getApplication());
+        daemon = TauDaemon.getInstance(application);
+    }
+
+    public void observeNeedStartDaemon () {
+        disposables.add(daemon.observeNeedStartDaemon()
+                .subscribeOn(Schedulers.io())
+                .filter((needStart) -> needStart)
+                .subscribe((needStart) -> daemon.start()));
     }
 
     @Override
@@ -91,6 +102,9 @@ public class UserViewModel extends AndroidViewModel {
         if(commonDialog != null && commonDialog.isShowing()){
             commonDialog.dismiss();
             commonDialog = null;
+        }
+        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
+            observeDaemonRunning.dispose();
         }
     }
 
@@ -347,7 +361,23 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 添加联系人
      */
-    public void addFriend(String publicKey) {
+    void addFriend(String publicKey) {
+        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
+            return;
+        }
+        observeDaemonRunning = daemon.observeDaemonRunning()
+                .subscribeOn(Schedulers.io())
+                .subscribe((isRunning) -> {
+                    if (isRunning) {
+                        addFriendTask(publicKey);
+                        if (observeDaemonRunning != null) {
+                            observeDaemonRunning.dispose();
+                        }
+                    }
+                });
+    }
+
+    private void addFriendTask(String publicKey) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             User user = userRepo.getUserByPublicKey(publicKey);
             if(null == user){
@@ -361,6 +391,7 @@ public class UserViewModel extends AndroidViewModel {
                 friend = new Friend(userPK, publicKey, 1);
                 friendRepo.addFriend(friend);
                 isExist = false;
+                daemon.addNewFriend(ByteUtil.toByte(publicKey));
             } else {
                 friend.state = 1;
                 friendRepo.updateFriend(friend);
@@ -372,14 +403,6 @@ public class UserViewModel extends AndroidViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(isExist -> addFriendResult.postValue(isExist));
         disposables.add(disposable);
-    }
-
-    /**
-     * 发送社区邀请链接给朋友
-     * @param inviteLink 社区邀请链接
-     */
-    public void shareInvitedLinkToFriend(String inviteLink, String friendPk) {
-        // TODO: 通过msg channel发送
     }
 
     /**

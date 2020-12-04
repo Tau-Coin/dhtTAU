@@ -10,6 +10,7 @@ import com.frostwire.jlibtorrent.Ed25519;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -24,8 +25,10 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.chain.ChainManager;
+import io.taucoin.communication.CommunicationManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
+import io.taucoin.db.DBException;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
@@ -33,6 +36,7 @@ import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -42,6 +46,7 @@ import io.taucoin.torrent.publishing.receiver.PowerReceiver;
 import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
 import io.taucoin.types.BlockContainer;
+import io.taucoin.types.Message;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteUtil;
 
@@ -65,6 +70,7 @@ public class TauDaemon {
     private SystemServiceManager systemServiceManager;
     private ExecutorService exec = Executors.newSingleThreadExecutor();
     private TauListenHandler tauListenHandler;
+    private MsgListenHandler msgListenHandler;
     private TauInfoProvider tauInfoProvider;
     private Disposable sessionStartedDispose; // session启动任务
     private volatile boolean isRunning = false;
@@ -90,6 +96,7 @@ public class TauDaemon {
         settingsRepo = RepositoryHelper.getSettingsRepository(appContext);
         systemServiceManager = SystemServiceManager.getInstance();
         tauListenHandler = new TauListenHandler(appContext, this);
+        msgListenHandler = new MsgListenHandler(appContext, this);
         tauInfoProvider = TauInfoProvider.getInstance(this);
 
         AndroidLeveldbFactory androidLeveldbFactory = new AndroidLeveldbFactory();
@@ -97,6 +104,7 @@ public class TauDaemon {
         logger.info("TauController repoPath::{}", repoPath);
         tauController = new TauController(repoPath, androidLeveldbFactory);
         tauController.registerListener(daemonListener);
+        tauController.registerMsgListener(msgListener);
         tauController.getDHTEngine().regulateDHTOPInterval(initDHTOPInterval);
 
         switchPowerReceiver();
@@ -208,6 +216,17 @@ public class TauDaemon {
     /**
      * 链端事件监听逻辑处理
      */
+    private final MsgListener msgListener = new MsgListener() {
+
+        @Override
+        public void onNewMessage(byte[] friend, Message message) {
+            msgListenHandler.onNewMessage(friend, message);
+        }
+    };
+
+    /**
+     * 链端事件监听逻辑处理
+     */
     private final TauDaemonListener daemonListener = new TauDaemonListener() {
         @Override
         public void onTauStarted(boolean success, String errMsg) {
@@ -271,6 +290,7 @@ public class TauDaemon {
             sessionStartedDispose.dispose();
         }
         tauListenHandler.destroy();
+        msgListenHandler.destroy();
         tauController.stop();
     }
 
@@ -553,5 +573,59 @@ public class TauDaemon {
     public byte[] putForumNote(String memo) {
         if (isRunning) { }
         return new byte[20];
+    }
+
+    private CommunicationManager getCommunicationManager() {
+        return tauController.getCommunicationManager();
+    }
+
+    /**
+     * 保存消息进levelDB
+     * @param hash
+     * @param msg
+     * @throws DBException
+     */
+    public void saveMsg(byte[] hash, byte[] msg) throws DBException{
+        getCommunicationManager().getMessageDB().putMessage(hash, msg);
+    }
+
+    /**
+     * 获取消息从levelDB
+     * @param hash
+     * @return msg
+     * @throws DBException
+     */
+    public byte[] getMsg(byte[] hash) throws DBException {
+        return  getCommunicationManager().getMessageDB().getMessageByHash(hash);
+    }
+
+    /**
+     * 添加朋友
+     * @param friendPk 朋友公钥
+     */
+    public void addNewFriend(byte[] friendPk) {
+        if (!isRunning) {
+            return;
+        }
+        getCommunicationManager().addNewFriend(friendPk);
+        logger.info("addNewFriend friendPk::{}", ByteUtil.toHexString(friendPk));
+    }
+
+    /**
+     * 发送消息
+     * @param friendPK
+     * @param contentLink
+     * @param data
+     * @return
+     */
+    public Message sendMessage(byte[] friendPK, byte[] contentLink, List<byte[]> data) {
+        byte[] timestamp = ByteUtil.longToBytes(DateUtil.getTime());
+        String userPk = MainApplication.getInstance().getPublicKey();
+        byte[] previousMsgDAGRoot = getCommunicationManager().getMyLatestMsgRoot(ByteUtil.toByte(userPk));
+        byte[] friendLatestMessageRoot = getCommunicationManager().getFriendLatestRoot(friendPK);
+        Message message = Message.CreateTextMessage(timestamp, previousMsgDAGRoot,
+                friendLatestMessageRoot, contentLink);
+        getCommunicationManager().publishNewMessage(friendPK, message, data);
+        return message;
     }
 }

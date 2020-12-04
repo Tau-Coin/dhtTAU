@@ -50,6 +50,11 @@ public class CommunityRepositoryImpl implements CommunityRepository{
         return db.communityDao().getCommunityBychainID(chainID);
     }
 
+    @Override
+    public Community getChatByFriendPk(@NonNull String friendPk) {
+        return db.communityDao().getCommunityBychainID(friendPk);
+    }
+
     /**
      * 观察不在黑名单的社区列表数据变化
      * @return 被观察的社区数据列表

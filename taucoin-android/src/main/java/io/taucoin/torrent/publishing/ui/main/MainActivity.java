@@ -1,7 +1,6 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -10,6 +9,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
+
+import com.luck.picture.lib.config.PictureConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +90,7 @@ public class MainActivity extends BaseActivity {
     private CommonDialog seedDialog;
     private CommonDialog linkDialog;
     private User user;
-    private boolean isEmptyView = true;
+    private Fragment currentFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -420,13 +421,17 @@ public class MainActivity extends BaseActivity {
         updateViewChanged();
     }
 
+    private boolean isEmptyView() {
+        return null == currentFragment;
+    }
+
     private void updateViewChanged() {
         if (Utils.isTablet()) {
             if (Utils.isLandscape()) {
                 updateViewWeight(binding.rlMainLeft, 3.5F);
                 updateViewWeight(binding.mainRightFragment, 6.5F);
             } else {
-                if (isEmptyView) {
+                if (isEmptyView()) {
                     nextAndBackChange(true);
                 } else {
                     updateViewWeight(binding.rlMainLeft, 0F);
@@ -434,7 +439,7 @@ public class MainActivity extends BaseActivity {
                 }
             }
         } else {
-            nextAndBackChange(isEmptyView);
+            nextAndBackChange(isEmptyView());
         }
     }
 
@@ -475,7 +480,7 @@ public class MainActivity extends BaseActivity {
             }
             bundle.putString(IntentExtra.CHAIN_ID, community.chainID);
         }
-        isEmptyView = null == newFragment;
+        currentFragment = newFragment;
         if (null == newFragment) {
             newFragment = new EmptyFragment();
         }
@@ -529,7 +534,7 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public void onBackPressed() {
-        if (isEmptyView) {
+        if (isEmptyView()) {
             mBackClick.onNext(1);
         } else {
             goBack();
@@ -567,8 +572,13 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == CommunityFragment.REQUEST_CODE && resultCode == Activity.RESULT_OK){
+        if (requestCode == CommunityFragment.REQUEST_CODE) {
             goBack();
+        } else if (requestCode == PictureConfig.CHOOSE_REQUEST ||
+                requestCode == PictureConfig.REQUEST_CAMERA){
+           if (!isEmptyView()) {
+               currentFragment.onActivityResult(requestCode, resultCode, data);
+           }
         }
     }
 }

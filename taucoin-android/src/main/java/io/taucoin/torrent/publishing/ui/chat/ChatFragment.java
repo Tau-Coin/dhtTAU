@@ -1,28 +1,42 @@
 package io.taucoin.torrent.publishing.ui.chat;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.luck.picture.lib.PictureSelector;
+import com.luck.picture.lib.config.PictureConfig;
+import com.luck.picture.lib.config.PictureMimeType;
+import com.luck.picture.lib.entity.LocalMedia;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
 import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
+import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentChatBinding;
@@ -30,18 +44,26 @@ import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
+import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
+import io.taucoin.types.MessageType;
+
+import static android.app.Activity.RESULT_OK;
 
 /**
  * 单个朋友聊天页面
  */
-public class ChatFragment extends BaseFragment implements View.OnClickListener{
+public class ChatFragment extends BaseFragment implements View.OnClickListener,
+    ChatListAdapter.ClickListener{
 
     private MainActivity activity;
     private static final Logger logger = LoggerFactory.getLogger("ChatFragment");
     private FragmentChatBinding binding;
+    private ChatViewModel chatViewModel;
     private CommunityViewModel communityViewModel;
+    private ChatListAdapter adapter;
     private CompositeDisposable disposables = new CompositeDisposable();
     private String friendPK;
+    private Handler handler = new Handler();
 
     @Nullable
     @Override
@@ -58,6 +80,8 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener{
         activity = (MainActivity) getActivity();
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);
+        chatViewModel = provider.get(ChatViewModel.class);
+        chatViewModel.observeNeedStartDaemon();
         initParameter();
         initLayout();
     }
@@ -94,10 +118,15 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener{
 
             }
         });
-        binding.etMessage.setOnFocusChangeListener((v, hasFocus) ->
-                showOrHideChatAddView(false));
-        binding.etMessage.setOnClickListener(v ->
-                showOrHideChatAddView(false));
+        binding.etMessage.setOnFocusChangeListener((v, hasFocus) -> {
+            showOrHideChatAddView(false);
+            handler.postDelayed(handleUpdateAdapter, 200);
+        });
+
+        binding.etMessage.setOnClickListener(v -> {
+            showOrHideChatAddView(false);
+            handler.postDelayed(handleUpdateAdapter, 200);
+        });
 
         binding.chatAdd.setVisibility(View.GONE);
         binding.chatAdd.setListener((title, icon) -> {
@@ -107,12 +136,25 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener{
                 MediaUtil.startOpenCamera(activity);
             }
         });
+
+        adapter = new ChatListAdapter(this);
+        DefaultItemAnimator animator = new DefaultItemAnimator() {
+            @Override
+            public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {
+                return true;
+            }
+        };
+        LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
+//        layoutManager.setReverseLayout(true);
+        binding.msgList.setLayoutManager(layoutManager);
+        binding.msgList.setItemAnimator(animator);
+        binding.msgList.setAdapter(adapter);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        subscribeCommunityViewModel();
+        subscribeChatViewModel();
     }
 
     @Override
@@ -129,10 +171,22 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener{
         super.onDestroy();
     }
 
+    private final Runnable handleUpdateAdapter = () -> {
+        if (binding.msgList.getLayoutManager() != null) {
+            int bottomPosition = adapter.getItemCount() - 1;
+            logger.debug("handleUpdateAdapter scrollToPosition::{}", bottomPosition);
+            binding.msgList.getLayoutManager().scrollToPosition(bottomPosition);
+        }
+    };
+
     /**
      * 订阅社区相关的被观察者
      */
-    private void subscribeCommunityViewModel() {
+    private void subscribeChatViewModel() {
+        chatViewModel.observerChat(friendPK).observe(this, messages -> {
+            adapter.submitList(messages, handleUpdateAdapter);
+            logger.debug("messages.size::{}", messages.size());
+        });
         disposables.add(communityViewModel.observerCommunityByChainID(friendPK)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -166,14 +220,62 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener{
         disposables.add(Observable.timer(50, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(aLong -> binding.chatAdd.setVisibility(isShow ? View.VISIBLE : View.GONE)));
+                .subscribe(aLong -> {
+                    binding.chatAdd.setVisibility(isShow ? View.VISIBLE : View.GONE);
+                    handler.post(handleUpdateAdapter);
+                }));
     }
 
     /**
      * 发送chat消息
      */
     private void sendMessage() {
-        String content = ViewUtils.getText(binding.etMessage);
+        String message = ViewUtils.getText(binding.etMessage);
+        chatViewModel.sendMessage(friendPK, message, MessageType.TEXT.ordinal());
         binding.etMessage.getText().clear();
+    }
+
+    @Override
+    public void onUserClicked(String publicKey) {
+
+    }
+
+    @Override
+    public void onEditNameClicked(String tx) {
+
+    }
+
+    @Override
+    public void onBanClicked(MsgAndReply tx) {
+
+    }
+
+    @Override
+    public void onItemLongClicked(View view, MsgAndReply tx) {
+
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            switch (requestCode){
+                case PictureConfig.CHOOSE_REQUEST:
+                case PictureConfig.REQUEST_CAMERA:
+                    List<LocalMedia> selectList = PictureSelector.obtainMultipleResult(data);
+                    if(selectList != null && selectList.size() == 1){
+                        LocalMedia localMedia = selectList.get(0);
+                        if(PictureMimeType.eqImage(localMedia.getMimeType())){
+                            String imagePath = localMedia.getPath();
+                            chatViewModel.sendMessage(friendPK, imagePath,
+                                    MessageType.PICTURE.ordinal());
+                            return;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

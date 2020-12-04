@@ -51,6 +51,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
+        userViewModel.observeNeedStartDaemon();
         communityViewModel = provider.get(CommunityViewModel.class);
         communityViewModel.observeNeedStartDaemon();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_user_detail);

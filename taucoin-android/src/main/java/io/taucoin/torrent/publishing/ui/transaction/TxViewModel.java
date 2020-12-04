@@ -117,7 +117,7 @@ public class TxViewModel extends AndroidViewModel {
         if(editFeeDialog != null){
             editFeeDialog.closeDialog();
         }
-        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             observeDaemonRunning.dispose();
         }
     }
@@ -143,7 +143,7 @@ public class TxViewModel extends AndroidViewModel {
      * @param tx 根据用户输入构建的用户数据
      */
     void addTransaction(Tx tx) {
-        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             return;
         }
         observeDaemonRunning = daemon.observeDaemonRunning()
@@ -370,7 +370,7 @@ public class TxViewModel extends AndroidViewModel {
      * @param friendPks
      */
     public void airdropToFriends(String chainID, List<String> friendPks, long medianFee) {
-        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             return;
         }
         observeDaemonRunning = daemon.observeDaemonRunning()

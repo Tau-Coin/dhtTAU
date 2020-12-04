@@ -163,7 +163,7 @@ public class CommunityViewModel extends AndroidViewModel {
      * @param community 社区数据
      */
     void addCommunity(@NonNull Community community, GenesisConfig cf){
-        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             return;
         }
         observeDaemonRunning = daemon.observeDaemonRunning()
@@ -217,7 +217,7 @@ public class CommunityViewModel extends AndroidViewModel {
     protected void onCleared() {
         super.onCleared();
         disposables.clear();
-        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             observeDaemonRunning.dispose();
         }
     }
@@ -242,7 +242,7 @@ public class CommunityViewModel extends AndroidViewModel {
      * @param blacklist 是否加入黑名单
      */
     public void setCommunityBlacklist(String chainID, boolean blacklist) {
-        if (observeDaemonRunning != null && observeDaemonRunning.isDisposed()) {
+        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             return;
         }
         observeDaemonRunning = daemon.observeDaemonRunning()

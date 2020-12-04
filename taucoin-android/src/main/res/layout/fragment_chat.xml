@@ -57,7 +57,7 @@
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
                 android:hint="@string/community_input_hint"
-                android:maxLines="5"
+                android:maxLines="4"
                 android:inputType="textMultiLine"
                 android:autofillHints="@string/community_input_hint"
                 android:background="@drawable/white_rect_round_bg"/>
@@ -70,7 +70,9 @@
                 android:layout_marginStart="10dp"
                 android:textAllCaps="false"
                 android:onClick="@{listener::onClick}"
+                android:layout_gravity="bottom|center"
                 android:gravity="center_vertical|center"
+                android:layout_marginBottom="1dp"
                 android:text="@string/tx_send"
                 android:background="@drawable/primary_rect_round_bg"
                 android:textColor="@color/color_white"
@@ -81,6 +83,8 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:layout_marginStart="10dp"
+                android:layout_gravity="bottom|center"
+                android:layout_marginBottom="7dp"
                 android:src="@mipmap/icon_add"
                 android:onClick="@{listener::onClick}"
                 android:contentDescription="@null"/>

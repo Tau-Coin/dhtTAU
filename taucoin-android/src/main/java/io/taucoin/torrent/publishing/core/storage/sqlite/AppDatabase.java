@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import io.taucoin.torrent.publishing.core.storage.sqlite.dao.ChatDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.CommunityDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.FavoriteDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.FriendDao;
@@ -14,6 +15,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.dao.MessageDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.NotificationDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.TxDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.UserDao;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Chat;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Favorite;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
@@ -30,7 +32,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
         Message.class,
         Favorite.class,
         Notification.class,
-        Friend.class
+        Friend.class,
+        Chat.class
     }, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "tau.db";
@@ -45,6 +48,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract FavoriteDao favoriteDao();
     public abstract NotificationDao notificationDao();
     public abstract FriendDao friendDao();
+    public abstract ChatDao chatDao();
 
     /**
      * 获取数据库实例

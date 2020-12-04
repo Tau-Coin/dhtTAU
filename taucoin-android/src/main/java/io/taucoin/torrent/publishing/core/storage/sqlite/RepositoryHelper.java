@@ -4,6 +4,8 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FavoriteRepository;
@@ -34,6 +36,7 @@ public class RepositoryHelper {
     private static FavoriteRepositoryImpl favoriteRepo;
     private static NotificationRepositoryImpl notificationRepo;
     private static FriendRepositoryImpl friendRepo;
+    private static ChatRepositoryImpl chatRepo;
 
     /**
      * 获取CommunityRepository单例
@@ -149,4 +152,18 @@ public class RepositoryHelper {
 
         return friendRepo;
     }
+
+    /**
+     * 获取ChatRepository单例
+     * @param appContext 上下文
+     * @return ChatRepository
+     */
+    public synchronized static ChatRepository getChatRepository(@NonNull Context appContext) {
+        if (chatRepo == null)
+            chatRepo = new ChatRepositoryImpl(appContext,
+                    AppDatabase.getInstance(appContext));
+
+        return chatRepo;
+    }
+
 }

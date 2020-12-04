@@ -62,6 +62,23 @@
                 android:textAppearance="@style/TextAppearanceHeadline5" />
 
             <TextView
+                android:id="@+id/tv_middle_name"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="3dp"
+                android:gravity="center_vertical|center"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMaxTextSize="18dp"
+                app:autoSizeMinTextSize="2dp"
+                app:autoSizeStepGranularity="0.5dp"
+                android:textColor="@color/color_white"
+                android:textAppearance="@style/TextAppearanceHeadline5" />
+
+            <TextView
                 android:id="@+id/tv_balance"
                 android:layout_width="match_parent"
                 android:layout_height="20dp"
