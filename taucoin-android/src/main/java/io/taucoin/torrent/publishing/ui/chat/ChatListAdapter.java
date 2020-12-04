@@ -64,10 +64,14 @@ public class ChatListAdapter extends PagedListAdapter<Chat, ChatListAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        Chat previousChat = null;
+        if (position > 0) {
+            previousChat = getItem(position - 1);
+        }
         if (getItemViewType(position) == MessageType.PICTURE.ordinal()) {
-            holder.bindPicture(holder, getItem(position));
+            holder.bindPicture(holder, getItem(position), previousChat);
         } else if (getItemViewType(position) == MessageType.TEXT.ordinal()) {
-            holder.bindText(holder, getItem(position));
+            holder.bindText(holder, getItem(position), previousChat);
         }
     }
 
@@ -81,7 +85,7 @@ public class ChatListAdapter extends PagedListAdapter<Chat, ChatListAdapter.View
             this.listener = listener;
         }
 
-        void bindText(ViewHolder holder, Chat chat) {
+        void bindText(ViewHolder holder, Chat chat, Chat previousChat) {
             if(null == this.binding || null == holder || null == chat){
                 return;
             }
@@ -91,12 +95,24 @@ public class ChatListAdapter extends PagedListAdapter<Chat, ChatListAdapter.View
             String showName = UsersUtil.getDefaultName(chat.senderPk);
             binding.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
 
-            String time = DateUtil.getWeekTime(chat.timestamp);
-            binding.tvTime.setText(time);
+            boolean isShowTime = isShowTime(chat, previousChat);
+            if (isShowTime) {
+                String time = DateUtil.getWeekTime(chat.timestamp);
+                binding.tvTime.setText(time);
+            }
+            binding.tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
             binding.tvMsg.setTextHash(chat.contextLink);
         }
 
-        void bindPicture(ViewHolder holder, Chat chat) {
+        private boolean isShowTime(Chat chat, Chat previousChat) {
+            if (previousChat != null) {
+                int interval = DateUtil.getSeconds(previousChat.timestamp, chat.timestamp);
+                return interval > 60;
+            }
+            return true;
+        }
+
+        void bindPicture(ViewHolder holder, Chat chat, Chat previousChat) {
             if(null == this.binding || null == holder || null == chat){
                 return;
             }
@@ -106,8 +122,12 @@ public class ChatListAdapter extends PagedListAdapter<Chat, ChatListAdapter.View
             String showName = UsersUtil.getDefaultName(chat.senderPk);
             binding.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
 
-            String time = DateUtil.getWeekTime(chat.timestamp);
-            binding.tvTime.setText(time);
+            boolean isShowTime = isShowTime(chat, previousChat);
+            if (isShowTime) {
+                String time = DateUtil.getWeekTime(chat.timestamp);
+                binding.tvTime.setText(time);
+            }
+            binding.tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
             binding.tvImage.setImageHash(chat.contextLink);
         }
 

@@ -304,4 +304,8 @@ public class DateUtil {
         }
         return 0;
     }
+
+    public static int getSeconds(long time1, long time2){
+        return (int)(time2 - time1);
+    }
 }
