@@ -9,16 +9,17 @@
 - chainManager 
 - communicationManager 
 
-[TauController Tutorial]()
+[TauController Tutorial](https://github.com/Tau-Coin/dhtTAU/blob/master/taucoin-core/src/main/java/io/taucoin/controller/README.md)
 
 ### DHTEngine
 
-代码目录`dht`，基于SessionController和Counter构建了一个单例，进行Item系统的数据流收发。
-- item system
-- sessionController
-- counter
+代码目录`dht`，基于frostwire-jlibtorrent 与 bittorrent dht network完成数据交换。
 
-[DHTEngine Tutorial]()
+- dht item request queue
+- SessionController
+- TauSession & Worker
+
+[DHTEngine Tutorial](https://github.com/Tau-Coin/dhtTAU/blob/master/taucoin-core/src/main/java/io/taucoin/dht/README.md)
 ### Application
 
 代码目录`communication` 和 `chain`
