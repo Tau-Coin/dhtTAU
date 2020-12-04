@@ -65,7 +65,7 @@ public final class DHT {
                 return "";
             }
 
-            return entry.toString();
+            return hash.toString();
         }
 
         private Sha1Hash computeHash() {
@@ -115,7 +115,7 @@ public final class DHT {
             sb.append("MutableItem(");
             sb.append("pubkey:" + Hex.toHexString(publicKey));
             sb.append(",salt:" + new String(salt));
-            sb.append(",e:" + entry.toString());
+            //sb.append(",e:" + entry.toString());
             sb.append(")");
 
             return sb.toString();
