@@ -39,15 +39,15 @@ public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 对UI使用的, Queue capability.
-    public static final int QueueCapability = 100;
+    public static final int QueueCapability = 1000;
 
-    // 对中间层的门槛
+    // 判断中间层队列的门槛值，中间层队列使用率超过0.8，则增加主循环时间间隔
     private final double THRESHOLD = 0.8;
 
     // 主循环间隔最小时间
     private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
-    // 循环间隔时间
+    // 主循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
     private final MsgListener msgListener;
@@ -55,10 +55,10 @@ public class Communication implements DHT.GetDHTItemCallback {
     // message db
     private final MessageDB messageDB;
 
-    // UI使用的请求queue
+    // UI相关请求存放的queue， ConcurrentLinkedQueue是一个支持并发操作的队列
     private final Queue<Object> queue = new ConcurrentLinkedQueue<>();
 
-    // gossip item set
+    // 发现的gossip item集合，synchronizedSet是支持并发操作的集合
     private final Set<GossipItem> gossipItems = Collections.synchronizedSet(new HashSet<>());
 
     // 消息集合（hash <--> Message）
@@ -125,11 +125,13 @@ public class Communication implements DHT.GetDHTItemCallback {
                     ByteArrayWrapper key = new ByteArrayWrapper(friend);
                     this.friends.add(key);
 
+                    // 获取朋友给我消息的最新root
                     byte[] root = this.messageDB.getFriendMessageRoot(friend);
                     if (null != root) {
                         this.friendRoot.put(key, root);
                     }
 
+                    // 获取我发给朋友消息的最新root
                     root = this.messageDB.getMessageToFriendRoot(friend);
                     if (null != root) {
                         this.toFriendRoot.put(key, root);
@@ -418,6 +420,10 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
     }
 
+    /**
+     * 向某个peer请求gossip数据
+     * @param pubKey public key
+     */
     private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), ChainParam.GOSSIP_CHANNEL);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
@@ -426,6 +432,11 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.queue.offer(mutableItemRequest);
     }
 
+    /**
+     * 请求gossip list, pubKey用于辅助识别是否我的朋友
+     * @param hash gossip list hash
+     * @param pubKey public key
+     */
     private void requestGossipList(byte[] hash, ByteArrayWrapper pubKey) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST, pubKey);
@@ -850,31 +861,34 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                     // 信任发送方自己给的gossip信息
                     byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
-                    if (Arrays.equals(pubKey, dataIdentifier.getKey().getData())) {
-                        for (GossipItem gossipItem : gossipList.getGossipList()) {
-                            ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
-                            if (Arrays.equals(pubKey, gossipItem.getReceiver())) {
-                                if (gossipItem.getGossipType() == GossipType.DEMAND) {
-                                    this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getMessageRoot()));
-                                } else if (gossipItem.getGossipType() == GossipType.MSG) {
-                                    Long oldTimeStamp = this.friendTimeStamp.get(sender);
-                                    long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
+                    for (GossipItem gossipItem : gossipList.getGossipList()) {
+                        ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
-                                    if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
-                                        // 加入活跃朋友集合
-                                        activeFriends.add(sender);
+                        // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
+                        // 并且gossip item的receiver是我，那么会直接信任该gossip消息
+                        if (Arrays.equals(dataIdentifier.getKey().getData(), gossipItem.getSender())
+                                && Arrays.equals(pubKey, gossipItem.getReceiver())) {
+                            if (gossipItem.getGossipType() == GossipType.DEMAND) {
+                                this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getMessageRoot()));
+                            } else if (gossipItem.getGossipType() == GossipType.MSG) {
+                                Long oldTimeStamp = this.friendTimeStamp.get(sender);
+                                long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
 
-                                        // 请求该root
-                                        requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getKey());
-                                        this.friendRoot.put(sender, gossipItem.getMessageRoot());
-                                        // 更新时间戳，不更新root，因为gossip不可靠，等亲自访问到节点自己给出的信息再更新
-                                        this.friendTimeStamp.put(sender, timeStamp);
-                                    }
+                                if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
+                                    // 加入活跃朋友集合
+                                    activeFriends.add(sender);
+
+                                    // 请求该root
+                                    requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getKey());
+                                    this.friendRoot.put(sender, gossipItem.getMessageRoot());
+                                    // 更新时间戳，不更新root，因为gossip不可靠，等亲自访问到节点自己给出的信息再更新
+                                    this.friendTimeStamp.put(sender, timeStamp);
                                 }
                             }
                         }
                     }
+
                 }
 
                 break;

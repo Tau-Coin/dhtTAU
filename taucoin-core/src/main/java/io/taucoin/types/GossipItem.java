@@ -1,6 +1,9 @@
 package io.taucoin.types;
 
+import org.spongycastle.util.encoders.Hex;
+
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
@@ -108,5 +111,16 @@ public class GossipItem {
         }
 
         return this.encode;
+    }
+
+    @Override
+    public String toString() {
+        return "GossipItem{" +
+                "sender=" + Hex.toHexString(sender) +
+                ", receiver=" + Hex.toHexString(receiver) +
+                ", timestamp=" + Hex.toHexString(timestamp) +
+                ", gossipType=" + gossipType +
+                ", messageRoot=" + Hex.toHexString(messageRoot) +
+                '}';
     }
 }

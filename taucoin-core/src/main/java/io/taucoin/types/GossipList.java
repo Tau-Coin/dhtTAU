@@ -1,6 +1,9 @@
 package io.taucoin.types;
 
+import org.spongycastle.util.encoders.Hex;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -103,4 +106,22 @@ public class GossipList {
         return rlpEncoded;
     }
 
+    @Override
+    public String toString() {
+        List<String> list = new ArrayList<>();
+
+        byte[] previousHash = getPreviousGossipListHash();
+        if (null != previousHash) {
+            list.add("Previous Gossip List Hash:" + Hex.toHexString(previousHash));
+        }
+
+        List<GossipItem> gossipList = getGossipList();
+        if (null != gossipList) {
+            for (GossipItem gossipItem: gossipList) {
+                list.add(gossipItem.toString());
+            }
+        }
+
+        return "GossipList{" + list + '}';
+    }
 }
