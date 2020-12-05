@@ -3,7 +3,6 @@ package io.taucoin.types;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
@@ -15,19 +14,19 @@ public class GossipItem {
     private byte[] timestamp;
     private GossipType gossipType;
     private byte[] messageRoot;
-    private byte[] witnessRoot;
+    private byte[] confirmationRoot;
 
     private byte[] hash;
     private byte[] encode;
     private boolean parsed = false;
 
-    public GossipItem(byte[] sender, byte[] receiver, byte[] timestamp, GossipType gossipType, byte[] messageRoot, byte[] witnessRoot) {
+    public GossipItem(byte[] sender, byte[] receiver, byte[] timestamp, GossipType gossipType, byte[] messageRoot, byte[] confirmationRoot) {
         this.sender = sender;
         this.receiver = receiver;
         this.timestamp = timestamp;
         this.gossipType = gossipType;
         this.messageRoot = messageRoot;
-        this.witnessRoot = witnessRoot;
+        this.confirmationRoot = confirmationRoot;
     }
 
     public GossipItem(byte[] encode) {
@@ -74,12 +73,12 @@ public class GossipItem {
         return messageRoot;
     }
 
-    public byte[] getWitnessRoot() {
+    public byte[] getConfirmationRoot() {
         if (!this.parsed) {
             parseRLP();
         }
 
-        return witnessRoot;
+        return confirmationRoot;
     }
 
     public byte[] getHash() {
@@ -105,7 +104,7 @@ public class GossipItem {
             this.gossipType = GossipType.values()[typeNum];
         }
         this.messageRoot = messageList.get(4).getRLPData();
-        this.witnessRoot = messageList.get(5).getRLPData();
+        this.confirmationRoot = messageList.get(5).getRLPData();
 
         this.parsed = true;
     }
@@ -117,9 +116,9 @@ public class GossipItem {
             byte[] timestamp = RLP.encodeElement(this.timestamp);
             byte[] gossipType = RLP.encodeBigInteger(BigInteger.valueOf(this.gossipType.ordinal()));
             byte[] messageRoot = RLP.encodeElement(this.messageRoot);
-            byte[] witnessRoot = RLP.encodeElement(this.witnessRoot);
+            byte[] confirmationRoot = RLP.encodeElement(this.confirmationRoot);
 
-            this.encode = RLP.encodeList(sender, receiver, timestamp, gossipType, messageRoot, witnessRoot);
+            this.encode = RLP.encodeList(sender, receiver, timestamp, gossipType, messageRoot, confirmationRoot);
         }
 
         return this.encode;
@@ -133,7 +132,7 @@ public class GossipItem {
                 ", timestamp=" + Hex.toHexString(timestamp) +
                 ", gossipType=" + gossipType +
                 ", messageRoot=" + Hex.toHexString(messageRoot) +
-                ", witnessRoot=" + Hex.toHexString(witnessRoot) +
+                ", confirmationRoot=" + Hex.toHexString(confirmationRoot) +
                 '}';
     }
 }
