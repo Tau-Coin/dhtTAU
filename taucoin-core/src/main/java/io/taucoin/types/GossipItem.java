@@ -15,17 +15,19 @@ public class GossipItem {
     private byte[] timestamp;
     private GossipType gossipType;
     private byte[] messageRoot;
+    private byte[] witnessRoot;
 
     private byte[] hash;
     private byte[] encode;
     private boolean parsed = false;
 
-    public GossipItem(byte[] sender, byte[] receiver, byte[] timestamp, GossipType gossipType, byte[] messageRoot) {
+    public GossipItem(byte[] sender, byte[] receiver, byte[] timestamp, GossipType gossipType, byte[] messageRoot, byte[] witnessRoot) {
         this.sender = sender;
         this.receiver = receiver;
         this.timestamp = timestamp;
         this.gossipType = gossipType;
         this.messageRoot = messageRoot;
+        this.witnessRoot = witnessRoot;
     }
 
     public GossipItem(byte[] encode) {
@@ -72,6 +74,14 @@ public class GossipItem {
         return messageRoot;
     }
 
+    public byte[] getWitnessRoot() {
+        if (!this.parsed) {
+            parseRLP();
+        }
+
+        return witnessRoot;
+    }
+
     public byte[] getHash() {
         if (null == this.hash) {
             this.hash = HashUtil.bencodeHash(getEncoded());
@@ -95,6 +105,7 @@ public class GossipItem {
             this.gossipType = GossipType.values()[typeNum];
         }
         this.messageRoot = messageList.get(4).getRLPData();
+        this.witnessRoot = messageList.get(5).getRLPData();
 
         this.parsed = true;
     }
@@ -106,8 +117,9 @@ public class GossipItem {
             byte[] timestamp = RLP.encodeElement(this.timestamp);
             byte[] gossipType = RLP.encodeBigInteger(BigInteger.valueOf(this.gossipType.ordinal()));
             byte[] messageRoot = RLP.encodeElement(this.messageRoot);
+            byte[] witnessRoot = RLP.encodeElement(this.witnessRoot);
 
-            this.encode = RLP.encodeList(sender, receiver, timestamp, gossipType, messageRoot);
+            this.encode = RLP.encodeList(sender, receiver, timestamp, gossipType, messageRoot, witnessRoot);
         }
 
         return this.encode;
@@ -121,6 +133,7 @@ public class GossipItem {
                 ", timestamp=" + Hex.toHexString(timestamp) +
                 ", gossipType=" + gossipType +
                 ", messageRoot=" + Hex.toHexString(messageRoot) +
+                ", witnessRoot=" + Hex.toHexString(witnessRoot) +
                 '}';
     }
 }

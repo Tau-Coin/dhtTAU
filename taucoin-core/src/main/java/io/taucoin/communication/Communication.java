@@ -61,10 +61,10 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 发现的gossip item集合，synchronizedSet是支持并发操作的集合
     private final Set<GossipItem> gossipItems = Collections.synchronizedSet(new HashSet<>());
 
-    // 消息集合（hash <--> Message）
+    // 得到的消息集合（hash <--> Message），synchronizedMap是支持并发操作的集合
     private final Map<ByteArrayWrapper, Message> messageMap = Collections.synchronizedMap(new HashMap<>());
 
-    // 消息发送者对照表（Message hash <--> Sender）
+    // 得到的消息与发送者对照表（Message hash <--> Sender）
     private final Map<ByteArrayWrapper, ByteArrayWrapper> messageSenderMap = Collections.synchronizedMap(new HashMap<>());
 
     // message content set
@@ -82,11 +82,17 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 我的朋友的最新消息的root <friend, root>
     private final Map<ByteArrayWrapper, byte[]> friendRoot = Collections.synchronizedMap(new HashMap<>());
 
+    // 新发现的，等待通知UI的，我的朋友的最新见证的root <friend, root>
+    private final Map<ByteArrayWrapper, byte[]> friendWitnessRoot = Collections.synchronizedMap(new HashMap<>());
+
     // 给我的朋友的最新消息的时间戳 <friend, timestamp>
-    private final Map<ByteArrayWrapper, Long> toFriendTimeStamp = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, Long> timeStampToFriend = Collections.synchronizedMap(new HashMap<>());
 
     // 给我的朋友的最新消息的root <friend, root>
-    private final Map<ByteArrayWrapper, byte[]> toFriendRoot = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, byte[]> rootToFriend = Collections.synchronizedMap(new HashMap<>());
+
+    // 发给朋友的witness root hash <<sender, receiver>, root>
+    private final Map<ByteArrayWrapper, byte[]> witnessRootToFriend = Collections.synchronizedMap(new HashMap<>());
 
     // 我的需求 <friend, demand hash>，用于通知我的朋友我的需求
     private final Map<ByteArrayWrapper, byte[]> demandHash = Collections.synchronizedMap(new HashMap<>());
@@ -102,6 +108,9 @@ public class Communication implements DHT.GetDHTItemCallback {
 
     // message root hash <<sender, receiver>, root>
     private final Map<Pair<byte[], byte[]>, byte[]> root = Collections.synchronizedMap(new HashMap<>());
+
+    // witness root hash <<sender, receiver>, root>
+    private final Map<Pair<byte[], byte[]>, byte[]> witnessRoot = Collections.synchronizedMap(new HashMap<>());
 
     // Communication thread.
     private Thread communicationThread;
@@ -134,7 +143,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                     // 获取我发给朋友消息的最新root
                     root = this.messageDB.getMessageToFriendRoot(friend);
                     if (null != root) {
-                        this.toFriendRoot.put(key, root);
+                        this.rootToFriend.put(key, root);
                     }
                 }
             }
@@ -157,17 +166,20 @@ public class Communication implements DHT.GetDHTItemCallback {
 
         // 统计我发给我朋友的消息
         for (ByteArrayWrapper friend: this.friends) {
-            Long timeStamp = this.toFriendTimeStamp.get(friend);
-            byte[] root = this.toFriendRoot.get(friend);
+            Long timeStamp = this.timeStampToFriend.get(friend);
+            byte[] root = this.rootToFriend.get(friend);
+            byte[] witnessRoot = this.witnessRootToFriend.get(friend);
 
-            list.add(new GossipItem(pubKey, friend.getData(), ByteUtil.longToBytes(timeStamp), GossipType.MSG, root));
+            GossipItem gossipItem = new GossipItem(pubKey, friend.getData(), ByteUtil.longToBytes(timeStamp), GossipType.MSG, root, witnessRoot);
+            list.add(gossipItem);
         }
 
         // 统计我对朋友的需求
         long currentTime = System.currentTimeMillis() / 1000;
         byte[] timeBytes = ByteUtil.longToBytes(currentTime);
         for (Map.Entry<ByteArrayWrapper, byte[]> entry : this.demandHash.entrySet()) {
-            list.add(new GossipItem(pubKey, entry.getKey().getData(), timeBytes, GossipType.DEMAND, entry.getValue()));
+            byte[] witnessRoot = this.witnessRootToFriend.get(entry.getKey());
+            list.add(new GossipItem(pubKey, entry.getKey().getData(), timeBytes, GossipType.DEMAND, entry.getValue(), witnessRoot));
         }
 
         // 统计其他人发给我朋友的消息
@@ -176,9 +188,10 @@ public class Communication implements DHT.GetDHTItemCallback {
                 // 只添加一天以内有新消息的
                 if (currentTime - entry.getValue() < ChainParam.ONE_DAY) {
                     byte[] root = this.root.get(entry.getKey());
+                    byte[] witnessRoot = this.witnessRoot.get(entry.getKey());
                     if (null != root) {
                         list.add(new GossipItem(entry.getKey().first, entry.getKey().second,
-                                ByteUtil.longToBytes(entry.getValue()), GossipType.MSG, root));
+                                ByteUtil.longToBytes(entry.getValue()), GossipType.MSG, root, witnessRoot));
                     }
                 }
             }
@@ -197,9 +210,10 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (it.hasNext()) {
             Map.Entry<Pair<byte[], byte[]>, Long> entry = it.next();
             if (entry.getValue() - currentTime > ChainParam.ONE_DAY) {
-                it.remove();
-
                 this.root.remove(entry.getKey());
+                this.witnessRoot.remove(entry.getKey());
+
+                it.remove();
             }
         }
     }
@@ -226,6 +240,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                     if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
                         // 朋友的root帮助记录，由其自己去验证
                         this.root.put(pair, gossipItem.getMessageRoot());
+                        this.witnessRoot.put(pair, gossipItem.getWitnessRoot());
                         // 更新时间戳
                         this.timeStamp.put(pair, timeStamp);
                     }
@@ -271,6 +286,19 @@ public class Communication implements DHT.GetDHTItemCallback {
                     requestGossipInfoFromPeer(peer);
                 }
             }
+        }
+    }
+
+    /**
+     * 通知UI新发现的朋友的已读消息的root
+     */
+    private void notifyUIReadMessageRoot() {
+        Iterator<Map.Entry<ByteArrayWrapper, byte[]>> iterator = this.friendWitnessRoot.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<ByteArrayWrapper, byte[]> entry = iterator.next();
+
+            this.msgListener.onReadMessageRoot(entry.getKey().getData(), entry.getValue());
+            iterator.remove();
         }
     }
 
@@ -372,6 +400,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void mainLoop() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+
+                notifyUIReadMessageRoot();
 
                 dealWithMessage();
 
@@ -633,8 +663,9 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void updateMessageInfoToFriend(byte[] friend, Message message) {
         ByteArrayWrapper key = new ByteArrayWrapper(friend);
-        this.toFriendTimeStamp.put(key, ByteUtil.byteArrayToLong(message.getTimestamp()));
-        this.toFriendRoot.put(key, message.getHash());
+        this.timeStampToFriend.put(key, ByteUtil.byteArrayToLong(message.getTimestamp()));
+        this.rootToFriend.put(key, message.getHash());
+        this.witnessRootToFriend.put(key, message.getFriendLatestMessageRoot());
     }
 
     /**
@@ -644,7 +675,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @throws DBException database exception
      */
     private void updateLatestRootToFriend(byte[] friend, byte[] hash) throws DBException {
-        this.toFriendRoot.put(new ByteArrayWrapper(friend), hash);
+        this.rootToFriend.put(new ByteArrayWrapper(friend), hash);
         this.messageDB.setMessageToFriendRoot(friend, hash);
     }
 
@@ -713,8 +744,10 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.friends.remove(key);
         this.friendTimeStamp.remove(key);
         this.friendRoot.remove(key);
-        this.toFriendTimeStamp.remove(key);
-        this.toFriendRoot.remove(key);
+        this.friendWitnessRoot.remove(key);
+        this.timeStampToFriend.remove(key);
+        this.rootToFriend.remove(key);
+        this.witnessRootToFriend.remove(key);
         this.demandHash.remove(key);
 
         Iterator<Map.Entry<Pair<byte[], byte[]>, Long>> iterator = this.timeStamp.entrySet().iterator();
@@ -726,7 +759,15 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
 
         Iterator<Map.Entry<Pair<byte[], byte[]>, byte[]>> it = this.root.entrySet().iterator();
-        while (iterator.hasNext()) {
+        while (it.hasNext()) {
+            Map.Entry<Pair<byte[], byte[]>, byte[]> entry = it.next();
+            if (Arrays.equals(pubKey, entry.getKey().second)) {
+                it.remove();
+            }
+        }
+
+        it = this.witnessRoot.entrySet().iterator();
+        while (it.hasNext()) {
             Map.Entry<Pair<byte[], byte[]>, byte[]> entry = it.next();
             if (Arrays.equals(pubKey, entry.getKey().second)) {
                 it.remove();
@@ -768,7 +809,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @return root
      */
     public byte[] getMyLatestMsgRoot(byte[] pubKey) {
-        return this.toFriendRoot.get(new ByteArrayWrapper(pubKey));
+        return this.rootToFriend.get(new ByteArrayWrapper(pubKey));
     }
 
     /**
@@ -882,6 +923,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                                     // 请求该root
                                     requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getKey());
                                     this.friendRoot.put(sender, gossipItem.getMessageRoot());
+                                    this.friendWitnessRoot.put(sender, gossipItem.getWitnessRoot());
                                     // 更新时间戳，不更新root，因为gossip不可靠，等亲自访问到节点自己给出的信息再更新
                                     this.friendTimeStamp.put(sender, timeStamp);
                                 }

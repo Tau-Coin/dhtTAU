@@ -29,6 +29,19 @@ public class CompositeMsgListener implements MsgListener {
     }
 
     /**
+     * 已读消息root通知
+     *
+     * @param friend 发已读消息的朋友
+     * @param root   已读消息的root
+     */
+    @Override
+    public void onReadMessageRoot(byte[] friend, byte[] root) {
+        for (MsgListener listener : listeners) {
+            listener.onReadMessageRoot(friend, root);
+        }
+    }
+
+    /**
      * This event will be notified if error happens during running time.
      * Note: this event won't be notified if error happens
      * during starting TauController.

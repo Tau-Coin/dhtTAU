@@ -11,6 +11,13 @@ public interface MsgListener {
     void onNewMessage(byte[] friend, Message message);
 
     /**
+     * 已读消息root通知
+     * @param friend 发已读消息的朋友
+     * @param root 已读消息的root
+     */
+    void onReadMessageRoot(byte[] friend, byte[] root);
+
+    /**
      * This event will be notified if error happens during running time.
      * Note: this event won't be notified if error happens
      * during starting TauController.
