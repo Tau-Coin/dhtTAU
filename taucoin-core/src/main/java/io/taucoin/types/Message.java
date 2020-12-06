@@ -1,6 +1,9 @@
 package io.taucoin.types;
 
+import org.spongycastle.util.encoders.Hex;
+
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
@@ -141,5 +144,18 @@ public class Message {
         }
 
         return this.encode;
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "version=" + getVersion() +
+                ", timestamp=" + Hex.toHexString(getTimestamp()) +
+                ", previousMsgDAGRoot=" + Hex.toHexString(getPreviousMsgDAGRoot()) +
+                ", friendLatestMessageRoot=" + Hex.toHexString(getFriendLatestMessageRoot()) +
+                ", type=" + getType() +
+                ", contentLink=" + Hex.toHexString(getContentLink()) +
+                ", hash=" + Hex.toHexString(getHash()) +
+                '}';
     }
 }

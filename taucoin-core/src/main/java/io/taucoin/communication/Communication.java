@@ -4,6 +4,7 @@ import com.frostwire.jlibtorrent.Pair;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -133,6 +134,8 @@ public class Communication implements DHT.GetDHTItemCallback {
                 for (byte[] friend: friends) {
                     ByteArrayWrapper key = new ByteArrayWrapper(friend);
                     this.friends.add(key);
+
+                    logger.debug("My friend:{}", key.toString());
 
                     // 获取朋友给我消息的最新root
                     byte[] root = this.messageDB.getFriendMessageRoot(friend);
@@ -297,7 +300,11 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (iterator.hasNext()) {
             Map.Entry<ByteArrayWrapper, byte[]> entry = iterator.next();
 
+            logger.debug("Notify UI read message from friend:{}, root:{}",
+                    entry.getKey().toString(), Hex.toHexString(entry.getValue()));
+
             this.msgListener.onReadMessageRoot(entry.getKey().getData(), entry.getValue());
+
             iterator.remove();
         }
     }
@@ -327,6 +334,9 @@ public class Communication implements DHT.GetDHTItemCallback {
             // save to db
             this.messageDB.putMessage(message.getHash(), message.getEncoded());
 
+            logger.debug("Notify UI new message from friend:{}, hash:{}",
+                    sender.toString(), Hex.toHexString(message.getHash()));
+
             // 通知UI新消息
             this.msgListener.onNewMessage(sender.getData(), message);
 
@@ -353,6 +363,8 @@ public class Communication implements DHT.GetDHTItemCallback {
         Iterator<ByteArrayWrapper> it = this.friendDemandHash.iterator();
         while (it.hasNext()) {
             byte[] hash = it.next().getData();
+            logger.info("Response demand:{}", Hex.toHexString(hash));
+
             byte[] data = this.messageDB.getMessageByHash(hash);
             publishImmutableData(data);
 
@@ -377,6 +389,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             while (iterator.hasNext()) {
                 byte[] value = iterator.next().getValue();
                 if (Arrays.equals(hash, value)) {
+                    logger.debug("Remove hash[{}] from demand hash set", Hex.toHexString(hash));
                     iterator.remove();
                 }
             }
@@ -390,6 +403,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void requestDemandHash() {
         for (Map.Entry<ByteArrayWrapper, byte[]> entry: this.demandHash.entrySet()) {
+            logger.debug("Request demand hash:{}", Hex.toHexString(entry.getValue()));
             requestImmutableData(entry.getValue());
         }
     }
@@ -475,6 +489,11 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.queue.offer(immutableItemRequest);
     }
 
+    /**
+     * 请求对应哈希值的消息
+     * @param hash msg hash
+     * @param pubKey public key
+     */
     private void requestMessage(byte[] hash, ByteArrayWrapper pubKey) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey);
@@ -483,6 +502,10 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.queue.offer(immutableItemRequest);
     }
 
+    /**
+     * 请求消息携带的内容
+     * @param hash 内容哈希
+     */
     private void requestMessageContent(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE_CONTENT);
@@ -491,6 +514,10 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.queue.offer(immutableItemRequest);
     }
 
+    /**
+     * 请求immutable数据
+     * @param hash 数据哈希
+     */
     public void requestImmutableData(byte[] hash) {
         DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.IMMUTABLE_DATA);
@@ -590,6 +617,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             }
 
             GossipList gossipList = new GossipList(previousGossipListHash, list);
+            logger.debug(gossipList.toString());
 
             publishGossipList(gossipList);
 
@@ -598,6 +626,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
         // 最后一个gossip list以mutable形式发布
         GossipList gossipList = new GossipList(previousGossipListHash, gossipItemList);
+        logger.debug(gossipList.toString());
         publishMutableGossipList(gossipList);
     }
 
@@ -657,15 +686,17 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
-     * 更新发给朋友的消息的时间和root
+     * 更新发给朋友的消息的时间和root等信息
      * @param friend friend to send msg
      * @param message msg
      */
-    private void updateMessageInfoToFriend(byte[] friend, Message message) {
+    private void updateMessageInfoToFriend(byte[] friend, Message message) throws DBException {
         ByteArrayWrapper key = new ByteArrayWrapper(friend);
         this.timeStampToFriend.put(key, ByteUtil.byteArrayToLong(message.getTimestamp()));
         this.rootToFriend.put(key, message.getHash());
         this.confirmationRootToFriend.put(key, message.getFriendLatestMessageRoot());
+
+        this.messageDB.setMessageToFriendRoot(friend, message.getHash());
     }
 
     /**
@@ -680,6 +711,24 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
+     * save message data in database
+     * @param message msg
+     * @param list msg data
+     * @throws DBException database exception
+     */
+    private void saveMessageDataInDB(Message message, List<byte[]> list) throws DBException {
+        if (null != message) {
+            this.messageDB.putMessage(message.getHash(), message.getEncoded());
+        }
+
+        if (null != list) {
+            for (byte[] date: list) {
+                this.messageDB.putMessage(HashUtil.bencodeHash(date), date);
+            }
+        }
+    }
+
+    /**
      * 向朋友发布新消息
      * @param friend 朋友公钥
      * @param message 新消息
@@ -689,7 +738,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     public boolean publishNewMessage(byte[] friend, Message message, List<byte[]> data) {
         if (this.queue.size() <= QueueCapability) {
             try {
-                updateLatestRootToFriend(friend, message.getHash());
+                saveMessageDataInDB(message, data);
                 updateMessageInfoToFriend(friend, message);
                 publishMessage(message);
                 publishImmutableData(data);
@@ -734,12 +783,22 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
 
+    /**
+     * 添加新朋友
+     * @param pubKey public key
+     * @throws DBException database exception
+     */
     public void addNewFriend(byte[] pubKey) throws DBException {
         this.friends.add(new ByteArrayWrapper(pubKey));
 
         this.messageDB.addFriend(pubKey);
     }
 
+    /**
+     * 删除朋友
+     * @param pubKey public key
+     * @throws DBException database exception
+     */
     public void delFriend(byte[] pubKey) throws DBException {
         ByteArrayWrapper key = new ByteArrayWrapper(pubKey);
         this.friends.remove(key);
@@ -779,6 +838,10 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.messageDB.delFriend(pubKey);
     }
 
+    /**
+     * 获取所有的朋友
+     * @return 所有朋友的公钥
+     */
     public List<byte[]> getAllFriends() {
         List<byte[]> list = new ArrayList<>();
         for (ByteArrayWrapper friend: this.friends) {
