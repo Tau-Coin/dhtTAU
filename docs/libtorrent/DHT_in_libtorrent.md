@@ -25,10 +25,23 @@ The following discussion is based on [libtorrent-1.2.10](https://github.com/arvi
 	> 对于Immutable item发现目标值，则会直接终止请求；
 	
 	> 对于Mutable item而言，即使节点回复了对应于target下的目标值，还会继续请求，因为在mutable item系统中，需要请求到最大sequence值对应的数据；
-6. 在libtorrent系统中，也存在找不到目标值的情况，下面我们会具体分析。
+6. 在libtorrent系统中，也存在找不到目标值的情况，下面我们会具体分析:
+  - 目标值的获取结果和初始的`k`个节点息息相关，尽管`KAD`算法收敛效率很高，基本在3-4次迭代就会找到离逻辑距离很近的节点，但并不能保证一定能查找到目标值；
+  - 目前`libtorrent`中几个重要的变量:
+  	- `m_result` // 决定了单次get的范围，目前libtorrent系统限制单次get的连接数为100；
+  	- branch-factor // `kad`中的`alpha`因子，决定了单次get的效率；
+  	- short_timeout && timeout // 会随着单个连接的请求时长增加而扩大branch-factor；
+ - 单次`get`请求的流量花销挺大，在移动网络或者一定成本的流量环境中，需要注意。后面我们会有测试数据分析。
 
 #### Put item in libtorrent
-对于`put item`的操作，首先会相应的进行`get item`的操作，执行get的操作主要是为了查找离target值逻辑距离最近的节点信息(nodeid, ip, port以及token)
+对于`put item`的操作，首先会相应的进行`get item`的操作：
+> 对于Immutable item而言，执行get操作的主要目的是主为了查找离target值逻辑距离最近的节点信息(nodeid, ip, port以及token)，之后可以进行put操作；
+	
+> 对于Mutable item而言，执行get操作有两个目的：
+ - sequence number, get操作需要执行到最后，拿到查询范围内最大的sequence number，才会执行后续的put操作，该值作为执行put mutable item的赋值；
+ - 是主为了查找离target值逻辑距离最近的节点信息(nodeid, ip, port以及token)，之后可以进行put操作；
+
+综上，`put`操作的资源消耗是相当大的。
 
 ### DHT in TAU
 We use ITEM system in dhtTAU for data communication. [Module-DHT]() was made to build a bridge between our applications and libtorrent.
