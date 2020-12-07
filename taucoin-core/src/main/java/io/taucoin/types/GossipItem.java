@@ -126,13 +126,25 @@ public class GossipItem {
 
     @Override
     public String toString() {
-        return "GossipItem{" +
-                "sender=" + Hex.toHexString(getSender()) +
-                ", receiver=" + Hex.toHexString(getReceiver()) +
-                ", timestamp=" + Hex.toHexString(getTimestamp()) +
-                ", gossipType=" + getGossipType() +
-                ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
-                ", confirmationRoot=" + Hex.toHexString(getMessageRoot()) +
-                '}';
+        byte[] confirmationRoot = getConfirmationRoot();
+
+        if (null != confirmationRoot) {
+            return "GossipItem{" +
+                    "sender=" + Hex.toHexString(getSender()) +
+                    ", receiver=" + Hex.toHexString(getReceiver()) +
+                    ", timestamp=" + Hex.toHexString(getTimestamp()) +
+                    ", gossipType=" + getGossipType() +
+                    ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
+                    ", confirmationRoot=" + Hex.toHexString(confirmationRoot) +
+                    '}';
+        } else {
+            return "GossipItem{" +
+                    "sender=" + Hex.toHexString(getSender()) +
+                    ", receiver=" + Hex.toHexString(getReceiver()) +
+                    ", timestamp=" + Hex.toHexString(getTimestamp()) +
+                    ", gossipType=" + getGossipType() +
+                    ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
+                    '}';
+        }
     }
 }
