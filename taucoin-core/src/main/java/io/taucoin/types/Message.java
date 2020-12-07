@@ -5,6 +5,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -150,7 +151,7 @@ public class Message {
     public String toString() {
         return "Message{" +
                 "version=" + getVersion() +
-                ", timestamp=" + Hex.toHexString(getTimestamp()) +
+                ", timestamp=" + ByteUtil.byteArrayToLong(getTimestamp()) +
                 ", previousMsgDAGRoot=" + Hex.toHexString(getPreviousMsgDAGRoot()) +
                 ", friendLatestMessageRoot=" + Hex.toHexString(getFriendLatestMessageRoot()) +
                 ", type=" + getType() +

@@ -481,12 +481,14 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param pubKey public key
      */
     private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
-        logger.debug("Request gossip info from peer:{}", pubKey.toString());
-        DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), ChainParam.GOSSIP_CHANNEL);
-        DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
+        if (null != pubKey) {
+            logger.debug("Request gossip info from peer:{}", pubKey.toString());
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), ChainParam.GOSSIP_CHANNEL);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
 
-        DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-        this.queue.offer(mutableItemRequest);
+            DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+            this.queue.offer(mutableItemRequest);
+        }
     }
 
     /**
@@ -495,11 +497,13 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param pubKey public key
      */
     private void requestGossipList(byte[] hash, ByteArrayWrapper pubKey) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-        DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST, pubKey);
+        if (null != hash) {
+            DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST, pubKey);
 
-        DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-        this.queue.offer(immutableItemRequest);
+            DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
+            this.queue.offer(immutableItemRequest);
+        }
     }
 
     /**
@@ -508,11 +512,14 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param pubKey public key
      */
     private void requestMessage(byte[] hash, ByteArrayWrapper pubKey) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-        DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey);
+        if (null != hash) {
+            logger.debug("Hash:{}, public key:{}", Hex.toHexString(hash), pubKey.toString());
+            DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey);
 
-        DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-        this.queue.offer(immutableItemRequest);
+            DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
+            this.queue.offer(immutableItemRequest);
+        }
     }
 
     /**
@@ -520,11 +527,13 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param hash 内容哈希
      */
     private void requestMessageContent(byte[] hash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-        DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE_CONTENT);
+        if (null != hash) {
+            DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE_CONTENT);
 
-        DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-        this.queue.offer(immutableItemRequest);
+            DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
+            this.queue.offer(immutableItemRequest);
+        }
     }
 
     /**
@@ -532,11 +541,13 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param hash 数据哈希
      */
     public void requestImmutableData(byte[] hash) {
-        DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-        DataIdentifier dataIdentifier = new DataIdentifier(DataType.IMMUTABLE_DATA);
+        if (null != hash) {
+            DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.IMMUTABLE_DATA);
 
-        DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-        this.queue.offer(immutableItemRequest);
+            DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
+            this.queue.offer(immutableItemRequest);
+        }
     }
 
     /**
@@ -615,6 +626,12 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void publishGossipInfo() {
         // put mutable item
         Set<GossipItem> gossipItemSet = getGossipSet();
+
+        logger.debug("----------------------start----------------------");
+        for(GossipItem gossipItem: gossipItemSet) {
+            logger.debug("Gossip set:{}", gossipItem.toString());
+        }
+        logger.debug("----------------------end----------------------");
 
         // 切分gossip列表，前面的列表以immutable形式发布
         byte[] previousGossipListHash = null;
@@ -711,6 +728,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void updateMessageInfoToFriend(byte[] friend, Message message) throws DBException {
         ByteArrayWrapper key = new ByteArrayWrapper(friend);
+        logger.info("Update friend [{}] info.", key.toString());
         this.timeStampToFriend.put(key, ByteUtil.byteArrayToLong(message.getTimestamp()));
         this.rootToFriend.put(key, message.getHash());
         this.confirmationRootToFriend.put(key, message.getFriendLatestMessageRoot());
@@ -951,7 +969,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                 }
 
                 Message message = new Message(item);
-                requestMessageContent(message.getPreviousMsgDAGRoot());
+                requestMessageContent(message.getContentLink());
                 logger.debug("Got message hash:{}", Hex.toHexString(message.getHash()));
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getKey());
@@ -971,7 +989,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             case GOSSIP_FROM_PEER:
             case GOSSIP_LIST: {
                 if (null == item) {
-                    logger.debug("GOSSIP_LIST is empty");
+                    logger.debug("GOSSIP_LIST from peer[{}] is empty", dataIdentifier.getKey().toString());
                     return;
                 }
 
@@ -1017,8 +1035,11 @@ public class Communication implements DHT.GetDHTItemCallback {
                                     this.friendRoot.put(sender, gossipItem.getMessageRoot());
 
                                     if (null != gossipItem.getConfirmationRoot()) {
+                                        logger.debug("Got a friend[{}] confirmation root[{}]",
+                                                dataIdentifier.getKey().toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
                                         this.friendConfirmationRoot.put(sender, gossipItem.getConfirmationRoot());
                                     }
+
                                     // 更新时间戳，不更新root，因为gossip不可靠，等亲自访问到节点自己给出的信息再更新
                                     this.friendTimeStamp.put(sender, timeStamp);
                                 }

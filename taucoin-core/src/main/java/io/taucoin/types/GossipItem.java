@@ -5,6 +5,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -149,7 +150,7 @@ public class GossipItem {
             return "GossipItem{" +
                     "sender=" + Hex.toHexString(getSender()) +
                     ", receiver=" + Hex.toHexString(getReceiver()) +
-                    ", timestamp=" + Hex.toHexString(getTimestamp()) +
+                    ", timestamp=" + ByteUtil.byteArrayToLong(getTimestamp()) +
                     ", gossipType=" + getGossipType() +
                     ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
                     ", confirmationRoot=" + Hex.toHexString(confirmationRoot) +
@@ -158,7 +159,7 @@ public class GossipItem {
             return "GossipItem{" +
                     "sender=" + Hex.toHexString(getSender()) +
                     ", receiver=" + Hex.toHexString(getReceiver()) +
-                    ", timestamp=" + Hex.toHexString(getTimestamp()) +
+                    ", timestamp=" + ByteUtil.byteArrayToLong(getTimestamp()) +
                     ", gossipType=" + getGossipType() +
                     ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
                     '}';
