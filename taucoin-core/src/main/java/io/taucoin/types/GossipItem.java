@@ -27,6 +27,8 @@ public class GossipItem {
         this.gossipType = gossipType;
         this.messageRoot = messageRoot;
         this.confirmationRoot = confirmationRoot;
+
+        this.parsed = true;
     }
 
     public GossipItem(byte[] encode) {

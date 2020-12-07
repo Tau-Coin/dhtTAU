@@ -24,6 +24,7 @@ public class GossipList {
     public GossipList(byte[] previousGossipListHash, List<GossipItem> gossipList) {
         this.previousGossipListHash = previousGossipListHash;
         this.gossipList = gossipList;
+
         this.parsed = true;
     }
 
