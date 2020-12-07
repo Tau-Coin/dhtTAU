@@ -2,14 +2,14 @@
     <!-- Create a logcat appender -->
     <appender name="logcat" class="ch.qos.logback.classic.android.LogcatAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>DEBUG</level>
+            <level>TRACE</level>
         </filter>
         <encoder>
             <pattern>%msg</pattern>
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="TRACE">
         <appender-ref ref="logcat" />
     </root>
 
