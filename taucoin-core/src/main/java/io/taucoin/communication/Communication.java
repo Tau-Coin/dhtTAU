@@ -501,7 +501,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void requestGossipList(byte[] hash, ByteArrayWrapper pubKey) {
         if (null != hash) {
             DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-            DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST, pubKey);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST, pubKey, new ByteArrayWrapper(hash));
 
             DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
             this.queue.offer(immutableItemRequest);
@@ -517,7 +517,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         if (null != hash) {
             logger.debug("Hash:{}, public key:{}", Hex.toHexString(hash), pubKey.toString());
             DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-            DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey, new ByteArrayWrapper(hash));
 
             DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
             this.queue.offer(immutableItemRequest);
@@ -528,10 +528,10 @@ public class Communication implements DHT.GetDHTItemCallback {
      * 请求消息携带的内容
      * @param hash 内容哈希
      */
-    private void requestMessageContent(byte[] hash) {
+    private void requestMessageContent(byte[] hash, ByteArrayWrapper pubKey) {
         if (null != hash) {
             DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-            DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE_CONTENT);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE_CONTENT, pubKey, new ByteArrayWrapper(hash));
 
             DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
             this.queue.offer(immutableItemRequest);
@@ -967,20 +967,22 @@ public class Communication implements DHT.GetDHTItemCallback {
             case MESSAGE: {
                 if (null == item) {
                     logger.debug("MESSAGE is empty");
+                    this.demandHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
 
                 Message message = new Message(item);
-                requestMessageContent(message.getContentLink());
+                requestMessageContent(message.getContentLink(), dataIdentifier.getExtraInfo1());
                 logger.debug("Got message hash:{}", Hex.toHexString(message.getHash()));
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
-                this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getKey());
+                this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getExtraInfo1());
 
                 break;
             }
             case MESSAGE_CONTENT: {
                 if (null == item) {
                     logger.debug("MESSAGE_CONTENT is empty");
+                    this.demandHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
 
@@ -988,18 +990,16 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                 break;
             }
-            case GOSSIP_FROM_PEER:
-            case GOSSIP_LIST: {
+            case GOSSIP_FROM_PEER: {
                 if (null == item) {
-                    logger.debug("GOSSIP_LIST from peer[{}] is empty", dataIdentifier.getKey().toString());
+                    logger.debug("GOSSIP_FROM_PEER from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
                     return;
                 }
 
                 GossipList gossipList = new GossipList(item);
                 if (null != gossipList.getPreviousGossipListHash()) {
-                    requestGossipList(gossipList.getPreviousGossipListHash(), dataIdentifier.getKey());
+                    requestGossipList(gossipList.getPreviousGossipListHash(), dataIdentifier.getExtraInfo1());
                 }
-
 
                 if (null != gossipList.getGossipList()) {
                     this.gossipItems.addAll(gossipList.getGossipList());
@@ -1009,7 +1009,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                     for (GossipItem gossipItem : gossipList.getGossipList()) {
                         logger.debug("Got gossip: {} from peer[{}]",
-                                gossipItem.toString(), dataIdentifier.getKey().toString());
+                                gossipItem.toString(), dataIdentifier.getExtraInfo1().toString());
 
                         ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
@@ -1020,7 +1020,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                         // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
                         // 并且gossip item的receiver是我，那么会直接信任该gossip消息
-                        if (Arrays.equals(dataIdentifier.getKey().getData(), gossipItem.getSender())
+                        if (Arrays.equals(dataIdentifier.getExtraInfo1().getData(), gossipItem.getSender())
                                 && Arrays.equals(pubKey, gossipItem.getReceiver())) {
                             if (gossipItem.getGossipType() == GossipType.DEMAND) {
                                 this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getMessageRoot()));
@@ -1033,12 +1033,76 @@ public class Communication implements DHT.GetDHTItemCallback {
                                     activeFriends.add(sender);
 
                                     // 请求该root
-                                    requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getKey());
+                                    requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getExtraInfo1());
                                     this.friendRoot.put(sender, gossipItem.getMessageRoot());
 
                                     if (null != gossipItem.getConfirmationRoot()) {
                                         logger.debug("Got a friend[{}] confirmation root[{}]",
-                                                dataIdentifier.getKey().toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
+                                                dataIdentifier.getExtraInfo1().toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
+                                        this.friendConfirmationRoot.put(sender, gossipItem.getConfirmationRoot());
+                                    }
+
+                                    // 更新时间戳，不更新root，因为gossip不可靠，等亲自访问到节点自己给出的信息再更新
+                                    this.friendTimeStamp.put(sender, timeStamp);
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                break;
+            }
+            case GOSSIP_LIST: {
+                if (null == item) {
+                    logger.debug("GOSSIP_LIST from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
+                    this.demandHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
+                    return;
+                }
+
+                GossipList gossipList = new GossipList(item);
+                if (null != gossipList.getPreviousGossipListHash()) {
+                    requestGossipList(gossipList.getPreviousGossipListHash(), dataIdentifier.getExtraInfo1());
+                }
+
+                if (null != gossipList.getGossipList()) {
+                    this.gossipItems.addAll(gossipList.getGossipList());
+
+                    // 信任发送方自己给的gossip信息
+                    byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+                    for (GossipItem gossipItem : gossipList.getGossipList()) {
+                        logger.debug("Got gossip: {} from peer[{}]",
+                                gossipItem.toString(), dataIdentifier.getExtraInfo1().toString());
+
+                        ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
+
+                        // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+                        if (Arrays.equals(sender.getData(), pubKey)) {
+                            continue;
+                        }
+
+                        // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
+                        // 并且gossip item的receiver是我，那么会直接信任该gossip消息
+                        if (Arrays.equals(dataIdentifier.getExtraInfo1().getData(), gossipItem.getSender())
+                                && Arrays.equals(pubKey, gossipItem.getReceiver())) {
+                            if (gossipItem.getGossipType() == GossipType.DEMAND) {
+                                this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getMessageRoot()));
+                            } else if (gossipItem.getGossipType() == GossipType.MSG) {
+                                Long oldTimeStamp = this.friendTimeStamp.get(sender);
+                                long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
+
+                                if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
+                                    // 加入活跃朋友集合
+                                    activeFriends.add(sender);
+
+                                    // 请求该root
+                                    requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getExtraInfo1());
+                                    this.friendRoot.put(sender, gossipItem.getMessageRoot());
+
+                                    if (null != gossipItem.getConfirmationRoot()) {
+                                        logger.debug("Got a friend[{}] confirmation root[{}]",
+                                                dataIdentifier.getExtraInfo1().toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
                                         this.friendConfirmationRoot.put(sender, gossipItem.getConfirmationRoot());
                                     }
 

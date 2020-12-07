@@ -2903,44 +2903,44 @@ public class Chains implements DHT.GetDHTItemCallback{
             case TIP_ITEM_FROM_PEER_FOR_MINING: {
                 if (null == item) {
                     logger.error("TIP_ITEM_FROM_PEER_FOR_MINING from peer[{}] is empty.",
-                            dataIdentifier.getKey().toString());
+                            dataIdentifier.getExtraInfo1().toString());
 
-                    Long count = this.tipFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getKey());
+                    Long count = this.tipFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo1());
                     if (null == count) {
                         count = 1L;
                     } else {
                         count++;
                     }
-                    this.tipFailure.get(dataIdentifier.getChainID()).put(dataIdentifier.getKey(), count);
+                    this.tipFailure.get(dataIdentifier.getChainID()).put(dataIdentifier.getExtraInfo1(), count);
 
-                    Long total = this.tipSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getKey());
+                    Long total = this.tipSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo1());
                     if (null == total) {
                         total = count;
                     } else {
                         total += count;
                     }
                     logger.info("Tip Item: Address:{}, failure rate: {} / {} = {}",
-                            dataIdentifier.getKey().toString(), count, total, ((float)count / (float)total));
+                            dataIdentifier.getExtraInfo1().toString(), count, total, ((float)count / (float)total));
 
                     return;
                 }
 
-                Long count = this.tipSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getKey());
+                Long count = this.tipSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo1());
                 if (null == count) {
                     count = 1L;
                 } else {
                     count++;
                 }
-                this.tipSuccess.get(dataIdentifier.getChainID()).put(dataIdentifier.getKey(), count);
+                this.tipSuccess.get(dataIdentifier.getChainID()).put(dataIdentifier.getExtraInfo1(), count);
 
-                Long total = this.tipFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getKey());
+                Long total = this.tipFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo1());
                 if (null == total) {
                     total = count;
                 } else {
                     total += count;
                 }
                 logger.info("Tip Item: Address:{}, success rate: {} / {} = {}",
-                        dataIdentifier.getKey().toString(), count, total, ((float)count / (float)total));
+                        dataIdentifier.getExtraInfo1().toString(), count, total, ((float)count / (float)total));
 
                 TipItem tipItem = new TipItem(item);
 
@@ -2948,14 +2948,14 @@ public class Chains implements DHT.GetDHTItemCallback{
                     byte[] blockHash = tipItem.getBlockHash();
                     if (null != blockHash) {
                         logger.debug("Request tip block hash[{}] from peer[{}]", Hex.toHexString(blockHash),
-                                dataIdentifier.getKey().toString());
+                                dataIdentifier.getExtraInfo1().toString());
                         requestBlockForMining(dataIdentifier.getChainID(), blockHash);
                     }
 
                     byte[] txHash = tipItem.getTxHash();
                     if (null != txHash) {
                         logger.debug("Request tip tx hash[{}] from peer[{}]", Hex.toHexString(txHash),
-                                dataIdentifier.getKey().toString());
+                                dataIdentifier.getExtraInfo1().toString());
                         requestTxForPool(dataIdentifier.getChainID(), txHash);
                     }
                 }
@@ -2965,19 +2965,19 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_BLOCK_REQUEST_FOR_MINING: {
                 if (null == item) {
                     logger.error("HISTORY_BLOCK_REQUEST_FOR_MINING is empty, block hash:{}",
-                            Hex.toHexString(dataIdentifier.getKey().getData()));
+                            Hex.toHexString(dataIdentifier.getExtraInfo1().getData()));
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setBlockHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setBlockHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     // 返回区块为空，在block container集合里插入空标志
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getKey(), null);
+                            put(dataIdentifier.getExtraInfo1(), null);
                     return;
                 }
 
                 byte[] blockHash = this.localDemandMap.get(dataIdentifier.getChainID()).getBlockHash();
-                if (null != blockHash && Arrays.equals(blockHash, dataIdentifier.getKey().getData())) {
+                if (null != blockHash && Arrays.equals(blockHash, dataIdentifier.getExtraInfo1().getData())) {
                     this.localDemandMap.get(dataIdentifier.getChainID()).clearBlockHash();
                 }
 
@@ -3002,7 +3002,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             this.verticalItemMap.get(dataIdentifier.getChainID()).remove(key);
                             // 在block container集合里插入空标志
                             this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                    put(dataIdentifier.getKey(), null);
+                                    put(dataIdentifier.getExtraInfo1(), null);
                             success = false;
                         }
                     } else {
@@ -3032,12 +3032,12 @@ public class Chains implements DHT.GetDHTItemCallback{
                                         this.txMap.get(dataIdentifier.getChainID()).remove(txKey);
                                         // 在block container集合里插入空标志
                                         this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                                put(dataIdentifier.getKey(), null);
+                                                put(dataIdentifier.getExtraInfo1(), null);
                                         success = false;
                                     }
                                 } else {
                                     // 缓存没有，则请求
-                                    requestTxForMining(dataIdentifier.getChainID(), horizontalItem.getTxHash(), dataIdentifier.getKey());
+                                    requestTxForMining(dataIdentifier.getChainID(), horizontalItem.getTxHash(), dataIdentifier.getExtraInfo1());
                                     success = false;
                                 }
                             }
@@ -3046,19 +3046,19 @@ public class Chains implements DHT.GetDHTItemCallback{
                             this.horizontalItemMap.get(dataIdentifier.getChainID()).remove(key);
                             // 在block container集合里插入空标志
                             this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                    put(dataIdentifier.getKey(), null);
+                                    put(dataIdentifier.getExtraInfo1(), null);
                             success = false;
                         }
                     } else {
                         requestHorizontalItemForMining(dataIdentifier.getChainID(),
-                                block.getHorizontalHash(), dataIdentifier.getKey());
+                                block.getHorizontalHash(), dataIdentifier.getExtraInfo1());
                         success = false;
                     }
                 }
 
                 if (success) {
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getKey(), blockContainer);
+                            put(dataIdentifier.getExtraInfo1(), blockContainer);
                 }
 
                 break;
@@ -3066,15 +3066,15 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_TX_REQUEST_FOR_MINING: {
                 if (null == item) {
                     logger.error("HISTORY_TX_REQUEST_FOR_MINING is empty, tx hash:{}",
-                            Hex.toHexString(dataIdentifier.getKey().getData()));
+                            Hex.toHexString(dataIdentifier.getExtraInfo1().getData()));
 
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setTxHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setTxHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getBlockHash(), null);
+                            put(dataIdentifier.getExtraInfo2(), null);
 
                     return;
                 } else {
@@ -3082,14 +3082,14 @@ public class Chains implements DHT.GetDHTItemCallback{
                     Transaction tx = TransactionFactory.parseTransaction(item);
 
                     byte[] txHash = this.localDemandMap.get(dataIdentifier.getChainID()).getTxHash();
-                    if (null != txHash && Arrays.equals(txHash, dataIdentifier.getKey().getData())) {
+                    if (null != txHash && Arrays.equals(txHash, dataIdentifier.getExtraInfo1().getData())) {
                         this.localDemandMap.get(dataIdentifier.getChainID()).clearTxHash();
                     }
 
                     // 放入交易集合作缓存
-                    this.txMap.get(dataIdentifier.getChainID()).put(dataIdentifier.getKey(), tx);
+                    this.txMap.get(dataIdentifier.getChainID()).put(dataIdentifier.getExtraInfo1(), tx);
 
-                    Block block = this.blockMap.get(dataIdentifier.getChainID()).get(dataIdentifier.getBlockHash());
+                    Block block = this.blockMap.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo2());
 
                     if (null != block) {
                         BlockContainer blockContainer = new BlockContainer(block);
@@ -3116,7 +3116,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         }
 
                         this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                put(dataIdentifier.getBlockHash(), blockContainer);
+                                put(dataIdentifier.getExtraInfo2(), blockContainer);
                     }
                 }
 
@@ -3125,30 +3125,30 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_VERTICAL_ITEM_REQUEST_FOR_MINING: {
                 if (null == item) {
                     logger.error("HISTORY_VERTICAL_ITEM_REQUEST_FOR_MINING is empty, hash:{}, block hash:{}",
-                            Hex.toHexString(dataIdentifier.getKey().getData()), dataIdentifier.getBlockHash().toString());
+                            Hex.toHexString(dataIdentifier.getExtraInfo1().getData()), dataIdentifier.getExtraInfo2().toString());
 
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setVerticalHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setVerticalHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getBlockHash(), null);
+                            put(dataIdentifier.getExtraInfo2(), null);
 
                     return;
                 } else {
                     byte[] verticalHash = this.localDemandMap.get(dataIdentifier.getChainID()).getVerticalHash();
-                    if (null != verticalHash && Arrays.equals(verticalHash, dataIdentifier.getKey().getData())) {
+                    if (null != verticalHash && Arrays.equals(verticalHash, dataIdentifier.getExtraInfo1().getData())) {
                         this.localDemandMap.get(dataIdentifier.getChainID()).clearVerticalHash();
                     }
 
                     VerticalItem verticalItem = new VerticalItem(item);
-                    logger.info("Got vertical item, hash:{}", dataIdentifier.getKey().toString());
+                    logger.info("Got vertical item, hash:{}", dataIdentifier.getExtraInfo1().toString());
                     // 放入缓存
                     this.verticalItemMap.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getKey(), verticalItem);
+                            put(dataIdentifier.getExtraInfo1(), verticalItem);
 
-                    Block block = this.blockMap.get(dataIdentifier.getChainID()).get(dataIdentifier.getBlockHash());
+                    Block block = this.blockMap.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo2());
 
                     if (null != block) {
                         BlockContainer blockContainer = new BlockContainer(block, verticalItem);
@@ -3174,9 +3174,9 @@ public class Chains implements DHT.GetDHTItemCallback{
                             }
                         }
 
-                        logger.info("Got block container [{}] completely.", dataIdentifier.getBlockHash().toString());
+                        logger.info("Got block container [{}] completely.", dataIdentifier.getExtraInfo2().toString());
                         this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                put(dataIdentifier.getBlockHash(), blockContainer);
+                                put(dataIdentifier.getExtraInfo2(), blockContainer);
                     }
 
                 }
@@ -3185,29 +3185,29 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_MINING: {
                 if (null == item) {
                     logger.error("HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_MINING is empty, hash:{}, block hash:{}",
-                            Hex.toHexString(dataIdentifier.getKey().getData()), dataIdentifier.getBlockHash().toString());
+                            Hex.toHexString(dataIdentifier.getExtraInfo1().getData()), dataIdentifier.getExtraInfo2().toString());
 
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setHorizontalHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setHorizontalHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMap.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getBlockHash(), null);
+                            put(dataIdentifier.getExtraInfo2(), null);
 
                     return;
                 } else {
                     byte[] horizontalHash = this.localDemandMap.get(dataIdentifier.getChainID()).getHorizontalHash();
-                    if (null != horizontalHash && Arrays.equals(horizontalHash, dataIdentifier.getKey().getData())) {
+                    if (null != horizontalHash && Arrays.equals(horizontalHash, dataIdentifier.getExtraInfo1().getData())) {
                         this.localDemandMap.get(dataIdentifier.getChainID()).clearHorizontalHash();
                     }
 
                     HorizontalItem horizontalItem = new HorizontalItem(item);
                     // 放入缓存
                     this.horizontalItemMap.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getKey(), horizontalItem);
+                            put(dataIdentifier.getExtraInfo1(), horizontalItem);
 
-                    Block block = this.blockMap.get(dataIdentifier.getChainID()).get(dataIdentifier.getBlockHash());
+                    Block block = this.blockMap.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo2());
 
                     if (null != block) {
                         BlockContainer blockContainer = new BlockContainer(block);
@@ -3234,25 +3234,25 @@ public class Chains implements DHT.GetDHTItemCallback{
                                     blockContainer.setTx(tx);
 
                                     this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                            put(dataIdentifier.getKey(), blockContainer);
+                                            put(dataIdentifier.getExtraInfo1(), blockContainer);
                                 } else {
                                     // 从缓存删掉空交易，非空交易不作删除，等队列满删除
                                     this.txMap.get(dataIdentifier.getChainID()).remove(txKey);
                                     // 在block container集合里插入空标志
                                     this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                            put(dataIdentifier.getKey(), null);
+                                            put(dataIdentifier.getExtraInfo1(), null);
                                     return;
                                 }
                             } else {
                                 // 缓存没有，则请求
                                 requestTxForMining(dataIdentifier.getChainID(),
-                                        horizontalItem.getTxHash(), dataIdentifier.getBlockHash());
+                                        horizontalItem.getTxHash(), dataIdentifier.getExtraInfo2());
                                 return;
                             }
                         }
 
                         this.blockContainerMap.get(dataIdentifier.getChainID()).
-                                put(dataIdentifier.getBlockHash(), blockContainer);
+                                put(dataIdentifier.getExtraInfo2(), blockContainer);
                     }
 
                 }
@@ -3261,42 +3261,42 @@ public class Chains implements DHT.GetDHTItemCallback{
             case DEMAND_FROM_PEER: {
                 if (null == item) {
                     logger.error("DEMAND_FROM_PEER is empty");
-                    Long count = this.demandFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getKey());
+                    Long count = this.demandFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo1());
                     if (null == count) {
                         count = 1L;
                     } else {
                         count++;
                     }
-                    this.demandFailure.get(dataIdentifier.getChainID()).put(dataIdentifier.getKey(), count);
+                    this.demandFailure.get(dataIdentifier.getChainID()).put(dataIdentifier.getExtraInfo1(), count);
 
-                    Long total = this.demandSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getKey());
+                    Long total = this.demandSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo1());
                     if (null == total) {
                         total = count;
                     } else {
                         total += count;
                     }
                     logger.info("Demand: Address:{}, failure rate: {} / {} = {}",
-                            dataIdentifier.getKey().toString(), count, total, ((float)count / (float)total));
+                            dataIdentifier.getExtraInfo1().toString(), count, total, ((float)count / (float)total));
 
                     return;
                 }
 
-                Long count = this.demandSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getKey());
+                Long count = this.demandSuccess.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo1());
                 if (null == count) {
                     count = 1L;
                 } else {
                     count++;
                 }
-                this.demandSuccess.get(dataIdentifier.getChainID()).put(dataIdentifier.getKey(), count);
+                this.demandSuccess.get(dataIdentifier.getChainID()).put(dataIdentifier.getExtraInfo1(), count);
 
-                Long total = this.demandFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getKey());
+                Long total = this.demandFailure.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo1());
                 if (null == total) {
                     total = count;
                 } else {
                     total += count;
                 }
                 logger.info("Demand: Address:{}, success rate: {} / {} = {}",
-                        dataIdentifier.getKey().toString(), count, total, ((float)count / (float)total));
+                        dataIdentifier.getExtraInfo1().toString(), count, total, ((float)count / (float)total));
 
                 DemandItem demandItem = new DemandItem(item);
                 if (demandItem.validate()) {
@@ -3347,14 +3347,14 @@ public class Chains implements DHT.GetDHTItemCallback{
                 if (null == item) {
                     logger.error("HISTORY_BLOCK_REQUEST_FOR_VOTING is empty");
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setBlockHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setBlockHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     return;
                 }
 
                 byte[] blockHash = this.localDemandMap.get(dataIdentifier.getChainID()).getBlockHash();
-                if (null != blockHash && Arrays.equals(blockHash, dataIdentifier.getKey().getData())) {
+                if (null != blockHash && Arrays.equals(blockHash, dataIdentifier.getExtraInfo1().getData())) {
                     this.localDemandMap.get(dataIdentifier.getChainID()).clearBlockHash();
                 }
 
@@ -3368,14 +3368,14 @@ public class Chains implements DHT.GetDHTItemCallback{
                     logger.error("TX_REQUEST_FOR_MINING is empty");
 
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setTxHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setTxHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     return;
                 }
 
                 byte[] txHash = this.localDemandMap.get(dataIdentifier.getChainID()).getTxHash();
-                if (null != txHash && Arrays.equals(txHash, dataIdentifier.getKey().getData())) {
+                if (null != txHash && Arrays.equals(txHash, dataIdentifier.getExtraInfo1().getData())) {
                     this.localDemandMap.get(dataIdentifier.getChainID()).clearTxHash();
                 }
 
@@ -3387,20 +3387,20 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_BLOCK_REQUEST_FOR_SYNC: {
                 if (null == item) {
                     logger.error("HISTORY_BLOCK_REQUEST_FOR_SYNC is empty, sync block hash:{}",
-                            dataIdentifier.getKey().toString());
+                            dataIdentifier.getExtraInfo1().toString());
 
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setBlockHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setBlockHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     // 返回区块为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getKey(), null);
+                            put(dataIdentifier.getExtraInfo1(), null);
                     return;
                 }
 
                 byte[] blockHash = this.localDemandMap.get(dataIdentifier.getChainID()).getBlockHash();
-                if (null != blockHash && Arrays.equals(blockHash, dataIdentifier.getKey().getData())) {
+                if (null != blockHash && Arrays.equals(blockHash, dataIdentifier.getExtraInfo1().getData())) {
                     this.localDemandMap.get(dataIdentifier.getChainID()).clearBlockHash();
                 }
 
@@ -3425,7 +3425,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                             this.verticalItemMapForSync.get(dataIdentifier.getChainID()).remove(key);
                             // 在block container集合里插入空标志
                             this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                                    put(dataIdentifier.getKey(), null);
+                                    put(dataIdentifier.getExtraInfo1(), null);
                             success = false;
                         }
                     } else {
@@ -3455,12 +3455,12 @@ public class Chains implements DHT.GetDHTItemCallback{
                                         this.txMapForSync.get(dataIdentifier.getChainID()).remove(txKey);
                                         // 在block container集合里插入空标志
                                         this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                                                put(dataIdentifier.getKey(), null);
+                                                put(dataIdentifier.getExtraInfo1(), null);
                                         success = false;
                                     }
                                 } else {
                                     // 缓存没有，则请求
-                                    requestTxForSync(dataIdentifier.getChainID(), horizontalItem.getTxHash(), dataIdentifier.getKey());
+                                    requestTxForSync(dataIdentifier.getChainID(), horizontalItem.getTxHash(), dataIdentifier.getExtraInfo1());
                                     success = false;
                                 }
                             }
@@ -3469,19 +3469,19 @@ public class Chains implements DHT.GetDHTItemCallback{
                             this.horizontalItemMapForSync.get(dataIdentifier.getChainID()).remove(key);
                             // 在block container集合里插入空标志
                             this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                                    put(dataIdentifier.getKey(), null);
+                                    put(dataIdentifier.getExtraInfo1(), null);
                             success = false;
                         }
                     } else {
                         requestHorizontalItemForSync(dataIdentifier.getChainID(),
-                                block.getHorizontalHash(), dataIdentifier.getKey());
+                                block.getHorizontalHash(), dataIdentifier.getExtraInfo1());
                         success = false;
                     }
                 }
 
                 if (success) {
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getKey(), blockContainer);
+                            put(dataIdentifier.getExtraInfo1(), blockContainer);
                 }
 
                 break;
@@ -3489,15 +3489,15 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_TX_REQUEST_FOR_SYNC: {
                 if (null == item) {
                     logger.error("HISTORY_TX_REQUEST_FOR_SYNC is empty, sync tx hash:{}",
-                            dataIdentifier.getKey().toString());
+                            dataIdentifier.getExtraInfo1().toString());
 
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setTxHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setTxHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getKey(), null);
+                            put(dataIdentifier.getExtraInfo1(), null);
                     return;
                 } else {
 
@@ -3505,14 +3505,14 @@ public class Chains implements DHT.GetDHTItemCallback{
                     Transaction tx = TransactionFactory.parseTransaction(item);
 
                     byte[] txHash = this.localDemandMap.get(dataIdentifier.getChainID()).getTxHash();
-                    if (null != txHash && Arrays.equals(txHash, dataIdentifier.getKey().getData())) {
+                    if (null != txHash && Arrays.equals(txHash, dataIdentifier.getExtraInfo1().getData())) {
                         this.localDemandMap.get(dataIdentifier.getChainID()).clearTxHash();
                     }
 
                     // 放入交易集合作缓存
-                    this.txMapForSync.get(dataIdentifier.getChainID()).put(dataIdentifier.getKey(), tx);
+                    this.txMapForSync.get(dataIdentifier.getChainID()).put(dataIdentifier.getExtraInfo1(), tx);
 
-                    Block block = this.blockMapForSync.get(dataIdentifier.getChainID()).get(dataIdentifier.getBlockHash());
+                    Block block = this.blockMapForSync.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo2());
 
                     if (null != block) {
                         BlockContainer blockContainer = new BlockContainer(block);
@@ -3539,7 +3539,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         }
 
                         this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                                put(dataIdentifier.getBlockHash(), blockContainer);
+                                put(dataIdentifier.getExtraInfo2(), blockContainer);
                     }
                 }
 
@@ -3548,29 +3548,29 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_VERTICAL_ITEM_REQUEST_FOR_SYNC: {
                 if (null == item) {
                     logger.error("HISTORY_VERTICAL_ITEM_REQUEST_FOR_SYNC is empty, hash:{}, block hash:{}",
-                            Hex.toHexString(dataIdentifier.getKey().getData()), dataIdentifier.getBlockHash().toString());
+                            Hex.toHexString(dataIdentifier.getExtraInfo1().getData()), dataIdentifier.getExtraInfo2().toString());
 
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setVerticalHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setVerticalHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getBlockHash(), null);
+                            put(dataIdentifier.getExtraInfo2(), null);
 
                     return;
                 } else {
                     byte[] verticalHash = this.localDemandMap.get(dataIdentifier.getChainID()).getVerticalHash();
-                    if (null != verticalHash && Arrays.equals(verticalHash, dataIdentifier.getKey().getData())) {
+                    if (null != verticalHash && Arrays.equals(verticalHash, dataIdentifier.getExtraInfo1().getData())) {
                         this.localDemandMap.get(dataIdentifier.getChainID()).clearVerticalHash();
                     }
 
                     VerticalItem verticalItem = new VerticalItem(item);
                     // 放入缓存
                     this.verticalItemMapForSync.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getKey(), verticalItem);
+                            put(dataIdentifier.getExtraInfo1(), verticalItem);
 
-                    Block block = this.blockMapForSync.get(dataIdentifier.getChainID()).get(dataIdentifier.getBlockHash());
+                    Block block = this.blockMapForSync.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo2());
 
                     int counter = this.syncCounter.get(dataIdentifier.getChainID()) + 1;
                     this.syncCounter.put(dataIdentifier.getChainID(), counter);
@@ -3609,7 +3609,7 @@ public class Chains implements DHT.GetDHTItemCallback{
                         }
 
                         this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                                put(dataIdentifier.getBlockHash(), blockContainer);
+                                put(dataIdentifier.getExtraInfo2(), blockContainer);
                     }
 
                 }
@@ -3618,29 +3618,29 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_SYNC: {
                 if (null == item) {
                     logger.error("HISTORY_HORIZONTAL_ITEM_REQUEST_FOR_SYNC is empty, hash:{}, block hash:{}",
-                            Hex.toHexString(dataIdentifier.getKey().getData()), dataIdentifier.getBlockHash().toString());
+                            Hex.toHexString(dataIdentifier.getExtraInfo1().getData()), dataIdentifier.getExtraInfo2().toString());
 
                     // 向dht请求
-                    this.localDemandMap.get(dataIdentifier.getChainID()).setHorizontalHash(dataIdentifier.getKey().getData());
+                    this.localDemandMap.get(dataIdentifier.getChainID()).setHorizontalHash(dataIdentifier.getExtraInfo1().getData());
                     publishDemand(dataIdentifier.getChainID(), this.localDemandMap.get(dataIdentifier.getChainID()));
 
                     // 区块对应交易为空，在block container集合里插入空标志
                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getBlockHash(), null);
+                            put(dataIdentifier.getExtraInfo2(), null);
 
                     return;
                 } else {
                     byte[] horizontalHash = this.localDemandMap.get(dataIdentifier.getChainID()).getHorizontalHash();
-                    if (null != horizontalHash && Arrays.equals(horizontalHash, dataIdentifier.getKey().getData())) {
+                    if (null != horizontalHash && Arrays.equals(horizontalHash, dataIdentifier.getExtraInfo1().getData())) {
                         this.localDemandMap.get(dataIdentifier.getChainID()).clearHorizontalHash();
                     }
 
                     HorizontalItem horizontalItem = new HorizontalItem(item);
                     // 放入缓存
                     this.horizontalItemMapForSync.get(dataIdentifier.getChainID()).
-                            put(dataIdentifier.getKey(), horizontalItem);
+                            put(dataIdentifier.getExtraInfo1(), horizontalItem);
 
-                    Block block = this.blockMapForSync.get(dataIdentifier.getChainID()).get(dataIdentifier.getBlockHash());
+                    Block block = this.blockMapForSync.get(dataIdentifier.getChainID()).get(dataIdentifier.getExtraInfo2());
 
                     if (null != block) {
                         BlockContainer blockContainer = new BlockContainer(block);
@@ -3667,25 +3667,25 @@ public class Chains implements DHT.GetDHTItemCallback{
                                     blockContainer.setTx(tx);
 
                                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                                            put(dataIdentifier.getKey(), blockContainer);
+                                            put(dataIdentifier.getExtraInfo1(), blockContainer);
                                 } else {
                                     // 从缓存删掉空交易，非空交易不作删除，等队列满删除
                                     this.txMapForSync.get(dataIdentifier.getChainID()).remove(txKey);
                                     // 在block container集合里插入空标志
                                     this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                                            put(dataIdentifier.getKey(), null);
+                                            put(dataIdentifier.getExtraInfo1(), null);
                                     return;
                                 }
                             } else {
                                 // 缓存没有，则请求
                                 requestTxForSync(dataIdentifier.getChainID(),
-                                        horizontalItem.getTxHash(), dataIdentifier.getBlockHash());
+                                        horizontalItem.getTxHash(), dataIdentifier.getExtraInfo2());
                                 return;
                             }
                         }
 
                         this.blockContainerMapForSync.get(dataIdentifier.getChainID()).
-                                put(dataIdentifier.getBlockHash(), blockContainer);
+                                put(dataIdentifier.getExtraInfo2(), blockContainer);
                     }
 
                 }
@@ -3694,7 +3694,7 @@ public class Chains implements DHT.GetDHTItemCallback{
             case HISTORY_BLOCK_DEMAND: {
                 if (null == item) {
                     logger.debug("HISTORY_BLOCK_DEMAND is empty");
-                    this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getKey());
+                    this.blockHashMapFromDemand.get(dataIdentifier.getChainID()).add(dataIdentifier.getExtraInfo1());
                 }
 
                 break;

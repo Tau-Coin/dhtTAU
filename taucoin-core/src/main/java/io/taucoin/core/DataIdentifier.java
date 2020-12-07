@@ -5,16 +5,23 @@ import io.taucoin.util.ByteArrayWrapper;
 public class DataIdentifier {
     ByteArrayWrapper chainID;
     DataType dataType;
-    ByteArrayWrapper key; // block hash, txid or pubKey
-    ByteArrayWrapper blockHash; // the block hash to which this item belongs
+    // extra info can be block hash, tx hash, pubKey, the block hash to which this item belongs or its own hash etc.
+    ByteArrayWrapper extraInfo1;
+    ByteArrayWrapper extraInfo2;
 
     public DataIdentifier(DataType dataType) {
         this.dataType = dataType;
     }
 
-    public DataIdentifier(DataType dataType, ByteArrayWrapper key) {
+    public DataIdentifier(DataType dataType, ByteArrayWrapper extraInfo1) {
         this.dataType = dataType;
-        this.key = key;
+        this.extraInfo1 = extraInfo1;
+    }
+
+    public DataIdentifier(DataType dataType, ByteArrayWrapper extraInfo1, ByteArrayWrapper extraInfo2) {
+        this.dataType = dataType;
+        this.extraInfo1 = extraInfo1;
+        this.extraInfo2 = extraInfo2;
     }
 
     public DataIdentifier(ByteArrayWrapper chainID, DataType dataType) {
@@ -22,17 +29,17 @@ public class DataIdentifier {
         this.dataType = dataType;
     }
 
-    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper key) {
+    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper extraInfo1) {
         this.chainID = chainID;
         this.dataType = dataType;
-        this.key = key;
+        this.extraInfo1 = extraInfo1;
     }
 
-    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper key, ByteArrayWrapper blockHash) {
+    public DataIdentifier(ByteArrayWrapper chainID, DataType dataType, ByteArrayWrapper extraInfo1, ByteArrayWrapper extraInfo2) {
         this.chainID = chainID;
         this.dataType = dataType;
-        this.key = key;
-        this.blockHash = blockHash;
+        this.extraInfo1 = extraInfo1;
+        this.extraInfo2 = extraInfo2;
     }
 
     public ByteArrayWrapper getChainID() {
@@ -43,11 +50,11 @@ public class DataIdentifier {
         return dataType;
     }
 
-    public ByteArrayWrapper getKey() {
-        return key;
+    public ByteArrayWrapper getExtraInfo1() {
+        return extraInfo1;
     }
 
-    public ByteArrayWrapper getBlockHash() {
-        return blockHash;
+    public ByteArrayWrapper getExtraInfo2() {
+        return extraInfo2;
     }
 }
