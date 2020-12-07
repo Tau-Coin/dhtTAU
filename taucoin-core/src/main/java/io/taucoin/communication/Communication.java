@@ -159,11 +159,11 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
-     * 获取gossip list
-     * @return gossip list
+     * 获取gossip集合
+     * @return gossip set
      */
-    private List<GossipItem> getGossipList() {
-        List<GossipItem> list = new ArrayList<>();
+    private Set<GossipItem> getGossipSet() {
+        Set<GossipItem> gossipSet = new HashSet<>();
 
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
@@ -175,7 +175,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
             if (null != timeStamp && null != root) {
                 GossipItem gossipItem = new GossipItem(pubKey, friend.getData(), ByteUtil.longToBytes(timeStamp), GossipType.MSG, root, confirmationRoot);
-                list.add(gossipItem);
+                gossipSet.add(gossipItem);
             }
         }
 
@@ -184,7 +184,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         byte[] timeBytes = ByteUtil.longToBytes(currentTime);
         for (Map.Entry<ByteArrayWrapper, byte[]> entry : this.demandHash.entrySet()) {
             byte[] confirmationRoot = this.confirmationRootToFriend.get(entry.getKey());
-            list.add(new GossipItem(pubKey, entry.getKey().getData(), timeBytes, GossipType.DEMAND, entry.getValue(), confirmationRoot));
+            gossipSet.add(new GossipItem(pubKey, entry.getKey().getData(), timeBytes, GossipType.DEMAND, entry.getValue(), confirmationRoot));
         }
 
         // 统计其他人发给我朋友的消息
@@ -195,7 +195,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                     byte[] root = this.root.get(entry.getKey());
                     byte[] confirmationRoot = this.confirmationRoot.get(entry.getKey());
                     if (null != root) {
-                        list.add(new GossipItem(entry.getKey().first, entry.getKey().second,
+                        gossipSet.add(new GossipItem(entry.getKey().first, entry.getKey().second,
                                 ByteUtil.longToBytes(entry.getValue()), GossipType.MSG, root, confirmationRoot));
                     }
                 }
@@ -203,7 +203,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
 
 
-        return list;
+        return gossipSet;
     }
 
     /**
@@ -606,13 +606,13 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void publishGossipInfo() {
         // put mutable item
-        List<GossipItem> gossipItemList = getGossipList();
+        Set<GossipItem> gossipItemSet = getGossipSet();
 
         // 切分gossip列表，前面的列表以immutable形式发布
         byte[] previousGossipListHash = null;
-        while (gossipItemList.size() > ChainParam.GOSSIP_SIZE) {
+        while (gossipItemSet.size() > ChainParam.GOSSIP_SIZE) {
             List<GossipItem> list = new ArrayList<>();
-            Iterator<GossipItem> it = gossipItemList.iterator();
+            Iterator<GossipItem> it = gossipItemSet.iterator();
 
             int i = 0;
             while (i <= ChainParam.GOSSIP_SIZE) {
@@ -630,7 +630,8 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
 
         // 最后一个gossip list以mutable形式发布
-        GossipList gossipList = new GossipList(previousGossipListHash, gossipItemList);
+        List<GossipItem> list = new ArrayList<>(gossipItemSet);
+        GossipList gossipList = new GossipList(previousGossipListHash, list);
         logger.debug(gossipList.toString());
         publishMutableGossipList(gossipList);
     }
@@ -977,6 +978,9 @@ public class Communication implements DHT.GetDHTItemCallback {
                     byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
                     for (GossipItem gossipItem : gossipList.getGossipList()) {
+                        logger.debug("Got gossip: {} from peer[{}]",
+                                gossipItem.toString(), dataIdentifier.getKey().toString());
+
                         ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
                         // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
