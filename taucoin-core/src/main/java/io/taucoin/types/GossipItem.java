@@ -127,12 +127,12 @@ public class GossipItem {
     @Override
     public String toString() {
         return "GossipItem{" +
-                "sender=" + Hex.toHexString(sender) +
-                ", receiver=" + Hex.toHexString(receiver) +
-                ", timestamp=" + Hex.toHexString(timestamp) +
-                ", gossipType=" + gossipType +
-                ", messageRoot=" + Hex.toHexString(messageRoot) +
-                ", confirmationRoot=" + Hex.toHexString(confirmationRoot) +
+                "sender=" + Hex.toHexString(getSender()) +
+                ", receiver=" + Hex.toHexString(getReceiver()) +
+                ", timestamp=" + Hex.toHexString(getTimestamp()) +
+                ", gossipType=" + getGossipType() +
+                ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
+                ", confirmationRoot=" + Hex.toHexString(getMessageRoot()) +
                 '}';
     }
 }
