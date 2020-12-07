@@ -38,6 +38,9 @@ To build taucoin-android, the SDK environment is needed, and we recommend that u
 
 > 4) SDK Tools-28.0.0 is needed to install from IDE SDK manager. 
 
-> 5) You can build the project from android-studio IDE, also in terminal cmd window using: `./gradlew build  -x test`.
+> 5) Declare environment variables in ~/.bashrc:
+> - `ANDROID_HOME=${Your andorid sdk directory}/Sdk`
+
+> 6) You can build the project from android-studio IDE, also in terminal cmd window using: `./gradlew build  -x test`.
 
 <strong>Any building problem please send an issue to us.</strong>
