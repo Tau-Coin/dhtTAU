@@ -469,6 +469,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param pubKey public key
      */
     private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
+        logger.debug("Request gossip info from peer:{}", pubKey.toString());
         DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), ChainParam.GOSSIP_CHANNEL);
         DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
 
@@ -653,18 +654,22 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     private void requestImmutableItem(DHT.ImmutableItemRequest req) {
+        logger.debug("requestImmutableItem:{}", req.getSpec().toString());
         DHTEngine.getInstance().request(req.getSpec(), req.getCallback(), req.getCallbackData());
     }
 
     private void requestMutableItem(DHT.MutableItemRequest req) {
+        logger.debug("requestMutableItem:{}", req.getSpec().toString());
         DHTEngine.getInstance().request(req.getSpec(), req.getCallback(), req.getCallbackData());
     }
 
     private void putImmutableItem(DHT.ImmutableItemDistribution d) {
+        logger.debug("putImmutableItem:{}", d.getItem().toString());
         DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
     }
 
     private void putMutableItem(DHT.MutableItemDistribution d) {
+        logger.debug("putMutableItem:{}", d.getItem().toString());
         DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
     }
 

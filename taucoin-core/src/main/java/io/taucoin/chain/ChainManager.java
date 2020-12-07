@@ -117,18 +117,18 @@ public class ChainManager {
         // Open the db for repo and block
         try {
 
-            openChainDB();
-            
-            initTauChain();
-
-            Set<byte[]> chainIDs = this.stateDB.getAllFollowedChains();
-            if (null != chainIDs) {
-                for (byte[] chainID: chainIDs) {
-                    chains.startChain(chainID);
-                }
-            }
-
-            chains.start();
+//            openChainDB();
+//
+//            initTauChain();
+//
+//            Set<byte[]> chainIDs = this.stateDB.getAllFollowedChains();
+//            if (null != chainIDs) {
+//                for (byte[] chainID: chainIDs) {
+//                    chains.startChain(chainID);
+//                }
+//            }
+//
+//            chains.start();
 
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
