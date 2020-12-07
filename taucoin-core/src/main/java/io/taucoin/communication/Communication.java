@@ -352,12 +352,14 @@ public class Communication implements DHT.GetDHTItemCallback {
 
             // try to find next one
             byte[] hash = message.getPreviousMsgDAGRoot();
-            // 先判断一下本地是否有，有的话则终止，没有则继续同步DAG，直至到连接到之前的数据
-            if (null == this.messageDB.getMessageByHash(hash)) {
-                Message previousMsg = this.messageMap.get(new ByteArrayWrapper(hash));
-                if (null == previousMsg) {
-                    // request next one
-                    requestMessage(hash, sender);
+            if (null != hash) {
+                // 先判断一下本地是否有，有的话则终止，没有则继续同步DAG，直至到连接到之前的数据
+                if (null == this.messageDB.getMessageByHash(hash)) {
+                    Message previousMsg = this.messageMap.get(new ByteArrayWrapper(hash));
+                    if (null == previousMsg) {
+                        // request next one
+                        requestMessage(hash, sender);
+                    }
                 }
             }
 
