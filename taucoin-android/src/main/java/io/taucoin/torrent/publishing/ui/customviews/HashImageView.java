@@ -5,15 +5,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
-import android.widget.ImageView;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.ref.SoftReference;
 import java.util.List;
 
 import androidx.annotation.Nullable;
@@ -24,7 +19,6 @@ import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.db.DBException;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.MsgBlock;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
@@ -32,8 +26,11 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.types.HashList;
 import io.taucoin.util.ByteUtil;
 
+/**
+ * 根据图片信息的Hash，递归获取全部信息并显示
+ */
 @SuppressLint("AppCompatCustomView")
-public class HashImageView extends ImageView {
+public class HashImageView extends RoundImageView {
 
     private static final Logger logger = LoggerFactory.getLogger("HashImageView");
     private TauDaemon daemon;
@@ -41,6 +38,9 @@ public class HashImageView extends ImageView {
     private byte[] totalBytes;
     private Disposable disposable;
     private boolean reload = false;
+    private BitmapFactory.Options options;
+    private int heightLimit = 300;
+    private int widthLimit = 300;
 
     public HashImageView(Context context) {
         this(context, null);
@@ -53,6 +53,7 @@ public class HashImageView extends ImageView {
     public HashImageView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         daemon = TauDaemon.getInstance(context);
+        options = new BitmapFactory.Options();
     }
 
     private void showImage() {
@@ -96,28 +97,48 @@ public class HashImageView extends ImageView {
                 .subscribe(this::setImageBitmap);
     }
 
-    private void showHorizontalData(byte[] imageHash, FlowableEmitter<Bitmap> emitter) throws DBException {
-        byte[] msgBlockEncoded = daemon.getMsg(imageHash);
-        if (msgBlockEncoded != null) {
-            MsgBlock block = new MsgBlock(msgBlockEncoded);
-            if (block.isHaveHorizontalHash()) {
-                byte[] hashListEncoded = daemon.getMsg(block.getHorizontalHash());
-                if (hashListEncoded != null) {
-                    HashList hashList = new HashList(hashListEncoded);
-                    List<byte[]> msgList = hashList.getHashList();
-                    if (msgList != null && msgList.size() > 0) {
-                        for (byte[] msgHash : msgList) {
-                            byte[] msgContent = daemon.getMsg(msgHash);
-                            if (!emitter.isCancelled()) {
-                                refreshImageView(msgContent, emitter);
-                            }
-                        }
+    private void showHorizontalData(byte[] imageHash, FlowableEmitter<Bitmap> emitter) throws Exception {
+        byte[] msgBlockEncoded = queryDataLoop(imageHash);
+        MsgBlock block = new MsgBlock(msgBlockEncoded);
+        if (block.isHaveHorizontalHash()) {
+            byte[] hashListEncoded = queryDataLoop(block.getHorizontalHash());
+            HashList hashList = new HashList(hashListEncoded);
+            List<byte[]> msgList = hashList.getHashList();
+            if (msgList != null && msgList.size() > 0) {
+                for (byte[] msgHash : msgList) {
+                    byte[] msgContent = queryDataLoop(msgHash);
+                    if (!emitter.isCancelled()) {
+                        refreshImageView(msgContent, emitter);
                     }
                 }
             }
-            if (block.isHaveVerticalHash() && !emitter.isCancelled()) {
-                showHorizontalData(block.getVerticalHash(), emitter);
+        }
+        if (block.isHaveVerticalHash() && !emitter.isCancelled()) {
+            showHorizontalData(block.getVerticalHash(), emitter);
+        }
+    }
+
+    /**
+     * 循环查询数据
+     * 如果查询不到或或者异常，1s后重试
+     * @param hash
+     * @return
+     * @throws InterruptedException
+     */
+    private byte[] queryDataLoop(byte[] hash) throws InterruptedException {
+        while (true) {
+            try {
+                byte[] data = daemon.getMsg(hash);
+                if (null == data) {
+                    daemon.requestMessageData(hash);
+                } else {
+                    return data;
+                }
+            } catch (Exception e) {
+                logger.debug("queryDataLoop error::{}", hash);
             }
+            // 如果获取不到，1秒后重试
+            Thread.sleep(1000);
         }
     }
 
@@ -144,36 +165,19 @@ public class HashImageView extends ImageView {
         byte lastOne = totalBytes[totalBytes.length - 1];
         totalBytes[totalBytes.length - 2] = -1;
         totalBytes[totalBytes.length - 1] = -39;
-//        bytesToBitmap(totalBytes);
-//        Bitmap bitmap = bytesToBitmap(totalBytes);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(totalBytes, 0, totalBytes.length);
+        options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(totalBytes, 0, totalBytes.length, options);
+        int heightRatio = options.outHeight / heightLimit;
+        int widthRatio = options.outWidth / widthLimit;
+        if (heightRatio > 0 || widthRatio > 1) {
+            options.inSampleSize = Math.max(heightRatio, widthRatio);
+        }
+        logger.debug("loadImageView::{}, {}, {}", options.outHeight, widthLimit, options.inSampleSize);
+        options.inJustDecodeBounds = false;
+        Bitmap bitmap = BitmapFactory.decodeByteArray(totalBytes, 0, totalBytes.length, options);
         totalBytes[totalBytes.length - 2] = lastTwo;
         totalBytes[totalBytes.length - 1] = lastOne;
-        return bitmap;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Bitmap bytesToBitmap(byte[] totalBytes) {
-        InputStream input = null;
-        Bitmap bitmap = null;
-        try{
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = 8;
-            input = new ByteArrayInputStream(totalBytes);
-            SoftReference softRef = new SoftReference(BitmapFactory.decodeStream(input, null, options));
-            bitmap = (Bitmap)softRef.get();
-        } catch(Exception e) {
-            logger.warn("bytesToBitmap warn", e);
-            e.printStackTrace();
-        } finally {
-            try {
-                if (input != null) {
-                    input.close();
-                }
-            } catch (IOException e) {
-                logger.warn("bytesToBitmap warn", e);
-            }
-        }
         return bitmap;
     }
 

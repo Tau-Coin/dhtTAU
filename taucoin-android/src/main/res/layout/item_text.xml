@@ -10,24 +10,25 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="10dp"
-        android:gravity="center_horizontal">
+        android:layout_marginEnd="10dp" >
 
         <TextView
+            android:visibility="gone"
             android:id="@+id/tv_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="5dp"
             android:textColor="@color/gray_dark"
+            android:layout_gravity="center_horizontal"
             android:textAppearance="@style/TextAppearanceBody3" />
 
         <LinearLayout
             android:orientation="horizontal"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="5dp"
+            android:layout_marginEnd="50dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginStart="10dp"
             android:gravity="bottom">
 
             <io.taucoin.torrent.publishing.ui.customviews.RoundButton
@@ -49,8 +50,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@mipmap/icon_chat_bg"
-                android:layout_marginEnd="60dp"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="5dp"
                 android:layout_marginBottom="3dp"
                 android:paddingStart="20dp"
                 android:paddingEnd="10dp"
@@ -62,9 +62,36 @@
                     android:id="@+id/tv_msg"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:maxWidth="240dp"
                     android:textAppearance="@style/TextAppearanceBody2" />
 
             </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical">
+                <ImageView
+                    android:id="@+id/iv_stats"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:layout_marginStart="5dp"
+                    android:layout_gravity="center_vertical"
+                    android:contentDescription="@null"
+                    android:src="@mipmap/icon_sent"/>
+
+                <ProgressBar
+                    android:id="@+id/tv_progress"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="5dp"
+                    android:indeterminateDrawable="@drawable/progressbar_round"
+                    android:layout_gravity="center_vertical"/>
+
+            </RelativeLayout>
 
         </LinearLayout>
 

@@ -1,7 +1,6 @@
 package io.taucoin.torrent.publishing.ui.chat;
 
 import android.app.Application;
-import android.content.Context;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +30,10 @@ import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.MsgBlock;
 import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Chat;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgType;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.MultimediaUtil;
 import io.taucoin.torrent.publishing.service.LibJpegManager;
 import io.taucoin.torrent.publishing.ui.constant.Page;
@@ -63,6 +64,10 @@ public class ChatViewModel extends AndroidViewModel {
         sourceFactory = new ChatSourceFactory(chatRepo);
     }
 
+    public MutableLiveData<Result> getChatResult() {
+        return chatResult;
+    }
+
     public void observeNeedStartDaemon () {
         disposables.add(daemon.observeNeedStartDaemon()
                 .subscribeOn(Schedulers.io())
@@ -84,7 +89,7 @@ public class ChatViewModel extends AndroidViewModel {
      * @param friendPK 朋友公钥
      * @return LiveData
      */
-    LiveData<PagedList<Chat>> observerChat(String friendPK) {
+    LiveData<PagedList<ChatMsg>> observerChat(String friendPK) {
         sourceFactory.setFriendPk(friendPK);
         return new LivePagedListBuilder<>(sourceFactory, Page.getPageListConfig())
                 .setInitialLoadKey(Page.PAGE_SIZE)
@@ -125,15 +130,28 @@ public class ChatViewModel extends AndroidViewModel {
                 }
                 // 组织Message的结构，并发送到DHT和数据入库
                 byte[] contentLink = data.get(data.size() - 1);
-                Message message = daemon.sendMessage(ByteUtil.toByte(friendPK), contentLink, data);
+                long timestamp = DateUtil.getTime();
+                String userPk = MainApplication.getInstance().getPublicKey();
+
+                byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(ByteUtil.toByte(userPk));
+                byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(ByteUtil.toByte(friendPK));
+                Message message = Message.CreateTextMessage(ByteUtil.longToBytes(timestamp),
+                        previousMsgDAGRoot, friendLatestMessageRoot, contentLink);
+                boolean isSendSuccess = daemon.sendMessage(ByteUtil.toByte(friendPK), message, data);
+                logger.debug("isSendSuccess::{}", isSendSuccess);
                 String hash = ByteUtil.toHexString(message.getHash());
-                Chat chat = chatRepo.queryChatByHash(hash);
-                if (null == chat) {
+                ChatMsg chatMsg = chatRepo.queryChatByHash(hash);
+                int status = isSendSuccess ? ChatMsgType.QUEUED.ordinal() :
+                        ChatMsgType.UNSENT.ordinal();
+                if (null == chatMsg) {
                     String senderPk = MainApplication.getInstance().getPublicKey();
                     String contentLinkStr = ByteUtil.toHexString(contentLink);
-                    long timestamp = ByteUtil.byteArrayToLong(message.getTimestamp());
-                    chat = new Chat(hash, senderPk, friendPK, contentLinkStr, type, timestamp);
-                    chatRepo.addChat(chat);
+                    chatMsg = new ChatMsg(hash, senderPk, friendPK, contentLinkStr, type, timestamp);
+                    chatMsg.status = status;
+                    chatRepo.addChat(chatMsg);
+                } else {
+                    chatMsg.status = status;
+                    chatRepo.updateChat(chatMsg);
                 }
             } catch (Exception e) {
                 logger.error("sendMessageTask error", e);
@@ -214,7 +232,6 @@ public class ChatViewModel extends AndroidViewModel {
         long startTime = System.currentTimeMillis();
         File file = new File(progressivePath);
         FileInputStream fis = new FileInputStream(file);
-        int horizontal_size = 40;
         byte[] buffer = new byte[BYTE_LIMIT];
         List<byte[]> list = new ArrayList<>();
         List<byte[]> hashList = new ArrayList<>();
@@ -229,7 +246,7 @@ public class ChatViewModel extends AndroidViewModel {
                 list.add(msgHash);
                 daemon.saveMsg(msgHash, msg);
             }
-            if (list.size() == horizontal_size || num == -1) {
+            if (list.size() == HORIZONTAL_SIZE || num == -1) {
                 HashList msgHashList = new HashList(list);
                 byte[] listEncoded =  msgHashList.getEncoded();
                 byte[] listHash = HashUtil.bencodeHash(listEncoded);

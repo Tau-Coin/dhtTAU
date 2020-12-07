@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_weight="1"
             android:layout_height="0dp"
-            android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
+            android:paddingBottom="10dp"
             android:clipToPadding="false"
             android:scrollbars="vertical"
             android:focusable="true"
@@ -94,6 +94,6 @@
             android:background="@color/color_chat_pop"
             android:id="@+id/chat_add"
             android:layout_width="match_parent"
-            android:layout_height="280dp" />
+            android:layout_height="260dp" />
     </LinearLayout>
 </layout>

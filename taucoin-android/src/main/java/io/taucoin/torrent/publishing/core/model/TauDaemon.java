@@ -222,6 +222,11 @@ public class TauDaemon {
         public void onNewMessage(byte[] friend, Message message) {
             msgListenHandler.onNewMessage(friend, message);
         }
+
+        @Override
+        public void onReadMessageRoot(byte[] friend, byte[] root) {
+            msgListenHandler.onReceivedMessageRoot(friend, root);
+        }
     };
 
     /**
@@ -600,6 +605,14 @@ public class TauDaemon {
     }
 
     /**
+     * 请求消息数据
+     * @param hash
+     */
+    public void requestMessageData(byte[] hash) {
+        getCommunicationManager().requestMessageData(hash);
+    }
+
+    /**
      * 添加朋友
      * @param friendPk 朋友公钥
      */
@@ -614,18 +627,31 @@ public class TauDaemon {
     /**
      * 发送消息
      * @param friendPK
-     * @param contentLink
+     * @param message
      * @param data
      * @return
      */
-    public Message sendMessage(byte[] friendPK, byte[] contentLink, List<byte[]> data) {
-        byte[] timestamp = ByteUtil.longToBytes(DateUtil.getTime());
-        String userPk = MainApplication.getInstance().getPublicKey();
-        byte[] previousMsgDAGRoot = getCommunicationManager().getMyLatestMsgRoot(ByteUtil.toByte(userPk));
-        byte[] friendLatestMessageRoot = getCommunicationManager().getFriendLatestRoot(friendPK);
-        Message message = Message.CreateTextMessage(timestamp, previousMsgDAGRoot,
-                friendLatestMessageRoot, contentLink);
-        getCommunicationManager().publishNewMessage(friendPK, message, data);
-        return message;
+    public boolean sendMessage(byte[] friendPK, Message message, List<byte[]> data) {
+        boolean isPublishSuccess = getCommunicationManager().publishNewMessage(friendPK, message, data);
+        logger.debug("sendMessage isPublishSuccess{}", isPublishSuccess);
+        return isPublishSuccess;
+    }
+
+    /**
+     * 获取用户信息root
+     * @param userPk
+     * @return root hash
+     */
+    public byte[] getMyLatestMsgRoot(byte[] userPk) {
+        return getCommunicationManager().getMyLatestMsgRoot(userPk);
+    }
+
+    /**
+     * 获取朋友最新信息root
+     * @param friendPK
+     * @return root hash
+     */
+    public byte[] getFriendLatestRoot(byte[] friendPK) {
+        return getCommunicationManager().getFriendLatestRoot(friendPK);
     }
 }

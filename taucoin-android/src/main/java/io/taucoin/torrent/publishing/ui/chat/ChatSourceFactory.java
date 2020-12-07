@@ -2,10 +2,10 @@ package io.taucoin.torrent.publishing.ui.chat;
 
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Chat;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 
-class ChatSourceFactory extends MsgDataSource.Factory<Integer, Chat> {
+class ChatSourceFactory extends MsgDataSource.Factory<Integer, ChatMsg> {
     private ChatRepository chatRepo;
     private String friendPk;
 
@@ -19,7 +19,7 @@ class ChatSourceFactory extends MsgDataSource.Factory<Integer, Chat> {
 
     @NonNull
     @Override
-    public DataSource<Integer, Chat> create() {
+    public DataSource<Integer, ChatMsg> create() {
         return new ChatDataSource(chatRepo, friendPk);
     }
 }

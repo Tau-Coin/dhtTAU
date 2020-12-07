@@ -8,43 +8,43 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Chat;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 
 /**
  * Room:User操作接口
  */
 @Dao
 public interface ChatDao {
-    String QUERY_GET_CHAT_BY_HASH = "SELECT * FROM Chats WHERE hash = :hash";
+    String QUERY_GET_CHAT_BY_HASH = "SELECT * FROM ChatMessages WHERE hash = :hash";
 
-    String QUERY_MESSAGES_WHERE = " WHERE (chat.senderPk = :senderPk OR chat.senderPk = :friendPk)" +
-            " AND (chat.friendPk = :friendPk OR chat.friendPk = :senderPk) " +
-            " AND chat.friendPk NOT IN" +
+    String QUERY_MESSAGES_WHERE = " WHERE (msg.senderPk = :senderPk OR msg.senderPk = :friendPk)" +
+            " AND (msg.friendPk = :friendPk OR msg.friendPk = :senderPk) " +
+            " AND msg.friendPk NOT IN" +
             UserDao.QUERY_GET_USER_PKS_IN_BAN_LIST;
 
-    String QUERY_NUM_MESSAGES = "SELECT count(*) FROM Chats chat" +
+    String QUERY_NUM_MESSAGES = "SELECT count(*) FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE;
 
-    String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT chat.*" +
-            " FROM Chats chat" +
+    String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +
+            " FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE + "limit :loadSize offset :startPosition ";
     /**
      * 添加聊天信息
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    long addChat(Chat chat);
+    long addChat(ChatMsg msg);
 
     /**
      * 更新聊天信息
      */
     @Update
-    int updateChat(Chat chat);
+    int updateChat(ChatMsg msg);
 
     /**
      * 获取当前的用户
      */
     @Query(QUERY_GET_CHAT_BY_HASH)
-    Chat queryChatByHash(String hash);
+    ChatMsg queryChatByHash(String hash);
 
     /**
      * 获取社区的消息
@@ -63,5 +63,5 @@ public interface ChatDao {
      */
     @Query(QUERY_MESSAGES_BY_FRIEND_PK)
     @Transaction
-    List<Chat> getMessages(String senderPk, String friendPk, int startPosition, int loadSize);
+    List<ChatMsg> getMessages(String senderPk, String friendPk, int startPosition, int loadSize);
 }

@@ -106,16 +106,16 @@ public class HashTextView extends TextView {
      * @param verticalHash
      * @throws DBException
      */
-    private void showHorizontalData(byte[] verticalHash) throws DBException {
+    private void showHorizontalData(byte[] verticalHash) throws Exception {
         if (null == verticalHash) {
             return;
         }
-        byte[] msgRoot = daemon.getMsg(verticalHash);
+        byte[] msgRoot = queryDataLoop(verticalHash);
         MsgBlock msgBlock = new MsgBlock(msgRoot);
         logger.debug("HorizontalData::{}, VerticalHash::{}",
                 msgBlock.getHorizontalHash(), msgBlock.getVerticalHash());
         if (msgBlock.isHaveHorizontalHash()) {
-            byte[] fragment = daemon.getMsg(msgBlock.getHorizontalHash());
+            byte[] fragment = queryDataLoop(msgBlock.getHorizontalHash());
             if (totalBytes == null) {
                 totalBytes = new byte[fragment.length];
                 System.arraycopy(fragment, 0, totalBytes, 0, totalBytes.length);
@@ -128,6 +128,30 @@ public class HashTextView extends TextView {
         }
         if (msgBlock.isHaveVerticalHash()) {
             showHorizontalData(msgBlock.getVerticalHash());
+        }
+    }
+
+    /**
+     * 循环查询数据
+     * 如果查询不到或或者异常，1s后重试
+     * @param hash
+     * @return
+     * @throws InterruptedException
+     */
+    private byte[] queryDataLoop(byte[] hash) throws InterruptedException {
+        while (true) {
+            try {
+                byte[] data = daemon.getMsg(hash);
+                if (null == data) {
+                    daemon.requestMessageData(hash);
+                } else {
+                    return data;
+                }
+            } catch (Exception e) {
+                logger.debug("queryDataLoop error::{}", hash);
+            }
+            // 如果获取不到，1秒后重试
+            Thread.sleep(1000);
         }
     }
 

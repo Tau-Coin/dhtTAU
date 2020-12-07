@@ -3,7 +3,7 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 import java.util.List;
 
 import io.reactivex.Observable;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Chat;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 
 /**
  * 提供操作Friend数据的接口
@@ -13,19 +13,19 @@ public interface ChatRepository {
     /**
      * 添加Chat
      */
-    void addChat(Chat chat);
+    void addChat(ChatMsg chat);
 
     /**
      * 更新Chat
      */
-    void updateChat(Chat chat);
+    void updateChat(ChatMsg chat);
 
     /**
      * 查询Chat
      * @param hash
      * @return
      */
-    Chat queryChatByHash(String hash);
+    ChatMsg queryChatByHash(String hash);
 
     /**
      * 观察社区的消息的变化
@@ -39,5 +39,5 @@ public interface ChatRepository {
 
     int getNumMessages(String friendPk);
 
-    List<Chat> getMessages(String friendPk, int pos, int loadSize);
+    List<ChatMsg> getMessages(String friendPk, int pos, int loadSize);
 }

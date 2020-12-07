@@ -12,7 +12,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Chat;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
@@ -52,6 +52,8 @@ class MsgListenHandler {
     }
 
     private void onNewMessage(String friendPk, Message message) {
+        logger.debug("onNewMessage friendPk::{}，Hash::{}, ContentLink::{}", friendPk,
+                message.getHash(), message.getContentLink());
         Disposable disposable = Flowable.create(emitter -> {
             // 处理ChatName，如果为空，取显朋友显示名
             String communityName = UsersUtil.getDefaultName(friendPk);
@@ -67,20 +69,26 @@ class MsgListenHandler {
                 friend.state = 2;
                 friendRepo.updateFriend(friend);
             }
-            logger.debug("onNewMessage friendPk::{}，blockNum::{}, blockHash::{}", friendPk,
-                    message.getHash(), message.getContentLink());
 
             String hash = ByteUtil.toHexString(message.getHash());
             String contentLinkStr = ByteUtil.toHexString(message.getContentLink());
             long timestamp = ByteUtil.byteArrayToLong(message.getTimestamp());
             int type = message.getType().ordinal();
-            Chat chat = new Chat(hash, friendPk, userPk, contentLinkStr, type, timestamp);
+            ChatMsg chat = new ChatMsg(hash, friendPk, userPk, contentLinkStr, type, timestamp);
             chatRepo.addChat(chat);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .subscribe();
         disposables.add(disposable);
+    }
+
+    /**
+     * 消息已被接收
+     * @param friendPk byte[] 朋友公钥
+     * @param root 消息root
+     */
+    public void onReceivedMessageRoot(byte[] friendPk, byte[] root) {
     }
 
     /**

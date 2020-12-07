@@ -11,8 +11,8 @@ import androidx.room.PrimaryKey;
 /**
  * Room: 数据库存储Chat实体类
  */
-@Entity(tableName = "Chats")
-public class Chat implements Parcelable {
+@Entity(tableName = "ChatMessages")
+public class ChatMsg implements Parcelable {
     @NonNull
     @PrimaryKey
     public String hash;                    // 消息的Hash
@@ -27,8 +27,10 @@ public class Chat implements Parcelable {
     @NonNull
     public int contextType;                // 消息内容类型
 
-    public Chat(@NonNull String hash, String senderPk, String friendPk,
-                String contextLink, int contextType, long timestamp){
+    public int status;                      // 消息状态 0: 未进入队列，1: 已进入队列，2: 已送达
+
+    public ChatMsg(@NonNull String hash, String senderPk, String friendPk,
+                   String contextLink, int contextType, long timestamp){
         this.hash = hash;
         this.senderPk = senderPk;
         this.friendPk = friendPk;
@@ -38,7 +40,7 @@ public class Chat implements Parcelable {
     }
 
     @Ignore
-    private Chat(Parcel in) {
+    private ChatMsg(Parcel in) {
         hash = in.readString();
         senderPk = in.readString();
         friendPk = in.readString();
@@ -62,15 +64,15 @@ public class Chat implements Parcelable {
         return 0;
     }
 
-    public static final Creator<Chat> CREATOR = new Creator<Chat>() {
+    public static final Creator<ChatMsg> CREATOR = new Creator<ChatMsg>() {
         @Override
-        public Chat createFromParcel(Parcel in) {
-            return new Chat(in);
+        public ChatMsg createFromParcel(Parcel in) {
+            return new ChatMsg(in);
         }
 
         @Override
-        public Chat[] newArray(int size) {
-            return new Chat[size];
+        public ChatMsg[] newArray(int size) {
+            return new ChatMsg[size];
         }
     };
 
@@ -81,6 +83,6 @@ public class Chat implements Parcelable {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Chat && (o == this || hash.equals(((Chat)o).hash));
+        return o instanceof ChatMsg && (o == this || hash.equals(((ChatMsg)o).hash));
     }
 }

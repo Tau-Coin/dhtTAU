@@ -15,7 +15,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.dao.MessageDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.NotificationDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.TxDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.UserDao;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Chat;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Favorite;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
@@ -33,7 +33,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
         Favorite.class,
         Notification.class,
         Friend.class,
-        Chat.class
+        ChatMsg.class
     }, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "tau.db";

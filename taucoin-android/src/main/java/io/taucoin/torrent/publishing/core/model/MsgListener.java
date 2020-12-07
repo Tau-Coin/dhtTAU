@@ -12,4 +12,9 @@ public abstract class MsgListener implements io.taucoin.listener.MsgListener {
     public void onNewMessage(byte[] friend, Message message) {
 
     }
+
+    @Override
+    public void onReadMessageRoot(byte[] friend, byte[] root) {
+
+    }
 }

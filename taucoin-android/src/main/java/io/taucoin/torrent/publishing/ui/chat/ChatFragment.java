@@ -34,10 +34,12 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
+import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
 import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentChatBinding;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
@@ -193,7 +195,11 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 .subscribe(community -> {
                     binding.toolbarInclude.tvTitle.setText(community.communityName);
                 }));
-
+        chatViewModel.getChatResult().observe(this, result -> {
+            if (!result.isSuccess()) {
+                ToastUtils.showShortToast(result.getMsg());
+            }
+        });
     }
 
     @Override
@@ -217,7 +223,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
         if (isShow) {
             KeyboardUtils.hideSoftInput(activity);
         }
-        disposables.add(Observable.timer(50, TimeUnit.MILLISECONDS)
+        disposables.add(Observable.timer(100, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(aLong -> {
@@ -267,6 +273,9 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                         LocalMedia localMedia = selectList.get(0);
                         if(PictureMimeType.eqImage(localMedia.getMimeType())){
                             String imagePath = localMedia.getPath();
+                            if (StringUtil.isNotEmpty(localMedia.getAndroidQToPath())) {
+                                imagePath = localMedia.getAndroidQToPath();
+                            }
                             chatViewModel.sendMessage(friendPK, imagePath,
                                     MessageType.PICTURE.ordinal());
                             return;

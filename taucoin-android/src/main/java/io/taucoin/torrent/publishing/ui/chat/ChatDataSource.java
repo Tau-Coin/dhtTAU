@@ -9,11 +9,11 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.paging.PositionalDataSource;
 import io.reactivex.disposables.Disposable;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Chat;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 
-class ChatDataSource extends PositionalDataSource<Chat> {
+class ChatDataSource extends PositionalDataSource<ChatMsg> {
     private static final Logger logger = LoggerFactory.getLogger("ChatDataSource");
     private ChatRepository chatRepo;
     private String friendPk;
@@ -36,7 +36,7 @@ class ChatDataSource extends PositionalDataSource<Chat> {
 
     @Override
     public void loadInitial(@NonNull LoadInitialParams params,
-                            @NonNull LoadInitialCallback<Chat> callback) {
+                            @NonNull LoadInitialCallback<ChatMsg> callback) {
         if(StringUtil.isEmpty(friendPk)) {
             return;
         }
@@ -50,7 +50,7 @@ class ChatDataSource extends PositionalDataSource<Chat> {
             pos = numMessages - loadSize;
         }
         logger.debug("loadInitial pos::{}, LoadSize::{}, numMessages::{}", pos, loadSize, numMessages);
-        List<Chat> messages = chatRepo.getMessages(friendPk, pos, loadSize);
+        List<ChatMsg> messages = chatRepo.getMessages(friendPk, pos, loadSize);
         logger.debug("loadInitial messages.size::{}", messages.size());
         if (messages.isEmpty()) {
             callback.onResult(messages, 0);
@@ -61,12 +61,12 @@ class ChatDataSource extends PositionalDataSource<Chat> {
 
     @Override
     public void loadRange(@NonNull LoadRangeParams params,
-                          @NonNull LoadRangeCallback<Chat> callback) {
+                          @NonNull LoadRangeCallback<ChatMsg> callback) {
         if(StringUtil.isEmpty(friendPk)) {
             return;
         }
 
-        List<Chat> messages;
+        List<ChatMsg> messages;
         int numMessages = chatRepo.getNumMessages(friendPk);
         int pos = params.startPosition;
         int loadSize = params.loadSize;

@@ -103,6 +103,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
             } else {
                 binding.tvAddToContact.setVisibility(View.GONE);
                 binding.tvShareQr.setVisibility(View.VISIBLE);
+                binding.tvStartChat.setVisibility(View.VISIBLE);
                 showShareQRDialog();
             }
         });

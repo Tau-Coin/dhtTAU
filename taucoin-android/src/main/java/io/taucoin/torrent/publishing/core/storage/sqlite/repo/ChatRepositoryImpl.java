@@ -11,8 +11,7 @@ import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Chat;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 
 /**
@@ -36,19 +35,19 @@ public class ChatRepositoryImpl implements ChatRepository{
     }
 
     @Override
-    public void addChat(Chat chat) {
+    public void addChat(ChatMsg chat) {
         db.chatDao().addChat(chat);
         submitDataSetChanged();
     }
 
     @Override
-    public void updateChat(Chat chat) {
+    public void updateChat(ChatMsg chat) {
         db.chatDao().updateChat(chat);
         submitDataSetChanged();
     }
 
     @Override
-    public Chat queryChatByHash(String hash) {
+    public ChatMsg queryChatByHash(String hash) {
         return db.chatDao().queryChatByHash(hash);
     }
 
@@ -70,7 +69,7 @@ public class ChatRepositoryImpl implements ChatRepository{
     }
 
     @Override
-    public List<Chat> getMessages(String friendPk, int startPosition, int loadSize) {
+    public List<ChatMsg> getMessages(String friendPk, int startPosition, int loadSize) {
         String senderPk = MainApplication.getInstance().getPublicKey();
         return db.chatDao().getMessages(senderPk, friendPk, startPosition, loadSize);
     }

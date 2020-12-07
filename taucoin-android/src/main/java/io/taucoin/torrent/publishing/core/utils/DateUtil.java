@@ -282,6 +282,27 @@ public class DateUtil {
         }
     }
 
+    public static String getWeekTimeWithHours(long time) {
+        long timeSeconds = time * 1000;
+        Date  date1 = new Date(timeSeconds);
+        Date  date2 = new Date();
+        int days = differentDays(date1, date2);
+        if(days == 0){
+            return formatTime(time, pattern0);
+        }else if(days > weeks.length){
+            return formatTime(time, pattern5);
+        }else{
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeZone(TimeZone.getDefault());
+            cal.setTimeInMillis(timeSeconds);
+            int weekIndex = cal.get(Calendar.DAY_OF_WEEK) - 1;
+            if(weekIndex < 0){
+                weekIndex = 0;
+            }
+            return weeks[weekIndex] + " " + formatTime(time, pattern0);
+        }
+    }
+
     /**
      * 得到今天剩余秒数
      * @return
