@@ -361,11 +361,11 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 添加联系人
      */
-    void addFriend(String publicKey) {
+    public void addFriend(String publicKey) {
         if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             return;
         }
-        observeDaemonRunning = daemon.observeDaemonRunning()
+        daemon.observeDaemonRunning()
                 .subscribeOn(Schedulers.io())
                 .subscribe((isRunning) -> {
                     if (isRunning) {
