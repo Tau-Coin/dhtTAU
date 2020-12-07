@@ -41,6 +41,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FileUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -414,7 +415,7 @@ public class UserViewModel extends AndroidViewModel {
             String userPK = MainApplication.getInstance().getPublicKey();
             UserAndFriend userAndFriend = userRepo.getUserAndFriend(userPK, publicKey);
             if(null == userAndFriend){
-                userAndFriend = new UserAndFriend("");
+                userAndFriend = new UserAndFriend(publicKey);
             }
             emitter.onNext(userAndFriend);
             emitter.onComplete();
@@ -528,6 +529,31 @@ public class UserViewModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe();
+        disposables.add(disposable);
+    }
+
+    /**
+     * 到处Seed
+     */
+    void exportSeed() {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
+            try {
+                User currentUser = userRepo.getCurrentUser();
+                emitter.onNext(currentUser.seed);
+            } catch (Exception e) {
+                logger.error("exportSeed error", e);
+                emitter.onNext("");
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(seed -> {
+                    if (StringUtil.isNotEmpty(seed)) {
+                        CopyManager.copyText(seed);
+                        ToastUtils.showShortToast(R.string.copy_seed);
+                    }
+                });
         disposables.add(disposable);
     }
 }

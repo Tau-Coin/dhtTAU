@@ -9,10 +9,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.databinding.ActivitySeedBinding;
@@ -85,9 +83,7 @@ public class SeedActivity extends BaseActivity implements View.OnClickListener, 
                 viewModel.showSaveSeedDialog(this, false);
                 break;
             case R.id.item_export_seed:
-                String publicKey = MainApplication.getInstance().getPublicKey();
-                CopyManager.copyText(publicKey);
-                ToastUtils.showShortToast(R.string.copy_seed);
+                viewModel.exportSeed();
                 break;
             case R.id.item_generate_seed:
                 viewModel.showSaveSeedDialog(this, true);

@@ -1,7 +1,6 @@
 package io.taucoin.torrent.publishing.ui.chat;
 
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -34,10 +33,8 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
-import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
-import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
@@ -46,7 +43,6 @@ import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
-import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
 import io.taucoin.types.MessageType;
 
 import static android.app.Activity.RESULT_OK;
@@ -101,7 +97,10 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
      * 初始化布局
      */
     private void initLayout() {
-        binding.toolbarInclude.ivBack.setOnClickListener(v -> activity.goBack());
+        binding.toolbarInclude.ivBack.setOnClickListener(v -> {
+            KeyboardUtils.hideSoftInput(activity);
+            activity.goBack();
+        });
         binding.etMessage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -163,14 +162,6 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     public void onStop() {
         super.onStop();
         disposables.clear();
-    }
-
-    @Override
-    public void onDestroy() {
-        if(KeyboardUtils.isSoftInputVisible(activity)){
-            KeyboardUtils.hideSoftInput(activity);
-        }
-        super.onDestroy();
     }
 
     private final Runnable handleUpdateAdapter = () -> {

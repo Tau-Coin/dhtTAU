@@ -131,10 +131,9 @@ public class ChatViewModel extends AndroidViewModel {
                 // 组织Message的结构，并发送到DHT和数据入库
                 byte[] contentLink = data.get(data.size() - 1);
                 long timestamp = DateUtil.getTime();
-                String userPk = MainApplication.getInstance().getPublicKey();
-
-                byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(ByteUtil.toByte(userPk));
-                byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(ByteUtil.toByte(friendPK));
+                byte[] friendPKBytes = ByteUtil.toByte(friendPK);
+                byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPKBytes);
+                byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(friendPKBytes);
                 Message message = Message.CreateTextMessage(ByteUtil.longToBytes(timestamp),
                         previousMsgDAGRoot, friendLatestMessageRoot, contentLink);
                 boolean isSendSuccess = daemon.sendMessage(ByteUtil.toByte(friendPK), message, data);
