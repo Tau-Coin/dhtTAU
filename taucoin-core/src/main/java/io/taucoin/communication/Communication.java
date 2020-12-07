@@ -173,8 +173,10 @@ public class Communication implements DHT.GetDHTItemCallback {
             byte[] root = this.rootToFriend.get(friend);
             byte[] confirmationRoot = this.confirmationRootToFriend.get(friend);
 
-            GossipItem gossipItem = new GossipItem(pubKey, friend.getData(), ByteUtil.longToBytes(timeStamp), GossipType.MSG, root, confirmationRoot);
-            list.add(gossipItem);
+            if (null != timeStamp && null != root) {
+                GossipItem gossipItem = new GossipItem(pubKey, friend.getData(), ByteUtil.longToBytes(timeStamp), GossipType.MSG, root, confirmationRoot);
+                list.add(gossipItem);
+            }
         }
 
         // 统计我对朋友的需求
