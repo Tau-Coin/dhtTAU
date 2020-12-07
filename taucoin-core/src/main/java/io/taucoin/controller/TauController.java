@@ -110,6 +110,8 @@ public class TauController {
         // Stop all blockchains.
         chainManager.stop();
 
+        communicationManager.stop();
+
         // Lastly, stop torrent engine
         dhtEngine.stop();
     }

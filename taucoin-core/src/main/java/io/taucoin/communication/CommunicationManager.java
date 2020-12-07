@@ -32,7 +32,7 @@ public class CommunicationManager {
         communication = new Communication(this.messageDB, this.listener);
     }
 
-    public void openChainDB() throws Exception {
+    public void openMessageDB() throws Exception {
         try {
             this.messageDB.open(Repo.getRepoPath() + File.separator + MSG_PATH);
         } catch (Exception e) {
@@ -44,7 +44,8 @@ public class CommunicationManager {
 
         // Open the db for repo and block
         try {
-            openChainDB();
+            openMessageDB();
+            communication.start();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

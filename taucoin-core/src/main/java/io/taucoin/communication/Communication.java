@@ -677,11 +677,15 @@ public class Communication implements DHT.GetDHTItemCallback {
      * 将所有的请求一次发给中间层
      */
     private void tryToSendAllRequest() {
+        logger.error("000000000000000000000000000000000000000");
         int size = DHTEngine.getInstance().queueOccupation();
+        logger.error("size:{}", size);
         if ((double)size / DHTEngine.DHTQueueCapability < THRESHOLD) {
+            logger.error("11111111111111111111111");
             while (true) {
                 Object request = this.queue.poll();
                 if (null != request) {
+                    logger.error("22222222222222222222222222222222222");
                     process(request);
                 } else {
                     break;
