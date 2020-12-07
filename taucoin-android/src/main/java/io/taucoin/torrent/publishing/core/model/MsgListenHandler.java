@@ -88,7 +88,9 @@ class MsgListenHandler {
      * @param friendPk byte[] 朋友公钥
      * @param root 消息root
      */
-    public void onReceivedMessageRoot(byte[] friendPk, byte[] root) {
+    void onReceivedMessageRoot(byte[] friendPk, byte[] root) {
+        logger.debug("onReceivedMessageRoot friendPk::{}，MessageRoot::{}",
+                ByteUtil.toHexString(friendPk), root);
     }
 
     /**

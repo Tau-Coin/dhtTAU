@@ -105,7 +105,7 @@ public class TauDaemon {
         tauController = new TauController(repoPath, androidLeveldbFactory);
         tauController.registerListener(daemonListener);
         tauController.registerMsgListener(msgListener);
-        tauController.getDHTEngine().regulateDHTOPInterval(initDHTOPInterval);
+//        tauController.getDHTEngine().regulateDHTOPInterval(initDHTOPInterval);
 
         switchPowerReceiver();
         switchConnectionReceiver();
@@ -389,20 +389,20 @@ public class TauDaemon {
                     logger.info("rescheduleDHTBySettings restartSessions::{}",
                             NetworkSetting.getDHTSessions());
                 } else {
-                    int regulateValue = NetworkSetting.calculateRegulateValue();
-                    if (regulateValue > 0) {
-                        tauController.getDHTEngine().increaseDHTOPInterval();
-                    } else if (regulateValue < 0) {
-                        if ((sessionStartedDispose != null && !sessionStartedDispose.isDisposed())) {
-                            return;
-                        }
-                        int dhtSessions = NetworkSetting.getDHTSessions();
-                        if (dhtSessions < maxSessions) {
-                            tauController.getDHTEngine().decreaseDHTOPInterval();
-                            tauController.getDHTEngine().increaseSession();
-                            resetDHTSessions(dhtSessions + 1);
-                        }
-                    }
+//                    int regulateValue = NetworkSetting.calculateRegulateValue();
+//                    if (regulateValue > 0) {
+//                        tauController.getDHTEngine().increaseDHTOPInterval();
+//                    } else if (regulateValue < 0) {
+//                        if ((sessionStartedDispose != null && !sessionStartedDispose.isDisposed())) {
+//                            return;
+//                        }
+//                        int dhtSessions = NetworkSetting.getDHTSessions();
+//                        if (dhtSessions < maxSessions) {
+//                            tauController.getDHTEngine().decreaseDHTOPInterval();
+//                            tauController.getDHTEngine().increaseSession();
+//                            resetDHTSessions(dhtSessions + 1);
+//                        }
+//                    }
                     logger.info("rescheduleDHTBySettings DHTSessions::{}, DHTOPInterval::{}",
                             NetworkSetting.getDHTSessions(), tauController.getDHTEngine().getDHTOPInterval());
                 }
@@ -416,6 +416,7 @@ public class TauDaemon {
      * 重置DHT Sessions个数
      */
     private void resetDHTSessions(int dhtSessions) {
+        dhtSessions = 8;
         NetworkSetting.updateDHTSessions(dhtSessions);
         if (dhtSessions != maxSessions) {
             subscribeSessionStarted();
