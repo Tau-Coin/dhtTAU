@@ -300,10 +300,12 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (iterator.hasNext()) {
             Map.Entry<ByteArrayWrapper, byte[]> entry = iterator.next();
 
-            logger.debug("Notify UI read message from friend:{}, root:{}",
-                    entry.getKey().toString(), Hex.toHexString(entry.getValue()));
+            if (null != entry.getValue()) {
+                logger.debug("Notify UI read message from friend:{}, root:{}",
+                        entry.getKey().toString(), Hex.toHexString(entry.getValue()));
 
-            this.msgListener.onReadMessageRoot(entry.getKey().getData(), entry.getValue());
+                this.msgListener.onReadMessageRoot(entry.getKey().getData(), entry.getValue());
+            }
 
             iterator.remove();
         }
@@ -992,7 +994,10 @@ public class Communication implements DHT.GetDHTItemCallback {
                                     // 请求该root
                                     requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getKey());
                                     this.friendRoot.put(sender, gossipItem.getMessageRoot());
-                                    this.friendConfirmationRoot.put(sender, gossipItem.getConfirmationRoot());
+
+                                    if (null != gossipItem.getConfirmationRoot()) {
+                                        this.friendConfirmationRoot.put(sender, gossipItem.getConfirmationRoot());
+                                    }
                                     // 更新时间戳，不更新root，因为gossip不可靠，等亲自访问到节点自己给出的信息再更新
                                     this.friendTimeStamp.put(sender, timeStamp);
                                 }
