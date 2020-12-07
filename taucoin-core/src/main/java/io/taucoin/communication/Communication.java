@@ -17,7 +17,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import io.taucoin.account.AccountManager;
 import io.taucoin.core.DataIdentifier;
@@ -61,7 +63,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     private final Queue<Object> queue = new ConcurrentLinkedQueue<>();
 
     // 发现的gossip item集合，synchronizedSet是支持并发操作的集合
-    private final Set<GossipItem> gossipItems = Collections.synchronizedSet(new HashSet<>());
+    private final Set<GossipItem> gossipItems = new CopyOnWriteArraySet<>();
 
     // 得到的消息集合（hash <--> Message），synchronizedMap是支持并发操作的集合
     private final Map<ByteArrayWrapper, Message> messageMap = Collections.synchronizedMap(new HashMap<>());
