@@ -36,6 +36,7 @@ import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 
+// TODO::是否使用immutable list来放gossip
 public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
@@ -229,28 +230,33 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void dealWithGossipItem() {
         Iterator<GossipItem> it = this.gossipItems.iterator();
 
-        // 遍历
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+        // 顶层gossip是按照朋友关系进行平等遍历，未来可能根据频率心跳信号的存在来调整
         while (it.hasNext()) {
             GossipItem gossipItem = it.next();
 
-            // 寻找跟我朋友相关的gossip
-            for(ByteArrayWrapper friend: this.friends) {
-                if (Arrays.equals(friend.getData(), gossipItem.getReceiver())) { // 找到
-                    Pair<byte[], byte[]> pair = new Pair<>(gossipItem.getSender(), gossipItem.getReceiver());
+            // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+            if (!Arrays.equals(gossipItem.getSender(), pubKey)) {
+                // 寻找跟我朋友相关的gossip
+                for (ByteArrayWrapper friend : this.friends) {
+                    if (Arrays.equals(friend.getData(), gossipItem.getReceiver())) { // 找到
+                        Pair<byte[], byte[]> pair = new Pair<>(gossipItem.getSender(), gossipItem.getReceiver());
 
-                    Long oldTimeStamp = this.timeStamp.get(pair);
-                    long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
+                        Long oldTimeStamp = this.timeStamp.get(pair);
+                        long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
 
-                    // 判断是否是新数据，若是，则记录下来以待发布
-                    if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
-                        // 朋友的root帮助记录，由其自己去验证
-                        this.root.put(pair, gossipItem.getMessageRoot());
-                        this.confirmationRoot.put(pair, gossipItem.getConfirmationRoot());
-                        // 更新时间戳
-                        this.timeStamp.put(pair, timeStamp);
+                        // 判断是否是新数据，若是，则记录下来以待发布
+                        if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
+                            // 朋友的root帮助记录，由其自己去验证
+                            this.root.put(pair, gossipItem.getMessageRoot());
+                            this.confirmationRoot.put(pair, gossipItem.getConfirmationRoot());
+                            // 更新时间戳
+                            this.timeStamp.put(pair, timeStamp);
+                        }
+
+                        break;
                     }
-
-                    break;
                 }
             }
 
@@ -346,6 +352,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
             // try to find next one
             byte[] hash = message.getPreviousMsgDAGRoot();
+            // 先判断一下本地是否有，有的话则终止，没有则继续同步DAG，直至到连接到之前的数据
             if (null == this.messageDB.getMessageByHash(hash)) {
                 Message previousMsg = this.messageMap.get(new ByteArrayWrapper(hash));
                 if (null == previousMsg) {
@@ -385,6 +392,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (it.hasNext()) {
             ByteArrayWrapper demandItem = it.next();
             byte[] hash = HashUtil.bencodeHash(demandItem.getData());
+            logger.debug("Save demand item:{}", Hex.toHexString(demandItem.getData()));
             // 数据存入数据库
             this.messageDB.putMessage(hash, demandItem.getData());
 
@@ -683,6 +691,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void tryToSendAllRequest() {
         int size = DHTEngine.getInstance().queueOccupation();
+        // 0.2 * 10000是中间层剩余空间，大于本地队列最大长度1000，目前肯定能放下
         if ((double)size / DHTEngine.DHTQueueCapability < THRESHOLD) {
             while (true) {
                 Object request = this.queue.poll();
@@ -943,6 +952,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                 Message message = new Message(item);
                 requestMessageContent(message.getPreviousMsgDAGRoot());
+                logger.debug("Got message hash:{}", Hex.toHexString(message.getHash()));
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getKey());
 
@@ -982,6 +992,11 @@ public class Communication implements DHT.GetDHTItemCallback {
                                 gossipItem.toString(), dataIdentifier.getKey().toString());
 
                         ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
+
+                        // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+                        if (Arrays.equals(sender.getData(), pubKey)) {
+                            continue;
+                        }
 
                         // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
                         // 并且gossip item的receiver是我，那么会直接信任该gossip消息

@@ -12,6 +12,7 @@ import io.taucoin.util.RLPList;
 public class GossipItem {
     private byte[] sender;
     private byte[] receiver;
+    // 可能需要拉长
     private byte[] timestamp;
     private GossipType gossipType;
     private byte[] messageRoot;
