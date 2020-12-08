@@ -25,6 +25,8 @@ public class SessionController {
 
     private static final int LISTEN_PORT = 6881;
 
+    public static final int DEFUALT_INTERFACES = 1;
+
     public static final int MIN_SESSIONS = 1;
     public static final int MAX_SESSIONS = 64;
 
@@ -52,6 +54,32 @@ public class SessionController {
     // between 'sessionsList' and 'sessionToWokerMap'
     private final Object lock = new Object();
 
+    static final class SessionQuota {
+
+        private int sessionsQuota;
+        private int interfacesQuota;
+
+        public SessionQuota() {
+            this.sessionsQuota = 1;
+            this.interfacesQuota = DEFUALT_INTERFACES;
+        }
+
+        public void set(int sessionsQuota, int interfacesQuota) {
+            this.sessionsQuota = sessionsQuota;
+            this.interfacesQuota = interfacesQuota;
+        }
+
+        public int getSessionsQuota() {
+            return sessionsQuota;
+        }
+
+        public int getInterfacesQuota() {
+            return interfacesQuota;
+        }
+    }
+
+    private SessionQuota sessionQuota;
+
     /**
      * SessionController constructor.
      *
@@ -64,14 +92,16 @@ public class SessionController {
         this.counter = counter;
         this.regulator = new Regulator();
         this.putCache = putCache;
+        this.sessionQuota = new SessionQuota();
     }
 
     /**
      * Start all sessions and workers.
      *
-     * @param quota sessions quota
+     * @param sessionsQuota sessions quota
+     * @param interfacesQuota interfaces quota
      */
-    public boolean start(int quota) {
+    public boolean start(int sessionsQuota, int interfacesQuota) {
 
         boolean ret = true;
 
@@ -80,12 +110,14 @@ public class SessionController {
             return false;
         }
 
+        sessionQuota.set(sessionsQuota, interfacesQuota);
+
         synchronized (lock) {
             // create tau sessions and workers.
-            for (int i = 0; i < quota; i++) {
+            for (int i = 0; i < sessionsQuota; i++) {
                 SessionSettings.Builder builder = new SessionSettings.Builder()
                         .setNetworkInterfaces(NetworkInterfacePolicy
-                                .networkInterfaces(i));
+                                .networkInterfaces(i, sessionQuota.getInterfacesQuota()));
                 TauSession s = new TauSession(builder.build());
                 Worker w = new Worker(i, s, inputQueue, counter, regulator, putCache);
 
@@ -134,11 +166,12 @@ public class SessionController {
     /**
      * Restart sessions and workers.
      *
-     * @param quota sessions quota
+     * @param sessionsQuota sessions quota
+     * @param interfacesQuota interfaces quota
      */
-    public boolean restart(int quota) {
+    public boolean restart(int sessionsQuota, int interfacesQuota) {
         stop();
-        return start(quota);
+        return start(sessionsQuota, interfacesQuota);
     }
 
     /**
@@ -152,7 +185,8 @@ public class SessionController {
 
         SessionSettings.Builder builder = new SessionSettings.Builder()
                 .setNetworkInterfaces(NetworkInterfacePolicy
-                        .networkInterfaces(sessionsList.size()));
+                        .networkInterfaces(sessionsList.size(),
+                                sessionQuota.getInterfacesQuota()));
 
         TauSession s = new TauSession(builder.build());
         Worker w = new Worker(sessionsList.size(), s, inputQueue, counter, regulator,
@@ -249,9 +283,19 @@ public class SessionController {
 
     private static final class NetworkInterfacePolicy {
 
-        public static String networkInterfaces(int index) {
-            int port = LISTEN_PORT + index;
-            return "0.0.0.0:" + port;
+        public static String networkInterfaces(int index, int interfacesQuota) {
+            StringBuilder sb = new StringBuilder();
+
+            int startPort = LISTEN_PORT + index * interfacesQuota;
+            for (int i = 0; i < interfacesQuota; i++) {
+                if (i != (interfacesQuota - 1)) {
+                    sb.append("0.0.0.0:" + (startPort + i) + ",");
+                } else {
+                    sb.append("0.0.0.0:" + (startPort + i));
+                }
+            }
+
+            return sb.toString();
         }
     }
 }

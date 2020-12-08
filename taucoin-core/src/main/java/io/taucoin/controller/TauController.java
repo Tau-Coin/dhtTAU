@@ -9,6 +9,7 @@ import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.listener.TauListener;
 import io.taucoin.dht.DHTEngine;
+import io.taucoin.dht.session.SessionController;
 import io.taucoin.util.Repo;
 
 import com.frostwire.jlibtorrent.Pair;
@@ -87,11 +88,21 @@ public class TauController {
      * @param sessionsQuota sessions quoto
      */
     public void start(int sessionsQuota) {
+        start(sessionsQuota, SessionController.DEFUALT_INTERFACES);
+    }
+
+    /**
+     * Start all the blockchain core components.
+     *
+     * @param sessionsQuota sessions quoto
+     * @param interfacesQuota interfaces quota
+     */
+    public void start(int sessionsQuota, int interfacesQuota) {
 
         registerListener(new StartListener(this, compositeTauListener));
 
         // First of all, start torrent engine.
-        dhtEngine.start(sessionsQuota);
+        dhtEngine.start(sessionsQuota, interfacesQuota);
 
         // And then start chain manager.
         // chain manager will start followed and mined blockchains.
@@ -122,7 +133,17 @@ public class TauController {
      * @param sessionsQuota sessions quota
      */
     public boolean restartSessions(int sessionsQuota) {
-        return dhtEngine.restart(sessionsQuota);
+        return dhtEngine.restart(sessionsQuota, SessionController.DEFUALT_INTERFACES);
+    }
+
+    /**
+     * Restart dht sessions.
+     *
+     * @param sessionsQuota sessions quota
+     * @param interfacesQuota interfaces quota
+     */
+    public boolean restartSessions(int sessionsQuota, int interfacesQuota) {
+        return dhtEngine.restart(sessionsQuota, interfacesQuota);
     }
 
     /**

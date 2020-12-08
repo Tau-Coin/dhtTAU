@@ -10,7 +10,10 @@ public class Config {
     public static final int DEFAULT_RPC_PORT= 9088;
 
     // default dht sessions quota
-    public static final int DEFAULT_SESSIONS_QUOTA = 32;
+    public static final int DEFAULT_SESSIONS_QUOTA = 16;
+
+    // default dht session interfaces quota
+    public static final int DEFAULT_INTERFACES_QUOTA = 8;
 
     // json rpc server listening port.
     private int rpcPort;
@@ -24,6 +27,9 @@ public class Config {
     // sessions quota
     private int sessionsQuota;
 
+    // interfaces quota
+    private int interfacesQuota;
+
     /**
      * Config constructor.
      */
@@ -33,6 +39,7 @@ public class Config {
         this.keySeed = null;
         this.dataDir = Repo.getDefaultDataDir();
         this.sessionsQuota = DEFAULT_SESSIONS_QUOTA;
+        this.interfacesQuota = DEFAULT_INTERFACES_QUOTA;
     }
 
     /**
@@ -105,6 +112,24 @@ public class Config {
      */
     public void setSessionsQuota(int quota) {
         this.sessionsQuota = quota;
+    }
+
+    /**
+     * Get dht session interfaces quota.
+     *
+     * @return int
+     */
+    public int getInterfacesQuota() {
+        return this.interfacesQuota;
+    }
+
+    /**
+     * Set dht session interfaces quota.
+     *
+     * @param quota
+     */
+    public void setInterfacesQuota(int quota) {
+        this.interfacesQuota = quota;
     }
 
     @Override

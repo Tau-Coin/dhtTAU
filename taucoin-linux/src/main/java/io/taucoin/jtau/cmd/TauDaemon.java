@@ -124,7 +124,8 @@ public class TauDaemon implements Runnable {
     }
 
     private void startTau() {
-        this.tauController.start(this.config.getSessionsQuota());
+        this.tauController.start(this.config.getSessionsQuota(),
+               this.config.getInterfacesQuota());
     }
 
     private void startRpcServer() {

@@ -84,10 +84,11 @@ public class DHTEngine {
     /**
      * Start dht engine.
      *
-     * @param quota sessions quota
+     * @param sessionsQuota sessions quota
+     * @param interfacesQuota interfaces quota
      */
-    public boolean start(int quota) {
-        boolean ok = sessionController.start(quota);
+    public boolean start(int sessionsQuota, int interfacesQuota) {
+        boolean ok = sessionController.start(sessionsQuota, interfacesQuota);
 
         if (ok) {
             logger.info("dht sessions start successfully");
@@ -113,10 +114,11 @@ public class DHTEngine {
     /**
      * Restart dht engine.
      *
-     * @param quota sessions quota
+     * @param sessionsQuota sessions quota
+     * @param interfacesQuota interfaces quota
      */
-    public boolean restart(int quota) {
-        return sessionController.restart(quota);
+    public boolean restart(int sessionsQuota, int interfacesQuota) {
+        return sessionController.restart(sessionsQuota, interfacesQuota);
     }
 
     /**
