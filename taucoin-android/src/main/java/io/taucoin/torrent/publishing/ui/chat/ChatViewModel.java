@@ -120,16 +120,17 @@ public class ChatViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
-                List<byte[]> data;
+                ContentItem contentItem = null;
                 if (type == MessageType.PICTURE.ordinal()) {
-                    data = handleMsgPicToDAG(msg);
+                    contentItem = handleMsgPicToDAG(msg);
                 } else if(type == MessageType.TEXT.ordinal()) {
-                    data = handleMsgTextToDAG(msg);
+                    contentItem = handleMsgTextToDAG(msg);
                 } else {
                     throw new Exception("Unknown message type");
                 }
+                List<byte[]> data = contentItem.getList();
+                byte[] contentLink = contentItem.getContentLink();
                 // 组织Message的结构，并发送到DHT和数据入库
-                byte[] contentLink = data.get(data.size() - 1);
                 long timestamp = DateUtil.getTime();
                 byte[] friendPkBytes = ByteUtil.toByte(friendPk);
                 byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
@@ -168,7 +169,7 @@ public class ChatViewModel extends AndroidViewModel {
     /**
      * 处理消息文本成DAG形式
      */
-    private List<byte[]> handleMsgTextToDAG(String msg) throws DBException {
+    private ContentItem handleMsgTextToDAG(String msg) throws DBException {
         List<byte[]> hashList = new ArrayList<>();
         List<byte[]> contentList = new ArrayList<>();
         byte[] msgBytes = msg.getBytes(StandardCharsets.UTF_8);
@@ -194,6 +195,7 @@ public class ChatViewModel extends AndroidViewModel {
         } while (statPos < msgSize);
         // 组织消息数据结构
         MsgBlock msgBlock = new MsgBlock();
+        byte[] contentLink = null;
         List<byte[]> msgBlockList = new ArrayList<>();
         for (int i = hashList.size() - 1; i >= 0; i--) {
             if (msgBlockList.size() == 0) {
@@ -206,16 +208,17 @@ public class ChatViewModel extends AndroidViewModel {
             byte[] msgBlockHash = HashUtil.bencodeHash(msgBlockEncoded);
             msgBlockList.add(msgBlockHash);
             contentList.add(msgBlockEncoded);
+            contentLink = msgBlockHash;
             daemon.saveMsg(msgBlockHash, msgBlockEncoded);
             logger.debug("msgBlockHash::{}, hashSize::{}", msgBlockHash, msgBlockHash.length);
         }
-        return contentList;
+        return ContentItem.newInstance(contentList, contentLink);
     }
 
     /**
      * 处理消息图片成DAG形式
      */
-    private List<byte[]> handleMsgPicToDAG(String originalPath) throws Exception {
+    private ContentItem handleMsgPicToDAG(String originalPath) throws Exception {
         String compressPath = LibJpegManager.getCompressFilePath();
         String progressivePath = LibJpegManager.getProgressiveFilePath();
         long startTime = System.currentTimeMillis();
@@ -227,7 +230,7 @@ public class ChatViewModel extends AndroidViewModel {
         return saveImageToLevelDB(progressivePath);
     }
 
-    private List<byte[]> saveImageToLevelDB(String progressivePath) throws Exception{
+    private ContentItem saveImageToLevelDB(String progressivePath) throws Exception{
         List<byte[]> contentList = new ArrayList<>();
         logger.debug("saveImageToLevelDB start");
         long startTime = System.currentTimeMillis();
@@ -263,6 +266,7 @@ public class ChatViewModel extends AndroidViewModel {
         }
         MsgBlock latterBlock = new MsgBlock();
         int hashListSize = hashList.size();
+        byte[] contentLink = null;
         for (int i = hashListSize - 1; i >= 0 ; i--) {
             byte[] listHash = hashList.get(i);
             boolean isSaveMsg = false;
@@ -279,6 +283,7 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] blockEncoded = latterBlock.getEncoded();
                 byte[] blockHash = HashUtil.sha1hash(blockEncoded);
                 daemon.saveMsg(blockHash, blockEncoded);
+                contentLink = blockHash;
                 contentList.add(blockEncoded);
 
                 latterBlock = new MsgBlock();
@@ -288,6 +293,29 @@ public class ChatViewModel extends AndroidViewModel {
         long endTime = System.currentTimeMillis();
         logger.debug("saveImageToLevelDB end times::{}ms", endTime - startTime);
         fis.close();
-        return contentList;
+        return ContentItem.newInstance(contentList, contentLink);
+    }
+
+    static class ContentItem {
+        private List<byte[]> contentList;
+        private byte[] contentLink;
+
+        ContentItem(List<byte[]> contentList, byte[] contentLink) {
+            this.contentList = contentList;
+            this.contentLink = contentLink;
+        }
+
+        byte[] getContentLink() {
+            return contentLink;
+        }
+
+        public List<byte[]> getList() {
+            return contentList;
+        }
+
+        static ContentItem newInstance(List<byte[]> contentList,
+                                       byte[] contentLink) {
+            return new ContentItem(contentList, contentLink);
+        }
     }
 }
