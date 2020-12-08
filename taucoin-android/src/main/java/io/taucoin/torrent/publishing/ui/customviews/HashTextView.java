@@ -60,12 +60,7 @@ public class HashTextView extends TextView {
      * 设置TextHash
      */
     public void setTextHash(String textHash) {
-        if (StringUtil.isEquals(this.textHash, textHash) && totalBytes != null) {
-            showText();
-            return;
-        }
         this.textHash = textHash;
-
         setTextHash(ByteUtil.toByte(textHash));
     }
 
@@ -86,6 +81,7 @@ public class HashTextView extends TextView {
                     logger.debug("showTextFromDB textHash::{}, text::{}, times::{}ms", textHash,
                             new String(totalBytes, StandardCharsets.UTF_8), endTime - startTime);
                 }
+            } catch (InterruptedException ignore) {
             } catch (Exception e) {
                 logger.error("showTextFromDB error", e);
             }

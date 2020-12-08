@@ -10,6 +10,7 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp" >
 
         <TextView
@@ -26,10 +27,59 @@
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="0dp"
+            android:layout_gravity="end"
+            android:layout_marginStart="0dp"
             android:layout_marginTop="5dp"
-            android:layout_marginStart="10dp"
             android:gravity="top">
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical">
+                <ImageView
+                    android:id="@+id/iv_stats"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:layout_marginEnd="5dp"
+                    android:layout_gravity="center_vertical"
+                    android:contentDescription="@null"
+                    android:src="@mipmap/icon_sent"/>
+
+                <ProgressBar
+                    android:id="@+id/tv_progress"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="5dp"
+                    android:indeterminateDrawable="@drawable/progressbar_round"
+                    android:layout_gravity="center_vertical"/>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/middle_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@mipmap/icon_chat_right"
+                android:layout_marginEnd="5dp"
+                android:layout_marginBottom="3dp"
+                android:paddingStart="15dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:orientation="vertical">
+
+                <io.taucoin.torrent.publishing.ui.customviews.HashTextView
+                    android:id="@+id/tv_msg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxWidth="180dp"
+                    android:gravity="start"
+                    android:textAppearance="@style/TextAppearanceBody2" />
+
+            </LinearLayout>
 
             <io.taucoin.torrent.publishing.ui.customviews.RoundButton
                 android:id="@+id/round_button"
@@ -44,55 +94,6 @@
                 app:isRadiusAutoHalf="true"
                 app:bgColor="@color/primary_light"
                 app:textColorForPressed="@color/color_white" />
-
-            <LinearLayout
-                android:id="@+id/middle_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@mipmap/icon_chat_left"
-                android:layout_marginStart="5dp"
-                android:layout_marginBottom="3dp"
-                android:paddingStart="20dp"
-                android:paddingEnd="15dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:orientation="vertical">
-
-                <io.taucoin.torrent.publishing.ui.customviews.HashTextView
-                    android:id="@+id/tv_msg"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="start"
-                    android:maxWidth="180dp"
-                    android:textAppearance="@style/TextAppearanceBody2" />
-
-            </LinearLayout>
-
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical">
-                <ImageView
-                    android:id="@+id/iv_stats"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:gravity="center_vertical"
-                    android:includeFontPadding="false"
-                    android:layout_marginStart="5dp"
-                    android:layout_gravity="center_vertical"
-                    android:contentDescription="@null"
-                    android:src="@mipmap/icon_sent"/>
-
-                <ProgressBar
-                    android:id="@+id/tv_progress"
-                    style="?android:attr/progressBarStyleSmall"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="5dp"
-                    android:indeterminateDrawable="@drawable/progressbar_round"
-                    android:layout_gravity="center_vertical"/>
-
-            </RelativeLayout>
 
         </LinearLayout>
 

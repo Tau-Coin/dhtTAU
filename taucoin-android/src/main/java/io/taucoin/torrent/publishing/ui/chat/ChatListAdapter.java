@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
@@ -12,6 +13,7 @@ import androidx.databinding.ViewDataBinding;
 import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
@@ -21,14 +23,26 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemPictureBinding;
+import io.taucoin.torrent.publishing.databinding.ItemPictureRightBinding;
 import io.taucoin.torrent.publishing.databinding.ItemTextBinding;
+import io.taucoin.torrent.publishing.databinding.ItemTextRightBinding;
 import io.taucoin.torrent.publishing.databinding.MsgLeftViewBinding;
+import io.taucoin.torrent.publishing.ui.customviews.HashImageView;
+import io.taucoin.torrent.publishing.ui.customviews.HashTextView;
+import io.taucoin.torrent.publishing.ui.customviews.RoundButton;
 import io.taucoin.types.MessageType;
 
 /**
  * 聊天消息的Adapter
  */
 public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.ViewHolder> {
+
+    enum ViewType {
+        LEFT_TEXT,
+        LEFT_PICTURE,
+        RIGHT_TEXT,
+        RIGHT_PICTURE
+    }
     private ClickListener listener;
 
     ChatListAdapter(ClickListener listener) {
@@ -42,7 +56,17 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
         ViewDataBinding binding;
-        if (viewType == MessageType.PICTURE.ordinal()) {
+        if (viewType == ViewType.RIGHT_PICTURE.ordinal()) {
+            binding = DataBindingUtil.inflate(inflater,
+                    R.layout.item_picture_right,
+                    parent,
+                    false);
+        } else if (viewType == ViewType.RIGHT_TEXT.ordinal()) {
+            binding = DataBindingUtil.inflate(inflater,
+                    R.layout.item_text_right,
+                    parent,
+                    false);
+        }  else if (viewType == ViewType.LEFT_PICTURE.ordinal()) {
             binding = DataBindingUtil.inflate(inflater,
                     R.layout.item_picture,
                     parent,
@@ -59,10 +83,23 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
     @Override
     public int getItemViewType(int position) {
         ChatMsg chat = getItem(position);
+        String userPk = MainApplication.getInstance().getPublicKey();
         if (chat != null) {
-            return chat.contextType;
+            if (StringUtil.isEquals(userPk, chat.senderPk) ) {
+                if (chat.contextType == MessageType.PICTURE.ordinal()) {
+                    return ViewType.RIGHT_PICTURE.ordinal();
+                } else {
+                    return ViewType.RIGHT_TEXT.ordinal();
+                }
+            } else {
+                if (chat.contextType == MessageType.PICTURE.ordinal()) {
+                    return ViewType.LEFT_PICTURE.ordinal();
+                } else {
+                    return ViewType.LEFT_TEXT.ordinal();
+                }
+            }
         }
-        return -1;
+        return ViewType.LEFT_TEXT.ordinal();
     }
 
     @Override
@@ -71,10 +108,18 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
         if (position > 0) {
             previousChat = getItem(position - 1);
         }
-        if (getItemViewType(position) == MessageType.PICTURE.ordinal()) {
-            holder.bindPicture(holder, getItem(position), previousChat);
-        } else if (getItemViewType(position) == MessageType.TEXT.ordinal()) {
-            holder.bindText(holder, getItem(position), previousChat);
+        if (getItemViewType(position) == ViewType.RIGHT_PICTURE.ordinal()) {
+            ItemPictureRightBinding binding = (ItemPictureRightBinding) holder.binding;
+            holder.bindPictureRight(binding, getItem(position), previousChat);
+        } else if (getItemViewType(position) == ViewType.RIGHT_TEXT.ordinal()) {
+            ItemTextRightBinding binding = (ItemTextRightBinding) holder.binding;
+            holder.bindTextRight(binding, getItem(position), previousChat);
+        } else if (getItemViewType(position) == ViewType.LEFT_PICTURE.ordinal()) {
+            ItemPictureBinding binding = (ItemPictureBinding) holder.binding;
+            holder.bindPicture(binding, getItem(position), previousChat);
+        } else {
+            ItemTextBinding binding = (ItemTextBinding) holder.binding;
+            holder.bindText(binding, getItem(position), previousChat);
         }
     }
 
@@ -88,36 +133,57 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             this.listener = listener;
         }
 
-        void bindText(ViewHolder holder, ChatMsg chat, ChatMsg previousChat) {
-            if(null == this.binding || null == holder || null == chat){
+        void bindTextRight(ItemTextRightBinding binding, ChatMsg chat, ChatMsg previousChat) {
+            if(null == binding || null == chat){
                 return;
             }
-            ItemTextBinding binding = (ItemTextBinding) this.binding;
-            binding.roundButton.setBgColor(Utils.getGroupColor(chat.senderPk));
+            showStatusView(binding.ivStats, binding.tvProgress, chat.status, true);
+            bindText(binding.roundButton, binding.tvTime, binding.tvMsg, chat, previousChat);
+        }
+
+        void bindText(ItemTextBinding binding, ChatMsg chat, ChatMsg previousChat) {
+            if(null == binding || null == chat){
+                return;
+            }
+            showStatusView(binding.ivStats, binding.tvProgress, chat.status, false);
+            bindText(binding.roundButton, binding.tvTime, binding.tvMsg, chat, previousChat);
+        }
+
+        private void bindText(RoundButton roundButton, TextView tvTime, HashTextView tvMsg,
+                      ChatMsg chat, ChatMsg previousChat) {
+            if(null == chat){
+                return;
+            }
+            roundButton.setBgColor(Utils.getGroupColor(chat.senderPk));
 
             String showName = UsersUtil.getDefaultName(chat.senderPk);
-            binding.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
+            roundButton.setText(StringUtil.getFirstLettersOfName(showName));
 
             boolean isShowTime = isShowTime(chat, previousChat);
             if (isShowTime) {
                 String time = DateUtil.getWeekTimeWithHours(chat.timestamp);
-                binding.tvTime.setText(time);
+                tvTime.setText(time);
             }
-            binding.tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            binding.tvMsg.setTextHash(chat.contextLink);
-            showStatusView(binding.ivStats, binding.tvProgress, chat.status);
+            tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
+            tvMsg.setTextHash(chat.contextLink);
         }
 
-        private void showStatusView(ImageView ivStats, ProgressBar tvProgress, int status) {
-            if (status == ChatMsgType.QUEUED.ordinal() || status == ChatMsgType.RECEIVED.ordinal()) {
-                tvProgress.setVisibility(View.GONE);
-                ivStats.setVisibility(View.VISIBLE);
-                int icon = status == ChatMsgType.QUEUED.ordinal() ? R.mipmap.icon_sent :
-                        R.mipmap.icon_received;
-                ivStats.setImageResource(icon);
+        private void showStatusView(ImageView ivStats, ProgressBar tvProgress,
+                                    int status, boolean isMine) {
+            if (isMine) {
+                if (status == ChatMsgType.QUEUED.ordinal() || status == ChatMsgType.RECEIVED.ordinal()) {
+                    tvProgress.setVisibility(View.GONE);
+                    ivStats.setVisibility(View.VISIBLE);
+                    int icon = status == ChatMsgType.QUEUED.ordinal() ? R.mipmap.icon_sent :
+                            R.mipmap.icon_received;
+                    ivStats.setImageResource(icon);
+                } else {
+                    tvProgress.setVisibility(View.VISIBLE);
+                    ivStats.setVisibility(View.GONE);
+                }
             } else {
-                tvProgress.setVisibility(View.VISIBLE);
                 ivStats.setVisibility(View.GONE);
+                tvProgress.setVisibility(View.VISIBLE);
             }
         }
 
@@ -129,42 +195,39 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             return true;
         }
 
-        void bindPicture(ViewHolder holder, ChatMsg chat, ChatMsg previousChat) {
-            if(null == this.binding || null == holder || null == chat){
+        void bindPictureRight(ItemPictureRightBinding binding, ChatMsg chat, ChatMsg previousChat) {
+            if(null == binding || null == chat){
                 return;
             }
-            ItemPictureBinding binding = (ItemPictureBinding) this.binding;
-            binding.roundButton.setBgColor(Utils.getGroupColor(chat.senderPk));
+            showStatusView(binding.ivStats, binding.tvProgress, chat.status, true);
+            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage, chat, previousChat);
+        }
+
+        void bindPicture(ItemPictureBinding binding, ChatMsg chat, ChatMsg previousChat) {
+            if(null == binding || null == chat){
+                return;
+            }
+            showStatusView(binding.ivStats, binding.tvProgress, chat.status, false);
+            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage, chat, previousChat);
+        }
+
+        private void bindPicture(RoundButton roundButton, TextView tvTime, HashImageView tvImage,
+                      ChatMsg chat, ChatMsg previousChat) {
+            if(null == chat){
+                return;
+            }
+            roundButton.setBgColor(Utils.getGroupColor(chat.senderPk));
 
             String showName = UsersUtil.getDefaultName(chat.senderPk);
-            binding.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
+            roundButton.setText(StringUtil.getFirstLettersOfName(showName));
 
             boolean isShowTime = isShowTime(chat, previousChat);
             if (isShowTime) {
                 String time = DateUtil.getWeekTimeWithHours(chat.timestamp);
-                binding.tvTime.setText(time);
+                tvTime.setText(time);
             }
-            binding.tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            binding.tvImage.setImageHash(chat.contextLink);
-            showStatusView(binding.ivStats, binding.tvProgress, chat.status);
-        }
-
-        private void setLeftViewClickListener(MsgLeftViewBinding leftView, MsgAndReply msg) {
-            leftView.roundButton.setOnClickListener(view ->{
-                if(listener != null){
-                    listener.onUserClicked(msg.senderPk);
-                }
-            });
-            leftView.tvEditName.setOnClickListener(view -> {
-                if(listener != null){
-                    listener.onEditNameClicked(msg.senderPk);
-                }
-            });
-            leftView.tvBlacklist.setOnClickListener(view ->{
-                if(listener != null){
-                    listener.onBanClicked(msg);
-                }
-            });
+            tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
+            tvImage.setImageHash(chat.contextLink);
         }
     }
 

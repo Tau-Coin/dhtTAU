@@ -64,10 +64,6 @@ public class HashImageView extends RoundImageView {
      * 设置ImageHash
      */
     public void setImageHash(String imageHash) {
-        if (StringUtil.isEquals(this.imageHash, imageHash) && totalBytes != null) {
-            showImage();
-            return;
-        }
         this.imageHash = imageHash;
         setImageHash(ByteUtil.toByte(imageHash));
     }
@@ -87,6 +83,7 @@ public class HashImageView extends RoundImageView {
                     long endTime = System.currentTimeMillis();
                     logger.debug("showImageFromDB times::{}ms", endTime - startTime);
                 }
+            } catch (InterruptedException ignore) {
             } catch (Exception e) {
                 logger.error("showImageFromDB error", e);
             }
