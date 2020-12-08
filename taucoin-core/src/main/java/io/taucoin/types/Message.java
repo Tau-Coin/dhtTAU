@@ -149,13 +149,17 @@ public class Message {
 
     @Override
     public String toString() {
+        byte[] previousRoot = getPreviousMsgDAGRoot();
+        byte[] friendRoot = getFriendLatestMessageRoot();
+        byte[] contentLink = getContentLink();
+
         return "Message{" +
                 "version=" + getVersion() +
                 ", timestamp=" + ByteUtil.byteArrayToLong(getTimestamp()) +
-                ", previousMsgDAGRoot=" + Hex.toHexString(getPreviousMsgDAGRoot()) +
-                ", friendLatestMessageRoot=" + Hex.toHexString(getFriendLatestMessageRoot()) +
+                ", previousMsgDAGRoot=" + (null != previousRoot ? Hex.toHexString(previousRoot) : " ") +
+                ", friendLatestMessageRoot=" + (null != friendRoot ? Hex.toHexString(friendRoot) : " ") +
                 ", type=" + getType() +
-                ", contentLink=" + Hex.toHexString(getContentLink()) +
+                ", contentLink=" + (null != contentLink ? Hex.toHexString(contentLink) : " ") +
                 ", hash=" + Hex.toHexString(getHash()) +
                 '}';
     }

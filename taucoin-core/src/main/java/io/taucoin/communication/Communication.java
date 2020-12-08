@@ -781,12 +781,16 @@ public class Communication implements DHT.GetDHTItemCallback {
     public boolean publishNewMessage(byte[] friend, Message message, List<byte[]> data) {
         if (this.queue.size() <= QueueCapability) {
             try {
-                saveMessageDataInDB(message, data);
-                updateMessageInfoToFriend(friend, message);
-                publishMessage(message);
-                publishImmutableData(data);
-                // 目前仅仅在发布新消息时才发布gossip，留待讨论
-                publishGossipInfo();
+                if (null != message) {
+                    logger.debug("Publish message:{}", message.toString());
+
+                    saveMessageDataInDB(message, data);
+                    updateMessageInfoToFriend(friend, message);
+                    publishMessage(message);
+                    publishImmutableData(data);
+                    // 目前仅仅在发布新消息时才发布gossip，留待讨论
+                    publishGossipInfo();
+                }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
