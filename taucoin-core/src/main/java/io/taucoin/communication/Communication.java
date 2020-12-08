@@ -55,6 +55,12 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 主循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
+    // 发布gossip信息的时间间隔
+    private final long GOSSIP_PUBLISH_INTERVAL_TIME = 30; // 30 s
+
+    // 记录上一次发布gossip的时间
+    private long lastGossipPublishTime = 0;
+
     private final MsgListener msgListener;
 
     // message db
@@ -160,6 +166,17 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
 
         return true;
+    }
+
+    /**
+     * 尝试发布gossip信息，看看时间间隔是否已到，每30一次
+     */
+    private void tryToPublishGossipInfo() {
+        long currentTime = System.currentTimeMillis() / 1000;
+
+        if (currentTime - lastGossipPublishTime > GOSSIP_PUBLISH_INTERVAL_TIME) {
+            publishGossipInfo();
+        }
     }
 
     /**
@@ -680,6 +697,9 @@ public class Communication implements DHT.GetDHTItemCallback {
         GossipList gossipList = new GossipList(previousGossipListHash, list);
         logger.debug(gossipList.toString());
         publishMutableGossipList(gossipList);
+
+        // 记录发布时间
+        this.lastGossipPublishTime = System.currentTimeMillis() / 1000;
     }
 
     /**
