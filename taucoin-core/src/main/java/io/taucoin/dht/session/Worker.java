@@ -28,6 +28,11 @@ class Worker {
     private static final Object StartLock = new Object();
     private static final long SessionStartInterval = 100; // milliseconds.
 
+    // Improvement for getting and putting dht items.
+    // Only when session's dht nodes is greater than 'DHTNODES_THRESOLD',
+    // can dht item be allowed to put and get.
+    private static final long DHTNODES_THRESOLD = 50;
+
     // Instance index;
     private int index;
 
@@ -90,6 +95,11 @@ class Worker {
 
                     if (stopRequested) {
                         break;
+                    }
+
+                    if (session.dhtNodes() <= DHTNODES_THRESOLD) {
+                        logger.trace("session dht nodes is too less:" + session.dhtNodes());
+                        continue;
                     }
 
                     // TODO: comments
