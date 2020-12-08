@@ -54,7 +54,7 @@ public class ChainParam {
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
 
     public static final int MAX_HASH_NUMBER = 47;
-    public static final int GOSSIP_SIZE = 4;
+    public static final int GOSSIP_SIZE = 5;
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
@@ -67,7 +67,7 @@ public class ChainParam {
     public static final byte[] DEMAND_CHANNEL = "#D".getBytes();
 
     // gossip
-    public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST".getBytes();
+    public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST1".getBytes();
 
     // one day
     public static final int ONE_DAY = 24 * 60 * 60;
