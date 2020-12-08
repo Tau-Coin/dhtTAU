@@ -19,6 +19,7 @@ import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.MsgBlock;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
@@ -33,14 +34,16 @@ import io.taucoin.util.ByteUtil;
 public class HashImageView extends RoundImageView {
 
     private static final Logger logger = LoggerFactory.getLogger("HashImageView");
+    private static final int heightLimit = 300;
+    private static final int widthLimit = 300;
     private TauDaemon daemon;
     private String imageHash;
     private byte[] totalBytes;
     private Disposable disposable;
     private boolean reload = false;
     private BitmapFactory.Options options;
-    private int heightLimit = 300;
-    private int widthLimit = 300;
+    private LoadCompleteListener listener;
+    private int loadBitmapTimes = 0;
 
     public HashImageView(Context context) {
         this(context, null);
@@ -56,8 +59,16 @@ public class HashImageView extends RoundImageView {
         options = new BitmapFactory.Options();
     }
 
-    private void showImage() {
-        setImageBitmap(loadImageView());
+    private void showImage(Bitmap bitmap) {
+        if (bitmap != null) {
+            this.setImageBitmap(bitmap);
+            loadBitmapTimes += 1;
+            if (loadBitmapTimes > 5 && listener != null) {
+                listener.onLoadComplete();
+            }
+        } else {
+            setImageResource(R.mipmap.icon_image_loading);
+        }
     }
 
     /**
@@ -68,9 +79,17 @@ public class HashImageView extends RoundImageView {
         setImageHash(ByteUtil.toByte(imageHash));
     }
 
+    public void setImageHash(String imageHash, LoadCompleteListener listener) {
+        this.listener = listener;
+        this.imageHash = imageHash;
+        setImageHash(ByteUtil.toByte(imageHash));
+    }
+
     private void setImageHash(byte[] imageHash) {
         logger.debug("setImageHash start::{}", imageHash);
+        showImage(null);
         totalBytes = null;
+        loadBitmapTimes = 0;
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
@@ -91,7 +110,7 @@ public class HashImageView extends RoundImageView {
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::setImageBitmap);
+                .subscribe(this::showImage);
     }
 
     private void showHorizontalData(byte[] imageHash, FlowableEmitter<Bitmap> emitter) throws Exception {
@@ -195,5 +214,9 @@ public class HashImageView extends RoundImageView {
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
+    }
+
+    public interface LoadCompleteListener {
+        void onLoadComplete();
     }
 }

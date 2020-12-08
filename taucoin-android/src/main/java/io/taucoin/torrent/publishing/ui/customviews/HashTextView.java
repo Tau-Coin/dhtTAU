@@ -35,6 +35,7 @@ public class HashTextView extends TextView {
     private Disposable disposable;
     private byte[] totalBytes = null;
     private boolean reload = false;
+    private LoadCompleteListener listener;
 
     public HashTextView(Context context) {
         this(context, null);
@@ -53,7 +54,11 @@ public class HashTextView extends TextView {
      * 显示Text
      */
     private void showText() {
-        setText(new String(totalBytes, StandardCharsets.UTF_8));
+        if (totalBytes != null) {
+            setText(new String(totalBytes, StandardCharsets.UTF_8));
+        } else {
+            setText("");
+        }
     }
 
     /**
@@ -67,7 +72,17 @@ public class HashTextView extends TextView {
     /**
      * 设置TextHash
      */
+    public void setTextHash(String textHash, LoadCompleteListener listener) {
+        this.listener = listener;
+        this.textHash = textHash;
+        setTextHash(ByteUtil.toByte(textHash));
+    }
+
+    /**
+     * 设置TextHash
+     */
     private void setTextHash(byte[] textHash) {
+        showText();
         totalBytes = null;
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
@@ -93,6 +108,9 @@ public class HashTextView extends TextView {
                 .subscribe(result -> {
                     if (result) {
                         showText();
+                        if (listener != null) {
+                            listener.onLoadComplete();
+                        }
                     }
                 });
     }
@@ -170,5 +188,9 @@ public class HashTextView extends TextView {
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
+    }
+
+    public interface LoadCompleteListener {
+        void onLoadComplete();
     }
 }

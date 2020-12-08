@@ -26,7 +26,6 @@ import io.taucoin.torrent.publishing.databinding.ItemPictureBinding;
 import io.taucoin.torrent.publishing.databinding.ItemPictureRightBinding;
 import io.taucoin.torrent.publishing.databinding.ItemTextBinding;
 import io.taucoin.torrent.publishing.databinding.ItemTextRightBinding;
-import io.taucoin.torrent.publishing.databinding.MsgLeftViewBinding;
 import io.taucoin.torrent.publishing.ui.customviews.HashImageView;
 import io.taucoin.torrent.publishing.ui.customviews.HashTextView;
 import io.taucoin.torrent.publishing.ui.customviews.RoundButton;
@@ -134,24 +133,26 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
         }
 
         void bindTextRight(ItemTextRightBinding binding, ChatMsg chat, ChatMsg previousChat) {
-            if(null == binding || null == chat){
+            if (null == binding || null == chat) {
                 return;
             }
             showStatusView(binding.ivStats, binding.tvProgress, chat.status, true);
-            bindText(binding.roundButton, binding.tvTime, binding.tvMsg, chat, previousChat);
+            bindText(binding.roundButton, binding.tvTime, binding.tvMsg,
+                    binding.tvProgress, chat, previousChat);
         }
 
         void bindText(ItemTextBinding binding, ChatMsg chat, ChatMsg previousChat) {
-            if(null == binding || null == chat){
+            if (null == binding || null == chat) {
                 return;
             }
             showStatusView(binding.ivStats, binding.tvProgress, chat.status, false);
-            bindText(binding.roundButton, binding.tvTime, binding.tvMsg, chat, previousChat);
+            bindText(binding.roundButton, binding.tvTime, binding.tvMsg,
+                    binding.tvProgress, chat, previousChat);
         }
 
         private void bindText(RoundButton roundButton, TextView tvTime, HashTextView tvMsg,
-                      ChatMsg chat, ChatMsg previousChat) {
-            if(null == chat){
+                      ProgressBar tvProgress, ChatMsg chat, ChatMsg previousChat) {
+            if (null == chat) {
                 return;
             }
             roundButton.setBgColor(Utils.getGroupColor(chat.senderPk));
@@ -165,7 +166,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvMsg.setTextHash(chat.contextLink);
+            tvMsg.setTextHash(chat.contextLink, () -> tvProgress.setVisibility(View.GONE));
         }
 
         private void showStatusView(ImageView ivStats, ProgressBar tvProgress,
@@ -196,11 +197,12 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
         }
 
         void bindPictureRight(ItemPictureRightBinding binding, ChatMsg chat, ChatMsg previousChat) {
-            if(null == binding || null == chat){
+            if (null == binding || null == chat) {
                 return;
             }
             showStatusView(binding.ivStats, binding.tvProgress, chat.status, true);
-            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage, chat, previousChat);
+            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage,
+                    binding.tvProgress, chat, previousChat);
         }
 
         void bindPicture(ItemPictureBinding binding, ChatMsg chat, ChatMsg previousChat) {
@@ -208,12 +210,13 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 return;
             }
             showStatusView(binding.ivStats, binding.tvProgress, chat.status, false);
-            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage, chat, previousChat);
+            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage,
+                    binding.tvProgress, chat, previousChat);
         }
 
         private void bindPicture(RoundButton roundButton, TextView tvTime, HashImageView tvImage,
-                      ChatMsg chat, ChatMsg previousChat) {
-            if(null == chat){
+                 ProgressBar tvProgress, ChatMsg chat, ChatMsg previousChat) {
+            if (null == chat) {
                 return;
             }
             roundButton.setBgColor(Utils.getGroupColor(chat.senderPk));
@@ -227,7 +230,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvImage.setImageHash(chat.contextLink);
+            tvImage.setImageHash(chat.contextLink, () -> tvProgress.setVisibility(View.GONE));
         }
     }
 

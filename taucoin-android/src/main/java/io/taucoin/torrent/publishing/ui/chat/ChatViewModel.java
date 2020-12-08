@@ -120,7 +120,7 @@ public class ChatViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
-                ContentItem contentItem = null;
+                ContentItem contentItem;
                 if (type == MessageType.PICTURE.ordinal()) {
                     contentItem = handleMsgPicToDAG(msg);
                 } else if(type == MessageType.TEXT.ordinal()) {
@@ -135,8 +135,14 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] friendPkBytes = ByteUtil.toByte(friendPk);
                 byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
                 byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(friendPkBytes);
-                Message message = Message.CreateTextMessage(ByteUtil.longToBytes(timestamp),
-                        previousMsgDAGRoot, friendLatestMessageRoot, contentLink);
+                Message message;
+                if (type == MessageType.PICTURE.ordinal()) {
+                    message = Message.CreatePictureMessage(ByteUtil.longToBytes(timestamp),
+                            previousMsgDAGRoot, friendLatestMessageRoot, contentLink);
+                } else {
+                    message = Message.CreateTextMessage(ByteUtil.longToBytes(timestamp),
+                            previousMsgDAGRoot, friendLatestMessageRoot, contentLink);
+                }
                 boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message, data);
                 logger.debug("isSendSuccess::{}", isSendSuccess);
                 String hash = ByteUtil.toHexString(message.getHash());

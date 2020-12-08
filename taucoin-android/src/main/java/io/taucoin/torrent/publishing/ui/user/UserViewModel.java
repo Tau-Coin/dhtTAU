@@ -393,9 +393,6 @@ public class UserViewModel extends AndroidViewModel {
                 friendRepo.addFriend(friend);
                 isExist = false;
                 daemon.addNewFriend(ByteUtil.toByte(publicKey));
-            } else {
-                friend.state = 1;
-                friendRepo.updateFriend(friend);
             }
             emitter.onNext(isExist);
             emitter.onComplete();
