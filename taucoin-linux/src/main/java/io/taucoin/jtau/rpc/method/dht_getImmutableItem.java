@@ -66,6 +66,8 @@ public class dht_getImmutableItem extends JsonRpcServerMethod {
                     } else if ("vertical".equals(type)){
                         VerticalItem verticalItem = new VerticalItem(item);
                         result = verticalItem.toString();
+                    } else if("RawData".equals(type)) {
+                        result = Hex.toHexString(item);
                     }
                 } catch (Exception e) {
                     result = e.toString();

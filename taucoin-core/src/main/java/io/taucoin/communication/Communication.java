@@ -191,19 +191,20 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
 
         // 统计其他人发给我朋友的消息
-        for (Map.Entry<Pair<byte[], byte[]>, Long> entry : this.timeStamp.entrySet()) {
-            if (this.friends.contains(new ByteArrayWrapper(entry.getKey().second))) {
-                // 只添加一天以内有新消息的
-                if (currentTime - entry.getValue() < ChainParam.ONE_DAY) {
-                    byte[] root = this.root.get(entry.getKey());
-                    byte[] confirmationRoot = this.confirmationRoot.get(entry.getKey());
-                    if (null != root) {
-                        gossipSet.add(new GossipItem(entry.getKey().first, entry.getKey().second,
-                                ByteUtil.longToBytes(entry.getValue()), GossipType.MSG, root, confirmationRoot));
-                    }
-                }
-            }
-        }
+        // TODO:: remove for now
+//        for (Map.Entry<Pair<byte[], byte[]>, Long> entry : this.timeStamp.entrySet()) {
+//            if (this.friends.contains(new ByteArrayWrapper(entry.getKey().second))) {
+//                // 只添加一天以内有新消息的
+//                if (currentTime - entry.getValue() < ChainParam.ONE_DAY) {
+//                    byte[] root = this.root.get(entry.getKey());
+//                    byte[] confirmationRoot = this.confirmationRoot.get(entry.getKey());
+//                    if (null != root) {
+//                        gossipSet.add(new GossipItem(entry.getKey().first, entry.getKey().second,
+//                                ByteUtil.longToBytes(entry.getValue()), GossipType.MSG, root, confirmationRoot));
+//                    }
+//                }
+//            }
+//        }
 
 
         return gossipSet;
@@ -420,7 +421,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void requestDemandHash() {
         for (Map.Entry<ByteArrayWrapper, byte[]> entry: this.demandHash.entrySet()) {
-            logger.debug("Request demand hash:{}", Hex.toHexString(entry.getValue()));
+            logger.trace("Request demand hash:{}", Hex.toHexString(entry.getValue()));
             requestImmutableData(entry.getValue());
         }
     }
@@ -487,7 +488,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
         if (null != pubKey) {
-            logger.debug("Request gossip info from peer:{}", pubKey.toString());
+            logger.trace("Request gossip info from peer:{}", pubKey.toString());
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), ChainParam.GOSSIP_CHANNEL);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
 
@@ -518,7 +519,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void requestMessage(byte[] hash, ByteArrayWrapper pubKey) {
         if (null != hash) {
-            logger.debug("Hash:{}, public key:{}", Hex.toHexString(hash), pubKey.toString());
+            logger.debug("Message root:{}, public key:{}", Hex.toHexString(hash), pubKey.toString());
             DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey, new ByteArrayWrapper(hash));
 
@@ -689,22 +690,22 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     private void requestImmutableItem(DHT.ImmutableItemRequest req) {
-        logger.debug("requestImmutableItem:{}", req.getSpec().toString());
+        logger.trace("requestImmutableItem:{}", req.getSpec().toString());
         DHTEngine.getInstance().request(req.getSpec(), req.getCallback(), req.getCallbackData());
     }
 
     private void requestMutableItem(DHT.MutableItemRequest req) {
-        logger.debug("requestMutableItem:{}", req.getSpec().toString());
+        logger.trace("requestMutableItem:{}", req.getSpec().toString());
         DHTEngine.getInstance().request(req.getSpec(), req.getCallback(), req.getCallbackData());
     }
 
     private void putImmutableItem(DHT.ImmutableItemDistribution d) {
-        logger.debug("putImmutableItem:{}", d.getItem().toString());
+        logger.trace("putImmutableItem:{}", d.getItem().toString());
         DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
     }
 
     private void putMutableItem(DHT.MutableItemDistribution d) {
-        logger.debug("putMutableItem:{}", d.getItem().toString());
+        logger.trace("putMutableItem:{}", d.getItem().toString());
         DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
     }
 
@@ -831,9 +832,14 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @throws DBException database exception
      */
     public void addNewFriend(byte[] pubKey) throws DBException {
-        this.friends.add(new ByteArrayWrapper(pubKey));
+        byte[] myPubKey = AccountManager.getInstance().getKeyPair().first;
 
-        this.messageDB.addFriend(pubKey);
+        // 朋友列表排除自己
+        if (!Arrays.equals(myPubKey, pubKey)) {
+            this.friends.add(new ByteArrayWrapper(pubKey));
+
+            this.messageDB.addFriend(pubKey);
+        }
     }
 
     /**
@@ -969,7 +975,8 @@ public class Communication implements DHT.GetDHTItemCallback {
             }
             case MESSAGE: {
                 if (null == item) {
-                    logger.debug("MESSAGE is empty");
+                    logger.debug("MESSAGE[{}] from peer[{}] is empty",
+                            dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
                     this.demandHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
@@ -984,7 +991,8 @@ public class Communication implements DHT.GetDHTItemCallback {
             }
             case MESSAGE_CONTENT: {
                 if (null == item) {
-                    logger.debug("MESSAGE_CONTENT is empty");
+                    logger.debug("MESSAGE_CONTENT[{}] from peer[{}] is empty",
+                            dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
                     this.demandHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
@@ -1011,13 +1019,14 @@ public class Communication implements DHT.GetDHTItemCallback {
                     byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
                     for (GossipItem gossipItem : gossipList.getGossipList()) {
-                        logger.debug("Got gossip: {} from peer[{}]",
+                        logger.trace("Got gossip: {} from peer[{}]",
                                 gossipItem.toString(), dataIdentifier.getExtraInfo1().toString());
 
                         ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
                         // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
                         if (Arrays.equals(sender.getData(), pubKey)) {
+                            logger.debug("Sender[{}] is me.", sender.toString());
                             continue;
                         }
 
@@ -1025,16 +1034,24 @@ public class Communication implements DHT.GetDHTItemCallback {
                         // 并且gossip item的receiver是我，那么会直接信任该gossip消息
                         if (Arrays.equals(dataIdentifier.getExtraInfo1().getData(), gossipItem.getSender())
                                 && Arrays.equals(pubKey, gossipItem.getReceiver())) {
+                            logger.debug("Got trusted gossip:{} from peer[{}]",
+                                    gossipItem.toString(), dataIdentifier.getExtraInfo1().toString());
+
                             if (gossipItem.getGossipType() == GossipType.DEMAND) {
                                 this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getMessageRoot()));
                             } else if (gossipItem.getGossipType() == GossipType.MSG) {
                                 Long oldTimeStamp = this.friendTimeStamp.get(sender);
                                 long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
 
-                                if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
-                                    // 加入活跃朋友集合
-                                    activeFriends.add(sender);
+                                if (null != oldTimeStamp) {
+                                    logger.debug("Old time stamp:{}", oldTimeStamp);
+                                } else {
+                                    logger.debug("Old time stamp is null");
+                                }
 
+                                logger.debug("Current time stamp:{}", timeStamp);
+
+                                if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
                                     // 请求该root
                                     requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getExtraInfo1());
                                     this.friendRoot.put(sender, gossipItem.getMessageRoot());
@@ -1058,7 +1075,8 @@ public class Communication implements DHT.GetDHTItemCallback {
             }
             case GOSSIP_LIST: {
                 if (null == item) {
-                    logger.debug("GOSSIP_LIST from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
+                    logger.debug("GOSSIP_LIST[{}] from peer[{}] is empty",
+                            dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
                     this.demandHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
@@ -1075,13 +1093,14 @@ public class Communication implements DHT.GetDHTItemCallback {
                     byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
                     for (GossipItem gossipItem : gossipList.getGossipList()) {
-                        logger.debug("Got gossip: {} from peer[{}]",
+                        logger.trace("Got gossip: {} from peer[{}]",
                                 gossipItem.toString(), dataIdentifier.getExtraInfo1().toString());
 
                         ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
                         // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
                         if (Arrays.equals(sender.getData(), pubKey)) {
+                            logger.debug("Sender[{}] is me.", sender.toString());
                             continue;
                         }
 
@@ -1089,16 +1108,24 @@ public class Communication implements DHT.GetDHTItemCallback {
                         // 并且gossip item的receiver是我，那么会直接信任该gossip消息
                         if (Arrays.equals(dataIdentifier.getExtraInfo1().getData(), gossipItem.getSender())
                                 && Arrays.equals(pubKey, gossipItem.getReceiver())) {
+                            logger.debug("Got trusted gossip:{} from peer[{}]",
+                                    gossipItem.toString(), dataIdentifier.getExtraInfo1().toString());
+
                             if (gossipItem.getGossipType() == GossipType.DEMAND) {
                                 this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getMessageRoot()));
                             } else if (gossipItem.getGossipType() == GossipType.MSG) {
                                 Long oldTimeStamp = this.friendTimeStamp.get(sender);
                                 long timeStamp = ByteUtil.byteArrayToLong(gossipItem.getTimestamp());
 
-                                if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
-                                    // 加入活跃朋友集合
-                                    activeFriends.add(sender);
+                                if (null != oldTimeStamp) {
+                                    logger.debug("Old time stamp:{}", oldTimeStamp);
+                                } else {
+                                    logger.debug("Old time stamp is null");
+                                }
 
+                                logger.debug("Current time stamp:{}", timeStamp);
+
+                                if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
                                     // 请求该root
                                     requestMessage(gossipItem.getMessageRoot(), dataIdentifier.getExtraInfo1());
                                     this.friendRoot.put(sender, gossipItem.getMessageRoot());
