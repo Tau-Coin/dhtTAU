@@ -49,7 +49,7 @@ import io.taucoin.util.HashUtil;
 public class ChatViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("ChatViewModel");
-    private static final int BYTE_LIMIT = 1000;
+    private static final int BYTE_LIMIT = 980;
     private static final int HORIZONTAL_SIZE = 40;
     private ChatRepository chatRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
@@ -287,7 +287,7 @@ public class ChatViewModel extends AndroidViewModel {
             }
             if (isSaveMsg) {
                 byte[] blockEncoded = latterBlock.getEncoded();
-                byte[] blockHash = HashUtil.sha1hash(blockEncoded);
+                byte[] blockHash = HashUtil.bencodeHash(blockEncoded);
                 daemon.saveMsg(blockHash, blockEncoded);
                 contentLink = blockHash;
                 contentList.add(blockEncoded);

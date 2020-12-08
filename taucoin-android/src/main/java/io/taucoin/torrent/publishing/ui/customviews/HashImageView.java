@@ -36,6 +36,7 @@ public class HashImageView extends RoundImageView {
     private static final Logger logger = LoggerFactory.getLogger("HashImageView");
     private static final int heightLimit = 300;
     private static final int widthLimit = 300;
+    private static final int loadBitmapLimit = 40;
     private TauDaemon daemon;
     private String imageHash;
     private byte[] totalBytes;
@@ -63,9 +64,11 @@ public class HashImageView extends RoundImageView {
         if (bitmap != null) {
             this.setImageBitmap(bitmap);
             loadBitmapTimes += 1;
-            if (loadBitmapTimes > 5 && listener != null) {
+            if (loadBitmapTimes >= loadBitmapLimit && listener != null) {
+                disposable.dispose();
                 listener.onLoadComplete();
             }
+            logger.trace("showImage imageHash::{}, loadBitmapTimes::{}", imageHash, loadBitmapTimes);
         } else {
             setImageResource(R.mipmap.icon_image_loading);
         }
@@ -86,7 +89,7 @@ public class HashImageView extends RoundImageView {
     }
 
     private void setImageHash(byte[] imageHash) {
-        logger.debug("setImageHash start::{}", imageHash);
+        logger.debug("setImageHash start::{}", this.imageHash);
         showImage(null);
         totalBytes = null;
         loadBitmapTimes = 0;
