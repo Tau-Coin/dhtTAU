@@ -54,7 +54,7 @@ public class ChainParam {
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
 
     public static final int MAX_HASH_NUMBER = 47;
-    public static final int GOSSIP_SIZE = 5;
+    public static final int GOSSIP_SIZE = 6;
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
