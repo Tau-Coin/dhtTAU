@@ -37,6 +37,7 @@ public class HashImageView extends RoundImageView {
     private static final int heightLimit = 300;
     private static final int widthLimit = 300;
     private static final int loadBitmapLimit = 40;
+    private static final int stopLoadingIcon = 5;
     private TauDaemon daemon;
     private String imageHash;
     private byte[] totalBytes;
@@ -44,7 +45,7 @@ public class HashImageView extends RoundImageView {
     private boolean reload = false;
     private BitmapFactory.Options options;
     private LoadCompleteListener listener;
-    private int loadBitmapTimes = 0;
+    private int loadBitmapNum = 0;
 
     public HashImageView(Context context) {
         this(context, null);
@@ -63,12 +64,13 @@ public class HashImageView extends RoundImageView {
     private void showImage(Bitmap bitmap) {
         if (bitmap != null) {
             this.setImageBitmap(bitmap);
-            loadBitmapTimes += 1;
-            if (loadBitmapTimes >= loadBitmapLimit && listener != null) {
-                disposable.dispose();
+            loadBitmapNum += 1;
+            if (loadBitmapNum == stopLoadingIcon && listener != null) {
                 listener.onLoadComplete();
+            } else if (loadBitmapNum >= loadBitmapLimit) {
+                disposable.dispose();
             }
-            logger.trace("showImage imageHash::{}, loadBitmapTimes::{}", imageHash, loadBitmapTimes);
+            logger.trace("showImage imageHash::{}, loadBitmapNum::{}", imageHash, loadBitmapNum);
         } else {
             setImageResource(R.mipmap.icon_image_loading);
         }
@@ -92,7 +94,7 @@ public class HashImageView extends RoundImageView {
         logger.debug("setImageHash start::{}", this.imageHash);
         showImage(null);
         totalBytes = null;
-        loadBitmapTimes = 0;
+        loadBitmapNum = 0;
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
