@@ -53,7 +53,7 @@ class MsgListenHandler {
 
     private void onNewMessage(String friendPk, Message message) {
         logger.debug("onNewMessage friendPk::{}，Hash::{}, ContentLink::{}", friendPk,
-                message.getHash(), message.getContentLink());
+                ByteUtil.toHexString(message.getHash()), ByteUtil.toHexString(message.getContentLink()));
         Disposable disposable = Flowable.create(emitter -> {
             // 处理ChatName，如果为空，取显朋友显示名
             String communityName = UsersUtil.getDefaultName(friendPk);
