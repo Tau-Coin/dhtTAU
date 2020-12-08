@@ -55,27 +55,30 @@ class MsgListenHandler {
         logger.debug("onNewMessage friendPk::{}，Hash::{}, ContentLink::{}", friendPk,
                 ByteUtil.toHexString(message.getHash()), ByteUtil.toHexString(message.getContentLink()));
         Disposable disposable = Flowable.create(emitter -> {
-            // 处理ChatName，如果为空，取显朋友显示名
-            String communityName = UsersUtil.getDefaultName(friendPk);
-            Community community = communityRepo.getChatByFriendPk(friendPk);
-            if (null == community) {
-                community = new Community(friendPk, communityName);
-                community.type = 1;
-                communityRepo.addCommunity(community);
+            try {
+                // 处理ChatName，如果为空，取显朋友显示名
+                String communityName = UsersUtil.getDefaultName(friendPk);
+                Community community = communityRepo.getChatByFriendPk(friendPk);
+                if (null == community) {
+                    community = new Community(friendPk, communityName);
+                    community.type = 1;
+                    communityRepo.addCommunity(community);
+                }
+                String userPk = MainApplication.getInstance().getPublicKey();
+                Friend friend = friendRepo.queryFriend(userPk, friendPk);
+                if (friend != null) {
+                    friend.state = 2;
+                    friendRepo.updateFriend(friend);
+                }
+                String hash = ByteUtil.toHexString(message.getHash());
+                String contentLinkStr = ByteUtil.toHexString(message.getContentLink());
+                long timestamp = ByteUtil.byteArrayToLong(message.getTimestamp());
+                int type = message.getType().ordinal();
+                ChatMsg msg = new ChatMsg(hash, friendPk, userPk, contentLinkStr, type, timestamp);
+                chatRepo.addChatMsg(msg);
+            } catch (Exception e) {
+                logger.error("onNewMessage error", e);
             }
-            String userPk = MainApplication.getInstance().getPublicKey();
-            Friend friend = friendRepo.queryFriend(userPk, friendPk);
-            if (friend != null) {
-                friend.state = 2;
-                friendRepo.updateFriend(friend);
-            }
-
-            String hash = ByteUtil.toHexString(message.getHash());
-            String contentLinkStr = ByteUtil.toHexString(message.getContentLink());
-            long timestamp = ByteUtil.byteArrayToLong(message.getTimestamp());
-            int type = message.getType().ordinal();
-            ChatMsg chat = new ChatMsg(hash, friendPk, userPk, contentLinkStr, type, timestamp);
-            chatRepo.addChat(chat);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
@@ -91,6 +94,23 @@ class MsgListenHandler {
     void onReceivedMessageRoot(byte[] friendPk, byte[] root) {
         logger.debug("onReceivedMessageRoot friendPk::{}，MessageRoot::{}",
                 ByteUtil.toHexString(friendPk), root);
+        Disposable disposable = Flowable.create(emitter -> {
+            try {
+                String friendPkStr = ByteUtil.toHexString(friendPk);
+                String hash = ByteUtil.toHexString(root);
+                ChatMsg msg = chatRepo.queryChatMsg(friendPkStr, hash);
+                if (msg != null) {
+                    msg.status = 2;
+                    chatRepo.updateChatMsg(msg);
+                }
+            } catch (Exception e) {
+                logger.error("onNewMessage error", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        disposables.add(disposable);
     }
 
     /**

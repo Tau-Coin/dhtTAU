@@ -13,19 +13,20 @@ public interface ChatRepository {
     /**
      * 添加Chat
      */
-    void addChat(ChatMsg chat);
+    void addChatMsg(ChatMsg chat);
 
     /**
      * 更新Chat
      */
-    void updateChat(ChatMsg chat);
+    void updateChatMsg(ChatMsg chat);
 
     /**
      * 查询Chat
+     * @param friendPk
      * @param hash
      * @return
      */
-    ChatMsg queryChatByHash(String hash);
+    ChatMsg queryChatMsg(String friendPk, String hash);
 
     /**
      * 观察社区的消息的变化

@@ -35,20 +35,20 @@ public class ChatRepositoryImpl implements ChatRepository{
     }
 
     @Override
-    public void addChat(ChatMsg chat) {
+    public void addChatMsg(ChatMsg chat) {
         db.chatDao().addChat(chat);
         submitDataSetChanged();
     }
 
     @Override
-    public void updateChat(ChatMsg chat) {
+    public void updateChatMsg(ChatMsg chat) {
         db.chatDao().updateChat(chat);
         submitDataSetChanged();
     }
 
     @Override
-    public ChatMsg queryChatByHash(String hash) {
-        return db.chatDao().queryChatByHash(hash);
+    public ChatMsg queryChatMsg(String friendPk, String hash) {
+        return db.chatDao().queryChatByHash(friendPk, hash);
     }
 
     @Override

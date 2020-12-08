@@ -15,7 +15,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
  */
 @Dao
 public interface ChatDao {
-    String QUERY_GET_CHAT_BY_HASH = "SELECT * FROM ChatMessages WHERE hash = :hash";
+    String QUERY_GET_CHAT_MSG = "SELECT * FROM ChatMessages WHERE friendPk = :friendPk AND hash = :hash";
 
     String QUERY_MESSAGES_WHERE = " WHERE (msg.senderPk = :senderPk OR msg.senderPk = :friendPk)" +
             " AND (msg.friendPk = :friendPk OR msg.friendPk = :senderPk) " +
@@ -27,7 +27,8 @@ public interface ChatDao {
 
     String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +
             " FROM ChatMessages msg" +
-            QUERY_MESSAGES_WHERE + "limit :loadSize offset :startPosition ";
+            QUERY_MESSAGES_WHERE + " ORDER BY msg.timestamp" +
+            " limit :loadSize offset :startPosition ";
     /**
      * 添加聊天信息
      */
@@ -43,8 +44,8 @@ public interface ChatDao {
     /**
      * 获取当前的用户
      */
-    @Query(QUERY_GET_CHAT_BY_HASH)
-    ChatMsg queryChatByHash(String hash);
+    @Query(QUERY_GET_CHAT_MSG)
+    ChatMsg queryChatByHash(String friendPk, String hash);
 
     /**
      * 获取社区的消息

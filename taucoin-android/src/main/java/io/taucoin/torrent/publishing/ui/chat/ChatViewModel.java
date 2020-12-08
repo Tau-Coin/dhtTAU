@@ -116,7 +116,7 @@ public class ChatViewModel extends AndroidViewModel {
                 });
     }
 
-    private void sendMessageTask(String friendPK, String msg, int type) {
+    private void sendMessageTask(String friendPk, String msg, int type) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
@@ -131,26 +131,26 @@ public class ChatViewModel extends AndroidViewModel {
                 // 组织Message的结构，并发送到DHT和数据入库
                 byte[] contentLink = data.get(data.size() - 1);
                 long timestamp = DateUtil.getTime();
-                byte[] friendPKBytes = ByteUtil.toByte(friendPK);
-                byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPKBytes);
-                byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(friendPKBytes);
+                byte[] friendPkBytes = ByteUtil.toByte(friendPk);
+                byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
+                byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(friendPkBytes);
                 Message message = Message.CreateTextMessage(ByteUtil.longToBytes(timestamp),
                         previousMsgDAGRoot, friendLatestMessageRoot, contentLink);
-                boolean isSendSuccess = daemon.sendMessage(ByteUtil.toByte(friendPK), message, data);
+                boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message, data);
                 logger.debug("isSendSuccess::{}", isSendSuccess);
                 String hash = ByteUtil.toHexString(message.getHash());
-                ChatMsg chatMsg = chatRepo.queryChatByHash(hash);
+                ChatMsg chatMsg = chatRepo.queryChatMsg(friendPk, hash);
                 int status = isSendSuccess ? ChatMsgType.QUEUED.ordinal() :
                         ChatMsgType.UNSENT.ordinal();
                 if (null == chatMsg) {
                     String senderPk = MainApplication.getInstance().getPublicKey();
                     String contentLinkStr = ByteUtil.toHexString(contentLink);
-                    chatMsg = new ChatMsg(hash, senderPk, friendPK, contentLinkStr, type, timestamp);
+                    chatMsg = new ChatMsg(hash, senderPk, friendPk, contentLinkStr, type, timestamp);
                     chatMsg.status = status;
-                    chatRepo.addChat(chatMsg);
+                    chatRepo.addChatMsg(chatMsg);
                 } else {
                     chatMsg.status = status;
-                    chatRepo.updateChat(chatMsg);
+                    chatRepo.updateChatMsg(chatMsg);
                 }
             } catch (Exception e) {
                 logger.error("sendMessageTask error", e);
@@ -170,6 +170,7 @@ public class ChatViewModel extends AndroidViewModel {
      */
     private List<byte[]> handleMsgTextToDAG(String msg) throws DBException {
         List<byte[]> hashList = new ArrayList<>();
+        List<byte[]> contentList = new ArrayList<>();
         byte[] msgBytes = msg.getBytes(StandardCharsets.UTF_8);
         int msgSize = msgBytes.length;
         int statPos = 0;
@@ -188,6 +189,7 @@ public class ChatViewModel extends AndroidViewModel {
                     fragmentHash.length, new String(bytes,
                             StandardCharsets.UTF_8));
             hashList.add(fragmentHash);
+            contentList.add(bytes);
             statPos = endPos;
         } while (statPos < msgSize);
         // 组织消息数据结构
@@ -203,11 +205,11 @@ public class ChatViewModel extends AndroidViewModel {
             byte[] msgBlockEncoded = msgBlock.getEncoded();
             byte[] msgBlockHash = HashUtil.bencodeHash(msgBlockEncoded);
             msgBlockList.add(msgBlockHash);
+            contentList.add(msgBlockEncoded);
             daemon.saveMsg(msgBlockHash, msgBlockEncoded);
             logger.debug("msgBlockHash::{}, hashSize::{}", msgBlockHash, msgBlockHash.length);
         }
-        hashList.addAll(msgBlockList);
-        return hashList;
+        return contentList;
     }
 
     /**
@@ -226,7 +228,7 @@ public class ChatViewModel extends AndroidViewModel {
     }
 
     private List<byte[]> saveImageToLevelDB(String progressivePath) throws Exception{
-        List<byte[]> allHashList = new ArrayList<>();
+        List<byte[]> contentList = new ArrayList<>();
         logger.debug("saveImageToLevelDB start");
         long startTime = System.currentTimeMillis();
         File file = new File(progressivePath);
@@ -243,6 +245,7 @@ public class ChatViewModel extends AndroidViewModel {
                 System.arraycopy(buffer, 0, msg, 0, num);
                 byte[] msgHash = HashUtil.bencodeHash(msg);
                 list.add(msgHash);
+                contentList.add(msg);
                 daemon.saveMsg(msgHash, msg);
             }
             if (list.size() == HORIZONTAL_SIZE || num == -1) {
@@ -250,8 +253,8 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] listEncoded =  msgHashList.getEncoded();
                 byte[] listHash = HashUtil.bencodeHash(listEncoded);
                 hashList.add(listHash);
+                contentList.add(listEncoded);
                 daemon.saveMsg(listHash, listEncoded);
-                allHashList.addAll(list);
                 list.clear();
                 if (num == -1) {
                     break;
@@ -260,7 +263,6 @@ public class ChatViewModel extends AndroidViewModel {
         }
         MsgBlock latterBlock = new MsgBlock();
         int hashListSize = hashList.size();
-        allHashList.addAll(hashList);
         for (int i = hashListSize - 1; i >= 0 ; i--) {
             byte[] listHash = hashList.get(i);
             boolean isSaveMsg = false;
@@ -277,7 +279,7 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] blockEncoded = latterBlock.getEncoded();
                 byte[] blockHash = HashUtil.sha1hash(blockEncoded);
                 daemon.saveMsg(blockHash, blockEncoded);
-                allHashList.add(blockHash);
+                contentList.add(blockEncoded);
 
                 latterBlock = new MsgBlock();
                 latterBlock.setVerticalHash(blockHash);
@@ -286,6 +288,6 @@ public class ChatViewModel extends AndroidViewModel {
         long endTime = System.currentTimeMillis();
         logger.debug("saveImageToLevelDB end times::{}ms", endTime - startTime);
         fis.close();
-        return allHashList;
+        return contentList;
     }
 }

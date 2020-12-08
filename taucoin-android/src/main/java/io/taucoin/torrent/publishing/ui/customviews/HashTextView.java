@@ -138,6 +138,8 @@ public class HashTextView extends TextView {
         while (true) {
             try {
                 byte[] data = daemon.getMsg(hash);
+                logger.debug("queryDataLoop hash::{}, empty::{}",
+                        ByteUtil.toHexString(hash), null == data);
                 if (null == data) {
                     daemon.requestMessageData(hash);
                 } else {
