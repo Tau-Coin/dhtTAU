@@ -262,7 +262,8 @@ public class Communication implements DHT.GetDHTItemCallback {
                 }
             }
 
-            it.remove();
+            this.gossipItems.remove(gossipItem);
+//            it.remove();
         }
     }
 
