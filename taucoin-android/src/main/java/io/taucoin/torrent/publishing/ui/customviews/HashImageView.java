@@ -93,11 +93,11 @@ public class HashImageView extends RoundImageView {
     private void setImageHash(byte[] imageHash) {
         logger.debug("setImageHash start::{}", this.imageHash);
         showImage(null);
-        totalBytes = null;
         loadBitmapNum = 0;
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
+        totalBytes = null;
         disposable = Flowable.create((FlowableOnSubscribe<Bitmap>) emitter -> {
             try {
                 if (imageHash != null) {
@@ -206,17 +206,19 @@ public class HashImageView extends RoundImageView {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         // 加在View
-        if (reload && StringUtil.isNotEmpty(imageHash)) {
+        if (reload && StringUtil.isNotEmpty(imageHash)
+                && disposable != null && disposable.isDisposed()) {
             setImageHash(imageHash);
         }
+        reload = false;
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         // 销毁View
-        reload = true;
         if (disposable != null && !disposable.isDisposed()) {
+            reload = true;
             disposable.dispose();
         }
     }

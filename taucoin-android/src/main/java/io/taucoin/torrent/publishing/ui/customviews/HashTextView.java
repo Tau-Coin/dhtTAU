@@ -56,6 +56,9 @@ public class HashTextView extends TextView {
     private void showText() {
         if (totalBytes != null) {
             setText(new String(totalBytes, StandardCharsets.UTF_8));
+            if (listener != null) {
+                listener.onLoadComplete();
+            }
         } else {
             setText("");
         }
@@ -82,11 +85,12 @@ public class HashTextView extends TextView {
      * 设置TextHash
      */
     private void setTextHash(byte[] textHash) {
+        logger.debug("setTextHash start::{}", this.textHash);
         showText();
-        totalBytes = null;
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
+        totalBytes = null;
         disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             try {
                 if (textHash != null) {
@@ -108,9 +112,6 @@ public class HashTextView extends TextView {
                 .subscribe(result -> {
                     if (result) {
                         showText();
-                        if (listener != null) {
-                            listener.onLoadComplete();
-                        }
                     }
                 });
     }
@@ -175,17 +176,19 @@ public class HashTextView extends TextView {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         // 加在View
-        if (reload && StringUtil.isNotEmpty(textHash)) {
+        if (reload && StringUtil.isNotEmpty(textHash)
+                && disposable != null && disposable.isDisposed()) {
             setTextHash(textHash);
         }
+        reload = false;
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         // 销毁View
-        reload = true;
         if (disposable != null && !disposable.isDisposed()) {
+            reload = true;
             disposable.dispose();
         }
     }
