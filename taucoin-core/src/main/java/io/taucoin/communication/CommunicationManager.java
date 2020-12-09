@@ -78,7 +78,11 @@ public class CommunicationManager {
      * @param hash data hash
      */
     public void requestMessageData(byte[] hash) {
-        this.communication.requestImmutableData(hash);
+        try {
+            this.communication.requestImmutableData(hash);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     /**
