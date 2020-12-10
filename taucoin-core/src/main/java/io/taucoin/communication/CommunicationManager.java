@@ -151,4 +151,13 @@ public class CommunicationManager {
         return this.communication.getFriendLatestRoot(pubKey);
     }
 
+    /**
+     * 获取朋友最新的confirmation root
+     * @param pubKey public key
+     * @return confirmation root
+     */
+    public byte[] getFriendConfirmationRoot(byte[] pubKey) {
+        return this.communication.getFriendConfirmationRoot(pubKey);
+    }
+
 }

@@ -93,8 +93,11 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 我的朋友的最新消息的root <friend, root>
     private final Map<ByteArrayWrapper, byte[]> friendRoot = Collections.synchronizedMap(new HashMap<>());
 
-    // 新发现的，等待通知UI的，我的朋友的最新确认的root <friend, root>
+    // 我的朋友的最新确认的root <friend, root>
     private final Map<ByteArrayWrapper, byte[]> friendConfirmationRoot = new ConcurrentHashMap<>();
+
+    // 新发现的，等待通知UI的，我的朋友的最新确认的root <friend, root>
+    private final Map<ByteArrayWrapper, byte[]> friendConfirmationRootToNotify = new ConcurrentHashMap<>();
 
     // 给我的朋友的最新消息的时间戳 <friend, timestamp>，发现对方新的确认信息root也会更新该时间
     private final Map<ByteArrayWrapper, Long> timeStampToFriend = Collections.synchronizedMap(new HashMap<>());
@@ -336,18 +339,21 @@ public class Communication implements DHT.GetDHTItemCallback {
      * 通知UI新发现的朋友的已读消息的root
      */
     private void notifyUIReadMessageRoot() {
-        Iterator<Map.Entry<ByteArrayWrapper, byte[]>> iterator = this.friendConfirmationRoot.entrySet().iterator();
+        Iterator<Map.Entry<ByteArrayWrapper, byte[]>> iterator = this.friendConfirmationRootToNotify.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<ByteArrayWrapper, byte[]> entry = iterator.next();
 
             if (null != entry.getValue()) {
+                // 更新confirmation root
+                this.friendConfirmationRoot.put(entry.getKey(), entry.getValue());
+
                 logger.debug("Notify UI read message from friend:{}, root:{}",
                         entry.getKey().toString(), Hex.toHexString(entry.getValue()));
 
                 this.msgListener.onReadMessageRoot(entry.getKey().getData(), entry.getValue());
             }
 
-            this.friendConfirmationRoot.remove(entry.getKey());
+            this.friendConfirmationRootToNotify.remove(entry.getKey());
         }
     }
 
@@ -896,6 +902,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.friendTimeStamp.remove(key);
         this.friendRoot.remove(key);
         this.friendConfirmationRoot.remove(key);
+        this.friendConfirmationRootToNotify.remove(key);
         this.timeStampToFriend.remove(key);
         this.rootToFriend.remove(key);
 //        this.confirmationRootToFriend.remove(key);
@@ -977,6 +984,15 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
+     * 获取朋友最新的confirmation root
+     * @param pubKey public key
+     * @return confirmation root
+     */
+    public byte[] getFriendConfirmationRoot(byte[] pubKey) {
+        return this.friendConfirmationRoot.get(new ByteArrayWrapper(pubKey));
+    }
+
+    /**
      * Start thread
      *
      * @return boolean successful or not.
@@ -1053,12 +1069,6 @@ public class Communication implements DHT.GetDHTItemCallback {
                             // 更新时间戳
                             this.friendTimeStamp.put(sender, timeStamp);
 
-                            if (null != gossipItem.getConfirmationRoot()) {
-                                logger.debug("Got a friend[{}] confirmation root[{}]",
-                                        peer.toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
-                                this.friendConfirmationRoot.put(sender, gossipItem.getConfirmationRoot());
-                            }
-
                             byte[] currentRoot = this.friendRoot.get(sender);
                             if (!Arrays.equals(currentRoot, gossipItem.getMessageRoot())) {
                                 // 如果该消息的root之前没拿到过，说明是新消息过来
@@ -1072,6 +1082,13 @@ public class Communication implements DHT.GetDHTItemCallback {
                                 // 有信息要发，即确认信息要发，更新时间戳，确认收到该root
                                 Long currentTime = System.currentTimeMillis() / 1000;
                                 this.timeStampToFriend.put(sender, currentTime);
+
+                                // 更新confirmation root
+                                if (null != gossipItem.getConfirmationRoot()) {
+                                    logger.debug("Got a friend[{}] confirmation root[{}]",
+                                            peer.toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
+                                    this.friendConfirmationRootToNotify.put(sender, gossipItem.getConfirmationRoot());
+                                }
                             }
                         }
                     }
