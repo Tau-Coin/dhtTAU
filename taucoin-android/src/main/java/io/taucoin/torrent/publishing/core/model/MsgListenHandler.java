@@ -13,6 +13,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgType;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
@@ -100,7 +101,7 @@ class MsgListenHandler {
                 String hash = ByteUtil.toHexString(root);
                 ChatMsg msg = chatRepo.queryChatMsg(friendPkStr, hash);
                 if (msg != null) {
-                    msg.status = 2;
+                    msg.status = ChatMsgType.RECEIVED.ordinal();
                     chatRepo.updateChatMsg(msg);
                 }
             } catch (Exception e) {

@@ -41,6 +41,7 @@ import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
+import io.taucoin.torrent.publishing.service.PublishManager;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.receiver.PowerReceiver;
 import io.taucoin.torrent.publishing.service.Scheduler;
@@ -238,6 +239,7 @@ public class TauDaemon {
             if (success) {
                 logger.debug("Tau start successfully");
                 isRunning = true;
+                PublishManager.startAllWork();
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
@@ -289,6 +291,7 @@ public class TauDaemon {
         if (!isRunning)
             return;
         isRunning = false;
+        PublishManager.cancelAllWork();
         disposables.clear();
         if (sessionStartedDispose != null
                 && !sessionStartedDispose.isDisposed()) {
@@ -654,5 +657,14 @@ public class TauDaemon {
      */
     public byte[] getFriendLatestRoot(byte[] friendPK) {
         return getCommunicationManager().getFriendLatestRoot(friendPK);
+    }
+
+    /**
+     * 获取朋友已接收的最新信息root
+     * @param friendPK
+     * @return root hash
+     */
+    public byte[] getFriendConfirmationRoot(byte[] friendPK) {
+        return getCommunicationManager().getFriendConfirmationRoot(friendPK);
     }
 }

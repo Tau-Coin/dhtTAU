@@ -41,4 +41,16 @@ public interface ChatRepository {
     int getNumMessages(String friendPk);
 
     List<ChatMsg> getMessages(String friendPk, int pos, int loadSize);
+
+    /**
+     * 获取未入队列的消息
+     * @return
+     */
+    List<ChatMsg> getUnsentMessages();
+
+    /**
+     * 获取未确认接收消息的朋友
+     * @return
+     */
+    List<String> getUnConfirmationFriends();
 }

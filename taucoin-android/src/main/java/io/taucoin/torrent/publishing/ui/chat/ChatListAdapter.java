@@ -138,7 +138,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             }
             showStatusView(binding.ivStats, binding.tvProgress, chat.status, true);
             bindText(binding.roundButton, binding.tvTime, binding.tvMsg,
-                    binding.tvProgress, chat, previousChat);
+                    binding.tvProgress, chat, previousChat, true);
         }
 
         void bindText(ItemTextBinding binding, ChatMsg chat, ChatMsg previousChat) {
@@ -147,11 +147,11 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             }
             showStatusView(binding.ivStats, binding.tvProgress, chat.status, false);
             bindText(binding.roundButton, binding.tvTime, binding.tvMsg,
-                    binding.tvProgress, chat, previousChat);
+                    binding.tvProgress, chat, previousChat, false);
         }
 
         private void bindText(RoundButton roundButton, TextView tvTime, HashTextView tvMsg,
-                      ProgressBar tvProgress, ChatMsg chat, ChatMsg previousChat) {
+                      ProgressBar tvProgress, ChatMsg chat, ChatMsg previousChat, boolean isMine) {
             if (null == chat) {
                 return;
             }
@@ -166,22 +166,22 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvMsg.setTextHash(chat.contextLink, () -> tvProgress.setVisibility(View.GONE));
+            tvMsg.setTextHash(chat.contextLink, () -> {
+                if (!isMine) {
+                    tvProgress.setVisibility(View.GONE);
+                }
+            });
         }
 
         private void showStatusView(ImageView ivStats, ProgressBar tvProgress,
                                     int status, boolean isMine) {
-            if (isMine) {
-                if (status == ChatMsgType.QUEUED.ordinal() || status == ChatMsgType.RECEIVED.ordinal()) {
-                    tvProgress.setVisibility(View.GONE);
-                    ivStats.setVisibility(View.VISIBLE);
-                    int icon = status == ChatMsgType.QUEUED.ordinal() ? R.mipmap.icon_sent :
-                            R.mipmap.icon_received;
-                    ivStats.setImageResource(icon);
-                } else {
-                    tvProgress.setVisibility(View.VISIBLE);
-                    ivStats.setVisibility(View.GONE);
-                }
+            if (isMine && status == ChatMsgType.QUEUED.ordinal() ||
+                    status == ChatMsgType.RECEIVED.ordinal()) {
+                tvProgress.setVisibility(View.GONE);
+                ivStats.setVisibility(View.VISIBLE);
+                int icon = status == ChatMsgType.QUEUED.ordinal() ? R.mipmap.icon_sent :
+                        R.mipmap.icon_received;
+                ivStats.setImageResource(icon);
             } else {
                 ivStats.setVisibility(View.GONE);
                 tvProgress.setVisibility(View.VISIBLE);
@@ -202,7 +202,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             }
             showStatusView(binding.ivStats, binding.tvProgress, chat.status, true);
             bindPicture(binding.roundButton, binding.tvTime, binding.tvImage,
-                    binding.tvProgress, chat, previousChat);
+                    binding.tvProgress, chat, previousChat, true);
         }
 
         void bindPicture(ItemPictureBinding binding, ChatMsg chat, ChatMsg previousChat) {
@@ -211,11 +211,11 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             }
             showStatusView(binding.ivStats, binding.tvProgress, chat.status, false);
             bindPicture(binding.roundButton, binding.tvTime, binding.tvImage,
-                    binding.tvProgress, chat, previousChat);
+                    binding.tvProgress, chat, previousChat, false);
         }
 
         private void bindPicture(RoundButton roundButton, TextView tvTime, HashImageView tvImage,
-                 ProgressBar tvProgress, ChatMsg chat, ChatMsg previousChat) {
+                 ProgressBar tvProgress, ChatMsg chat, ChatMsg previousChat, boolean isMine) {
             if (null == chat) {
                 return;
             }
@@ -230,7 +230,11 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvImage.setImageHash(chat.contextLink, () -> tvProgress.setVisibility(View.GONE));
+            tvImage.setImageHash(chat.contextLink, () -> {
+                if (!isMine) {
+                    tvProgress.setVisibility(View.GONE);
+                }
+            });
         }
     }
 
@@ -244,7 +248,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
     private static final DiffUtil.ItemCallback<ChatMsg> diffCallback = new DiffUtil.ItemCallback<ChatMsg>() {
         @Override
         public boolean areContentsTheSame(@NonNull ChatMsg oldItem, @NonNull ChatMsg newItem) {
-            return oldItem.equals(newItem);
+            return oldItem.equals(newItem) && oldItem.status == newItem.status;
         }
 
         @Override

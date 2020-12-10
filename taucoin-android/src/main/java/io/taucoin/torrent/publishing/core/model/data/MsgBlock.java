@@ -4,8 +4,8 @@ import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 public class MsgBlock {
-    private byte[] verticalHash;   // 消息后面的40个block的immutable items的40个hash
-    private byte[] horizontalHash; // 消息当前40个block的immutable items的40个hash
+    private byte[] verticalHash;   // 代表后面的MsgBlock的Hash
+    private byte[] horizontalHash; // 如果是文本代表1个切片Hash，如果是图片代表40个切片Hash
 
     private byte[] rlpEncoded;
     private boolean isParsed = false;

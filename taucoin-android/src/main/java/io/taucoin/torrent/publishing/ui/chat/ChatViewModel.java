@@ -36,6 +36,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.MultimediaUtil;
 import io.taucoin.torrent.publishing.service.LibJpegManager;
+import io.taucoin.torrent.publishing.service.PublishManager;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.types.HashList;
 import io.taucoin.types.Message;
@@ -97,8 +98,10 @@ public class ChatViewModel extends AndroidViewModel {
     }
 
     /**
-     * 给朋友发信息
+     * 给朋友发信息任务
      * @param friendPK 朋友公钥
+     * @param msg 消息
+     * @param type 消息类型
      */
     void sendMessage(String friendPK, String msg, int type) {
         if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
@@ -116,6 +119,12 @@ public class ChatViewModel extends AndroidViewModel {
                 });
     }
 
+    /**
+     * 给朋友发信息任务
+     * @param friendPk 朋友公钥
+     * @param msg 消息
+     * @param type 消息类型
+     */
     private void sendMessageTask(String friendPk, String msg, int type) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
@@ -130,35 +139,16 @@ public class ChatViewModel extends AndroidViewModel {
                 }
                 List<byte[]> data = contentItem.getList();
                 byte[] contentLink = contentItem.getContentLink();
+                logger.debug("sendMessageTask data.size::{}, contentLink::{}",
+                        data.size(), ByteUtil.toHexString(contentLink));
                 // 组织Message的结构，并发送到DHT和数据入库
                 long timestamp = DateUtil.getTime();
-                byte[] friendPkBytes = ByteUtil.toByte(friendPk);
-                byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
-                byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(friendPkBytes);
-                Message message;
-                if (type == MessageType.PICTURE.ordinal()) {
-                    message = Message.CreatePictureMessage(ByteUtil.longToBytes(timestamp),
-                            previousMsgDAGRoot, friendLatestMessageRoot, contentLink);
-                } else {
-                    message = Message.CreateTextMessage(ByteUtil.longToBytes(timestamp),
-                            previousMsgDAGRoot, friendLatestMessageRoot, contentLink);
-                }
-                boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message, data);
-                logger.debug("isSendSuccess::{}", isSendSuccess);
-                String hash = ByteUtil.toHexString(message.getHash());
-                ChatMsg chatMsg = chatRepo.queryChatMsg(friendPk, hash);
-                int status = isSendSuccess ? ChatMsgType.QUEUED.ordinal() :
-                        ChatMsgType.UNSENT.ordinal();
-                if (null == chatMsg) {
-                    String senderPk = MainApplication.getInstance().getPublicKey();
-                    String contentLinkStr = ByteUtil.toHexString(contentLink);
-                    chatMsg = new ChatMsg(hash, senderPk, friendPk, contentLinkStr, type, timestamp);
-                    chatMsg.status = status;
-                    chatRepo.addChatMsg(chatMsg);
-                } else {
-                    chatMsg.status = status;
-                    chatRepo.updateChatMsg(chatMsg);
-                }
+                String senderPk = MainApplication.getInstance().getPublicKey();
+                String contentLinkStr = ByteUtil.toHexString(contentLink);
+                ChatMsg chatMsg = new ChatMsg(senderPk, friendPk, contentLinkStr, type, timestamp);
+                chatMsg.status = ChatMsgType.UNSENT.ordinal();
+                chatRepo.addChatMsg(chatMsg);
+                PublishManager.startPublishWorker();
             } catch (Exception e) {
                 logger.error("sendMessageTask error", e);
                 result.setFailMsg(e.getMessage());
@@ -238,6 +228,7 @@ public class ChatViewModel extends AndroidViewModel {
 
     private ContentItem saveImageToLevelDB(String progressivePath) throws Exception{
         List<byte[]> contentList = new ArrayList<>();
+        List<byte[]> allList = new ArrayList<>();
         logger.debug("saveImageToLevelDB start");
         long startTime = System.currentTimeMillis();
         File file = new File(progressivePath);
@@ -255,6 +246,7 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] msgHash = HashUtil.bencodeHash(msg);
                 list.add(msgHash);
                 contentList.add(msg);
+                allList.add(msgHash);
                 daemon.saveMsg(msgHash, msg);
             }
             if (list.size() == HORIZONTAL_SIZE || num == -1) {
@@ -263,6 +255,7 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] listHash = HashUtil.bencodeHash(listEncoded);
                 hashList.add(listHash);
                 contentList.add(listEncoded);
+                allList.add(listHash);
                 daemon.saveMsg(listHash, listEncoded);
                 list.clear();
                 if (num == -1) {
@@ -290,6 +283,7 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] blockHash = HashUtil.bencodeHash(blockEncoded);
                 daemon.saveMsg(blockHash, blockEncoded);
                 contentLink = blockHash;
+                allList.add(blockHash);
                 contentList.add(blockEncoded);
 
                 latterBlock = new MsgBlock();
@@ -299,6 +293,10 @@ public class ChatViewModel extends AndroidViewModel {
         long endTime = System.currentTimeMillis();
         logger.debug("saveImageToLevelDB end times::{}ms", endTime - startTime);
         fis.close();
+        for (int i = 0; i < allList.size(); i++) {
+            logger.debug("sendMessageTask data.size::{}, contentLink::{}",
+                    i, ByteUtil.toHexString(allList.get(i)));
+        }
         return ContentItem.newInstance(contentList, contentLink);
     }
 

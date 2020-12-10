@@ -73,4 +73,22 @@ public class ChatRepositoryImpl implements ChatRepository{
         String senderPk = MainApplication.getInstance().getPublicKey();
         return db.chatDao().getMessages(senderPk, friendPk, startPosition, loadSize);
     }
+
+    /**
+     * 获取未入队列的消息
+     * @return
+     */
+    @Override
+    public List<ChatMsg> getUnsentMessages() {
+        return db.chatDao().getUnsentMessages();
+    }
+
+    /**
+     * 获取未确认接收消息的朋友
+     * @return
+     */
+    @Override
+    public List<String> getUnConfirmationFriends() {
+        return db.chatDao().getUnConfirmationFriends();
+    }
 }

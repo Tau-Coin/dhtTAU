@@ -35,6 +35,7 @@ public class HashTextView extends TextView {
     private Disposable disposable;
     private byte[] totalBytes = null;
     private boolean reload = false;
+    private boolean isLoadSuccess = false;
     private LoadCompleteListener listener;
 
     public HashTextView(Context context) {
@@ -57,6 +58,7 @@ public class HashTextView extends TextView {
         if (totalBytes != null) {
             setText(new String(totalBytes, StandardCharsets.UTF_8));
             if (listener != null) {
+                isLoadSuccess = true;
                 listener.onLoadComplete();
             }
         } else {
@@ -68,7 +70,6 @@ public class HashTextView extends TextView {
      * 设置TextHash
      */
     public void setTextHash(String textHash) {
-        this.textHash = textHash;
         setTextHash(ByteUtil.toByte(textHash));
     }
 
@@ -77,7 +78,6 @@ public class HashTextView extends TextView {
      */
     public void setTextHash(String textHash, LoadCompleteListener listener) {
         this.listener = listener;
-        this.textHash = textHash;
         setTextHash(ByteUtil.toByte(textHash));
     }
 
@@ -85,6 +85,13 @@ public class HashTextView extends TextView {
      * 设置TextHash
      */
     private void setTextHash(byte[] textHash) {
+        if (isLoadSuccess && totalBytes != null
+                && StringUtil.isEquals(this.textHash, ByteUtil.toHexString(textHash))) {
+            showText();
+            return;
+        }
+        this.textHash = ByteUtil.toHexString(textHash);
+        isLoadSuccess = false;
         logger.debug("setTextHash start::{}", this.textHash);
         showText();
         if (disposable != null && !disposable.isDisposed()) {
@@ -188,7 +195,9 @@ public class HashTextView extends TextView {
         super.onDetachedFromWindow();
         // 销毁View
         if (disposable != null && !disposable.isDisposed()) {
-            reload = true;
+            if (!isLoadSuccess) {
+                reload = true;
+            }
             disposable.dispose();
         }
     }

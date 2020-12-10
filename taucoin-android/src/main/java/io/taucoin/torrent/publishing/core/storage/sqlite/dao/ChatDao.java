@@ -9,6 +9,7 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgType;
 
 /**
  * Room:User操作接口
@@ -27,8 +28,22 @@ public interface ChatDao {
 
     String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +
             " FROM ChatMessages msg" +
-            QUERY_MESSAGES_WHERE + " ORDER BY msg.timestamp" +
-            " limit :loadSize offset :startPosition ";
+            QUERY_MESSAGES_WHERE + " ORDER BY msg.timestamp, msg.id" +
+            " LIMIT :loadSize OFFSET :startPosition ";
+
+    String QUERY_UNSENT_MESSAGES = "SELECT msg.*" +
+            " FROM ChatMessages msg" +
+            " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
+            " AND msg.status = 0" +
+            " ORDER BY msg.timestamp, msg.id";
+
+    String QUERY_UN_CONFIRMATION_FRIENDS = "SELECT msg.friendPk" +
+            " FROM ChatMessages msg" +
+            " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
+            " AND msg.status == 1" +
+            " GROUP BY msg.friendPk" +
+            " ORDER BY msg.timestamp";
+
     /**
      * 添加聊天信息
      */
@@ -65,4 +80,10 @@ public interface ChatDao {
     @Query(QUERY_MESSAGES_BY_FRIEND_PK)
     @Transaction
     List<ChatMsg> getMessages(String senderPk, String friendPk, int startPosition, int loadSize);
+
+    @Query(QUERY_UNSENT_MESSAGES)
+    List<ChatMsg> getUnsentMessages();
+
+    @Query(QUERY_UN_CONFIRMATION_FRIENDS)
+    List<String> getUnConfirmationFriends();
 }
