@@ -160,4 +160,12 @@ public class CommunicationManager {
         return this.communication.getFriendConfirmationRoot(pubKey);
     }
 
+    /**
+     * 设置gossip时间片
+     * @param timeInterval 时间间隔，单位:s
+     */
+    public void setGossipTimeInterval(long timeInterval) {
+        this.communication.setGossipTimeInterval(timeInterval);
+    }
+
 }

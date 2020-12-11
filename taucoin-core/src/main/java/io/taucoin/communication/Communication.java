@@ -55,8 +55,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 主循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
-    // 发布gossip信息的时间间隔
-    private final long GOSSIP_PUBLISH_INTERVAL_TIME = 30; // 30 s
+    // 默认的发布gossip信息的时间间隔
+    private long GOSSIP_PUBLISH_INTERVAL_TIME = 30; // 30 s
 
     // 记录上一次发布gossip的时间
     private long lastGossipPublishTime = 0;
@@ -66,7 +66,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     // message db
     private final MessageDB messageDB;
 
-    // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求， ConcurrentLinkedQueue是一个支持并发操作的队列
+    // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求，ConcurrentLinkedQueue是一个支持并发操作的队列
     private final Queue<Object> queue = new ConcurrentLinkedQueue<>();
 
     // 发现的gossip item集合，synchronizedSet是支持并发操作的集合
@@ -344,9 +344,6 @@ public class Communication implements DHT.GetDHTItemCallback {
             Map.Entry<ByteArrayWrapper, byte[]> entry = iterator.next();
 
             if (null != entry.getValue()) {
-                // 更新confirmation root
-                this.friendConfirmationRoot.put(entry.getKey(), entry.getValue());
-
                 logger.debug("Notify UI read message from friend:{}, root:{}",
                         entry.getKey().toString(), Hex.toHexString(entry.getValue()));
 
@@ -833,7 +830,6 @@ public class Communication implements DHT.GetDHTItemCallback {
                     updateMessageInfoToFriend(friend, message);
                     publishMessage(message);
                     publishImmutableData(data);
-                    // 目前仅仅在发布新消息时才发布gossip，留待讨论
                     publishGossipInfo();
                 }
             } catch (Exception e) {
@@ -993,6 +989,14 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
+     * 设置gossip时间片
+     * @param timeInterval 时间间隔，单位:s
+     */
+    public void setGossipTimeInterval(long timeInterval) {
+        this.GOSSIP_PUBLISH_INTERVAL_TIME = timeInterval;
+    }
+
+    /**
      * Start thread
      *
      * @return boolean successful or not.
@@ -1066,29 +1070,36 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                         // 如果是对方直接给我发的gossip消息，并且时间戳更新一些
                         if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
+                            logger.debug("Got a new gossip item");
                             // 更新时间戳
                             this.friendTimeStamp.put(sender, timeStamp);
 
+                            // 只要发现更新的gossip信息，则使用其confirmation root
+                            if (null != gossipItem.getConfirmationRoot()) {
+                                logger.debug("Got a friend[{}] confirmation root[{}]",
+                                        peer.toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
+
+                                byte[] confirmationRoot = this.friendConfirmationRoot.get(sender);
+                                if (!Arrays.equals(confirmationRoot, gossipItem.getConfirmationRoot())) {
+                                    // 有信息要发，即确认信息要发，更新时间戳，确认收到该root
+                                    Long currentTime = System.currentTimeMillis() / 1000;
+                                    this.timeStampToFriend.put(sender, currentTime);
+                                    // 更新confirmation root
+                                    this.friendConfirmationRoot.put(sender, gossipItem.getConfirmationRoot());
+                                    // 加入待通知列表
+                                    this.friendConfirmationRootToNotify.put(sender, gossipItem.getConfirmationRoot());
+                                }
+                            }
+
+                            // 发现更新时间戳的gossip消息，并且root与之前的不同，才更新并请求新数据
                             byte[] currentRoot = this.friendRoot.get(sender);
                             if (!Arrays.equals(currentRoot, gossipItem.getMessageRoot())) {
+                                logger.debug("Got a new message root:{}", Hex.toHexString(gossipItem.getMessageRoot()));
                                 // 如果该消息的root之前没拿到过，说明是新消息过来
                                 // 更新朋友root信息
                                 this.friendRoot.put(sender, gossipItem.getMessageRoot());
                                 // 请求该root
                                 requestMessage(gossipItem.getMessageRoot(), peer);
-                            } else {
-                                // 如果拿过root，并且时间戳更新，则说明是朋友有confirmation root发送
-                                // 发现新消息的root
-                                // 有信息要发，即确认信息要发，更新时间戳，确认收到该root
-                                Long currentTime = System.currentTimeMillis() / 1000;
-                                this.timeStampToFriend.put(sender, currentTime);
-
-                                // 更新confirmation root
-                                if (null != gossipItem.getConfirmationRoot()) {
-                                    logger.debug("Got a friend[{}] confirmation root[{}]",
-                                            peer.toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
-                                    this.friendConfirmationRootToNotify.put(sender, gossipItem.getConfirmationRoot());
-                                }
                             }
                         }
                     }
