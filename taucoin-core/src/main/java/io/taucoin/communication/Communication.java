@@ -49,6 +49,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 判断中间层队列的门槛值，中间层队列使用率超过0.8，则增加主循环时间间隔
     private final double THRESHOLD = 0.8;
 
+    private final int SHORT_ADDRESS_LENGTH = 4;
+
     // 主循环间隔最小时间
     private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
@@ -183,6 +185,28 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
+     * 使用短地址来构建gossip item
+     * @param sender sender public key
+     * @param receiver receiver public key
+     * @param timestamp timestamp
+     * @param gossipType gossip type
+     * @param root msg root
+     * @param confirmationRoot confirmation root
+     * @return gossip item
+     */
+    private GossipItem makeGossipItemWithShortAddress(byte[] sender, byte[] receiver,
+                                                      byte[] timestamp, GossipType gossipType,
+                                                      byte[] root, byte[] confirmationRoot) {
+        byte[] shortSender = new byte[SHORT_ADDRESS_LENGTH];
+        System.arraycopy(sender, 0, shortSender, 0, SHORT_ADDRESS_LENGTH);
+
+        byte[] shortReceiver = new byte[SHORT_ADDRESS_LENGTH];
+        System.arraycopy(receiver, 0, shortReceiver, 0, SHORT_ADDRESS_LENGTH);
+
+        return new GossipItem(shortSender, shortReceiver, timestamp, gossipType, root, confirmationRoot);
+    }
+
+    /**
      * 获取gossip集合
      * @return gossip set
      */
@@ -199,7 +223,8 @@ public class Communication implements DHT.GetDHTItemCallback {
             byte[] confirmationRoot = this.friendRoot.get(friend);
 
             if (null != timeStamp && null != root) {
-                GossipItem gossipItem = new GossipItem(pubKey, friend.getData(), ByteUtil.longToBytes(timeStamp), GossipType.MSG, root, confirmationRoot);
+                GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
+                        ByteUtil.longToBytes(timeStamp), GossipType.MSG, root, confirmationRoot);
                 gossipSet.add(gossipItem);
             }
         }
@@ -210,7 +235,9 @@ public class Communication implements DHT.GetDHTItemCallback {
         for (Map.Entry<ByteArrayWrapper, byte[]> entry : this.demandHash.entrySet()) {
 //            byte[] confirmationRoot = this.confirmationRootToFriend.get(entry.getKey());
             byte[] confirmationRoot = this.friendRoot.get(entry.getKey());
-            gossipSet.add(new GossipItem(pubKey, entry.getKey().getData(), timeBytes, GossipType.DEMAND, entry.getValue(), confirmationRoot));
+            GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, entry.getKey().getData(),
+                    timeBytes, GossipType.DEMAND, entry.getValue(), confirmationRoot);
+            gossipSet.add(gossipItem);
         }
 
         // 统计其他人发给我朋友的消息
@@ -221,8 +248,9 @@ public class Communication implements DHT.GetDHTItemCallback {
                     byte[] root = this.gossipRoot.get(entry.getKey());
                     byte[] confirmationRoot = this.gossipConfirmationRoot.get(entry.getKey());
                     if (null != root) {
-                        gossipSet.add(new GossipItem(entry.getKey().getSender(), entry.getKey().getReceiver(),
-                                ByteUtil.longToBytes(entry.getValue()), GossipType.MSG, root, confirmationRoot));
+                        GossipItem gossipItem = makeGossipItemWithShortAddress(entry.getKey().getSender(), entry.getKey().getReceiver(),
+                                ByteUtil.longToBytes(entry.getValue()), GossipType.MSG, root, confirmationRoot);
+                        gossipSet.add(gossipItem);
                     }
                 }
             }
@@ -264,14 +292,14 @@ public class Communication implements DHT.GetDHTItemCallback {
             byte[] receiver = gossipItem.getReceiver();
 
             // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
-            if (!Arrays.equals(sender, pubKey)) {
+            if (!ByteUtil.startsWith(pubKey, sender)) {
                 // 首先，判断一下是否有涉及自己的gossip，有的话则加入待访问的活跃朋友集合
-                if (Arrays.equals(receiver, pubKey)) {
+                if (ByteUtil.startsWith(pubKey, receiver)) {
                     this.activeFriends.add(new ByteArrayWrapper(receiver));
                 } else {
                     // 寻找跟我朋友相关的gossip
                     for (ByteArrayWrapper friend : this.friends) {
-                        if (Arrays.equals(friend.getData(), receiver)) { // 找到
+                        if (ByteUtil.startsWith(friend.getData(), receiver)) { // 找到
                             FriendPair pair = FriendPair.create(sender, receiver);
 
                             Long oldTimeStamp = this.gossipTimeStamp.get(pair);
@@ -1043,15 +1071,15 @@ public class Communication implements DHT.GetDHTItemCallback {
                 ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
                 // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
-                if (Arrays.equals(sender.getData(), pubKey)) {
+                if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
                     logger.debug("Sender[{}] is me.", sender.toString());
                     continue;
                 }
 
                 // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
                 // 并且gossip item的receiver是我，那么会直接信任该gossip消息
-                if (Arrays.equals(peer.getData(), gossipItem.getSender())
-                        && Arrays.equals(pubKey, gossipItem.getReceiver())) {
+                if (ByteUtil.startsWith(peer.getData(), gossipItem.getSender())
+                        && ByteUtil.startsWith(pubKey, gossipItem.getReceiver())) {
                     logger.debug("Got trusted gossip:{} from peer[{}]", gossipItem.toString(), peer.toString());
 
                     if (gossipItem.getGossipType() == GossipType.DEMAND) {
