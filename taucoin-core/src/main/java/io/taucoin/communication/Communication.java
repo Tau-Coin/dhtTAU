@@ -87,13 +87,13 @@ public class Communication implements DHT.GetDHTItemCallback {
     private final Set<ByteArrayWrapper> demandItem = new CopyOnWriteArraySet<>();
 
     // 我的朋友集合
-    private final Set<ByteArrayWrapper> friends = Collections.synchronizedSet(new HashSet<>());
+    private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
 
     // 我的朋友的最新消息的时间戳 <friend, timestamp>
-    private final Map<ByteArrayWrapper, Long> friendTimeStamp = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, Long> friendTimeStamp = new ConcurrentHashMap<>();
 
     // 我的朋友的最新消息的root <friend, root>
-    private final Map<ByteArrayWrapper, byte[]> friendRoot = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, byte[]> friendRoot = new ConcurrentHashMap<>();
 
     // 我的朋友的最新确认的root <friend, root>
     private final Map<ByteArrayWrapper, byte[]> friendConfirmationRoot = new ConcurrentHashMap<>();
@@ -102,16 +102,16 @@ public class Communication implements DHT.GetDHTItemCallback {
     private final Map<ByteArrayWrapper, byte[]> friendConfirmationRootToNotify = new ConcurrentHashMap<>();
 
     // 给我的朋友的最新消息的时间戳 <friend, timestamp>，发现对方新的确认信息root也会更新该时间
-    private final Map<ByteArrayWrapper, Long> timeStampToFriend = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, Long> timeStampToFriend = new ConcurrentHashMap<>();
 
     // 给我的朋友的最新消息的root <friend, root>
-    private final Map<ByteArrayWrapper, byte[]> rootToFriend = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, byte[]> rootToFriend = new ConcurrentHashMap<>();
 
     // 发给朋友的confirmation root hash <friend, root>
-//    private final Map<ByteArrayWrapper, byte[]> confirmationRootToFriend = Collections.synchronizedMap(new HashMap<>());
+//    private final Map<ByteArrayWrapper, byte[]> confirmationRootToFriend = new ConcurrentHashMap<>();
 
     // 我的需求 <friend, demand hash>，用于通知我的朋友我的需求
-    private final Map<ByteArrayWrapper, byte[]> demandHash = Collections.synchronizedMap(new HashMap<>());
+    private final Map<ByteArrayWrapper, byte[]> demandHash = new ConcurrentHashMap<>();
 
     // 我收到的需求hash
     private final Set<ByteArrayWrapper> friendDemandHash = new CopyOnWriteArraySet<>();
@@ -120,13 +120,13 @@ public class Communication implements DHT.GetDHTItemCallback {
     private final Set<ByteArrayWrapper> activeFriends = new CopyOnWriteArraySet<>();
 
     // 通过gossip机制发现的给朋友的最新时间 <FriendPair, timestamp>
-    private final Map<FriendPair, Long> gossipTimeStamp = Collections.synchronizedMap(new HashMap<>());
+    private final Map<FriendPair, Long> gossipTimeStamp = new ConcurrentHashMap<>();
 
     // 通过gossip机制发现的给朋友的root <FriendPair, root>
-    private final Map<FriendPair, byte[]> gossipRoot = Collections.synchronizedMap(new HashMap<>());
+    private final Map<FriendPair, byte[]> gossipRoot = new ConcurrentHashMap<>();
 
     // 通过gossip机制发现的给朋友的confirmation root <FriendPair, root>
-    private final Map<FriendPair, byte[]> gossipConfirmationRoot = Collections.synchronizedMap(new HashMap<>());
+    private final Map<FriendPair, byte[]> gossipConfirmationRoot = new ConcurrentHashMap<>();
 
     // Communication thread.
     private Thread communicationThread;
@@ -272,7 +272,8 @@ public class Communication implements DHT.GetDHTItemCallback {
                 this.gossipRoot.remove(entry.getKey());
                 this.gossipConfirmationRoot.remove(entry.getKey());
 
-                it.remove();
+                this.gossipTimeStamp.remove(entry.getKey());
+//                it.remove();
             }
         }
     }
@@ -469,10 +470,12 @@ public class Communication implements DHT.GetDHTItemCallback {
             // 从demand集合移除
             Iterator<Map.Entry<ByteArrayWrapper, byte[]>> iterator = this.demandHash.entrySet().iterator();
             while (iterator.hasNext()) {
-                byte[] value = iterator.next().getValue();
+                Map.Entry<ByteArrayWrapper, byte[]> entry = iterator.next();
+                byte[] value = entry.getValue();
                 if (Arrays.equals(hash, value)) {
                     logger.debug("Remove hash[{}] from demand hash set", Hex.toHexString(hash));
-                    iterator.remove();
+                    this.demandHash.remove(entry.getKey());
+//                    iterator.remove();
                 }
             }
 
@@ -936,7 +939,8 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (iterator.hasNext()) {
             Map.Entry<FriendPair, Long> entry = iterator.next();
             if (Arrays.equals(pubKey, entry.getKey().getReceiver())) {
-                iterator.remove();
+                this.gossipTimeStamp.remove(entry.getKey());
+//                iterator.remove();
             }
         }
 
@@ -944,7 +948,8 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (it.hasNext()) {
             Map.Entry<FriendPair, byte[]> entry = it.next();
             if (Arrays.equals(pubKey, entry.getKey().getReceiver())) {
-                it.remove();
+                this.gossipRoot.remove(entry.getKey());
+//                it.remove();
             }
         }
 
@@ -952,7 +957,8 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (it.hasNext()) {
             Map.Entry<FriendPair, byte[]> entry = it.next();
             if (Arrays.equals(pubKey, entry.getKey().getReceiver())) {
-                it.remove();
+                this.gossipConfirmationRoot.remove(entry.getKey());
+//                it.remove();
             }
         }
 
