@@ -308,7 +308,9 @@ public class Communication implements DHT.GetDHTItemCallback {
                             if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
                                 // 朋友的root帮助记录，由其自己去验证
                                 this.gossipRoot.put(pair, gossipItem.getMessageRoot());
-                                this.gossipConfirmationRoot.put(pair, gossipItem.getConfirmationRoot());
+                                if (null != gossipItem.getConfirmationRoot()) {
+                                    this.gossipConfirmationRoot.put(pair, gossipItem.getConfirmationRoot());
+                                }
                                 // 更新时间戳
                                 this.gossipTimeStamp.put(pair, timeStamp);
                             }
