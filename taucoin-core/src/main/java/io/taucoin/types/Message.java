@@ -3,7 +3,6 @@ package io.taucoin.types;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
