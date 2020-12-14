@@ -8,8 +8,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -1174,11 +1172,12 @@ public class Communication implements DHT.GetDHTItemCallback {
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getExtraInfo1());
 
-                try {
-                    requestMessageContent(message.getContentLink(), dataIdentifier.getExtraInfo1());
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                }
+                // 暂时只考虑直接携带的文本
+//                try {
+//                    requestMessageContent(message.getContent(), dataIdentifier.getExtraInfo1());
+//                } catch (Exception e) {
+//                    logger.error(e.getMessage(), e);
+//                }
 
                 break;
             }

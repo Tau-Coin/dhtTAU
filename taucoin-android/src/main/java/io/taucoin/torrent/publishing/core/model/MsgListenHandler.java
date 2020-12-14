@@ -54,7 +54,7 @@ class MsgListenHandler {
 
     private void onNewMessage(String friendPk, Message message) {
         logger.debug("onNewMessage friendPk::{}，Hash::{}, ContentLink::{}", friendPk,
-                ByteUtil.toHexString(message.getHash()), ByteUtil.toHexString(message.getContentLink()));
+                ByteUtil.toHexString(message.getHash()), ByteUtil.toHexString(message.getContent()));
         Disposable disposable = Flowable.create(emitter -> {
             try {
                 // 处理ChatName，如果为空，取显朋友显示名
@@ -72,7 +72,7 @@ class MsgListenHandler {
                     friendRepo.updateFriend(friend);
                 }
                 String hash = ByteUtil.toHexString(message.getHash());
-                String contentLinkStr = ByteUtil.toHexString(message.getContentLink());
+                String contentLinkStr = ByteUtil.toHexString(message.getContent());
                 long timestamp = ByteUtil.byteArrayToLong(message.getTimestamp());
                 int type = message.getType().ordinal();
                 ChatMsg msg = new ChatMsg(hash, friendPk, userPk, contentLinkStr, type, timestamp);

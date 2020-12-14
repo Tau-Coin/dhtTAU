@@ -15,27 +15,27 @@ public class Message {
     private byte[] previousMsgDAGRoot;
     private byte[] friendLatestMessageRoot;
     private MessageType type;
-    private byte[] contentLink;
+    private byte[] content;
 
     private byte[] hash;
     private byte[] encode;
     private boolean parsed = false;
 
-    public static Message CreateTextMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, byte[] contentLink) {
-        return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, friendLatestMessageRoot, MessageType.TEXT, contentLink);
+    public static Message CreateTextMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, byte[] content) {
+        return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, friendLatestMessageRoot, MessageType.TEXT, content);
     }
 
-    public static Message CreatePictureMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, byte[] contentLink) {
-        return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, friendLatestMessageRoot, MessageType.PICTURE, contentLink);
-    }
+//    public static Message CreatePictureMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, byte[] contentLink) {
+//        return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, friendLatestMessageRoot, MessageType.PICTURE, contentLink);
+//    }
 
-    private Message(MessageVersion version, byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, MessageType type, byte[] contentLink) {
+    public Message(MessageVersion version, byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, MessageType type, byte[] content) {
         this.version = version;
         this.timestamp = timestamp;
         this.previousMsgDAGRoot = previousMsgDAGRoot;
         this.friendLatestMessageRoot = friendLatestMessageRoot;
         this.type = type;
-        this.contentLink = contentLink;
+        this.content = content;
 
         this.parsed = true;
     }
@@ -84,12 +84,12 @@ public class Message {
         return type;
     }
 
-    public byte[] getContentLink() {
+    public byte[] getContent() {
         if (!this.parsed) {
             parseRLP();
         }
 
-        return contentLink;
+        return content;
     }
 
     public byte[] getHash() {
@@ -126,7 +126,7 @@ public class Message {
             this.type = MessageType.values()[typeNum];
         }
 
-        this.contentLink = messageList.get(5).getRLPData();
+        this.content = messageList.get(5).getRLPData();
 
         this.parsed = true;
     }
@@ -138,9 +138,9 @@ public class Message {
             byte[] previousMsgDAGRoot = RLP.encodeElement(this.previousMsgDAGRoot);
             byte[] friendLatestMessageRoot = RLP.encodeElement(this.friendLatestMessageRoot);
             byte[] type = RLP.encodeBigInteger(BigInteger.valueOf(this.type.ordinal()));
-            byte[] contentLink = RLP.encodeElement(this.contentLink);
+            byte[] content = RLP.encodeElement(this.content);
 
-            this.encode = RLP.encodeList(version, timestamp, previousMsgDAGRoot, friendLatestMessageRoot, type, contentLink);
+            this.encode = RLP.encodeList(version, timestamp, previousMsgDAGRoot, friendLatestMessageRoot, type, content);
         }
 
         return this.encode;
@@ -150,7 +150,7 @@ public class Message {
     public String toString() {
         byte[] previousRoot = getPreviousMsgDAGRoot();
         byte[] friendRoot = getFriendLatestMessageRoot();
-        byte[] contentLink = getContentLink();
+        byte[] content = getContent();
 
         return "Message{" +
                 "version=" + getVersion() +
@@ -158,7 +158,7 @@ public class Message {
                 ", previousMsgDAGRoot=" + (null != previousRoot ? Hex.toHexString(previousRoot) : " ") +
                 ", friendLatestMessageRoot=" + (null != friendRoot ? Hex.toHexString(friendRoot) : " ") +
                 ", type=" + getType() +
-                ", contentLink=" + (null != contentLink ? Hex.toHexString(contentLink) : " ") +
+                ", content=" + (null != content ? new String(content) : " ") +
                 ", hash=" + Hex.toHexString(getHash()) +
                 '}';
     }
