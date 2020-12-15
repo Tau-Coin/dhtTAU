@@ -166,11 +166,15 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvMsg.setTextHash(chat.contextLink, () -> {
-                if (!isMine) {
-                    tvProgress.setVisibility(View.GONE);
-                }
-            });
+            tvMsg.setText(chat.context);
+            if (!isMine) {
+                tvProgress.setVisibility(View.GONE);
+            }
+//            tvMsg.setTextHash(chat.context, () -> {
+//                if (!isMine) {
+//                    tvProgress.setVisibility(View.GONE);
+//                }
+//            });
         }
 
         private void showStatusView(ImageView ivStats, ProgressBar tvProgress,
@@ -230,7 +234,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvImage.setImageHash(chat.contextLink, () -> {
+            tvImage.setImageHash(chat.context, () -> {
                 if (!isMine) {
                     tvProgress.setVisibility(View.GONE);
                 }

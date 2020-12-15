@@ -26,4 +26,12 @@ public class Constants {
     public static final int CHAIN_LINK_BS_LIMIT = 10;
 
     public static final int ONLINE_HOURS = 12;
+
+    // APP在前台运行时重新put immutable数据覆盖为10s, 单位：秒
+    public static final int FOREGROUND_PUT_IMMUTABLE_DATA_TIME = 10;
+    // 1、重新put immutable数据时间间隔10s
+    // 2、APP在前台运行时的gossip时间片10s
+    public static final long FOREGROUND_GOSSIP_INTERVAL = 10 * 1000;
+    // APP在后台运行时的gossip时间片30s
+    public static final long BACKGROUND_GOSSIP_INTERVAL = 30 * 1000;
 }

@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 import io.taucoin.db.DBException;
+import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
@@ -38,9 +39,9 @@ public class ReceivedConfirmationWorker extends Worker {
     @Override
     public Result doWork() {
         logger.debug("doWork");
-        while (true) {
+        logger.debug("receivedConfirmation start");
+        while (!isStopped()) {
             try {
-                logger.debug("publishMessage start");
                 List<String> publicKeys = chatRepo.getUnConfirmationFriends();
                 if (publicKeys != null && publicKeys.size() > 0) {
                     logger.debug("receivedConfirmation publicKeys.size::{}", publicKeys.size());
@@ -48,10 +49,10 @@ public class ReceivedConfirmationWorker extends Worker {
                 } else {
                     break;
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 logger.warn("receivedConfirmation error ::{}", e.getMessage());
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(Frequency.FREQUENCY_RETRY.getFrequency());
                     logger.debug("receivedConfirmation retry");
                 } catch (InterruptedException ignore) {
                 }
@@ -65,6 +66,9 @@ public class ReceivedConfirmationWorker extends Worker {
      */
     private void receivedConfirmation(@NonNull List<String> publicKeys) {
         for (String publicKey : publicKeys) {
+            if (isStopped()) {
+                break;
+            }
             try {
                 byte[] friendPk = ByteUtil.toByte(publicKey);
                 byte[] friendConfirmationRoot = daemon.getFriendConfirmationRoot(friendPk);
@@ -72,13 +76,8 @@ public class ReceivedConfirmationWorker extends Worker {
                         publicKey,
                         ByteUtil.toHexString(friendConfirmationRoot));
                 updateReceivedConfirmationState(publicKey, friendConfirmationRoot);
-            } catch (DBException e) {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException ignore) {
-                }
-            } catch (Exception e) {
-                logger.warn("publishMessage error:: {}", e.getMessage());
+            }catch (Exception e) {
+                logger.warn("updateReceivedConfirmationState error:: {}", e.getMessage());
             }
         }
     }
@@ -106,6 +105,6 @@ public class ReceivedConfirmationWorker extends Worker {
     @Override
     public void onStopped() {
         super.onStopped();
-        logger.debug("PublishWorker onStopped");
+        logger.debug("Worker onStopped");
     }
 }

@@ -36,10 +36,9 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.MultimediaUtil;
 import io.taucoin.torrent.publishing.service.LibJpegManager;
-import io.taucoin.torrent.publishing.service.PublishManager;
+import io.taucoin.torrent.publishing.service.WorkerManager;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.types.HashList;
-import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
@@ -50,7 +49,7 @@ import io.taucoin.util.HashUtil;
 public class ChatViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("ChatViewModel");
-    private static final int BYTE_LIMIT = 980;
+    private static final int BYTE_LIMIT = 900;
     private static final int HORIZONTAL_SIZE = 40;
     private ChatRepository chatRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
@@ -129,26 +128,23 @@ public class ChatViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
-                ContentItem contentItem;
+                byte[] content;
                 if (type == MessageType.PICTURE.ordinal()) {
-                    contentItem = handleMsgPicToDAG(msg);
+                    throw new Exception("Unknown message type");
                 } else if(type == MessageType.TEXT.ordinal()) {
-                    contentItem = handleMsgTextToDAG(msg);
+                    content = handleMsgText(msg);
                 } else {
                     throw new Exception("Unknown message type");
                 }
-                List<byte[]> data = contentItem.getList();
-                byte[] contentLink = contentItem.getContentLink();
-                logger.debug("sendMessageTask data.size::{}, contentLink::{}",
-                        data.size(), ByteUtil.toHexString(contentLink));
+                logger.debug("sendMessageTask content::{}", ByteUtil.toHexString(content));
                 // 组织Message的结构，并发送到DHT和数据入库
                 long timestamp = DateUtil.getTime();
                 String senderPk = MainApplication.getInstance().getPublicKey();
-                String contentLinkStr = ByteUtil.toHexString(contentLink);
-                ChatMsg chatMsg = new ChatMsg(senderPk, friendPk, contentLinkStr, type, timestamp);
+                String contentStr = new String(content, StandardCharsets.UTF_8);
+                ChatMsg chatMsg = new ChatMsg(senderPk, friendPk, contentStr, type, timestamp);
                 chatMsg.status = ChatMsgType.UNSENT.ordinal();
                 chatRepo.addChatMsg(chatMsg);
-                PublishManager.startPublishWorker();
+                WorkerManager.startPublishNewMsgWorker();
             } catch (Exception e) {
                 logger.error("sendMessageTask error", e);
                 result.setFailMsg(e.getMessage());
@@ -165,6 +161,18 @@ public class ChatViewModel extends AndroidViewModel {
     /**
      * 处理消息文本成DAG形式
      */
+    private byte[] handleMsgText(String msg) {
+        byte[] msgBytes = msg.getBytes(StandardCharsets.UTF_8);
+        int msgSize = msgBytes.length;
+        if (msgSize > BYTE_LIMIT) {
+            msgSize = BYTE_LIMIT;
+        }
+        byte[] bytes = new byte[msgSize];
+        System.arraycopy(msgBytes, 0, bytes, 0, bytes.length);
+        logger.debug("msgBytes::{}, bytes::{}", msgBytes.length, bytes.length);
+        return bytes;
+    }
+
     private ContentItem handleMsgTextToDAG(String msg) throws DBException {
         List<byte[]> hashList = new ArrayList<>();
         List<byte[]> contentList = new ArrayList<>();

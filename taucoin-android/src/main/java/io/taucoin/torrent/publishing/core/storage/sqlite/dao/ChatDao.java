@@ -44,6 +44,13 @@ public interface ChatDao {
             " GROUP BY msg.friendPk" +
             " ORDER BY msg.timestamp";
 
+    String QUERY_MESSAGES_BY_TIME = "SELECT msg.*" +
+            " FROM ChatMessages msg" +
+            " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
+            " AND msg.status = 1" +
+            " AND msg.timestamp >= :time" +
+            " ORDER BY msg.timestamp";
+
     /**
      * 添加聊天信息
      */
@@ -86,4 +93,7 @@ public interface ChatDao {
 
     @Query(QUERY_UN_CONFIRMATION_FRIENDS)
     List<String> getUnConfirmationFriends();
+
+    @Query(QUERY_MESSAGES_BY_TIME)
+    List<ChatMsg> getMessagesByTime(long time);
 }

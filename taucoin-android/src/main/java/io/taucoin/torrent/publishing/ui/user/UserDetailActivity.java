@@ -2,7 +2,6 @@ package io.taucoin.torrent.publishing.ui.user;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -22,9 +21,7 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityUserDetailBinding;
-import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
@@ -42,7 +39,6 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
     private UserViewModel userViewModel;
     private CommunityViewModel communityViewModel;
     private UserCommunityListAdapter adapter;
-    private CommonDialog commonDialog;
     private CommonDialog shareQRDialog;
     private String publicKey;
     private UserAndFriend user;
@@ -103,7 +99,6 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
             } else {
                 binding.tvAddToContact.setVisibility(View.GONE);
                 binding.tvShareQr.setVisibility(View.VISIBLE);
-                binding.tvStartChat.setVisibility(View.VISIBLE);
                 showShareQRDialog();
             }
         });
@@ -116,16 +111,13 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
                 onBackPressed();
                 openChatActivity(state.getMsg());
             }
-            if (commonDialog != null) {
-                commonDialog.closeDialog();
-            }
         });
     }
 
     private void showUserInfo(UserAndFriend userInfo) {
         boolean isMine = StringUtil.isEquals(publicKey, MainApplication.getInstance().getPublicKey());
         binding.tvAddToContact.setVisibility(!isMine && userInfo.isDiscovered() ? View.VISIBLE : View.GONE);
-        binding.tvStartChat.setVisibility(!isMine && !userInfo.isDiscovered() ? View.VISIBLE : View.GONE);
+        binding.tvStartChat.setVisibility(!isMine && userInfo.isConnected() ? View.VISIBLE : View.GONE);
         binding.tvShareQr.setVisibility(!isMine && userInfo.isConnected() ? View.GONE : View.VISIBLE);
         this.user = userInfo;
         String showName = UsersUtil.getCurrentUserName(user);
@@ -175,7 +167,8 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
                 userViewModel.addFriend(publicKey);
                 break;
             case R.id.tv_start_chat:
-                showChatDialog();
+                showProgressDialog();
+                communityViewModel.createChat(user.publicKey);
                 break;
             case R.id.tv_share_qr:
                 ActivityUtil.startActivity(this, UserQRCodeActivity.class);
@@ -212,48 +205,9 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         ActivityUtil.startActivity(intent, this, MainActivity.class);
     }
 
-    /**
-     * 显示和朋友Chatting的对话框
-     */
-    private void showChatDialog() {
-        if(null == user){
-            return;
-        }
-        if (commonDialog != null && commonDialog.isShowing()) {
-            return;
-        }
-        ContactsDialogBinding contactsBinding = DataBindingUtil.inflate(LayoutInflater.from(this),
-                R.layout.contacts_dialog, null, false);
-        String showName = UsersUtil.getShowName(user);
-        contactsBinding.tvTitle.setText(Html.fromHtml(getString(R.string.contacts_chatting, showName)));
-        contactsBinding.tvTitle.setVisibility(View.VISIBLE);
-        contactsBinding.etChatName.setVisibility(View.VISIBLE);
-        contactsBinding.etPublicKey.setVisibility(View.GONE);
-        contactsBinding.tvSubmit.setText(R.string.common_start);
-        contactsBinding.ivClose.setOnClickListener(v -> {
-            if (commonDialog != null) {
-                commonDialog.closeDialog();
-            }
-        });
-        contactsBinding.tvSubmit.setOnClickListener(v -> {
-            String chatName = ViewUtils.getText(contactsBinding.etChatName);
-            showProgressDialog();
-            communityViewModel.createChat(chatName, user.publicKey);
-        });
-
-        commonDialog = new CommonDialog.Builder(this)
-                .setContentView(contactsBinding.getRoot())
-                .setButtonWidth(240)
-                .create();
-        commonDialog.show();
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (commonDialog != null) {
-            commonDialog.closeDialog();
-        }
         if (shareQRDialog != null) {
             shareQRDialog.closeDialog();
         }

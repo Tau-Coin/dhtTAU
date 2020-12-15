@@ -36,12 +36,11 @@ import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
-import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
-import io.taucoin.torrent.publishing.service.PublishManager;
+import io.taucoin.torrent.publishing.service.WorkerManager;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.receiver.PowerReceiver;
 import io.taucoin.torrent.publishing.service.Scheduler;
@@ -228,6 +227,11 @@ public class TauDaemon {
         public void onReadMessageRoot(byte[] friend, byte[] root) {
             msgListenHandler.onReceivedMessageRoot(friend, root);
         }
+
+        @Override
+        public void onDiscoveryFriend(byte[] friend) {
+            msgListenHandler.onDiscoveryFriend(friend);
+        }
     };
 
     /**
@@ -239,7 +243,7 @@ public class TauDaemon {
             if (success) {
                 logger.debug("Tau start successfully");
                 isRunning = true;
-                PublishManager.startAllWork();
+                WorkerManager.startAllWorker();
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
@@ -291,7 +295,7 @@ public class TauDaemon {
         if (!isRunning)
             return;
         isRunning = false;
-        PublishManager.cancelAllWork();
+        WorkerManager.cancelAllWork();
         disposables.clear();
         if (sessionStartedDispose != null
                 && !sessionStartedDispose.isDisposed()) {
@@ -369,6 +373,26 @@ public class TauDaemon {
             enableServerMode(settingsRepo.serverMode());
         } else if (key.equals(appContext.getString(R.string.pref_key_is_metered_network))) {
             logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
+        } else if (key.equals(appContext.getString(R.string.pref_key_foreground_running))) {
+            logger.info("foreground running::{}", settingsRepo.getBooleanValue(key));
+            if (!isRunning) {
+                return;
+            }
+            boolean foregroundRunning = settingsRepo.getBooleanValue(key);
+            boolean isMeteredNetwork = NetworkSetting.isMeteredNetwork();
+            long gossipFrequency;
+            if (foregroundRunning) {
+                WorkerManager.startPublishImmutableWorker();
+                gossipFrequency = isMeteredNetwork ?
+                        Frequency.GOSSIP_FREQUENCY_MEDIUM_HEIGHT.getFrequency()
+                        : Frequency.GOSSIP_FREQUENCY_HEIGHT.getFrequency();
+            } else {
+                WorkerManager.cancelPublishImmutableWork();
+                gossipFrequency = isMeteredNetwork ?
+                        Frequency.GOSSIP_FREQUENCY_LOW.getFrequency()
+                        : Frequency.GOSSIP_FREQUENCY_MEDIUM_LOW.getFrequency();
+            }
+            setGossipTimeInterval(gossipFrequency);
         }
     }
 
@@ -666,5 +690,22 @@ public class TauDaemon {
      */
     public byte[] getFriendConfirmationRoot(byte[] friendPK) {
         return getCommunicationManager().getFriendConfirmationRoot(friendPK);
+    }
+
+    /**
+     * 根据APP前后台状态调整gossip的时间间隔
+     * @param timeInterval 时间间隔
+     */
+    private void setGossipTimeInterval(long timeInterval) {
+        getCommunicationManager().setGossipTimeInterval(timeInterval);
+        logger.debug("setGossipTimeInterval::{}", timeInterval);
+    }
+
+    /**
+     * 发布Immutable数据
+     * @param data Immutable Data
+     */
+    public void publishImmutableData(byte[] data) {
+        getCommunicationManager().publishImmutableData(data);
     }
 }

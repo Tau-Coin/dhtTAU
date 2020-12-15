@@ -57,26 +57,29 @@ class MsgListenHandler {
                 ByteUtil.toHexString(message.getHash()), ByteUtil.toHexString(message.getContent()));
         Disposable disposable = Flowable.create(emitter -> {
             try {
-                // 处理ChatName，如果为空，取显朋友显示名
-                String communityName = UsersUtil.getDefaultName(friendPk);
-                Community community = communityRepo.getChatByFriendPk(friendPk);
-                if (null == community) {
-                    community = new Community(friendPk, communityName);
-                    community.type = 1;
-                    communityRepo.addCommunity(community);
+                if (null == message) {
+                    // TODO: 更新朋友状态
+                } else {
+                    String hash = ByteUtil.toHexString(message.getHash());
+                    ChatMsg chatMsg = chatRepo.queryChatMsg(friendPk, hash);
+                    // 上报的Message有可能重复, 如果本地已存在不处理
+                    if (null == chatMsg) {
+                        // 处理ChatName，如果为空，取显朋友显示名
+                        String communityName = UsersUtil.getDefaultName(friendPk);
+                        Community community = communityRepo.getChatByFriendPk(friendPk);
+                        if (null == community) {
+                            community = new Community(friendPk, communityName);
+                            community.type = 1;
+                            communityRepo.addCommunity(community);
+                        }
+                        String userPk = MainApplication.getInstance().getPublicKey();
+                        String content = new String(message.getContent());
+                        long timestamp = message.getTimestamp().longValue();
+                        int type = message.getType().ordinal();
+                        ChatMsg msg = new ChatMsg(hash, friendPk, userPk, content, type, timestamp);
+                        chatRepo.addChatMsg(msg);
+                    }
                 }
-                String userPk = MainApplication.getInstance().getPublicKey();
-                Friend friend = friendRepo.queryFriend(userPk, friendPk);
-                if (friend != null) {
-                    friend.state = 2;
-                    friendRepo.updateFriend(friend);
-                }
-                String hash = ByteUtil.toHexString(message.getHash());
-                String contentLinkStr = ByteUtil.toHexString(message.getContent());
-                long timestamp = ByteUtil.byteArrayToLong(message.getTimestamp());
-                int type = message.getType().ordinal();
-                ChatMsg msg = new ChatMsg(hash, friendPk, userPk, contentLinkStr, type, timestamp);
-                chatRepo.addChatMsg(msg);
             } catch (Exception e) {
                 logger.error("onNewMessage error", e);
             }
@@ -119,5 +122,31 @@ class MsgListenHandler {
      */
     void destroy() {
         disposables.clear();
+    }
+
+    /**
+     * 发现朋友
+     * @param friendPk 朋友公钥
+     */
+    void onDiscoveryFriend(byte[] friendPk) {
+        logger.debug("onDiscoveryFriend friendPk::{}",
+                ByteUtil.toHexString(friendPk));
+        Disposable disposable = Flowable.create(emitter -> {
+            try {
+                String userPk = MainApplication.getInstance().getPublicKey();
+                String friendPkStr = ByteUtil.toHexString(friendPk);
+                Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
+                if (friend != null) {
+                    friend.state = 2;
+                    friendRepo.updateFriend(friend);
+                }
+            } catch (Exception e) {
+                logger.error("onDiscoveryFriend error", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        disposables.add(disposable);
     }
 }

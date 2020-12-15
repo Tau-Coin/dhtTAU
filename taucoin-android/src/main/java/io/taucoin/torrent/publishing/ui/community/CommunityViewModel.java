@@ -318,19 +318,15 @@ public class CommunityViewModel extends AndroidViewModel {
 
     /**
      * 和联系人创建Chat
-     * @param chatName chatName
      * @param friendPk friend's PK
      */
-    public void createChat(String chatName, String friendPk) {
+    public void createChat(String friendPk) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
                 // 处理ChatName，如果为空，取显朋友显示名
-                String communityName = chatName;
-                if (StringUtil.isEmpty(communityName)) {
-                    User friend = userRepo.getUserByPublicKey(friendPk);
-                    communityName = UsersUtil.getShowName(friend);
-                }
+                User friend = userRepo.getUserByPublicKey(friendPk);
+                String communityName = UsersUtil.getShowName(friend);
                 Community community = communityRepo.getCommunityByChainID(friendPk);
                 if (null == community) {
                     community = new Community(friendPk, communityName);

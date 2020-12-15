@@ -217,6 +217,13 @@
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:configChanges="orientation|keyboardHidden|screenSize" />
 
+        <!-- 禁用默认提供程序 -->
+        <provider
+            android:name="androidx.work.impl.WorkManagerInitializer"
+            android:authorities="${applicationId}.workmanager-init"
+            android:exported="false"
+            android:enabled="false"/>
+
     </application>
 
 </manifest>

@@ -23,7 +23,7 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivitySettingBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.service.PublishManager;
+import io.taucoin.torrent.publishing.service.WorkerManager;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
@@ -165,7 +165,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 ActivityUtil.startActivity(this, JournalActivity.class);
                 break;
             case R.id.item_help:
-                PublishManager.startPublishWorker();
                 break;
         }
     }

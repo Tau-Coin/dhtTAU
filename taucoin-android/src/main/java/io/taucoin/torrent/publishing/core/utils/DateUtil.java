@@ -329,4 +329,25 @@ public class DateUtil {
     public static int getSeconds(long time1, long time2){
         return (int)(time2 - time1);
     }
+
+    /**
+     * 获取当前时间前pastTime的时间
+     * @param pastSecond 减去的时间，单位：秒
+     */
+    public static long getPastTime(int pastSecond){
+        Date date = new Date();
+        try {
+            format.applyPattern(pattern6);
+            format.format(date);
+
+            Calendar newTime = Calendar.getInstance();
+            newTime.setTime(date);
+            newTime.add(Calendar.SECOND, -pastSecond);
+
+            Date newDate = newTime.getTime();
+            return newDate.getTime()  / 1000;
+        } catch(Exception ignore) {
+        }
+        return date.getTime() / 1000;
+    }
 }

@@ -10,4 +10,5 @@ public class IntentExtra {
     public static final String CHAIN_LINK = "chainLink";
     public static final String PUBLIC_KEY = "publicKey";
     public static final String ON_CHAIN = "onChain";
+    public static final String IMMEDIATE_EXECUTION = "immediateExecution";
 }

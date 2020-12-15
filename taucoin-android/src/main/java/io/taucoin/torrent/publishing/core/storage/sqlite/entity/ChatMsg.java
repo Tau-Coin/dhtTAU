@@ -24,28 +24,28 @@ public class ChatMsg implements Parcelable {
     @NonNull
     public long timestamp;                 // 时间戳
     @NonNull
-    public String contextLink;             // 消息内容Link
+    public String context;             // 消息内容Link
     @NonNull
     public int contextType;                // 消息内容类型
 
     public int status;                      // 消息状态 0: 未进入队列，1: 已进入队列，2: 已送达
 
     public ChatMsg(@NonNull String hash, String senderPk, String friendPk,
-                   String contextLink, int contextType, long timestamp){
+                   String context, int contextType, long timestamp){
         this.hash = hash;
         this.senderPk = senderPk;
         this.friendPk = friendPk;
-        this.contextLink = contextLink;
+        this.context = context;
         this.contextType = contextType;
         this.timestamp = timestamp;
     }
 
     @Ignore
     public ChatMsg(String senderPk, String friendPk,
-                   String contextLink, int contextType, long timestamp){
+                   String context, int contextType, long timestamp){
         this.senderPk = senderPk;
         this.friendPk = friendPk;
-        this.contextLink = contextLink;
+        this.context = context;
         this.contextType = contextType;
         this.timestamp = timestamp;
     }
@@ -58,7 +58,7 @@ public class ChatMsg implements Parcelable {
         friendPk = in.readString();
         contextType = in.readInt();
         timestamp = in.readLong();
-        contextLink = in.readString();
+        context = in.readString();
     }
 
     @Override
@@ -69,7 +69,7 @@ public class ChatMsg implements Parcelable {
         dest.writeString(friendPk);
         dest.writeInt(contextType);
         dest.writeLong(timestamp);
-        dest.writeString(contextLink);
+        dest.writeString(context);
     }
 
     @Override

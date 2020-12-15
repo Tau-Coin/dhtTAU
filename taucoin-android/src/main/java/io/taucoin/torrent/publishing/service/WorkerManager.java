@@ -2,7 +2,7 @@ package io.taucoin.torrent.publishing.service;
 
 import android.content.Context;
 
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -14,28 +14,26 @@ import io.taucoin.torrent.publishing.MainApplication;
 /**
  * 发布消息管理
  */
-public class PublishManager {
-    private static UUID publishWorkID;
-    private static UUID confirmationWorkID;
+public class WorkerManager {
+    private static final String PUBLISH_NEW_MSG_WORK_NAME = "PublishNewMsg";
+    private static final String RECEIVED_CONFIRMATION_WORK_NAME = "ReceivedConfirmation";
 
     /**
-     * 启动PublishWorker
+     * 启动PublishNewMsgWorker
      */
-    public static void startPublishWorker() {
+    public static void startPublishNewMsgWorker() {
         // 限制条件
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
         Context context = MainApplication.getInstance();
-        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PublishWorker.class)
+        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PublishNewMsgWorker.class)
+                .setInitialDelay(0, TimeUnit.MILLISECONDS)
                 .setConstraints(constraints)
                 .build();
-        if (null == publishWorkID) {
-            publishWorkID = request.getId();
-        }
         WorkManager.getInstance(context)
-                .beginUniqueWork("PublishMessage",
-                        ExistingWorkPolicy.KEEP, request)
+                .beginUniqueWork(PUBLISH_NEW_MSG_WORK_NAME,
+                    ExistingWorkPolicy.KEEP, request)
                 .enqueue();
     }
 
@@ -51,20 +49,17 @@ public class PublishManager {
         OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(ReceivedConfirmationWorker.class)
                 .setConstraints(constraints)
                 .build();
-        if (null == confirmationWorkID) {
-            confirmationWorkID = request.getId();
-        }
         WorkManager.getInstance(context)
-                .beginUniqueWork("ReceivedConfirmation",
-                        ExistingWorkPolicy.KEEP, request)
+                .beginUniqueWork(RECEIVED_CONFIRMATION_WORK_NAME,
+                    ExistingWorkPolicy.KEEP, request)
                 .enqueue();
     }
 
     /**
-     * 启动PublishWorker
+     * 启动所有的Worker
      */
-    public static void startAllWork() {
-        startPublishWorker();
+    public static void startAllWorker() {
+        startPublishNewMsgWorker();
         startReceivedConfirmationWorker();
     }
 
@@ -73,11 +68,6 @@ public class PublishManager {
      */
     public static void cancelAllWork() {
         Context context = MainApplication.getInstance();
-        if (publishWorkID != null) {
-            WorkManager.getInstance(context).cancelWorkById(publishWorkID);
-        }
-        if (confirmationWorkID != null) {
-            WorkManager.getInstance(context).cancelWorkById(confirmationWorkID);
-        }
+        WorkManager.getInstance(context).cancelAllWork();
     }
 }
