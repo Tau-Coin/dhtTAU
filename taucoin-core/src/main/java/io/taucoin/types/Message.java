@@ -11,7 +11,7 @@ import io.taucoin.util.RLPList;
 
 public class Message {
     private MessageVersion version;
-    private byte[] timestamp;
+    private BigInteger timestamp;
     private byte[] previousMsgDAGRoot;
     private byte[] friendLatestMessageRoot;
     private MessageType type;
@@ -21,15 +21,15 @@ public class Message {
     private byte[] encode;
     private boolean parsed = false;
 
-    public static Message CreateTextMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, byte[] content) {
+    public static Message CreateTextMessage(BigInteger timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, byte[] content) {
         return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, friendLatestMessageRoot, MessageType.TEXT, content);
     }
 
-//    public static Message CreatePictureMessage(byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, byte[] contentLink) {
+//    public static Message CreatePictureMessage(BigInteger timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, byte[] contentLink) {
 //        return new Message(MessageVersion.VERSION1, timestamp, previousMsgDAGRoot, friendLatestMessageRoot, MessageType.PICTURE, contentLink);
 //    }
 
-    public Message(MessageVersion version, byte[] timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, MessageType type, byte[] content) {
+    public Message(MessageVersion version, BigInteger timestamp, byte[] previousMsgDAGRoot, byte[] friendLatestMessageRoot, MessageType type, byte[] content) {
         this.version = version;
         this.timestamp = timestamp;
         this.previousMsgDAGRoot = previousMsgDAGRoot;
@@ -52,7 +52,7 @@ public class Message {
         return version;
     }
 
-    public byte[] getTimestamp() {
+    public BigInteger getTimestamp() {
         if (!this.parsed) {
             parseRLP();
         }
@@ -104,22 +104,23 @@ public class Message {
         RLPList params = RLP.decode2(this.encode);
         RLPList messageList = (RLPList) params.get(0);
 
-        byte[] versionByte = messageList.get(0).getRLPData();
-        int versionNum = null == versionByte ? 0: new BigInteger(1, versionByte).intValue();
+        byte[] versionBytes = messageList.get(0).getRLPData();
+        int versionNum = null == versionBytes ? 0: new BigInteger(1, versionBytes).intValue();
         if (versionNum >= MessageVersion.MAX_VERSION.ordinal()) {
             this.version = MessageVersion.MAX_VERSION;
         } else {
             this.version = MessageVersion.values()[versionNum];
         }
 
-        this.timestamp = messageList.get(1).getRLPData();
+        byte[] timeBytes = messageList.get(1).getRLPData();
+        this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
         this.previousMsgDAGRoot = messageList.get(2).getRLPData();
 
         this.friendLatestMessageRoot = messageList.get(3).getRLPData();
 
-        byte[] typeByte = messageList.get(4).getRLPData();
-        int typeNum = null == typeByte ? 0: new BigInteger(1, typeByte).intValue();
+        byte[] typeBytes = messageList.get(4).getRLPData();
+        int typeNum = null == typeBytes ? 0: new BigInteger(1, typeBytes).intValue();
         if (typeNum >= MessageType.UNKNOWN.ordinal()) {
             this.type = MessageType.UNKNOWN;
         } else {
@@ -134,7 +135,7 @@ public class Message {
     public byte[] getEncoded() {
         if (null == this.encode) {
             byte[] version = RLP.encodeBigInteger(BigInteger.valueOf(this.version.ordinal()));
-            byte[] timestamp = RLP.encodeElement(this.timestamp);
+            byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
             byte[] previousMsgDAGRoot = RLP.encodeElement(this.previousMsgDAGRoot);
             byte[] friendLatestMessageRoot = RLP.encodeElement(this.friendLatestMessageRoot);
             byte[] type = RLP.encodeBigInteger(BigInteger.valueOf(this.type.ordinal()));
@@ -154,7 +155,7 @@ public class Message {
 
         return "Message{" +
                 "version=" + getVersion() +
-                ", timestamp=" + ByteUtil.byteArrayToLong(getTimestamp()) +
+                ", timestamp=" + getTimestamp() +
                 ", previousMsgDAGRoot=" + (null != previousRoot ? Hex.toHexString(previousRoot) : " ") +
                 ", friendLatestMessageRoot=" + (null != friendRoot ? Hex.toHexString(friendRoot) : " ") +
                 ", type=" + getType() +

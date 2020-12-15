@@ -5,7 +5,6 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -14,7 +13,7 @@ public class GossipItem {
     private byte[] sender;
     private byte[] receiver;
     // 可能需要拉长
-    private byte[] timestamp;
+    private BigInteger timestamp;
     private GossipType gossipType;
     private byte[] messageRoot;
     private byte[] confirmationRoot;
@@ -23,7 +22,7 @@ public class GossipItem {
     private byte[] encode;
     private boolean parsed = false;
 
-    public GossipItem(byte[] sender, byte[] receiver, byte[] timestamp, GossipType gossipType, byte[] messageRoot, byte[] confirmationRoot) {
+    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, GossipType gossipType, byte[] messageRoot, byte[] confirmationRoot) {
         this.sender = sender;
         this.receiver = receiver;
         this.timestamp = timestamp;
@@ -54,7 +53,7 @@ public class GossipItem {
         return receiver;
     }
 
-    public byte[] getTimestamp() {
+    public BigInteger getTimestamp() {
         if (!this.parsed) {
             parseRLP();
         }
@@ -100,9 +99,10 @@ public class GossipItem {
 
         this.sender = messageList.get(0).getRLPData();
         this.receiver = messageList.get(1).getRLPData();
-        this.timestamp = messageList.get(2).getRLPData();
-        byte[] typeByte = messageList.get(3).getRLPData();
-        int typeNum = null == typeByte ? 0: new BigInteger(1, typeByte).intValue();
+        byte[] timeBytes = messageList.get(2).getRLPData();
+        this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
+        byte[] typeBytes = messageList.get(3).getRLPData();
+        int typeNum = null == typeBytes ? 0: new BigInteger(1, typeBytes).intValue();
         if (typeNum >= GossipType.UNKNOWN.ordinal()) {
             this.gossipType = GossipType.UNKNOWN;
         } else {
@@ -118,7 +118,7 @@ public class GossipItem {
         if (null == this.encode) {
             byte[] sender = RLP.encodeElement(this.sender);
             byte[] receiver = RLP.encodeElement(this.receiver);
-            byte[] timestamp = RLP.encodeElement(this.timestamp);
+            byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
             byte[] gossipType = RLP.encodeBigInteger(BigInteger.valueOf(this.gossipType.ordinal()));
             byte[] messageRoot = RLP.encodeElement(this.messageRoot);
             byte[] confirmationRoot = RLP.encodeElement(this.confirmationRoot);
@@ -150,7 +150,7 @@ public class GossipItem {
             return "GossipItem{" +
                     "sender=" + Hex.toHexString(getSender()) +
                     ", receiver=" + Hex.toHexString(getReceiver()) +
-                    ", timestamp=" + ByteUtil.byteArrayToLong(getTimestamp()) +
+                    ", timestamp=" + getTimestamp() +
                     ", gossipType=" + getGossipType() +
                     ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
                     ", confirmationRoot=" + Hex.toHexString(confirmationRoot) +
@@ -159,7 +159,7 @@ public class GossipItem {
             return "GossipItem{" +
                     "sender=" + Hex.toHexString(getSender()) +
                     ", receiver=" + Hex.toHexString(getReceiver()) +
-                    ", timestamp=" + ByteUtil.byteArrayToLong(getTimestamp()) +
+                    ", timestamp=" + getTimestamp() +
                     ", gossipType=" + getGossipType() +
                     ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
                     '}';
