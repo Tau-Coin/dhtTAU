@@ -84,8 +84,11 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 请求到的demand item
     private final Set<ByteArrayWrapper> demandItem = new CopyOnWriteArraySet<>();
 
-    // 我的朋友集合
+    // 当前我加的朋友集合
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
+
+    // 当前发现的等待通知的在线的朋友集合
+    private final Set<ByteArrayWrapper> onlineFriendsToNotify = new CopyOnWriteArraySet<>();
 
     // 我的朋友的最新消息的时间戳 <friend, timestamp>
     private final Map<ByteArrayWrapper, Long> friendTimeStamp = new ConcurrentHashMap<>();
@@ -307,7 +310,9 @@ public class Communication implements DHT.GetDHTItemCallback {
                             // 判断是否是新数据，若是，则记录下来以待发布
                             if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
                                 // 朋友的root帮助记录，由其自己去验证
-                                this.gossipRoot.put(pair, gossipItem.getMessageRoot());
+                                if (null != gossipItem.getMessageRoot()) {
+                                    this.gossipRoot.put(pair, gossipItem.getMessageRoot());
+                                }
                                 if (null != gossipItem.getConfirmationRoot()) {
                                     this.gossipConfirmationRoot.put(pair, gossipItem.getConfirmationRoot());
                                 }
@@ -361,6 +366,18 @@ public class Communication implements DHT.GetDHTItemCallback {
                     requestGossipInfoFromPeer(peer);
                 }
             }
+        }
+    }
+
+    /**
+     * 通知UI发现的还在线的朋友
+     */
+    private void notifyUIOnlineFriend() {
+        for (ByteArrayWrapper friend: this.onlineFriendsToNotify) {
+            logger.debug("Notify UI online friend:{}", friend.toString());
+            this.msgListener.onDiscoveryFriend(friend.getData());
+
+            this.onlineFriendsToNotify.remove(friend);
         }
     }
 
@@ -500,6 +517,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void mainLoop() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+
+                notifyUIOnlineFriend();
 
                 notifyUIReadMessageRoot();
 
@@ -655,7 +674,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      * 发布immutable data
      * @param data immutable data
      */
-    private void publishImmutableData(byte[] data) {
+    public void publishImmutableData(byte[] data) {
         if (null != data) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(data);
 
@@ -1086,7 +1105,11 @@ public class Communication implements DHT.GetDHTItemCallback {
                 // 并且gossip item的receiver是我，那么会直接信任该gossip消息
                 if (ByteUtil.startsWith(peer.getData(), gossipItem.getSender())
                         && ByteUtil.startsWith(pubKey, gossipItem.getReceiver())) {
-                    logger.debug("Got trusted gossip:{} from peer[{}]", gossipItem.toString(), peer.toString());
+                    logger.debug("Got trusted gossip:{} from online friend[{}]",
+                            gossipItem.toString(), peer.toString());
+
+                    // 发现的在线好友
+                    this.onlineFriendsToNotify.add(peer);
 
                     if (gossipItem.getGossipType() == GossipType.DEMAND) {
                         this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getMessageRoot()));

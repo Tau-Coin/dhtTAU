@@ -42,6 +42,18 @@ public class CompositeMsgListener implements MsgListener {
     }
 
     /**
+     * 发现朋友通知
+     *
+     * @param friend 发现的添加我为好友的朋友
+     */
+    @Override
+    public void onDiscoveryFriend(byte[] friend) {
+        for (MsgListener listener : listeners) {
+            listener.onDiscoveryFriend(friend);
+        }
+    }
+
+    /**
      * This event will be notified if error happens during running time.
      * Note: this event won't be notified if error happens
      * during starting TauController.

@@ -18,6 +18,12 @@ public interface MsgListener {
     void onReadMessageRoot(byte[] friend, byte[] root);
 
     /**
+     * 发现朋友通知
+     * @param friend 发现的添加我为好友的朋友
+     */
+    void onDiscoveryFriend(byte[] friend);
+
+    /**
      * This event will be notified if error happens during running time.
      * Note: this event won't be notified if error happens
      * during starting TauController.

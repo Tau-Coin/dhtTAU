@@ -86,6 +86,14 @@ public class CommunicationManager {
     }
 
     /**
+     * 发布immutable data
+     * @param data immutable data
+     */
+    public void publishImmutableData(byte[] data) {
+        this.communication.publishImmutableData(data);
+    }
+
+    /**
      * 添加新朋友
      * @param pubKey public key
      */
