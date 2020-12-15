@@ -100,7 +100,6 @@ public class PublishNewMsgWorker extends Worker {
                     msg.hash = hash;
                     msg.status = ChatMsgType.QUEUED.ordinal();
                     chatRepo.updateChatMsg(msg);
-                    WorkerManager.startPublishImmutableWorker();
                     WorkerManager.startReceivedConfirmationWorker();
                 } else {
                     Thread.sleep(Frequency.FREQUENCY_RETRY.getFrequency());

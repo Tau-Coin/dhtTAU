@@ -138,9 +138,17 @@ public class UserRepositoryImpl implements UserRepository{
     @Override
     public DataSource.Factory<Integer, UserAndFriend> queryUsers(String userPK, int order, boolean isAll) {
         if (isAll) {
-            return db.userDao().queryUsers(userPK, order == 0 ? "lastUpdateTime" : "lastCommTime");
+            if (order == 0) {
+                return db.userDao().queryUsersOrderByLastSeenTime(userPK);
+            } else {
+                return db.userDao().queryUsersOrderByLastCommTime(userPK);
+            }
         } else {
-            return db.userDao().queryUsersByState(userPK, order == 0 ? "lastUpdateTime" : "lastCommTime");
+            if (order == 0) {
+                return db.userDao().queryUsersByStateOrderByLastSeenTime(userPK);
+            } else {
+                return db.userDao().queryUsersByStateOrderByLastCommTime(userPK);
+            }
         }
     }
 

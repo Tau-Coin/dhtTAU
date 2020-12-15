@@ -65,6 +65,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         userViewModel = provider.get(UserViewModel.class);
         txViewModel = provider.get(TxViewModel.class);
         communityViewModel = provider.get(CommunityViewModel.class);
+        initParameter();
         userViewModel.addFriend("63ec42130442c91e23d56dc73708e06eb164883ab74c9813764c3fd0e2042dc4");
         userViewModel.addFriend("809df518ee450ded0a659aeb4bc5bec636e2cff012fc88d343b7419af974bb81");
         userViewModel.addFriend("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9");

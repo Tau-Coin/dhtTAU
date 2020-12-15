@@ -130,8 +130,8 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
             holder.binding.leftView.setText(firstLetters);
 
             String time = "";
-            if (order == 0 && user.lastUpdateTime > 0) {
-                time = DateUtil.formatTime(user.lastUpdateTime, DateUtil.pattern5);
+            if (order == 0 && user.lastSeenTime > 0) {
+                time = DateUtil.formatTime(user.lastSeenTime, DateUtil.pattern5);
                 time = context.getResources().getString(R.string.contacts_last_seen, time);
             } else if (order != 0 && user.lastCommTime > 0) {
                 time = DateUtil.formatTime(user.lastCommTime, DateUtil.pattern5);

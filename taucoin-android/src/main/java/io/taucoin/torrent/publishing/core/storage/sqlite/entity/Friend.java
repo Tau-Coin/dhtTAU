@@ -17,6 +17,7 @@ public class Friend implements Parcelable {
     @NonNull
     public String friendPK;            // 朋友的公钥
     public long lastCommTime;          // 朋友之间上次交流时间
+    public long lastSeenTime;          // 上次看到朋友的时间
     public int state;                  // 朋友的状态；0：discovered; 1: Added; 2: Connected
 
     public Friend(@NonNull String userPK, @NonNull String friendPK){
@@ -34,6 +35,8 @@ public class Friend implements Parcelable {
     protected Friend(Parcel in) {
         userPK = in.readString();
         friendPK = in.readString();
+        lastCommTime = in.readLong();
+        lastSeenTime = in.readLong();
         state = in.readInt();
     }
 
@@ -42,6 +45,8 @@ public class Friend implements Parcelable {
         dest.writeString(userPK);
         dest.writeString(friendPK);
         dest.writeInt(state);
+        dest.writeLong(lastCommTime);
+        dest.writeLong(lastSeenTime);
     }
 
     @Override

@@ -15,6 +15,7 @@ public class UserAndFriend extends User {
             entityColumn = "publicKey")
     public List<Member> members;                  // 所在社区列表
     public long lastCommTime;
+    public long lastSeenTime;
     public int state;
 
     public UserAndFriend(@NonNull String publicKey) {

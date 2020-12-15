@@ -8,7 +8,7 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="65dp"
+        android:layout_height="60dp"
         android:layout_marginStart="10dp">
 
         <CheckBox
@@ -21,8 +21,8 @@
         <io.taucoin.torrent.publishing.ui.customviews.RoundButton
             android:layout_toEndOf="@+id/cb_select"
             android:id="@+id/left_view"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
             android:layout_marginEnd="7dp"
             android:layout_centerVertical="true"
             android:gravity="center"
@@ -63,7 +63,7 @@
                 android:singleLine="true"
                 android:ellipsize="end"
                 android:textColor="@color/gray_dark"
-                android:textAppearance="@style/TextAppearanceBody2" />
+                android:textAppearance="@style/TextAppearanceBody3" />
 
             <TextView
                 android:visibility="gone"
@@ -74,7 +74,7 @@
                 android:includeFontPadding="false"
                 android:ellipsize="end"
                 android:textColor="@color/gray_dark"
-                android:textAppearance="@style/TextAppearanceBody2" />
+                android:textAppearance="@style/TextAppearanceBody3" />
 
         </LinearLayout>
 
@@ -99,17 +99,17 @@
             <io.taucoin.torrent.publishing.ui.customviews.CompletedView
                 android:visibility="gone"
                 android:id="@+id/state_progress"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
                 android:layout_centerVertical="true"
                 android:layout_marginEnd="10dp"
                 android:layout_marginStart="10dp"
                 app:circleColor="@color/color_white"
-                app:radius="20dip"
+                app:radius="18dip"
                 app:ringBgColor="@color/divider"
                 app:ringColor="@color/color_yellow"
-                app:ringTextSize="14dp"
-                app:strokeWidth="4dip"/>
+                app:ringTextSize="12dp"
+                app:strokeWidth="3dip"/>
 
         </RelativeLayout>
 

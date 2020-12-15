@@ -5,6 +5,8 @@ import android.content.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
+
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
@@ -19,6 +21,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.types.Message;
 import io.taucoin.util.ByteUtil;
@@ -72,7 +75,18 @@ class MsgListenHandler {
                             community.type = 1;
                             communityRepo.addCommunity(community);
                         }
+                        // 更新朋友信息
                         String userPk = MainApplication.getInstance().getPublicKey();
+                        Friend friend = friendRepo.queryFriend(userPk, friendPk);
+                        if (friend != null) {
+                            friend.state = 2;
+                            friend.lastSeenTime = DateUtil.getTime();
+                            BigInteger lastCommTime = BigInteger.valueOf(friend.lastCommTime);
+                            if (message.getTimestamp().compareTo(lastCommTime) > 0) {
+                                friend.lastCommTime = message.getTimestamp().longValue();
+                            }
+                            friendRepo.updateFriend(friend);
+                        }
                         String content = new String(message.getContent());
                         long timestamp = message.getTimestamp().longValue();
                         int type = message.getType().ordinal();
@@ -138,6 +152,7 @@ class MsgListenHandler {
                 Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
                 if (friend != null) {
                     friend.state = 2;
+                    friend.lastSeenTime = DateUtil.getTime();
                     friendRepo.updateFriend(friend);
                 }
             } catch (Exception e) {

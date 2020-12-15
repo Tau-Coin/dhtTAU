@@ -382,12 +382,10 @@ public class TauDaemon {
             boolean isMeteredNetwork = NetworkSetting.isMeteredNetwork();
             long gossipFrequency;
             if (foregroundRunning) {
-                WorkerManager.startPublishImmutableWorker();
                 gossipFrequency = isMeteredNetwork ?
                         Frequency.GOSSIP_FREQUENCY_MEDIUM_HEIGHT.getFrequency()
                         : Frequency.GOSSIP_FREQUENCY_HEIGHT.getFrequency();
             } else {
-                WorkerManager.cancelPublishImmutableWork();
                 gossipFrequency = isMeteredNetwork ?
                         Frequency.GOSSIP_FREQUENCY_LOW.getFrequency()
                         : Frequency.GOSSIP_FREQUENCY_MEDIUM_LOW.getFrequency();

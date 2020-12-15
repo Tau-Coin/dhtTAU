@@ -23,21 +23,30 @@ public interface UserDao {
     String QUERY_GET_CURRENT_USER_PK = "SELECT publicKey FROM Users WHERE isCurrentUser = 1";
     String QUERY_GET_USER_LIST = "SELECT * FROM Users";
     String QUERY_GET_USERS_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 1 and isCurrentUser != 1";
-    String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT u.*, f.lastCommTime AS lastCommTime, f.state" +
+    String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT u.*, f.lastCommTime AS lastCommTime," +
+            " f.lastSeenTime AS lastSeenTime, f.state" +
             " FROM Users u" +
-            " LEFT JOIN Friends f ON u.publicKey = f.friendPK and f.userPK= :userPK" +
-            " where u.isBanned = 0 and u.isCurrentUser != 1" +
-            " ORDER BY :orderName DESC";
-    String QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST = "SELECT u.*, f.lastCommTime AS lastCommTime, f.state AS state" +
-            " FROM Users u" +
-            " LEFT JOIN Friends f ON u.publicKey = f.friendPK and f.userPK= :userPK" +
-            " where u.isBanned = 0 and u.isCurrentUser != 1 and state = 2" +
-            " ORDER BY :orderName DESC";
+            " LEFT JOIN Friends f ON u.publicKey = f.friendPK AND f.userPK= :userPK" +
+            " WHERE u.isBanned = 0 AND u.isCurrentUser != 1";
+
+    String QUERY_USERS_ORDER_BY_LAST_SEEN_TIME = QUERY_GET_USERS_NOT_IN_BAN_LIST +
+            " ORDER BY f.lastSeenTime DESC";
+    String QUERY_USERS_ORDER_BY_LAST_COMM_TIME = QUERY_GET_USERS_NOT_IN_BAN_LIST +
+            " ORDER BY f.lastCommTime DESC";
+
+    String QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST = QUERY_GET_USERS_NOT_IN_BAN_LIST +
+            " AND state = 2";
+    String QUERY_USERS_STATE_ORDER_BY_LAST_SEEN_TIME = QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST +
+            " ORDER BY f.lastSeenTime DESC";
+    String QUERY_USERS_STATE_ORDER_BY_LAST_COMM_TIME = QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST +
+            " ORDER BY f.lastCommTime DESC";
+
     String QUERY_SET_CURRENT_USER = "UPDATE Users SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
     String QUERY_ADD_USER_BLACKLIST = "UPDATE Users SET isBanned = :isBanned WHERE publicKey = :publicKey";
     String QUERY_SEED_HISTORY_LIST = "SELECT * FROM Users WHERE isBanned = 0 and seed not null";
     String QUERY_USER_BY_PUBLIC_KEY = "SELECT * FROM Users WHERE publicKey = :publicKey";
-    String QUERY_FRIEND_BY_PUBLIC_KEY = "SELECT u.*, f.lastCommTime AS lastCommTime, f.state AS state" +
+    String QUERY_FRIEND_BY_PUBLIC_KEY = "SELECT u.*, f.lastCommTime AS lastCommTime," +
+            " f.lastSeenTime AS lastSeenTime, f.state" +
             " FROM Users u" +
             " LEFT JOIN Friends f ON u.publicKey = f.friendPK and f.userPK= :userPK" +
             " where u.publicKey = :publicKey";
@@ -117,12 +126,20 @@ public interface UserDao {
      * 观察不在黑名单的列表中
      */
     @Transaction
-    @Query(QUERY_GET_USERS_NOT_IN_BAN_LIST)
-    DataSource.Factory<Integer, UserAndFriend> queryUsers(String userPK, String orderName);
+    @Query(QUERY_USERS_ORDER_BY_LAST_COMM_TIME)
+    DataSource.Factory<Integer, UserAndFriend> queryUsersOrderByLastCommTime(String userPK);
 
     @Transaction
-    @Query(QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST)
-    DataSource.Factory<Integer, UserAndFriend> queryUsersByState(String userPK, String orderName);
+    @Query(QUERY_USERS_ORDER_BY_LAST_SEEN_TIME)
+    DataSource.Factory<Integer, UserAndFriend> queryUsersOrderByLastSeenTime(String userPK);
+
+    @Transaction
+    @Query(QUERY_USERS_STATE_ORDER_BY_LAST_COMM_TIME)
+    DataSource.Factory<Integer, UserAndFriend> queryUsersByStateOrderByLastCommTime(String userPK);
+
+    @Transaction
+    @Query(QUERY_USERS_STATE_ORDER_BY_LAST_SEEN_TIME)
+    DataSource.Factory<Integer, UserAndFriend> queryUsersByStateOrderByLastSeenTime(String userPK);
 
     /**
      * 获取用户和朋友的信息
