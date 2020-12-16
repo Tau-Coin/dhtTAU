@@ -244,6 +244,7 @@ public class TauDaemon {
                 logger.debug("Tau start successfully");
                 isRunning = true;
                 WorkerManager.startAllWorker();
+                handleSettingsChanged(appContext.getString(R.string.pref_key_foreground_running));
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
@@ -375,23 +376,31 @@ public class TauDaemon {
             logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
         } else if (key.equals(appContext.getString(R.string.pref_key_foreground_running))) {
             logger.info("foreground running::{}", settingsRepo.getBooleanValue(key));
-            if (!isRunning) {
-                return;
-            }
-            boolean foregroundRunning = settingsRepo.getBooleanValue(key);
-            boolean isMeteredNetwork = NetworkSetting.isMeteredNetwork();
-            long gossipFrequency;
-            if (foregroundRunning) {
-                gossipFrequency = isMeteredNetwork ?
-                        Frequency.GOSSIP_FREQUENCY_MEDIUM_HEIGHT.getFrequency()
-                        : Frequency.GOSSIP_FREQUENCY_HEIGHT.getFrequency();
-            } else {
-                gossipFrequency = isMeteredNetwork ?
-                        Frequency.GOSSIP_FREQUENCY_LOW.getFrequency()
-                        : Frequency.GOSSIP_FREQUENCY_MEDIUM_LOW.getFrequency();
-            }
-            setGossipTimeInterval(gossipFrequency);
+            updateGossipTimeInterval();
         }
+    }
+
+    /**
+     * 更新Gossip的时间间隔
+     */
+    private void updateGossipTimeInterval() {
+        if (!isRunning) {
+            return;
+        }
+        boolean foregroundRunning = settingsRepo.getBooleanValue(
+                appContext.getString(R.string.pref_key_foreground_running));
+        boolean isMeteredNetwork = NetworkSetting.isMeteredNetwork();
+        long gossipFrequency;
+        if (foregroundRunning) {
+            gossipFrequency = isMeteredNetwork ?
+                    Frequency.GOSSIP_FREQUENCY_MEDIUM_HEIGHT.getFrequency() :
+                    Frequency.GOSSIP_FREQUENCY_HEIGHT.getFrequency();
+        } else {
+            gossipFrequency = isMeteredNetwork ?
+                    Frequency.GOSSIP_FREQUENCY_LOW.getFrequency() :
+                    Frequency.GOSSIP_FREQUENCY_MEDIUM_LOW.getFrequency();
+        }
+        setGossipTimeInterval(gossipFrequency);
     }
 
     /**
