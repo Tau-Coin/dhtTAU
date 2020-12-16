@@ -382,6 +382,9 @@ public class TauDaemon {
 
     /**
      * 更新Gossip的时间间隔
+     * 1、如果APP在前台，非计费网络是5s, 计费网络是10s
+     * 2、如果APP在后台，非计费网络是30s, 计费网络是60s
+     * 3、如果用户在聊天页面1s, 退出恢复1、2处理
      */
     public void updateGossipTimeInterval() {
         if (!isRunning) {
@@ -392,10 +395,12 @@ public class TauDaemon {
         boolean isMeteredNetwork = NetworkSetting.isMeteredNetwork();
         long gossipFrequency;
         if (foregroundRunning) {
+            // APP在前台，非计费网络是5s, 计费网络是10s
             gossipFrequency = isMeteredNetwork ?
                     Frequency.GOSSIP_FREQUENCY_DEFAULT.getFrequency() :
                     Frequency.GOSSIP_FREQUENCY_MEDIUM_HEIGHT.getFrequency();
         } else {
+            // APP在后台，非计费网络是30s, 计费网络是60s
             gossipFrequency = isMeteredNetwork ?
                     Frequency.GOSSIP_FREQUENCY_LOW.getFrequency() :
                     Frequency.GOSSIP_FREQUENCY_MEDIUM_LOW.getFrequency();

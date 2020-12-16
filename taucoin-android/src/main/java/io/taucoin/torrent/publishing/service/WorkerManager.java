@@ -2,9 +2,8 @@ package io.taucoin.torrent.publishing.service;
 
 import android.content.Context;
 
-import java.util.concurrent.TimeUnit;
-
 import androidx.work.Constraints;
+import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
@@ -12,9 +11,10 @@ import androidx.work.WorkManager;
 import io.taucoin.torrent.publishing.MainApplication;
 
 /**
- * 发布消息管理
+ * Worker管理
  */
 public class WorkerManager {
+    private static final String MSG_LISTEN_HANDLER_WORK_NAME = "MsgListenHandler";
     private static final String PUBLISH_NEW_MSG_WORK_NAME = "PublishNewMsg";
     private static final String RECEIVED_CONFIRMATION_WORK_NAME = "ReceivedConfirmation";
 
@@ -28,7 +28,6 @@ public class WorkerManager {
                 .build();
         Context context = MainApplication.getInstance();
         OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(PublishNewMsgWorker.class)
-                .setInitialDelay(0, TimeUnit.MILLISECONDS)
                 .setConstraints(constraints)
                 .build();
         WorkManager.getInstance(context)
@@ -56,6 +55,20 @@ public class WorkerManager {
     }
 
     /**
+     * 启动MsgListenHandlerWorker
+     */
+    public static void startMsgListenHandlerWorker(Data data) {
+        Context context = MainApplication.getInstance();
+        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(MsgListenHandlerWorker.class)
+                .setInputData(data)
+                .build();
+        WorkManager.getInstance(context)
+                .beginUniqueWork(MSG_LISTEN_HANDLER_WORK_NAME,
+                    ExistingWorkPolicy.APPEND, request)
+                .enqueue();
+    }
+
+    /**
      * 启动所有的Worker
      */
     public static void startAllWorker() {
@@ -68,6 +81,7 @@ public class WorkerManager {
      */
     public static void cancelAllWork() {
         Context context = MainApplication.getInstance();
-        WorkManager.getInstance(context).cancelAllWork();
+        WorkManager.getInstance(context).cancelUniqueWork(PUBLISH_NEW_MSG_WORK_NAME);
+        WorkManager.getInstance(context).cancelUniqueWork(RECEIVED_CONFIRMATION_WORK_NAME);
     }
 }
