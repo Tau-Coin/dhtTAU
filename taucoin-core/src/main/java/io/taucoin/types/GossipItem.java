@@ -14,21 +14,44 @@ public class GossipItem {
     private byte[] receiver;
     // 可能需要拉长
     private BigInteger timestamp;
-    private GossipType gossipType;
     private byte[] messageRoot;
-    private byte[] confirmationRoot;
+    private byte[] confirmationRoot = null;
+    private byte[] demandHash = null;
+    private GossipStatus gossipStatus = GossipStatus.UNKNOWN;
 
     private byte[] hash;
     private byte[] encode;
     private boolean parsed = false;
 
-    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, GossipType gossipType, byte[] messageRoot, byte[] confirmationRoot) {
+    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot, byte[] confirmationRoot, byte[] demandHash) {
         this.sender = sender;
         this.receiver = receiver;
         this.timestamp = timestamp;
-        this.gossipType = gossipType;
         this.messageRoot = messageRoot;
         this.confirmationRoot = confirmationRoot;
+        this.demandHash = demandHash;
+
+        this.parsed = true;
+    }
+
+    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot, byte[] confirmationRoot) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.timestamp = timestamp;
+        this.messageRoot = messageRoot;
+        this.confirmationRoot = confirmationRoot;
+
+        this.parsed = true;
+    }
+
+    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot, byte[] confirmationRoot, byte[] demandHash, GossipStatus gossipStatus) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.timestamp = timestamp;
+        this.messageRoot = messageRoot;
+        this.confirmationRoot = confirmationRoot;
+        this.demandHash = demandHash;
+        this.gossipStatus = gossipStatus;
 
         this.parsed = true;
     }
@@ -61,14 +84,6 @@ public class GossipItem {
         return timestamp;
     }
 
-    public GossipType getGossipType() {
-        if (!this.parsed) {
-            parseRLP();
-        }
-
-        return gossipType;
-    }
-
     public byte[] getMessageRoot() {
         if (!this.parsed) {
             parseRLP();
@@ -83,6 +98,22 @@ public class GossipItem {
         }
 
         return confirmationRoot;
+    }
+
+    public byte[] getDemandHash() {
+        if (!this.parsed) {
+            parseRLP();
+        }
+
+        return demandHash;
+    }
+
+    public GossipStatus getGossipStatus() {
+        if (!this.parsed) {
+            parseRLP();
+        }
+
+        return gossipStatus;
     }
 
     public byte[] getHash() {
@@ -101,15 +132,18 @@ public class GossipItem {
         this.receiver = messageList.get(1).getRLPData();
         byte[] timeBytes = messageList.get(2).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
-        byte[] typeBytes = messageList.get(3).getRLPData();
-        int typeNum = null == typeBytes ? 0: new BigInteger(1, typeBytes).intValue();
-        if (typeNum >= GossipType.UNKNOWN.ordinal()) {
-            this.gossipType = GossipType.UNKNOWN;
+
+        this.messageRoot = messageList.get(3).getRLPData();
+        this.confirmationRoot = messageList.get(4).getRLPData();
+        this.demandHash = messageList.get(5).getRLPData();
+
+        byte[] statusBytes = messageList.get(6).getRLPData();
+        int statusNum = null == statusBytes ? 0: new BigInteger(1, statusBytes).intValue();
+        if (statusNum >= GossipStatus.UNKNOWN.ordinal()) {
+            this.gossipStatus = GossipStatus.UNKNOWN;
         } else {
-            this.gossipType = GossipType.values()[typeNum];
+            this.gossipStatus = GossipStatus.values()[statusNum];
         }
-        this.messageRoot = messageList.get(4).getRLPData();
-        this.confirmationRoot = messageList.get(5).getRLPData();
 
         this.parsed = true;
     }
@@ -119,11 +153,13 @@ public class GossipItem {
             byte[] sender = RLP.encodeElement(this.sender);
             byte[] receiver = RLP.encodeElement(this.receiver);
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
-            byte[] gossipType = RLP.encodeBigInteger(BigInteger.valueOf(this.gossipType.ordinal()));
             byte[] messageRoot = RLP.encodeElement(this.messageRoot);
             byte[] confirmationRoot = RLP.encodeElement(this.confirmationRoot);
+            byte[] demandHash = RLP.encodeElement(this.demandHash);
+            byte[] gossipStatus = RLP.encodeBigInteger(BigInteger.valueOf(this.gossipStatus.ordinal()));
 
-            this.encode = RLP.encodeList(sender, receiver, timestamp, gossipType, messageRoot, confirmationRoot);
+            this.encode = RLP.encodeList(sender, receiver, timestamp, messageRoot,
+                    confirmationRoot, demandHash, gossipStatus);
         }
 
         return this.encode;
@@ -144,25 +180,55 @@ public class GossipItem {
 
     @Override
     public String toString() {
+        byte[] sender = getSender();
+        byte[] receiver = getReceiver();
+        BigInteger timestamp = getTimestamp();
+        byte[] messageRoot = getMessageRoot();
         byte[] confirmationRoot = getConfirmationRoot();
+        byte[] demandHash = getDemandHash();
+        GossipStatus gossipStatus = getGossipStatus();
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("GossipItem{");
+
+        if (null != sender) {
+            stringBuilder.append("sender=");
+            stringBuilder.append(Hex.toHexString(sender));
+        }
+
+        if (null != receiver) {
+            stringBuilder.append(", receiver=");
+            stringBuilder.append(Hex.toHexString(receiver));
+        }
+
+        if (null != timestamp) {
+            stringBuilder.append(", timestamp=");
+            stringBuilder.append(timestamp);
+        }
+
+        if (null != messageRoot) {
+            stringBuilder.append(", messageRoot=");
+            stringBuilder.append(Hex.toHexString(messageRoot));
+        }
 
         if (null != confirmationRoot) {
-            return "GossipItem{" +
-                    "sender=" + Hex.toHexString(getSender()) +
-                    ", receiver=" + Hex.toHexString(getReceiver()) +
-                    ", timestamp=" + getTimestamp() +
-                    ", gossipType=" + getGossipType() +
-                    ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
-                    ", confirmationRoot=" + Hex.toHexString(confirmationRoot) +
-                    '}';
-        } else {
-            return "GossipItem{" +
-                    "sender=" + Hex.toHexString(getSender()) +
-                    ", receiver=" + Hex.toHexString(getReceiver()) +
-                    ", timestamp=" + getTimestamp() +
-                    ", gossipType=" + getGossipType() +
-                    ", messageRoot=" + Hex.toHexString(getMessageRoot()) +
-                    '}';
+            stringBuilder.append(", confirmationRoot=");
+            stringBuilder.append(Hex.toHexString(confirmationRoot));
         }
+
+        if (null != demandHash) {
+            stringBuilder.append(", demandHash=");
+            stringBuilder.append(Hex.toHexString(demandHash));
+        }
+
+        if (null != gossipStatus) {
+            stringBuilder.append(", gossipStatus=");
+            stringBuilder.append(gossipStatus);
+        }
+
+        stringBuilder.append("}");
+
+        return stringBuilder.toString();
     }
 }

@@ -14,11 +14,10 @@ public class GossipItemTest {
         byte[] sender = Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9");
         byte[] receiver = Hex.decode("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124");
         BigInteger timeStamp = BigInteger.valueOf(System.currentTimeMillis() / 1000);
-        GossipType gossipType = GossipType.MSG;
         byte[] messageRoot = Hex.decode("2eac92b256b6960eefa5b105fe7ab1322b796245");
         byte[] confirmationRoot = Hex.decode("3eac92b256b6960eefa5b105fe7ab1322b796245");
 
-        GossipItem gossipItem = new GossipItem(sender, receiver, timeStamp, gossipType, messageRoot, confirmationRoot);
+        GossipItem gossipItem = new GossipItem(sender, receiver, timeStamp, messageRoot, confirmationRoot);
 
         byte[] encode = gossipItem.getEncoded();
 
@@ -35,11 +34,10 @@ public class GossipItemTest {
         byte[] sender = Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9");
         byte[] receiver = Hex.decode("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124");
         BigInteger timeStamp = BigInteger.valueOf(System.currentTimeMillis() / 1000);
-        GossipType gossipType = GossipType.MSG;
         byte[] messageRoot = Hex.decode("2eac92b256b6960eefa5b105fe7ab1322b796245");
         byte[] confirmationRoot = null;
 
-        GossipItem gossipItem = new GossipItem(sender, receiver, timeStamp, gossipType, messageRoot, confirmationRoot);
+        GossipItem gossipItem = new GossipItem(sender, receiver, timeStamp, messageRoot, confirmationRoot);
 
         byte[] encode = gossipItem.getEncoded();
 
