@@ -46,6 +46,7 @@ public class ReceivedConfirmationWorker extends Worker {
                 if (publicKeys != null && publicKeys.size() > 0) {
                     logger.debug("receivedConfirmation publicKeys.size::{}", publicKeys.size());
                     receivedConfirmation(publicKeys);
+                    Thread.sleep(Frequency.GOSSIP_FREQUENCY_DEFAULT.getFrequency());
                 } else {
                     break;
                 }
@@ -75,6 +76,9 @@ public class ReceivedConfirmationWorker extends Worker {
                 logger.debug("friendPk::{}, friendConfirmationRoot::{}",
                         publicKey,
                         ByteUtil.toHexString(friendConfirmationRoot));
+                if (null == friendConfirmationRoot) {
+                    continue;
+                }
                 updateReceivedConfirmationState(publicKey, friendConfirmationRoot);
             }catch (Exception e) {
                 logger.warn("updateReceivedConfirmationState error:: {}", e.getMessage());

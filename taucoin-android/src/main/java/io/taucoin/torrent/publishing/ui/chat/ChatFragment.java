@@ -32,6 +32,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
 import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
@@ -156,12 +157,14 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     public void onStart() {
         super.onStart();
         subscribeChatViewModel();
+        chatViewModel.updateGossipTimeInternal();
     }
 
     @Override
     public void onStop() {
         super.onStop();
         disposables.clear();
+        chatViewModel.resumeGossipTimeInternal();
     }
 
     private final Runnable handleUpdateAdapter = () -> {

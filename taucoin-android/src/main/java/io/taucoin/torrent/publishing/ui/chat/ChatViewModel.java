@@ -26,6 +26,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.db.DBException;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.MsgBlock;
 import io.taucoin.torrent.publishing.core.model.data.Result;
@@ -329,5 +330,20 @@ public class ChatViewModel extends AndroidViewModel {
                                        byte[] contentLink) {
             return new ContentItem(contentList, contentLink);
         }
+    }
+
+    /**
+     * 更新Gossip时间间隔
+     * @
+     */
+    public void updateGossipTimeInternal() {
+        daemon.setGossipTimeInterval(Frequency.GOSSIP_FREQUENCY_HEIGHT.getFrequency());
+    }
+
+    /**
+     * 更新Gossip时间间隔
+     */
+    public void resumeGossipTimeInternal() {
+        daemon.updateGossipTimeInterval();
     }
 }

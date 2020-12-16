@@ -383,7 +383,7 @@ public class TauDaemon {
     /**
      * 更新Gossip的时间间隔
      */
-    private void updateGossipTimeInterval() {
+    public void updateGossipTimeInterval() {
         if (!isRunning) {
             return;
         }
@@ -393,8 +393,8 @@ public class TauDaemon {
         long gossipFrequency;
         if (foregroundRunning) {
             gossipFrequency = isMeteredNetwork ?
-                    Frequency.GOSSIP_FREQUENCY_MEDIUM_HEIGHT.getFrequency() :
-                    Frequency.GOSSIP_FREQUENCY_HEIGHT.getFrequency();
+                    Frequency.GOSSIP_FREQUENCY_DEFAULT.getFrequency() :
+                    Frequency.GOSSIP_FREQUENCY_MEDIUM_HEIGHT.getFrequency();
         } else {
             gossipFrequency = isMeteredNetwork ?
                     Frequency.GOSSIP_FREQUENCY_LOW.getFrequency() :
@@ -703,7 +703,10 @@ public class TauDaemon {
      * 根据APP前后台状态调整gossip的时间间隔
      * @param timeInterval 时间间隔
      */
-    private void setGossipTimeInterval(long timeInterval) {
+    public void setGossipTimeInterval(long timeInterval) {
+        if (!isRunning) {
+            return;
+        }
         getCommunicationManager().setGossipTimeInterval(timeInterval);
         logger.debug("setGossipTimeInterval::{}", timeInterval);
     }
