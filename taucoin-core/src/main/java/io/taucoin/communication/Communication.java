@@ -60,7 +60,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
     // 默认的发布gossip信息的时间间隔
-    private long GOSSIP_PUBLISH_INTERVAL_TIME = 30; // 30 s
+    private long GOSSIP_PUBLISH_INTERVAL_TIME = 10; // 30 s
 
     // 记录上一次发布gossip的时间
     private long lastGossipPublishTime = 0;
@@ -115,8 +115,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 当前我正在聊天的朋友集合，即用即弃
     private final Set<ByteArrayWrapper> writingFriends = new CopyOnWriteArraySet<>();
 
-    // 当前发现的处于写状态的朋友集合，即用即弃
-    private final Set<ByteArrayWrapper> writingFriendsToVisit = new CopyOnWriteArraySet<>();
+    // 当前发现的处于写状态的朋友集合，即用即弃，<friend, timestamp>
+    private final Map<ByteArrayWrapper, Long> writingFriendsToVisit = new ConcurrentHashMap<>();
 
     // 发给朋友的confirmation root hash <friend, root>
 //    private final Map<ByteArrayWrapper, byte[]> confirmationRootToFriend = new ConcurrentHashMap<>();
@@ -427,13 +427,16 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
-     * 访问当前正在写状态的朋友节点
+     * 访问当前正在写状态的朋友节点，发现写状态在10s以内的继续访问，超过10s的从访问清单删除
      */
     private void visitWritingFriends() {
-        for (ByteArrayWrapper friend: this.writingFriendsToVisit) {
-            requestLatestMessageFromPeer(friend);
-
-            this.writingFriendsToVisit.remove(friend);
+        long currentTime = System.currentTimeMillis() / 1000;
+        for (Map.Entry<ByteArrayWrapper, Long> entry: this.writingFriendsToVisit.entrySet()) {
+            if (currentTime - entry.getValue() > GOSSIP_PUBLISH_INTERVAL_TIME) {
+                this.writingFriendsToVisit.remove(entry.getKey());
+            } else {
+                requestLatestMessageFromPeer(entry.getKey());
+            }
         }
     }
 
@@ -1240,7 +1243,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                         }
 
                         if (GossipStatus.WRITING == gossipItem.getGossipStatus()) {
-                            this.writingFriendsToVisit.add(peer);
+                            this.writingFriendsToVisit.put(peer, System.currentTimeMillis() / 1000);
                         }
 
                         // 更新时间戳
