@@ -74,6 +74,18 @@ public class CommunicationManager {
     }
 
     /**
+     * 发布上次发送的消息到专用聊天频道
+     * @param friend 当前聊天的朋友
+     */
+    public void publishLastMessage(byte[] friend) {
+        try {
+            this.communication.publishLastMessage(friend);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    /**
      * 请求message相关的数据，包括message/message content/各级图片/文本等，拿到数据后会放到message db
      * @param hash data hash
      */

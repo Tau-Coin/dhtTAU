@@ -29,5 +29,7 @@ public enum DataType {
     MESSAGE, // message
     MESSAGE_CONTENT, // message content
 
+    LATEST_MESSAGE, // mutable item: latest message
+
     IMMUTABLE_DATA, // immutable data
 }
