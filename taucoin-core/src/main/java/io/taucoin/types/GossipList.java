@@ -1,9 +1,7 @@
 package io.taucoin.types;
 
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -13,7 +11,6 @@ import io.taucoin.util.RLPList;
 
 // gossip list是gossip mutable item的具体内容
 public class GossipList {
-    private byte[] previousGossipListHash;
     private List<GossipItem> gossipList = new CopyOnWriteArrayList<>();
 
     private byte[] hash;
@@ -21,8 +18,7 @@ public class GossipList {
 
     private boolean parsed = false;
 
-    public GossipList(byte[] previousGossipListHash, List<GossipItem> gossipList) {
-        this.previousGossipListHash = previousGossipListHash;
+    public GossipList(List<GossipItem> gossipList) {
         this.gossipList = gossipList;
 
         this.parsed = true;
@@ -30,14 +26,6 @@ public class GossipList {
 
     public GossipList(byte[] encode) {
         this.rlpEncoded = encode;
-    }
-
-    public byte[] getPreviousGossipListHash() {
-        if (!parsed) {
-            parseRLP();
-        }
-
-        return previousGossipListHash;
     }
 
     public List<GossipItem> getGossipList() {
@@ -74,10 +62,7 @@ public class GossipList {
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
 
-        this.previousGossipListHash = list.get(0).getRLPData();
-        if (2 == list.size()) {
-            parseList((RLPList) list.get(1));
-        }
+        parseList(list);
 
         this.parsed = true;
     }
@@ -98,10 +83,7 @@ public class GossipList {
      */
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
-            byte[] previousGossipListHash = RLP.encodeElement(this.previousGossipListHash);
-            byte[] listEncode = getGossipListEncoded();
-
-            this.rlpEncoded = RLP.encodeList(previousGossipListHash, listEncode);
+            this.rlpEncoded = getGossipListEncoded();
         }
 
         return rlpEncoded;
@@ -110,11 +92,6 @@ public class GossipList {
     @Override
     public String toString() {
         List<String> list = new ArrayList<>();
-
-        byte[] previousHash = getPreviousGossipListHash();
-        if (null != previousHash) {
-            list.add("Previous Gossip List Hash:" + Hex.toHexString(previousHash));
-        }
 
         List<GossipItem> gossipList = getGossipList();
         if (null != gossipList) {

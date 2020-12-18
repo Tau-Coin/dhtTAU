@@ -16,6 +16,7 @@ import io.taucoin.dht.DHT;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.GossipList;
+import io.taucoin.util.ByteUtil;
 
 public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
 
@@ -23,6 +24,16 @@ public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
 
     public dht_getGossipItemFromPeer(TauController tauController) {
         super(tauController);
+    }
+
+    private byte[] makeGossipSalt() {
+        long time = System.currentTimeMillis() / 1000 / 10;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
+        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, 0, ChainParam.GOSSIP_CHANNEL.length);
+        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
+        return salt;
     }
 
     @Override
@@ -35,8 +46,9 @@ public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
         } else {
             // get pubkey
             byte[] pubkey = Hex.decode((String)(params.get(0)));
+            byte[] salt = makeGossipSalt();
 
-            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubkey, ChainParam.GOSSIP_CHANNEL);
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubkey, salt);
 
             byte[] item = dhtGet(spec);
 

@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -35,7 +36,6 @@ import io.taucoin.param.ChainParam;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.GossipList;
 import io.taucoin.types.GossipStatus;
-import io.taucoin.types.GossipType;
 import io.taucoin.types.Message;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
@@ -60,7 +60,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
     // 默认的发布gossip信息的时间间隔
-    private long GOSSIP_PUBLISH_INTERVAL_TIME = 10; // 30 s
+    private long GOSSIP_PUBLISH_INTERVAL_TIME = 10; // 10 s
 
     // 记录上一次发布gossip的时间
     private long lastGossipPublishTime = 0;
@@ -223,6 +223,67 @@ public class Communication implements DHT.GetDHTItemCallback {
         System.arraycopy(receiver, 0, shortReceiver, 0, SHORT_ADDRESS_LENGTH);
 
         return new GossipItem(shortSender, shortReceiver, timestamp, root, confirmationRoot, demandHash, gossipStatus);
+    }
+
+    /**
+     * 获取gossip集合
+     * @return gossip set
+     */
+    private LinkedHashSet<GossipItem> getGossipList() {
+        LinkedHashSet<GossipItem> gossipList = new LinkedHashSet<>();
+
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+        // 统计我发给我朋友的gossip
+        long currentTime = System.currentTimeMillis() / 1000;
+        for (ByteArrayWrapper friend: this.friends) {
+            BigInteger timeStamp = this.timeStampToFriend.get(friend);
+            byte[] root = this.rootToFriend.get(friend);
+//            byte[] confirmationRoot = this.confirmationRootToFriend.get(friend);
+            byte[] confirmationRoot = this.friendRoot.get(friend);
+            byte[] demandHash = this.demandHash.get(friend);
+
+            // 如果有demand需求，时间戳用最新时间，以便被捕获
+            if (null != demandHash) {
+                timeStamp = BigInteger.valueOf(currentTime);
+            }
+
+            if (null != timeStamp && null != root) {
+
+                if (this.writingFriends.contains(friend)) {
+                    GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
+                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.WRITING);
+                    gossipList.add(gossipItem);
+
+                    this.writingFriends.remove(friend);
+                } else {
+                    GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
+                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.UNKNOWN);
+                    gossipList.add(gossipItem);
+                }
+            }
+        }
+
+        // 统计其他人发给我朋友的消息
+        for (Map.Entry<FriendPair, BigInteger> entry : this.gossipTimeStamp.entrySet()) {
+            if (this.friends.contains(new ByteArrayWrapper(entry.getKey().getReceiver()))) {
+                // 只添加一天以内有新消息的
+                if (currentTime - entry.getValue().longValue() < ChainParam.ONE_DAY) {
+                    byte[] root = this.gossipRoot.get(entry.getKey());
+                    byte[] confirmationRoot = this.gossipConfirmationRoot.get(entry.getKey());
+                    byte[] demandHash = this.gossipDemandHash.get(entry.getKey());
+                    GossipStatus gossipStatus = this.gossipStatus.get(entry.getKey());
+                    if (null != root) {
+                        GossipItem gossipItem = makeGossipItemWithShortAddress(entry.getKey().getSender(),
+                                entry.getKey().getReceiver(), entry.getValue(), root, confirmationRoot, demandHash, gossipStatus);
+                        gossipList.add(gossipItem);
+                    }
+                }
+            }
+        }
+
+
+        return gossipList;
     }
 
     /**
@@ -620,7 +681,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
         if (null != pubKey) {
             logger.trace("Request gossip info from peer:{}", pubKey.toString());
-            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), ChainParam.GOSSIP_CHANNEL);
+            byte[] salt = makeGossipSalt();
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
 
             DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
@@ -756,6 +818,20 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
+     * 构造GOSSIP频道对应的salt
+     * @return salt
+     */
+    private byte[] makeGossipSalt() {
+        long time = System.currentTimeMillis() / 1000 / GOSSIP_PUBLISH_INTERVAL_TIME;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
+        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, 0, ChainParam.GOSSIP_CHANNEL.length);
+        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
+        return salt;
+    }
+
+    /**
      * 在gossip频道发布gossip信息
      * @param gossipList last gossip list
      */
@@ -763,7 +839,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
-        byte[] salt = ChainParam.GOSSIP_CHANNEL;
+        byte[] salt = makeGossipSalt();
         byte[] encode = gossipList.getEncoded();
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
@@ -779,38 +855,30 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void publishGossipInfo() {
         // put mutable item
-        Set<GossipItem> gossipItemSet = getGossipSet();
+        LinkedHashSet<GossipItem> gossipItemList = getGossipList();
 
         logger.debug("----------------------start----------------------");
-        for(GossipItem gossipItem: gossipItemSet) {
+        for(GossipItem gossipItem: gossipItemList) {
             logger.debug("Gossip set:{}", gossipItem.toString());
         }
         logger.debug("----------------------end----------------------");
 
-        // 切分gossip列表，前面的列表以immutable形式发布
-        byte[] previousGossipListHash = null;
-        while (gossipItemSet.size() > ChainParam.GOSSIP_SIZE) {
-            List<GossipItem> list = new ArrayList<>();
-            Iterator<GossipItem> it = gossipItemSet.iterator();
+        List<GossipItem> list = new ArrayList<>();
 
-            int i = 0;
-            while (i <= ChainParam.GOSSIP_SIZE) {
-                list.add(it.next());
-                it.remove();
-                i ++;
-            }
-
-            GossipList gossipList = new GossipList(previousGossipListHash, list);
-            logger.debug(gossipList.toString());
-
-            publishGossipList(gossipList);
-
-            previousGossipListHash = gossipList.getHash();
+        Iterator<GossipItem> iterator = gossipItemList.iterator();
+        int i = 0;
+        while (iterator.hasNext() && i <= ChainParam.GOSSIP_LIMIT_SIZE) {
+            GossipItem gossipItem = iterator.next();
+            list.add(gossipItem);
+            i++;
         }
 
-        // 最后一个gossip list以mutable形式发布
-        List<GossipItem> list = new ArrayList<>(gossipItemSet);
-        GossipList gossipList = new GossipList(previousGossipListHash, list);
+        GossipList gossipList = new GossipList(list);
+        while (gossipList.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
+            list.remove(list.size() - 1);
+            gossipList = new GossipList(list);
+        }
+
         logger.debug(gossipList.toString());
         publishMutableGossipList(gossipList);
 
@@ -1193,9 +1261,9 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param peer gossip发出的peer
      */
     private void preprocessGossipListFromNet(GossipList gossipList, ByteArrayWrapper peer) {
-        if (null != gossipList.getPreviousGossipListHash()) {
-            requestGossipList(gossipList.getPreviousGossipListHash(), peer);
-        }
+//        if (null != gossipList.getPreviousGossipListHash()) {
+//            requestGossipList(gossipList.getPreviousGossipListHash(), peer);
+//        }
 
         if (null != gossipList.getGossipList()) {
 

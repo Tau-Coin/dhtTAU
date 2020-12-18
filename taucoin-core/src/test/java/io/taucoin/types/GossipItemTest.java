@@ -4,6 +4,8 @@ import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.taucoin.util.ByteUtil;
 
@@ -46,5 +48,34 @@ public class GossipItemTest {
         GossipItem gossipItem1 = new GossipItem(encode);
         System.out.print(gossipItem1.toString());
 
+    }
+
+    @Test
+    public void testGossipListCodec() {
+        List<GossipItem> list = new ArrayList<>();
+
+        byte[] sender = Hex.decode("2a628682");
+        byte[] receiver = Hex.decode("3e87c35d");
+        BigInteger timeStamp = BigInteger.valueOf(System.currentTimeMillis() / 1000);
+        byte[] messageRoot = Hex.decode("2eac92b256b6960eefa5b105fe7ab1322b796245");
+        byte[] confirmationRoot = Hex.decode("3eac92b256b6960eefa5b105fe7ab1322b796245");
+
+        GossipItem gossipItem = new GossipItem(sender, receiver, timeStamp, messageRoot, confirmationRoot);
+
+        for (int i = 0; i < 16; i++) {
+            list.add(gossipItem);
+        }
+
+        GossipList gossipList = new GossipList(list);
+
+        System.out.print(gossipList.toString());
+        System.out.print("\n");
+
+        byte[] encode = gossipList.getEncoded();
+        System.out.print(encode.length);
+        System.out.print("\n");
+
+        GossipList gossipList1 = new GossipList(encode);
+        System.out.print(gossipList1.toString());
     }
 }
