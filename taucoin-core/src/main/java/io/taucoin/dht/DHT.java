@@ -162,6 +162,10 @@ public final class DHT {
             this(sha1, DHT_OP_TIMEOUT);
         }
 
+        public Sha1Hash hash() {
+            return sha1;
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof GetImmutableItemSpec)) {
@@ -190,14 +194,22 @@ public final class DHT {
         public byte[] salt;
         public int timeout;
 
+        private Sha1Hash hash;
+
         public GetMutableItemSpec(byte[] publicKey, byte[] salt, int timeout) {
             this.publicKey = publicKey;
             this.salt = salt;
             this.timeout = timeout;
+
+            this.hash = MutableItem.computeHash(publicKey, salt);
         }
 
         public GetMutableItemSpec(byte[] publicKey, byte[] salt) {
             this(publicKey, salt, DHT_OP_TIMEOUT);
+        }
+
+        public Sha1Hash hash() {
+            return hash;
         }
 
         @Override
@@ -219,24 +231,7 @@ public final class DHT {
 
         @Override
         public int hashCode() {
-            MessageDigest digest = null;
-
-            try {
-                digest = MessageDigest.getInstance("SHA-1");
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                // For sha1 this exception should never happens.
-                return 0;
-            }
-
-            digest.update(publicKey);
-            digest.update(salt);
-            digest.update(ByteUtil.intToBytes(timeout));
-
-            byte_vector bvs = Vectors.bytes2byte_vector(digest.digest());
-            sha1_hash hash = new sha1_hash(bvs);
-
-            return hash.hash_code();
+            return hash.hashCode();
         }
 
         @Override
@@ -267,7 +262,7 @@ public final class DHT {
     /**
      * The wrapper of getting immutable request.
      */
-    public static class ImmutableItemRequest {
+    public static class ImmutableItemRequest extends Trace {
 
         public GetImmutableItemSpec spec;
 
@@ -301,6 +296,10 @@ public final class DHT {
             }
         }
 
+        public Sha1Hash hash() {
+            return spec.hash();
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof ImmutableItemRequest)) {
@@ -326,7 +325,7 @@ public final class DHT {
     /**
      * The wrapper of getting mutable request.
      */
-    public static class MutableItemRequest {
+    public static class MutableItemRequest extends Trace {
 
         public GetMutableItemSpec spec;
 
@@ -360,6 +359,10 @@ public final class DHT {
             }
         }
 
+        public Sha1Hash hash() {
+            return spec.hash();
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof MutableItemRequest)) {
@@ -385,7 +388,7 @@ public final class DHT {
     /**
      * The wrapper of immutable item distribution.
      */
-    public static class ImmutableItemDistribution {
+    public static class ImmutableItemDistribution extends Trace {
 
         public ImmutableItem item;
 
@@ -447,7 +450,7 @@ public final class DHT {
     /**
      * The wrapper of mutable item distribution.
      */
-    public static class MutableItemDistribution {
+    public static class MutableItemDistribution extends Trace {
 
         public MutableItem item;
 
@@ -506,4 +509,23 @@ public final class DHT {
         }
     }
 
+    public static class Trace {
+
+        protected long start;
+        protected long end;
+
+        public Trace() {}
+
+        public void start() {
+            this.start = System.nanoTime();
+        }
+
+        public void end() {
+            this.end = System.nanoTime();
+        }
+
+        public long cost() {
+            return (end -start);
+        }
+    }
 }

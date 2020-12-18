@@ -48,6 +48,9 @@ public class DHTEngine {
     private Map<Sha1Hash, Object> putCache = Collections.synchronizedMap(
             new HashMap<Sha1Hash, Object>());
 
+    // Cache map from sha1 hash to getting immutable or mutable item specification.
+    private Map<Sha1Hash, Object> getCache = Collections.synchronizedMap(
+            new HashMap<Sha1Hash, Object>());
 
     /**
      * Get DHTEngine instance.
@@ -69,7 +72,8 @@ public class DHTEngine {
     // DHTEngine constructor
     private DHTEngine() {
         this.counter = new Counter();
-        this.sessionController = new SessionController(requestQueue, counter, putCache);
+        this.sessionController = new SessionController(requestQueue, counter,
+                putCache, getCache);
     }
 
     /**
@@ -352,7 +356,7 @@ public class DHTEngine {
         ImmutableItemRequest req = new ImmutableItemRequest(spec, cb, cbData);
 
         // Drop this request if it exists.
-        if (requestQueue.contains(req)) {
+        if (requestQueue.contains(req) || (getCache.get(req.hash()) != null)) {
             logger.trace("duplicate immutable item req:" + req);
             return Duplicated;
         }
@@ -391,7 +395,7 @@ public class DHTEngine {
         MutableItemRequest req = new MutableItemRequest(spec, cb, cbData);
 
         // Drop this request if it exists.
-        if (requestQueue.contains(req)) {
+        if (requestQueue.contains(req)  || (getCache.get(req.hash()) != null)) {
             logger.trace("duplicate mutable item req:" + req);
             return Duplicated;
         }
@@ -414,6 +418,6 @@ public class DHTEngine {
      * Get occupation of dht middleware blocking queue.
      */
     public int queueOccupation() {
-        return requestQueue.size();
+        return requestQueue.size() + putCache.size() + getCache.size();
     }
 }
