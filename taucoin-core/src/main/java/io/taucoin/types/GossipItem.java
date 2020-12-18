@@ -9,27 +9,34 @@ import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
+// 单条gossip记录，大概能放16条记录在一个mutable item中
 public class GossipItem {
-    private byte[] sender;
-    private byte[] receiver;
+    private byte[] sender; // 4个字节,提取的public key的前缀
+    private byte[] receiver; // 4个字节,提取的public key的前缀
     // 可能需要拉长
-    private BigInteger timestamp;
-    private byte[] messageRoot;
-    private byte[] confirmationRoot = null;
-    private byte[] demandHash = null;
-    private GossipStatus gossipStatus = GossipStatus.UNKNOWN;
+    private BigInteger timestamp; // 4个字节
+    // 我的最新消息的root
+    private byte[] messageRoot;  // 20个字节
+    // 我看到的对方的root
+    private byte[] confirmationRoot = null; // 20个字节
+    // 我的需求，是immutable data的hash, demand功能仅限于immutable data，
+    // 对于mutable data由时钟频率提供数据，不需要demand
+    private byte[] demandImmutableDataHash = null; // 20个字节
+    // 当前的聊天状态,可以发现对方是否处于写状态
+    private GossipStatus gossipStatus = GossipStatus.UNKNOWN; // 1个字节
 
     private byte[] hash;
     private byte[] encode;
     private boolean parsed = false;
 
-    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot, byte[] confirmationRoot, byte[] demandHash) {
+    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot,
+                      byte[] confirmationRoot, byte[] demandImmutableDataHash) {
         this.sender = sender;
         this.receiver = receiver;
         this.timestamp = timestamp;
         this.messageRoot = messageRoot;
         this.confirmationRoot = confirmationRoot;
-        this.demandHash = demandHash;
+        this.demandImmutableDataHash = demandImmutableDataHash;
 
         this.parsed = true;
     }
@@ -44,13 +51,14 @@ public class GossipItem {
         this.parsed = true;
     }
 
-    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot, byte[] confirmationRoot, byte[] demandHash, GossipStatus gossipStatus) {
+    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot,
+                      byte[] confirmationRoot, byte[] demandImmutableDataHash, GossipStatus gossipStatus) {
         this.sender = sender;
         this.receiver = receiver;
         this.timestamp = timestamp;
         this.messageRoot = messageRoot;
         this.confirmationRoot = confirmationRoot;
-        this.demandHash = demandHash;
+        this.demandImmutableDataHash = demandImmutableDataHash;
         this.gossipStatus = gossipStatus;
 
         this.parsed = true;
@@ -100,12 +108,12 @@ public class GossipItem {
         return confirmationRoot;
     }
 
-    public byte[] getDemandHash() {
+    public byte[] getDemandImmutableDataHash() {
         if (!this.parsed) {
             parseRLP();
         }
 
-        return demandHash;
+        return demandImmutableDataHash;
     }
 
     public GossipStatus getGossipStatus() {
@@ -135,7 +143,7 @@ public class GossipItem {
 
         this.messageRoot = messageList.get(3).getRLPData();
         this.confirmationRoot = messageList.get(4).getRLPData();
-        this.demandHash = messageList.get(5).getRLPData();
+        this.demandImmutableDataHash = messageList.get(5).getRLPData();
 
         byte[] statusBytes = messageList.get(6).getRLPData();
         int statusNum = null == statusBytes ? 0: new BigInteger(1, statusBytes).intValue();
@@ -155,7 +163,7 @@ public class GossipItem {
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
             byte[] messageRoot = RLP.encodeElement(this.messageRoot);
             byte[] confirmationRoot = RLP.encodeElement(this.confirmationRoot);
-            byte[] demandHash = RLP.encodeElement(this.demandHash);
+            byte[] demandHash = RLP.encodeElement(this.demandImmutableDataHash);
             byte[] gossipStatus = RLP.encodeBigInteger(BigInteger.valueOf(this.gossipStatus.ordinal()));
 
             this.encode = RLP.encodeList(sender, receiver, timestamp, messageRoot,
@@ -185,7 +193,7 @@ public class GossipItem {
         BigInteger timestamp = getTimestamp();
         byte[] messageRoot = getMessageRoot();
         byte[] confirmationRoot = getConfirmationRoot();
-        byte[] demandHash = getDemandHash();
+        byte[] demandHash = getDemandImmutableDataHash();
         GossipStatus gossipStatus = getGossipStatus();
 
         StringBuilder stringBuilder = new StringBuilder();

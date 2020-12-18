@@ -139,8 +139,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 通过gossip机制发现的给朋友的confirmation root <FriendPair, root>
     private final Map<FriendPair, byte[]> gossipConfirmationRoot = Collections.synchronizedMap(new HashMap<>());
 
-    // 通过gossip机制发现的给朋友的demand hash <FriendPair, demand hash>
-    private final Map<FriendPair, byte[]> gossipDemandHash = Collections.synchronizedMap(new HashMap<>());
+    // 通过gossip机制发现的给朋友的demand immutable data hash <FriendPair, demand hash>
+    private final Map<FriendPair, byte[]> gossipDemandImmutableDataHash = Collections.synchronizedMap(new HashMap<>());
 
     // 通过gossip机制发现的给朋友的gossip status <FriendPair, gossip status>
     private final Map<FriendPair, GossipStatus> gossipStatus = Collections.synchronizedMap(new HashMap<>());
@@ -226,7 +226,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
-     * 获取gossip集合
+     * 获取下一个gossip临时集合，从缓存（各个消息渠道的队列）获取gossip所需的各项数据
      * @return gossip set
      */
     private LinkedHashSet<GossipItem> getGossipList() {
@@ -234,7 +234,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-        // 统计我发给我朋友的gossip
+        // 1.统计我发给我朋友的gossip
         long currentTime = System.currentTimeMillis() / 1000;
         for (ByteArrayWrapper friend: this.friends) {
             BigInteger timeStamp = this.timeStampToFriend.get(friend);
@@ -252,7 +252,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                 if (this.writingFriends.contains(friend)) {
                     GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.WRITING);
+                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.ON_WRITING);
                     gossipList.add(gossipItem);
 
                     this.writingFriends.remove(friend);
@@ -264,14 +264,14 @@ public class Communication implements DHT.GetDHTItemCallback {
             }
         }
 
-        // 统计其他人发给我朋友的消息
+        // 2.统计其他人发给我朋友的消息
         for (Map.Entry<FriendPair, BigInteger> entry : this.gossipTimeStamp.entrySet()) {
             if (this.friends.contains(new ByteArrayWrapper(entry.getKey().getReceiver()))) {
                 // 只添加一天以内有新消息的
                 if (currentTime - entry.getValue().longValue() < ChainParam.ONE_DAY) {
                     byte[] root = this.gossipRoot.get(entry.getKey());
                     byte[] confirmationRoot = this.gossipConfirmationRoot.get(entry.getKey());
-                    byte[] demandHash = this.gossipDemandHash.get(entry.getKey());
+                    byte[] demandHash = this.gossipDemandImmutableDataHash.get(entry.getKey());
                     GossipStatus gossipStatus = this.gossipStatus.get(entry.getKey());
                     if (null != root) {
                         GossipItem gossipItem = makeGossipItemWithShortAddress(entry.getKey().getSender(),
@@ -313,7 +313,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                 if (this.writingFriends.contains(friend)) {
                     GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.WRITING);
+                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.ON_WRITING);
                     gossipSet.add(gossipItem);
 
                     this.writingFriends.remove(friend);
@@ -332,7 +332,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                 if (currentTime - entry.getValue().longValue() < ChainParam.ONE_DAY) {
                     byte[] root = this.gossipRoot.get(entry.getKey());
                     byte[] confirmationRoot = this.gossipConfirmationRoot.get(entry.getKey());
-                    byte[] demandHash = this.gossipDemandHash.get(entry.getKey());
+                    byte[] demandHash = this.gossipDemandImmutableDataHash.get(entry.getKey());
                     GossipStatus gossipStatus = this.gossipStatus.get(entry.getKey());
                     if (null != root) {
                         GossipItem gossipItem = makeGossipItemWithShortAddress(entry.getKey().getSender(),
@@ -358,7 +358,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             if (currentTime - entry.getValue().longValue() > ChainParam.ONE_DAY) {
                 this.gossipRoot.remove(entry.getKey());
                 this.gossipConfirmationRoot.remove(entry.getKey());
-                this.gossipDemandHash.remove(entry.getKey());
+                this.gossipDemandImmutableDataHash.remove(entry.getKey());
                 this.gossipStatus.remove(entry.getKey());
 
                 this.gossipTimeStamp.remove(entry.getKey());
@@ -400,7 +400,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                                 // 朋友的root帮助记录，由其自己去验证
                                 this.gossipRoot.put(pair, gossipItem.getMessageRoot());
                                 this.gossipConfirmationRoot.put(pair, gossipItem.getConfirmationRoot());
-                                this.gossipDemandHash.put(pair, gossipItem.getDemandHash());
+                                this.gossipDemandImmutableDataHash.put(pair, gossipItem.getDemandImmutableDataHash());
                                 this.gossipStatus.put(pair, gossipItem.getGossipStatus());
 
                                 // 更新时间戳
@@ -822,6 +822,9 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @return salt
      */
     private byte[] makeGossipSalt() {
+        // TODO::需要统一时间间隙
+        // 应该是个叠加频率，发送方频率是双频率发送
+        // TODO::单一salt，两个频率写的频率可以提高，接收方可以根据自己的工作状况决定频率
         long time = System.currentTimeMillis() / 1000 / GOSSIP_PUBLISH_INTERVAL_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
@@ -1150,9 +1153,9 @@ public class Communication implements DHT.GetDHTItemCallback {
             }
         }
 
-        for (Map.Entry<FriendPair, byte[]> entry: this.gossipDemandHash.entrySet()) {
+        for (Map.Entry<FriendPair, byte[]> entry: this.gossipDemandImmutableDataHash.entrySet()) {
             if (Arrays.equals(pubKey, entry.getKey().getReceiver())) {
-                this.gossipDemandHash.remove(entry.getKey());
+                this.gossipDemandImmutableDataHash.remove(entry.getKey());
             }
         }
 
@@ -1306,11 +1309,11 @@ public class Communication implements DHT.GetDHTItemCallback {
                     if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
                         logger.debug("Got a new gossip item");
 
-                        if (null != gossipItem.getDemandHash()) {
-                            this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getDemandHash()));
+                        if (null != gossipItem.getDemandImmutableDataHash()) {
+                            this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getDemandImmutableDataHash()));
                         }
 
-                        if (GossipStatus.WRITING == gossipItem.getGossipStatus()) {
+                        if (GossipStatus.ON_WRITING == gossipItem.getGossipStatus()) {
                             this.writingFriendsToVisit.put(peer, System.currentTimeMillis() / 1000);
                         }
 
