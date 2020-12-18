@@ -50,6 +50,9 @@ public class SessionController {
     // Cache map from sha1 hash to putting immutable or mutable item request.
     private Map<Sha1Hash, Object> putCache;
 
+    // Cache map from sha1 hash to getting immutable or mutable item specification.
+    private Map<Sha1Hash, Object> getCache;
+
     // Lock to ensure the operation atomicity
     // between 'sessionsList' and 'sessionToWokerMap'
     private final Object lock = new Object();
@@ -87,11 +90,12 @@ public class SessionController {
      * @param counter metrics counter
      */
     public SessionController(BlockingQueue inputQueue, Counter counter,
-            Map<Sha1Hash, Object> putCache) {
+            Map<Sha1Hash, Object> putCache, Map<Sha1Hash, Object> getCache) {
         this.inputQueue = inputQueue;
         this.counter = counter;
         this.regulator = new Regulator();
         this.putCache = putCache;
+        this.getCache = getCache;
         this.sessionQuota = new SessionQuota();
     }
 
@@ -119,7 +123,8 @@ public class SessionController {
                         .setNetworkInterfaces(NetworkInterfacePolicy
                                 .networkInterfaces(i, sessionQuota.getInterfacesQuota()));
                 TauSession s = new TauSession(builder.build());
-                Worker w = new Worker(i, s, inputQueue, counter, regulator, putCache);
+                Worker w = new Worker(i, s, inputQueue, counter, regulator,
+                        putCache, getCache);
 
                 sessionToWorkerMap.put(s, w);
                 sessionsList.add(s);
@@ -190,7 +195,7 @@ public class SessionController {
 
         TauSession s = new TauSession(builder.build());
         Worker w = new Worker(sessionsList.size(), s, inputQueue, counter, regulator,
-                putCache);
+                putCache, getCache);
 
         if (w.start()) {
             synchronized (lock) {

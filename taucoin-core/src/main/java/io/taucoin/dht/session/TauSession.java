@@ -27,6 +27,8 @@ class TauSession {
     // Torrent session manager.
     private SessionManager sessionManager;
 
+    private SessionHandle sessionHandle;
+
     // node id(s)
     private String nids = null;
 
@@ -36,6 +38,8 @@ class TauSession {
     private static int[] listenAlerts = new int[] {
             AlertType.LISTEN_SUCCEEDED.swig(),
             AlertType.LISTEN_FAILED.swig(),
+            AlertType.DHT_IMMUTABLE_ITEM.swig(),
+            AlertType.DHT_MUTABLE_ITEM.swig(),
             AlertType.DHT_PUT.swig(),
             AlertType.DHT_LOG.swig(),
             //AlertType.DHT_PKT.swig(),
@@ -80,6 +84,12 @@ class TauSession {
                 DhtPutAlert a = (DhtPutAlert) alert;
                 logger.info(a.message());
                 notifyItemPutEvent(a);
+            } else if (type == AlertType.DHT_IMMUTABLE_ITEM) {
+                DhtImmutableItemAlert a = (DhtImmutableItemAlert) alert;
+                notifyImmutableItemGotEvent(a);
+            } else if (type == AlertType.DHT_MUTABLE_ITEM) {
+                DhtMutableItemAlert a = (DhtMutableItemAlert) alert;
+                notifyMutableItemGotEvent(a);
             } else if (type == AlertType.DHT_LOG) {
                 if (EnableTorrentLog) {
                     DhtLogAlert a = (DhtLogAlert) alert;
@@ -94,11 +104,16 @@ class TauSession {
     private volatile boolean startingResult = false;
     private volatile boolean startingResultReceived = false;
 
-    public static interface ItemPutListener {
+    public static interface ItemGotPutListener {
+
+        void onImmutableItemGot(DhtImmutableItemAlert a);
+
+        void onMutableItemGot(DhtMutableItemAlert a);
+
         void onItemPut(DhtPutAlert a);
     }
 
-    private List<ItemPutListener> listeners = new CopyOnWriteArrayList<>();
+    private List<ItemGotPutListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * TauSession constructor.
@@ -122,25 +137,36 @@ class TauSession {
     }
 
     /**
-     * Register ItemPutListener
+     * Register ItemGotPutListener
      *
      * @param listener
      */
-    public void addListener(ItemPutListener listener) {
+    public void addListener(ItemGotPutListener listener) {
         listeners.add(listener);
     }
 
     /**
-     * Unregister ItemPutListener
+     * Unregister ItemGotPutListener
      *
      * @param listener
      */
-    public void removeListener(ItemPutListener listener) {
+    public void removeListener(ItemGotPutListener listener) {
         listeners.remove(listener);
     }
 
+    private void notifyImmutableItemGotEvent(DhtImmutableItemAlert a) {
+        for (ItemGotPutListener listener : listeners) {
+            listener.onImmutableItemGot(a);
+        }
+    }
+    private void notifyMutableItemGotEvent(DhtMutableItemAlert a) {
+        for (ItemGotPutListener listener : listeners) {
+            listener.onMutableItemGot(a);
+        }
+    }
+
     private void notifyItemPutEvent(DhtPutAlert a) {
-        for (ItemPutListener listener : listeners) {
+        for (ItemGotPutListener listener : listeners) {
             listener.onItemPut(a);
         }
     }
@@ -155,6 +181,7 @@ class TauSession {
 
         logger.info("starting session");
         sessionManager.start(settings.getSessionParams());
+        sessionHandle = new SessionHandle(sessionManager.swig());
 
         // wait for starting result.
         synchronized (signal) {
@@ -293,6 +320,23 @@ class TauSession {
     }
 
     /**
+     * dht gets immutable item asynchronously.
+     *
+     * @param spec getting immutable item specification
+     * @return boolean
+     */
+    public boolean dhtGetAsync(GetImmutableItemSpec spec) {
+
+        if (!sessionManager.isRunning()) {
+            return false;
+        }
+
+        sessionHandle.dhtGetItem(spec.sha1);
+
+        return true;
+    }
+
+    /**
      * dht tau gets mutable item.
      *
      * @param spec getting mutable item specification
@@ -318,6 +362,23 @@ class TauSession {
 
         logger.info("mutable item type:" + result.item.swig().type());
         return Utils.stringEntryToBytes(result.item);
+    }
+
+    /**
+     * dht tau gets mutable item asynchronously.
+     *
+     * @param spec getting mutable item specification
+     * @return boolean
+     */
+    public boolean dhtGetAsync(GetMutableItemSpec spec) {
+
+        if (!sessionManager.isRunning()) {
+            return false;
+        }
+
+        sessionHandle.dhtGetItem(spec.publicKey, spec.salt);
+
+        return true;
     }
 
     private String getNodeIds() {

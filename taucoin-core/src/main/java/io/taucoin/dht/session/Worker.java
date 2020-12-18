@@ -3,7 +3,10 @@ package io.taucoin.dht.session;
 import io.taucoin.dht.metrics.Counter;
 import io.taucoin.dht.util.Utils;
 
+import com.frostwire.jlibtorrent.alerts.DhtImmutableItemAlert;
+import com.frostwire.jlibtorrent.alerts.DhtMutableItemAlert;
 import com.frostwire.jlibtorrent.alerts.DhtPutAlert;
+import com.frostwire.jlibtorrent.Entry;
 import com.frostwire.jlibtorrent.Sha1Hash;
 import com.frostwire.jlibtorrent.swig.dht_put_alert;
 import org.slf4j.Logger;
@@ -14,7 +17,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.Map;
 
 import static io.taucoin.dht.DHT.*;
-import static io.taucoin.dht.session.TauSession.ItemPutListener;
+import static io.taucoin.dht.session.TauSession.ItemGotPutListener;
 
 /**
  * Worker gets and puts immutable and mutable item from and into dht network.
@@ -32,6 +35,10 @@ class Worker {
     // Only when session's dht nodes is greater than 'DHTNODES_THRESOLD',
     // can dht item be allowed to put and get.
     private static final long DHTNODES_THRESOLD = 50;
+
+    private static final boolean GET_ITEM_ASYNC = true;
+
+    private static final int CACHE_SIZE_LIMIT = 200;
 
     // Instance index;
     private int index;
@@ -52,6 +59,9 @@ class Worker {
 
     // Cache map from sha1 hash to putting immutable or mutable item request.
     private Map<Sha1Hash, Object> putCache;
+
+    // Cache map from sha1 hash to getting immutable or mutable item specification.
+    private Map<Sha1Hash, Object> getCache;
 
     // Components for waiting the result of starting TauSession.
     private final Object signal = new Object();
@@ -78,7 +88,7 @@ class Worker {
                 }
             }
 
-            session.addListener(putListener);
+            session.addListener(listener);
 
             // notify starting result.
             synchronized(signal) {
@@ -97,7 +107,8 @@ class Worker {
                         break;
                     }
 
-                    if (session.dhtNodes() <= DHTNODES_THRESOLD) {
+                    if (session.dhtNodes() <= DHTNODES_THRESOLD
+                            || getCache.size() >= CACHE_SIZE_LIMIT) {
                         logger.trace("session dht nodes is too less:" + session.dhtNodes());
                         continue;
                     }
@@ -128,7 +139,7 @@ class Worker {
     public Worker(int index, TauSession session,
             BlockingQueue<Object> inputQueue,
             Counter counter, Regulator regulator,
-            Map<Sha1Hash, Object> putCache) {
+            Map<Sha1Hash, Object> putCache, Map<Sha1Hash, Object> getCache) {
 
         this.index = index;
         this.session = session;
@@ -136,6 +147,7 @@ class Worker {
         this.counter = counter;
         this.regulator = regulator;
         this.putCache = putCache;
+        this.getCache = getCache;
 
         logger = LoggerFactory.getLogger("Session[" + index + "]");
         this.session.setLogger(logger);
@@ -200,9 +212,17 @@ class Worker {
 
         // dispatch dht request
         if (req instanceof ImmutableItemRequest) {
-            requestImmutableItem((ImmutableItemRequest)req);
+            if (GET_ITEM_ASYNC) {
+                requestImmutableItemAsync((ImmutableItemRequest)req);
+            } else {
+                requestImmutableItem((ImmutableItemRequest)req);
+            }
         } else if (req instanceof MutableItemRequest) {
-            requestMutableItem((MutableItemRequest)req);
+            if (GET_ITEM_ASYNC) {
+                requestMutableItemAsync((MutableItemRequest)req);
+            } else {
+                requestMutableItem((MutableItemRequest)req);
+            }
         } else if (req instanceof ImmutableItemDistribution) {
             putImmutableItem((ImmutableItemDistribution)req);
         } else if (req instanceof MutableItemDistribution) {
@@ -262,6 +282,26 @@ class Worker {
         req.onDHTItemGot(item);
     }
 
+    private void requestImmutableItemAsync(ImmutableItemRequest req) {
+        req.start();
+        boolean ret = session.dhtGetAsync(req.getSpec());
+
+        if (ret) {
+            counter.immutableItemRequest();
+            getCache.put(req.hash(), req);
+        }
+    }
+
+    private void requestMutableItemAsync(MutableItemRequest req) {
+        req.start();
+        boolean ret = session.dhtGetAsync(req.getSpec());
+
+        if (ret) {
+            counter.mutableItemRequest();
+            getCache.put(req.hash(), req);
+        }
+    }
+
     private void putImmutableItem(ImmutableItemDistribution d) {
         Sha1Hash hash = session.dhtPut(d.item);
 
@@ -280,7 +320,17 @@ class Worker {
         }
     }
 
-    private ItemPutListener putListener = new ItemPutListener() {
+    private ItemGotPutListener listener = new ItemGotPutListener() {
+
+        @Override
+        public void onImmutableItemGot(DhtImmutableItemAlert a) {
+            handleImmutableItemGot(a);
+        }
+
+        @Override
+        public void onMutableItemGot(DhtMutableItemAlert a) {
+            handleMutableItemGot(a);
+        }
 
         @Override
         public void onItemPut(DhtPutAlert a) {
@@ -293,6 +343,106 @@ class Worker {
             }
         }
     };
+
+    private void handleImmutableItemGot(DhtImmutableItemAlert a) {
+        if (!GET_ITEM_ASYNC) {
+            return;
+        }
+
+        Sha1Hash hash = a.target();
+        if (hash == null) {
+            return;
+        }
+
+        Entry item = a.item();
+        // Get callback from getCache
+        Object r = getCache.get(hash);
+        if (r == null) {
+            logger.warn("immutable item got:not found cache for " + hash);
+            return;
+        }
+
+        ImmutableItemRequest req = (ImmutableItemRequest)r;
+        req.end();
+        long timeCost = req.cost() / 1000000;
+
+        byte[] data = null;
+
+        if (item != null && !Utils.isEntryUndefined(item)) {
+            data = Utils.stringEntryToBytes(item);
+            logger.trace(String.format("immutable getting success:"
+                    + "time cost %d ms", timeCost));
+        } else {
+            counter.immutableGettingFailed();
+            logger.debug(String.format("immutable getting failed:"
+                    + "time cost %d ms, fail rate:(%d/%d=%.4f)"
+                    + ", req %s, callback data %s",
+                    timeCost,
+                    counter.getImmutableGettingFailCounter(),
+                    counter.getImmutableGettingCounter(),
+                    counter.getImmutableGettingFailRate(),
+                    req,
+                    req.getCallbackData() != null ? req.getCallbackData() : "null"
+            ));
+        }
+
+        req.onDHTItemGot(data);
+        getCache.remove(hash);
+        logger.trace("immutable item got:" + hash + ", cache size:" + getCache.size());
+    }
+
+    private void handleMutableItemGot(DhtMutableItemAlert a) {
+        if (!GET_ITEM_ASYNC) {
+            return;
+        }
+
+        byte[] publicKey = a.key();
+        byte[] salt = a.salt();
+
+        if (publicKey == null || salt == null) {
+            return;
+        }
+
+        Sha1Hash hash = MutableItem.computeHash(publicKey, salt);
+
+        Entry item = a.item();
+        // Get callback from getCache
+        Object r = getCache.get(hash);
+        if (r == null) {
+            logger.warn("mutable item got:not found cache for "
+                    + Hex.toHexString(publicKey) + "/" + new String(salt));
+            return;
+        }
+
+        MutableItemRequest req = (MutableItemRequest)r;
+        req.end();
+        long timeCost = req.cost() / 1000000;
+
+        byte[] data = null;
+
+        if (item != null && !Utils.isEntryUndefined(item)) {
+            data = Utils.stringEntryToBytes(item);
+            logger.trace(String.format("mutable getting success:"
+                    + "time cost %d ms", timeCost));
+        } else {
+            counter.mutableGettingFailed();
+            logger.debug(String.format("mutable getting failed:"
+                    + "time cost %d ms, fail rate:(%d/%d=%.4f)"
+                    + ", req %s, callback data %s",
+                    timeCost,
+                    counter.getMutableGettingFailCounter(),
+                    counter.getMutableGettingCounter(),
+                    counter.getMutableGettingFailRate(),
+                    req,
+                    req.getCallbackData() != null ? req.getCallbackData() : "null"
+            ));
+        }
+
+        req.onDHTItemGot(data);
+        getCache.remove(hash);
+        logger.trace("mutable item got:" + Hex.toHexString(publicKey)
+                + "/" + new String(salt) + ", cache size:" + getCache.size());
+    }
 
     private void handleImmutableItemPutCompleted(DhtPutAlert a) {
         Sha1Hash hash = a.target();
