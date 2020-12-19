@@ -723,4 +723,11 @@ public class TauDaemon {
     public void publishImmutableData(byte[] data) {
         getCommunicationManager().publishImmutableData(data);
     }
+
+    /**
+     * 发布最后一条消息
+     * @param toByte
+     */
+    public void publishLastMessage(byte[] toByte) {
+    }
 }

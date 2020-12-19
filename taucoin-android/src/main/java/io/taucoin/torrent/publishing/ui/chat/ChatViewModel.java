@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -20,6 +21,7 @@ import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -57,6 +59,7 @@ public class ChatViewModel extends AndroidViewModel {
     private MutableLiveData<Result> chatResult = new MutableLiveData<>();
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
+    private Disposable publishLastMessageTimer;
     private ChatSourceFactory sourceFactory;
     public ChatViewModel(@NonNull Application application) {
         super(application);
@@ -83,6 +86,7 @@ public class ChatViewModel extends AndroidViewModel {
         if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             observeDaemonRunning.dispose();
         }
+        resumeGossipTimeInternal();
     }
 
     /**
@@ -336,14 +340,42 @@ public class ChatViewModel extends AndroidViewModel {
      * 更新Gossip时间间隔
      * @
      */
-    public void updateGossipTimeInternal() {
+    private void updateGossipTimeInternal() {
         daemon.setGossipTimeInterval(Frequency.GOSSIP_FREQUENCY_HEIGHT.getFrequency());
     }
 
     /**
      * 更新Gossip时间间隔
      */
-    public void resumeGossipTimeInternal() {
+    private void resumeGossipTimeInternal() {
+        if (publishLastMessageTimer != null && !publishLastMessageTimer.isDisposed()) {
+            publishLastMessageTimer.dispose();
+        }
         daemon.updateGossipTimeInterval();
+    }
+
+    /**
+     * 用户在输入状态，触发定时发送上次消息
+     * @param friendPK
+     * @param isEmpty
+     */
+    void publishLastMessage(String friendPK, boolean isEmpty) {
+        if (!isEmpty) {
+            if (publishLastMessageTimer != null && !publishLastMessageTimer.isDisposed()) {
+                logger.debug("publishLastMessage friendPK::{} Timer is running", friendPK);
+                return;
+            }
+            updateGossipTimeInternal();
+            publishLastMessageTimer = Observable.interval(
+                    Frequency.FREQUENCY_PUBLISH_MESSAGE.getFrequency(), TimeUnit.MILLISECONDS)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(aLong -> {
+                        logger.debug("publishLastMessage friendPK::{}", friendPK);
+                        daemon.publishLastMessage(ByteUtil.toByte(friendPK));
+                    });
+            disposables.add(publishLastMessageTimer);
+        } else {
+            resumeGossipTimeInternal();
+        }
     }
 }

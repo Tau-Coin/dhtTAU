@@ -32,7 +32,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
 import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
@@ -110,9 +109,10 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                boolean isHiddenSend = StringUtil.isEmpty(s);
-                binding.tvSend.setVisibility(isHiddenSend ? View.GONE : View.VISIBLE);
-                binding.ivAdd.setVisibility(!isHiddenSend ? View.GONE : View.VISIBLE);
+                boolean isEmpty = StringUtil.isEmpty(s);
+                binding.tvSend.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+                binding.ivAdd.setVisibility(!isEmpty ? View.GONE : View.VISIBLE);
+                chatViewModel.publishLastMessage(friendPK, isEmpty);
             }
 
             @Override
@@ -157,14 +157,12 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     public void onStart() {
         super.onStart();
         subscribeChatViewModel();
-        chatViewModel.updateGossipTimeInternal();
     }
 
     @Override
     public void onStop() {
         super.onStop();
         disposables.clear();
-        chatViewModel.resumeGossipTimeInternal();
     }
 
     private final Runnable handleUpdateAdapter = () -> {

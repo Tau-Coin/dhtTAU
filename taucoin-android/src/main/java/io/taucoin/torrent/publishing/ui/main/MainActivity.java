@@ -490,7 +490,8 @@ public class MainActivity extends BaseActivity {
         // Replace whatever is in the fragment container view with this fragment,
         // and add the transaction to the back stack
         transaction.replace(R.id.main_right_fragment, newFragment);
-        transaction.addToBackStack(null);
+        // 执行此方法后，fragment的onDestroy()方法和ViewModel的onCleared()方法都不执行
+        // transaction.addToBackStack(null);
         transaction.commitAllowingStateLoss();
         updateViewChanged();
     }
