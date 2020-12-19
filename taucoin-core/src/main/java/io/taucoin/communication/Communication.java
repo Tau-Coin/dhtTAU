@@ -555,7 +555,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
-     * 回应远端的需求
+     * 回应远端的需求，一次回应连续10s的消息
      * @throws DBException database exception
      */
     private void responseRemoteDemand() throws DBException {
@@ -565,7 +565,22 @@ public class Communication implements DHT.GetDHTItemCallback {
             logger.info("Response demand:{}", hash.toString());
 
             byte[] data = this.messageDB.getMessageByHash(hash.getData());
-            publishImmutableData(data);
+            if (null != data) {
+                Message msg = new Message(data);
+                BigInteger timestamp = msg.getTimestamp();
+                publishImmutableData(data);
+
+                while (null != msg.getPreviousMsgDAGRoot()) {
+                    data = this.messageDB.getMessageByHash(msg.getPreviousMsgDAGRoot());
+                    if (null != data) {
+                        msg = new Message(data);
+                        publishImmutableData(data);
+                        if (timestamp.longValue() - msg.getTimestamp().longValue() > 10) {
+                            break;
+                        }
+                    }
+                }
+            }
 
             this.friendDemandHash.remove(hash);
 //            it.remove();
@@ -675,17 +690,32 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
-     * 向某个peer请求gossip数据
+     * 向某个peer请求gossip数据，同时在邻近的未来/现在/将来三个时间片频道上获取
      * @param pubKey public key
      */
     private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
         if (null != pubKey) {
             logger.trace("Request gossip info from peer:{}", pubKey.toString());
+
+            // 在当前时间对应的频道上获取数据
             byte[] salt = makeGossipSalt();
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
-
             DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+            this.queue.offer(mutableItemRequest);
+
+            // 在当前时间对应的下一个频道上获取数据
+            salt = makeNextGossipSalt();
+            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
+            dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
+            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+            this.queue.offer(mutableItemRequest);
+
+            // 在当前时间对应的上一个频道上获取数据
+            salt = makePreviousGossipSalt();
+            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
+            dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
+            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
             this.queue.offer(mutableItemRequest);
         }
     }
@@ -835,10 +865,38 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
+     * 构造GOSSIP频道对应的上一个salt
+     * @return salt
+     */
+    private byte[] makePreviousGossipSalt() {
+        long time = System.currentTimeMillis() / 1000 / GOSSIP_PUBLISH_INTERVAL_TIME - 1;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
+        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, 0, ChainParam.GOSSIP_CHANNEL.length);
+        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
+        return salt;
+    }
+
+    /**
+     * 构造GOSSIP频道对应的下一个salt
+     * @return salt
+     */
+    private byte[] makeNextGossipSalt() {
+        long time = System.currentTimeMillis() / 1000 / GOSSIP_PUBLISH_INTERVAL_TIME + 1;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
+        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, 0, ChainParam.GOSSIP_CHANNEL.length);
+        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
+        return salt;
+    }
+
+    /**
      * 在gossip频道发布gossip信息
      * @param gossipList last gossip list
      */
-    private void publishMutableGossipList(GossipList gossipList) {
+    private void publishMutableGossip(GossipList gossipList) {
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
@@ -854,21 +912,60 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
+     * 在前一个gossip频道发布gossip信息
+     * @param gossipList last gossip list
+     */
+    private void publishMutableGossipOnPreviousChannel(GossipList gossipList) {
+        // put mutable item
+        Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+
+        byte[] salt = makePreviousGossipSalt();
+        byte[] encode = gossipList.getEncoded();
+        if (null != encode) {
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
+                    keyPair.second, encode, salt);
+            DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
+
+            this.queue.offer(mutableItemDistribution);
+        }
+    }
+
+    /**
+     * 在下一个gossip频道发布gossip信息
+     * @param gossipList last gossip list
+     */
+    private void publishMutableGossipOnNextChannel(GossipList gossipList) {
+        // put mutable item
+        Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+
+        byte[] salt = makeNextGossipSalt();
+        byte[] encode = gossipList.getEncoded();
+        if (null != encode) {
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
+                    keyPair.second, encode, salt);
+            DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
+
+            this.queue.offer(mutableItemDistribution);
+        }
+    }
+
+    /**
      * 发布所有gossip信息
      */
     private void publishGossipInfo() {
         // put mutable item
-        LinkedHashSet<GossipItem> gossipItemList = getGossipList();
+        LinkedHashSet<GossipItem> gossipItemSet = getGossipList();
 
         logger.debug("----------------------start----------------------");
-        for(GossipItem gossipItem: gossipItemList) {
+        for(GossipItem gossipItem: gossipItemSet) {
             logger.debug("Gossip set:{}", gossipItem.toString());
         }
         logger.debug("----------------------end----------------------");
 
+        // 1.先发布gossip到当前的频道
         List<GossipItem> list = new ArrayList<>();
 
-        Iterator<GossipItem> iterator = gossipItemList.iterator();
+        Iterator<GossipItem> iterator = gossipItemSet.iterator();
         int i = 0;
         while (iterator.hasNext() && i <= ChainParam.GOSSIP_LIMIT_SIZE) {
             GossipItem gossipItem = iterator.next();
@@ -876,14 +973,68 @@ public class Communication implements DHT.GetDHTItemCallback {
             i++;
         }
 
-        GossipList gossipList = new GossipList(list);
-        while (gossipList.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
-            list.remove(list.size() - 1);
-            gossipList = new GossipList(list);
+        if (!list.isEmpty()) {
+            GossipList gossipList = new GossipList(list);
+            while (gossipList.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
+                list.remove(list.size() - 1);
+                gossipList = new GossipList(list);
+            }
+
+            logger.debug(gossipList.toString());
+            publishMutableGossip(gossipList);
         }
 
-        logger.debug(gossipList.toString());
-        publishMutableGossipList(gossipList);
+        // 2.发布gossip到下一个频道（未来频道）
+        for (GossipItem gossipItem: list) {
+            gossipItemSet.remove(gossipItem);
+        }
+
+        list = new ArrayList<>();
+
+        iterator = gossipItemSet.iterator();
+        i = 0;
+        while (iterator.hasNext() && i <= ChainParam.GOSSIP_LIMIT_SIZE) {
+            GossipItem gossipItem = iterator.next();
+            list.add(gossipItem);
+            i++;
+        }
+
+        if (!list.isEmpty()) {
+            GossipList gossipList = new GossipList(list);
+            while (gossipList.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
+                list.remove(list.size() - 1);
+                gossipList = new GossipList(list);
+            }
+
+            logger.debug(gossipList.toString());
+            publishMutableGossipOnNextChannel(gossipList);
+        }
+
+        // 3.发布gossip到上一个频道（历史频道）
+        for (GossipItem gossipItem: list) {
+            gossipItemSet.remove(gossipItem);
+        }
+
+        list = new ArrayList<>();
+
+        iterator = gossipItemSet.iterator();
+        i = 0;
+        while (iterator.hasNext() && i <= ChainParam.GOSSIP_LIMIT_SIZE) {
+            GossipItem gossipItem = iterator.next();
+            list.add(gossipItem);
+            i++;
+        }
+
+        if (!list.isEmpty()) {
+            GossipList gossipList = new GossipList(list);
+            while (gossipList.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
+                list.remove(list.size() - 1);
+                gossipList = new GossipList(list);
+            }
+
+            logger.debug(gossipList.toString());
+            publishMutableGossipOnPreviousChannel(gossipList);
+        }
 
         // 记录发布时间
         this.lastGossipPublishTime = System.currentTimeMillis() / 1000;
