@@ -59,8 +59,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 主循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
-    // 默认的发布gossip信息的时间间隔
-    private long GOSSIP_PUBLISH_INTERVAL_TIME = 10; // 10 s
+    // 发布gossip信息的时间间隔，默认10s
+    private long gossipPublishIntervalTime = 10; // 10 s
 
     // 记录上一次发布gossip的时间
     private long lastGossipPublishTime = 0;
@@ -191,12 +191,12 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
-     * 尝试发布gossip信息，看看时间间隔是否已到，每30s一次
+     * 尝试发布gossip信息，看看时间间隔是否已到，每10s一次
      */
     private void tryToPublishGossipInfo() {
         long currentTime = System.currentTimeMillis() / 1000;
 
-        if (currentTime - lastGossipPublishTime > GOSSIP_PUBLISH_INTERVAL_TIME) {
+        if (currentTime - lastGossipPublishTime > gossipPublishIntervalTime) {
             publishGossipInfo();
         }
     }
@@ -493,7 +493,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void visitWritingFriends() {
         long currentTime = System.currentTimeMillis() / 1000;
         for (Map.Entry<ByteArrayWrapper, Long> entry: this.writingFriendsToVisit.entrySet()) {
-            if (currentTime - entry.getValue() > GOSSIP_PUBLISH_INTERVAL_TIME) {
+            if (currentTime - entry.getValue() > ChainParam.GOSSIP_CHANNEL_TIME) {
                 this.writingFriendsToVisit.remove(entry.getKey());
             } else {
                 requestLatestMessageFromPeer(entry.getKey());
@@ -851,11 +851,11 @@ public class Communication implements DHT.GetDHTItemCallback {
      * 构造GOSSIP频道对应的salt
      * @return salt
      */
-    private byte[] makeGossipSalt() {
-        // TODO::需要统一时间间隙
-        // 应该是个叠加频率，发送方频率是双频率发送
-        // TODO::单一salt，两个频率写的频率可以提高，接收方可以根据自己的工作状况决定频率
-        long time = System.currentTimeMillis() / 1000 / GOSSIP_PUBLISH_INTERVAL_TIME;
+    public static byte[] makeGossipSalt() {
+        // 可能是个叠加频率，发送方频率是双频率发送
+        // 单一salt，两个频率写的频率可以提高，接收方可以根据自己的工作状况决定频率
+        // 目前暂定固定时间片10s
+        long time = System.currentTimeMillis() / 1000 / ChainParam.GOSSIP_CHANNEL_TIME;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
         byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
@@ -868,8 +868,8 @@ public class Communication implements DHT.GetDHTItemCallback {
      * 构造GOSSIP频道对应的上一个salt
      * @return salt
      */
-    private byte[] makePreviousGossipSalt() {
-        long time = System.currentTimeMillis() / 1000 / GOSSIP_PUBLISH_INTERVAL_TIME - 1;
+    private static byte[] makePreviousGossipSalt() {
+        long time = System.currentTimeMillis() / 1000 / ChainParam.GOSSIP_CHANNEL_TIME - 1;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
         byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
@@ -882,8 +882,8 @@ public class Communication implements DHT.GetDHTItemCallback {
      * 构造GOSSIP频道对应的下一个salt
      * @return salt
      */
-    private byte[] makeNextGossipSalt() {
-        long time = System.currentTimeMillis() / 1000 / GOSSIP_PUBLISH_INTERVAL_TIME + 1;
+    private static byte[] makeNextGossipSalt() {
+        long time = System.currentTimeMillis() / 1000 / ChainParam.GOSSIP_CHANNEL_TIME + 1;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
         byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
@@ -1380,7 +1380,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param timeInterval 时间间隔，单位:s
      */
     public void setGossipTimeInterval(long timeInterval) {
-        this.GOSSIP_PUBLISH_INTERVAL_TIME = timeInterval;
+        this.gossipPublishIntervalTime = timeInterval;
     }
 
     /**

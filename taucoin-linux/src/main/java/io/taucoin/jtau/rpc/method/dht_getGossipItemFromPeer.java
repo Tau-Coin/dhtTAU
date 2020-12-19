@@ -11,6 +11,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 
+import io.taucoin.communication.Communication;
 import io.taucoin.controller.TauController;
 import io.taucoin.dht.DHT;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
@@ -26,16 +27,6 @@ public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
         super(tauController);
     }
 
-    private byte[] makeGossipSalt() {
-        long time = System.currentTimeMillis() / 1000 / 10;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
-        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, 0, ChainParam.GOSSIP_CHANNEL.length);
-        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
-        return salt;
-    }
-
     @Override
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
 
@@ -46,7 +37,7 @@ public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
         } else {
             // get pubkey
             byte[] pubkey = Hex.decode((String)(params.get(0)));
-            byte[] salt = makeGossipSalt();
+            byte[] salt = Communication.makeGossipSalt();
 
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubkey, salt);
 

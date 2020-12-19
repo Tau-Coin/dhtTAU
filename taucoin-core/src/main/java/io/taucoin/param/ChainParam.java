@@ -74,6 +74,8 @@ public class ChainParam {
 
     public static final int COMMUNICATION_CHANNEL_TIME = 3; // 3s
 
+    public static final int GOSSIP_CHANNEL_TIME = 10; // 10s
+
     // one day
     public static final int ONE_DAY = 24 * 60 * 60;
 
