@@ -16,11 +16,9 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import io.taucoin.account.AccountManager;
@@ -41,7 +39,6 @@ import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 
-// TODO::是否使用immutable list来放gossip
 public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
@@ -70,8 +67,8 @@ public class Communication implements DHT.GetDHTItemCallback {
     // message db
     private final MessageDB messageDB;
 
-    // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求，ConcurrentLinkedQueue是一个支持并发操作的队列
-    private final Queue<Object> queue = new ConcurrentLinkedQueue<>();
+    // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求，LinkedHashSet确保队列的顺序性与唯一性
+    private final LinkedHashSet<Object> queue = new LinkedHashSet<>();
 
     // 发现的gossip item集合，synchronizedSet是支持并发操作的集合
     private final Set<GossipItem> gossipItems = new CopyOnWriteArraySet<>();
@@ -702,21 +699,21 @@ public class Communication implements DHT.GetDHTItemCallback {
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
             DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-            this.queue.offer(mutableItemRequest);
+            this.queue.add(mutableItemRequest);
 
             // 在当前时间对应的下一个频道上获取数据
             salt = makeNextGossipSalt();
             spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
             mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-            this.queue.offer(mutableItemRequest);
+            this.queue.add(mutableItemRequest);
 
             // 在当前时间对应的上一个频道上获取数据
             salt = makePreviousGossipSalt();
             spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
             mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-            this.queue.offer(mutableItemRequest);
+            this.queue.add(mutableItemRequest);
         }
     }
 
@@ -733,7 +730,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.LATEST_MESSAGE, pubKey);
 
             DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-            this.queue.offer(mutableItemRequest);
+            this.queue.add(mutableItemRequest);
         }
     }
 
@@ -748,7 +745,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST, pubKey, new ByteArrayWrapper(hash));
 
             DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-            this.queue.offer(immutableItemRequest);
+            this.queue.add(immutableItemRequest);
         }
     }
 
@@ -764,7 +761,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey, new ByteArrayWrapper(hash));
 
             DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-            this.queue.offer(immutableItemRequest);
+            this.queue.add(immutableItemRequest);
         }
     }
 
@@ -778,7 +775,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE_CONTENT, pubKey, new ByteArrayWrapper(hash));
 
             DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-            this.queue.offer(immutableItemRequest);
+            this.queue.add(immutableItemRequest);
         }
     }
 
@@ -792,7 +789,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.IMMUTABLE_DATA);
 
             DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-            this.queue.offer(immutableItemRequest);
+            this.queue.add(immutableItemRequest);
         }
     }
 
@@ -805,7 +802,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(message.getEncoded());
 
             DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
-            this.queue.offer(immutableItemDistribution);
+            this.queue.add(immutableItemDistribution);
         }
     }
 
@@ -830,7 +827,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(data);
 
             DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
-            this.queue.offer(immutableItemDistribution);
+            this.queue.add(immutableItemDistribution);
         }
     }
 
@@ -843,7 +840,7 @@ public class Communication implements DHT.GetDHTItemCallback {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(gossipList.getEncoded());
 
             DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
-            this.queue.offer(immutableItemDistribution);
+            this.queue.add(immutableItemDistribution);
         }
     }
 
@@ -907,7 +904,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                     keyPair.second, encode, salt);
             DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
 
-            this.queue.offer(mutableItemDistribution);
+            this.queue.add(mutableItemDistribution);
         }
     }
 
@@ -926,7 +923,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                     keyPair.second, encode, salt);
             DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
 
-            this.queue.offer(mutableItemDistribution);
+            this.queue.add(mutableItemDistribution);
         }
     }
 
@@ -945,7 +942,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                     keyPair.second, encode, salt);
             DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
 
-            this.queue.offer(mutableItemDistribution);
+            this.queue.add(mutableItemDistribution);
         }
     }
 
@@ -1089,13 +1086,12 @@ public class Communication implements DHT.GetDHTItemCallback {
         int size = DHTEngine.getInstance().queueOccupation();
         // 0.2 * 10000是中间层剩余空间，大于本地队列最大长度1000，目前肯定能放下
         if ((double)size / DHTEngine.DHTQueueCapability < THRESHOLD) {
-            while (true) {
-                Object request = this.queue.poll();
+            for (Object request: this.queue) {
                 if (null != request) {
                     process(request);
-                } else {
-                    break;
                 }
+
+                this.queue.remove(request);
             }
         }
     }
@@ -1217,7 +1213,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                         keyPair.second, encode, salt);
                 DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
 
-                this.queue.offer(mutableItemDistribution);
+                this.queue.add(mutableItemDistribution);
             }
 
             this.writingFriends.add(new ByteArrayWrapper(friend));
