@@ -58,9 +58,17 @@ class MsgListenHandler {
                 ByteUtil.toHexString(message.getHash()));
         String hash = ByteUtil.toHexString(message.getHash());
         String content = new String(message.getContent(), StandardCharsets.UTF_8);
-        msgLogger.debug("onNewMessage friendPk::{}, hash::{}, timestamp::{}, content::{}",
+        long sentTime = message.getTimestamp().longValue();
+        long receivedTime = DateUtil.getTime();
+        String sentTimeStr = DateUtil.formatTime(sentTime, DateUtil.pattern6);
+        String receivedTimeStr = DateUtil.formatTime(receivedTime, DateUtil.pattern6);
+        long delayTime = receivedTime - sentTime;
+        msgLogger.debug("onNewMessage friendPk::{}, hash::{}, SentTime::{}, ReceivedTime::{}," +
+                        " DelayTime::{}s content::{}",
                 ByteUtil.toHexString(friendPk), hash,
-                DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6),
+                sentTimeStr,
+                receivedTimeStr,
+                delayTime,
                 content);
         Data data = new Data.Builder()
                 .putByteArray("friendPk", friendPk)
