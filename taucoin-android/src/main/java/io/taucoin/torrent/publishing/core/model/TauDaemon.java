@@ -10,6 +10,7 @@ import com.frostwire.jlibtorrent.Ed25519;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +37,7 @@ import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -56,6 +58,7 @@ import io.taucoin.util.ByteUtil;
 public class TauDaemon {
     private static final String TAG = TauDaemon.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
+    private static final Logger msgLogger = LoggerFactory.getLogger("TAU messaging");
     private static final int initDHTOPInterval = 30 * 1000;
     private static final int maxSessions = 8;
     private static final int sessionStartedTime = 10 * 1000;
@@ -674,6 +677,12 @@ public class TauDaemon {
     public boolean sendMessage(byte[] friendPK, Message message, List<byte[]> data) {
         boolean isPublishSuccess = getCommunicationManager().publishNewMessage(friendPK, message, data);
         logger.debug("sendMessage isPublishSuccess{}", isPublishSuccess);
+        String content = new String(message.getContent(), StandardCharsets.UTF_8);
+        String hash = ByteUtil.toHexString(message.getHash());
+        msgLogger.debug("sendMessage friendPk::{}, hash::{}, timestamp::{}, content::{}",
+                ByteUtil.toHexString(friendPK), hash,
+                DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6),
+                content);
         return isPublishSuccess;
     }
 

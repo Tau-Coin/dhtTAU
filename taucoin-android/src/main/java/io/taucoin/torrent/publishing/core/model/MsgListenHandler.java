@@ -5,6 +5,8 @@ import android.content.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+
 import androidx.work.Data;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -29,6 +31,7 @@ import io.taucoin.util.ByteUtil;
  */
 class MsgListenHandler {
     private static final Logger logger = LoggerFactory.getLogger("MsgListenHandler");
+    private static final Logger msgLogger = LoggerFactory.getLogger("TAU messaging");
     private CompositeDisposable disposables = new CompositeDisposable();
     private ChatRepository chatRepo;
     private CommunityRepository communityRepo;
@@ -53,6 +56,12 @@ class MsgListenHandler {
         logger.debug("onNewMessage friendPk::{}，Hash::{}",
                 ByteUtil.toHexString(friendPk),
                 ByteUtil.toHexString(message.getHash()));
+        String hash = ByteUtil.toHexString(message.getHash());
+        String content = new String(message.getContent(), StandardCharsets.UTF_8);
+        msgLogger.debug("onNewMessage friendPk::{}, hash::{}, timestamp::{}, content::{}",
+                ByteUtil.toHexString(friendPk), hash,
+                DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6),
+                content);
         Data data = new Data.Builder()
                 .putByteArray("friendPk", friendPk)
                 .putByteArray("hash", message.getHash())
@@ -111,7 +120,11 @@ class MsgListenHandler {
                 Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
                 if (friend != null) {
                     friend.state = 2;
-                    friend.lastSeenTime = DateUtil.getTime();
+                    long currentTime = DateUtil.getTime();
+                    // 当前时间大于上次更新时间30s再更新
+                    if (currentTime - friend.lastSeenTime > 30) {
+                        friend.lastSeenTime = DateUtil.getTime();
+                    }
                     friendRepo.updateFriend(friend);
                 }
             } catch (Exception e) {
