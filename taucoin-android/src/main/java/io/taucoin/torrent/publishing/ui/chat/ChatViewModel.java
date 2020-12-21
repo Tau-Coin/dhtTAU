@@ -366,16 +366,25 @@ public class ChatViewModel extends AndroidViewModel {
                 return;
             }
             updateGossipTimeInternal();
+            publishLastMessage(friendPK);
             publishLastMessageTimer = Observable.interval(
                     Frequency.FREQUENCY_PUBLISH_MESSAGE.getFrequency(), TimeUnit.MILLISECONDS)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(aLong -> {
-                        logger.debug("publishLastMessage friendPK::{}", friendPK);
-                        daemon.publishLastMessage(ByteUtil.toByte(friendPK));
+                        publishLastMessage(friendPK);
                     });
             disposables.add(publishLastMessageTimer);
         } else {
             resumeGossipTimeInternal();
         }
+    }
+
+    /**
+     * 发布最后一条消息
+     * @param friendPk
+     */
+    private void publishLastMessage(String friendPk) {
+        logger.debug("publishLastMessage friendPk::{}", friendPk);
+        daemon.publishLastMessage(ByteUtil.toByte(friendPk));
     }
 }
