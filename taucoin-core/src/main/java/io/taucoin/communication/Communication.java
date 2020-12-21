@@ -1083,12 +1083,15 @@ public class Communication implements DHT.GetDHTItemCallback {
         int size = DHTEngine.getInstance().queueOccupation();
         // 0.2 * 10000是中间层剩余空间，大于本地队列最大长度1000，目前肯定能放下
         if ((double)size / DHTEngine.DHTQueueCapability < THRESHOLD) {
-            for (Object request: this.queue) {
+            Iterator<Object> it = this.queue.iterator();
+            while (it.hasNext()) {
+                Object request = it.next();
+
                 if (null != request) {
                     process(request);
                 }
 
-                this.queue.remove(request);
+                it.remove();
             }
         }
     }
