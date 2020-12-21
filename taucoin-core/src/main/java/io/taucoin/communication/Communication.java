@@ -261,7 +261,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         // 2.统计其他人发给我朋友的消息
         for (Map.Entry<FriendPair, BigInteger> entry : this.gossipTimeStamp.entrySet()) {
             ByteArrayWrapper key = getCompletePubKeyFromFriend(entry.getKey().getReceiver());
-            if (this.friends.contains(key)) {
+            if (null != key && this.friends.contains(key)) {
                 // 只添加一天以内有新消息的
                 if (currentTime - entry.getValue().longValue() < ChainParam.ONE_DAY) {
                     byte[] root = this.gossipRoot.get(entry.getKey());
@@ -279,67 +279,6 @@ public class Communication implements DHT.GetDHTItemCallback {
 
 
         return gossipList;
-    }
-
-    /**
-     * 获取gossip集合
-     * @return gossip set
-     */
-    private Set<GossipItem> getGossipSet() {
-        Set<GossipItem> gossipSet = new HashSet<>();
-
-        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
-
-        // 统计我发给我朋友的gossip
-        long currentTime = System.currentTimeMillis() / 1000;
-        for (ByteArrayWrapper friend: this.friends) {
-            BigInteger timeStamp = this.timeStampToFriend.get(friend);
-            byte[] root = this.rootToFriend.get(friend);
-//            byte[] confirmationRoot = this.confirmationRootToFriend.get(friend);
-            byte[] confirmationRoot = this.friendRoot.get(friend);
-            byte[] demandImmutableDataHash = this.demandImmutableDataHash.get(friend);
-
-            // 如果有demand需求，时间戳用最新时间，以便被捕获
-            if (null != demandImmutableDataHash) {
-                timeStamp = BigInteger.valueOf(currentTime);
-            }
-
-            if (null != timeStamp && null != root) {
-
-                if (this.writingFriends.contains(friend)) {
-                    GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                            timeStamp, root, confirmationRoot, demandImmutableDataHash, GossipStatus.ON_WRITING);
-                    gossipSet.add(gossipItem);
-
-                    this.writingFriends.remove(friend);
-                } else {
-                    GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                            timeStamp, root, confirmationRoot, demandImmutableDataHash, GossipStatus.UNKNOWN);
-                    gossipSet.add(gossipItem);
-                }
-            }
-        }
-
-        // 统计其他人发给我朋友的消息
-        for (Map.Entry<FriendPair, BigInteger> entry : this.gossipTimeStamp.entrySet()) {
-            if (this.friends.contains(new ByteArrayWrapper(entry.getKey().getReceiver()))) {
-                // 只添加一天以内有新消息的
-                if (currentTime - entry.getValue().longValue() < ChainParam.ONE_DAY) {
-                    byte[] root = this.gossipRoot.get(entry.getKey());
-                    byte[] confirmationRoot = this.gossipConfirmationRoot.get(entry.getKey());
-                    byte[] demandImmutableDataHash = this.gossipDemandImmutableDataHash.get(entry.getKey());
-                    GossipStatus gossipStatus = this.gossipStatus.get(entry.getKey());
-                    if (null != root) {
-                        GossipItem gossipItem = makeGossipItemWithShortAddress(entry.getKey().getSender(),
-                                entry.getKey().getReceiver(), entry.getValue(), root, confirmationRoot, demandImmutableDataHash, gossipStatus);
-                        gossipSet.add(gossipItem);
-                    }
-                }
-            }
-        }
-
-
-        return gossipSet;
     }
 
     /**
@@ -508,6 +447,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         long currentTime = System.currentTimeMillis() / 1000;
         for (Map.Entry<ByteArrayWrapper, Long> entry: this.writingFriendsToVisit.entrySet()) {
             if (currentTime - entry.getValue() > ChainParam.GOSSIP_CHANNEL_TIME) {
+                logger.debug("Remove writing peer:{}", entry.getKey().toString());
                 this.writingFriendsToVisit.remove(entry.getKey());
             } else {
                 requestLatestMessageFromPeer(entry.getKey());
@@ -740,7 +680,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void requestLatestMessageFromPeer(ByteArrayWrapper pubKey) {
         if (null != pubKey) {
-            logger.trace("Request latest message from peer:{}", pubKey.toString());
+            logger.debug("Request latest message from peer:{}", pubKey.toString());
 
             byte[] salt = getReceivingSalt(pubKey.getData());
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
@@ -1481,6 +1421,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                         }
 
                         if (GossipStatus.ON_WRITING == gossipItem.getGossipStatus()) {
+                            logger.debug("Got a writing peer:{}", peer.toString());
                             this.writingFriendsToVisit.put(peer, System.currentTimeMillis() / 1000);
                         }
 
