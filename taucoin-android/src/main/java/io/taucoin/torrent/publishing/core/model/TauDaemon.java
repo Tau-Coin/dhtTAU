@@ -737,11 +737,11 @@ public class TauDaemon {
      * 发布最后一条消息
      * @param friendPk
      */
-    public void publishLastMessage(byte[] friendPk) {
+    public void publishLastMessage(String friendPk) {
         if (!isRunning) {
             return;
         }
-        getCommunicationManager().publishLastMessage(friendPk);
+        getCommunicationManager().publishLastMessage(ByteUtil.toByte(friendPk));
         logger.debug("publishLastMessage friendPk::{} successfully", friendPk);
     }
 }

@@ -385,6 +385,6 @@ public class ChatViewModel extends AndroidViewModel {
      */
     private void publishLastMessage(String friendPk) {
         logger.debug("publishLastMessage friendPk::{}", friendPk);
-        daemon.publishLastMessage(ByteUtil.toByte(friendPk));
+        daemon.publishLastMessage(friendPk);
     }
 }
