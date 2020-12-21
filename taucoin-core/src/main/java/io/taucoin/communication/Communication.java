@@ -682,11 +682,23 @@ public class Communication implements DHT.GetDHTItemCallback {
         if (null != pubKey) {
             logger.debug("Request latest message from peer:{}", pubKey.toString());
 
+            // 在当前时间频道请求
             byte[] salt = getReceivingSalt(pubKey.getData());
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.LATEST_MESSAGE, pubKey);
-
             DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+            this.queue.add(mutableItemRequest);
+
+            // 在下一个时间频道请求
+            salt = getNextReceivingSalt(pubKey.getData());
+            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
+            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+            this.queue.add(mutableItemRequest);
+
+            // 在上一个时间频道请求
+            salt = getPreviousReceivingSalt(pubKey.getData());
+            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
+            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
             this.queue.add(mutableItemRequest);
         }
     }
@@ -1107,6 +1119,8 @@ public class Communication implements DHT.GetDHTItemCallback {
                     publishMessage(message);
                     publishImmutableData(data);
                     publishGossipInfo();
+
+                    publishLastMessage(friend);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
@@ -1146,6 +1160,44 @@ public class Communication implements DHT.GetDHTItemCallback {
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
         long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
+        System.arraycopy(friend, 0, salt, 0, SHORT_ADDRESS_LENGTH);
+        System.arraycopy(pubKey, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
+        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
+
+        return salt;
+    }
+
+    /**
+     * 获取下一个聊天接收频道salt
+     * @param friend 对方public key
+     * @return salt
+     */
+    public byte[] getNextReceivingSalt(byte[] friend) {
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME + 1;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
+        System.arraycopy(friend, 0, salt, 0, SHORT_ADDRESS_LENGTH);
+        System.arraycopy(pubKey, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
+        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
+
+        return salt;
+    }
+
+    /**
+     * 获取上一个聊天接收频道salt
+     * @param friend 对方public key
+     * @return salt
+     */
+    public byte[] getPreviousReceivingSalt(byte[] friend) {
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME - 1;
         byte[] timeBytes = ByteUtil.longToBytes(time);
 
         byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
