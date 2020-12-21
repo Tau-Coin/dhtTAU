@@ -85,61 +85,61 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 请求到的demand item
     private final Set<ByteArrayWrapper> demandItem = new CopyOnWriteArraySet<>();
 
-    // 当前我加的朋友集合
+    // 当前我加的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
 
-    // 当前发现的等待通知的在线的朋友集合
+    // 当前发现的等待通知的在线的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> onlineFriendsToNotify = new CopyOnWriteArraySet<>();
 
-    // 我的朋友的最新消息的时间戳 <friend, timestamp>
+    // 我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> friendTimeStamp = new ConcurrentHashMap<>();
 
-    // 我的朋友的最新消息的root <friend, root>
+    // 我的朋友的最新消息的root <friend, root>（完整公钥）
     private final Map<ByteArrayWrapper, byte[]> friendRoot = new ConcurrentHashMap<>();
 
-    // 我的朋友的最新确认的root <friend, root>
+    // 我的朋友的最新确认的root <friend, root>（完整公钥）
     private final Map<ByteArrayWrapper, byte[]> friendConfirmationRoot = new ConcurrentHashMap<>();
 
-    // 新发现的，等待通知UI的，我的朋友的最新确认的root <friend, root>
+    // 新发现的，等待通知UI的，我的朋友的最新确认的root <friend, root>（完整公钥）
     private final Map<ByteArrayWrapper, byte[]> friendConfirmationRootToNotify = new ConcurrentHashMap<>();
 
-    // 给我的朋友的最新消息的时间戳 <friend, timestamp>，发现对方新的确认信息root也会更新该时间
+    // 给我的朋友的最新消息的时间戳 <friend, timestamp>，发现对方新的确认信息root也会更新该时间（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> timeStampToFriend = new ConcurrentHashMap<>();
 
-    // 给我的朋友的最新消息的root <friend, root>
+    // 给我的朋友的最新消息的root <friend, root>（完整公钥）
     private final Map<ByteArrayWrapper, byte[]> rootToFriend = new ConcurrentHashMap<>();
 
-    // 当前我正在聊天的朋友集合，即用即弃
+    // 当前我正在聊天的朋友集合，即用即弃（完整公钥）
     private final Set<ByteArrayWrapper> writingFriends = new CopyOnWriteArraySet<>();
 
-    // 当前发现的处于写状态的朋友集合，即用即弃，<friend, timestamp>
+    // 当前发现的处于写状态的朋友集合，即用即弃，<friend, timestamp>（完整公钥）
     private final Map<ByteArrayWrapper, Long> writingFriendsToVisit = new ConcurrentHashMap<>();
 
     // 发给朋友的confirmation root hash <friend, root>
 //    private final Map<ByteArrayWrapper, byte[]> confirmationRootToFriend = new ConcurrentHashMap<>();
 
-    // 我的需求 <friend, demand hash>，用于通知我的朋友我的需求
-    private final Map<ByteArrayWrapper, byte[]> demandHash = new ConcurrentHashMap<>();
+    // 我的需求 <friend, demand hash>，用于通知我的朋友我的需求（完整公钥）
+    private final Map<ByteArrayWrapper, byte[]> demandImmutableDataHash = new ConcurrentHashMap<>();
 
     // 我收到的需求hash
     private final Set<ByteArrayWrapper> friendDemandHash = new CopyOnWriteArraySet<>();
 
-    // 通过gossip机制发现的跟我有新消息的朋友集合
+    // 通过gossip机制发现的跟我有新消息的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> activeFriends = new CopyOnWriteArraySet<>();
 
-    // 通过gossip机制发现的给朋友的最新时间 <FriendPair, timestamp>
+    // 通过gossip机制发现的给朋友的最新时间 <FriendPair, timestamp>（非完整公钥）
     private final Map<FriendPair, BigInteger> gossipTimeStamp = Collections.synchronizedMap(new HashMap<>());
 
-    // 通过gossip机制发现的给朋友的root <FriendPair, root>
+    // 通过gossip机制发现的给朋友的root <FriendPair, root>（非完整公钥）
     private final Map<FriendPair, byte[]> gossipRoot = Collections.synchronizedMap(new HashMap<>());
 
-    // 通过gossip机制发现的给朋友的confirmation root <FriendPair, root>
+    // 通过gossip机制发现的给朋友的confirmation root <FriendPair, root>（非完整公钥）
     private final Map<FriendPair, byte[]> gossipConfirmationRoot = Collections.synchronizedMap(new HashMap<>());
 
-    // 通过gossip机制发现的给朋友的demand immutable data hash <FriendPair, demand hash>
+    // 通过gossip机制发现的给朋友的demand immutable data hash <FriendPair, demand hash>（非完整公钥）
     private final Map<FriendPair, byte[]> gossipDemandImmutableDataHash = Collections.synchronizedMap(new HashMap<>());
 
-    // 通过gossip机制发现的给朋友的gossip status <FriendPair, gossip status>
+    // 通过gossip机制发现的给朋友的gossip status <FriendPair, gossip status>（非完整公钥）
     private final Map<FriendPair, GossipStatus> gossipStatus = Collections.synchronizedMap(new HashMap<>());
 
     // Communication thread.
@@ -205,13 +205,13 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param timestamp timestamp
      * @param root msg root
      * @param confirmationRoot confirmation root
-     * @param demandHash demand hash
+     * @param demandImmutableDataHash demand hash
      * @param gossipStatus gossip status
      * @return gossip item
      */
     private GossipItem makeGossipItemWithShortAddress(byte[] sender, byte[] receiver,
                                                       BigInteger timestamp, byte[] root,
-                                                      byte[] confirmationRoot, byte[] demandHash,
+                                                      byte[] confirmationRoot, byte[] demandImmutableDataHash,
                                                       GossipStatus gossipStatus) {
         byte[] shortSender = new byte[SHORT_ADDRESS_LENGTH];
         System.arraycopy(sender, 0, shortSender, 0, SHORT_ADDRESS_LENGTH);
@@ -219,7 +219,7 @@ public class Communication implements DHT.GetDHTItemCallback {
         byte[] shortReceiver = new byte[SHORT_ADDRESS_LENGTH];
         System.arraycopy(receiver, 0, shortReceiver, 0, SHORT_ADDRESS_LENGTH);
 
-        return new GossipItem(shortSender, shortReceiver, timestamp, root, confirmationRoot, demandHash, gossipStatus);
+        return new GossipItem(shortSender, shortReceiver, timestamp, root, confirmationRoot, demandImmutableDataHash, gossipStatus);
     }
 
     /**
@@ -238,38 +238,39 @@ public class Communication implements DHT.GetDHTItemCallback {
             byte[] root = this.rootToFriend.get(friend);
 //            byte[] confirmationRoot = this.confirmationRootToFriend.get(friend);
             byte[] confirmationRoot = this.friendRoot.get(friend);
-            byte[] demandHash = this.demandHash.get(friend);
+            byte[] demandImmutableDataHash = this.demandImmutableDataHash.get(friend);
 
             // 如果有demand需求，时间戳用最新时间，以便被捕获
-            if (null != demandHash || null == timeStamp) {
+            if (null != demandImmutableDataHash || null == timeStamp) {
                 timeStamp = BigInteger.valueOf(currentTime);
             }
 
             if (this.writingFriends.contains(friend)) {
                 GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                        timeStamp, root, confirmationRoot, demandHash, GossipStatus.ON_WRITING);
+                        timeStamp, root, confirmationRoot, demandImmutableDataHash, GossipStatus.ON_WRITING);
                 gossipList.add(gossipItem);
 
                 this.writingFriends.remove(friend);
             } else {
                 GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                        timeStamp, root, confirmationRoot, demandHash, GossipStatus.UNKNOWN);
+                        timeStamp, root, confirmationRoot, demandImmutableDataHash, GossipStatus.UNKNOWN);
                 gossipList.add(gossipItem);
             }
         }
 
         // 2.统计其他人发给我朋友的消息
         for (Map.Entry<FriendPair, BigInteger> entry : this.gossipTimeStamp.entrySet()) {
-            if (this.friends.contains(new ByteArrayWrapper(entry.getKey().getReceiver()))) {
+            ByteArrayWrapper key = getCompletePubKeyFromFriend(entry.getKey().getReceiver());
+            if (this.friends.contains(key)) {
                 // 只添加一天以内有新消息的
                 if (currentTime - entry.getValue().longValue() < ChainParam.ONE_DAY) {
                     byte[] root = this.gossipRoot.get(entry.getKey());
                     byte[] confirmationRoot = this.gossipConfirmationRoot.get(entry.getKey());
-                    byte[] demandHash = this.gossipDemandImmutableDataHash.get(entry.getKey());
+                    byte[] demandImmutableDataHash = this.gossipDemandImmutableDataHash.get(entry.getKey());
                     GossipStatus gossipStatus = this.gossipStatus.get(entry.getKey());
                     if (null != root) {
                         GossipItem gossipItem = makeGossipItemWithShortAddress(entry.getKey().getSender(),
-                                entry.getKey().getReceiver(), entry.getValue(), root, confirmationRoot, demandHash, gossipStatus);
+                                entry.getKey().getReceiver(), entry.getValue(), root, confirmationRoot, demandImmutableDataHash, gossipStatus);
                         gossipList.add(gossipItem);
                     }
                 }
@@ -296,10 +297,10 @@ public class Communication implements DHT.GetDHTItemCallback {
             byte[] root = this.rootToFriend.get(friend);
 //            byte[] confirmationRoot = this.confirmationRootToFriend.get(friend);
             byte[] confirmationRoot = this.friendRoot.get(friend);
-            byte[] demandHash = this.demandHash.get(friend);
+            byte[] demandImmutableDataHash = this.demandImmutableDataHash.get(friend);
 
             // 如果有demand需求，时间戳用最新时间，以便被捕获
-            if (null != demandHash) {
+            if (null != demandImmutableDataHash) {
                 timeStamp = BigInteger.valueOf(currentTime);
             }
 
@@ -307,13 +308,13 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                 if (this.writingFriends.contains(friend)) {
                     GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.ON_WRITING);
+                            timeStamp, root, confirmationRoot, demandImmutableDataHash, GossipStatus.ON_WRITING);
                     gossipSet.add(gossipItem);
 
                     this.writingFriends.remove(friend);
                 } else {
                     GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.UNKNOWN);
+                            timeStamp, root, confirmationRoot, demandImmutableDataHash, GossipStatus.UNKNOWN);
                     gossipSet.add(gossipItem);
                 }
             }
@@ -326,11 +327,11 @@ public class Communication implements DHT.GetDHTItemCallback {
                 if (currentTime - entry.getValue().longValue() < ChainParam.ONE_DAY) {
                     byte[] root = this.gossipRoot.get(entry.getKey());
                     byte[] confirmationRoot = this.gossipConfirmationRoot.get(entry.getKey());
-                    byte[] demandHash = this.gossipDemandImmutableDataHash.get(entry.getKey());
+                    byte[] demandImmutableDataHash = this.gossipDemandImmutableDataHash.get(entry.getKey());
                     GossipStatus gossipStatus = this.gossipStatus.get(entry.getKey());
                     if (null != root) {
                         GossipItem gossipItem = makeGossipItemWithShortAddress(entry.getKey().getSender(),
-                                entry.getKey().getReceiver(), entry.getValue(), root, confirmationRoot, demandHash, gossipStatus);
+                                entry.getKey().getReceiver(), entry.getValue(), root, confirmationRoot, demandImmutableDataHash, gossipStatus);
                         gossipSet.add(gossipItem);
                     }
                 }
@@ -362,6 +363,21 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
+     * 从朋友列表获取完整公钥
+     * @param pubKey public key
+     * @return 完整的公钥
+     */
+    private ByteArrayWrapper getCompletePubKeyFromFriend(byte[] pubKey) {
+        for (ByteArrayWrapper key: this.friends) {
+            if (ByteUtil.startsWith(key.getData(), pubKey)) {
+                return key;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
      * 处理朋友相关的gossip item
      */
     private void dealWithGossipItem() {
@@ -378,8 +394,12 @@ public class Communication implements DHT.GetDHTItemCallback {
             // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
             if (!ByteUtil.startsWith(pubKey, sender)) {
                 // 首先，判断一下是否有涉及自己的gossip，有的话则加入待访问的活跃朋友集合
-                if (ByteUtil.startsWith(pubKey, receiver)) {
-                    this.activeFriends.add(new ByteArrayWrapper(receiver));
+                if (ByteUtil.startsWith(pubKey, receiver)) { // 接收者是我
+                    // 寻找发送者完整公钥
+                    ByteArrayWrapper peer = getCompletePubKeyFromFriend(sender);
+                    if (null != peer) {
+                        this.activeFriends.add(peer);
+                    }
                 } else {
                     // 寻找跟我朋友相关的gossip
                     for (ByteArrayWrapper friend : this.friends) {
@@ -595,13 +615,13 @@ public class Communication implements DHT.GetDHTItemCallback {
             this.messageDB.putMessage(hash, demandItem.getData());
 
             // 从demand集合移除
-            Iterator<Map.Entry<ByteArrayWrapper, byte[]>> iterator = this.demandHash.entrySet().iterator();
+            Iterator<Map.Entry<ByteArrayWrapper, byte[]>> iterator = this.demandImmutableDataHash.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<ByteArrayWrapper, byte[]> entry = iterator.next();
                 byte[] value = entry.getValue();
                 if (Arrays.equals(hash, value)) {
                     logger.debug("Remove hash[{}] from demand hash set", Hex.toHexString(hash));
-                    this.demandHash.remove(entry.getKey());
+                    this.demandImmutableDataHash.remove(entry.getKey());
 //                    iterator.remove();
                 }
             }
@@ -615,7 +635,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      * 请求immutable data
      */
     private void requestDemandHash() throws DBException {
-        for (Map.Entry<ByteArrayWrapper, byte[]> entry: this.demandHash.entrySet()) {
+        for (Map.Entry<ByteArrayWrapper, byte[]> entry: this.demandImmutableDataHash.entrySet()) {
             logger.trace("Request demand hash:{}", Hex.toHexString(entry.getValue()));
             requestImmutableData(entry.getValue());
         }
@@ -1280,34 +1300,34 @@ public class Communication implements DHT.GetDHTItemCallback {
         this.timeStampToFriend.remove(key);
         this.rootToFriend.remove(key);
 //        this.confirmationRootToFriend.remove(key);
-        this.demandHash.remove(key);
+        this.demandImmutableDataHash.remove(key);
 
         for (Map.Entry<FriendPair, BigInteger> entry: this.gossipTimeStamp.entrySet()) {
-            if (Arrays.equals(pubKey, entry.getKey().getReceiver())) {
+            if (ByteUtil.startsWith(pubKey, entry.getKey().getReceiver())) {
                 this.gossipTimeStamp.remove(entry.getKey());
             }
         }
 
         for (Map.Entry<FriendPair, byte[]> entry: this.gossipRoot.entrySet()) {
-            if (Arrays.equals(pubKey, entry.getKey().getReceiver())) {
+            if (ByteUtil.startsWith(pubKey, entry.getKey().getReceiver())) {
                 this.gossipRoot.remove(entry.getKey());
             }
         }
 
         for (Map.Entry<FriendPair, byte[]> entry: this.gossipConfirmationRoot.entrySet()) {
-            if (Arrays.equals(pubKey, entry.getKey().getReceiver())) {
+            if (ByteUtil.startsWith(pubKey, entry.getKey().getReceiver())) {
                 this.gossipConfirmationRoot.remove(entry.getKey());
             }
         }
 
         for (Map.Entry<FriendPair, byte[]> entry: this.gossipDemandImmutableDataHash.entrySet()) {
-            if (Arrays.equals(pubKey, entry.getKey().getReceiver())) {
+            if (ByteUtil.startsWith(pubKey, entry.getKey().getReceiver())) {
                 this.gossipDemandImmutableDataHash.remove(entry.getKey());
             }
         }
 
         for (Map.Entry<FriendPair, GossipStatus> entry: this.gossipStatus.entrySet()) {
-            if (Arrays.equals(pubKey, entry.getKey().getReceiver())) {
+            if (ByteUtil.startsWith(pubKey, entry.getKey().getReceiver())) {
                 this.gossipStatus.remove(entry.getKey());
             }
         }
@@ -1438,10 +1458,10 @@ public class Communication implements DHT.GetDHTItemCallback {
                     logger.debug("Got trusted gossip:{} from online friend[{}]",
                             gossipItem.toString(), peer.toString());
 
-                    // 发现的在线好友
+                    // 发现的在线好友（完整公钥）
                     this.onlineFriendsToNotify.add(peer);
 
-                    BigInteger oldTimeStamp = this.friendTimeStamp.get(sender);
+                    BigInteger oldTimeStamp = this.friendTimeStamp.get(peer);
                     BigInteger timeStamp = gossipItem.getTimestamp();
 
                     if (null != oldTimeStamp) {
@@ -1465,32 +1485,32 @@ public class Communication implements DHT.GetDHTItemCallback {
                         }
 
                         // 更新时间戳
-                        this.friendTimeStamp.put(sender, timeStamp);
+                        this.friendTimeStamp.put(peer, timeStamp);
 
                         // 只要发现更新的gossip信息，则使用其confirmation root
                         if (null != gossipItem.getConfirmationRoot()) {
                             logger.debug("Got a friend[{}] confirmation root[{}]",
                                     peer.toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
 
-                            byte[] confirmationRoot = this.friendConfirmationRoot.get(sender);
+                            byte[] confirmationRoot = this.friendConfirmationRoot.get(peer);
                             if (!Arrays.equals(confirmationRoot, gossipItem.getConfirmationRoot())) {
                                 // 有信息要发，即确认信息要发，更新时间戳，确认收到该root
                                 long currentTime = System.currentTimeMillis() / 1000;
-                                this.timeStampToFriend.put(sender, BigInteger.valueOf(currentTime));
+                                this.timeStampToFriend.put(peer, BigInteger.valueOf(currentTime));
                                 // 更新confirmation root
-                                this.friendConfirmationRoot.put(sender, gossipItem.getConfirmationRoot());
+                                this.friendConfirmationRoot.put(peer, gossipItem.getConfirmationRoot());
                                 // 加入待通知列表
-                                this.friendConfirmationRootToNotify.put(sender, gossipItem.getConfirmationRoot());
+                                this.friendConfirmationRootToNotify.put(peer, gossipItem.getConfirmationRoot());
                             }
                         }
 
                         // 发现更新时间戳的gossip消息，并且root与之前的不同，才更新并请求新数据
-                        byte[] currentRoot = this.friendRoot.get(sender);
+                        byte[] currentRoot = this.friendRoot.get(peer);
                         if (!Arrays.equals(currentRoot, gossipItem.getMessageRoot()) && null != gossipItem.getMessageRoot()) {
                             logger.debug("Got a new message root:{}", Hex.toHexString(gossipItem.getMessageRoot()));
                             // 如果该消息的root之前没拿到过，说明是新消息过来
                             // 更新朋友root信息
-                            this.friendRoot.put(sender, gossipItem.getMessageRoot());
+                            this.friendRoot.put(peer, gossipItem.getMessageRoot());
                             // 请求该root
                             requestMessage(gossipItem.getMessageRoot(), peer);
                         }
@@ -1523,7 +1543,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                 if (null == item) {
                     logger.debug("MESSAGE[{}] from peer[{}] is empty",
                             dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
-                    this.demandHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
+                    this.demandImmutableDataHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
 
@@ -1545,7 +1565,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                 if (null == item) {
                     logger.debug("MESSAGE_CONTENT[{}] from peer[{}] is empty",
                             dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
-                    this.demandHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
+                    this.demandImmutableDataHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
 
@@ -1568,7 +1588,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                 if (null == item) {
                     logger.debug("GOSSIP_LIST[{}] from peer[{}] is empty",
                             dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
-                    this.demandHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
+                    this.demandImmutableDataHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
 
