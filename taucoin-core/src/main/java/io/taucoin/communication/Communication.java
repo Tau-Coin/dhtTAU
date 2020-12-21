@@ -241,23 +241,20 @@ public class Communication implements DHT.GetDHTItemCallback {
             byte[] demandHash = this.demandHash.get(friend);
 
             // 如果有demand需求，时间戳用最新时间，以便被捕获
-            if (null != demandHash) {
+            if (null != demandHash || null == timeStamp) {
                 timeStamp = BigInteger.valueOf(currentTime);
             }
 
-            if (null != timeStamp && null != root) {
+            if (this.writingFriends.contains(friend)) {
+                GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
+                        timeStamp, root, confirmationRoot, demandHash, GossipStatus.ON_WRITING);
+                gossipList.add(gossipItem);
 
-                if (this.writingFriends.contains(friend)) {
-                    GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.ON_WRITING);
-                    gossipList.add(gossipItem);
-
-                    this.writingFriends.remove(friend);
-                } else {
-                    GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
-                            timeStamp, root, confirmationRoot, demandHash, GossipStatus.UNKNOWN);
-                    gossipList.add(gossipItem);
-                }
+                this.writingFriends.remove(friend);
+            } else {
+                GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(),
+                        timeStamp, root, confirmationRoot, demandHash, GossipStatus.UNKNOWN);
+                gossipList.add(gossipItem);
             }
         }
 
@@ -1486,7 +1483,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                         // 发现更新时间戳的gossip消息，并且root与之前的不同，才更新并请求新数据
                         byte[] currentRoot = this.friendRoot.get(sender);
-                        if (!Arrays.equals(currentRoot, gossipItem.getMessageRoot())) {
+                        if (!Arrays.equals(currentRoot, gossipItem.getMessageRoot()) && null != gossipItem.getMessageRoot()) {
                             logger.debug("Got a new message root:{}", Hex.toHexString(gossipItem.getMessageRoot()));
                             // 如果该消息的root之前没拿到过，说明是新消息过来
                             // 更新朋友root信息
