@@ -68,7 +68,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     private final MessageDB messageDB;
 
     // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求，LinkedHashSet确保队列的顺序性与唯一性
-    private final LinkedHashSet<Object> queue = new LinkedHashSet<>();
+    private final Set<Object> queue = Collections.synchronizedSet(new LinkedHashSet<>());
 
     // 发现的gossip item集合，synchronizedSet是支持并发操作的集合
     private final Set<GossipItem> gossipItems = new CopyOnWriteArraySet<>();
@@ -1055,6 +1055,13 @@ public class Communication implements DHT.GetDHTItemCallback {
         int size = DHTEngine.getInstance().queueOccupation();
         // 0.2 * 10000是中间层剩余空间，大于本地队列最大长度1000，目前肯定能放下
         if ((double)size / DHTEngine.DHTQueueCapability < THRESHOLD) {
+//            for (Object request: this.queue) {
+//                if (null != request) {
+//                    process(request);
+//                }
+//
+//                this.queue.remove(request);
+//            }
             Iterator<Object> it = this.queue.iterator();
             while (it.hasNext()) {
                 Object request = it.next();
