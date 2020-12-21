@@ -55,9 +55,10 @@ public class MsgListenHandlerWorker extends Worker {
             int type = data.getInt("type", 0);
             String friendPkStr = ByteUtil.toHexString(friendPk);
             String hashStr = ByteUtil.toHexString(hash);
+            String userPk = MainApplication.getInstance().getPublicKey();
             logger.debug("onNewMessage friendPk::{}, hash::{}, timestamp::{}", friendPkStr, hashStr,
                     DateUtil.formatTime(timestamp, DateUtil.pattern6));
-            ChatMsg chatMsg = chatRepo.queryChatMsg(friendPkStr, hashStr);
+            ChatMsg chatMsg = chatRepo.queryChatMsg(userPk, hashStr);
             // 上报的Message有可能重复, 如果本地已存在不处理
             if (null == chatMsg) {
                 // 处理ChatName，如果为空，取显朋友显示名
@@ -69,7 +70,6 @@ public class MsgListenHandlerWorker extends Worker {
                     communityRepo.addCommunity(community);
                 }
                 // 更新朋友信息
-                String userPk = MainApplication.getInstance().getPublicKey();
                 Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
                 if (friend != null) {
                     friend.state = 2;

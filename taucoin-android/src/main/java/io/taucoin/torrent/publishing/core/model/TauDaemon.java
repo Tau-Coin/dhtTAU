@@ -99,7 +99,7 @@ public class TauDaemon {
         settingsRepo = RepositoryHelper.getSettingsRepository(appContext);
         systemServiceManager = SystemServiceManager.getInstance();
         tauListenHandler = new TauListenHandler(appContext, this);
-        msgListenHandler = new MsgListenHandler(appContext, this);
+        msgListenHandler = new MsgListenHandler(appContext);
         tauInfoProvider = TauInfoProvider.getInstance(this);
 
         AndroidLeveldbFactory androidLeveldbFactory = new AndroidLeveldbFactory();
