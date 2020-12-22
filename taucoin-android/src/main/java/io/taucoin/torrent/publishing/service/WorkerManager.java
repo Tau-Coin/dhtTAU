@@ -64,7 +64,7 @@ public class WorkerManager {
                 .build();
         WorkManager.getInstance(context)
                 .beginUniqueWork(MSG_LISTEN_HANDLER_WORK_NAME,
-                    ExistingWorkPolicy.APPEND, request)
+                    ExistingWorkPolicy.APPEND_OR_REPLACE, request)
                 .enqueue();
     }
 

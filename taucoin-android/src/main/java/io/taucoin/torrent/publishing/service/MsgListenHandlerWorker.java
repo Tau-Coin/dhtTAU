@@ -35,7 +35,6 @@ public class MsgListenHandlerWorker extends Worker {
     private FriendRepository friendRepo;
     public MsgListenHandlerWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
-        logger.debug("constructor");
         chatRepo = RepositoryHelper.getChatRepository(context);
         communityRepo = RepositoryHelper.getCommunityRepository(context);
         friendRepo = RepositoryHelper.getFriendsRepository(context);
@@ -56,9 +55,10 @@ public class MsgListenHandlerWorker extends Worker {
             String friendPkStr = ByteUtil.toHexString(friendPk);
             String hashStr = ByteUtil.toHexString(hash);
             String userPk = MainApplication.getInstance().getPublicKey();
-            logger.debug("onNewMessage friendPk::{}, hash::{}, timestamp::{}", friendPkStr, hashStr,
-                    DateUtil.formatTime(timestamp, DateUtil.pattern6));
             ChatMsg chatMsg = chatRepo.queryChatMsg(userPk, hashStr);
+            logger.debug("onNewMessage friendPk::{}, hash::{},  timestamp::{}, exist::{}",
+                    friendPkStr, hashStr, DateUtil.formatTime(timestamp, DateUtil.pattern6),
+                    null != chatMsg);
             // 上报的Message有可能重复, 如果本地已存在不处理
             if (null == chatMsg) {
                 // 处理ChatName，如果为空，取显朋友显示名
