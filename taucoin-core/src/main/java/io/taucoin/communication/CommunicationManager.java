@@ -86,6 +86,14 @@ public class CommunicationManager {
     }
 
     /**
+     * 正在写给某个朋友
+     * @param friend 正在写给的朋友
+     */
+    public void writingToFriend(byte[] friend) {
+        this.communication.writingToFriend(friend);
+    }
+
+    /**
      * 请求message相关的数据，包括message/message content/各级图片/文本等，拿到数据后会放到message db
      * @param hash data hash
      */

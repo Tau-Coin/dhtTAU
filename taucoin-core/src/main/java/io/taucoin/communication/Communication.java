@@ -48,7 +48,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     // 判断中间层队列的门槛值，中间层队列使用率超过0.8，则增加主循环时间间隔
     private final double THRESHOLD = 0.8;
 
-    private final int SHORT_ADDRESS_LENGTH = 4;
+    private static final int SHORT_ADDRESS_LENGTH = 4;
 
     // 主循环间隔最小时间
     private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
@@ -690,19 +690,19 @@ public class Communication implements DHT.GetDHTItemCallback {
             DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
             this.queue.add(mutableItemRequest);
 
-//            // 在下一个时间频道请求
-//            salt = getNextReceivingSalt(pubKey.getData());
-//            logger.debug("TAU messaging, next salt:{}", Hex.toHexString(salt));
-//            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
-//            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-//            this.queue.add(mutableItemRequest);
-//
-//            // 在上一个时间频道请求
-//            salt = getPreviousReceivingSalt(pubKey.getData());
-//            logger.debug("TAU messaging, previous salt:{}", Hex.toHexString(salt));
-//            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
-//            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-//            this.queue.add(mutableItemRequest);
+            // 在下一个时间频道请求
+            salt = getNextReceivingSalt(pubKey.getData());
+            logger.debug("TAU messaging, next salt:{}", Hex.toHexString(salt));
+            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
+            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+            this.queue.add(mutableItemRequest);
+
+            // 在上一个时间频道请求
+            salt = getPreviousReceivingSalt(pubKey.getData());
+            logger.debug("TAU messaging, previous salt:{}", Hex.toHexString(salt));
+            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
+            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+            this.queue.add(mutableItemRequest);
         }
     }
 
@@ -1128,9 +1128,8 @@ public class Communication implements DHT.GetDHTItemCallback {
                     updateMessageInfoToFriend(friend, message);
                     publishMessage(message);
                     publishImmutableData(data);
-                    publishGossipInfo();
-
                     publishLastMessage(friend);
+                    publishGossipInfo();
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
@@ -1150,13 +1149,51 @@ public class Communication implements DHT.GetDHTItemCallback {
     public byte[] getSendingSalt(byte[] friend) {
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-//        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
-//        byte[] timeBytes = ByteUtil.longToBytes(time);
+        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
 
-        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 /*+ timeBytes.length*/];
+        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
         System.arraycopy(pubKey, 0, salt, 0, SHORT_ADDRESS_LENGTH);
         System.arraycopy(friend, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-//        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
+        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
+
+        return salt;
+    }
+
+    /**
+     * 获取下一个聊天发送频道salt
+     * @param friend 对方public key
+     * @return salt
+     */
+    public byte[] getNextSendingSalt(byte[] friend) {
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
+        System.arraycopy(pubKey, 0, salt, 0, SHORT_ADDRESS_LENGTH);
+        System.arraycopy(friend, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
+        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
+
+        return salt;
+    }
+
+    /**
+     * 获取前一个聊天发送频道salt
+     * @param friend 对方public key
+     * @return salt
+     */
+    public byte[] getPreviousSendingSalt(byte[] friend) {
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
+
+        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
+        System.arraycopy(pubKey, 0, salt, 0, SHORT_ADDRESS_LENGTH);
+        System.arraycopy(friend, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
+        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
 
         return salt;
     }
@@ -1169,13 +1206,13 @@ public class Communication implements DHT.GetDHTItemCallback {
     public byte[] getReceivingSalt(byte[] friend) {
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-//        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
-//        byte[] timeBytes = ByteUtil.longToBytes(time);
+        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
+        byte[] timeBytes = ByteUtil.longToBytes(time);
 
-        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 /*+ timeBytes.length*/];
+        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
         System.arraycopy(friend, 0, salt, 0, SHORT_ADDRESS_LENGTH);
         System.arraycopy(pubKey, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-//        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
+        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
 
         return salt;
     }
@@ -1227,21 +1264,44 @@ public class Communication implements DHT.GetDHTItemCallback {
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
         byte[] root = this.rootToFriend.get(new ByteArrayWrapper(friend));
-        byte[] salt = getSendingSalt(friend);
-        logger.debug("TAU messaging, sending salt:{}", Hex.toHexString(salt));
 
         if (null != root) {
             byte[] encode = this.messageDB.getMessageByHash(root);
             if (null != encode) {
+                byte[] salt = getSendingSalt(friend);
+                logger.debug("TAU messaging, sending salt:{}", Hex.toHexString(salt));
                 DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                         keyPair.second, encode, salt);
                 DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
+                this.queue.add(mutableItemDistribution);
 
+                salt = getNextSendingSalt(friend);
+                logger.debug("TAU messaging, next sending salt:{}", Hex.toHexString(salt));
+                mutableItem = new DHT.MutableItem(keyPair.first,
+                        keyPair.second, encode, salt);
+                mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
+                this.queue.add(mutableItemDistribution);
+
+                salt = getPreviousSendingSalt(friend);
+                logger.debug("TAU messaging, previous sending salt:{}", Hex.toHexString(salt));
+                mutableItem = new DHT.MutableItem(keyPair.first,
+                        keyPair.second, encode, salt);
+                mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
                 this.queue.add(mutableItemDistribution);
             }
 
             this.writingFriends.add(new ByteArrayWrapper(friend));
         }
+    }
+
+    /**
+     * 正在写给某个朋友
+     * @param friend 正在写给的朋友
+     */
+    public void writingToFriend(byte[] friend) {
+        this.writingFriends.add(new ByteArrayWrapper(friend));
+
+        publishGossipInfo();
     }
 
     /**
@@ -1451,7 +1511,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                 // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
                 if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
-                    logger.debug("Sender[{}] is me.", sender.toString());
+                    logger.trace("Sender[{}] is me.", sender.toString());
                     continue;
                 }
 
