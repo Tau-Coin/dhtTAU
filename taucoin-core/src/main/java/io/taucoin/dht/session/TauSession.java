@@ -7,6 +7,7 @@ import com.frostwire.jlibtorrent.alerts.*;
 import com.frostwire.jlibtorrent.swig.entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -21,6 +22,12 @@ class TauSession {
 
     // enable torrent log or not.
     private static final boolean EnableTorrentLog = false;
+
+    private static final String MUTABLE_PUT_MESSAGE_FORMAT
+            = "DHT put complete (success=%d key=%s sig=%s salt=%s seq=%d)";
+
+    private static final String IMMUTABLE_PUT_MESSAGE_FORMAT
+            = "DHT put commplete (success=%d hash=%s)";
 
     private Logger logger;
 
@@ -83,7 +90,8 @@ class TauSession {
                 }
             } else if (type == AlertType.DHT_PUT) {
                 DhtPutAlert a = (DhtPutAlert) alert;
-                logger.info(a.message());
+                // logger.info(a.message());
+                logger.info(putAlertMessage(a));
                 notifyItemPutEvent(a);
             } else if (type == AlertType.DHT_IMMUTABLE_ITEM) {
                 DhtImmutableItemAlert a = (DhtImmutableItemAlert) alert;
@@ -428,5 +436,24 @@ class TauSession {
         }
 
         return sb.toString();
+    }
+
+    public static String putAlertMessage(DhtPutAlert a) {
+        Sha1Hash target = a.target();
+
+        if (target.isAllZeros()) {
+            // mutable item put alert
+            return String.format(MUTABLE_PUT_MESSAGE_FORMAT,
+                    a.swig().getNum_success(),
+                    Hex.toHexString(a.publicKey()),
+                    Hex.toHexString(a.signature()),
+                    new String(a.salt()),
+                    a.seq());
+        } else {
+            // immutable item put alert
+            return String.format(IMMUTABLE_PUT_MESSAGE_FORMAT,
+                    a.swig().getNum_success(),
+                    target.toString());
+        }
     }
 }
