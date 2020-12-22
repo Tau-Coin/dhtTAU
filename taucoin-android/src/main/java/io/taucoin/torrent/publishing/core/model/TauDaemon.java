@@ -734,14 +734,14 @@ public class TauDaemon {
     }
 
     /**
-     * 发布最后一条消息
+     * 正在和朋友写动作
      * @param friendPk
      */
-    public void publishLastMessage(String friendPk) {
+    public void writingToFriend(String friendPk) {
         if (!isRunning) {
             return;
         }
-        getCommunicationManager().publishLastMessage(ByteUtil.toByte(friendPk));
-        logger.debug("publishLastMessage friendPk::{} successfully", friendPk);
+        getCommunicationManager().writingToFriend(ByteUtil.toByte(friendPk));
+        logger.debug("writingToFriend friendPk::{} successfully", friendPk);
     }
 }

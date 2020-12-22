@@ -355,23 +355,23 @@ public class ChatViewModel extends AndroidViewModel {
     }
 
     /**
-     * 用户在输入状态，触发定时发送上次消息
+     * 用户在输入状态，触发定时通知朋友正在输入状态
      * @param friendPK
      * @param isEmpty
      */
-    void publishLastMessage(String friendPK, boolean isEmpty) {
+    void writingToFriend(String friendPK, boolean isEmpty) {
         if (!isEmpty) {
             if (publishLastMessageTimer != null && !publishLastMessageTimer.isDisposed()) {
                 logger.debug("publishLastMessage friendPK::{} Timer is running", friendPK);
                 return;
             }
             updateGossipTimeInternal();
-            publishLastMessage(friendPK);
+            writingToFriend(friendPK);
             publishLastMessageTimer = Observable.interval(
                     Frequency.FREQUENCY_PUBLISH_MESSAGE.getFrequency(), TimeUnit.MILLISECONDS)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(aLong -> {
-                        publishLastMessage(friendPK);
+                        writingToFriend(friendPK);
                     });
             disposables.add(publishLastMessageTimer);
         } else {
@@ -380,11 +380,11 @@ public class ChatViewModel extends AndroidViewModel {
     }
 
     /**
-     * 发布最后一条消息
+     * 通知朋友正在输入状态
      * @param friendPk
      */
-    private void publishLastMessage(String friendPk) {
-        logger.debug("publishLastMessage friendPk::{}", friendPk);
-        daemon.publishLastMessage(friendPk);
+    private void writingToFriend(String friendPk) {
+        logger.debug("writingToFriend friendPk::{}", friendPk);
+        daemon.writingToFriend(friendPk);
     }
 }
