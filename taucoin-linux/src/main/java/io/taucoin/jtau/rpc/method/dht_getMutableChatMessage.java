@@ -17,6 +17,7 @@ import io.taucoin.dht.DHT;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.HashList;
+import io.taucoin.types.Message;
 import io.taucoin.util.ByteUtil;
 
 public class dht_getMutableChatMessage extends JsonRpcServerMethod {
@@ -82,9 +83,9 @@ public class dht_getMutableChatMessage extends JsonRpcServerMethod {
                 result= "Get mutable item, nothing !";
             } else {
                 try {
-                    byte[] hash = new HashList(item).getFirstHash();
-                    if (null != hash) {
-                        result = "Hash: " + Hex.toHexString(hash);
+                    Message msg = new Message(item);
+                    if (null != msg) {
+                        result = "Message: " + msg.toString();
                     } else {
                         result = "empty";
                     }

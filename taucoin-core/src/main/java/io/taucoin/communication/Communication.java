@@ -1553,7 +1553,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                 }
 
                 Message message = new Message(item);
-                logger.debug("Got message hash:{}", Hex.toHexString(message.getHash()));
+                logger.debug("MESSAGE: Got message :{}", message.toString());
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getExtraInfo1());
 
@@ -1609,7 +1609,7 @@ public class Communication implements DHT.GetDHTItemCallback {
                 }
 
                 Message message = new Message(item);
-                logger.debug("Got message:{}", Hex.toHexString(message.getHash()));
+                logger.debug("LATEST_MESSAGE: Got message:{}", message.toString());
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getExtraInfo1());
 
