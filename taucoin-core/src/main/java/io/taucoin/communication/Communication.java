@@ -680,10 +680,11 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void requestLatestMessageFromPeer(ByteArrayWrapper pubKey) {
         if (null != pubKey) {
-            logger.debug("Request latest message from peer:{}", pubKey.toString());
+            logger.debug("TAU messaging Request latest message from peer:{}", pubKey.toString());
 
             // 在当前时间频道请求
             byte[] salt = getReceivingSalt(pubKey.getData());
+            logger.debug("TAU messaging, salt:{}", new String(salt));
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.LATEST_MESSAGE, pubKey);
             DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
@@ -691,12 +692,14 @@ public class Communication implements DHT.GetDHTItemCallback {
 
             // 在下一个时间频道请求
             salt = getNextReceivingSalt(pubKey.getData());
+            logger.debug("TAU messaging, next salt:{}", new String(salt));
             spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
             this.queue.add(mutableItemRequest);
 
             // 在上一个时间频道请求
             salt = getPreviousReceivingSalt(pubKey.getData());
+            logger.debug("TAU messaging, previous salt:{}", new String(salt));
             spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
             this.queue.add(mutableItemRequest);
@@ -1220,10 +1223,12 @@ public class Communication implements DHT.GetDHTItemCallback {
      * @param friend 当前聊天的朋友
      */
     public void publishLastMessage(byte[] friend) throws DBException {
+        logger.debug("TAU messaging publish last message, friend:{}", Hex.toHexString(friend));
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
         byte[] root = this.rootToFriend.get(new ByteArrayWrapper(friend));
         byte[] salt = getSendingSalt(friend);
+        logger.debug("TAU messaging, salt:{}", new String(salt));
 
         if (null != root) {
             byte[] encode = this.messageDB.getMessageByHash(root);
