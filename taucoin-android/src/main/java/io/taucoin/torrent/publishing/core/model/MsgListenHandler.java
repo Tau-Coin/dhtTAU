@@ -30,7 +30,6 @@ import io.taucoin.util.ByteUtil;
  */
 class MsgListenHandler {
     private static final Logger logger = LoggerFactory.getLogger("MsgListenHandler");
-    private static final Logger msgLogger = LoggerFactory.getLogger("TAU messaging");
     private CompositeDisposable disposables = new CompositeDisposable();
     private ChatRepository chatRepo;
     private FriendRepository friendRepo;
@@ -58,7 +57,7 @@ class MsgListenHandler {
         String sentTimeStr = DateUtil.formatTime(sentTime, DateUtil.pattern6);
         String receivedTimeStr = DateUtil.formatTime(receivedTime, DateUtil.pattern6);
         long delayTime = receivedTime - sentTime;
-        msgLogger.debug("onNewMessage friendPk::{}, hash::{}, SentTime::{}, ReceivedTime::{}," +
+        logger.debug("TAU messaging onNewMessage friendPk::{}, hash::{}, SentTime::{}, ReceivedTime::{}," +
                         " DelayTime::{}s content::{}",
                 ByteUtil.toHexString(friendPk), hash,
                 sentTimeStr,
