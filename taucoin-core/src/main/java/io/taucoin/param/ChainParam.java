@@ -72,7 +72,7 @@ public class ChainParam {
     // gossip
     public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST1".getBytes();
 
-    public static final int COMMUNICATION_CHANNEL_TIME = 10; // 10s
+    public static final int COMMUNICATION_CHANNEL_TIME = 20; // 10s
 
     public static final int GOSSIP_CHANNEL_TIME = 10; // 10s
 
