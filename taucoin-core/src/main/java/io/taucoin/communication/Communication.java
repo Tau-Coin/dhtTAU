@@ -50,8 +50,10 @@ public class Communication implements DHT.GetDHTItemCallback {
 
     private static final int SHORT_ADDRESS_LENGTH = 4;
 
+    private static final int TWO_MINUTE = 120; // 120s
+
     // 主循环间隔最小时间
-    private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
+    private final int MIN_LOOP_INTERVAL_TIME = 100; // 50 ms
 
     // 主循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
@@ -87,6 +89,9 @@ public class Communication implements DHT.GetDHTItemCallback {
 
     // 当前我加的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
+
+    // 我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
+    private final Map<ByteArrayWrapper, BigInteger> friendLastSeen = new ConcurrentHashMap<>();
 
     // 当前发现的等待通知的在线的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> onlineFriendsToNotify = new CopyOnWriteArraySet<>();
@@ -372,6 +377,19 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
+     * 访问在线peer，对上线时间在两分钟以内的peer直接去拿消息
+     */
+    private void visitOnlinePeer() {
+        BigInteger time = BigInteger.valueOf(System.currentTimeMillis() / 1000 - TWO_MINUTE);
+        for (Map.Entry<ByteArrayWrapper, BigInteger> entry: this.friendLastSeen.entrySet()) {
+            if (null != entry.getValue() && entry.getValue().compareTo(time) > 0) {
+                logger.debug("ctx ------------ Visit online peer:{}", entry.getKey().toString());
+                requestLatestMessageFromPeer(entry.getKey());
+            }
+        }
+    }
+
+    /**
      * 挑选一个活跃的peer访问
      */
     private void visitActivePeer() {
@@ -606,6 +624,8 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                 tryToPublishGossipInfo();
 
+                visitOnlinePeer();
+
                 visitActivePeer();
 
                 requestDemandHash();
@@ -650,6 +670,10 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
         if (null != pubKey) {
             logger.trace("Request gossip info from peer:{}", pubKey.toString());
+
+            if (Arrays.equals(pubKey.getData(), Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9"))) {
+                logger.debug("ctx ------------ Request gossip from peer:{}", pubKey.toString());
+            }
 
             // 在当前时间对应的频道上获取数据
             byte[] salt = makeGossipSalt();
@@ -1526,7 +1550,10 @@ public class Communication implements DHT.GetDHTItemCallback {
                     logger.trace("Got trusted gossip:{} from online friend[{}]",
                             gossipItem.toString(), peer.toString());
 
+                    BigInteger currentTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
+
                     // 发现的在线好友（完整公钥）
+                    this.friendLastSeen.put(peer, currentTime);
                     this.onlineFriendsToNotify.add(peer);
 
                     BigInteger oldTimeStamp = this.friendTimeStamp.get(peer);
@@ -1564,8 +1591,8 @@ public class Communication implements DHT.GetDHTItemCallback {
                             byte[] confirmationRoot = this.friendConfirmationRoot.get(peer);
                             if (!Arrays.equals(confirmationRoot, gossipItem.getConfirmationRoot())) {
                                 // 有信息要发，即确认信息要发，更新时间戳，确认收到该root
-                                long currentTime = System.currentTimeMillis() / 1000;
-                                this.timeStampToFriend.put(peer, BigInteger.valueOf(currentTime));
+
+                                this.timeStampToFriend.put(peer, currentTime);
                                 // 更新confirmation root
                                 this.friendConfirmationRoot.put(peer, gossipItem.getConfirmationRoot());
                                 // 加入待通知列表
@@ -1610,14 +1637,14 @@ public class Communication implements DHT.GetDHTItemCallback {
             }
             case MESSAGE: {
                 if (null == item) {
-                    logger.debug("MESSAGE[{}] from peer[{}] is empty",
+                    logger.debug("ctx ------------ MESSAGE[{}] from peer[{}] is empty",
                             dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
                     this.demandImmutableDataHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
 
                 Message message = new Message(item);
-                logger.debug("MESSAGE: Got message :{}", message.toString());
+                logger.debug("ctx ------------ MESSAGE: Got message :{}", message.toString());
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getExtraInfo1());
 
@@ -1643,6 +1670,9 @@ public class Communication implements DHT.GetDHTItemCallback {
                 break;
             }
             case GOSSIP_FROM_PEER: {
+                if (Arrays.equals(dataIdentifier.getExtraInfo1().getData(), Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9"))) {
+                    logger.debug("ctx ------------ Got gossip callback from peer:{}", dataIdentifier.getExtraInfo1().toString());
+                }
                 if (null == item) {
                     logger.debug("GOSSIP_FROM_PEER from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
                     return;
