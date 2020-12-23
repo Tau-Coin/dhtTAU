@@ -33,18 +33,20 @@ public class MsgListenHandlerWorker extends Worker {
     private ChatRepository chatRepo;
     private CommunityRepository communityRepo;
     private FriendRepository friendRepo;
+    private String uuid;
     public MsgListenHandlerWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         chatRepo = RepositoryHelper.getChatRepository(context);
         communityRepo = RepositoryHelper.getCommunityRepository(context);
         friendRepo = RepositoryHelper.getFriendsRepository(context);
-        logger.debug("constructor isStopped::{}", isStopped());
+        uuid = getId().toString();
+        logger.debug("constructor uuid::{}, isStopped::{}", uuid, isStopped());
     }
 
     @NonNull
     @Override
     public Result doWork() {
-        logger.debug("doWork");
+        logger.debug("doWork uuid::{}", uuid);
         try {
             Data data = getInputData();
             byte[] friendPk = data.getByteArray("friendPk");
@@ -56,8 +58,8 @@ public class MsgListenHandlerWorker extends Worker {
             String hashStr = ByteUtil.toHexString(hash);
             String userPk = MainApplication.getInstance().getPublicKey();
             ChatMsg chatMsg = chatRepo.queryChatMsg(userPk, hashStr);
-            logger.debug("onNewMessage friendPk::{}, hash::{},  timestamp::{}, exist::{}",
-                    friendPkStr, hashStr, DateUtil.formatTime(timestamp, DateUtil.pattern6),
+            logger.debug("uuid::{}, onNewMessage friendPk::{}, hash::{},  timestamp::{}, exist::{}",
+                    uuid, friendPkStr, hashStr, DateUtil.formatTime(timestamp, DateUtil.pattern6),
                     null != chatMsg);
             // 上报的Message有可能重复, 如果本地已存在不处理
             if (null == chatMsg) {
@@ -94,6 +96,6 @@ public class MsgListenHandlerWorker extends Worker {
     @Override
     public void onStopped() {
         super.onStopped();
-        logger.debug("Worker onStopped");
+        logger.debug("Worker  uuid::{} onStopped", uuid);
     }
 }

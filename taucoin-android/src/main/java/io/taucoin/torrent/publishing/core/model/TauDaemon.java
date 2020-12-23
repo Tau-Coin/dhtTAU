@@ -58,7 +58,6 @@ import io.taucoin.util.ByteUtil;
 public class TauDaemon {
     private static final String TAG = TauDaemon.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
-    private static final Logger msgLogger = LoggerFactory.getLogger("TAU messaging");
     private static final int initDHTOPInterval = 30 * 1000;
     private static final int maxSessions = 8;
     private static final int sessionStartedTime = 10 * 1000;
@@ -679,7 +678,7 @@ public class TauDaemon {
         logger.debug("sendMessage isPublishSuccess{}", isPublishSuccess);
         String content = new String(message.getContent(), StandardCharsets.UTF_8);
         String hash = ByteUtil.toHexString(message.getHash());
-        msgLogger.debug("sendMessage friendPk::{}, hash::{}, timestamp::{}, content::{}",
+        logger.debug("TAU messaging sendMessage friendPk::{}, hash::{}, timestamp::{}, content::{}",
                 ByteUtil.toHexString(friendPK), hash,
                 DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6),
                 content);
