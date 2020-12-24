@@ -46,7 +46,7 @@ public class ReceivedConfirmationWorker extends Worker {
                 if (publicKeys != null && publicKeys.size() > 0) {
                     logger.debug("receivedConfirmation publicKeys.size::{}", publicKeys.size());
                     receivedConfirmation(publicKeys);
-                    Thread.sleep(Frequency.GOSSIP_FREQUENCY_DEFAULT.getFrequency());
+                    Thread.sleep(Frequency.FREQUENCY_RETRY.getFrequency());
                 } else {
                     break;
                 }
@@ -91,12 +91,14 @@ public class ReceivedConfirmationWorker extends Worker {
      */
     private void updateReceivedConfirmationState(String friendPk, byte[] msgRoot) throws DBException{
         String msgRootHash = ByteUtil.toHexString(msgRoot);
-        logger.debug("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
-                friendPk, msgRootHash);
         ChatMsg msg = chatRepo.queryChatMsg(friendPk, msgRootHash);
-        if (msg != null) {
+        if (msg != null && msg.status != ChatMsgType.RECEIVED.ordinal()) {
             msg.status = ChatMsgType.RECEIVED.ordinal();
             chatRepo.updateChatMsg(msg);
+            logger.debug("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
+                    friendPk, msgRootHash);
+        } else {
+            return;
         }
         byte[] msgEncoded = daemon.getMsg(msgRoot);
         Message message = new Message(msgEncoded);

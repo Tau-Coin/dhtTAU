@@ -364,13 +364,13 @@ public class ChatViewModel extends AndroidViewModel {
             return;
         }
         updateGossipTimeInternal();
-        writingToFriend(friendPK);
-        writingToFriendTimer = Observable.interval(
-                Frequency.FREQUENCY_PUBLISH_WRITING.getFrequency(), TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(aLong -> {
-                    writingToFriend(friendPK);
-                });
+//        writingToFriend(friendPK);
+//        writingToFriendTimer = Observable.interval(
+//                Frequency.FREQUENCY_PUBLISH_WRITING.getFrequency(), TimeUnit.SECONDS)
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(aLong -> {
+//                    writingToFriend(friendPK);
+//                });
     }
 
     /**
