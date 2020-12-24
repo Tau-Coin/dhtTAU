@@ -59,7 +59,7 @@ public class ChatViewModel extends AndroidViewModel {
     private MutableLiveData<Result> chatResult = new MutableLiveData<>();
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
-    private Disposable publishLastMessageTimer;
+    private Disposable writingToFriendTimer;
     private ChatSourceFactory sourceFactory;
     public ChatViewModel(@NonNull Application application) {
         super(application);
@@ -348,35 +348,29 @@ public class ChatViewModel extends AndroidViewModel {
      * 更新Gossip时间间隔
      */
     private void resumeGossipTimeInternal() {
-        if (publishLastMessageTimer != null && !publishLastMessageTimer.isDisposed()) {
-            publishLastMessageTimer.dispose();
+        if (writingToFriendTimer != null && !writingToFriendTimer.isDisposed()) {
+            writingToFriendTimer.dispose();
         }
         daemon.updateGossipTimeInterval();
     }
 
     /**
-     * 用户在输入状态，触发定时通知朋友正在输入状态
+     * 用户在聊天页面，触发定时通知朋友更新
      * @param friendPK
-     * @param isEmpty
      */
-    void writingToFriend(String friendPK, boolean isEmpty) {
-        if (!isEmpty) {
-            if (publishLastMessageTimer != null && !publishLastMessageTimer.isDisposed()) {
-                logger.debug("publishLastMessage friendPK::{} Timer is running", friendPK);
-                return;
-            }
-            updateGossipTimeInternal();
-            writingToFriend(friendPK);
-            publishLastMessageTimer = Observable.interval(
-                    Frequency.FREQUENCY_PUBLISH_MESSAGE.getFrequency(), TimeUnit.MILLISECONDS)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(aLong -> {
-                        writingToFriend(friendPK);
-                    });
-            disposables.add(publishLastMessageTimer);
-        } else {
-            resumeGossipTimeInternal();
+    void writingToFriendTimer(String friendPK) {
+        if (writingToFriendTimer != null && !writingToFriendTimer.isDisposed()) {
+            logger.debug("writingToFriend friendPK::{} Timer is running", friendPK);
+            return;
         }
+        updateGossipTimeInternal();
+        writingToFriend(friendPK);
+        writingToFriendTimer = Observable.interval(
+                Frequency.FREQUENCY_PUBLISH_WRITING.getFrequency(), TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(aLong -> {
+                    writingToFriend(friendPK);
+                });
     }
 
     /**

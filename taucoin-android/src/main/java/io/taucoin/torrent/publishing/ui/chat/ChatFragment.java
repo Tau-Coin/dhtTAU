@@ -112,7 +112,6 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 boolean isEmpty = StringUtil.isEmpty(s);
                 binding.tvSend.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
                 binding.ivAdd.setVisibility(!isEmpty ? View.GONE : View.VISIBLE);
-                chatViewModel.writingToFriend(friendPK, isEmpty);
             }
 
             @Override
@@ -157,6 +156,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     public void onStart() {
         super.onStart();
         subscribeChatViewModel();
+        chatViewModel.writingToFriendTimer(friendPK);
     }
 
     @Override
