@@ -371,7 +371,7 @@ class Worker {
         if (item != null && !Utils.isEntryUndefined(item)) {
             data = Utils.stringEntryToBytes(item);
             logger.trace(String.format("immutable getting success:"
-                    + "time cost %d ms", timeCost));
+                    + "time cost %d ms, hash: %s", timeCost, hash.toString()));
         } else {
             counter.immutableGettingFailed();
             logger.debug(String.format("immutable getting failed:"
@@ -423,7 +423,8 @@ class Worker {
         if (item != null && !Utils.isEntryUndefined(item)) {
             data = Utils.stringEntryToBytes(item);
             logger.trace(String.format("mutable getting success:"
-                    + "time cost %d ms", timeCost));
+                    + "time cost %d ms, pubkey:%s, salt:%s",
+                    timeCost, Hex.toHexString(publicKey), new String(salt)));
         } else {
             counter.mutableGettingFailed();
             logger.debug(String.format("mutable getting failed:"
