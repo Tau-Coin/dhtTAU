@@ -1056,22 +1056,22 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     private void requestImmutableItem(DHT.ImmutableItemRequest req) {
-        logger.trace("requestImmutableItem:{}", req.getSpec().toString());
+        logger.info("requestImmutableItem:{}", req.toString());
         DHTEngine.getInstance().request(req.getSpec(), req.getCallback(), req.getCallbackData());
     }
 
     private void requestMutableItem(DHT.MutableItemRequest req) {
-        logger.trace("requestMutableItem:{}", req.getSpec().toString());
+        logger.info("requestMutableItem:{}", req.toString());
         DHTEngine.getInstance().request(req.getSpec(), req.getCallback(), req.getCallbackData());
     }
 
     private void putImmutableItem(DHT.ImmutableItemDistribution d) {
-        logger.trace("putImmutableItem:{}", d.getItem().toString());
+        logger.info("putImmutableItem:{}", d.toString());
         DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
     }
 
     private void putMutableItem(DHT.MutableItemDistribution d) {
-        logger.trace("putMutableItem:{}", d.getItem().toString());
+        logger.info("putMutableItem:{}", d.toString());
         DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
     }
 
@@ -1292,22 +1292,24 @@ public class Communication implements DHT.GetDHTItemCallback {
         if (null != root) {
             byte[] encode = this.messageDB.getMessageByHash(root);
             if (null != encode) {
+                String hash = Hex.toHexString(HashUtil.bencodeHash(encode));
+
                 byte[] salt = getSendingSalt(friend);
-                logger.debug("TAU messaging, sending salt:{}", Hex.toHexString(salt));
+                logger.info("TAU messaging, message hash:{}, sending salt:{}", hash, Hex.toHexString(salt));
                 DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                         keyPair.second, encode, salt);
                 DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
                 this.queue.add(mutableItemDistribution);
 
                 salt = getNextSendingSalt(friend);
-                logger.debug("TAU messaging, next sending salt:{}", Hex.toHexString(salt));
+                logger.info("TAU messaging, message hash:{}, next sending salt:{}", hash, Hex.toHexString(salt));
                 mutableItem = new DHT.MutableItem(keyPair.first,
                         keyPair.second, encode, salt);
                 mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
                 this.queue.add(mutableItemDistribution);
 
                 salt = getPreviousSendingSalt(friend);
-                logger.debug("TAU messaging, previous sending salt:{}", Hex.toHexString(salt));
+                logger.info("TAU messaging, message hash:{}, previous sending salt:{}", hash, Hex.toHexString(salt));
                 mutableItem = new DHT.MutableItem(keyPair.first,
                         keyPair.second, encode, salt);
                 mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
