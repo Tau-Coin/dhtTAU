@@ -284,6 +284,7 @@ class Worker {
 
     private void requestImmutableItemAsync(ImmutableItemRequest req) {
         req.start();
+        logger.trace("get immutable item:" + req.toString());
         boolean ret = session.dhtGetAsync(req.getSpec());
 
         if (ret) {
@@ -294,6 +295,7 @@ class Worker {
 
     private void requestMutableItemAsync(MutableItemRequest req) {
         req.start();
+        logger.trace("get mutable item:" + req.toString());
         boolean ret = session.dhtGetAsync(req.getSpec());
 
         if (ret) {
@@ -303,6 +305,8 @@ class Worker {
     }
 
     private void putImmutableItem(ImmutableItemDistribution d) {
+        d.start();
+        logger.trace("put immutable item:" + d.toString());
         Sha1Hash hash = session.dhtPut(d.item);
 
         // add d into putCache
@@ -312,6 +316,8 @@ class Worker {
     }
 
     private void putMutableItem(MutableItemDistribution d) {
+        d.start();
+        logger.trace("put mutable item:" + d.toString());
         boolean ret = session.dhtPut(d.item);
 
         // add d into putCache
