@@ -853,7 +853,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
         byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
         System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, 0, ChainParam.GOSSIP_CHANNEL.length);
-        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
+        System.arraycopy(timeBytes, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
         return salt;
     }
 
@@ -867,7 +867,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
         byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
         System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, 0, ChainParam.GOSSIP_CHANNEL.length);
-        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
+        System.arraycopy(timeBytes, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
         return salt;
     }
 
@@ -881,7 +881,7 @@ public class Communication implements DHT.GetDHTItemCallback {
 
         byte[] salt = new byte[ChainParam.GOSSIP_CHANNEL.length + timeBytes.length];
         System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, 0, ChainParam.GOSSIP_CHANNEL.length);
-        System.arraycopy(ChainParam.GOSSIP_CHANNEL, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
+        System.arraycopy(timeBytes, 0, salt, ChainParam.GOSSIP_CHANNEL.length, timeBytes.length);
         return salt;
     }
 
