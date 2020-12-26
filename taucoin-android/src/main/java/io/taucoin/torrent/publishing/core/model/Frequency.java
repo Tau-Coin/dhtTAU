@@ -12,9 +12,7 @@ public enum Frequency {
     GOSSIP_FREQUENCY_LOW(60),
 
     // Worker中失败异常重试频率，单位ms
-    FREQUENCY_RETRY(1000),
-    // 聊天界面，发送写时间频率，单位s
-    FREQUENCY_PUBLISH_WRITING(60);
+    FREQUENCY_RETRY(1000);
 
     private long frequency;
     Frequency(long frequency) {
