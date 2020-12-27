@@ -39,6 +39,14 @@ import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 
+/**
+ * 设计思想：限于APP端不允许与中间层直接交互，中间层数据回调不允许处理繁重的任务，因此，Communication模块的主要功能
+ * 包括缓存通报app端与中间层的交互数据，以及gossip数据的自动获取。
+ * 所有的数据，包括app端的需求数据以及中间层送来的数据，都会在主循环里面统一调度，主循化的主要任务包括：
+ * 1. 通知UI发现的在线朋友
+ * 2. 通知UI已读root
+ * 3. 访问正在写状态的朋友
+ */
 public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
@@ -606,12 +614,16 @@ public class Communication implements DHT.GetDHTItemCallback {
         while (!Thread.currentThread().isInterrupted()) {
             try {
 
+                // 1. 通知UI发现的在线朋友
                 notifyUIOnlineFriend();
 
+                // 2. 通知UI已读root
                 notifyUIReadMessageRoot();
 
+                // 3. 访问正在写状态的朋友
                 visitWritingFriends();
 
+                // 4. 处理获得的消息
                 dealWithMessage();
 
                 dealWithGossipItem();
