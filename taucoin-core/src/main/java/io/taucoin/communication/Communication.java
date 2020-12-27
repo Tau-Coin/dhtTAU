@@ -467,7 +467,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
-     * 访问当前正在写状态的朋友节点，发现写状态在10s以内的继续访问，超过10s的从访问清单删除
+     * 访问当前正在写状态的朋友节点，发现写状态在120s以内的继续访问，超过120s的从访问清单删除
      */
     private void visitWritingFriends() {
         long currentTime = System.currentTimeMillis() / 1000;
@@ -608,7 +608,7 @@ public class Communication implements DHT.GetDHTItemCallback {
     }
 
     /**
-     * 死循环
+     * 主循环
      */
     private void mainLoop() {
         while (!Thread.currentThread().isInterrupted()) {
@@ -622,6 +622,8 @@ public class Communication implements DHT.GetDHTItemCallback {
 
                 // 3. 访问正在写状态的朋友
                 visitWritingFriends();
+
+                // TODO: 并行中继节点搜索，先进行搜索，将put与get分开，get的时候获取中继节点，put时候直接put
 
                 // 4. 处理获得的消息
                 dealWithMessage();
@@ -959,6 +961,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void publishGossipInfo() {
         // put mutable item
+        // TODO:以后可能根据前台状态调整
         LinkedHashSet<GossipItem> gossipItemSet = getGossipList();
 
         logger.trace("----------------------start----------------------");
@@ -1351,6 +1354,7 @@ public class Communication implements DHT.GetDHTItemCallback {
      */
     private void adjustIntervalTime() {
         int size = DHTEngine.getInstance().queueOccupation();
+        // 理想状态是直接问中间层是否资源紧张，根据资源紧张度来调整访问频率，资源紧张则降低访问频率
         if ((double)size / DHTEngine.DHTQueueCapability > THRESHOLD) {
             increaseIntervalTime();
         } else {
