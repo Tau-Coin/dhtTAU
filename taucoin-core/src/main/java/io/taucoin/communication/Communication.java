@@ -40,12 +40,24 @@ import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 
 /**
- * 设计思想：限于APP端不允许与中间层直接交互，中间层数据回调不允许处理繁重的任务，因此，Communication模块的主要功能
- * 包括缓存通报app端与中间层的交互数据，以及gossip数据的自动获取。
- * 所有的数据，包括app端的需求数据以及中间层送来的数据，都会在主循环里面统一调度，主循化的主要任务包括：
+ * 设计目的：gossip机制的实现，app端与中间层数据交互协调；
+ * 设计思想：限于APP端不允许与中间层直接交互，中间层数据回调不允许处理繁重的任务，也就是app端与中间层没办法直接交互，
+ * 因此，Communication模块必然需要设计大量缓存来缓存通报app端与中间层的交互数据；
+ * 目前，所有的数据，包括app端的需求数据以及中间层送来的数据，都会在主循环里面统一处理调度，主循化的主要任务包括：
  * 1. 通知UI发现的在线朋友
  * 2. 通知UI已读root
  * 3. 访问正在写状态的朋友
+ * 4. 处理获得的消息
+ * 5. 处理获得的gossip
+ * 6. 处理获得的demand数据
+ * 7. 相应远端的需求
+ * 8. 尝试对gossip数据进行瘦身
+ * 9. 尝试发布gossip数据
+ * 10. 访问在线peer
+ * 11. 访问通过gossip机制发现的活跃peer
+ * 12. 请求demand数据
+ * 13. 尝试向中间层发送所有的请求
+ * 14. 尝试调整间隔时间
  */
 public class Communication implements DHT.GetDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
@@ -628,24 +640,34 @@ public class Communication implements DHT.GetDHTItemCallback {
                 // 4. 处理获得的消息
                 dealWithMessage();
 
+                // 5. 处理获得的gossip
                 dealWithGossipItem();
 
+                // 6. 处理获得的demand数据
                 dealWithDemandItem();
 
+                // 7. 相应远端的需求
                 responseRemoteDemand();
 
+                // 8. 尝试对gossip数据进行瘦身
                 tryToSlimDownGossip();
 
+                // 9. 尝试发布gossip数据
                 tryToPublishGossipInfo();
 
+                // 10. 访问在线peer
                 visitOnlinePeer();
 
+                // 11. 访问通过gossip机制发现的活跃peer
                 visitActivePeer();
 
+                // 12. 请求demand数据
                 requestDemandHash();
 
+                // 13. 尝试向中间层发送所有的请求
                 tryToSendAllRequest();
 
+                // 14. 尝试调整间隔时间
                 adjustIntervalTime();
 
                 try {
