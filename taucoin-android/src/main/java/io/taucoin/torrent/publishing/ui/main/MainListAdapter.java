@@ -140,11 +140,14 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 int bgColor = Utils.getGroupColor(community.chainID);
                 binding.leftView.setBgColor(bgColor);
 
-                String msg = "Hello " + community.communityName;
+                String msg = community.txMemo;
                 binding.tvUserMessage.setText(msg);
-                String time = DateUtil.getWeekTime(DateUtil.getTime());
-                binding.tvMsgLastTime.setText(time);
-
+                if(community.txTimestamp > 0){
+                    String time = DateUtil.getWeekTime(community.txTimestamp);
+                    binding.tvMsgLastTime.setText(time);
+                }else{
+                    binding.tvMsgLastTime.setText(null);
+                }
                 binding.readOnly.setVisibility(View.INVISIBLE);
             }
             holder.binding.getRoot().setOnClickListener(v -> {

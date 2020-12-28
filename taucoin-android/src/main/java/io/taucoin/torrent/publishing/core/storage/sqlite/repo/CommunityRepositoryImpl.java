@@ -40,11 +40,11 @@ public class CommunityRepositoryImpl implements CommunityRepository{
         return db.communityDao().addCommunity(community);
     }
 
-//    @Override
-//    public int updateCommunity(@NonNull Community community) {
-//        return db.communityDao().updateCommunity(community);
-//    }
-//
+    @Override
+    public int updateCommunity(@NonNull Community community) {
+        return db.communityDao().updateCommunity(community);
+    }
+
     @Override
     public Community getCommunityByChainID(@NonNull String chainID) {
         return db.communityDao().getCommunityBychainID(chainID);

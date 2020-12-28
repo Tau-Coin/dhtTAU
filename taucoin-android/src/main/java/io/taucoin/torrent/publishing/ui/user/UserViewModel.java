@@ -113,7 +113,7 @@ public class UserViewModel extends AndroidViewModel {
      * 显示保存Seed的对话框，也起到确认效果,确认后执行后续操作
      * @param generate：false导入; true:生成新的seed
      */
-    void showSaveSeedDialog(Context context, boolean generate){
+    public void showSaveSeedDialog(Context context, boolean generate){
         SeedDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(context),
                 R.layout.seed_dialog, null, false);
         if(generate){
@@ -226,7 +226,7 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 获取切换Seed后结果
      */
-    MutableLiveData<String> getChangeResult() {
+    public MutableLiveData<String> getChangeResult() {
         return changeResult;
     }
 

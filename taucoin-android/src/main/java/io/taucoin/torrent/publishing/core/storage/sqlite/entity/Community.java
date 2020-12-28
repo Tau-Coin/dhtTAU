@@ -27,8 +27,7 @@ public class Community implements Parcelable {
     public long totalCoin;                  // 社区总的币量（不上链，不入数据库）
     @Ignore
     public int blockInAvg;                  // 社区创建者的公钥平均出块时间（不上链，不入数据库）
-    @Ignore
-    public String publicKey;                // 社区创建者的公钥（不上链，不入数据库）
+    public String publicKey;                // 社区创建者的公钥 或者 当前Chat中的登录用户公钥
 
     public Community(@NonNull String chainID, @NonNull String communityName){
         this.communityName = communityName;

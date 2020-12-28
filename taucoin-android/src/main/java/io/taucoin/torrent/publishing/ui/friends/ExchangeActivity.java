@@ -60,20 +60,6 @@ public class ExchangeActivity extends BaseActivity implements View.OnClickListen
         Bitmap bitmap = CodeUtils.createQRCode(publicKey, 480);
         binding.ivQrCode.setImageBitmap(bitmap);
 
-        SpannableStringBuilder stepOne = new SpanUtils()
-                .append(getString(R.string.qr_code_step_one_point))
-                .append(getString(R.string.qr_code_step_one))
-                .setUnderline()
-                .create();
-        binding.tvStepOne.setText(stepOne);
-
-        SpannableStringBuilder stepTwo = new SpanUtils()
-                .append(getString(R.string.qr_code_step_one_point))
-                .append(getString(R.string.qr_code_step_two))
-                .setUnderline()
-                .create();
-        binding.tvStepTwo.setText(stepTwo);
-
         disposables.add(userViewModel.observeCurrentUser()
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())

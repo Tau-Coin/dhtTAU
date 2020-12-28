@@ -65,6 +65,7 @@ class MsgListenHandler {
                 delayTime,
                 content);
         Data data = new Data.Builder()
+                .putString("userPk", MainApplication.getInstance().getPublicKey())
                 .putByteArray("friendPk", friendPk)
                 .putByteArray("hash", message.getHash())
                 .putLong("timestamp", message.getTimestamp().longValue())

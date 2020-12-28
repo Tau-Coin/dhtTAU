@@ -49,6 +49,7 @@ public class MsgListenHandlerWorker extends Worker {
         logger.debug("doWork uuid::{}", uuid);
         try {
             Data data = getInputData();
+            String userPk = data.getString("userPk");
             byte[] friendPk = data.getByteArray("friendPk");
             byte[] hash = data.getByteArray("hash");
             long timestamp = data.getLong("timestamp", 0);
@@ -56,7 +57,6 @@ public class MsgListenHandlerWorker extends Worker {
             int type = data.getInt("type", 0);
             String friendPkStr = ByteUtil.toHexString(friendPk);
             String hashStr = ByteUtil.toHexString(hash);
-            String userPk = MainApplication.getInstance().getPublicKey();
             ChatMsg chatMsg = chatRepo.queryChatMsg(userPk, hashStr);
             logger.debug("uuid::{}, onNewMessage friendPk::{}, hash::{},  timestamp::{}, exist::{}",
                     uuid, friendPkStr, hashStr, DateUtil.formatTime(timestamp, DateUtil.pattern6),
@@ -69,6 +69,7 @@ public class MsgListenHandlerWorker extends Worker {
                 if (null == community) {
                     community = new Community(friendPkStr, communityName);
                     community.type = 1;
+                    community.publicKey = userPk;
                     communityRepo.addCommunity(community);
                 }
                 // 更新朋友信息

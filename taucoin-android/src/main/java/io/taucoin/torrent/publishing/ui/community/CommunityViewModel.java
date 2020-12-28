@@ -331,8 +331,13 @@ public class CommunityViewModel extends AndroidViewModel {
                 if (null == community) {
                     community = new Community(friendPk, communityName);
                     community.type = 1;
+                    community.publicKey = MainApplication.getInstance().getPublicKey();
+                    communityRepo.addCommunity(community);
+                } else {
+                    community.type = 1;
+                    community.publicKey = MainApplication.getInstance().getPublicKey();
+                    communityRepo.updateCommunity(community);
                 }
-                communityRepo.addCommunity(community);
                 result.setMsg(community.chainID);
             }catch (Exception e){
                 result.setFailMsg(e.getMessage());

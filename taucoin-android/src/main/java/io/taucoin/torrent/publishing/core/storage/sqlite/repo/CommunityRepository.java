@@ -21,7 +21,7 @@ public interface CommunityRepository {
      */
     long addCommunity(@NonNull Community community);
 
-//    int updateCommunity(@NonNull Community community);
+    int updateCommunity(@NonNull Community community);
 //
     Community getCommunityByChainID(@NonNull String chainID);
 

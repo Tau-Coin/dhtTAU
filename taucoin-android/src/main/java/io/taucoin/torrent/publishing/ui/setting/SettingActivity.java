@@ -19,11 +19,11 @@ import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivitySettingBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.service.WorkerManager;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
@@ -37,6 +37,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private UserViewModel viewModel;
     private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private Disposable observeCurrentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +92,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::handleSettingsChanged);
+        disposables.add(disposable);
     }
 
     /**
@@ -104,11 +106,14 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
      * 订阅当前用户
      */
     private void subscribeCurrentUser() {
-        disposables.add(viewModel.observeCurrentUser()
+        if (observeCurrentUser != null) {
+            disposables.remove(observeCurrentUser);
+        }
+        observeCurrentUser = viewModel.observeCurrentUser()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::updateUserInfo));
-
+                .subscribe(this::updateUserInfo);
+        disposables.add(observeCurrentUser);
     }
 
     /**
@@ -119,11 +124,14 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         if(null == user){
             return;
         }
+        logger.debug("updateUserInfo::{}", user.localName);
         binding.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
         String userName = UsersUtil.getCurrentUserName(user);
         binding.etUsername.setText(userName);
         binding.etUsername.setTag(userName);
-        disposables.clear();
+        if (observeCurrentUser != null) {
+            disposables.remove(observeCurrentUser);
+        }
     }
 
     private void handleSettingsChanged(String key) {
@@ -143,6 +151,13 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     public void onStart() {
         super.onStart();
         subscribeCurrentUser();
+        viewModel.getChangeResult().observe(this, result -> {
+            if (StringUtil.isNotEmpty(result)) {
+                ToastUtils.showShortToast(result);
+            } else {
+                subscribeCurrentUser();
+            }
+        });
     }
 
 
@@ -165,6 +180,10 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 ActivityUtil.startActivity(this, JournalActivity.class);
                 break;
             case R.id.item_help:
+                break;
+            case R.id.tv_public_key:
+            case R.id.tv_import_new_key:
+                viewModel.showSaveSeedDialog(this, false);
                 break;
         }
     }

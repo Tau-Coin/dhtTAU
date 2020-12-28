@@ -237,7 +237,7 @@
     <string name="foreground_notification">Foreground notification</string>
 
     <!-- Strings used for connected peers -->
-    <string name="contacts_exchange_qr">Exchange QR with friend</string>
+    <string name="contacts_exchange_qr">Exchange QR code to add friends</string>
     <string name="contacts_discovered">Discovered</string>
     <string name="contacts_added">Added</string>
     <string name="contacts_share_qr_code">Share QR Code to</string>
@@ -267,9 +267,8 @@
     <!-- Strings used for QRCode -->
     <string name="qr_code_title">My Public Key QR Code</string>
     <string name="qr_code_two_steps">Exchange needs two steps</string>
-    <string name="qr_code_step_one_point">·&#160;</string>
-    <string name="qr_code_step_one">Share QR code to friend</string>
-    <string name="qr_code_step_two">Scan friend’s QR code</string>
+    <string name="qr_code_step_one">·&#160;Share QR code to friends</string>
+    <string name="qr_code_step_two">·&#160;Scan friend’s QR code</string>
     <string name="qr_code_scan_friend_qr">Scan Friend\'s QR Code</string>
     <string name="qr_code_scan_qr">Scan QR</string>
     <string name="qr_code_scan_cancelled">Cancelled</string>

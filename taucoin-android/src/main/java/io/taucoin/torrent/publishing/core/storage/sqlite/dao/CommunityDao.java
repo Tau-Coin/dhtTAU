@@ -21,20 +21,45 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 public interface CommunityDao {
     String QUERY_GET_CURRENT_USER_PK = " (SELECT publicKey FROM Users WHERE isCurrentUser = 1 limit 1) ";
     String QUERY_GET_BANNED_USER_PK = " (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1) ";
+    String QUERY_NEWEST_MSG = " (SELECT" +
+            " (case when e1.timestamp1 >= e2.timestamp2 then e1.timestamp1 else e2.timestamp2 end) AS timestamp," +
+            " (case when e1.timestamp1 >= e2.timestamp2 then e1.context1 else e2.context2 end) AS context," +
+            " (case when e1.timestamp1 >= e2.timestamp2 then e1.senderPk1 else e2.senderPk2 end) AS senderPk," +
+            " (case when e1.timestamp1 >= e2.timestamp2 then e1.friendPk1 else e2.friendPk2 end) AS friendPk" +
+            " FROM (SELECT timestamp AS timestamp1, context AS context1, senderPk AS senderPk1, friendPk AS friendPk1" +
+            " FROM (SELECT * FROM ChatMessages" +
+            " WHERE senderPk = " + QUERY_GET_CURRENT_USER_PK +
+            " ORDER BY timestamp) GROUP BY senderPk) AS e1, " +
+            " (SELECT timestamp AS timestamp2, context AS context2, senderPk AS senderPk2, friendPk AS friendPk2" +
+            " FROM (SELECT * FROM ChatMessages" +
+            " WHERE friendPk = "+ QUERY_GET_CURRENT_USER_PK +
+            " ORDER BY timestamp) GROUP BY friendPk) AS e2" +
+            " WHERE e1.friendPk1 = e2.senderPk2) ";
     String QUERY_GET_COMMUNITIES_NOT_IN_BLACKLIST = "SELECT a.*, b.balance, b.power," +
-            " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.memo else d.context end) AS txMemo," +
-            " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.timestamp else d.timestamp end) AS txTimestamp" +
+            " (case when a.type = 0 then" +
+            " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.memo else d.context end)" +
+            " else e.context end)" +
+            " AS txMemo," +
+            " (case when a.type = 0 then" +
+            " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.timestamp else d.timestamp end)" +
+            " else e.timestamp end)" +
+            " AS txTimestamp" +
             " FROM Communities AS a" +
-            " LEFT JOIN Members AS b ON a.chainID = b.chainID and b.publicKey = " + QUERY_GET_CURRENT_USER_PK +
+            " LEFT JOIN Members AS b ON a.type = 0 AND a.chainID = b.chainID and b.publicKey = " + QUERY_GET_CURRENT_USER_PK +
             " LEFT JOIN (SELECT timestamp, memo, chainID FROM (SELECT timestamp, memo, chainID FROM Txs" +
             " WHERE senderPk NOT IN " + QUERY_GET_BANNED_USER_PK +
             " ORDER BY timestamp) GROUP BY chainID) AS c" +
-            " ON a.chainID = c.chainID" +
+            " ON a.type = 0 AND a.chainID = c.chainID" +
             " LEFT JOIN (SELECT timestamp, context, chainID FROM (SELECT timestamp, context, chainID FROM Messages " +
             " WHERE senderPk NOT IN " + QUERY_GET_BANNED_USER_PK +
             " ORDER BY timestamp) GROUP BY chainID) AS d" +
-            " ON a.chainID = d.chainID" +
-            " where isBanned = 0 ORDER BY txTimestamp DESC";
+            " ON a.type = 0 AND a.chainID = d.chainID" +
+            " LEFT JOIN " + QUERY_NEWEST_MSG + " AS e" +
+            " ON (a.chainID = e.senderPk AND a.publicKey = e.friendPk)" +
+            " OR (a.chainID = e.friendPk AND a.publicKey = e.senderPk)" +
+            " WHERE (a.type = 0 AND isBanned = 0)" +
+            " OR (a.type = 1 AND a.chainID NOT IN " + QUERY_GET_BANNED_USER_PK + ")" +
+            " ORDER BY txTimestamp DESC";
     String QUERY_GET_COMMUNITIES_IN_BLACKLIST = "SELECT * FROM Communities where isBanned = 1";
     String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Communities WHERE chainID = :chainID";
     String QUERY_ADD_COMMUNITY_BLACKLIST = "Update Communities set isBanned =:isBanned WHERE chainID = :chainID";
