@@ -58,7 +58,6 @@ import io.taucoin.util.ByteUtil;
 public class TauDaemon {
     private static final String TAG = TauDaemon.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
-    private static final int initDHTOPInterval = 30 * 1000;
     private static final int maxSessions = 1;
     private static final int sessionStartedTime = 10 * 1000;
 
@@ -107,7 +106,6 @@ public class TauDaemon {
         tauController = new TauController(repoPath, androidLeveldbFactory);
         tauController.registerListener(daemonListener);
         tauController.registerMsgListener(msgListener);
-        tauController.getDHTEngine().regulateDHTOPInterval(initDHTOPInterval);
 
         switchPowerReceiver();
         switchConnectionReceiver();
