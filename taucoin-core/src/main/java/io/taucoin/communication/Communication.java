@@ -40,9 +40,14 @@ import io.taucoin.util.ByteUtil;
 import io.taucoin.util.HashUtil;
 
 /**
- * 设计目的：gossip机制的实现，app端与中间层数据交互协调；
+ * 主要功能：
+ * 1. gossip机制的实现:通过gossip来打听哪个节点有新消息，从而用作下次访问的依据;
+ * 2. app端与中间层数据的交互协调：app端通过communication模块来间接向中间层请求数据，中间层的数据通过communication
+ * 模块间接调度送达app端；
+ *
  * 设计思想：限于APP端不允许与中间层直接交互，中间层数据回调不允许处理繁重的任务，也就是app端与中间层没办法直接交互，
  * 因此，Communication模块必然需要设计大量缓存来缓存通报app端与中间层的交互数据；
+ *
  * 目前，所有的数据，包括app端的需求数据以及中间层送来的数据，都会在主循环里面统一处理调度，主循化的主要任务包括：
  * 1. 通知UI发现的在线朋友
  * 2. 通知UI已读root
