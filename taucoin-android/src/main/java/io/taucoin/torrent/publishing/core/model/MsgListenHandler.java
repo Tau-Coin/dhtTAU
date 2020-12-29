@@ -126,6 +126,9 @@ class MsgListenHandler {
                     if (friend.state != 2) {
                         friend.state = 2;
                         isUpdate = true;
+                        logger.info("addNewFriend successfully, friendPk::{}, timestamp::{}",
+                                ByteUtil.toHexString(friendPk),
+                                DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6));
                     }
                     long currentTime = DateUtil.getTime();
                     // 当前时间大于上次更新时间30s再更新

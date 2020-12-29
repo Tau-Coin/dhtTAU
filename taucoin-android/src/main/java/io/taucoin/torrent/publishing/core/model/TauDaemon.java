@@ -662,7 +662,8 @@ public class TauDaemon {
             return;
         }
         getCommunicationManager().addNewFriend(friendPk);
-        logger.info("addNewFriend friendPk::{}", ByteUtil.toHexString(friendPk));
+        logger.info("addNewFriend friendPk::{}, timestamp::{}", ByteUtil.toHexString(friendPk),
+                DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6));
     }
 
     /**
