@@ -30,6 +30,7 @@ import io.taucoin.db.MessageDB;
 import io.taucoin.dht.DHT;
 import io.taucoin.dht.DHTEngine;
 import io.taucoin.listener.MsgListener;
+import io.taucoin.listener.MsgStatus;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.GossipList;
@@ -64,7 +65,7 @@ import io.taucoin.util.HashUtil;
  * 13. 尝试向中间层发送所有的请求
  * 14. 尝试调整间隔时间
  */
-public class Communication implements DHT.GetDHTItemCallback {
+public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCallback {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 对UI使用的, Queue capability.
@@ -837,9 +838,14 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void publishMessage(Message message) {
         if (null != message) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(message.getEncoded());
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.PUT_IMMUTABLE_DATA,
+                    new ByteArrayWrapper(message.getHash()));
 
-            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
+            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, this, dataIdentifier);
             this.queue.add(immutableItemDistribution);
+
+            logger.debug("Msg status:{}, {}", Hex.toHexString(message.getHash()), MsgStatus.TO_COMMUNICATION_QUEUE);
+            this.msgListener.onMessageStatus(message.getHash(), MsgStatus.TO_COMMUNICATION_QUEUE);
         }
     }
 
@@ -1110,6 +1116,9 @@ public class Communication implements DHT.GetDHTItemCallback {
     private void putImmutableItem(DHT.ImmutableItemDistribution d) {
         logger.info("putImmutableItem:{}", d.toString());
         DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
+
+        logger.debug("Msg status:{}, {}", d.toString(), MsgStatus.TO_DHT_QUEUE);
+        this.msgListener.onMessageStatus(Hex.decode(d.getItem().hash().toHex()), MsgStatus.TO_DHT_QUEUE);
     }
 
     private void putMutableItem(DHT.MutableItemDistribution d) {
@@ -1760,4 +1769,24 @@ public class Communication implements DHT.GetDHTItemCallback {
         }
     }
 
+    @Override
+    public void onDHTItemPut(int success, Object cbData) {
+        DataIdentifier dataIdentifier = (DataIdentifier) cbData;
+        switch (dataIdentifier.getDataType()) {
+            case IMMUTABLE_DATA: {
+                if (success > 0) {
+                    logger.debug("Msg status:{}, {}", dataIdentifier.getExtraInfo1().toString(), MsgStatus.PUT_SUCCESS);
+                    this.msgListener.onMessageStatus(dataIdentifier.getExtraInfo1().getData(), MsgStatus.PUT_SUCCESS);
+                } else {
+                    logger.debug("Msg status:{}, {}", dataIdentifier.getExtraInfo1().toString(), MsgStatus.PUT_FAIL);
+                    this.msgListener.onMessageStatus(dataIdentifier.getExtraInfo1().getData(), MsgStatus.PUT_FAIL);
+                }
+
+                break;
+            }
+            default: {
+                logger.info("Type mismatch.");
+            }
+        }
+    }
 }

@@ -29,6 +29,19 @@ public class CompositeMsgListener implements MsgListener {
     }
 
     /**
+     * 通知消息状态
+     *
+     * @param root      消息哈希
+     * @param msgStatus 消息当前状态
+     */
+    @Override
+    public void onMessageStatus(byte[] root, MsgStatus msgStatus) {
+        for (MsgListener listener : listeners) {
+            listener.onMessageStatus(root, msgStatus);
+        }
+    }
+
+    /**
      * 已读消息root通知
      *
      * @param friend 发已读消息的朋友
