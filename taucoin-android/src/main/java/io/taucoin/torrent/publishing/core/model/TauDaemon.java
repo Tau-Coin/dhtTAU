@@ -58,6 +58,7 @@ import io.taucoin.util.ByteUtil;
 public class TauDaemon {
     private static final String TAG = TauDaemon.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
+    private static final int minSessions = 1;
     private static final int maxSessions = 1;
     private static final int sessionStartedTime = 10 * 1000;
 
@@ -285,7 +286,7 @@ public class TauDaemon {
                 .subscribe());
 
         rescheduleDHTBySettings();
-        resetDHTSessions(1);
+        resetDHTSessions(minSessions);
         tauController.start(NetworkSetting.getDHTSessions());
         subscribeSessionStarted();
     }
@@ -424,7 +425,7 @@ public class TauDaemon {
             // 判断有无网络连接
             if (settingsRepo.internetState()) {
                 if (isRestart) {
-                    resetDHTSessions(1);
+                    resetDHTSessions(minSessions);
                     tauController.restartSessions(NetworkSetting.getDHTSessions());
                     logger.info("rescheduleDHTBySettings restartSessions::{}",
                             NetworkSetting.getDHTSessions());
