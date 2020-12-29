@@ -21,20 +21,19 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 public interface CommunityDao {
     String QUERY_GET_CURRENT_USER_PK = " (SELECT publicKey FROM Users WHERE isCurrentUser = 1 limit 1) ";
     String QUERY_GET_BANNED_USER_PK = " (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1) ";
-    String QUERY_NEWEST_MSG = " (SELECT" +
-            " (case when e1.timestamp1 >= e2.timestamp2 then e1.timestamp1 else e2.timestamp2 end) AS timestamp," +
-            " (case when e1.timestamp1 >= e2.timestamp2 then e1.context1 else e2.context2 end) AS context," +
-            " (case when e1.timestamp1 >= e2.timestamp2 then e1.senderPk1 else e2.senderPk2 end) AS senderPk," +
-            " (case when e1.timestamp1 >= e2.timestamp2 then e1.friendPk1 else e2.friendPk2 end) AS friendPk" +
-            " FROM (SELECT timestamp AS timestamp1, context AS context1, senderPk AS senderPk1, friendPk AS friendPk1" +
+    String QUERY_NEWEST_MSG = " (SELECT * FROM (SELECT * FROM (" +
+            " SELECT timestamp, context, senderPk, friendPk, friendPk AS friendPkTemp" +
             " FROM (SELECT * FROM ChatMessages" +
             " WHERE senderPk = " + QUERY_GET_CURRENT_USER_PK +
-            " ORDER BY timestamp) GROUP BY senderPk) AS e1, " +
-            " (SELECT timestamp AS timestamp2, context AS context2, senderPk AS senderPk2, friendPk AS friendPk2" +
+            " ORDER BY timestamp) GROUP BY friendPk" +
+            " UNION ALL" +
+            " SELECT timestamp, context, senderPk, friendPk, senderPk AS friendPkTemp" +
             " FROM (SELECT * FROM ChatMessages" +
             " WHERE friendPk = "+ QUERY_GET_CURRENT_USER_PK +
-            " ORDER BY timestamp) GROUP BY friendPk) AS e2" +
-            " WHERE e1.friendPk1 = e2.senderPk2) ";
+            " ORDER BY timestamp) GROUP BY senderPk)" +
+            " ORDER BY timestamp)" +
+            " GROUP BY friendPkTemp)";
+
     String QUERY_GET_COMMUNITIES_NOT_IN_BLACKLIST = "SELECT a.*, b.balance, b.power," +
             " (case when a.type = 0 then" +
             " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.memo else d.context end)" +

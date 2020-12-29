@@ -271,7 +271,7 @@ public class NetworkSetting {
             }
         } else {
             // 超出流量控制范围
-            return -1;
+            return 1;
         }
         return 0;
     }
