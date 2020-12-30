@@ -727,7 +727,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 向某个peer请求gossip数据，同时在邻近的未来/现在/将来三个时间片频道上获取
+     * 向某个peer请求gossip数据
      * @param pubKey public key
      */
     private void requestGossipInfoFromPeer(ByteArrayWrapper pubKey) {
@@ -738,25 +738,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 logger.debug("ctx ------------ Request gossip from peer:{}", pubKey.toString());
             }
 
-            // 在当前时间对应的频道上获取数据
-            byte[] salt = makeGossipSalt();
+            byte[] salt = ChainParam.GOSSIP_CHANNEL;
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
             DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-            this.queue.add(mutableItemRequest);
-
-            // 在当前时间对应的下一个频道上获取数据
-            salt = makeNextGossipSalt();
-            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
-            dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
-            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-            this.queue.add(mutableItemRequest);
-
-            // 在当前时间对应的上一个频道上获取数据
-            salt = makePreviousGossipSalt();
-            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
-            dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
-            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
             this.queue.add(mutableItemRequest);
         }
     }
@@ -775,20 +760,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.LATEST_MESSAGE, pubKey);
             DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-            this.queue.add(mutableItemRequest);
-
-            // 在下一个时间频道请求
-            salt = getNextReceivingSalt(pubKey.getData());
-            logger.debug("Next salt:{}", Hex.toHexString(salt));
-            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
-            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-            this.queue.add(mutableItemRequest);
-
-            // 在上一个时间频道请求
-            salt = getPreviousReceivingSalt(pubKey.getData());
-            logger.debug("Previous salt:{}", Hex.toHexString(salt));
-            spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
-            mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
             this.queue.add(mutableItemRequest);
         }
     }
@@ -961,7 +932,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
-        byte[] salt = makeGossipSalt();
+        byte[] salt = ChainParam.GOSSIP_CHANNEL;
         byte[] encode = gossipList.getEncoded();
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
@@ -1046,7 +1017,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             publishMutableGossip(gossipList);
         }
 
-        // 2.发布gossip到下一个频道（未来频道）
+/*        // 2.发布gossip到下一个频道（未来频道）
         for (GossipItem gossipItem: list) {
             gossipItemSet.remove(gossipItem);
         }
@@ -1096,7 +1067,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
             logger.debug(gossipList.toString());
             publishMutableGossipOnPreviousChannel(gossipList);
-        }
+        }*/
 
         // 记录发布时间
         this.lastGossipPublishTime = System.currentTimeMillis() / 1000;
@@ -1245,13 +1216,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     public byte[] getSendingSalt(byte[] friend) {
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
+        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2];
         System.arraycopy(pubKey, 0, salt, 0, SHORT_ADDRESS_LENGTH);
         System.arraycopy(friend, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
 
         return salt;
     }
@@ -1302,13 +1269,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     public byte[] getReceivingSalt(byte[] friend) {
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
+        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2];
         System.arraycopy(friend, 0, salt, 0, SHORT_ADDRESS_LENGTH);
         System.arraycopy(pubKey, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
 
         return salt;
     }
@@ -1372,20 +1335,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                         keyPair.second, encode, salt);
                 DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
                 this.queue.add(mutableItemDistribution);
-
-                salt = getNextSendingSalt(friend);
-                logger.info("TAU messaging, message hash:{}, next sending salt:{}", hash, Hex.toHexString(salt));
-                mutableItem = new DHT.MutableItem(keyPair.first,
-                        keyPair.second, encode, salt);
-                mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
-                this.queue.add(mutableItemDistribution);
-
-                salt = getPreviousSendingSalt(friend);
-                logger.info("TAU messaging, message hash:{}, previous sending salt:{}", hash, Hex.toHexString(salt));
-                mutableItem = new DHT.MutableItem(keyPair.first,
-                        keyPair.second, encode, salt);
-                mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
-                this.queue.add(mutableItemDistribution);
             }
 
             this.writingFriends.add(new ByteArrayWrapper(friend));
@@ -1414,22 +1363,20 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         // 理想状态是直接问中间层是否资源紧张，根据资源紧张度来调整访问频率，资源紧张则降低访问频率
         if ((double)size / DHTEngine.DHTQueueCapability > THRESHOLD) {
             increaseIntervalTime();
-        } else {
-            decreaseIntervalTime();
         }
     }
 
     /**
      * 增加间隔时间
      */
-    private void increaseIntervalTime() {
+    public void increaseIntervalTime() {
         this.loopIntervalTime = this.loopIntervalTime * 2;
     }
 
     /**
      * 减少间隔时间
      */
-    private void decreaseIntervalTime() {
+    public void decreaseIntervalTime() {
         if (this.loopIntervalTime > this.MIN_LOOP_INTERVAL_TIME) {
             this.loopIntervalTime = this.loopIntervalTime / 2;
         }

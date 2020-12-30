@@ -196,4 +196,18 @@ public class CommunicationManager {
         this.communication.setGossipTimeInterval(timeInterval);
     }
 
+    /**
+     * 增加间隔时间
+     */
+    public void increaseIntervalTime() {
+        this.communication.increaseIntervalTime();
+    }
+
+    /**
+     * 减少间隔时间
+     */
+    public void decreaseIntervalTime() {
+        this.communication.decreaseIntervalTime();
+    }
+
 }
