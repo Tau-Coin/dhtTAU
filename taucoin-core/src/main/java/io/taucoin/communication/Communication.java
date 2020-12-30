@@ -1794,7 +1794,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     public void onDHTItemPut(int success, Object cbData) {
         DataIdentifier dataIdentifier = (DataIdentifier) cbData;
         switch (dataIdentifier.getDataType()) {
-            case IMMUTABLE_DATA: {
+            case PUT_IMMUTABLE_DATA: {
                 if (success > 0) {
                     logger.debug("Msg status:{}, {}", dataIdentifier.getExtraInfo1().toString(), MsgStatus.PUT_SUCCESS);
                     this.msgStatus.put(dataIdentifier.getExtraInfo1(), MsgStatus.PUT_SUCCESS);
