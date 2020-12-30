@@ -439,8 +439,10 @@ public class TauDaemon {
                     int regulateValue = NetworkSetting.calculateRegulateValue();
                     if (regulateValue > 0) {
                         tauController.getDHTEngine().increaseDHTOPInterval();
+                        tauController.getCommunicationManager().increaseIntervalTime();
                     } else if (regulateValue < 0) {
                         tauController.getDHTEngine().decreaseDHTOPInterval();
+                        tauController.getCommunicationManager().decreaseIntervalTime();
                         if ((sessionStartedDispose != null && !sessionStartedDispose.isDisposed())) {
                             return;
                         }
