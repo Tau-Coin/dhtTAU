@@ -134,6 +134,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 新发现的，等待通知UI的，我的朋友的最新确认的root <friend, root>（完整公钥）
     private final Map<ByteArrayWrapper, byte[]> friendConfirmationRootToNotify = new ConcurrentHashMap<>();
 
+    // 等待通知的消息状态
+    private final Map<ByteArrayWrapper, MsgStatus> msgStatus = new ConcurrentHashMap<>();
+
     // 给我的朋友的最新消息的时间戳 <friend, timestamp>，发现对方新的确认信息root也会更新该时间（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> timeStampToFriend = new ConcurrentHashMap<>();
 
@@ -454,6 +457,21 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
+     * 通知UI消息状态
+     */
+    private void notifyUIMessageStatus() {
+        Iterator<Map.Entry<ByteArrayWrapper, MsgStatus>> iterator = this.msgStatus.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<ByteArrayWrapper, MsgStatus> entry = iterator.next();
+
+            logger.debug("Notify UI msg status:{}, {}", entry.getKey().toString(), entry.getValue());
+            this.msgListener.onMessageStatus(entry.getKey().getData(), entry.getValue());
+
+            this.msgStatus.remove(entry.getKey());
+        }
+    }
+
+    /**
      * 通知UI发现的还在线的朋友
      */
     private void notifyUIOnlineFriend() {
@@ -631,6 +649,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     private void mainLoop() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+
+                // 0. 通知UI消息状态
+                notifyUIMessageStatus();
 
                 // 1. 通知UI发现的在线朋友
                 notifyUIOnlineFriend();
@@ -1776,10 +1797,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             case IMMUTABLE_DATA: {
                 if (success > 0) {
                     logger.debug("Msg status:{}, {}", dataIdentifier.getExtraInfo1().toString(), MsgStatus.PUT_SUCCESS);
-                    this.msgListener.onMessageStatus(dataIdentifier.getExtraInfo1().getData(), MsgStatus.PUT_SUCCESS);
+                    this.msgStatus.put(dataIdentifier.getExtraInfo1(), MsgStatus.PUT_SUCCESS);
                 } else {
                     logger.debug("Msg status:{}, {}", dataIdentifier.getExtraInfo1().toString(), MsgStatus.PUT_FAIL);
-                    this.msgListener.onMessageStatus(dataIdentifier.getExtraInfo1().getData(), MsgStatus.PUT_FAIL);
+                    this.msgStatus.put(dataIdentifier.getExtraInfo1(), MsgStatus.PUT_FAIL);
                 }
 
                 break;

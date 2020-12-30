@@ -2,6 +2,7 @@ package io.taucoin.core;
 
 public enum DataType {
 
+    /************************************get相关***************************************/
     TIP_ITEM_FROM_PEER_FOR_MINING, // mutable item: tip item
 
     HISTORY_BLOCK_REQUEST_FOR_MINING, // immutable block
@@ -33,5 +34,6 @@ public enum DataType {
 
     IMMUTABLE_DATA, // immutable data
 
+    /************************************put相关***************************************/
     PUT_IMMUTABLE_DATA, // put immutable data
 }
