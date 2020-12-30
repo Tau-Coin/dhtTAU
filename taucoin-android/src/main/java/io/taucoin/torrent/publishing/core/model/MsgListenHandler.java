@@ -157,6 +157,7 @@ class MsgListenHandler {
      * @param msgStatus
      */
     void onMessageStatus(byte[] root, MsgStatus msgStatus) {
-
+        logger.trace("onMessageStatus root::{}, msgStatus::{}",
+                ByteUtil.toHexString(root), msgStatus.name());
     }
 }
