@@ -13,6 +13,7 @@ import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.listener.MsgStatus;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
@@ -148,5 +149,14 @@ class MsgListenHandler {
                 .subscribeOn(Schedulers.io())
                 .subscribe();
         disposables.add(disposable);
+    }
+
+    /**
+     * 上报的消息状态变化
+     * @param root
+     * @param msgStatus
+     */
+    void onMessageStatus(byte[] root, MsgStatus msgStatus) {
+
     }
 }

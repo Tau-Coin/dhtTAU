@@ -31,6 +31,7 @@ import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
 import io.taucoin.db.DBException;
 import io.taucoin.genesis.GenesisConfig;
+import io.taucoin.listener.MsgStatus;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -232,6 +233,11 @@ public class TauDaemon {
         @Override
         public void onDiscoveryFriend(byte[] friend) {
             msgListenHandler.onDiscoveryFriend(friend);
+        }
+
+        @Override
+        public void onMessageStatus(byte[] root, MsgStatus msgStatus) {
+            msgListenHandler.onMessageStatus(root, msgStatus);
         }
     };
 
