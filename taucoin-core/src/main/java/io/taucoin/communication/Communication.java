@@ -79,7 +79,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     private static final int TWO_MINUTE = 120; // 120s
 
     // 主循环间隔最小时间
-    private final int MIN_LOOP_INTERVAL_TIME = 100; // 50 ms
+    private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
     // 主循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
