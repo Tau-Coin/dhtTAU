@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.frostwire.jlibtorrent.Ed25519;
+import com.google.gson.Gson;
 import com.king.zxing.CaptureActivity;
 import com.king.zxing.DecodeFormatManager;
 import com.king.zxing.camera.FrontLightMode;
@@ -38,6 +39,7 @@ import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.constant.QRContent;
 import io.taucoin.torrent.publishing.ui.customviews.permission.EasyPermissions;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
@@ -132,9 +134,13 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                     String chainID = decode.getDn();
                     openChainLink(chainID, scanResult);
                     return;
-                } else if (ByteUtil.toByte(scanResult).length == Ed25519.PUBLIC_KEY_SIZE) {
+                }
+                QRContent content = new Gson().fromJson(scanResult, QRContent.class);
+                if (content != null &&
+                        ByteUtil.toByte(content.getPublicKey()).length == Ed25519.PUBLIC_KEY_SIZE) {
                     Intent intent = new Intent();
-                    intent.putExtra(IntentExtra.PUBLIC_KEY, scanResult);
+                    intent.putExtra(IntentExtra.PUBLIC_KEY, content.getPublicKey());
+                    intent.putExtra(IntentExtra.NICK_NAME, content.getNickName());
                     ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
                     onBackPressed();
                     return;
@@ -216,7 +222,7 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
      * @param noQrCode
      */
     private void showNoQrCodeView(boolean isError, boolean noQrCode) {
-        tvNoQrCode.setText(noQrCode ? R.string.qr_code_not_found : R.string.contacts_error_invalid_pk);
+        tvNoQrCode.setText(noQrCode ? R.string.qr_code_not_found : R.string.contacts_error_invalid_qr);
         tvContinue.setVisibility(View.VISIBLE);
         showNoQrCodeView(isError);
     }

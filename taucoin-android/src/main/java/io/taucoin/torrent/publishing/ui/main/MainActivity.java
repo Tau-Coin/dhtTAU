@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,6 +39,7 @@ import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
@@ -91,6 +93,8 @@ public class MainActivity extends BaseActivity {
     private CommonDialog linkDialog;
     private User user;
     private Fragment currentFragment;
+    // 是否提示用户填写nickname
+    private AtomicBoolean nickNameTips = new AtomicBoolean(true);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -250,6 +254,16 @@ public class MainActivity extends BaseActivity {
         String showName = UsersUtil.getCurrentUserName(user);
         binding.drawer.tvNoteName.setText(showName);
         binding.drawer.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
+        if (nickNameTips.compareAndSet(true, false)){
+            // 如果用户没有nickname, APP启动提示一次, 并且Activity在前台
+            logger.trace("showName::{}, defaultName::{}, isForeground::{}", showName,
+                    UsersUtil.getDefaultName(user.publicKey),
+                    AppUtil.isForeground(this, MainActivity.class.getName()));
+            if (StringUtil.isEquals(showName, UsersUtil.getDefaultName(user.publicKey)) &&
+                    AppUtil.isForeground(this, MainActivity.class.getName())) {
+                userViewModel.showEditNameDialog(this, user.publicKey);
+            }
+        }
     }
 
     @Override

@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.gson.Gson;
 import com.king.zxing.util.CodeUtils;
 
 import androidx.databinding.DataBindingUtil;
@@ -15,15 +16,15 @@ import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
-import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityQrCodeBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.constant.QRContent;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
@@ -31,9 +32,12 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
  */
 public class UserQRCodeActivity extends BaseActivity implements View.OnClickListener {
 
+    public static final int TYPE_QR_DISPLAY = 0;
+    public static final int TYPE_QR_SHARE = 1;
     private CompositeDisposable disposables = new CompositeDisposable();
     private ActivityQrCodeBinding binding;
     private UserViewModel userViewModel;
+    private int type;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,40 +46,52 @@ public class UserQRCodeActivity extends BaseActivity implements View.OnClickList
         binding.setListener(this);
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
+        initParameter();
         initView();
+    }
+
+    private void initParameter() {
+        type = getIntent().getIntExtra(IntentExtra.TYPE, TYPE_QR_DISPLAY);
     }
 
     /**
      * 初始化布局
      */
     private void initView() {
-        String publicKey = MainApplication.getInstance().getPublicKey();
-        if(StringUtil.isEmpty(publicKey)){
-            return;
-        }
         binding.tvQrCode.setVisibility(View.GONE);
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
         binding.toolbarInclude.toolbar.setTitle(R.string.qr_code_title);
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
-        binding.roundButton.setBgColor(Utils.getGroupColor(publicKey));
-
-        Bitmap bitmap = CodeUtils.createQRCode(publicKey, 480);
-        binding.ivQrCode.setImageBitmap(bitmap);
 
         SpannableStringBuilder scanQrCode = new SpanUtils()
                 .append(getString(R.string.qr_code_scan_friend_qr))
                 .setUnderline()
                 .create();
         binding.tvScanQrCode.setText(scanQrCode);
+        binding.tvScanQrCode.setVisibility(type == TYPE_QR_DISPLAY ? View.VISIBLE : View.GONE);
 
         disposables.add(userViewModel.observeCurrentUser()
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(user -> {
                     String showName = UsersUtil.getShowName(user);
-                    binding.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
+                    binding.roundButton.setText(showName);
+                    binding.roundButton.setBgColor(Utils.getGroupColor(user.publicKey));
+                    showQRCOdeImage(user.publicKey, showName);
                 }));
+    }
+
+    /**
+     * 显示QRCode图片
+     */
+    private void showQRCOdeImage(String publicKey, String nickName) {
+        QRContent content = new QRContent();
+        content.setPublicKey(publicKey);
+        content.setNickName(nickName);
+        String contentJson = new Gson().toJson(content);
+        Bitmap bitmap = CodeUtils.createQRCode(contentJson, 480);
+        binding.ivQrCode.setImageBitmap(bitmap);
     }
 
     /**

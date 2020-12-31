@@ -169,8 +169,8 @@
     <string name="user_edit_name">Edit Name</string>
     <string name="user_mutual_communities">Mutual Communities:</string>
     <string name="user_community_name">C/%1$s</string>
-    <string name="user_new_name_hint">New Name</string>
-    <string name="user_invalid_new_name">Invalid New Name</string>
+    <string name="user_new_name_hint">Nick Name</string>
+    <string name="user_invalid_new_name">Invalid Nick Name</string>
     <string name="user_no_messages_from">No messages from</string>
     <string name="user_until_removed">until removed from the ban list.</string>
     <string name="user_start_chat">Start Chat</string>
@@ -259,16 +259,16 @@
     <string name="contacts_confirm_shared">Add friend successfully.\n
         Please confirm whether you have shared the QR code to your friend?</string>
     <string name="contacts_friend_already_exists">Friend already exists!</string>
-    <string name="contacts_error_invalid_pk">Invalid friend\'s public key!</string>
+    <string name="contacts_error_invalid_qr">Invalid QR code!</string>
     <string name="contacts_airdrop_successfully">You have send %1$s coins to your friends!</string>
     <string name="contacts_total_pay" formatted="false"><Data><![CDATA[Invite&nbsp;<font color="#f19322">%1$d</font>&nbsp;friends,&nbsp;total
     &nbsp;<font color="#f19322">%2$s</font>&nbsp;%3$s&nbsp;(including %4$s fee).]]></Data></string>
 
     <!-- Strings used for QRCode -->
     <string name="qr_code_title">My Public Key QR Code</string>
-    <string name="qr_code_two_steps">Exchange needs two steps</string>
-    <string name="qr_code_step_one">·&#160;Share QR code to friends</string>
-    <string name="qr_code_step_two">·&#160;Scan friend’s QR code</string>
+    <string name="qr_code_two_steps">Two steps to connect a friend</string>
+    <string name="qr_code_step_one">Share QR code to friends</string>
+    <string name="qr_code_step_two">Scan friend’s QR code</string>
     <string name="qr_code_scan_friend_qr">Scan Friend\'s QR Code</string>
     <string name="qr_code_scan_qr">Scan QR</string>
     <string name="qr_code_scan_cancelled">Cancelled</string>

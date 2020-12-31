@@ -363,6 +363,10 @@ public class UserViewModel extends AndroidViewModel {
      * 添加联系人
      */
     public void addFriend(String publicKey) {
+        addFriend(publicKey, null);
+    }
+
+    public void addFriend(String publicKey, String nickname) {
         if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             return;
         }
@@ -370,7 +374,7 @@ public class UserViewModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io())
                 .subscribe((isRunning) -> {
                     if (isRunning) {
-                        addFriendTask(publicKey);
+                        addFriendTask(publicKey, nickname);
                         if (observeDaemonRunning != null) {
                             observeDaemonRunning.dispose();
                         }
@@ -378,11 +382,11 @@ public class UserViewModel extends AndroidViewModel {
                 });
     }
 
-    private void addFriendTask(String publicKey) {
+    private void addFriendTask(String publicKey, String nickname) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             User user = userRepo.getUserByPublicKey(publicKey);
             if(null == user){
-                user = new User(publicKey);
+                user = new User(publicKey, nickname);
                 userRepo.addUser(user);
             }
             String userPK = MainApplication.getInstance().getPublicKey();

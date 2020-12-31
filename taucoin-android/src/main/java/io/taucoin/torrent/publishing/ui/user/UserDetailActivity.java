@@ -41,6 +41,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
     private UserCommunityListAdapter adapter;
     private CommonDialog shareQRDialog;
     private String publicKey;
+    private String nickName;
     private UserAndFriend user;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +62,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
     private void initView() {
         if(getIntent() != null){
             publicKey = getIntent().getStringExtra(IntentExtra.PUBLIC_KEY);
+            nickName = getIntent().getStringExtra(IntentExtra.NICK_NAME);
         }
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
         binding.toolbarInclude.toolbar.setTitle("");
@@ -118,20 +120,37 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         boolean isMine = StringUtil.isEquals(publicKey, MainApplication.getInstance().getPublicKey());
         binding.tvAddToContact.setVisibility(!isMine && userInfo.isDiscovered() ? View.VISIBLE : View.GONE);
         binding.tvStartChat.setVisibility(!isMine && userInfo.isConnected() ? View.VISIBLE : View.GONE);
-        binding.tvShareQr.setVisibility(!isMine && userInfo.isConnected() ? View.GONE : View.VISIBLE);
+        binding.tvShareQr.setVisibility(!isMine && userInfo.isAdded() ? View.VISIBLE : View.GONE);
         this.user = userInfo;
         String showName = UsersUtil.getCurrentUserName(user);
+        if (StringUtil.isNotEmpty(nickName)) {
+            showName = nickName;
+        }
         binding.tvName.setText(showName);
         binding.leftView.setText(StringUtil.getFirstLettersOfName(showName));
         binding.leftView.setBgColor(Utils.getGroupColor(user.publicKey));
         binding.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
         binding.ivPublicKeyCopy.setOnClickListener(v -> {
-            CopyManager.copyText(user.publicKey);
-            ToastUtils.showShortToast(R.string.copy_public_key);
+            copyPublicKey(user.publicKey);
+        });
+        binding.tvPublicKey.setOnClickListener(v -> {
+            copyPublicKey(user.publicKey);
         });
         if(user.members != null){
             adapter.setDataList(user.members);
+            if (user.members.size() > 0) {
+                binding.llMutualCommunities.setVisibility(View.VISIBLE);
+            }
         }
+    }
+
+    /**
+     * 复制公钥
+     * @param publicKey public Key
+     */
+    private void copyPublicKey(String publicKey) {
+        CopyManager.copyText(publicKey);
+        ToastUtils.showShortToast(R.string.copy_public_key);
     }
 
     private void showShareQRDialog() {
@@ -145,8 +164,11 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         shareQRDialog = new CommonDialog.Builder(this)
                 .setContentView(binding.getRoot())
                 .setHorizontal()
-                .setPositiveButton(R.string.contacts_to_share, (dialog, which) ->
-                        ActivityUtil.startActivity(UserDetailActivity.this, UserQRCodeActivity.class))
+                .setPositiveButton(R.string.contacts_to_share, (dialog, which) -> {
+                        Intent intent = new Intent();
+                        intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
+                        ActivityUtil.startActivity(intent, UserDetailActivity.this, UserQRCodeActivity.class);
+                    })
                 .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel())
                 .setCanceledOnTouchOutside(false)
                 .create();
@@ -164,14 +186,16 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         switch (v.getId()){
             case R.id.tv_add_to_contact:
                 showProgressDialog();
-                userViewModel.addFriend(publicKey);
+                userViewModel.addFriend(publicKey, nickName);
                 break;
             case R.id.tv_start_chat:
                 showProgressDialog();
                 communityViewModel.createChat(user.publicKey);
                 break;
             case R.id.tv_share_qr:
-                ActivityUtil.startActivity(this, UserQRCodeActivity.class);
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
+                ActivityUtil.startActivity(intent, UserDetailActivity.this, UserQRCodeActivity.class);
                 break;
         }
     }

@@ -67,10 +67,9 @@
                 <LinearLayout
                     android:orientation="horizontal"
                     android:id="@+id/ll_public_key"
-                    android:layout_marginTop="5dp"
                     android:paddingEnd="30dp"
                     android:paddingStart="0dp"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
 
                     <TextView
@@ -78,16 +77,18 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:includeFontPadding="false"
+                        android:layout_marginTop="2dp"
                         android:singleLine="true"
+                        android:onClick="@{listener::onClick}"
                         android:ellipsize="end"
                         android:textAppearance="@style/TextAppearanceBody1" />
 
                     <ImageView
                         android:id="@+id/iv_public_key_copy"
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:padding="5dp"
                         android:onClick="@{listener::onClick}"
-                        android:layout_marginTop="2dp"
                         android:contentDescription="@null"
                         android:layout_marginStart="5dp"
                         android:src="@mipmap/icon_copy"/>
@@ -106,6 +107,8 @@
                 android:orientation="vertical">
 
                 <LinearLayout
+                    android:visibility="gone"
+                    android:id="@+id/ll_mutual_communities"
                     android:background="@color/color_white"
                     android:orientation="vertical"
                     android:layout_width="match_parent"
