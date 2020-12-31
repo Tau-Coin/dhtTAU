@@ -209,11 +209,18 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                 MediaUtil.startOpenGallery(this);
                 break;
             case R.id.surfaceView:
-                isParseImage = false;
-                super.onResume();
-                showNoQrCodeView(false);
+                refreshScanView();
                 break;
         }
+    }
+
+    /**
+     * 刷新扫描试图
+     */
+    private void refreshScanView() {
+        isParseImage = false;
+        super.onResume();
+        showNoQrCodeView(false);
     }
 
     /**
@@ -303,6 +310,8 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                         } else {
                             this.finish();
                         }
+                    } else {
+                        refreshScanView();
                     }
                 }
                 break;
