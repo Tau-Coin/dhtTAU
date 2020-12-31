@@ -1123,24 +1123,15 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      */
     private void tryToSendAllRequest() {
         int size = DHTEngine.getInstance().queueOccupation();
+
         // 0.2 * 10000是中间层剩余空间，大于本地队列最大长度1000，目前肯定能放下
         if ((double)size / DHTEngine.DHTQueueCapability < THRESHOLD) {
-//            for (Object request: this.queue) {
-//                if (null != request) {
-//                    process(request);
-//                }
-//
-//                this.queue.remove(request);
-//            }
-            Iterator<Object> it = this.queue.iterator();
-            while (it.hasNext()) {
-                Object request = it.next();
-
+            Set<Object> all = new LinkedHashSet<>(this.queue);
+            this.queue.removeAll(all);
+            for (Object request: all) {
                 if (null != request) {
                     process(request);
                 }
-
-                it.remove();
             }
         }
     }
