@@ -56,6 +56,7 @@ import io.taucoin.torrent.publishing.databinding.ExternalLinkDialogBinding;
 import io.taucoin.torrent.publishing.databinding.UserDialogBinding;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.chat.ChatFragment;
 import io.taucoin.torrent.publishing.ui.community.CommunityFragment;
 import io.taucoin.torrent.publishing.ui.ExternalLinkActivity;
@@ -68,7 +69,6 @@ import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
 import io.taucoin.torrent.publishing.ui.friends.FriendsActivity;
 import io.taucoin.torrent.publishing.ui.setting.DataCostActivity;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
-import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
@@ -76,7 +76,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 /**
  * APP主页面：包含左侧抽屉页面，顶部工具栏，群组列表
  */
-public class MainActivity extends BaseActivity {
+public class MainActivity extends ScanTriggerActivity {
     private static final Logger logger = LoggerFactory.getLogger("MainActivity");
     private ActivityMainDrawerBinding binding;
     private ActionBarDrawerToggle toggle;
@@ -540,9 +540,7 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_scan) {
-            Intent intent = new Intent();
-            intent.putExtra(IntentExtra.BEAN, user);
-            ActivityUtil.startActivity(intent,this, ScanQRCodeActivity.class);
+            openScanQRActivity(user);
         }
         return true;
     }

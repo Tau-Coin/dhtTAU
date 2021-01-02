@@ -10,15 +10,14 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityExchangeBinding;
-import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 
 /**
  * 和朋友交换二维码页面
  */
-public class ExchangeActivity extends BaseActivity implements View.OnClickListener {
+public class ExchangeActivity extends ScanTriggerActivity implements View.OnClickListener {
 
     private ActivityExchangeBinding binding;
 
@@ -55,7 +54,7 @@ public class ExchangeActivity extends BaseActivity implements View.OnClickListen
                 ActivityUtil.startActivity(intent, ExchangeActivity.this, UserQRCodeActivity.class);
                 break;
             case R.id.tv_step_two:
-                ActivityUtil.startActivity(this, ScanQRCodeActivity.class);
+                openScanQRActivity();
                 break;
             default:
                 break;

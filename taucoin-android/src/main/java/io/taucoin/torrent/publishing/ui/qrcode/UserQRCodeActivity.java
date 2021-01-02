@@ -1,6 +1,5 @@
 package io.taucoin.torrent.publishing.ui.qrcode;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
@@ -17,12 +16,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityQrCodeBinding;
-import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.constant.QRContent;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
@@ -30,7 +28,7 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 /**
  * 用户QR Code页面
  */
-public class UserQRCodeActivity extends BaseActivity implements View.OnClickListener {
+public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnClickListener {
 
     public static final int TYPE_QR_DISPLAY = 0;
     public static final int TYPE_QR_SHARE = 1;
@@ -120,9 +118,7 @@ public class UserQRCodeActivity extends BaseActivity implements View.OnClickList
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.tv_scan_qr_code) {
-            onBackPressed();
-            Intent intent = new Intent();
-            ActivityUtil.startActivity(intent, this, ScanQRCodeActivity.class);
+            openScanQRActivityAndExit();
         }
     }
 }

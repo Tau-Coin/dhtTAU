@@ -14,21 +14,20 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
-import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityCommunityQrCodeBinding;
-import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 
 /**
  * 社区QR Code页面
  */
-public class CommunityQRCodeActivity extends BaseActivity implements View.OnClickListener {
+public class CommunityQRCodeActivity extends ScanTriggerActivity implements View.OnClickListener {
 
     private CompositeDisposable disposables = new CompositeDisposable();
     private ActivityCommunityQrCodeBinding binding;
@@ -92,8 +91,7 @@ public class CommunityQRCodeActivity extends BaseActivity implements View.OnClic
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.tv_scan_qr_code) {
-            onBackPressed();
-            ActivityUtil.startActivity( this, ScanQRCodeActivity.class);
+            openScanQRActivityAndExit();
         }
     }
 }
