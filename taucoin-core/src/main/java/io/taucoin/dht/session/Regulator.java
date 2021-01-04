@@ -3,13 +3,13 @@ package io.taucoin.dht.session;
 class Regulator {
 
     // The time interval for dht operation.
-    public static final long DEFAULT_DHTOPInterval = 1000; // milliseconds.
+    public static final long DEFAULT_DHTOPInterval = 100; // milliseconds.
 
     public static final long DHTOPInterval_MIN = DEFAULT_DHTOPInterval; // milliseconds.
 
     public static final long DHTOPInterval_MAX = 100 * 1000; // milliseconds.
 
-    private static final long STEP = 1000; // milliseconds.
+    private static final long STEP = 100; // milliseconds.
 
     private volatile long dhtOPInterval;
 
