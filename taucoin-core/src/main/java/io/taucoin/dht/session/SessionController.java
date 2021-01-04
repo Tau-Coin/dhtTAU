@@ -57,6 +57,8 @@ public class SessionController {
     // between 'sessionsList' and 'sessionToWokerMap'
     private final Object lock = new Object();
 
+    private volatile boolean readOnly = false;
+
     static final class SessionQuota {
 
         private int sessionsQuota;
@@ -106,6 +108,9 @@ public class SessionController {
      * @param interfacesQuota interfaces quota
      */
     public boolean start(int sessionsQuota, int interfacesQuota) {
+
+        // set "read only" option into "false"
+        this.readOnly = false;
 
         boolean ret = true;
 
@@ -202,6 +207,11 @@ public class SessionController {
                 sessionToWorkerMap.put(s, w);
                 sessionsList.add(s);
             }
+
+            if (readOnly) {
+                s.setReadOnly(readOnly);
+            }
+
             return true;
         }
 
@@ -240,6 +250,8 @@ public class SessionController {
      * @param value
      */
     public void setReadOnly(boolean value) {
+        this.readOnly = value;
+
         for (TauSession s : sessionsList) {
             s.setReadOnly(value);
         }
