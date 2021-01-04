@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -408,7 +407,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     /**
      * 访问在线peer，对上线时间在两分钟以内的peer直接去拿消息
      */
-    private void visitOnlinePeer() {
+    private void retrieveOnlinePeerMsg() {
         BigInteger time = BigInteger.valueOf(System.currentTimeMillis() / 1000 - TWO_MINUTE);
         for (Map.Entry<ByteArrayWrapper, BigInteger> entry: this.friendLastSeen.entrySet()) {
             if (null != entry.getValue() && entry.getValue().compareTo(time) > 0) {
@@ -505,7 +504,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     /**
      * 访问当前正在写状态的朋友节点，发现写状态在120s以内的继续访问，超过120s的从访问清单删除
      */
-    private void visitWritingFriends() {
+    private void retrieveChattingFriendMsg() {
         long currentTime = System.currentTimeMillis() / 1000;
         for (Map.Entry<ByteArrayWrapper, Long> entry: this.writingFriendsToVisit.entrySet()) {
             if (currentTime - entry.getValue() > ChainParam.GOSSIP_CHANNEL_TIME) {
@@ -660,7 +659,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 notifyUIReadMessageRoot();
 
                 // 3. 访问正在写状态的朋友
-                visitWritingFriends();
+                retrieveChattingFriendMsg();
 
                 // TODO: 并行中继节点搜索，先进行搜索，将put与get分开，get的时候获取中继节点，put时候直接put
 
@@ -683,7 +682,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 tryToPublishGossipInfo();
 
                 // 10. 访问在线peer
-                visitOnlinePeer();
+                retrieveOnlinePeerMsg();
 
                 // 11. 访问通过gossip机制发现的活跃peer
                 visitActivePeer();

@@ -57,7 +57,7 @@ public class ChainParam {
 
     public static final int GOSSIP_LIMIT_SIZE = 16;
 
-    public static final int DHT_ITEM_LIMIT_SIZE = 1000; // 1000 byte
+    public static final int DHT_ITEM_LIMIT_SIZE = 996; // 996 byte
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
