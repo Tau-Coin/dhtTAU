@@ -19,7 +19,12 @@ public class UsersUtil {
     public static String getDefaultName(String name) {
         StringBuilder defaultName = new StringBuilder();
         if(StringUtil.isNotEmpty(name)){
-            defaultName.append("T");
+            for (int i = 0; i < name.length(); i++) {
+                if (!Character.isDigit(name.charAt(i))) {
+                    defaultName.append(name.charAt(i));
+                    break;
+                }
+            }
             for (int i = 0; i < name.length(); i++) {
                 if (Character.isDigit(name.charAt(i))) {
                     defaultName.append(name.charAt(i));
@@ -29,8 +34,7 @@ public class UsersUtil {
                 }
             }
         }
-        return defaultName.toString();
-//        return StringUtil.subStringLater(name, DEFAULT_NAME_LENGTH);
+        return defaultName.toString().toUpperCase();
     }
 
     /**
