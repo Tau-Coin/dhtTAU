@@ -252,8 +252,6 @@ public class NetworkSetting {
         Context context = MainApplication.getInstance();
         if (AppUtil.isOnForeground(context)) {
             speedLimit = speedLimit.multiply(speedAdjustment);
-        } else {
-            speedLimit = speedLimit.divide(speedAdjustment);
         }
         return calculateRegulateValue(speedLimit);
     }

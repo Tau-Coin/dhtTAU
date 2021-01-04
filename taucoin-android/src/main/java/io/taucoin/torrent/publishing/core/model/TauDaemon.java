@@ -252,6 +252,7 @@ public class TauDaemon {
                 isRunning = true;
                 WorkerManager.startAllWorker();
                 handleSettingsChanged(appContext.getString(R.string.pref_key_foreground_running));
+                tauController.getDHTEngine().setReadOnly(NetworkSetting.isMeteredNetwork());
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
@@ -433,6 +434,7 @@ public class TauDaemon {
                 if (isRestart) {
                     resetDHTSessions(minSessions);
                     tauController.restartSessions(NetworkSetting.getDHTSessions());
+                    tauController.getDHTEngine().setReadOnly(NetworkSetting.isMeteredNetwork());
                     logger.info("rescheduleDHTBySettings restartSessions::{}",
                             NetworkSetting.getDHTSessions());
                 } else {
