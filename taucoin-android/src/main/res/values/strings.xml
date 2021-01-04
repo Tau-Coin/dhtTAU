@@ -49,7 +49,7 @@
     <string name="drawer_daily_data">%1$s</string>
     <string name="drawer_cpu_usage">CPU/%1$s</string>
     <string name="drawer_mem_data">Memory/%1$s</string>
-    <string name="drawer_export_seed">Export Seed</string>
+    <string name="drawer_export_seed">Export Secret</string>
     <string name="drawer_wifi">Wifi</string>
     <string name="drawer_telecom">Tele\ncom</string>
 
@@ -113,8 +113,8 @@
     <string name="community_added_members">+ Add Members Now</string>
 
     <string name="setting_title">Settings</string>
-    <string name="setting_account">PublicKey(Address)</string>
-    <string name="setting_import_seed">Tap to import seed</string>
+    <string name="setting_account">TAU ID</string>
+    <string name="setting_import_seed">Tap to import secret</string>
     <string name="setting_username_app">Username in app</string>
     <string name="setting_privacy_security">Privacy and Security</string>
     <string name="setting_community_setting">Community Setting</string>
@@ -151,18 +151,18 @@
     <string name="setting_blacklist_communities">Banlist Communities</string>
     <string name="setting_Unblock">Unblock</string>
     <string name="setting_security">Security</string>
-    <string name="setting_seeds">Seeds</string>
+    <string name="setting_seeds">Secrets</string>
 
-    <string name="user_generate_seed">Generate Seed</string>
-    <string name="user_import_seed">Import Seed</string>
-    <string name="user_export_seed">Export Seed</string>
+    <string name="user_generate_seed">Generate Secret</string>
+    <string name="user_import_seed">Import Secret</string>
+    <string name="user_export_seed">Export Secret</string>
     <string name="user_seeds_history">History</string>
     <string name="user_nickname">Nickname(optional)</string>
-    <string name="user_seed_import_hint">Paste Seed(required)</string>
+    <string name="user_seed_import_hint">Paste Secret(required)</string>
     <string name="user_seed_import">Import</string>
-    <string name="user_seed_generate">Generate New Seed</string>
-    <string name="user_seed_empty">Seed cannot be empty!</string>
-    <string name="user_seed_save_tips">Please make sure your seed\nhas been saved</string>
+    <string name="user_seed_generate">Generate New Secret</string>
+    <string name="user_seed_empty">Secret cannot be empty!</string>
+    <string name="user_seed_save_tips">Please make sure your secret\nhas been saved</string>
     <string name="user_show_name">%1$s(%2$s)</string>
     <string name="user_ban">Ban</string>
     <string name="user_ban_list">Banlist</string>
@@ -177,8 +177,8 @@
     <string name="user_add_to_contact">Add To Friends</string>
     <string name="user_share_qr">Share QR To Friend</string>
 
-    <string name="copy_seed">Seed copied</string>
-    <string name="copy_public_key">Public key copied</string>
+    <string name="copy_seed">Secret copied</string>
+    <string name="copy_public_key">TAU ID copied</string>
     <string name="copy_share_link">Share link copied</string>
     <string name="copy_message_hash">Message hash copied</string>
     <string name="copy_successfully">Copy successfully</string>
@@ -189,7 +189,7 @@
 
     <!-- Strings used for transactions -->
     <string name="tx_send">Send</string>
-    <string name="tx_public_key_hint">Public Key</string>
+    <string name="tx_public_key_hint">TAU ID</string>
     <string name="tx_amount_hint">Amount</string>
     <string name="tx_memo_hint">Memo</string>
     <string name="tx_median_fee">Transaction median fee/%1$s %2$s</string>
@@ -211,7 +211,7 @@
     <string name="tx_fee_hint">Fee</string>
     <string name="tx_median_fee_tips">Transaction median fee:%1$s</string>
     <string name="tx_fee_tips">*More transaction fees more opportunities be packaged miners.</string>
-    <string name="tx_error_invalid_pk">Invalid receiver\'s public key!</string>
+    <string name="tx_error_invalid_pk">Invalid receiver\'s TAU ID!</string>
     <string name="tx_error_invalid_amount">Invalid Transaction amount</string>
     <string name="tx_error_no_enough_coins">Insufficient Balance :\nAmount + Transaction Fee > Balance</string>
     <string name="tx_error_no_enough_coins_for_fee">Insufficient Balance :\nTransaction Fee > Balance</string>
@@ -252,7 +252,7 @@
     <string name="contacts_community">TAU</string>
     <string name="contacts_sms">SMS</string>
     <string name="contacts_chat_name_hint">Chat Name(Optional)</string>
-    <string name="contacts_public_key_hint">Friend\'s Public Key</string>
+    <string name="contacts_public_key_hint">Friend\'s TAU ID</string>
     <string name="contacts_chatting" formatted="false"><Data><![CDATA[Chatting with <font color="#f19322">%1$s</font> now]]></Data></string>
     <string name="contacts_add_successfully">Add successfully!</string>
     <string name="contacts_to_share">To share</string>
@@ -265,7 +265,7 @@
     &nbsp;<font color="#f19322">%2$s</font>&nbsp;%3$s&nbsp;(including %4$s fee).]]></Data></string>
 
     <!-- Strings used for QRCode -->
-    <string name="qr_code_title">My Public Key QR Code</string>
+    <string name="qr_code_title">My TAU ID QR Code</string>
     <string name="qr_code_two_steps">Two steps to connect a friend</string>
     <string name="qr_code_step_one">Share QR code to friends</string>
     <string name="qr_code_step_two">Scan friend’s QR code</string>
