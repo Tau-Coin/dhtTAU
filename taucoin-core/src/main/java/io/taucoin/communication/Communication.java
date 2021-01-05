@@ -157,8 +157,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 我收到的需求hash
     private final Set<ByteArrayWrapper> friendDemandHash = new CopyOnWriteArraySet<>();
 
-    // 通过gossip机制发现的跟我有新消息的朋友集合（完整公钥）
-    private final Set<ByteArrayWrapper> activeFriends = new CopyOnWriteArraySet<>();
+    // 通过gossip推荐机制发现的有新消息的朋友集合（完整公钥）
+    private final Set<ByteArrayWrapper> referredFriends = new CopyOnWriteArraySet<>();
 
     // 通过gossip机制发现的给朋友的最新时间 <FriendPair, timestamp>（非完整公钥）
     private final Map<FriendPair, BigInteger> gossipTimeStamp = Collections.synchronizedMap(new HashMap<>());
@@ -370,7 +370,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                     // 寻找发送者完整公钥
                     ByteArrayWrapper peer = getCompletePubKeyFromFriend(sender);
                     if (null != peer) {
-                        this.activeFriends.add(peer);
+                        this.referredFriends.add(peer);
                     }
                 } else {
                     // 寻找跟我朋友相关的gossip
@@ -418,19 +418,19 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 挑选一个活跃的peer访问
+     * 挑选一个推荐的朋友访问，没有则随机挑一个访问
      */
-    private void visitActivePeer() {
-        Iterator<ByteArrayWrapper> it = this.activeFriends.iterator();
+    private void visitReferredFriends() {
+        Iterator<ByteArrayWrapper> it = this.referredFriends.iterator();
         // 如果有现成的peer，则挑选一个peer访问
         if (it.hasNext()) {
             ByteArrayWrapper peer = it.next();
             requestGossipInfoFromPeer(peer);
 
-            this.activeFriends.remove(peer);
+            this.referredFriends.remove(peer);
 //            it.remove();
         } else {
-            // 没有找到活跃的peer，则自己随机访问一个自己的朋友
+            // 没有找到推荐的活跃的peer，则自己随机访问一个自己的朋友
             Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
             if (iterator.hasNext()) {
 
@@ -682,10 +682,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 tryToPublishGossipInfo();
 
                 // 10. 访问在线peer
-                retrieveOnlinePeerMsg();
+//                retrieveOnlinePeerMsg();
 
-                // 11. 访问通过gossip机制发现的活跃peer
-                visitActivePeer();
+                // 11. 访问通过gossip机制推荐的活跃peer
+                visitReferredFriends();
 
                 // 12. 请求demand数据
                 requestDemandHash();

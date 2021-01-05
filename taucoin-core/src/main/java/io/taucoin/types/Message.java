@@ -177,7 +177,7 @@ public class Message {
 
         StringBuilder stringBuilder = new StringBuilder();
 
-        stringBuilder.append("GossipItem{");
+        stringBuilder.append("Message{");
 
         if (null != hash) {
             stringBuilder.append("hash=");
@@ -192,15 +192,15 @@ public class Message {
             stringBuilder.append(timestamp);
         }
         if (null != previousRoot) {
-            stringBuilder.append("previousMsgRoot=");
+            stringBuilder.append(", previousMsgRoot=");
             stringBuilder.append(Hex.toHexString(previousRoot));
         }
         if (null != friendRoot) {
-            stringBuilder.append("friendMsgRoot=");
+            stringBuilder.append(", friendMsgRoot=");
             stringBuilder.append(Hex.toHexString(friendRoot));
         }
         if (null != skipRoot) {
-            stringBuilder.append("skipMsgRoot=");
+            stringBuilder.append(", skipMsgRoot=");
             stringBuilder.append(Hex.toHexString(skipRoot));
         }
         if (null != type) {
