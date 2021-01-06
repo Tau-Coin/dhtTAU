@@ -75,7 +75,7 @@
                     android:id="@+id/tv_msg"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:maxWidth="180dp"
+                    android:maxWidth="220dp"
                     android:gravity="start"
                     android:textAppearance="@style/TextAppearanceBody2" />
 

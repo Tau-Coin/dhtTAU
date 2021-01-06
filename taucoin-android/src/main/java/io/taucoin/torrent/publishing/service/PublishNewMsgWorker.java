@@ -52,7 +52,7 @@ public class PublishNewMsgWorker extends Worker {
                 } else {
                     break;
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 logger.warn("publishMessage error ::{}", e.getMessage());
                 try {
                     Thread.sleep(Frequency.FREQUENCY_RETRY.getFrequency());
@@ -78,6 +78,7 @@ public class PublishNewMsgWorker extends Worker {
                 byte[] content;
                 byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
                 byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(friendPkBytes);
+                byte[] skipMessageRoot = daemon.getFriendLatestRoot(friendPkBytes);
                 logger.debug("previousMsgDAGRoot::{}", ByteUtil.toHexString(previousMsgDAGRoot));
                 Message message;
                 List<byte[]> data = new ArrayList<>();
@@ -89,8 +90,7 @@ public class PublishNewMsgWorker extends Worker {
                 } else {
                     content = msg.context.getBytes(StandardCharsets.UTF_8);
                     message = Message.CreateTextMessage(BigInteger.valueOf(msg.timestamp),
-                            previousMsgDAGRoot, friendLatestMessageRoot, content);
-//                    parseMsgTextData(contentLink, data);
+                            previousMsgDAGRoot, friendLatestMessageRoot, skipMessageRoot, content);
                 }
                 boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message, data);
                 String hash = ByteUtil.toHexString(message.getHash());

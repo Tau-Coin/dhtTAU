@@ -311,8 +311,6 @@ public class TauDaemon {
                 && !sessionStartedDispose.isDisposed()) {
             sessionStartedDispose.dispose();
         }
-        tauListenHandler.destroy();
-        msgListenHandler.destroy();
         tauController.stop();
     }
 

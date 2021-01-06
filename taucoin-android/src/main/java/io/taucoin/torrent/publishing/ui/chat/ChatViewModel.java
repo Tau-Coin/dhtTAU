@@ -37,6 +37,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgType;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.MultimediaUtil;
 import io.taucoin.torrent.publishing.service.LibJpegManager;
 import io.taucoin.torrent.publishing.service.WorkerManager;
@@ -133,22 +134,29 @@ public class ChatViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
-                byte[] content;
+                List<byte[]> contents;
                 if (type == MessageType.PICTURE.ordinal()) {
                     throw new Exception("Unknown message type");
                 } else if(type == MessageType.TEXT.ordinal()) {
-                    content = handleMsgText(msg);
+                    contents = MsgSplitUtil.splitTextMsg(msg);
                 } else {
                     throw new Exception("Unknown message type");
                 }
-                logger.debug("sendMessageTask content::{}", ByteUtil.toHexString(content));
-                // 组织Message的结构，并发送到DHT和数据入库
-                long timestamp = DateUtil.getTime();
-                String senderPk = MainApplication.getInstance().getPublicKey();
-                String contentStr = new String(content, StandardCharsets.UTF_8);
-                ChatMsg chatMsg = new ChatMsg(senderPk, friendPk, contentStr, type, timestamp);
-                chatMsg.status = ChatMsgType.UNSENT.ordinal();
-                chatRepo.addChatMsg(chatMsg);
+                for (byte[] content : contents) {
+                    String contentStr;
+                    if (type == MessageType.TEXT.ordinal()) {
+                        contentStr = MsgSplitUtil.textMsgToString(content);
+                    } else {
+                        contentStr = ByteUtil.toHexString(content);
+                    }
+                    logger.debug("sendMessageTask content::{}", contentStr);
+                    // 组织Message的结构，并发送到DHT和数据入库
+                    long timestamp = DateUtil.getTime();
+                    String senderPk = MainApplication.getInstance().getPublicKey();
+                    ChatMsg chatMsg = new ChatMsg(senderPk, friendPk, contentStr, type, timestamp);
+                    chatMsg.status = ChatMsgType.UNSENT.ordinal();
+                    chatRepo.addChatMsg(chatMsg);
+                }
                 WorkerManager.startPublishNewMsgWorker();
             } catch (Exception e) {
                 logger.error("sendMessageTask error", e);
@@ -157,7 +165,7 @@ public class ChatViewModel extends AndroidViewModel {
             emitter.onNext(result);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(Schedulers.single())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(result -> chatResult.postValue(result));
         disposables.add(disposable);

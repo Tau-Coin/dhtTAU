@@ -63,7 +63,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="start"
-                    android:maxWidth="180dp"
+                    android:maxWidth="220dp"
                     android:textAppearance="@style/TextAppearanceBody2" />
 
             </LinearLayout>

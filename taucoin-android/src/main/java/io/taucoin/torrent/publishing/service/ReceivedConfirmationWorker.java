@@ -95,7 +95,10 @@ public class ReceivedConfirmationWorker extends Worker {
     private void updateReceivedConfirmationState(String friendPk, byte[] msgRoot) throws DBException{
         String msgRootHash = ByteUtil.toHexString(msgRoot);
         ChatMsg msg = chatRepo.queryChatMsg(friendPk, msgRootHash);
-        if (msg != null && msg.status != ChatMsgType.RECEIVED.ordinal()) {
+        if (null == msg) {
+            return;
+        }
+        if (msg.status != ChatMsgType.RECEIVED.ordinal()) {
             confirmedQuantity = 0;
             msg.status = ChatMsgType.RECEIVED.ordinal();
             chatRepo.updateChatMsg(msg);
@@ -103,7 +106,7 @@ public class ReceivedConfirmationWorker extends Worker {
                     friendPk, msgRootHash);
         } else {
             // 防止部分信息无法确认
-            if (confirmedQuantity > maxConfirmedQuantity) {
+            if (confirmedQuantity >= maxConfirmedQuantity) {
                 return;
             }
             confirmedQuantity ++;
