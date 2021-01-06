@@ -26,8 +26,10 @@ import io.taucoin.util.ByteUtil;
 public class ReceivedConfirmationWorker extends Worker {
 
     private static final Logger logger = LoggerFactory.getLogger("ReceivedConfirmationWorker");
+    private static final int maxConfirmedQuantity = 10; // 最大已确认数量
     private TauDaemon daemon;
     private ChatRepository chatRepo;
+    private int confirmedQuantity;
     public ReceivedConfirmationWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         logger.debug("constructor");
@@ -79,6 +81,7 @@ public class ReceivedConfirmationWorker extends Worker {
                 if (null == friendConfirmationRoot) {
                     continue;
                 }
+                confirmedQuantity = 0;
                 updateReceivedConfirmationState(publicKey, friendConfirmationRoot);
             }catch (Exception e) {
                 logger.warn("updateReceivedConfirmationState error:: {}", e.getMessage());
@@ -93,12 +96,17 @@ public class ReceivedConfirmationWorker extends Worker {
         String msgRootHash = ByteUtil.toHexString(msgRoot);
         ChatMsg msg = chatRepo.queryChatMsg(friendPk, msgRootHash);
         if (msg != null && msg.status != ChatMsgType.RECEIVED.ordinal()) {
+            confirmedQuantity = 0;
             msg.status = ChatMsgType.RECEIVED.ordinal();
             chatRepo.updateChatMsg(msg);
             logger.debug("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
                     friendPk, msgRootHash);
         } else {
-            return;
+            // 防止部分信息无法确认
+            if (confirmedQuantity > maxConfirmedQuantity) {
+                return;
+            }
+            confirmedQuantity ++;
         }
         byte[] msgEncoded = daemon.getMsg(msgRoot);
         Message message = new Message(msgEncoded);
