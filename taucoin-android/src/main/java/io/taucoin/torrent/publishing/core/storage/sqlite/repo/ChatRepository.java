@@ -11,9 +11,14 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 public interface ChatRepository {
 
     /**
-     * 添加Chat
+     * 添加Chats
      */
     void addChatMsg(ChatMsg chat);
+
+    /**
+     * 添加多条Chats
+     */
+    void addChatMessages(ChatMsg... chats);
 
     /**
      * 更新Chat

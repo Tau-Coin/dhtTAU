@@ -57,6 +57,9 @@ public interface ChatDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long addChat(ChatMsg msg);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long[] addChats(ChatMsg... msg);
+
     /**
      * 更新聊天信息
      */

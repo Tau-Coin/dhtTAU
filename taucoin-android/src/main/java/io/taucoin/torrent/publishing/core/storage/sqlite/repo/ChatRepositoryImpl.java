@@ -41,6 +41,12 @@ public class ChatRepositoryImpl implements ChatRepository{
     }
 
     @Override
+    public void addChatMessages(ChatMsg... chats) {
+        db.chatDao().addChats(chats);
+        submitDataSetChanged();
+    }
+
+    @Override
     public void updateChatMsg(ChatMsg chat) {
         db.chatDao().updateChat(chat);
         submitDataSetChanged();

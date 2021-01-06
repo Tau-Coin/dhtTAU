@@ -142,7 +142,9 @@ public class ChatViewModel extends AndroidViewModel {
                 } else {
                     throw new Exception("Unknown message type");
                 }
-                for (byte[] content : contents) {
+                ChatMsg[] messages = new ChatMsg[contents.size()];
+                for (int i = 0; i < contents.size(); i++) {
+                    byte[] content = contents.get(i);
                     String contentStr;
                     if (type == MessageType.TEXT.ordinal()) {
                         contentStr = MsgSplitUtil.textMsgToString(content);
@@ -155,9 +157,13 @@ public class ChatViewModel extends AndroidViewModel {
                     String senderPk = MainApplication.getInstance().getPublicKey();
                     ChatMsg chatMsg = new ChatMsg(senderPk, friendPk, contentStr, type, timestamp);
                     chatMsg.status = ChatMsgType.UNSENT.ordinal();
-                    chatRepo.addChatMsg(chatMsg);
+                    messages[i] = chatMsg;
                 }
-                WorkerManager.startPublishNewMsgWorker();
+                // 批量添加到数据库
+                if (messages.length > 0) {
+                    chatRepo.addChatMessages(messages);
+                    WorkerManager.startPublishNewMsgWorker();
+                }
             } catch (Exception e) {
                 logger.error("sendMessageTask error", e);
                 result.setFailMsg(e.getMessage());
