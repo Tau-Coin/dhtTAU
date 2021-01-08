@@ -12,7 +12,7 @@ import io.taucoin.util.RLPList;
 public class Message {
     private MessageVersion version; // 标识消息版本
     private BigInteger timestamp;
-    private BigInteger nonce;
+    private BigInteger nonce; // 局部nonce，用于标识切分消息的顺序
     private byte[] previousMsgDAGRoot; // 对应horizontal概念
     private byte[] friendLatestMessageRoot; // 对应horizontal概念
     // 利用skip list概念来提升访问效率和处理访问失败的备份方案，本质上是vertical的概念
@@ -21,8 +21,8 @@ public class Message {
     private byte[] content; // 消息体
 
     private byte[] hash; // gossip hash 入口
-    private byte[] encode;
-    private boolean parsed = false;
+    private byte[] encode; // 缓存编码
+    private boolean parsed = false; // 是否解码标志
 
     public static Message CreateTextMessage(BigInteger timestamp, BigInteger nonce, byte[] previousMsgDAGRoot,
                                             byte[] friendLatestMessageRoot, byte[] skipMessageRoot, byte[] content) {

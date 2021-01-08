@@ -378,7 +378,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         BigInteger time = BigInteger.valueOf(System.currentTimeMillis() / 1000 - TWO_MINUTE);
         for (Map.Entry<ByteArrayWrapper, BigInteger> entry: this.friendLastSeen.entrySet()) {
             if (null != entry.getValue() && entry.getValue().compareTo(time) > 0) {
-                logger.debug("ctx ------------ Visit online peer:{}", entry.getKey().toString());
                 requestLatestMessageFromPeer(entry.getKey());
             }
         }
@@ -475,7 +474,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         long currentTime = System.currentTimeMillis() / 1000;
         for (Map.Entry<ByteArrayWrapper, Long> entry: this.writingFriendsToVisit.entrySet()) {
             if (currentTime - entry.getValue() > TWO_MINUTE) {
-                logger.debug("ctx ------------ Remove writing peer:{}", entry.getKey().toString());
                 this.writingFriendsToVisit.remove(entry.getKey());
             } else {
                 requestLatestMessageFromPeer(entry.getKey());
@@ -700,10 +698,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         if (null != pubKey) {
             logger.trace("Request gossip info from peer:{}", pubKey.toString());
 
-            if (Arrays.equals(pubKey.getData(), Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9"))) {
-                logger.debug("ctx ------------ Request gossip from peer:{}", pubKey.toString());
-            }
-
             byte[] salt = ChainParam.GOSSIP_CHANNEL;
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
@@ -718,7 +712,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      */
     private void requestLatestMessageFromPeer(ByteArrayWrapper pubKey) {
         if (null != pubKey) {
-            logger.debug("ctx ------------ Request latest message from peer:{}", pubKey.toString());
+            logger.debug("Request latest message from peer:{}", pubKey.toString());
 
             // 在当前时间频道请求
             byte[] salt = getReceivingSalt(pubKey.getData());
@@ -953,13 +947,12 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     private void publishGossipInfo() {
         // put mutable item
         // TODO:以后可能根据前台状态调整
+        // TODO:gossip轮转发送策略，可设置队列发完重置
         LinkedHashSet<GossipItem> gossipItemSet = getGossipList();
 
-        logger.trace("----------------------start----------------------");
         for(GossipItem gossipItem: gossipItemSet) {
             logger.trace("Gossip set:{}", gossipItem.toString());
         }
-        logger.trace("----------------------end----------------------");
 
         // 1.先发布gossip到当前的频道
         List<GossipItem> list = new ArrayList<>();
@@ -1181,44 +1174,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 获取下一个聊天发送频道salt
-     * @param friend 对方public key
-     * @return salt
-     */
-    public byte[] getNextSendingSalt(byte[] friend) {
-        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
-
-        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
-        System.arraycopy(pubKey, 0, salt, 0, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(friend, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
-
-        return salt;
-    }
-
-    /**
-     * 获取前一个聊天发送频道salt
-     * @param friend 对方public key
-     * @return salt
-     */
-    public byte[] getPreviousSendingSalt(byte[] friend) {
-        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
-
-        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
-        System.arraycopy(pubKey, 0, salt, 0, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(friend, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
-
-        return salt;
-    }
-
-    /**
      * 获取聊天接收频道salt
      * @param friend 对方public key
      * @return salt
@@ -1229,44 +1184,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2];
         System.arraycopy(friend, 0, salt, 0, SHORT_ADDRESS_LENGTH);
         System.arraycopy(pubKey, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-
-        return salt;
-    }
-
-    /**
-     * 获取下一个聊天接收频道salt
-     * @param friend 对方public key
-     * @return salt
-     */
-    public byte[] getNextReceivingSalt(byte[] friend) {
-        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
-
-        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME + 1;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
-        System.arraycopy(friend, 0, salt, 0, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(pubKey, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
-
-        return salt;
-    }
-
-    /**
-     * 获取上一个聊天接收频道salt
-     * @param friend 对方public key
-     * @return salt
-     */
-    public byte[] getPreviousReceivingSalt(byte[] friend) {
-        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
-
-        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME - 1;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
-        System.arraycopy(friend, 0, salt, 0, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(pubKey, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
 
         return salt;
     }
@@ -1480,9 +1397,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      * @param peer gossip发出的peer
      */
     private void preprocessGossipListFromNet(GossipList gossipList, ByteArrayWrapper peer) {
-//        if (null != gossipList.getPreviousGossipListHash()) {
-//            requestGossipList(gossipList.getPreviousGossipListHash(), peer);
-//        }
 
         if (null != gossipList.getGossipList()) {
 
@@ -1516,24 +1430,16 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                     BigInteger oldTimeStamp = this.friendTimeStamp.get(peer);
                     BigInteger timeStamp = gossipItem.getTimestamp();
 
-//                    if (null != oldTimeStamp) {
-//                        logger.debug("Old time stamp:{}", oldTimeStamp);
-//                    } else {
-//                        logger.debug("Old time stamp is null");
-//                    }
-
-//                    logger.debug("Gossip time stamp:{}", timeStamp);
-
                     // 如果是对方直接给我发的gossip消息，并且时间戳更新一些
                     if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
-                        logger.debug("ctx ------------ Got a new gossip item:{}", gossipItem.toString());
+                        logger.debug("Got a new gossip item:{}", gossipItem.toString());
 
                         if (null != gossipItem.getDemandImmutableDataHash()) {
                             this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getDemandImmutableDataHash()));
                         }
 
                         if (GossipStatus.ON_WRITING == gossipItem.getGossipStatus()) {
-                            logger.debug("ctx ------------ Got a writing peer:{}", peer.toString());
+                            logger.debug("Got a writing peer:{}", peer.toString());
                             this.writingFriendsToVisit.put(peer, System.currentTimeMillis() / 1000);
                         }
 
@@ -1542,7 +1448,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
                         // 只要发现更新的gossip信息，则使用其confirmation root
                         if (null != gossipItem.getConfirmationRoot()) {
-                            logger.debug("ctx ------------ Got a friend[{}] confirmation root[{}]",
+                            logger.debug("Got a friend[{}] confirmation root[{}]",
                                     peer.toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
 
                             byte[] confirmationRoot = this.friendConfirmationRoot.get(peer);
@@ -1560,7 +1466,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                         // 发现更新时间戳的gossip消息，并且root与之前的不同，才更新并请求新数据
                         byte[] currentRoot = this.friendRoot.get(peer);
                         if (!Arrays.equals(currentRoot, gossipItem.getMessageRoot()) && null != gossipItem.getMessageRoot()) {
-                            logger.debug("ctx ------------ Got a new message root:{}", Hex.toHexString(gossipItem.getMessageRoot()));
+                            logger.debug("Got a new message root:{}", Hex.toHexString(gossipItem.getMessageRoot()));
                             // 如果该消息的root之前没拿到过，说明是新消息过来
                             // 更新朋友root信息
                             this.friendRoot.put(peer, gossipItem.getMessageRoot());
@@ -1594,14 +1500,14 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             }
             case MESSAGE: {
                 if (null == item) {
-                    logger.debug("ctx ------------ MESSAGE[{}] from peer[{}] is empty",
+                    logger.debug("MESSAGE[{}] from peer[{}] is empty",
                             dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
                     this.demandImmutableDataHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
 
                 Message message = new Message(item);
-                logger.debug("ctx ------------ MESSAGE: Got message :{}", message.toString());
+                logger.debug("MESSAGE: Got message :{}", message.toString());
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getExtraInfo1());
 
@@ -1627,9 +1533,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 break;
             }
             case GOSSIP_FROM_PEER: {
-                if (Arrays.equals(dataIdentifier.getExtraInfo1().getData(), Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9"))) {
-                    logger.debug("ctx ------------ Got gossip callback from peer:{}", dataIdentifier.getExtraInfo1().toString());
-                }
                 if (null == item) {
                     logger.debug("GOSSIP_FROM_PEER from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
                     return;
@@ -1655,12 +1558,12 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             }
             case LATEST_MESSAGE: {
                 if (null == item) {
-                    logger.debug("ctx ------------ LATEST MESSAGE : from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
+                    logger.debug("LATEST MESSAGE : from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
                     return;
                 }
 
                 Message message = new Message(item);
-                logger.debug("ctx ------------ LATEST MESSAGE : Got message:{}", message.toString());
+                logger.debug("LATEST MESSAGE : Got message:{}", message.toString());
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getExtraInfo1());
 
