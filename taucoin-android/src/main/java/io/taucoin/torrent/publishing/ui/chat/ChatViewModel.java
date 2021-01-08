@@ -34,7 +34,7 @@ import io.taucoin.torrent.publishing.core.model.data.MsgBlock;
 import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgType;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
@@ -156,7 +156,6 @@ public class ChatViewModel extends AndroidViewModel {
                     long timestamp = DateUtil.getTime();
                     String senderPk = MainApplication.getInstance().getPublicKey();
                     ChatMsg chatMsg = new ChatMsg(senderPk, friendPk, contentStr, type, timestamp);
-                    chatMsg.status = ChatMsgType.UNSENT.ordinal();
                     messages[i] = chatMsg;
                 }
                 // 批量添加到数据库
@@ -327,6 +326,10 @@ public class ChatViewModel extends AndroidViewModel {
         return ContentItem.newInstance(contentList, contentLink);
     }
 
+    public Observable<List<ChatMsgLog>> observerMsgLogs(String hash) {
+        return chatRepo.observerMsgLogs(hash);
+    }
+
     static class ContentItem {
         private List<byte[]> contentList;
         private byte[] contentLink;
@@ -393,6 +396,10 @@ public class ChatViewModel extends AndroidViewModel {
      */
     private void writingToFriend(String friendPk) {
         logger.debug("writingToFriend friendPk::{}", friendPk);
-        daemon.writingToFriend(friendPk);
+        try {
+            daemon.writingToFriend(friendPk);
+        } catch (Exception e) {
+            logger.error("writingToFriend error", e);
+        }
     }
 }

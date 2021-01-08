@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgType;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -132,63 +130,57 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             this.listener = listener;
         }
 
-        void bindTextRight(ItemTextRightBinding binding, ChatMsg chat, ChatMsg previousChat) {
-            if (null == binding || null == chat) {
+        void bindTextRight(ItemTextRightBinding binding, ChatMsg msg, ChatMsg previousChat) {
+            if (null == binding || null == msg) {
                 return;
             }
-            showStatusView(binding.ivStats, binding.tvProgress, chat.status, true);
+            showStatusView(binding.ivStats, binding.tvProgress, msg, true);
             bindText(binding.roundButton, binding.tvTime, binding.tvMsg,
-                    binding.tvProgress, chat, previousChat, true);
+                    binding.tvProgress, msg, previousChat, true);
         }
 
-        void bindText(ItemTextBinding binding, ChatMsg chat, ChatMsg previousChat) {
-            if (null == binding || null == chat) {
+        void bindText(ItemTextBinding binding, ChatMsg msg, ChatMsg previousChat) {
+            if (null == binding || null == msg) {
                 return;
             }
-            showStatusView(binding.ivStats, binding.tvProgress, chat.status, false);
+            showStatusView(binding.ivStats, binding.tvProgress, msg, false);
             bindText(binding.roundButton, binding.tvTime, binding.tvMsg,
-                    binding.tvProgress, chat, previousChat, false);
+                    binding.tvProgress, msg, previousChat, false);
         }
 
         private void bindText(RoundButton roundButton, TextView tvTime, HashTextView tvMsg,
-                      ProgressBar tvProgress, ChatMsg chat, ChatMsg previousChat, boolean isMine) {
-            if (null == chat) {
+                      ProgressBar tvProgress, ChatMsg msg, ChatMsg previousChat, boolean isMine) {
+            if (null == msg) {
                 return;
             }
-            roundButton.setBgColor(Utils.getGroupColor(chat.senderPk));
+            roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
 
-            String showName = UsersUtil.getDefaultName(chat.senderPk);
+            String showName = UsersUtil.getDefaultName(msg.senderPk);
             roundButton.setText(StringUtil.getFirstLettersOfName(showName));
 
-            boolean isShowTime = isShowTime(chat, previousChat);
+            boolean isShowTime = isShowTime(msg, previousChat);
             if (isShowTime) {
-                String time = DateUtil.getWeekTimeWithHours(chat.timestamp);
+                String time = DateUtil.getWeekTimeWithHours(msg.timestamp);
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvMsg.setText(chat.context);
-            if (!isMine) {
-                tvProgress.setVisibility(View.GONE);
-            }
-//            tvMsg.setTextHash(chat.context, () -> {
-//                if (!isMine) {
-//                    tvProgress.setVisibility(View.GONE);
-//                }
-//            });
+            tvMsg.setText(msg.context);
         }
 
-        private void showStatusView(ImageView ivStats, ProgressBar tvProgress,
-                                    int status, boolean isMine) {
-            if (isMine && status == ChatMsgType.QUEUED.ordinal() ||
-                    status == ChatMsgType.RECEIVED.ordinal()) {
-                tvProgress.setVisibility(View.GONE);
+        private void showStatusView(ImageView ivStats, ProgressBar tvProgress, ChatMsg msg, boolean isMine) {
+            if (isMine) {
+                ivStats.setImageResource(R.mipmap.icon_logs);
                 ivStats.setVisibility(View.VISIBLE);
-                int icon = status == ChatMsgType.QUEUED.ordinal() ? R.mipmap.icon_sent :
-                        R.mipmap.icon_received;
-                ivStats.setImageResource(icon);
+                tvProgress.setVisibility(View.GONE);
+
+                ivStats.setOnClickListener(v -> {
+                    if (listener != null) {
+                        listener.onMsgLogsClicked(msg);
+                    }
+                });
             } else {
                 ivStats.setVisibility(View.GONE);
-                tvProgress.setVisibility(View.VISIBLE);
+                tvProgress.setVisibility(View.GONE);
             }
         }
 
@@ -200,41 +192,41 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             return true;
         }
 
-        void bindPictureRight(ItemPictureRightBinding binding, ChatMsg chat, ChatMsg previousChat) {
-            if (null == binding || null == chat) {
+        void bindPictureRight(ItemPictureRightBinding binding, ChatMsg msg, ChatMsg previousChat) {
+            if (null == binding || null == msg) {
                 return;
             }
-            showStatusView(binding.ivStats, binding.tvProgress, chat.status, true);
+            showStatusView(binding.ivStats, binding.tvProgress, msg, true);
             bindPicture(binding.roundButton, binding.tvTime, binding.tvImage,
-                    binding.tvProgress, chat, previousChat, true);
+                    binding.tvProgress, msg, previousChat, true);
         }
 
-        void bindPicture(ItemPictureBinding binding, ChatMsg chat, ChatMsg previousChat) {
-            if(null == binding || null == chat){
+        void bindPicture(ItemPictureBinding binding, ChatMsg msg, ChatMsg previousChat) {
+            if(null == binding || null == msg){
                 return;
             }
-            showStatusView(binding.ivStats, binding.tvProgress, chat.status, false);
+            showStatusView(binding.ivStats, binding.tvProgress, msg, false);
             bindPicture(binding.roundButton, binding.tvTime, binding.tvImage,
-                    binding.tvProgress, chat, previousChat, false);
+                    binding.tvProgress, msg, previousChat, false);
         }
 
         private void bindPicture(RoundButton roundButton, TextView tvTime, HashImageView tvImage,
-                 ProgressBar tvProgress, ChatMsg chat, ChatMsg previousChat, boolean isMine) {
-            if (null == chat) {
+                 ProgressBar tvProgress, ChatMsg msg, ChatMsg previousChat, boolean isMine) {
+            if (null == msg) {
                 return;
             }
-            roundButton.setBgColor(Utils.getGroupColor(chat.senderPk));
+            roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
 
-            String showName = UsersUtil.getDefaultName(chat.senderPk);
+            String showName = UsersUtil.getDefaultName(msg.senderPk);
             roundButton.setText(StringUtil.getFirstLettersOfName(showName));
 
-            boolean isShowTime = isShowTime(chat, previousChat);
+            boolean isShowTime = isShowTime(msg, previousChat);
             if (isShowTime) {
-                String time = DateUtil.getWeekTimeWithHours(chat.timestamp);
+                String time = DateUtil.getWeekTimeWithHours(msg.timestamp);
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvImage.setImageHash(chat.context, () -> {
+            tvImage.setImageHash(msg.context, () -> {
                 if (!isMine) {
                     tvProgress.setVisibility(View.GONE);
                 }
@@ -243,16 +235,14 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
     }
 
     public interface ClickListener {
-        void onUserClicked(String publicKey);
-        void onEditNameClicked(String tx);
-        void onBanClicked(MsgAndReply tx);
-        void onItemLongClicked(View view, MsgAndReply tx);
+        void onMsgLogsClicked(ChatMsg msg);
+//        void onItemLongClicked(View view, MsgAndReply tx);
     }
 
     private static final DiffUtil.ItemCallback<ChatMsg> diffCallback = new DiffUtil.ItemCallback<ChatMsg>() {
         @Override
         public boolean areContentsTheSame(@NonNull ChatMsg oldItem, @NonNull ChatMsg newItem) {
-            return oldItem.equals(newItem) && oldItem.status == newItem.status;
+            return oldItem.equals(newItem) && StringUtil.isEquals(oldItem.hash, newItem.hash);
         }
 
         @Override

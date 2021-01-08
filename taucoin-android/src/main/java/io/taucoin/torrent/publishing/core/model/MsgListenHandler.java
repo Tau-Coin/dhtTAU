@@ -14,9 +14,10 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.listener.MsgStatus;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgType;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
@@ -98,7 +99,7 @@ class MsgListenHandler {
                         friendRepo.updateFriend(friend);
                     }
                     ChatMsg msg = new ChatMsg(hash, friendPkStr, userPk, content,
-                            message.getType().ordinal(), sentTime);
+                            message.getType().ordinal(), sentTime, message.getNonce().longValue());
                     chatRepo.addChatMsg(msg);
                 }
             } catch (Exception e) {
@@ -121,12 +122,11 @@ class MsgListenHandler {
                 ByteUtil.toHexString(friendPk), root);
         Disposable disposable = Flowable.create(emitter -> {
             try {
-                String friendPkStr = ByteUtil.toHexString(friendPk);
                 String hash = ByteUtil.toHexString(root);
-                ChatMsg msg = chatRepo.queryChatMsg(friendPkStr, hash);
-                if (msg != null && msg.status != ChatMsgType.RECEIVED.ordinal()) {
-                    msg.status = ChatMsgType.RECEIVED.ordinal();
-                    chatRepo.updateChatMsg(msg);
+                ChatMsgLog msg = chatRepo.queryChatMsgLastLog(hash);
+                if (msg != null && msg.status != ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
+                    msg.status = ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus();
+                    chatRepo.addChatMsgLog(msg);
                 }
             } catch (Exception e) {
                 logger.error("onNewMessage error", e);
@@ -185,7 +185,21 @@ class MsgListenHandler {
      * @param msgStatus
      */
     void onMessageStatus(byte[] root, MsgStatus msgStatus) {
-        logger.trace("onMessageStatus root::{}, msgStatus::{}",
-                ByteUtil.toHexString(root), msgStatus.name());
+        Disposable disposable = Flowable.create(emitter -> {
+            try {
+                String hash = ByteUtil.toHexString(root);
+                logger.trace("onMessageStatus root::{}, msgStatus::{}",
+                        hash, msgStatus.name());
+                int status = msgStatus.ordinal();
+                ChatMsgLog msgLog = new ChatMsgLog(hash, status, DateUtil.getTime());
+                chatRepo.addChatMsgLog(msgLog);
+            } catch (Exception e) {
+                logger.error("onMessageStatus error", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        disposables.add(disposable);
     }
 }

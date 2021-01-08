@@ -13,10 +13,12 @@ import androidx.work.WorkerParameters;
 import io.taucoin.db.DBException;
 import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgType;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.types.Message;
 import io.taucoin.util.ByteUtil;
 
@@ -94,16 +96,17 @@ public class ReceivedConfirmationWorker extends Worker {
      */
     private void updateReceivedConfirmationState(String friendPk, byte[] msgRoot) throws DBException{
         String msgRootHash = ByteUtil.toHexString(msgRoot);
-        ChatMsg msg = chatRepo.queryChatMsg(friendPk, msgRootHash);
+        ChatMsgLog msg = chatRepo.queryChatMsgLastLog(msgRootHash);
         if (null == msg) {
             return;
         }
-        if (msg.status != ChatMsgType.RECEIVED.ordinal()) {
+        if (msg.status != ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
             confirmedQuantity = 0;
-            msg.status = ChatMsgType.RECEIVED.ordinal();
-            chatRepo.updateChatMsg(msg);
+            ChatMsgLog msgLog = new ChatMsgLog(msgRootHash,
+                    ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), DateUtil.getTime());
             logger.debug("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
                     friendPk, msgRootHash);
+            chatRepo.addChatMsgLog(msgLog);
         } else {
             // 防止部分信息无法确认
             if (confirmedQuantity >= maxConfirmedQuantity) {

@@ -85,7 +85,8 @@ public class MsgListenHandlerWorker extends Worker {
                     friendRepo.updateFriend(friend);
                 }
                 String contentStr = new String(content);
-                ChatMsg msg = new ChatMsg(hashStr, friendPkStr, userPk, contentStr, type, timestamp);
+                ChatMsg msg = new ChatMsg(hashStr, friendPkStr, userPk, contentStr,
+                        type, timestamp);
                 chatRepo.addChatMsg(msg);
             }
         } catch (Exception e) {

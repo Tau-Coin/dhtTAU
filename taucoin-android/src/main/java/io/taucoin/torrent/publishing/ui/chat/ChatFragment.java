@@ -30,9 +30,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.MsgAndReply;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -42,6 +44,7 @@ import io.taucoin.torrent.publishing.databinding.FragmentChatBinding;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.customviews.MsgLogsDialog;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.types.MessageType;
 
@@ -60,8 +63,10 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     private CommunityViewModel communityViewModel;
     private ChatListAdapter adapter;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private Disposable logsDisposable;
     private String friendPK;
     private Handler handler = new Handler();
+    private MsgLogsDialog msgLogsDialog;
 
     @Nullable
     @Override
@@ -234,23 +239,43 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     }
 
     @Override
-    public void onUserClicked(String publicKey) {
-
+    public void onMsgLogsClicked(ChatMsg msg) {
+        if (logsDisposable != null) {
+            disposables.remove(logsDisposable);
+        }
+        logsDisposable = chatViewModel.observerMsgLogs(msg.hash)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(logs -> showMsgLogsDialog(msg, logs));
+        disposables.add(logsDisposable);
     }
 
-    @Override
-    public void onEditNameClicked(String tx) {
+    /**
+     * 显示消息的
+     * @param msg
+     * @param logs
+     */
+    private void showMsgLogsDialog(ChatMsg msg, List<ChatMsgLog> logs) {
+        if (msgLogsDialog != null && msgLogsDialog.isShowing()) {
+            msgLogsDialog.submitList(msg, logs);
+            return;
+        }
+        msgLogsDialog = new MsgLogsDialog.Builder(activity)
+                .setMsgLogsListener(new MsgLogsDialog.MsgLogsListener() {
+                    @Override
+                    public void onRetry() {
 
-    }
+                    }
 
-    @Override
-    public void onBanClicked(MsgAndReply tx) {
-
-    }
-
-    @Override
-    public void onItemLongClicked(View view, MsgAndReply tx) {
-
+                    @Override
+                    public void onCancel() {
+                        if (logsDisposable != null) {
+                            disposables.remove(logsDisposable);
+                        }
+                    }
+                }).create();
+        msgLogsDialog.submitList(msg, logs);
+        msgLogsDialog.show();
     }
 
     @Override

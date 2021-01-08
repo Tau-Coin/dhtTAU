@@ -8,8 +8,10 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
+import io.reactivex.Observable;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgType;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 
 /**
  * Room:User操作接口
@@ -28,28 +30,35 @@ public interface ChatDao {
 
     String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +
             " FROM ChatMessages msg" +
-            QUERY_MESSAGES_WHERE + " ORDER BY msg.timestamp, msg.id" +
+            QUERY_MESSAGES_WHERE +
+            " ORDER BY msg.timestamp, msg.nonce, msg.id" +
             " LIMIT :loadSize OFFSET :startPosition ";
 
     String QUERY_UNSENT_MESSAGES = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
-            " AND msg.status = 0" +
+            " AND msg.hash IS NULL" +
             " ORDER BY msg.timestamp, msg.id";
 
+    // 查询消息未确认的HASH
+    String QUERY_UN_CONFIRMATION_MSG_HASH = " (SELECT hash FROM ChatMsgLogs WHERE status = :status) ";
+
+    // 查询消息未确认朋友
     String QUERY_UN_CONFIRMATION_FRIENDS = "SELECT msg.friendPk" +
             " FROM ChatMessages msg" +
             " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
-            " AND msg.status == 1" +
+            " AND (msg.hash IS NULL" +
+            " OR msg.hash NOT IN" + QUERY_UN_CONFIRMATION_MSG_HASH + ")" +
             " GROUP BY msg.friendPk" +
             " ORDER BY msg.timestamp";
 
-    String QUERY_MESSAGES_BY_TIME = "SELECT msg.*" +
-            " FROM ChatMessages msg" +
-            " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
-            " AND msg.status = 1" +
-            " AND msg.timestamp >= :time" +
-            " ORDER BY msg.timestamp";
+    // 查询消息的最新log
+    String QUERY_CHAT_MSG_LAST_LOG = "SELECT * FROM ChatMsgLogs WHERE hash = :hash" +
+            " ORDER BY timestamp LIMIT 1";
+
+    // 查询消息的所有日志
+    String QUERY_CHAT_MSG_LOGS = "SELECT * FROM ChatMsgLogs WHERE hash = :hash" +
+            " ORDER BY status DESC";
 
     /**
      * 添加聊天信息
@@ -95,8 +104,17 @@ public interface ChatDao {
     List<ChatMsg> getUnsentMessages();
 
     @Query(QUERY_UN_CONFIRMATION_FRIENDS)
-    List<String> getUnConfirmationFriends();
+    List<String> getUnConfirmationFriends(int status);
 
-    @Query(QUERY_MESSAGES_BY_TIME)
-    List<ChatMsg> getMessagesByTime(long time);
+    /**
+     * 添加消息日志
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    long addChatMsgLog(ChatMsgLog msgLog);
+
+    @Query(QUERY_CHAT_MSG_LAST_LOG)
+    ChatMsgLog queryChatMsgLastLog(String hash);
+
+    @Query(QUERY_CHAT_MSG_LOGS)
+    Observable<List<ChatMsgLog>> observerMsgLogs(String hash);
 }

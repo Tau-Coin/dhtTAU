@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.reactivex.Observable;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 
 /**
  * 提供操作Friend数据的接口
@@ -26,7 +27,7 @@ public interface ChatRepository {
     void updateChatMsg(ChatMsg chat);
 
     /**
-     * 查询Chat
+     * 查询ChatMsg
      * @param friendPk
      * @param hash
      * @return
@@ -58,4 +59,23 @@ public interface ChatRepository {
      * @return
      */
     List<String> getUnConfirmationFriends();
+
+    /**
+     * 添加消息日志
+     * @param msgLog
+     */
+    void addChatMsgLog(ChatMsgLog msgLog);
+
+    /**
+     * 查询消息的最新log
+     * @param hash
+     */
+    ChatMsgLog queryChatMsgLastLog(String hash);
+
+    /**
+     * 观察消息日志
+     * @param hash
+     * @return
+     */
+    Observable<List<ChatMsgLog>> observerMsgLogs(String hash);
 }

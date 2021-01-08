@@ -10,8 +10,10 @@ import androidx.annotation.NonNull;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 
 /**
@@ -95,6 +97,35 @@ public class ChatRepositoryImpl implements ChatRepository{
      */
     @Override
     public List<String> getUnConfirmationFriends() {
-        return db.chatDao().getUnConfirmationFriends();
+        int status = ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus();
+        return db.chatDao().getUnConfirmationFriends(status);
+    }
+
+    /**
+     * 添加消息日志
+     * @param msgLog
+     */
+    @Override
+    public void addChatMsgLog(ChatMsgLog msgLog) {
+        db.chatDao().addChatMsgLog(msgLog);
+    }
+
+    /**
+     * 查询消息的最新log
+     * @param hash
+     */
+    @Override
+    public ChatMsgLog queryChatMsgLastLog(String hash) {
+        return db.chatDao().queryChatMsgLastLog(hash);
+    }
+
+    /**
+     * 观察消息日志
+     * @param hash
+     * @return
+     */
+    @Override
+    public Observable<List<ChatMsgLog>> observerMsgLogs(String hash) {
+        return db.chatDao().observerMsgLogs(hash);
     }
 }
