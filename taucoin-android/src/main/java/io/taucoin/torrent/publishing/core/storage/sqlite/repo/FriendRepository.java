@@ -1,5 +1,7 @@
 package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
+import java.util.List;
+
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 
 /**
@@ -25,4 +27,10 @@ public interface FriendRepository {
      */
     Friend queryFriend(String userPK, String friendPK);
 
+    /**
+     * 查询已获得连接的朋友列表
+     * @param userPK
+     * @return
+     */
+    List<String> queryConnectedFriends(String userPK, int limit);
 }

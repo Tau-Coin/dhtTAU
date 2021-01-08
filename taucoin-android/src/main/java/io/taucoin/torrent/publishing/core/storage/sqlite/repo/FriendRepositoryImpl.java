@@ -2,6 +2,8 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
 
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
@@ -37,5 +39,16 @@ public class FriendRepositoryImpl implements FriendRepository{
     @Override
     public Friend queryFriend(String userPK, String friendPK) {
         return db.friendDao().queryFriend(userPK, friendPK);
+    }
+
+    /**
+     * 查询已获得连接的朋友列表
+     * @param userPK
+     * @param limit
+     * @return
+     */
+    @Override
+    public List<String> queryConnectedFriends(String userPK, int limit) {
+        return db.friendDao().queryConnectedFriends(userPK, limit);
     }
 }

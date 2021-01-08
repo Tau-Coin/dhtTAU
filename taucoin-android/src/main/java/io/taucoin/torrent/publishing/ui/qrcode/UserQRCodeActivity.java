@@ -32,7 +32,6 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
 
     public static final int TYPE_QR_DISPLAY = 0;
     public static final int TYPE_QR_SHARE = 1;
-    private CompositeDisposable disposables = new CompositeDisposable();
     private ActivityQrCodeBinding binding;
     private UserViewModel userViewModel;
     private int type;
@@ -69,24 +68,17 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
         binding.tvScanQrCode.setText(scanQrCode);
         binding.tvScanQrCode.setVisibility(type == TYPE_QR_DISPLAY ? View.VISIBLE : View.GONE);
 
-        disposables.add(userViewModel.observeCurrentUser()
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(user -> {
-                    String showName = UsersUtil.getShowName(user);
-                    binding.roundButton.setText(showName);
-                    binding.roundButton.setBgColor(Utils.getGroupColor(user.publicKey));
-                    showQRCOdeImage(user.publicKey, showName);
-                }));
+        // 查询数据
+        userViewModel.queryCurrentUserAndFriends();
+        userViewModel.getQRContent().observe(this, this::showQRCOdeImage);
     }
 
     /**
      * 显示QRCode图片
      */
-    private void showQRCOdeImage(String publicKey, String nickName) {
-        QRContent content = new QRContent();
-        content.setPublicKey(publicKey);
-        content.setNickName(nickName);
+    private void showQRCOdeImage(QRContent content) {
+        binding.roundButton.setText(content.getNickName());
+        binding.roundButton.setBgColor(Utils.getGroupColor(content.getPublicKey()));
         String contentJson = new Gson().toJson(content);
         Bitmap bitmap = CodeUtils.createQRCode(contentJson, 480);
         binding.ivQrCode.setImageBitmap(bitmap);

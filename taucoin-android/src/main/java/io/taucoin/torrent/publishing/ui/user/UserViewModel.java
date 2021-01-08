@@ -49,12 +49,15 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.Page;
+import io.taucoin.torrent.publishing.ui.constant.QRContent;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.util.ByteUtil;
 
@@ -76,6 +79,7 @@ public class UserViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> editNameResult = new MutableLiveData<>();
     private MutableLiveData<List<User>> blackList = new MutableLiveData<>();
     private MutableLiveData<UserAndFriend> userDetail = new MutableLiveData<>();
+    private MutableLiveData<QRContent> qrContent = new MutableLiveData<>();
     private CommonDialog commonDialog;
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
@@ -210,10 +214,42 @@ public class UserViewModel extends AndroidViewModel {
     }
 
     /**
+     * 观察当前用户需要生成的QR内容
+     */
+    public MutableLiveData<QRContent> getQRContent() {
+        return qrContent;
+    }
+
+    /**
      * 观察当前用户是否变化
      */
     public Flowable<User> observeCurrentUser() {
         return userRepo.observeCurrentUser();
+    }
+
+    /**
+     * 观察当前用户和其朋友列表
+     */
+    public void queryCurrentUserAndFriends() {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<QRContent>) emitter -> {
+            try {
+                User user = userRepo.getCurrentUser();
+                List<String> friendPks = friendRepo.queryConnectedFriends(user.publicKey, 10);
+                String showName = UsersUtil.getShowName(user);
+                QRContent content = new QRContent();
+                content.setPublicKey(user.publicKey);
+                content.setNickName(showName);
+                content.setFriendPks(friendPks);
+                emitter.onNext(content);
+            }catch (Exception e){
+                logger.error("queryCurrentUserAndFriends error ", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> qrContent.postValue(result));
+        disposables.add(disposable);
     }
 
     /**
@@ -366,11 +402,11 @@ public class UserViewModel extends AndroidViewModel {
         addFriend(publicKey, null);
     }
 
-    public void addFriend(String publicKey, String nickname) {
+    void addFriend(String publicKey, String nickname) {
         if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             return;
         }
-        daemon.observeDaemonRunning()
+        observeDaemonRunning = daemon.observeDaemonRunning()
                 .subscribeOn(Schedulers.io())
                 .subscribe((isRunning) -> {
                     if (isRunning) {

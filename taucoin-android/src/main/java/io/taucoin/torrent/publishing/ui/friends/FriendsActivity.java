@@ -32,6 +32,7 @@ import io.taucoin.torrent.publishing.databinding.ActivityFriendsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
@@ -66,10 +67,6 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         txViewModel = provider.get(TxViewModel.class);
         communityViewModel = provider.get(CommunityViewModel.class);
         initParameter();
-        userViewModel.addFriend("63ec42130442c91e23d56dc73708e06eb164883ab74c9813764c3fd0e2042dc4");
-        userViewModel.addFriend("809df518ee450ded0a659aeb4bc5bec636e2cff012fc88d343b7419af974bb81");
-        userViewModel.addFriend("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9");
-        userViewModel.addFriend("3e87c35d2079858d88dcb113edadaf1b339fcd4f74c539faa9a9bd59e787f124");
         initView();
         initFabSpeedDial();
         getMedianFee();
@@ -229,9 +226,15 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
             setResult(RESULT_OK, intent);
             onBackPressed();
         }else{
-            Intent intent = new Intent();
-            intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
-            ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
+            if (user.isAdded()) {
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
+                ActivityUtil.startActivity(intent, this, UserQRCodeActivity.class);
+            } else {
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
+                ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
+            }
         }
     }
 
