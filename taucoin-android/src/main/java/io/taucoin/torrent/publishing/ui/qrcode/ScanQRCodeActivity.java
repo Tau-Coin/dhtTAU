@@ -36,8 +36,10 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.constant.QRContent;
+import io.taucoin.torrent.publishing.ui.friends.FriendsActivity;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
+import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -54,6 +56,8 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
     private TextView tvNoQrCode;
     private TextView tvContinue;
     private CommunityViewModel communityViewModel;
+    private UserViewModel userViewModel;
+    private String friendPk; // 识别的朋友公钥
 
     @Override
     public int getLayoutId() {
@@ -67,6 +71,7 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);
+        userViewModel = provider.get(UserViewModel.class);
         initView();
         //获取CaptureHelper，里面有扫码相关的配置设置
         getCaptureHelper().playBeep(false)// 播放音效
@@ -119,11 +124,8 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                 QRContent content = new Gson().fromJson(scanResult, QRContent.class);
                 if (content != null &&
                         ByteUtil.toByte(content.getPublicKey()).length == Ed25519.PUBLIC_KEY_SIZE) {
-                    Intent intent = new Intent();
-                    intent.putExtra(IntentExtra.PUBLIC_KEY, content.getPublicKey());
-                    intent.putExtra(IntentExtra.NICK_NAME, content.getNickName());
-                    ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
-                    onBackPressed();
+                    friendPk = content.getPublicKey();
+                    userViewModel.addFriend(content.getPublicKey(), content.getNickName());
                     return;
                 }
             }
@@ -149,6 +151,18 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                 openCommunityActivity(result.getMsg());
             }
         });
+
+        userViewModel.getAddFriendResult().observe(this, result -> {
+            openFriendActivity();
+        });
+    }
+
+    private void openFriendActivity() {
+        Intent intent = new Intent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra(IntentExtra.PUBLIC_KEY, friendPk);
+        ActivityUtil.startActivity(intent, this, FriendsActivity.class);
+        onBackPressed();
     }
 
     private void openCommunityActivity(String chainID) {

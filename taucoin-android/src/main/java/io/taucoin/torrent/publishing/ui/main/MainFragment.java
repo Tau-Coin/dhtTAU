@@ -19,9 +19,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.databinding.FragmentMainBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
+import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
+import io.taucoin.torrent.publishing.ui.friends.ExchangeActivity;
 
 /**
  * 群组列表页面
@@ -29,6 +32,7 @@ import io.taucoin.torrent.publishing.ui.BaseFragment;
 public class MainFragment extends BaseFragment implements MainListAdapter.ClickListener{
 
     private MainActivity activity;
+
     private MainListAdapter adapter;
     private FragmentMainBinding binding;
     private MainViewModel viewModel;
@@ -69,6 +73,11 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
         binding.groupList.setItemAnimator(animator);
         binding.groupList.setEmptyView(binding.emptyViewGroupList);
         binding.groupList.setAdapter(adapter);
+
+        binding.tvAddFriends.setOnClickListener(v ->
+                ActivityUtil.startActivity(this, ExchangeActivity.class));
+        binding.tvCreateCommunities.setOnClickListener(v ->
+                ActivityUtil.startActivity(this, CommunityCreateActivity.class));
     }
 
     private void subscribeMainViewModel() {

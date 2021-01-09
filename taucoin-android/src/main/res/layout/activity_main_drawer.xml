@@ -37,15 +37,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
 
-                    <io.taucoin.torrent.publishing.ui.customviews.ThemedSpeedDialView
-                        android:id="@+id/fab_button"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_alignParentBottom="true"
-                        app:sdMainFabClosedSrc="@mipmap/icon_pencil"
-                        app:sdMainFabAnimationRotateAngle="0" />
-
                     <View
                         android:layout_below="@+id/toolbar_include"
                         android:layout_width="1dp"

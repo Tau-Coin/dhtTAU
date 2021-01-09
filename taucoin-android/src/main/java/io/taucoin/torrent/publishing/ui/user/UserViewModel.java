@@ -402,7 +402,7 @@ public class UserViewModel extends AndroidViewModel {
         addFriend(publicKey, null);
     }
 
-    void addFriend(String publicKey, String nickname) {
+    public void addFriend(String publicKey, String nickname) {
         if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             return;
         }

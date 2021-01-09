@@ -31,12 +31,14 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
     private List<String> selectedList = new ArrayList<>();
     private int page;
     private int order;
+    private String friendPk;
 
-    FriendsListAdapter(ClickListener listener, int type, int order) {
+    FriendsListAdapter(ClickListener listener, int type, int order, String friendPk) {
         super(diffCallback);
         this.listener = listener;
         this.page = type;
         this.order = order;
+        this.friendPk = friendPk;
     }
 
     void setOrder(int order) {
@@ -53,7 +55,7 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
                 parent,
                 false);
 
-        return new ViewHolder(binding, listener, page, selectedList);
+        return new ViewHolder(binding, listener, page, selectedList, friendPk);
     }
 
     @Override
@@ -71,15 +73,17 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
         private Context context;
         private int type;
         private List<String> selectedList;
+        private String friendPk;
 
         ViewHolder(ItemFriendListBinding binding, ClickListener listener, int type,
-                   List<String> selectedList) {
+                   List<String> selectedList, String friendPk) {
             super(binding.getRoot());
             this.binding = binding;
             this.context = binding.getRoot().getContext();
             this.listener = listener;
             this.type = type;
             this.selectedList = selectedList;
+            this.friendPk = friendPk;
         }
 
         void bind(ViewHolder holder, UserAndFriend user, int order) {
@@ -177,6 +181,10 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
                     listener.onShareClicked(user);
                 }
             });
+            // 新朋友高亮显示
+            boolean isNewScanFriend = StringUtil.isEquals(friendPk, user.publicKey);
+            bgColor = isNewScanFriend ? R.color.color_bg : R.color.color_white;
+            holder.binding.getRoot().setBackgroundColor(context.getResources().getColor(bgColor));
         }
     }
 

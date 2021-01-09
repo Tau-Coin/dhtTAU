@@ -55,7 +55,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.databinding.ExternalLinkDialogBinding;
 import io.taucoin.torrent.publishing.databinding.UserDialogBinding;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
-import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.chat.ChatFragment;
 import io.taucoin.torrent.publishing.ui.community.CommunityFragment;
@@ -162,22 +161,11 @@ public class MainActivity extends ScanTriggerActivity {
 
         updateDHTStats();
 
-        initFabSpeedDial();
-
         if (Utils.isTablet()) {
             updateViewChanged();
         } else {
             updateViewWeight(binding.mainRightFragment, 0);
         }
-    }
-
-    /**
-     * 初始化右下角悬浮按钮组件
-     */
-    private void initFabSpeedDial() {
-        // 自定义点击事件
-        binding.fabButton.getMainFab().setOnClickListener(v ->
-                ActivityUtil.startActivity(MainActivity.this, CommunityCreateActivity.class));
     }
 
     @Override

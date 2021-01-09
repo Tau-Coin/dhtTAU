@@ -55,6 +55,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     private String chainID;
     // 代表不同的入口页面
     private int page;
+    private String friendPk; // 新扫描的朋友的公钥
     private long medianFee;
     private int order = 0; // 0:last seen, 1:last communication
 
@@ -78,6 +79,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     private void initParameter() {
         chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
         page = getIntent().getIntExtra(IntentExtra.TYPE, PAGE_FRIENDS_LIST);
+        friendPk = getIntent().getStringExtra(IntentExtra.PUBLIC_KEY);
     }
 
     /**
@@ -89,7 +91,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         setSupportActionBar(binding.toolbarInclude.toolbar);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        adapter = new FriendsListAdapter(this, page, order);
+        adapter = new FriendsListAdapter(this, page, order, friendPk);
         /*
          * A RecyclerView by default creates another copy of the ViewHolder in order to
          * fade the views into each other. This causes the problem because the old ViewHolder gets
