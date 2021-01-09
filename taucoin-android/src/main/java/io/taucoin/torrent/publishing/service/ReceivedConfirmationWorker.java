@@ -15,7 +15,6 @@ import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
@@ -28,7 +27,7 @@ import io.taucoin.util.ByteUtil;
 public class ReceivedConfirmationWorker extends Worker {
 
     private static final Logger logger = LoggerFactory.getLogger("ReceivedConfirmationWorker");
-    private static final int maxConfirmedQuantity = 10; // 最大已确认数量
+    private static final int maxConfirmedQuantity = 5; // 最大已确认数量
     private TauDaemon daemon;
     private ChatRepository chatRepo;
     private int confirmedQuantity;

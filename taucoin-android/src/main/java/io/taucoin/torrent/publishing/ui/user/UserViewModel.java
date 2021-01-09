@@ -31,6 +31,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.BuildConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
@@ -396,17 +397,24 @@ public class UserViewModel extends AndroidViewModel {
     }
 
     /**
-     * 添加联系人
+     * 添加朋友
      */
     public void addFriend(String publicKey) {
         addFriend(publicKey, null);
     }
 
+    /**
+     * 添加朋友
+     * 根据BuildConfig.DEBUG 添加测试代码，多次调用添加测试朋友
+     * @param publicKey
+     * @param nickname
+     */
     public void addFriend(String publicKey, String nickname) {
-        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
+        if (!BuildConfig.DEBUG && observeDaemonRunning != null
+                && !observeDaemonRunning.isDisposed()) {
             return;
         }
-        observeDaemonRunning = daemon.observeDaemonRunning()
+        Disposable disposable = daemon.observeDaemonRunning()
                 .subscribeOn(Schedulers.io())
                 .subscribe((isRunning) -> {
                     if (isRunning) {
@@ -416,6 +424,9 @@ public class UserViewModel extends AndroidViewModel {
                         }
                     }
                 });
+        if (!BuildConfig.DEBUG) {
+            observeDaemonRunning = disposable;
+        }
     }
 
     private void addFriendTask(String publicKey, String nickname) {

@@ -81,15 +81,23 @@ public class PublishNewMsgWorker extends Worker {
             byte[] content;
             byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
             byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(friendPkBytes);
-            byte[] skipMessageRoot = daemon.getFriendLatestRoot(friendPkBytes);
+            byte[] skipMessageRoot = null;
             logger.debug("previousMsgDAGRoot::{}", ByteUtil.toHexString(previousMsgDAGRoot));
-            BigInteger nonce = BigInteger.ZERO;
-            if (previousMsgDAGRoot != null) {
-                byte[] previousMsgEncode = daemon.getMsg(previousMsgDAGRoot);
-                Message previousMsg = new Message(previousMsgEncode);
-                nonce = previousMsg.getNonce();
-                nonce = nonce.add(BigInteger.ONE);
+            // 如果当前message的nonce为0，最新的msgRoot就是message的skipMessageRoot
+            // 否则最新msgRoot对应的skipMessageRoot，就是message的skipMessageRoot
+            if (msg.nonce == 0) {
+                skipMessageRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
+            } else {
+                byte[] latestMsgRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
+                if (latestMsgRoot != null) {
+                    byte[] latestMsgEncoded =  daemon.getMsg(latestMsgRoot);
+                    if (latestMsgEncoded != null) {
+                        Message message = new Message(latestMsgEncoded);
+                        skipMessageRoot = message.getSkipMessageRoot();
+                    }
+                }
             }
+            BigInteger nonce = BigInteger.valueOf(msg.nonce);
             Message message;
             List<byte[]> data = new ArrayList<>();
             if (msg.contextType == MessageType.PICTURE.ordinal()) {

@@ -156,6 +156,7 @@ public class ChatViewModel extends AndroidViewModel {
                     long timestamp = DateUtil.getTime();
                     String senderPk = MainApplication.getInstance().getPublicKey();
                     ChatMsg chatMsg = new ChatMsg(senderPk, friendPk, contentStr, type, timestamp);
+                    chatMsg.nonce = i;
                     messages[i] = chatMsg;
                 }
                 // 批量添加到数据库

@@ -118,15 +118,19 @@ class MsgListenHandler {
      * @param root 消息root
      */
     void onReceivedMessageRoot(byte[] friendPk, byte[] root) {
-        logger.debug("onReceivedMessageRoot friendPk::{}，MessageRoot::{}",
-                ByteUtil.toHexString(friendPk), root);
+        String friendPkStr = ByteUtil.toHexString(friendPk);
+        logger.trace("onReceivedMessageRoot friendPk::{}，MessageRoot::{}",
+                friendPkStr, root);
         Disposable disposable = Flowable.create(emitter -> {
             try {
                 String hash = ByteUtil.toHexString(root);
                 ChatMsgLog msg = chatRepo.queryChatMsgLastLog(hash);
                 if (msg != null && msg.status != ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
                     msg.status = ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus();
+                    msg.timestamp = DateUtil.getTime();
                     chatRepo.addChatMsgLog(msg);
+                    logger.trace("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
+                            friendPkStr, hash);
                 }
             } catch (Exception e) {
                 logger.error("onNewMessage error", e);
