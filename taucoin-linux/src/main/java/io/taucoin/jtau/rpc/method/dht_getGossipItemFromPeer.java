@@ -37,7 +37,7 @@ public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
         } else {
             // get pubkey
             byte[] pubkey = Hex.decode((String)(params.get(0)));
-            byte[] salt = Communication.makeGossipSalt();
+            byte[] salt = ChainParam.GOSSIP_CHANNEL;
 
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubkey, salt);
 

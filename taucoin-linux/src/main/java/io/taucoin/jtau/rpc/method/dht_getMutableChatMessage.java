@@ -44,25 +44,6 @@ public class dht_getMutableChatMessage extends JsonRpcServerMethod {
         return salt;
     }
 
-    /**
-     * 获取上一个聊天接收频道salt
-     * @param friend 对方public key
-     * @return salt
-     */
-    public byte[] getPreviousReceivingSalt(byte[] friend) {
-        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
-
-        long time = System.currentTimeMillis() / 1000 / ChainParam.COMMUNICATION_CHANNEL_TIME - 1;
-        byte[] timeBytes = ByteUtil.longToBytes(time);
-
-        byte[] salt = new byte[SHORT_ADDRESS_LENGTH * 2 + timeBytes.length];
-        System.arraycopy(friend, 0, salt, 0, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(pubKey, 0, salt, SHORT_ADDRESS_LENGTH, SHORT_ADDRESS_LENGTH);
-        System.arraycopy(timeBytes, 0, salt, SHORT_ADDRESS_LENGTH * 2, timeBytes.length);
-
-        return salt;
-    }
-
     @Override
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
         List<Object> params = req.getPositionalParams();
