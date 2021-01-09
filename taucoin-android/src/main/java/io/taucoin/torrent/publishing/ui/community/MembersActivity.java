@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.ui.community;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -24,8 +25,10 @@ import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityMembersBinding;
+import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.friends.FriendsActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.CommunityQRCodeActivity;
 
@@ -40,6 +43,7 @@ public class MembersActivity extends BaseActivity {
     private String chainID;
     private List<Fragment> fragmentList = new ArrayList<>();
     private int[] titles = new int[]{R.string.community_on_chain, R.string.community_queue};
+    private CommonDialog banDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,13 +123,35 @@ public class MembersActivity extends BaseActivity {
             intent.putExtra(IntentExtra.CHAIN_ID, chainID);
             ActivityUtil.startActivity(intent, this, FriendsActivity.class);
         } else if (item.getItemId() == R.id.member_ban) {
-            communityViewModel.setCommunityBlacklist(chainID, true);
+            showBanCommunityTipsDialog(chainID);
         } else if (item.getItemId() == R.id.community_qr_code) {
             Intent intent = new Intent();
             intent.putExtra(IntentExtra.CHAIN_ID, chainID);
             ActivityUtil.startActivity(intent, this, CommunityQRCodeActivity.class);
         }
         return true;
+    }
+
+    /**
+     * 显示禁止社区的提示对话框
+     * @param chainID
+     */
+    private void showBanCommunityTipsDialog(String chainID) {
+        ViewDialogBinding dialogBinding = DataBindingUtil.inflate(LayoutInflater.from(this),
+                R.layout.view_dialog, null, false);
+        dialogBinding.tvMsg.setText(R.string.community_ban_community);
+        dialogBinding.tvMsg.setTextColor(getResources().getColor(R.color.color_black));
+        banDialog = new CommonDialog.Builder(this)
+                .setContentView(dialogBinding.getRoot())
+                .setCanceledOnTouchOutside(false)
+                .setHorizontal()
+                .setPositiveButton(R.string.common_yes, (dialog, which) -> {
+                    dialog.dismiss();
+                    communityViewModel.setCommunityBlacklist(chainID, true);
+                })
+                .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
+                .create();
+        banDialog.show();
     }
 
     @Override

@@ -78,6 +78,7 @@
     <string name="community_invite_link">Invite Link</string>
     <string name="community_add_member">Add Member via Wiring</string>
     <string name="community_qr_code">Community QR Code</string>
+    <string name="community_ban_community">Do you want to ban this community?</string>
 
     <string name="community_input_hint">Message</string>
     <string name="community_users_stats">%1$d members, %2$d online</string>
