@@ -25,10 +25,8 @@ public enum DataType {
     TX_REQUEST_FOR_MINING, // immutable tx for pool
 
     GOSSIP_FROM_PEER, // gossip information from peer
-    GOSSIP_LIST, // gossip list
 
     MESSAGE, // message
-    MESSAGE_CONTENT, // message content
 
     LATEST_MESSAGE, // mutable item: latest message
 

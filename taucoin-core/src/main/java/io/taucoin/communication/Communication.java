@@ -111,9 +111,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 得到的消息与发送者对照表（Message hash <--> Sender）
     private final Map<ByteArrayWrapper, ByteArrayWrapper> messageSenderMap = new ConcurrentHashMap<>();
 
-    // message content set
-    private final Set<ByteArrayWrapper> messageContentSet = new CopyOnWriteArraySet<>();
-
     // 请求到的demand item
     private final Set<ByteArrayWrapper> demandItem = new CopyOnWriteArraySet<>();
 
@@ -490,15 +487,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      */
     private void dealWithMessage() throws DBException {
 
-        // 将消息的内容直接存入数据库
-        Iterator<ByteArrayWrapper> it = this.messageContentSet.iterator();
-        while (it.hasNext()) {
-            ByteArrayWrapper messageContent = it.next();
-            this.messageDB.putMessage(HashUtil.bencodeHash(messageContent.getData()), messageContent.getData());
-            this.messageContentSet.remove(messageContent);
-//            it.remove();
-        }
-
         // 将消息存入数据库并通知UI，尝试获取下一条消息
         Iterator<Map.Entry<ByteArrayWrapper, Message>> iterator = this.messageMap.entrySet().iterator();
 
@@ -728,21 +716,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 请求gossip list, pubKey用于辅助识别是否我的朋友
-     * @param hash gossip list hash
-     * @param pubKey public key
-     */
-    private void requestGossipList(byte[] hash, ByteArrayWrapper pubKey) {
-        if (null != hash) {
-            DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-            DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_LIST, pubKey, new ByteArrayWrapper(hash));
-
-            DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-            this.queue.add(immutableItemRequest);
-        }
-    }
-
-    /**
      * 请求对应哈希值的消息
      * @param hash msg hash
      * @param pubKey public key
@@ -752,20 +725,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             logger.debug("Message root:{}, public key:{}", Hex.toHexString(hash), pubKey.toString());
             DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey, new ByteArrayWrapper(hash));
-
-            DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-            this.queue.add(immutableItemRequest);
-        }
-    }
-
-    /**
-     * 请求消息携带的内容
-     * @param hash 内容哈希
-     */
-    private void requestMessageContent(byte[] hash, ByteArrayWrapper pubKey) throws DBException {
-        if (null != hash && null == this.messageDB.getMessageByHash(hash)) {
-            DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-            DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE_CONTENT, pubKey, new ByteArrayWrapper(hash));
 
             DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
             this.queue.add(immutableItemRequest);
@@ -1382,43 +1341,11 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), dataIdentifier.getExtraInfo1());
 
-                // 暂时只考虑直接携带的文本
-//                try {
-//                    requestMessageContent(message.getContent(), dataIdentifier.getExtraInfo1());
-//                } catch (Exception e) {
-//                    logger.error(e.getMessage(), e);
-//                }
-
-                break;
-            }
-            case MESSAGE_CONTENT: {
-                if (null == item) {
-                    logger.debug("MESSAGE_CONTENT[{}] from peer[{}] is empty",
-                            dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
-                    this.demandImmutableDataHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
-                    return;
-                }
-
-                this.messageContentSet.add(new ByteArrayWrapper(item));
-
                 break;
             }
             case GOSSIP_FROM_PEER: {
                 if (null == item) {
                     logger.debug("GOSSIP_FROM_PEER from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
-                    return;
-                }
-
-                GossipList gossipList = new GossipList(item);
-                preprocessGossipListFromNet(gossipList, dataIdentifier.getExtraInfo1());
-
-                break;
-            }
-            case GOSSIP_LIST: {
-                if (null == item) {
-                    logger.debug("GOSSIP_LIST[{}] from peer[{}] is empty",
-                            dataIdentifier.getExtraInfo2().toString(), dataIdentifier.getExtraInfo1().toString());
-                    this.demandImmutableDataHash.put(dataIdentifier.getExtraInfo1(), dataIdentifier.getExtraInfo2().getData());
                     return;
                 }
 
