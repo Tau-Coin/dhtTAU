@@ -62,6 +62,8 @@ public class ChainParam {
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
 
+    public static final int TX_GOSSIP_SIZE = 3;
+
     /**********CHANNEL SALT**********/
     // tip
     public static final byte[] TIP_CHANNEL = "#T".getBytes();
@@ -71,6 +73,9 @@ public class ChainParam {
 
     // gossip
     public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST1".getBytes();
+
+    // group chat gossip channel prefix
+    public static final byte[] GROUP_CHAT_GOSSIP_CHANNEL_PREFIX = "GC_".getBytes();
 
     // one day
     public static final int ONE_DAY = 24 * 60 * 60;
