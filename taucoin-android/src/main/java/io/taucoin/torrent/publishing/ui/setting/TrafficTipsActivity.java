@@ -113,6 +113,14 @@ public class TrafficTipsActivity extends BaseActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mDialog != null && mDialog.isShowing()) {
+            mDialog.dismiss();
+        }
+    }
+
+    @Override
     public void onBackPressed() {
         handleUserSelected(false);
     }

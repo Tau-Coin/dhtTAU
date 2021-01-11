@@ -141,6 +141,9 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 binding.leftView.setBgColor(bgColor);
 
                 String msg = community.txMemo;
+                if (StringUtil.isEmpty(msg)) {
+                    msg = context.getString(R.string.main_no_messages);
+                }
                 binding.tvUserMessage.setText(msg);
                 if(community.txTimestamp > 0){
                     String time = DateUtil.getWeekTime(community.txTimestamp);

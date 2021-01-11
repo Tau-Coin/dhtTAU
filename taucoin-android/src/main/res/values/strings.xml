@@ -39,6 +39,8 @@
     <string name="main_new_community">New Community</string>
     <string name="main_community_settings">Community Settings</string>
     <string name="main_other_transaction">Other Transaction</string>
+    <string name="main_no_messages">[No messages]</string>
+    <string name="main_pic_messages">[Picture]</string>
 
     <!-- Strings used for main drawer content -->
     <string name="drawer_new_community">New Community</string>
