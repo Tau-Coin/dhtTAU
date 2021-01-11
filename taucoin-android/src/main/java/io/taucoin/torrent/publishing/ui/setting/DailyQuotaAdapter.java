@@ -28,6 +28,11 @@ public class DailyQuotaAdapter extends ListAdapter<Integer, DailyQuotaAdapter.Vi
         this.type = type;
     }
 
+    public void updateSelectLimit(int selectLimit) {
+        this.selectLimit = selectLimit;
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -71,8 +76,6 @@ public class DailyQuotaAdapter extends ListAdapter<Integer, DailyQuotaAdapter.Vi
             holder.binding.radioButton.setChecked(adapter.selectLimit == limit);
             holder.binding.radioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
-                    adapter.selectLimit = limit;
-                    adapter.notifyDataSetChanged();
                     if (adapter.listener != null) {
                         adapter.listener.onCheckedChanged(adapter.type, limit);
                     }

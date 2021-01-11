@@ -56,6 +56,13 @@ public class AppUtil {
     /**
      * 判断某个界面是否在前台,返回true，为显示,否则不是
      */
+    public static boolean isForeground(Context context, Class<?> zClass) {
+        return isForeground(context, zClass.getName());
+    }
+
+    /**
+     * 判断某个界面是否在前台,返回true，为显示,否则不是
+     */
     public static boolean isForeground(Context context, String className) {
         if (context == null || StringUtil.isEmpty(className))
             return false;

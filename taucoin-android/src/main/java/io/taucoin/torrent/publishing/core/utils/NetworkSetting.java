@@ -9,6 +9,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.SpeedRegulate;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 
@@ -18,9 +19,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 public class NetworkSetting {
     private static final int meteredLimited;                                  // 单位MB
     private static final int wifiLimited;                                     // 单位MB
-    // 网速在限制内浮动范围
-    private static final BigInteger speedRange = BigInteger.valueOf(512);     // 0.5KB
-    private static final BigInteger speedAdjustment = BigInteger.valueOf(3);  // 网速根据前后台调整倍数
+    private static final BigInteger fgSpeedAdjustment = BigInteger.valueOf(3);  // 网速前后台调整倍数
+    private static final BigInteger bgSpeedAdjustment = BigInteger.valueOf(2);  // 网速后后台调整倍数
     private static final long speed_sample = 10;                              // 单位s
 
     private static SettingsRepository settingsRepo;
@@ -240,7 +240,7 @@ public class NetworkSetting {
     /**
      * 计算DHT操作的调节值
      */
-    public static int calculateRegulateValue() {
+    public static SpeedRegulate calculateRegulateValue() {
         BigInteger speedLimit;
         if (isMeteredNetwork()) {
             // 当前网络为计费网络
@@ -251,7 +251,9 @@ public class NetworkSetting {
         }
         Context context = MainApplication.getInstance();
         if (AppUtil.isOnForeground(context)) {
-            speedLimit = speedLimit.multiply(speedAdjustment);
+            speedLimit = speedLimit.multiply(fgSpeedAdjustment);
+        } else {
+            speedLimit = speedLimit.multiply(bgSpeedAdjustment);
         }
         return calculateRegulateValue(speedLimit);
     }
@@ -259,18 +261,18 @@ public class NetworkSetting {
     /**
      * 根据网速限制计算DHT操作的调节值
      */
-    private static int calculateRegulateValue(BigInteger speedLimit) {
+    private static SpeedRegulate calculateRegulateValue(BigInteger speedLimit) {
         BigInteger currentSpeed = BigInteger.valueOf(NetworkSetting.getCurrentSpeed());
         if (speedLimit.compareTo(BigInteger.ZERO) > 0) {
-            if (currentSpeed.compareTo(speedLimit.subtract(speedRange)) < 0) {
-                return -1;
+            if (currentSpeed.compareTo(speedLimit) < 0) {
+                return SpeedRegulate.SPEED_UP;
             } else if (currentSpeed.compareTo(speedLimit) > 0){
-                return 1;
+                return SpeedRegulate.SPEED_DOWN;
             }
         } else {
             // 超出流量控制范围
-            return 1;
+            return SpeedRegulate.NO_REMAINING_DATA;
         }
-        return 0;
+        return SpeedRegulate.SPEED_UNCHANGED;
     }
 }

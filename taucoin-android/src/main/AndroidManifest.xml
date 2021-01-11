@@ -225,6 +225,11 @@
             android:exported="false"
             android:enabled="false"/>
 
+        <activity
+            android:name=".ui.setting.TrafficTipsActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/transparent"/>
+
     </application>
 
 </manifest>

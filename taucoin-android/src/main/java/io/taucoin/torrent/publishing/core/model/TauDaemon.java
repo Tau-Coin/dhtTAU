@@ -34,9 +34,11 @@ import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.listener.MsgStatus;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.SpeedRegulate;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
+import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
@@ -48,6 +50,7 @@ import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.receiver.PowerReceiver;
 import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
+import io.taucoin.torrent.publishing.ui.setting.TrafficTipsActivity;
 import io.taucoin.types.BlockContainer;
 import io.taucoin.types.Message;
 import io.taucoin.types.Transaction;
@@ -77,6 +80,7 @@ public class TauDaemon {
     private TauInfoProvider tauInfoProvider;
     private Disposable sessionStartedDispose; // session启动任务
     private volatile boolean isRunning = false;
+    private volatile boolean trafficTips = true; // 剩余流量用完提示
     private volatile String seed;
 
     private static volatile TauDaemon instance;
@@ -252,7 +256,7 @@ public class TauDaemon {
                 isRunning = true;
                 WorkerManager.startAllWorker();
                 handleSettingsChanged(appContext.getString(R.string.pref_key_foreground_running));
-                tauController.getDHTEngine().setReadOnly(NetworkSetting.isMeteredNetwork());
+                resetReadOnly();
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
@@ -432,26 +436,36 @@ public class TauDaemon {
                 if (isRestart) {
                     resetDHTSessions(minSessions);
                     tauController.restartSessions(NetworkSetting.getDHTSessions());
-                    tauController.getDHTEngine().setReadOnly(NetworkSetting.isMeteredNetwork());
+                    resetReadOnly();
                     logger.info("rescheduleDHTBySettings restartSessions::{}",
                             NetworkSetting.getDHTSessions());
                 } else {
-//                    int regulateValue = NetworkSetting.calculateRegulateValue();
-//                    if (regulateValue > 0) {
+                    SpeedRegulate value = NetworkSetting.calculateRegulateValue();
+                    if (value == SpeedRegulate.SPEED_UP) {
 //                        tauController.getDHTEngine().increaseDHTOPInterval();
 //                        tauController.getCommunicationManager().increaseIntervalTime();
-//                    } else if (regulateValue < 0) {
+                    } else if (value == SpeedRegulate.SPEED_DOWN) {
 //                        tauController.getDHTEngine().decreaseDHTOPInterval();
 //                        tauController.getCommunicationManager().decreaseIntervalTime();
-//                        if ((sessionStartedDispose != null && !sessionStartedDispose.isDisposed())) {
-//                            return;
-//                        }
-//                        int dhtSessions = NetworkSetting.getDHTSessions();
-//                        if (dhtSessions < maxSessions) {
-//                            tauController.getDHTEngine().increaseSession();
-//                            resetDHTSessions(dhtSessions + 1);
-//                        }
-//                    }
+                        if ((sessionStartedDispose != null && !sessionStartedDispose.isDisposed())) {
+                            return;
+                        }
+                        int dhtSessions = NetworkSetting.getDHTSessions();
+                        if (dhtSessions < maxSessions) {
+                            tauController.getDHTEngine().increaseSession();
+                            resetDHTSessions(dhtSessions + 1);
+                        }
+                    } else if (value == SpeedRegulate.NO_REMAINING_DATA) {
+//                        tauController.getDHTEngine().increaseDHTOPInterval();
+//                        tauController.getCommunicationManager().increaseIntervalTime();
+                        resetReadOnly(true);
+                        showNoRemainingDataTipsDialog();
+                    }
+
+                    if (value != SpeedRegulate.NO_REMAINING_DATA) {
+                        trafficTips = true;
+                        resetReadOnly(false);
+                    }
                     logger.info("rescheduleDHTBySettings DHTSessions::{}, DHTOPInterval::{}",
                             NetworkSetting.getDHTSessions(), tauController.getDHTEngine().getDHTOPInterval());
                 }
@@ -459,6 +473,46 @@ public class TauDaemon {
         } catch (Exception e) {
             logger.error("rescheduleDHTBySettings errors", e);
         }
+    }
+
+    /**
+     * 显示没有剩余流量提示对话框
+     */
+    private void showNoRemainingDataTipsDialog() {
+        if (trafficTips && AppUtil.isOnForeground(appContext) &&
+                !AppUtil.isForeground(appContext, TrafficTipsActivity.class)) {
+            Intent intent = new Intent(appContext, TrafficTipsActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            appContext.startActivity(intent);
+        }
+    }
+
+    /**
+     * 处理用户流量提示选择
+     * @param updateDailyDataLimit 是否更新每日流量限制
+     */
+    public void handleUserSelected(boolean updateDailyDataLimit) {
+        trafficTips = updateDailyDataLimit;
+        resetReadOnly(!updateDailyDataLimit);
+    }
+
+    /**
+     * 计费网络下设置DHTEngine为read only模式
+     */
+    private void resetReadOnly() {
+        resetReadOnly(false);
+    }
+
+    /**
+     * 计费网络下设置DHTEngine为read only模式
+     *  或者没有剩余流量时，强迫为read only模式
+     */
+    private void resetReadOnly(boolean isForced) {
+        if (!isRunning) {
+            return;
+        }
+        boolean isReadOnly = NetworkSetting.isMeteredNetwork() || isForced;
+        tauController.getDHTEngine().setReadOnly(isReadOnly);
     }
 
     /**

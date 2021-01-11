@@ -2,7 +2,6 @@ package io.taucoin.torrent.publishing.ui.setting;
 
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 
 import com.google.common.primitives.Ints;
 
@@ -20,7 +19,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityDataCostBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 
@@ -32,6 +30,8 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
     private ActivityDataCostBinding binding;
     private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private DailyQuotaAdapter adapterMetered;
+    private DailyQuotaAdapter adapterWiFi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +63,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         LinearLayoutManager layoutManagerMetered = new LinearLayoutManager(this);
         layoutManagerMetered.setOrientation(RecyclerView.HORIZONTAL);
         binding.rvMeteredDailyQuota.setLayoutManager(layoutManagerMetered);
-        DailyQuotaAdapter adapterMetered = new DailyQuotaAdapter(this,
+        adapterMetered = new DailyQuotaAdapter(this,
                 DailyQuotaAdapter.TYPE_METERED, NetworkSetting.getMeteredLimit());
         binding.rvMeteredDailyQuota.setAdapter(adapterMetered);
         int[] meteredLimits = getResources().getIntArray(R.array.metered_limit);
@@ -73,7 +73,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         LinearLayoutManager layoutManagerWiFi = new LinearLayoutManager(this);
         layoutManagerWiFi.setOrientation(RecyclerView.HORIZONTAL);
         binding.rvWifiDailyQuota.setLayoutManager(layoutManagerWiFi);
-        DailyQuotaAdapter adapterWiFi = new DailyQuotaAdapter(this,
+        adapterWiFi = new DailyQuotaAdapter(this,
                 DailyQuotaAdapter.TYPE_WIFI, NetworkSetting.getWiFiLimit());
         binding.rvWifiDailyQuota.setAdapter(adapterWiFi);
         int[] wifiLimits = getResources().getIntArray(R.array.wifi_limit);
@@ -102,6 +102,10 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
                 .subscribe(this::handleSettingsChanged));
     }
 
+    /**
+     * 用户设置参数变化
+     * @param key
+     */
     private void handleSettingsChanged(String key) {
         if(StringUtil.isEquals(key, getString(R.string.pref_key_current_speed_list))) {
             long currentSpeed = NetworkSetting.getCurrentSpeed();
@@ -148,6 +152,10 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             long availableData = NetworkSetting.getWiFiAvailableData();
             String availableDataStr = Formatter.formatFileSize(this, availableData).toUpperCase();
             binding.tvWifiAvailableData.setText(availableDataStr);
+        }  else if (key.equals(getString(R.string.pref_key_metered_limit))) {
+            adapterMetered.updateSelectLimit(NetworkSetting.getMeteredLimit());
+        } else if (key.equals(getString(R.string.pref_key_wifi_limit))) {
+            adapterWiFi.updateSelectLimit(NetworkSetting.getWiFiLimit());
         }
     }
 
