@@ -11,6 +11,7 @@ import io.taucoin.db.MessageDB;
 import io.taucoin.db.MessageDBImpl;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.types.Message;
+import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.Repo;
 
 public class CommunicationManager {
@@ -94,12 +95,13 @@ public class CommunicationManager {
     }
 
     /**
-     * 请求message相关的数据，包括message/message content/各级图片/文本等，拿到数据后会放到message db
+     * 请求message数据，拿到数据后会放到message db
      * @param hash data hash
+     * @param friend 请求该数据的朋友
      */
-    public void requestMessageData(byte[] hash) {
+    public void requestMessageData(byte[] hash, byte[] friend) {
         try {
-            this.communication.requestImmutableData(hash);
+            this.communication.requestMessage(hash, new ByteArrayWrapper(friend));
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

@@ -30,8 +30,6 @@ public enum DataType {
 
     LATEST_MESSAGE, // mutable item: latest message
 
-    IMMUTABLE_DATA, // immutable data
-
     /************************************put相关***************************************/
     PUT_IMMUTABLE_DATA, // put immutable data
 }

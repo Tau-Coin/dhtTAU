@@ -111,9 +111,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 得到的消息与发送者对照表（Message hash <--> Sender）
     private final Map<ByteArrayWrapper, ByteArrayWrapper> messageSenderMap = new ConcurrentHashMap<>();
 
-    // 请求到的demand item
-    private final Set<ByteArrayWrapper> demandItem = new CopyOnWriteArraySet<>();
-
     // 当前我加的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
 
@@ -506,6 +503,17 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             // 通知UI新消息
             this.msgListener.onNewMessage(sender.getData(), message);
 
+            // 从demand集合移除
+            Iterator<Map.Entry<ByteArrayWrapper, byte[]>> iterator1 = this.demandImmutableDataHash.entrySet().iterator();
+            while (iterator1.hasNext()) {
+                Map.Entry<ByteArrayWrapper, byte[]> entry1 = iterator1.next();
+                byte[] value = entry1.getValue();
+                if (Arrays.equals(msgHash.getData(), value)) {
+                    logger.debug("Remove hash[{}] from demand hash set", msgHash.toString());
+                    this.demandImmutableDataHash.remove(entry1.getKey());
+                }
+            }
+
             // try to find next one
             byte[] hash = message.getPreviousMsgDAGRoot();
             if (null != hash) {
@@ -559,42 +567,12 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 处理请求回来的数据，将其存储到数据库，并且demand hash集合中清除掉
-     * @throws DBException database exception
-     */
-    private void dealWithDemandItem() throws DBException {
-        Iterator<ByteArrayWrapper> it = this.demandItem.iterator();
-        while (it.hasNext()) {
-            ByteArrayWrapper demandItem = it.next();
-            byte[] hash = HashUtil.bencodeHash(demandItem.getData());
-            logger.debug("Save demand item:{}", Hex.toHexString(demandItem.getData()));
-            // 数据存入数据库
-            this.messageDB.putMessage(hash, demandItem.getData());
-
-            // 从demand集合移除
-            Iterator<Map.Entry<ByteArrayWrapper, byte[]>> iterator = this.demandImmutableDataHash.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<ByteArrayWrapper, byte[]> entry = iterator.next();
-                byte[] value = entry.getValue();
-                if (Arrays.equals(hash, value)) {
-                    logger.debug("Remove hash[{}] from demand hash set", Hex.toHexString(hash));
-                    this.demandImmutableDataHash.remove(entry.getKey());
-//                    iterator.remove();
-                }
-            }
-
-            this.demandItem.remove(demandItem);
-//            it.remove();
-        }
-    }
-
-    /**
      * 请求immutable data
      */
     private void requestDemandHash() throws DBException {
         for (Map.Entry<ByteArrayWrapper, byte[]> entry: this.demandImmutableDataHash.entrySet()) {
-            logger.trace("Request demand hash:{}", Hex.toHexString(entry.getValue()));
-            requestImmutableData(entry.getValue());
+            logger.trace("Request demand message hash:{}", Hex.toHexString(entry.getValue()));
+            requestMessage(entry.getValue(), entry.getKey());
         }
     }
 
@@ -626,7 +604,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 dealWithGossipItem();
 
                 // 6. 处理获得的demand数据
-                dealWithDemandItem();
+//                dealWithDemandItem();
 
                 // 7. 相应远端的需求
                 responseRemoteDemand();
@@ -720,25 +698,11 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      * @param hash msg hash
      * @param pubKey public key
      */
-    private void requestMessage(byte[] hash, ByteArrayWrapper pubKey) {
+    public void requestMessage(byte[] hash, ByteArrayWrapper pubKey) {
         if (null != hash) {
             logger.debug("Message root:{}, public key:{}", Hex.toHexString(hash), pubKey.toString());
             DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey, new ByteArrayWrapper(hash));
-
-            DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-            this.queue.add(immutableItemRequest);
-        }
-    }
-
-    /**
-     * 请求immutable数据
-     * @param hash 数据哈希
-     */
-    public void requestImmutableData(byte[] hash) throws DBException {
-        if (null != hash && null == this.messageDB.getMessageByHash(hash)) {
-            DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
-            DataIdentifier dataIdentifier = new DataIdentifier(DataType.IMMUTABLE_DATA);
 
             DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
             this.queue.add(immutableItemRequest);
@@ -1318,16 +1282,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     public void onDHTItemGot(byte[] item, Object cbData) {
         DataIdentifier dataIdentifier = (DataIdentifier) cbData;
         switch (dataIdentifier.getDataType()) {
-            case IMMUTABLE_DATA: {
-                if (null == item) {
-                    logger.debug("IMMUTABLE_DATA is empty");
-                    return;
-                }
-
-                this.demandItem.add(new ByteArrayWrapper(item));
-
-                break;
-            }
             case MESSAGE: {
                 if (null == item) {
                     logger.debug("MESSAGE[{}] from peer[{}] is empty",
