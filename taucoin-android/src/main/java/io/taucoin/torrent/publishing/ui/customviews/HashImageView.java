@@ -49,6 +49,7 @@ public class HashImageView extends RoundImageView {
     private boolean reload = false;
     private BitmapFactory.Options options;
     private int loadBitmapNum = 0;
+    private boolean isLoadSuccess;
 
     public HashImageView(Context context) {
         this(context, null);
@@ -70,6 +71,7 @@ public class HashImageView extends RoundImageView {
             this.setImageBitmap(bitmap);
             loadBitmapNum += 1;
             if (loadBitmapNum >= loadBitmapLimit) {
+                isLoadSuccess = true;
                 disposable.dispose();
             }
             logger.trace("showImage imageHash::{}, loadBitmapNum::{}", imageHash, loadBitmapNum);
@@ -84,6 +86,11 @@ public class HashImageView extends RoundImageView {
      * @param unsent
      */
     public void setImageHash(boolean unsent, String imageHash) {
+        // 如果是图片已加载，并且显示的图片不变，直接返回
+        if (isLoadSuccess && totalBytes != null
+                && StringUtil.isEquals(imageHash, this.imageHash)) {
+            return;
+        }
         this.imageHash = imageHash;
         this.unsent = unsent;
         setImageHash(ByteUtil.toByte(imageHash));
@@ -96,6 +103,7 @@ public class HashImageView extends RoundImageView {
     private void setImageHash(byte[] imageHash) {
         logger.debug("setImageHash start::{}", this.imageHash);
         showImage(null);
+        isLoadSuccess = false;
         loadBitmapNum = 0;
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
