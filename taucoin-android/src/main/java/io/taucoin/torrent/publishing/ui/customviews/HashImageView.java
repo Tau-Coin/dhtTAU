@@ -9,7 +9,7 @@ import android.util.AttributeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.math.BigInteger;
 
 import androidx.annotation.Nullable;
 import io.reactivex.BackpressureStrategy;
@@ -20,11 +20,14 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.model.data.MsgBlock;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.types.HashList;
+import io.taucoin.types.Message;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -37,14 +40,14 @@ public class HashImageView extends RoundImageView {
     private static final int heightLimit = 300;
     private static final int widthLimit = 300;
     private static final int loadBitmapLimit = 40;
-    private static final int stopLoadingIcon = 5;
+    private ChatRepository chatRepo;
     private TauDaemon daemon;
     private String imageHash;
+    private boolean unsent;
     private byte[] totalBytes;
     private Disposable disposable;
     private boolean reload = false;
     private BitmapFactory.Options options;
-    private LoadCompleteListener listener;
     private int loadBitmapNum = 0;
 
     public HashImageView(Context context) {
@@ -58,6 +61,7 @@ public class HashImageView extends RoundImageView {
     public HashImageView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         daemon = TauDaemon.getInstance(context);
+        chatRepo = RepositoryHelper.getChatRepository(context);
         options = new BitmapFactory.Options();
     }
 
@@ -65,9 +69,7 @@ public class HashImageView extends RoundImageView {
         if (bitmap != null) {
             this.setImageBitmap(bitmap);
             loadBitmapNum += 1;
-            if (loadBitmapNum == stopLoadingIcon && listener != null) {
-                listener.onLoadComplete();
-            } else if (loadBitmapNum >= loadBitmapLimit) {
+            if (loadBitmapNum >= loadBitmapLimit) {
                 disposable.dispose();
             }
             logger.trace("showImage imageHash::{}, loadBitmapNum::{}", imageHash, loadBitmapNum);
@@ -78,18 +80,19 @@ public class HashImageView extends RoundImageView {
 
     /**
      * 设置ImageHash
+     * @param imageHash
+     * @param unsent
      */
-    public void setImageHash(String imageHash) {
+    public void setImageHash(boolean unsent, String imageHash) {
         this.imageHash = imageHash;
+        this.unsent = unsent;
         setImageHash(ByteUtil.toByte(imageHash));
     }
 
-    public void setImageHash(String imageHash, LoadCompleteListener listener) {
-        this.listener = listener;
-        this.imageHash = imageHash;
-        setImageHash(ByteUtil.toByte(imageHash));
-    }
-
+    /**
+     * 设置ImageHash
+     * @param imageHash
+     */
     private void setImageHash(byte[] imageHash) {
         logger.debug("setImageHash start::{}", this.imageHash);
         showImage(null);
@@ -103,7 +106,7 @@ public class HashImageView extends RoundImageView {
                 if (imageHash != null) {
                     logger.debug("showHorizontalData start");
                     long startTime = System.currentTimeMillis();
-                    showHorizontalData(imageHash, emitter);
+                    showFragmentData(this.unsent, imageHash, emitter);
                     long endTime = System.currentTimeMillis();
                     logger.debug("showImageFromDB times::{}ms", endTime - startTime);
                 }
@@ -118,24 +121,50 @@ public class HashImageView extends RoundImageView {
                 .subscribe(this::showImage);
     }
 
-    private void showHorizontalData(byte[] imageHash, FlowableEmitter<Bitmap> emitter) throws Exception {
-        byte[] msgBlockEncoded = queryDataLoop(imageHash);
-        MsgBlock block = new MsgBlock(msgBlockEncoded);
-        if (block.isHaveHorizontalHash()) {
-            byte[] hashListEncoded = queryDataLoop(block.getHorizontalHash());
-            HashList hashList = new HashList(hashListEncoded);
-            List<byte[]> msgList = hashList.getHashList();
-            if (msgList != null && msgList.size() > 0) {
-                for (byte[] msgHash : msgList) {
-                    byte[] msgContent = queryDataLoop(msgHash);
-                    if (!emitter.isCancelled()) {
-                        refreshImageView(msgContent, emitter);
-                    }
-                }
-            }
+    /**
+     * 递归显示图片切分的片段数据
+     * @param imageHash
+     * @param emitter
+     * @throws Exception
+     */
+    private void showFragmentData(boolean unsent, byte[] imageHash,
+                              FlowableEmitter<Bitmap> emitter) throws Exception {
+        if (emitter.isCancelled()) {
+            return;
         }
-        if (block.isHaveVerticalHash() && !emitter.isCancelled()) {
-            showHorizontalData(block.getVerticalHash(), emitter);
+        BigInteger nonce = BigInteger.ZERO;
+        byte[] content = null;
+        byte[] previousMsgHash = null;
+        if (unsent) {
+            String hash = ByteUtil.toHexString(imageHash);
+            ChatMsg msg = chatRepo.queryChatMsg(hash);
+            if (msg.unsent == 0) {
+                nonce = BigInteger.valueOf(msg.nonce);
+                if (StringUtil.isNotEmpty(msg.content)) {
+                    content = ByteUtil.toByte(msg.content);
+                }
+                if (StringUtil.isNotEmpty(msg.previousMsgHash)) {
+                    previousMsgHash = ByteUtil.toByte(msg.previousMsgHash);
+                }
+            } else {
+                showFragmentData(false, imageHash, emitter);
+            }
+        } else {
+            byte[] fragmentEncoded = queryDataLoop(imageHash);
+            Message msg = new Message(fragmentEncoded);
+            nonce = msg.getNonce();
+            content = msg.getContent();
+            previousMsgHash = msg.getPreviousMsgDAGRoot();
+        }
+        if (nonce.compareTo(BigInteger.ZERO) == 0 &&
+                StringUtil.isNotEquals(ByteUtil.toHexString(imageHash), this.imageHash)) {
+            return;
+        }
+        if (!emitter.isCancelled()) {
+            refreshImageView(content, emitter);
+        }
+        if (previousMsgHash != null) {
+            showFragmentData(unsent, previousMsgHash, emitter);
         }
     }
 
@@ -159,7 +188,7 @@ public class HashImageView extends RoundImageView {
                 logger.debug("queryDataLoop error::{}", hash);
             }
             // 如果获取不到，1秒后重试
-            Thread.sleep(1000);
+            Thread.sleep(Frequency.FREQUENCY_RETRY.getFrequency());
         }
     }
 
@@ -176,7 +205,7 @@ public class HashImageView extends RoundImageView {
         Bitmap bitmap = loadImageView();
         logger.debug("RefreshScanImages, bitmap::{}, size::{}", bitmap,
                 Formatter.formatFileSize(getContext(), totalBytes.length));
-        if (bitmap != null) {
+        if (bitmap != null && !emitter.isCancelled()) {
             emitter.onNext(bitmap);
         }
     }
@@ -208,7 +237,7 @@ public class HashImageView extends RoundImageView {
         // 加在View
         if (reload && StringUtil.isNotEmpty(imageHash)
                 && disposable != null && disposable.isDisposed()) {
-            setImageHash(imageHash);
+            setImageHash(unsent, imageHash);
         }
         reload = false;
     }
@@ -221,9 +250,5 @@ public class HashImageView extends RoundImageView {
             reload = true;
             disposable.dispose();
         }
-    }
-
-    public interface LoadCompleteListener {
-        void onLoadComplete();
     }
 }

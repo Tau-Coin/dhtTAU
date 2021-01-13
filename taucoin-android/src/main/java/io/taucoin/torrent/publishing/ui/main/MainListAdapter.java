@@ -24,6 +24,7 @@ import io.taucoin.torrent.publishing.databinding.ItemChatListBinding;
 import io.taucoin.torrent.publishing.databinding.ItemGroupListBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.ui.Selectable;
+import io.taucoin.types.MessageType;
 
 /**
  * 主页显示的群组列表的Adapter
@@ -141,7 +142,9 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 binding.leftView.setBgColor(bgColor);
 
                 String msg = community.txMemo;
-                if (StringUtil.isEmpty(msg)) {
+               if (community.msgType == MessageType.PICTURE.ordinal()) {
+                    msg = context.getString(R.string.main_pic_messages);
+                } else if (StringUtil.isEmpty(msg)) {
                     msg = context.getString(R.string.main_no_messages);
                 }
                 binding.tvUserMessage.setText(msg);

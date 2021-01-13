@@ -83,13 +83,13 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
         String userPk = MainApplication.getInstance().getPublicKey();
         if (chat != null) {
             if (StringUtil.isEquals(userPk, chat.senderPk) ) {
-                if (chat.contextType == MessageType.PICTURE.ordinal()) {
+                if (chat.contentType == MessageType.PICTURE.ordinal()) {
                     return ViewType.RIGHT_PICTURE.ordinal();
                 } else {
                     return ViewType.RIGHT_TEXT.ordinal();
                 }
             } else {
-                if (chat.contextType == MessageType.PICTURE.ordinal()) {
+                if (chat.contentType == MessageType.PICTURE.ordinal()) {
                     return ViewType.LEFT_PICTURE.ordinal();
                 } else {
                     return ViewType.LEFT_TEXT.ordinal();
@@ -164,7 +164,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvMsg.setText(msg.context);
+            tvMsg.setTextAndHash(msg.content, msg.hash);
         }
 
         private void showStatusView(ImageView ivStats, ProgressBar tvProgress, ChatMsg msg, boolean isMine) {
@@ -226,11 +226,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvImage.setImageHash(msg.context, () -> {
-                if (!isMine) {
-                    tvProgress.setVisibility(View.GONE);
-                }
-            });
+            tvImage.setImageHash(msg.unsent == 0, msg.hash);
         }
     }
 

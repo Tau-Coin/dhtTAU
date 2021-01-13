@@ -35,6 +35,13 @@ public interface ChatRepository {
     ChatMsg queryChatMsg(String friendPk, String hash);
 
     /**
+     * 查询ChatMsg
+     * @param hash
+     * @return
+     */
+    ChatMsg queryChatMsg(String hash);
+
+    /**
      * 观察社区的消息的变化
      */
     Observable<String> observeDataSetChanged();
@@ -53,6 +60,11 @@ public interface ChatRepository {
      * @return
      */
     List<ChatMsg> getUnsentMessages();
+
+    /**
+     * 获取最新已构建并且未入队列的消息
+     */
+    ChatMsg getLatestBuiltAndUnsentMsg();
 
     /**
      * 获取未确认接收消息的朋友

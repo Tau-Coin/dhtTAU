@@ -23,42 +23,46 @@ public class ChatMsg implements Parcelable {
     public String friendPk;                // 朋友公钥
     @NonNull
     public long timestamp;                 // 时间戳
+    public String content;                 // 消息内容
     @NonNull
-    public String context;                 // 消息内容
-    @NonNull
-    public int contextType;                // 消息内容类型
+    public int contentType;                // 消息内容类型
     @NonNull
     public long nonce;                     // 帮助消息排序
+    @NonNull
+    public int unsent;                     // 0: 未发送， 1: 已发送
+    public String skipMsgHash;             // 跳跃到上一个完整Msg的hash
+    public String previousMsgHash;         // 上一条消息的hash
+    public String friendLatestMsgHash;     // 朋友最新消息hash
 
     public ChatMsg(@NonNull String hash, String senderPk, String friendPk,
-                   String context, int contextType, long timestamp){
+                   String content, int contentType, long timestamp){
         this.hash = hash;
         this.senderPk = senderPk;
         this.friendPk = friendPk;
-        this.context = context;
-        this.contextType = contextType;
+        this.content = content;
+        this.contentType = contentType;
         this.timestamp = timestamp;
     }
 
     @Ignore
     public ChatMsg(@NonNull String hash, String senderPk, String friendPk,
-                   String context, int contextType, long timestamp, long nonce){
+                   String content, int contentType, long timestamp, long nonce){
         this.hash = hash;
         this.senderPk = senderPk;
         this.friendPk = friendPk;
-        this.context = context;
-        this.contextType = contextType;
+        this.content = content;
+        this.contentType = contentType;
         this.timestamp = timestamp;
         this.nonce = nonce;
     }
 
     @Ignore
     public ChatMsg(String senderPk, String friendPk,
-                   String context, int contextType, long timestamp){
+                   String content, int contentType, long timestamp){
         this.senderPk = senderPk;
         this.friendPk = friendPk;
-        this.context = context;
-        this.contextType = contextType;
+        this.content = content;
+        this.contentType = contentType;
         this.timestamp = timestamp;
     }
 
@@ -68,10 +72,14 @@ public class ChatMsg implements Parcelable {
         hash = in.readString();
         senderPk = in.readString();
         friendPk = in.readString();
-        contextType = in.readInt();
+        contentType = in.readInt();
         timestamp = in.readLong();
-        context = in.readString();
+        content = in.readString();
         nonce = in.readLong();
+        unsent = in.readInt();
+        skipMsgHash = in.readString();
+        previousMsgHash = in.readString();
+        friendLatestMsgHash = in.readString();
     }
 
     @Override
@@ -80,10 +88,14 @@ public class ChatMsg implements Parcelable {
         dest.writeString(hash);
         dest.writeString(senderPk);
         dest.writeString(friendPk);
-        dest.writeInt(contextType);
+        dest.writeInt(contentType);
         dest.writeLong(timestamp);
-        dest.writeString(context);
+        dest.writeString(content);
         dest.writeLong(nonce);
+        dest.writeInt(unsent);
+        dest.writeString(skipMsgHash);
+        dest.writeString(previousMsgHash);
+        dest.writeString(friendLatestMsgHash);
     }
 
     @Override

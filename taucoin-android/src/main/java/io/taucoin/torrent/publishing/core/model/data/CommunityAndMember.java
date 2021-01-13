@@ -9,5 +9,6 @@ public class CommunityAndMember extends Community {
     public long balance;                    // 成员在此社区的balance
     public long power;                      // 成员在此社区的power
     public String txMemo;                   // 交易备注信息
-    public long txTimestamp;              // 交易时间戳
+    public int msgType;                     // 消息类型 对应MessageType枚举类型
+    public long txTimestamp;                // 交易时间戳
 }

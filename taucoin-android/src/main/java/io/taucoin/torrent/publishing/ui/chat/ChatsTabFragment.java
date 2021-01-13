@@ -192,8 +192,8 @@ public class ChatsTabFragment extends CommunityTabFragment implements MsgListAda
         if (isReadOnly) {
             binding.replay.setVisibility(View.GONE);
         }
-        binding.copy.setTag(msg.context);
-        String link = Utils.parseUrlFormStr(msg.context);
+        binding.copy.setTag(msg.content);
+        String link = Utils.parseUrlFormStr(msg.content);
         if(StringUtil.isNotEmpty(link)){
             binding.copyLink.setTag(link);
         }else{
@@ -290,7 +290,7 @@ public class ChatsTabFragment extends CommunityTabFragment implements MsgListAda
         binding.rlReply.setVisibility(View.VISIBLE);
         String showName = UsersUtil.getDefaultName(msg.senderPk);
         binding.tvReplyName.setText(showName);
-        binding.tvReplyMsg.setText(msg.context);
+        binding.tvReplyMsg.setText(msg.content);
     }
 
     /**

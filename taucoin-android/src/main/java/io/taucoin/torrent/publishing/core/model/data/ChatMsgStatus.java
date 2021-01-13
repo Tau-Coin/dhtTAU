@@ -7,17 +7,17 @@ import io.taucoin.listener.MsgStatus;
  */
 public enum ChatMsgStatus {
     UNSENT(-1,
-            "Message built"),
+            "Message Built"),
     TO_COMMUNICATION_QUEUE(MsgStatus.TO_COMMUNICATION_QUEUE.ordinal(),
-            "The message has entered the communication queue"),
+            "Message Processing in Protocol Pool"),
     TO_DHT_QUEUE(MsgStatus.TO_DHT_QUEUE.ordinal(),
-            "The message has entered the DHT queue"),
+            "Message in Transfer Queue"),
     PUT_SUCCESS(MsgStatus.PUT_SUCCESS.ordinal(),
-            "DHT put message succeeded"),
+            "DHT_PUT success"),
     PUT_FAIL(MsgStatus.PUT_FAIL.ordinal(),
-            "DHT put message failed"),
+            "DHT_PUT fail"),
     RECEIVED_CONFIRMATION(100,
-            "Message arrived");
+            "Message Received by Peer");
 
     private int status;
     private String statusInfo;

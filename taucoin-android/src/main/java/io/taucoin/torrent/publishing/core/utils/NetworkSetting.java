@@ -2,6 +2,9 @@ package io.taucoin.torrent.publishing.core.utils;
 
 import android.content.Context;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
  * 网络流量设置相关工具类
  */
 public class NetworkSetting {
+    private static final Logger logger = LoggerFactory.getLogger("NetworkSetting");
     private static final int meteredLimited;                                  // 单位MB
     private static final int wifiLimited;                                     // 单位MB
     private static final BigInteger fgSpeedAdjustment = BigInteger.valueOf(3);  // 网速前后台调整倍数
@@ -185,6 +189,8 @@ public class NetworkSetting {
         Context context = MainApplication.getInstance();
         long total = TrafficUtil.getTrafficUploadTotal() + TrafficUtil.getTrafficDownloadTotal();
         long usage = total - TrafficUtil.getMeteredTrafficTotal();
+        logger.trace("updateWiFiSpeedLimit total::{}, MeteredTotal::{}, wifiUsage::{}", total,
+                TrafficUtil.getMeteredTrafficTotal(), usage);
         long limit =  getWiFiLimit();
         long speedLimit = 0;
         long availableData = 0;
@@ -192,6 +198,10 @@ public class NetworkSetting {
         BigInteger bigUnit = new BigInteger("1024");
         BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
         BigInteger bigUsage = BigInteger.valueOf(usage);
+        logger.trace("updateWiFiSpeedLimit bigLimit::{}, bigUsage::{}, compareTo::{}",
+                bigLimit.longValue(),
+                bigUsage.longValue(),
+                bigLimit.compareTo(bigUsage));
         if (bigLimit.compareTo(bigUsage) > 0) {
             long todayLastSeconds = DateUtil.getTodayLastSeconds();
             availableData = bigLimit.subtract(bigUsage).longValue();
@@ -253,7 +263,7 @@ public class NetworkSetting {
         if (AppUtil.isOnForeground(context)) {
             speedLimit = speedLimit.multiply(fgSpeedAdjustment);
         } else {
-            speedLimit = speedLimit.multiply(bgSpeedAdjustment);
+            speedLimit = speedLimit.divide(bgSpeedAdjustment);
         }
         return calculateRegulateValue(speedLimit);
     }

@@ -94,30 +94,37 @@ public class ReceivedConfirmationWorker extends Worker {
      * 递归更新本地消息已接收状态
      */
     private void updateReceivedConfirmationState(String friendPk, byte[] msgRoot) throws DBException{
-        String msgRootHash = ByteUtil.toHexString(msgRoot);
-        ChatMsgLog msg = chatRepo.queryChatMsgLastLog(msgRootHash);
-        if (null == msg) {
-            return;
-        }
-        if (msg.status != ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
-            confirmedQuantity = 0;
-            ChatMsgLog msgLog = new ChatMsgLog(msgRootHash,
-                    ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), DateUtil.getTime());
-            logger.debug("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
-                    friendPk, msgRootHash);
-            chatRepo.addChatMsgLog(msgLog);
-        } else {
-            // 防止部分信息无法确认
-            if (confirmedQuantity >= maxConfirmedQuantity) {
-                return;
-            }
-            confirmedQuantity ++;
-        }
         byte[] msgEncoded = daemon.getMsg(msgRoot);
         Message message = new Message(msgEncoded);
-        byte[] previousMsgDAGRoot = message.getPreviousMsgDAGRoot();
-        if (previousMsgDAGRoot != null) {
-            updateReceivedConfirmationState(friendPk, previousMsgDAGRoot);
+        if (message.getNonce().longValue() == 0) {
+            String msgRootHash = ByteUtil.toHexString(msgRoot);
+            ChatMsgLog msg = chatRepo.queryChatMsgLastLog(msgRootHash);
+            if (null == msg) {
+                return;
+            }
+            if (msg.status != ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
+                confirmedQuantity = 0;
+                ChatMsgLog msgLog = new ChatMsgLog(msgRootHash,
+                        ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), DateUtil.getTime());
+                logger.debug("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
+                        friendPk, msgRootHash);
+                chatRepo.addChatMsgLog(msgLog);
+            } else {
+                // 防止部分信息无法确认
+                if (confirmedQuantity >= maxConfirmedQuantity) {
+                    return;
+                }
+                confirmedQuantity ++;
+            }
+            byte[] previousMsgDAGRoot = message.getPreviousMsgDAGRoot();
+            if (previousMsgDAGRoot != null) {
+                updateReceivedConfirmationState(friendPk, previousMsgDAGRoot);
+            }
+        } else {
+            byte[] skipMessageRoot = message.getSkipMessageRoot();
+            if (skipMessageRoot != null) {
+                updateReceivedConfirmationState(friendPk, skipMessageRoot);
+            }
         }
     }
 

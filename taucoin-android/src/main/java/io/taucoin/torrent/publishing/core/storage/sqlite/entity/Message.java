@@ -23,12 +23,12 @@ public class Message implements Parcelable {
     @NonNull
     public long timestamp;                  // 消息时间戳
     @NonNull
-    public String context;                  // 消息内容
+    public String content;                  // 消息内容
     public String replyID;                  // 被回复消息ID
 
-    public Message(@NonNull String chainID, String context){
+    public Message(@NonNull String chainID, String content){
         this.chainID = chainID;
-        this.context = context;
+        this.content = content;
     }
 
     @Ignore
@@ -36,7 +36,7 @@ public class Message implements Parcelable {
         msgID = in.readString();
         chainID = in.readString();
         senderPk = in.readString();
-        context = in.readString();
+        content = in.readString();
         timestamp = in.readLong();
         replyID = in.readString();
     }
@@ -46,7 +46,7 @@ public class Message implements Parcelable {
         dest.writeString(msgID);
         dest.writeString(chainID);
         dest.writeString(senderPk);
-        dest.writeString(context);
+        dest.writeString(content);
         dest.writeLong(timestamp);
         dest.writeString(replyID);
     }

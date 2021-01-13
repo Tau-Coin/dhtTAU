@@ -93,22 +93,22 @@ public class FavoriteViewModel extends AndroidViewModel {
                 Message msg = msgRepo.getMessageByID(msgID);
                 if(msg != null){
                     favorite = new Favorite(msg.msgID, msg.chainID, msg.senderPk,
-                            -1, msg.context, msg.replyID);
+                            -1, msg.content, msg.replyID);
                     favorite.timestamp = DateUtil.getTime();
                     favoriteRepo.addFavorite(favorite);
                     logger.info("AddMsgFavorite msgID::{}, chainID::{}, memo::{}", msg.msgID,
-                            msg.chainID, msg.context);
+                            msg.chainID, msg.content);
                     if(StringUtil.isNotEmpty(msg.replyID)){
                         Favorite favoriteReply = favoriteRepo.queryFavoriteByID(msg.replyID);
                         if(null == favoriteReply){
                             Message replyMsg = msgRepo.getMessageByID(msg.replyID);
                             favoriteReply = new Favorite(replyMsg.msgID, replyMsg.chainID, replyMsg.senderPk,
-                                    -1, replyMsg.context, replyMsg.replyID, 1);
+                                    -1, replyMsg.content, replyMsg.replyID, 1);
                             favoriteReply.timestamp = DateUtil.getTime();
                             favoriteRepo.addFavorite(favoriteReply);
 
                             logger.info("AddMsgFavorite's reply msgID::{}, chainID::{}, memo::{}", msg.msgID,
-                                    msg.chainID, msg.context);
+                                    msg.chainID, msg.content);
                         }
                     }
                 }

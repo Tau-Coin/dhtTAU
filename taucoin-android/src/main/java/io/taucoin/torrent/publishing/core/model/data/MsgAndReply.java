@@ -22,7 +22,7 @@ public class MsgAndReply extends Message {
 
     public long senderBalance;
 
-    public MsgAndReply(@NonNull String chainID, String context) {
-        super(chainID, context);
+    public MsgAndReply(@NonNull String chainID, String content) {
+        super(chainID, content);
     }
 }

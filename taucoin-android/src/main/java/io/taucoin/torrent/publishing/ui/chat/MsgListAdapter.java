@@ -74,14 +74,14 @@ public class MsgListAdapter extends PagedListAdapter<MsgAndReply, MsgListAdapter
             String time = DateUtil.getWeekTime(msg.timestamp);
             binding.tvTime.setText(time);
 
-            SpannableStringBuilder context = Utils.getSpannableStringUrl(msg.context);
+            SpannableStringBuilder context = Utils.getSpannableStringUrl(msg.content);
             binding.tvMsg.setText(context);
 
             if(msg.replyMsg != null){
                 binding.llReply.setVisibility(View.VISIBLE);
                 String replyName = UsersUtil.getShowName(msg.replyMsg.senderPk, msg.replyName);
                 binding.tvReplyName.setText(replyName);
-                binding.tvReplyMsg.setText(msg.replyMsg.context);
+                binding.tvReplyMsg.setText(msg.replyMsg.content);
             }else{
                 binding.llReply.setVisibility(View.GONE);
             }

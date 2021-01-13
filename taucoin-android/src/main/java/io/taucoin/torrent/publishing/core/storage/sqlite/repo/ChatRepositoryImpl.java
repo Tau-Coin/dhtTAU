@@ -56,7 +56,17 @@ public class ChatRepositoryImpl implements ChatRepository{
 
     @Override
     public ChatMsg queryChatMsg(String friendPk, String hash) {
-        return db.chatDao().queryChatByHash(friendPk, hash);
+        return db.chatDao().queryChatMsg(friendPk, hash);
+    }
+
+    /**
+     * 查询ChatMsg
+     * @param hash
+     * @return
+     */
+    @Override
+    public ChatMsg queryChatMsg(String hash) {
+        return db.chatDao().queryChatMsg(hash);
     }
 
     @Override
@@ -89,6 +99,15 @@ public class ChatRepositoryImpl implements ChatRepository{
     @Override
     public List<ChatMsg> getUnsentMessages() {
         return db.chatDao().getUnsentMessages();
+    }
+
+    /**
+     * 获取最新已构建并且未入队列的消息
+     * @return
+     */
+    @Override
+    public ChatMsg getLatestBuiltAndUnsentMsg() {
+        return db.chatDao().getLatestBuiltAndUnsentMsg();
     }
 
     /**

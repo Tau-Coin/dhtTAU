@@ -1,13 +1,27 @@
 package io.taucoin.torrent.publishing.core.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
+import io.taucoin.torrent.publishing.service.LibJpegManager;
+import io.taucoin.torrent.publishing.ui.chat.ChatViewModel;
+import io.taucoin.types.HashList;
+import io.taucoin.util.ByteUtil;
+import io.taucoin.util.HashUtil;
 
 /**
  * 聊天消息拆分工具
  */
 public class MsgSplitUtil {
+    private static final Logger logger = LoggerFactory.getLogger("MsgSplit");
     private static final int BYTE_LIMIT = 900; // 消息拆分字节限制
 
     /**
@@ -48,5 +62,49 @@ public class MsgSplitUtil {
 
     public static String textMsgToString(byte[] msg) {
         return new String(msg, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 处理消息图片成DAG形式
+     */
+    public static String compressAndScansPic(String originalPath) throws Exception {
+        String compressPath = LibJpegManager.getCompressFilePath();
+        String progressivePath = LibJpegManager.getProgressiveFilePath();
+        long startTime = System.currentTimeMillis();
+        // 压缩图片
+        MultimediaUtil.compressImage(originalPath, compressPath);
+        long endTime = System.currentTimeMillis();
+        logger.debug("compressImage:: times::{}ms", endTime - startTime);
+        LibJpegManager.jpegScans(compressPath, progressivePath);
+        return progressivePath;
+    }
+
+    /**
+     * 拆分图片消息
+     * @param progressivePath 渐进式图片路径
+     * @return 拆分的消息列表
+     */
+    public static List<byte[]> splitPicMsg(String progressivePath) throws IOException {
+        List<byte[]> list = new ArrayList<>();
+        long startTime = System.currentTimeMillis();
+        File file = new File(progressivePath);
+        FileInputStream fis = new FileInputStream(file);
+        byte[] buffer = new byte[BYTE_LIMIT];
+        int num;
+        byte[] msg;
+        while (true) {
+            num = fis.read(buffer);
+            if (num != -1) {
+                msg = new byte[num];
+                System.arraycopy(buffer, 0, msg, 0, num);
+                list.add(msg);
+            } else {
+                break;
+            }
+        }
+        fis.close();
+        long endTime = System.currentTimeMillis();
+        logger.debug("splitPicMsg end times::{}ms", endTime - startTime);
+        return list;
     }
 }

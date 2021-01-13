@@ -8,8 +8,6 @@ import android.widget.TextView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
-
 import androidx.annotation.Nullable;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -17,10 +15,11 @@ import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.db.DBException;
+import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.model.data.MsgBlock;
+import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.types.Message;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -32,11 +31,8 @@ public class HashTextView extends TextView {
     private static final Logger logger = LoggerFactory.getLogger("HashTextView");
     private TauDaemon daemon;
     private String textHash;
+    private String text;
     private Disposable disposable;
-    private byte[] totalBytes = null;
-    private boolean reload = false;
-    private boolean isLoadSuccess = false;
-    private LoadCompleteListener listener;
 
     public HashTextView(Context context) {
         this(context, null);
@@ -55,63 +51,61 @@ public class HashTextView extends TextView {
      * 显示Text
      */
     private void showText() {
-        if (totalBytes != null) {
-            setText(new String(totalBytes, StandardCharsets.UTF_8));
-            if (listener != null) {
-                isLoadSuccess = true;
-                listener.onLoadComplete();
-            }
+        if (StringUtil.isNotEmpty(this.text)) {
+            setText(this.text);
         } else {
             setText("");
         }
     }
 
-    /**
-     * 设置TextHash
-     */
-    public void setTextHash(String textHash) {
-        setTextHash(ByteUtil.toByte(textHash));
+
+    public void setTextAndHash(String text, String textHash) {
+        this.text = text;
+        this.textHash = textHash;
+        if (StringUtil.isNotEmpty(text)) {
+            logger.debug("setText directly::{}", this.text);
+            setText(text);
+        } else {
+            setTextHash(textHash);
+        }
     }
 
     /**
      * 设置TextHash
      */
-    public void setTextHash(String textHash, LoadCompleteListener listener) {
-        this.listener = listener;
-        setTextHash(ByteUtil.toByte(textHash));
-    }
-
-    /**
-     * 设置TextHash
-     */
-    private void setTextHash(byte[] textHash) {
-        if (isLoadSuccess && totalBytes != null
-                && StringUtil.isEquals(this.textHash, ByteUtil.toHexString(textHash))) {
+    private void setTextHash(String textHash) {
+        logger.debug("setTextHash::{}", textHash);
+        if (StringUtil.isEmpty(textHash)) {
+            return;
+        }
+        if (StringUtil.isNotEmpty(this.text)
+                && StringUtil.isEquals(this.textHash, textHash)) {
             showText();
             return;
         }
-        this.textHash = ByteUtil.toHexString(textHash);
-        isLoadSuccess = false;
+        this.textHash = textHash;
         logger.debug("setTextHash start::{}", this.textHash);
-        showText();
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
-        totalBytes = null;
         disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             try {
-                if (textHash != null) {
+                if (StringUtil.isNotEmpty(this.textHash)) {
                     long startTime = System.currentTimeMillis();
-                    showHorizontalData(textHash);
+                    byte[] msgEncoded = queryDataLoop(ByteUtil.toByte(textHash));
+                    if (msgEncoded != null) {
+                        Message message = new Message(msgEncoded);
+                        this.text = MsgSplitUtil.textMsgToString(message.getContent());
+                    }
                     long endTime = System.currentTimeMillis();
-                    logger.debug("showTextFromDB textHash::{}, text::{}, times::{}ms", textHash,
-                            new String(totalBytes, StandardCharsets.UTF_8), endTime - startTime);
+                    logger.debug("setTextHash textHash::{}, text::{}, times::{}ms", textHash,
+                            text, endTime - startTime);
                 }
             } catch (InterruptedException ignore) {
             } catch (Exception e) {
                 logger.error("showTextFromDB error", e);
             }
-            emitter.onNext(totalBytes != null);
+            emitter.onNext(StringUtil.isNotEmpty(this.text));
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
@@ -121,36 +115,6 @@ public class HashTextView extends TextView {
                         showText();
                     }
                 });
-    }
-
-    /**
-     * 递归显示HorizontalData数据
-     * @param verticalHash
-     * @throws DBException
-     */
-    private void showHorizontalData(byte[] verticalHash) throws Exception {
-        if (null == verticalHash) {
-            return;
-        }
-        byte[] msgRoot = queryDataLoop(verticalHash);
-        MsgBlock msgBlock = new MsgBlock(msgRoot);
-        logger.debug("HorizontalData::{}, VerticalHash::{}",
-                msgBlock.getHorizontalHash(), msgBlock.getVerticalHash());
-        if (msgBlock.isHaveHorizontalHash()) {
-            byte[] fragment = queryDataLoop(msgBlock.getHorizontalHash());
-            if (totalBytes == null) {
-                totalBytes = new byte[fragment.length];
-                System.arraycopy(fragment, 0, totalBytes, 0, totalBytes.length);
-            } else {
-                byte[] tempBytes = new byte[totalBytes.length + fragment.length];
-                System.arraycopy(totalBytes, 0, tempBytes, 0, totalBytes.length);
-                System.arraycopy(fragment, 0, tempBytes, totalBytes.length, fragment.length);
-                totalBytes = tempBytes;
-            }
-        }
-        if (msgBlock.isHaveVerticalHash()) {
-            showHorizontalData(msgBlock.getVerticalHash());
-        }
     }
 
     /**
@@ -175,19 +139,13 @@ public class HashTextView extends TextView {
                 logger.debug("queryDataLoop error::{}", hash);
             }
             // 如果获取不到，1秒后重试
-            Thread.sleep(1000);
+            Thread.sleep(Frequency.FREQUENCY_RETRY.getFrequency());
         }
     }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        // 加在View
-        if (reload && StringUtil.isNotEmpty(textHash)
-                && disposable != null && disposable.isDisposed()) {
-            setTextHash(textHash);
-        }
-        reload = false;
     }
 
     @Override
@@ -195,14 +153,7 @@ public class HashTextView extends TextView {
         super.onDetachedFromWindow();
         // 销毁View
         if (disposable != null && !disposable.isDisposed()) {
-            if (!isLoadSuccess) {
-                reload = true;
-            }
             disposable.dispose();
         }
-    }
-
-    public interface LoadCompleteListener {
-        void onLoadComplete();
     }
 }

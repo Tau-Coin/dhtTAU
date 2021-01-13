@@ -86,7 +86,7 @@
     <string name="community_users_stats">%1$d members, %2$d online</string>
     <string name="common_loading">loading&#8230;</string>
 
-    <string name="community_community_name">e.g.Paris(required)</string>
+    <string name="community_community_name">e.g.Paris(required)</string>F
     <string name="community_coin_name">Coin Name(optional)</string>
     <string name="community_announce">Announce on TAU</string>
     <string name="community_total_coin">Total Coins</string>
@@ -146,8 +146,7 @@
     <string name="setting_charging">Charging</string>
     <string name="setting_internet">Internet</string>
     <string name="setting_wake_lock">Always Awake</string>
-    <string name="setting_daily_traffic_limit_used_up">Your daily traffic limit has been used up. \n
-        Do you want to continue to use it?</string>
+    <string name="setting_daily_traffic_limit_used_up">Daily data limit is used, proceed to use 30% more data?</string>
     <string name="setting_metered_limit_select_tips">Using telecom data may incur additional fees.\n
         How much traffic do you want to use per day?</string>
 

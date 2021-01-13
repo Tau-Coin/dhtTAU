@@ -18,6 +18,7 @@ import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
@@ -76,58 +77,43 @@ public class PublishNewMsgWorker extends Worker {
         if (isStopped()) {
             return;
         }
-        try {
-            byte[] friendPkBytes = ByteUtil.toByte(msg.friendPk);
-            byte[] content;
-            byte[] previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
-            byte[] friendLatestMessageRoot = daemon.getFriendLatestRoot(friendPkBytes);
-            byte[] skipMessageRoot = null;
-            logger.debug("previousMsgDAGRoot::{}", ByteUtil.toHexString(previousMsgDAGRoot));
-            // 如果当前message的nonce为0，最新的msgRoot就是message的skipMessageRoot
-            // 否则最新msgRoot对应的skipMessageRoot，就是message的skipMessageRoot
-            if (msg.nonce == 0) {
-                skipMessageRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
-            } else {
-                byte[] latestMsgRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
-                if (latestMsgRoot != null) {
-                    byte[] latestMsgEncoded =  daemon.getMsg(latestMsgRoot);
-                    if (latestMsgEncoded != null) {
-                        Message message = new Message(latestMsgEncoded);
-                        skipMessageRoot = message.getSkipMessageRoot();
-                    }
-                }
+        List<byte[]> data = new ArrayList<>();
+        Message message;
+        byte[] friendPkBytes = ByteUtil.toByte(msg.friendPk);
+        BigInteger nonce = BigInteger.valueOf(msg.nonce);
+        BigInteger timestamp = BigInteger.valueOf(msg.timestamp);
+        byte[] previousMsgDAGRoot = null;
+        if (StringUtil.isNotEmpty(msg.previousMsgHash)) {
+            previousMsgDAGRoot = ByteUtil.toByte(msg.previousMsgHash);
+        }
+        byte[] friendLatestMessageRoot = null;
+        if (StringUtil.isNotEmpty(msg.friendLatestMsgHash)) {
+            friendLatestMessageRoot = ByteUtil.toByte(msg.friendLatestMsgHash);
+        }
+        byte[] skipMessageRoot = null;
+        if (StringUtil.isNotEmpty(msg.skipMsgHash)) {
+            skipMessageRoot = ByteUtil.toByte(msg.skipMsgHash);
+        }
+        byte[] content;
+        if (msg.contentType == MessageType.PICTURE.ordinal()) {
+            content = ByteUtil.toByte(msg.content);
+            message = Message.CreatePictureMessage(timestamp, nonce,
+                    previousMsgDAGRoot, friendLatestMessageRoot, skipMessageRoot, content);
+        } else {
+            content = msg.content.getBytes(StandardCharsets.UTF_8);
+            message = Message.CreateTextMessage(BigInteger.valueOf(msg.timestamp), nonce,
+                    previousMsgDAGRoot, friendLatestMessageRoot, skipMessageRoot, content);
+        }
+        boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message, data);
+        logger.debug("NewMsgDAGRoot::{}, data.size::{}, isSendSuccess::{}", msg.hash,
+                data.size(), isSendSuccess);
+        if (isSendSuccess) {
+            if (msg.contentType == MessageType.PICTURE.ordinal()) {
+                msg.content = null;
             }
-            BigInteger nonce = BigInteger.valueOf(msg.nonce);
-            Message message;
-            List<byte[]> data = new ArrayList<>();
-            if (msg.contextType == MessageType.PICTURE.ordinal()) {
-//                    message = Message.createPictureMessage(timestamp,
-//                            previousMsgDAGRoot, friendLatestMessageRoot, contentLink);
-//                    parseMsgPicData(contentLink, data);
-                return;
-            } else {
-                content = msg.context.getBytes(StandardCharsets.UTF_8);
-                message = Message.CreateTextMessage(BigInteger.valueOf(msg.timestamp), nonce,
-                        previousMsgDAGRoot, friendLatestMessageRoot, skipMessageRoot, content);
-            }
-            boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message, data);
-            String hash = ByteUtil.toHexString(message.getHash());
-            logger.debug("NewMsgDAGRoot::{}, data.size::{}, isSendSuccess::{}", hash,
-                    data.size(), isSendSuccess);
-            if (isSendSuccess) {
-                msg.hash = hash;
-                msg.nonce = nonce.longValue();
-                chatRepo.updateChatMsg(msg);
-                WorkerManager.startReceivedConfirmationWorker();
-            } else {
-                // 发送消息，进入Communication Queue失败，重试发送
-                Thread.sleep(Frequency.FREQUENCY_RETRY.getFrequency());
-                publishMessage(msg);
-            }
-        } catch (InterruptedException ignore) {
-
-        } catch (Exception e) {
-            logger.warn("publishMessage error:: {}", e.getMessage());
+            msg.unsent = 1;
+            chatRepo.updateChatMsg(msg);
+            WorkerManager.startReceivedConfirmationWorker();
         }
     }
 

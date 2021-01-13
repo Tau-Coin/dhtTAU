@@ -5,10 +5,8 @@ import android.app.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -26,11 +24,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.db.DBException;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.model.data.MsgBlock;
 import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
@@ -38,14 +34,12 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
-import io.taucoin.torrent.publishing.core.utils.MultimediaUtil;
-import io.taucoin.torrent.publishing.service.LibJpegManager;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.service.WorkerManager;
 import io.taucoin.torrent.publishing.ui.constant.Page;
-import io.taucoin.types.HashList;
+import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
-import io.taucoin.util.HashUtil;
 
 /**
  * 聊天相关的ViewModel
@@ -53,8 +47,6 @@ import io.taucoin.util.HashUtil;
 public class ChatViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("ChatViewModel");
-    private static final int BYTE_LIMIT = 900;
-    private static final int HORIZONTAL_SIZE = 40;
     private ChatRepository chatRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<Result> chatResult = new MutableLiveData<>();
@@ -136,34 +128,83 @@ public class ChatViewModel extends AndroidViewModel {
             try {
                 List<byte[]> contents;
                 if (type == MessageType.PICTURE.ordinal()) {
-                    throw new Exception("Unknown message type");
+                    String progressivePath = MsgSplitUtil.compressAndScansPic(msg);
+                    contents = MsgSplitUtil.splitPicMsg(progressivePath);
                 } else if(type == MessageType.TEXT.ordinal()) {
                     contents = MsgSplitUtil.splitTextMsg(msg);
                 } else {
                     throw new Exception("Unknown message type");
                 }
+                byte[] friendPkBytes = ByteUtil.toByte(friendPk);
+                byte[] friendLatestMsgHash = daemon.getFriendLatestRoot(friendPkBytes);
+                byte[] previousMsgDAGRoot = null;
+                byte[] skipMessageRoot = null;
+                ChatMsg latestBuiltAndUnsentMsg = chatRepo.getLatestBuiltAndUnsentMsg();
+                if (latestBuiltAndUnsentMsg != null) {
+                    previousMsgDAGRoot = ByteUtil.toByte(latestBuiltAndUnsentMsg.hash);
+                    skipMessageRoot = previousMsgDAGRoot;
+                } else {
+                    // 如果当前message的nonce为0，最新的msgRoot就是message的skipMessageRoot
+                    // 否则最新msgRoot对应的skipMessageRoot，就是message的skipMessageRoot
+                    previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
+                    skipMessageRoot = previousMsgDAGRoot;
+                }
                 ChatMsg[] messages = new ChatMsg[contents.size()];
-                for (int i = 0; i < contents.size(); i++) {
-                    byte[] content = contents.get(i);
+                int contentSize = contents.size();
+                for (int i = 0; i < contentSize; i++) {
                     String contentStr;
+                    byte[] content;
+                    int nonce = contentSize - 1 - i;
+                    content = contents.get(nonce);
+                    long timestamp = DateUtil.getTime();
+                    Message message;
                     if (type == MessageType.TEXT.ordinal()) {
                         contentStr = MsgSplitUtil.textMsgToString(content);
+                        message = Message.CreateTextMessage(
+                                BigInteger.valueOf(timestamp),
+                                BigInteger.valueOf(nonce),
+                                previousMsgDAGRoot,
+                                friendLatestMsgHash,
+                                skipMessageRoot, content);
                     } else {
                         contentStr = ByteUtil.toHexString(content);
+                        message = Message.CreatePictureMessage(
+                                BigInteger.valueOf(timestamp),
+                                BigInteger.valueOf(nonce),
+                                previousMsgDAGRoot,
+                                friendLatestMsgHash,
+                                skipMessageRoot,
+                                content);
                     }
-                    logger.debug("sendMessageTask content::{}", contentStr);
+                    String hash = ByteUtil.toHexString(message.getHash());
+                    logger.debug("sendMessageTask hash::{}, contentType::{}, nonce::{}, contentSize::{}",
+                            hash, type, i, content.length);
+                    logger.trace("sendMessageTask hash::{}, content::{}", hash, contentStr);
                     // 组织Message的结构，并发送到DHT和数据入库
-                    long timestamp = DateUtil.getTime();
                     String senderPk = MainApplication.getInstance().getPublicKey();
-                    ChatMsg chatMsg = new ChatMsg(senderPk, friendPk, contentStr, type, timestamp);
-                    chatMsg.nonce = i;
+                    ChatMsg chatMsg = new ChatMsg(hash, senderPk, friendPk, contentStr, type,
+                            timestamp, nonce);
+                    if (previousMsgDAGRoot != null) {
+                        chatMsg.previousMsgHash = ByteUtil.toHexString(previousMsgDAGRoot);
+                        logger.trace("sendMessageTask hash::{}, previousMsgHash::{}",
+                                hash, chatMsg.previousMsgHash);
+                    }
+                    if (skipMessageRoot != null) {
+                        chatMsg.skipMsgHash = ByteUtil.toHexString(skipMessageRoot);
+                        logger.trace("sendMessageTask hash::{}, skipMsgHash::{}",
+                                hash,chatMsg.skipMsgHash);
+                    }
+                    if (friendLatestMsgHash != null) {
+                        chatMsg.friendLatestMsgHash = ByteUtil.toHexString(friendLatestMsgHash);
+                        logger.trace("sendMessageTask hash::{}, friendLatestMsgHash::{}",
+                                hash, chatMsg.friendLatestMsgHash);
+                    }
                     messages[i] = chatMsg;
+                    previousMsgDAGRoot = message.getHash();
                 }
                 // 批量添加到数据库
-                if (messages.length > 0) {
-                    chatRepo.addChatMessages(messages);
-                    WorkerManager.startPublishNewMsgWorker();
-                }
+                chatRepo.addChatMessages(messages);
+                WorkerManager.startPublishNewMsgWorker();
             } catch (Exception e) {
                 logger.error("sendMessageTask error", e);
                 result.setFailMsg(e.getMessage());
@@ -177,181 +218,8 @@ public class ChatViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
-    /**
-     * 处理消息文本成DAG形式
-     */
-    private byte[] handleMsgText(String msg) {
-        byte[] msgBytes = msg.getBytes(StandardCharsets.UTF_8);
-        int msgSize = msgBytes.length;
-        if (msgSize > BYTE_LIMIT) {
-            msgSize = BYTE_LIMIT;
-        }
-        byte[] bytes = new byte[msgSize];
-        System.arraycopy(msgBytes, 0, bytes, 0, bytes.length);
-        logger.debug("msgBytes::{}, bytes::{}", msgBytes.length, bytes.length);
-        return bytes;
-    }
-
-    private ContentItem handleMsgTextToDAG(String msg) throws DBException {
-        List<byte[]> hashList = new ArrayList<>();
-        List<byte[]> contentList = new ArrayList<>();
-        byte[] msgBytes = msg.getBytes(StandardCharsets.UTF_8);
-        int msgSize = msgBytes.length;
-        int statPos = 0;
-        // 拆分消息数据
-        do {
-            int endPos = statPos + BYTE_LIMIT;
-            if (endPos >= msgSize) {
-                endPos = msgSize;
-            }
-            byte[] bytes = new byte[endPos - statPos];
-            logger.debug("msgBytes::{}, bytes::{}", msgBytes.length, bytes.length);
-            System.arraycopy(msgBytes, statPos, bytes, 0, bytes.length);
-            byte[] fragmentHash = HashUtil.bencodeHash(bytes);
-            daemon.saveMsg(fragmentHash, bytes);
-            logger.debug("fragmentHash::{}, hashSize::{}, fragmentContent::{}", fragmentHash,
-                    fragmentHash.length, new String(bytes,
-                            StandardCharsets.UTF_8));
-            hashList.add(fragmentHash);
-            contentList.add(bytes);
-            statPos = endPos;
-        } while (statPos < msgSize);
-        // 组织消息数据结构
-        MsgBlock msgBlock = new MsgBlock();
-        byte[] contentLink = null;
-        List<byte[]> msgBlockList = new ArrayList<>();
-        for (int i = hashList.size() - 1; i >= 0; i--) {
-            if (msgBlockList.size() == 0) {
-                msgBlock.setHorizontalHash(hashList.get(i));
-            } else {
-                msgBlock.setVerticalHash(msgBlockList.get(msgBlockList.size() - 1));
-                msgBlock.setHorizontalHash(hashList.get(i));
-            }
-            byte[] msgBlockEncoded = msgBlock.getEncoded();
-            byte[] msgBlockHash = HashUtil.bencodeHash(msgBlockEncoded);
-            msgBlockList.add(msgBlockHash);
-            contentList.add(msgBlockEncoded);
-            contentLink = msgBlockHash;
-            daemon.saveMsg(msgBlockHash, msgBlockEncoded);
-            logger.debug("msgBlockHash::{}, hashSize::{}", msgBlockHash, msgBlockHash.length);
-        }
-        return ContentItem.newInstance(contentList, contentLink);
-    }
-
-    /**
-     * 处理消息图片成DAG形式
-     */
-    private ContentItem handleMsgPicToDAG(String originalPath) throws Exception {
-        String compressPath = LibJpegManager.getCompressFilePath();
-        String progressivePath = LibJpegManager.getProgressiveFilePath();
-        long startTime = System.currentTimeMillis();
-        // 压缩图片
-        MultimediaUtil.compressImage(originalPath, compressPath);
-        long endTime = System.currentTimeMillis();
-        logger.debug("compressImage:: times::{}ms", endTime - startTime);
-        LibJpegManager.jpegScans(compressPath, progressivePath);
-        return saveImageToLevelDB(progressivePath);
-    }
-
-    private ContentItem saveImageToLevelDB(String progressivePath) throws Exception{
-        List<byte[]> contentList = new ArrayList<>();
-        List<byte[]> allList = new ArrayList<>();
-        logger.debug("saveImageToLevelDB start");
-        long startTime = System.currentTimeMillis();
-        File file = new File(progressivePath);
-        FileInputStream fis = new FileInputStream(file);
-        byte[] buffer = new byte[BYTE_LIMIT];
-        List<byte[]> list = new ArrayList<>();
-        List<byte[]> hashList = new ArrayList<>();
-        int num;
-        byte[] msg;
-        while (true) {
-            num = fis.read(buffer);
-            if (num != -1) {
-                msg = new byte[num];
-                System.arraycopy(buffer, 0, msg, 0, num);
-                byte[] msgHash = HashUtil.bencodeHash(msg);
-                list.add(msgHash);
-                contentList.add(msg);
-                allList.add(msgHash);
-                daemon.saveMsg(msgHash, msg);
-            }
-            if (list.size() == HORIZONTAL_SIZE || num == -1) {
-                HashList msgHashList = new HashList(list);
-                byte[] listEncoded =  msgHashList.getEncoded();
-                byte[] listHash = HashUtil.bencodeHash(listEncoded);
-                hashList.add(listHash);
-                contentList.add(listEncoded);
-                allList.add(listHash);
-                daemon.saveMsg(listHash, listEncoded);
-                list.clear();
-                if (num == -1) {
-                    break;
-                }
-            }
-        }
-        MsgBlock latterBlock = new MsgBlock();
-        int hashListSize = hashList.size();
-        byte[] contentLink = null;
-        for (int i = hashListSize - 1; i >= 0 ; i--) {
-            byte[] listHash = hashList.get(i);
-            boolean isSaveMsg = false;
-            if (!latterBlock.isHaveVerticalHash() && i != hashListSize - 1) {
-                latterBlock.setVerticalHash(listHash);
-                if (i == 0) {
-                    isSaveMsg = true;
-                }
-            } else {
-                latterBlock.setHorizontalHash(listHash);
-                isSaveMsg = true;
-            }
-            if (isSaveMsg) {
-                byte[] blockEncoded = latterBlock.getEncoded();
-                byte[] blockHash = HashUtil.bencodeHash(blockEncoded);
-                daemon.saveMsg(blockHash, blockEncoded);
-                contentLink = blockHash;
-                allList.add(blockHash);
-                contentList.add(blockEncoded);
-
-                latterBlock = new MsgBlock();
-                latterBlock.setVerticalHash(blockHash);
-            }
-        }
-        long endTime = System.currentTimeMillis();
-        logger.debug("saveImageToLevelDB end times::{}ms", endTime - startTime);
-        fis.close();
-        for (int i = 0; i < allList.size(); i++) {
-            logger.debug("sendMessageTask data.size::{}, contentLink::{}",
-                    i, ByteUtil.toHexString(allList.get(i)));
-        }
-        return ContentItem.newInstance(contentList, contentLink);
-    }
-
-    public Observable<List<ChatMsgLog>> observerMsgLogs(String hash) {
+    Observable<List<ChatMsgLog>> observerMsgLogs(String hash) {
         return chatRepo.observerMsgLogs(hash);
-    }
-
-    static class ContentItem {
-        private List<byte[]> contentList;
-        private byte[] contentLink;
-
-        ContentItem(List<byte[]> contentList, byte[] contentLink) {
-            this.contentList = contentList;
-            this.contentLink = contentLink;
-        }
-
-        byte[] getContentLink() {
-            return contentLink;
-        }
-
-        public List<byte[]> getList() {
-            return contentList;
-        }
-
-        static ContentItem newInstance(List<byte[]> contentList,
-                                       byte[] contentLink) {
-            return new ContentItem(contentList, contentLink);
-        }
     }
 
     /**

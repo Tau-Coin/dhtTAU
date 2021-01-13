@@ -22,12 +22,12 @@ public interface CommunityDao {
     String QUERY_GET_CURRENT_USER_PK = " (SELECT publicKey FROM Users WHERE isCurrentUser = 1 limit 1) ";
     String QUERY_GET_BANNED_USER_PK = " (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1) ";
     String QUERY_NEWEST_MSG = " (SELECT * FROM (SELECT * FROM (" +
-            " SELECT timestamp, context, senderPk, friendPk, friendPk AS friendPkTemp" +
+            " SELECT timestamp, content, contentType, senderPk, friendPk, friendPk AS friendPkTemp" +
             " FROM (SELECT * FROM ChatMessages" +
             " WHERE senderPk = " + QUERY_GET_CURRENT_USER_PK +
             " ORDER BY timestamp) GROUP BY friendPk" +
             " UNION ALL" +
-            " SELECT timestamp, context, senderPk, friendPk, senderPk AS friendPkTemp" +
+            " SELECT timestamp, content, contentType, senderPk, friendPk, senderPk AS friendPkTemp" +
             " FROM (SELECT * FROM ChatMessages" +
             " WHERE friendPk = "+ QUERY_GET_CURRENT_USER_PK +
             " ORDER BY timestamp) GROUP BY senderPk)" +
@@ -36,9 +36,10 @@ public interface CommunityDao {
 
     String QUERY_GET_COMMUNITIES_NOT_IN_BLACKLIST = "SELECT a.*, b.balance, b.power," +
             " (case when a.type = 0 then" +
-            " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.memo else d.context end)" +
-            " else e.context end)" +
+            " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.memo else d.content end)" +
+            " else e.content end)" +
             " AS txMemo," +
+            " (case when a.type = 0 then 0 else e.contentType end) AS msgType," +
             " (case when a.type = 0 then" +
             " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.timestamp else d.timestamp end)" +
             " else e.timestamp end)" +
@@ -49,7 +50,7 @@ public interface CommunityDao {
             " WHERE senderPk NOT IN " + QUERY_GET_BANNED_USER_PK +
             " ORDER BY timestamp) GROUP BY chainID) AS c" +
             " ON a.type = 0 AND a.chainID = c.chainID" +
-            " LEFT JOIN (SELECT timestamp, context, chainID FROM (SELECT timestamp, context, chainID FROM Messages " +
+            " LEFT JOIN (SELECT timestamp, content, chainID FROM (SELECT timestamp, content, chainID FROM Messages " +
             " WHERE senderPk NOT IN " + QUERY_GET_BANNED_USER_PK +
             " ORDER BY timestamp) GROUP BY chainID) AS d" +
             " ON a.type = 0 AND a.chainID = d.chainID" +
