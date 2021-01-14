@@ -270,6 +270,21 @@ public class SessionController {
     }
 
     /**
+     * Get sessions dht nodes account.
+     *
+     * @return List<Long>
+     */
+    public List<Long> getSessionNodes() {
+        List<Long> ret = new ArrayList<>();
+
+        for (int i = 0; i < sessionsList.size(); i++) {
+            ret.add(sessionsList.get(i).dhtNodes());
+        }
+
+        return ret;
+    }
+
+    /**
      * Regulate time interval for dht putting and getting operation.
      *
      * @param interval time interval(milliseconds)

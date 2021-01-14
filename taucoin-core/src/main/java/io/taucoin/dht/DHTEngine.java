@@ -148,6 +148,15 @@ public class DHTEngine {
     }
 
     /**
+     * Get sessions dht nodes account.
+     *
+     * @return List<Long>
+     */
+    public List<Long> getSessionNodes() {
+        return sessionController.getSessionNodes();
+    }
+
+    /**
      * Set read only mode for all sessions.
      *
      * @param value
