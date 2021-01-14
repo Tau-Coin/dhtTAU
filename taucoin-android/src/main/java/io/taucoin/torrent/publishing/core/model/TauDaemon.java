@@ -82,6 +82,7 @@ public class TauDaemon {
     private volatile boolean isRunning = false;
     private volatile boolean trafficTips = true; // 剩余流量用完提示
     private volatile String seed;
+    private long noRemainingDataTimes = 0; // 触发无剩余流量的次数
 
     private static volatile TauDaemon instance;
 
@@ -464,6 +465,7 @@ public class TauDaemon {
 
                     if (value != SpeedRegulate.NO_REMAINING_DATA) {
                         trafficTips = true;
+                        noRemainingDataTimes = 0;
                         resetReadOnly(false);
                     }
                     logger.info("rescheduleDHTBySettings DHTSessions::{}, DHTOPInterval::{}",
@@ -477,9 +479,16 @@ public class TauDaemon {
 
     /**
      * 显示没有剩余流量提示对话框
+     * 必须同时满足需要提示、触发次数大于等于网速采样数、APP在前台、目前没有打开的流量提示Activity
      */
     private void showNoRemainingDataTipsDialog() {
-        if (trafficTips && AppUtil.isOnForeground(appContext) &&
+        if (trafficTips) {
+            if (noRemainingDataTimes < NetworkSetting.speed_sample) {
+                noRemainingDataTimes += 1;
+                return;
+            }
+        }
+        if (AppUtil.isOnForeground(appContext) &&
                 !AppUtil.isForeground(appContext, TrafficTipsActivity.class)) {
             Intent intent = new Intent(appContext, TrafficTipsActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

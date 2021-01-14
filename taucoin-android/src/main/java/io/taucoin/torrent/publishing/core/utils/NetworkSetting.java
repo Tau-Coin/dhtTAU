@@ -25,7 +25,7 @@ public class NetworkSetting {
     private static final int wifiLimited;                                     // 单位MB
     private static final BigInteger fgSpeedAdjustment = BigInteger.valueOf(3);  // 网速前后台调整倍数
     private static final BigInteger bgSpeedAdjustment = BigInteger.valueOf(2);  // 网速后后台调整倍数
-    private static final long speed_sample = 10;                              // 单位s
+    public static final long speed_sample = 10;                              // 单位s
 
     private static SettingsRepository settingsRepo;
     static {
