@@ -48,7 +48,7 @@
     <string name="drawer_setting">Settings</string>
     <string name="drawer_data_cost">Data Cost</string>
     <string name="drawer_share">Share</string>
-    <string name="drawer_dht_nodes">Sessions/%1$d</string>
+    <string name="drawer_dht_nodes">Peers/%1$d</string>
     <string name="drawer_daily_data">%1$s</string>
     <string name="drawer_cpu_usage">CPU/%1$s</string>
     <string name="drawer_mem_data">Memory/%1$s</string>

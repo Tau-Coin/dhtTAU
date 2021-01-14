@@ -806,4 +806,14 @@ public class TauDaemon {
         getCommunicationManager().writingToFriend(ByteUtil.toByte(friendPk));
         logger.debug("writingToFriend friendPk::{} successfully", friendPk);
     }
+
+    /**
+     * 统计Sessions的nodes数
+     */
+    public List<Long> getSessionNodes() {
+        if (!isRunning) {
+            return null;
+        }
+        return tauController.getDHTEngine().getSessionNodes();
+    }
 }

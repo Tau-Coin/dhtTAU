@@ -191,14 +191,12 @@ public class MainActivity extends ScanTriggerActivity {
      * 更新DHT的状态
      */
     private void updateDHTStats() {
-        long sessions = NetworkSetting.getDHTSessions();
         long downloadTotal = TrafficUtil.getTrafficDownloadTotal();
         long uploadTotal = TrafficUtil.getTrafficUploadTotal();
         String downloadTotalStr = Formatter.formatFileSize(this, downloadTotal).toUpperCase();
         String uploadTotalStr = Formatter.formatFileSize(this, uploadTotal).toUpperCase();
-        logger.info("DHTSessions::{}, downloadTotalStr::{}, uploadTotalStr::{}", sessions,
+        logger.info("downloadTotalStr::{}, uploadTotalStr::{}",
                 downloadTotalStr, uploadTotalStr);
-        binding.drawer.itemDhtNodes.setRightText(getString(R.string.drawer_dht_nodes, sessions));
         binding.drawer.itemDownloadData.setRightText(getString(R.string.drawer_daily_data,
                 downloadTotalStr));
         binding.drawer.itemUploadData.setRightText(getString(R.string.drawer_daily_data,
@@ -274,6 +272,11 @@ public class MainActivity extends ScanTriggerActivity {
                             Formatter.formatFileSize(this, statistics.totalMemory)));
                     updateDHTStats();
                 }));
+        disposables.add(infoProvider.observeSessionStats()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(nodes -> binding.drawer.itemDhtNodes.setRightText(
+                        getString(R.string.drawer_dht_nodes, nodes))));
     }
 
     private void handleClipboardContent() {

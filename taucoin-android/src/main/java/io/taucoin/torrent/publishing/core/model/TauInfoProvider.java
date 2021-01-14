@@ -8,6 +8,9 @@ import io.taucoin.dht.SessionStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -63,8 +66,7 @@ public class TauInfoProvider {
      * 观察torrent SessionStats的工作流
      * @return Flowable
      */
-    @Deprecated
-    public Flowable<SessionStats> observeSessionStats() {
+    public Flowable<Long> observeSessionStats() {
         return makeSessionStatsFlowable();
     }
 
@@ -72,19 +74,20 @@ public class TauInfoProvider {
      * 创建torrent SessionStats的工作流
      * @return Flowable
      */
-    private Flowable<SessionStats> makeSessionStatsFlowable() {
+    private Flowable<Long> makeSessionStatsFlowable() {
         return Flowable.create((emitter) -> {
-            TauDaemonListener listener = new TauDaemonListener() {
-                @Override
-                public void onSessionStats(@NonNull SessionStats newStats) {
-                    if (!emitter.isCancelled())
-                        emitter.onNext(newStats);
+            while (!emitter.isCancelled()) {
+                BigInteger nodes = BigInteger.ZERO;
+                List<Long> sessionNodes = daemon.getSessionNodes();
+                if (sessionNodes != null) {
+                    for (Long node : sessionNodes) {
+                        nodes = nodes.add(BigInteger.valueOf(node));
+                    }
+                    emitter.onNext(nodes.longValue());
                 }
-            };
-            if (!emitter.isCancelled()) {
-                daemon.registerListener(listener);
-                emitter.setDisposable(Disposables.fromAction(() ->
-                        daemon.unregisterListener(listener)));
+                if (!emitter.isCancelled()) {
+                    Thread.sleep(STATISTICS_PERIOD);
+                }
             }
         }, BackpressureStrategy.LATEST);
     }
