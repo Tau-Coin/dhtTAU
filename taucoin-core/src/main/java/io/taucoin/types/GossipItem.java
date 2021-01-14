@@ -25,7 +25,7 @@ public class GossipItem {
     // 当前的聊天状态,可以发现对方是否处于写状态
     private GossipStatus gossipStatus = GossipStatus.UNKNOWN; // 1个字节
 
-    private byte[] hash; // gossip hash 入口
+    private byte[] hash;
     private byte[] encode; // 缓存编码
     private boolean parsed = false; // 是否解码标志
 
