@@ -488,7 +488,7 @@ public class TauDaemon {
                 return;
             }
         }
-        if (AppUtil.isOnForeground(appContext) &&
+        if (trafficTips && AppUtil.isOnForeground(appContext) &&
                 !AppUtil.isForeground(appContext, TrafficTipsActivity.class)) {
             Intent intent = new Intent(appContext, TrafficTipsActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
