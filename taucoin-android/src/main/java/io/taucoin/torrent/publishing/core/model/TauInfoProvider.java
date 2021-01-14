@@ -76,18 +76,23 @@ public class TauInfoProvider {
      */
     private Flowable<Long> makeSessionStatsFlowable() {
         return Flowable.create((emitter) -> {
-            while (!emitter.isCancelled()) {
-                BigInteger nodes = BigInteger.ZERO;
-                List<Long> sessionNodes = daemon.getSessionNodes();
-                if (sessionNodes != null) {
-                    for (Long node : sessionNodes) {
-                        nodes = nodes.add(BigInteger.valueOf(node));
+            try {
+                while (!emitter.isCancelled()) {
+                    BigInteger nodes = BigInteger.ZERO;
+                    List<Long> sessionNodes = daemon.getSessionNodes();
+                    if (sessionNodes != null) {
+                        for (Long node : sessionNodes) {
+                            nodes = nodes.add(BigInteger.valueOf(node));
+                        }
+                        emitter.onNext(nodes.longValue());
                     }
-                    emitter.onNext(nodes.longValue());
+                    if (!emitter.isCancelled()) {
+                        Thread.sleep(STATISTICS_PERIOD);
+                    }
                 }
-                if (!emitter.isCancelled()) {
-                    Thread.sleep(STATISTICS_PERIOD);
-                }
+            } catch (InterruptedException ignore) {
+            } catch (Exception e) {
+                logger.error("makeSessionStatsFlowable is error", e);
             }
         }, BackpressureStrategy.LATEST);
     }
