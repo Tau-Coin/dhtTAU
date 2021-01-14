@@ -32,6 +32,7 @@ public class HashTextView extends TextView {
     private TauDaemon daemon;
     private String textHash;
     private String text;
+    private byte[] friendPk;
     private Disposable disposable;
 
     public HashTextView(Context context) {
@@ -59,9 +60,10 @@ public class HashTextView extends TextView {
     }
 
 
-    public void setTextAndHash(String text, String textHash) {
+    public void setTextAndHash(String text, String textHash, String friendPk) {
         this.text = text;
         this.textHash = textHash;
+        this.friendPk = ByteUtil.toByte(friendPk);
         if (StringUtil.isNotEmpty(text)) {
             logger.debug("setText directly::{}", this.text);
             setText(text);
@@ -131,7 +133,7 @@ public class HashTextView extends TextView {
                 logger.debug("queryDataLoop hash::{}, empty::{}",
                         ByteUtil.toHexString(hash), null == data);
                 if (null == data) {
-                    daemon.requestMessageData(hash);
+                    daemon.requestMessageData(hash, friendPk);
                 } else {
                     return data;
                 }

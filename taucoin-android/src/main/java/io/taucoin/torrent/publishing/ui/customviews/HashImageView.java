@@ -43,6 +43,7 @@ public class HashImageView extends RoundImageView {
     private ChatRepository chatRepo;
     private TauDaemon daemon;
     private String imageHash;
+    private byte[] friendPk;
     private boolean unsent;
     private byte[] totalBytes;
     private Disposable disposable;
@@ -84,8 +85,19 @@ public class HashImageView extends RoundImageView {
      * 设置ImageHash
      * @param imageHash
      * @param unsent
+     * @param friendPk
      */
-    public void setImageHash(boolean unsent, String imageHash) {
+    public void setImageHash(boolean unsent, String imageHash, String friendPk) {
+        setImageHash(unsent, imageHash, ByteUtil.toByte(friendPk));
+    }
+
+    /**
+     * 设置ImageHash
+     * @param imageHash
+     * @param unsent
+     * @param friendPk
+     */
+    public void setImageHash(boolean unsent, String imageHash, byte[] friendPk) {
         // 如果是图片已加载，并且显示的图片不变，直接返回
         if (isLoadSuccess && totalBytes != null
                 && StringUtil.isEquals(imageHash, this.imageHash)) {
@@ -93,6 +105,7 @@ public class HashImageView extends RoundImageView {
         }
         this.imageHash = imageHash;
         this.unsent = unsent;
+        this.friendPk = friendPk;
         setImageHash(ByteUtil.toByte(imageHash));
     }
 
@@ -188,7 +201,7 @@ public class HashImageView extends RoundImageView {
             try {
                 byte[] data = daemon.getMsg(hash);
                 if (null == data) {
-                    daemon.requestMessageData(hash);
+                    daemon.requestMessageData(hash, friendPk);
                 } else {
                     return data;
                 }
@@ -245,7 +258,7 @@ public class HashImageView extends RoundImageView {
         // 加在View
         if (reload && StringUtil.isNotEmpty(imageHash)
                 && disposable != null && disposable.isDisposed()) {
-            setImageHash(unsent, imageHash);
+            setImageHash(unsent, imageHash, friendPk);
         }
         reload = false;
     }
