@@ -107,8 +107,7 @@ public class GroupChatGossip {
         this.bestBlockHash = list.get(0).getRLPData();
         this.bestTxHash = list.get(1).getRLPData();
 
-        RLPList list1 = (RLPList)list.get(2);
-        parseList(list1);
+        parseList((RLPList)list.get(2));
 
         this.parsed = true;
     }

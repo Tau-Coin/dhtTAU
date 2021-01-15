@@ -7,8 +7,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.taucoin.util.ByteUtil;
-
 public class GossipItemTest {
 
     @Test
@@ -66,16 +64,16 @@ public class GossipItemTest {
             list.add(gossipItem);
         }
 
-        GossipList gossipList = new GossipList(list);
+        Gossip gossip = new Gossip(list);
 
-        System.out.print(gossipList.toString());
+        System.out.print(gossip.toString());
         System.out.print("\n");
 
-        byte[] encode = gossipList.getEncoded();
+        byte[] encode = gossip.getEncoded();
         System.out.print(encode.length);
         System.out.print("\n");
 
-        GossipList gossipList1 = new GossipList(encode);
-        System.out.print(gossipList1.toString());
+        Gossip gossip1 = new Gossip(encode);
+        System.out.print(gossip1.toString());
     }
 }

@@ -11,13 +11,11 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 
-import io.taucoin.communication.Communication;
 import io.taucoin.controller.TauController;
 import io.taucoin.dht.DHT;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.param.ChainParam;
-import io.taucoin.types.GossipList;
-import io.taucoin.util.ByteUtil;
+import io.taucoin.types.Gossip;
 
 public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
 
@@ -49,9 +47,9 @@ public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
             if (item == null) {
                 result= "Get mutable item, nothing !";
             } else {
-                GossipList gossipList = new GossipList(item);
+                Gossip gossip = new Gossip(item);
 
-                result = gossipList.toString();
+                result = gossip.toString();
             }
 
             JSONRPC2Response response = new JSONRPC2Response(result, req.getID());

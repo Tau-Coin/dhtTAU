@@ -32,7 +32,7 @@ import io.taucoin.listener.MsgListener;
 import io.taucoin.listener.MsgStatus;
 import io.taucoin.param.ChainParam;
 import io.taucoin.types.GossipItem;
-import io.taucoin.types.GossipList;
+import io.taucoin.types.Gossip;
 import io.taucoin.types.GossipStatus;
 import io.taucoin.types.Message;
 import io.taucoin.util.ByteArrayWrapper;
@@ -369,18 +369,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 访问在线peer，对上线时间在两分钟以内的peer直接去拿消息
-     */
-    private void retrieveOnlinePeerMsg() {
-        BigInteger time = BigInteger.valueOf(System.currentTimeMillis() / 1000 - TWO_MINUTE);
-        for (Map.Entry<ByteArrayWrapper, BigInteger> entry: this.friendLastSeen.entrySet()) {
-            if (null != entry.getValue() && entry.getValue().compareTo(time) > 0) {
-                requestLatestMessageFromPeer(entry.getKey());
-            }
-        }
-    }
-
-    /**
      * 挑选一个推荐的朋友访问，没有则随机挑一个访问
      */
     private void visitReferredFriends() {
@@ -583,28 +571,25 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         while (!Thread.currentThread().isInterrupted()) {
             try {
 
-                // 0. 通知UI消息状态
+                // 1. 通知UI消息状态
                 notifyUIMessageStatus();
 
-                // 1. 通知UI发现的在线朋友
+                // 2. 通知UI发现的在线朋友
                 notifyUIOnlineFriend();
 
-                // 2. 通知UI已读root
+                // 3. 通知UI已读root
                 notifyUIReadMessageRoot();
 
-                // 3. 访问正在写状态的朋友
+                // 4. 访问正在写状态的朋友
                 retrieveChattingFriendMsg();
 
                 // TODO: 并行中继节点搜索，先进行搜索，将put与get分开，get的时候获取中继节点，put时候直接put
 
-                // 4. 处理获得的消息
+                // 5. 处理获得的消息
                 dealWithMessage();
 
-                // 5. 处理获得的gossip
+                // 6. 处理获得的gossip
                 dealWithGossipItem();
-
-                // 6. 处理获得的demand数据
-//                dealWithDemandItem();
 
                 // 7. 相应远端的需求
                 responseRemoteDemand();
@@ -615,19 +600,16 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 // 9. 尝试发布gossip数据
                 tryToPublishGossipInfo();
 
-                // 10. 访问在线peer
-//                retrieveOnlinePeerMsg();
-
-                // 11. 访问通过gossip机制推荐的活跃peer
+                // 10. 访问通过gossip机制推荐的活跃peer
                 visitReferredFriends();
 
-                // 12. 请求demand数据
+                // 11. 请求demand数据
                 requestDemandHash();
 
-                // 13. 尝试向中间层发送所有的请求
+                // 12. 尝试向中间层发送所有的请求
                 tryToSendAllRequest();
 
-                // 14. 尝试调整间隔时间
+                // 13. 尝试调整间隔时间
                 adjustIntervalTime();
 
                 try {
@@ -753,28 +735,15 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 发布gossip数据
-     * @param gossipList gossip list
-     */
-    private void publishGossipList(GossipList gossipList) {
-        if (null != gossipList) {
-            DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(gossipList.getEncoded());
-
-            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
-            this.queue.add(immutableItemDistribution);
-        }
-    }
-
-    /**
      * 在gossip频道发布gossip信息
-     * @param gossipList last gossip list
+     * @param gossip last gossip list
      */
-    private void publishMutableGossip(GossipList gossipList) {
+    private void publishMutableGossip(Gossip gossip) {
         // put mutable item
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
         byte[] salt = ChainParam.GOSSIP_CHANNEL;
-        byte[] encode = gossipList.getEncoded();
+        byte[] encode = gossip.getEncoded();
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                     keyPair.second, encode, salt);
@@ -812,14 +781,14 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         }
 
         if (!list.isEmpty()) {
-            GossipList gossipList = new GossipList(list);
-            while (gossipList.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
+            Gossip gossip = new Gossip(list);
+            while (gossip.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
                 list.remove(list.size() - 1);
-                gossipList = new GossipList(list);
+                gossip = new Gossip(list);
             }
 
-            logger.debug(gossipList.toString());
-            publishMutableGossip(gossipList);
+            logger.debug(gossip.toString());
+            publishMutableGossip(gossip);
         }
 
         // 记录发布时间
@@ -1186,94 +1155,97 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 预处理受到的gossip list
-     * @param gossipList 收到的gossip list
+     * 预处理受到的gossip
+     * @param gossip 收到的gossip
      * @param peer gossip发出的peer
      */
-    private void preprocessGossipListFromNet(GossipList gossipList, ByteArrayWrapper peer) {
+    private void preprocessGossipFromNet(Gossip gossip, ByteArrayWrapper peer) {
 
-        if (null != gossipList.getGossipList()) {
+        // 是否更新好友的在线时间（完整公钥）
+        BigInteger gossipTime = gossip.getTimestamp();
+        BigInteger lastSeen = this.friendLastSeen.get(peer);
+        if (null == lastSeen || lastSeen.compareTo(gossipTime) < 0) { // 判断是否是更新的gossip
+            this.friendLastSeen.put(peer, gossipTime);
+            this.onlineFriendsToNotify.add(peer);
 
-            // 信任发送方自己给的gossip信息
-            byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+            if (null != gossip.getGossipList()) {
 
-            for (GossipItem gossipItem : gossipList.getGossipList()) {
-                logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
+                // 信任发送方自己给的gossip信息
+                byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-                ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
+                for (GossipItem gossipItem : gossip.getGossipList()) {
+                    logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
 
-                // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
-                if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
-                    logger.trace("Sender[{}] is me.", sender.toString());
-                    continue;
-                }
+                    ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
-                // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
-                // 并且gossip item的receiver是我，那么会直接信任该gossip消息
-                if (ByteUtil.startsWith(peer.getData(), gossipItem.getSender())
-                        && ByteUtil.startsWith(pubKey, gossipItem.getReceiver())) {
-                    logger.trace("Got trusted gossip:{} from online friend[{}]",
-                            gossipItem.toString(), peer.toString());
+                    // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+                    if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
+                        logger.trace("Sender[{}] is me.", sender.toString());
+                        continue;
+                    }
 
-                    BigInteger currentTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
+                    // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
+                    // 并且gossip item的receiver是我，那么会直接信任该gossip消息
+                    if (ByteUtil.startsWith(peer.getData(), gossipItem.getSender())
+                            && ByteUtil.startsWith(pubKey, gossipItem.getReceiver())) {
+                        logger.trace("Got trusted gossip:{} from online friend[{}]",
+                                gossipItem.toString(), peer.toString());
 
-                    // 发现的在线好友（完整公钥）
-                    this.friendLastSeen.put(peer, currentTime);
-                    this.onlineFriendsToNotify.add(peer);
+                        BigInteger currentTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
+                        BigInteger timeStamp = gossipItem.getTimestamp();
+                        BigInteger oldTimeStamp = this.friendTimeStamp.get(peer);
 
-                    BigInteger oldTimeStamp = this.friendTimeStamp.get(peer);
-                    BigInteger timeStamp = gossipItem.getTimestamp();
+                        // 如果是对方直接给我发的gossip消息，并且时间戳更新一些
+                        if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
+                            logger.debug("Got a new gossip item:{}", gossipItem.toString());
 
-                    // 如果是对方直接给我发的gossip消息，并且时间戳更新一些
-                    if (null == oldTimeStamp || oldTimeStamp.compareTo(timeStamp) < 0) {
-                        logger.debug("Got a new gossip item:{}", gossipItem.toString());
+                            if (null != gossipItem.getDemandImmutableDataHash()) {
+                                this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getDemandImmutableDataHash()));
+                            }
 
-                        if (null != gossipItem.getDemandImmutableDataHash()) {
-                            this.friendDemandHash.add(new ByteArrayWrapper(gossipItem.getDemandImmutableDataHash()));
-                        }
+                            if (GossipStatus.ON_WRITING == gossipItem.getGossipStatus()) {
+                                logger.debug("Got a writing peer:{}", peer.toString());
+                                this.writingFriendsToVisit.put(peer, System.currentTimeMillis() / 1000);
+                            }
 
-                        if (GossipStatus.ON_WRITING == gossipItem.getGossipStatus()) {
-                            logger.debug("Got a writing peer:{}", peer.toString());
-                            this.writingFriendsToVisit.put(peer, System.currentTimeMillis() / 1000);
-                        }
+                            // 更新时间戳
+                            this.friendTimeStamp.put(peer, timeStamp);
 
-                        // 更新时间戳
-                        this.friendTimeStamp.put(peer, timeStamp);
+                            // 只要发现更新的gossip信息，则使用其confirmation root
+                            if (null != gossipItem.getConfirmationRoot()) {
+                                logger.debug("Got a friend[{}] confirmation root[{}]",
+                                        peer.toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
 
-                        // 只要发现更新的gossip信息，则使用其confirmation root
-                        if (null != gossipItem.getConfirmationRoot()) {
-                            logger.debug("Got a friend[{}] confirmation root[{}]",
-                                    peer.toString(), Hex.toHexString(gossipItem.getConfirmationRoot()));
+                                byte[] confirmationRoot = this.friendConfirmationRoot.get(peer);
+                                if (!Arrays.equals(confirmationRoot, gossipItem.getConfirmationRoot())) {
+                                    // 有信息要发，即确认信息要发，更新时间戳，确认收到该root
 
-                            byte[] confirmationRoot = this.friendConfirmationRoot.get(peer);
-                            if (!Arrays.equals(confirmationRoot, gossipItem.getConfirmationRoot())) {
-                                // 有信息要发，即确认信息要发，更新时间戳，确认收到该root
+                                    this.timeStampToFriend.put(peer, currentTime);
+                                    // 更新confirmation root
+                                    this.friendConfirmationRoot.put(peer, gossipItem.getConfirmationRoot());
+                                    // 加入待通知列表
+                                    this.friendConfirmationRootToNotify.put(peer, gossipItem.getConfirmationRoot());
+                                }
+                            }
 
-                                this.timeStampToFriend.put(peer, currentTime);
-                                // 更新confirmation root
-                                this.friendConfirmationRoot.put(peer, gossipItem.getConfirmationRoot());
-                                // 加入待通知列表
-                                this.friendConfirmationRootToNotify.put(peer, gossipItem.getConfirmationRoot());
+                            // 发现更新时间戳的gossip消息，并且root与之前的不同，才更新并请求新数据
+                            byte[] currentRoot = this.friendRoot.get(peer);
+                            if (!Arrays.equals(currentRoot, gossipItem.getMessageRoot()) && null != gossipItem.getMessageRoot()) {
+                                logger.debug("Got a new message root:{}", Hex.toHexString(gossipItem.getMessageRoot()));
+                                // 如果该消息的root之前没拿到过，说明是新消息过来
+                                // 更新朋友root信息
+                                this.friendRoot.put(peer, gossipItem.getMessageRoot());
+                                // 请求该root
+                                requestMessage(gossipItem.getMessageRoot(), peer);
                             }
                         }
 
-                        // 发现更新时间戳的gossip消息，并且root与之前的不同，才更新并请求新数据
-                        byte[] currentRoot = this.friendRoot.get(peer);
-                        if (!Arrays.equals(currentRoot, gossipItem.getMessageRoot()) && null != gossipItem.getMessageRoot()) {
-                            logger.debug("Got a new message root:{}", Hex.toHexString(gossipItem.getMessageRoot()));
-                            // 如果该消息的root之前没拿到过，说明是新消息过来
-                            // 更新朋友root信息
-                            this.friendRoot.put(peer, gossipItem.getMessageRoot());
-                            // 请求该root
-                            requestMessage(gossipItem.getMessageRoot(), peer);
-                        }
+                        continue;
                     }
 
-                    continue;
+                    // 剩余的留给主循环处理
+                    this.gossipItems.add(gossipItem);
                 }
-
-                // 剩余的留给主循环处理
-                this.gossipItems.add(gossipItem);
             }
         }
     }
@@ -1303,8 +1275,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                     return;
                 }
 
-                GossipList gossipList = new GossipList(item);
-                preprocessGossipListFromNet(gossipList, dataIdentifier.getExtraInfo1());
+                Gossip gossip = new Gossip(item);
+                preprocessGossipFromNet(gossip, dataIdentifier.getExtraInfo1());
 
                 break;
             }

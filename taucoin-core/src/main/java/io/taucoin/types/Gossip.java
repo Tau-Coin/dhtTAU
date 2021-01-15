@@ -1,6 +1,7 @@
 package io.taucoin.types;
 
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -9,8 +10,9 @@ import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
-// gossip list是gossip mutable item的具体内容
-public class GossipList {
+// gossip是gossip mutable item的具体内容
+public class Gossip {
+    private BigInteger timestamp;
     private List<GossipItem> gossipList = new CopyOnWriteArrayList<>();
 
     private byte[] hash;
@@ -18,14 +20,23 @@ public class GossipList {
 
     private boolean parsed = false;
 
-    public GossipList(List<GossipItem> gossipList) {
+    public Gossip(List<GossipItem> gossipList) {
+        this.timestamp = BigInteger.valueOf(System.currentTimeMillis() / 1000);
         this.gossipList = gossipList;
 
         this.parsed = true;
     }
 
-    public GossipList(byte[] encode) {
+    public Gossip(byte[] encode) {
         this.rlpEncoded = encode;
+    }
+
+    public BigInteger getTimestamp() {
+        if (!parsed) {
+            parseRLP();
+        }
+
+        return timestamp;
     }
 
     public List<GossipItem> getGossipList() {
@@ -62,7 +73,10 @@ public class GossipList {
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
 
-        parseList(list);
+        byte[] timeBytes = list.get(0).getRLPData();
+        this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
+
+        parseList((RLPList) list.get(1));
 
         this.parsed = true;
     }
@@ -83,7 +97,10 @@ public class GossipList {
      */
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
-            this.rlpEncoded = getGossipListEncoded();
+            byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
+            byte[] gossipListEncoded = getGossipListEncoded();
+
+            this.rlpEncoded = RLP.encodeList(timestamp, gossipListEncoded);
         }
 
         return rlpEncoded;
@@ -91,6 +108,7 @@ public class GossipList {
 
     @Override
     public String toString() {
+        BigInteger timeStamp = getTimestamp();
         List<String> list = new ArrayList<>();
 
         List<GossipItem> gossipList = getGossipList();
@@ -100,6 +118,6 @@ public class GossipList {
             }
         }
 
-        return "GossipList{" + list + '}';
+        return "Gossip{ timestamp: " + timeStamp + ", "  + list + '}';
     }
 }
