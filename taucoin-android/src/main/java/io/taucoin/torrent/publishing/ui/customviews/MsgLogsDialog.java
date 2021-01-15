@@ -21,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.RelativeLayout;
 
 import java.util.List;
 
@@ -33,10 +32,8 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.databinding.ItemMsgLogBinding;
 import io.taucoin.torrent.publishing.databinding.MsgLogsBinding;
 
@@ -110,6 +107,8 @@ public class MsgLogsDialog extends Dialog {
 
     private static class LogsAdapter extends ListAdapter<ChatMsgLog, LogsAdapter.ViewHolder> {
         private MsgLogsListener listener;
+        private int size;
+        private int oldSize;
         LogsAdapter(MsgLogsListener listener) {
             super(diffCallback);
             this.listener = listener;
@@ -146,24 +145,28 @@ public class MsgLogsDialog extends Dialog {
                 }
                 Context context = binding.getRoot().getContext();
                 // 消息是否送达送达
-                boolean isReceived = log.status == ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus();
-                int color = isReceived ? R.color.color_black : R.color.gray_dark;
-                binding.tvTime.setText(DateUtil.formatTime(log.timestamp, DateUtil.pattern6));
+                boolean highlight = pos == 0;
+                int color = highlight ? R.color.color_black : R.color.gray_dark;
+                binding.tvTime.setText(DateUtil.format(log.timestamp, DateUtil.pattern9));
                 binding.tvTime.setTextColor(context.getResources().getColor(color));
                 binding.tvStatus.setText(ChatMsgStatus.getStatusInfo(log.status));
                 binding.tvStatus.setTextColor(context.getResources().getColor(color));
 
                 binding.timeLineBottom.setVisibility(pos == size - 1 ? View.GONE : View.VISIBLE);
-                binding.timeLineTop.setVisibility(pos == 0 ? View.INVISIBLE : View.VISIBLE);
 
-                int timePointRes = isReceived ? R.mipmap.icon_time_end : R.mipmap.icon_time_point;
+                int timePointRes;
+                if (log.status == ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
+                    timePointRes = R.mipmap.icon_msg_received;
+                } else if (log.status == ChatMsgStatus.PUT_SUCCESS.getStatus()) {
+                    timePointRes = R.mipmap.icon_put_success;
+                }  else if (log.status == ChatMsgStatus.TO_DHT_QUEUE.getStatus()) {
+                    timePointRes = R.mipmap.icon_transfer_queue;
+                } else if (log.status == ChatMsgStatus.TO_COMMUNICATION_QUEUE.getStatus()) {
+                    timePointRes = R.mipmap.icon_protocol_pool;
+                } else {
+                    timePointRes = R.mipmap.icon_msg_built;
+                }
                 binding.timePoint.setImageResource(timePointRes);
-                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)
-                        binding.timePoint.getLayoutParams();
-                int pointSize = isReceived || pos == size - 1 ? 20 : 15;
-                layoutParams.width = DimensionsUtil.dip2px(context, pointSize);
-                layoutParams.height = DimensionsUtil.dip2px(context, pointSize);
-                binding.timePoint.setLayoutParams(layoutParams);
             }
         }
 
@@ -191,10 +194,10 @@ public class MsgLogsDialog extends Dialog {
         }
     }
 
-    public void submitList(ChatMsg msg, List<ChatMsgLog> logs) {
+    public void submitList(List<ChatMsgLog> logs) {
         if (adapter != null) {
-            logs.add(new ChatMsgLog(msg.hash, ChatMsgStatus.UNSENT.getStatus(), msg.timestamp));
             adapter.submitList(logs);
+            adapter.notifyDataSetChanged();
         }
     }
 }

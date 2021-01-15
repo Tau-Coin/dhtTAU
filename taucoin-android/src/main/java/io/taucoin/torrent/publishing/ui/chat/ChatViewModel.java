@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -27,6 +26,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
@@ -34,7 +34,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
-import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.service.WorkerManager;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.types.Message;
@@ -156,7 +155,8 @@ public class ChatViewModel extends AndroidViewModel {
                     byte[] content;
                     int nonce = contentSize - 1 - i;
                     content = contents.get(nonce);
-                    long timestamp = DateUtil.getTime();
+                    long millisTime = DateUtil.getMillisTime();
+                    long timestamp = millisTime / 1000;
                     Message message;
                     if (type == MessageType.TEXT.ordinal()) {
                         contentStr = MsgSplitUtil.textMsgToString(content);
@@ -201,6 +201,12 @@ public class ChatViewModel extends AndroidViewModel {
                     }
                     messages[i] = chatMsg;
                     previousMsgDAGRoot = message.getHash();
+
+                    if (i == contentSize - 1) {
+                        ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash,
+                                ChatMsgStatus.UNSENT.getStatus(), millisTime);
+                        chatRepo.addChatMsgLog(chatMsgLog);
+                    }
                 }
                 // 批量添加到数据库
                 chatRepo.addChatMessages(messages);

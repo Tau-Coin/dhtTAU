@@ -105,7 +105,7 @@ public class ReceivedConfirmationWorker extends Worker {
             if (msg.status != ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
                 confirmedQuantity = 0;
                 ChatMsgLog msgLog = new ChatMsgLog(msgRootHash,
-                        ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), DateUtil.getTime());
+                        ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), DateUtil.getMillisTime());
                 logger.debug("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
                         friendPk, msgRootHash);
                 chatRepo.addChatMsgLog(msgLog);

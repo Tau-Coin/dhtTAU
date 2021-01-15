@@ -246,18 +246,17 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
         logsDisposable = chatViewModel.observerMsgLogs(msg.hash)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(logs -> showMsgLogsDialog(msg, logs));
+                .subscribe(this::showMsgLogsDialog);
         disposables.add(logsDisposable);
     }
 
     /**
      * 显示消息的
-     * @param msg
      * @param logs
      */
-    private void showMsgLogsDialog(ChatMsg msg, List<ChatMsgLog> logs) {
+    private void showMsgLogsDialog(List<ChatMsgLog> logs) {
         if (msgLogsDialog != null && msgLogsDialog.isShowing()) {
-            msgLogsDialog.submitList(msg, logs);
+            msgLogsDialog.submitList(logs);
             return;
         }
         msgLogsDialog = new MsgLogsDialog.Builder(activity)
@@ -274,7 +273,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                         }
                     }
                 }).create();
-        msgLogsDialog.submitList(msg, logs);
+        msgLogsDialog.submitList(logs);
         msgLogsDialog.show();
     }
 

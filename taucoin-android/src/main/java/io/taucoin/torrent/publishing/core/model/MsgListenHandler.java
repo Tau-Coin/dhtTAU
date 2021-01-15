@@ -137,7 +137,7 @@ class MsgListenHandler {
                 ChatMsgLog msg = chatRepo.queryChatMsgLastLog(hash);
                 if (msg != null && msg.status != ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
                     msg.status = ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus();
-                    msg.timestamp = DateUtil.getTime();
+                    msg.timestamp = DateUtil.getMillisTime();
                     chatRepo.addChatMsgLog(msg);
                     logger.trace("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
                             friendPkStr, hash);
@@ -205,7 +205,7 @@ class MsgListenHandler {
                 logger.trace("onMessageStatus root::{}, msgStatus::{}",
                         hash, msgStatus.name());
                 int status = msgStatus.ordinal();
-                ChatMsgLog msgLog = new ChatMsgLog(hash, status, DateUtil.getTime());
+                ChatMsgLog msgLog = new ChatMsgLog(hash, status, DateUtil.getMillisTime());
                 chatRepo.addChatMsgLog(msgLog);
             } catch (Exception e) {
                 logger.error("onMessageStatus error", e);

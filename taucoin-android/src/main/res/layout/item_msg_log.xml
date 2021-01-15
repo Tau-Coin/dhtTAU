@@ -32,6 +32,7 @@
                 <View
                     android:id="@+id/time_line_bottom"
                     android:layout_width="2dp"
+                    android:layout_marginTop="16dp"
                     android:layout_height="match_parent"
                     android:background="@color/gray_dark"/>
 
@@ -39,12 +40,12 @@
 
             <ImageView
                 android:id="@+id/time_point"
-                android:layout_width="15dp"
-                android:layout_height="15dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:layout_centerHorizontal="true"
-                android:src="@mipmap/icon_time_point"
+                android:src="@mipmap/icon_msg_built"
                 android:contentDescription="@null"/>
 
         </RelativeLayout>
