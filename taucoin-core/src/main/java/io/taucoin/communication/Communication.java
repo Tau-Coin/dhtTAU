@@ -147,9 +147,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 当前发现的处于写状态的朋友集合，即用即弃，<friend, timestamp>（完整公钥）
     private final Map<ByteArrayWrapper, Long> writingFriendsToVisit = new ConcurrentHashMap<>();
 
-    // 发给朋友的confirmation root hash <friend, root>
-//    private final Map<ByteArrayWrapper, byte[]> confirmationRootToFriend = new ConcurrentHashMap<>();
-
     // 我的需求 <friend, demand hash>，用于通知我的朋友我的需求（完整公钥）
     private final Map<ByteArrayWrapper, byte[]> demandImmutableDataHash = new ConcurrentHashMap<>();
 
@@ -159,8 +156,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 通过gossip推荐机制发现的有新消息的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> referredFriends = new CopyOnWriteArraySet<>();
 
-    // 通过gossip机制发现的给朋友的gossip item <FriendPair, GossipItem>（非完整公钥）
-    private final Map<FriendPair, GossipItem> friendGossipItem = Collections.synchronizedMap(new HashMap<>());
+    // 通过gossip机制发现的给朋友的gossip item <FriendPair, Timestamp>（非完整公钥, FriendPair均为短地址）
+    private final Map<FriendPair, BigInteger> friendGossipItem = Collections.synchronizedMap(new HashMap<>());
 
     // Communication thread.
     private Thread communicationThread;
@@ -216,6 +213,48 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         if (currentTime - lastGossipPublishTime > gossipPublishIntervalTime) {
             publishGossipInfo();
         }
+    }
+
+    /**
+     * 构建短地址
+     * @param pubKey public key
+     * @return short address
+     */
+    private byte[] makeShortAddress(byte[] pubKey) {
+        if (pubKey.length > SHORT_ADDRESS_LENGTH) {
+            byte[] shortAddress = new byte[SHORT_ADDRESS_LENGTH];
+            System.arraycopy(pubKey, 0, shortAddress, 0, SHORT_ADDRESS_LENGTH);
+            return shortAddress;
+        }
+
+        return pubKey;
+    }
+
+    /**
+     * 使用短地址来构建gossip item
+     * @param friendPair 短地址friend pair
+     * @param timestamp gossip时间戳
+     * @return gossip item
+     */
+    private GossipItem makeGossipItemWithShortAddress(FriendPair friendPair, BigInteger timestamp) {
+        return new GossipItem(friendPair.getSender(), friendPair.getReceiver(), timestamp);
+    }
+
+    /**
+     * 使用短地址来构建gossip item
+     * @param sender sender public key
+     * @param receiver receiver public key
+     * @param timestamp timestamp
+     * @return gossip item
+     */
+    private GossipItem makeGossipItemWithShortAddress(byte[] sender, byte[] receiver, BigInteger timestamp) {
+        byte[] shortSender = new byte[SHORT_ADDRESS_LENGTH];
+        System.arraycopy(sender, 0, shortSender, 0, SHORT_ADDRESS_LENGTH);
+
+        byte[] shortReceiver = new byte[SHORT_ADDRESS_LENGTH];
+        System.arraycopy(receiver, 0, shortReceiver, 0, SHORT_ADDRESS_LENGTH);
+
+        return new GossipItem(shortSender, shortReceiver, timestamp);
     }
 
     /**
@@ -279,11 +318,11 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         }
 
         // 2.统计其他人发给我朋友的消息
-        for (Map.Entry<FriendPair, GossipItem> entry : this.friendGossipItem.entrySet()) {
-            GossipItem gossipItem = entry.getValue();
+        for (Map.Entry<FriendPair, BigInteger> entry : this.friendGossipItem.entrySet()) {
+            BigInteger timestamp = entry.getValue();
             // 只添加一天以内有新消息的
-            if (currentTime - gossipItem.getTimestamp().longValue() < ChainParam.ONE_DAY) {
-                gossipList.add(gossipItem);
+            if (currentTime - timestamp.longValue() < ChainParam.ONE_DAY) {
+                gossipList.add(makeGossipItemWithShortAddress(entry.getKey(), timestamp));
             }
         }
 
@@ -295,10 +334,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      */
     private void tryToSlimDownGossip() {
         long currentTime = System.currentTimeMillis() / 1000;
-        Iterator<Map.Entry<FriendPair, GossipItem>> it = this.friendGossipItem.entrySet().iterator();
+        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.friendGossipItem.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry<FriendPair, GossipItem> entry = it.next();
-            if (currentTime - entry.getValue().getTimestamp().longValue() > ChainParam.ONE_DAY) {
+            Map.Entry<FriendPair, BigInteger> entry = it.next();
+            if (currentTime - entry.getValue().longValue() > ChainParam.ONE_DAY) {
                 it.remove();
             }
         }
@@ -346,15 +385,15 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                     // 寻找跟我朋友相关的gossip
                     for (ByteArrayWrapper friend : this.friends) {
                         if (ByteUtil.startsWith(friend.getData(), receiver)) { // 找到
-                            FriendPair pair = FriendPair.create(sender, receiver);
+                            FriendPair pair = FriendPair.create(makeShortAddress(sender), makeShortAddress(receiver));
 
-                            GossipItem oldGossipItem = this.friendGossipItem.get(pair);
+                            BigInteger oldTimestamp = this.friendGossipItem.get(pair);
 
                             BigInteger timeStamp = gossipItem.getTimestamp();
 
                             // 判断是否是新数据，若是，则记录下来以待发布
-                            if (null == oldGossipItem || oldGossipItem.getTimestamp().compareTo(timeStamp) < 0) {
-                                this.friendGossipItem.put(pair, gossipItem);
+                            if (null == oldTimestamp || oldTimestamp.compareTo(timeStamp) < 0) {
+                                this.friendGossipItem.put(pair, timeStamp);
                             }
 
                             break;
@@ -772,6 +811,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
         Iterator<GossipItem> iterator = this.gossipItemsToPut.iterator();
         int i = 0;
+        // TODO:: 等待测试新的GOSSIP_LIMIT_SIZE
         while (iterator.hasNext() && i <= ChainParam.GOSSIP_LIMIT_SIZE) {
             GossipItem gossipItem = iterator.next();
             list.add(gossipItem);
@@ -1053,9 +1093,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 //        this.confirmationRootToFriend.remove(key);
         this.demandImmutableDataHash.remove(key);
 
-        Iterator<Map.Entry<FriendPair, GossipItem>> it = this.friendGossipItem.entrySet().iterator();
+        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.friendGossipItem.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry<FriendPair, GossipItem> entry = it.next();
+            Map.Entry<FriendPair, BigInteger> entry = it.next();
             if (ByteUtil.startsWith(pubKey, entry.getKey().getReceiver())) {
                 it.remove();
             }

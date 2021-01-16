@@ -29,6 +29,15 @@ public class GossipItem {
     private byte[] encode; // 缓存编码
     private boolean parsed = false; // 是否解码标志
 
+    // 主要用于转发的gossip item
+    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.timestamp = timestamp;
+
+        this.parsed = true;
+    }
+
     public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot,
                       byte[] confirmationRoot, byte[] demandImmutableDataHash) {
         this.sender = sender;
