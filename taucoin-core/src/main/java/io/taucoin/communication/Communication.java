@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import io.taucoin.account.AccountManager;
+import io.taucoin.account.KeyChangedListener;
 import io.taucoin.core.DataIdentifier;
 import io.taucoin.core.DataType;
 import io.taucoin.core.FriendPair;
@@ -64,7 +65,7 @@ import io.taucoin.util.HashUtil;
  * 13. 尝试向中间层发送所有的请求
  * 14. 尝试调整间隔时间
  */
-public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCallback {
+public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCallback, KeyChangedListener {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 对UI使用的, Queue capability.
@@ -1175,6 +1176,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      */
     public boolean start() {
 
+        AccountManager.getInstance().addListener(this);
+
         if (!init()) {
             return false;
         }
@@ -1192,6 +1195,18 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         if (null != communicationThread) {
             communicationThread.interrupt();
         }
+
+        AccountManager.getInstance().removeListener(this);
+    }
+
+    @Override
+    public void onKeyChanged(Pair<byte[], byte[]> newKey) {
+        this.friendLastSeen.clear();
+        this.friendTimeStamp.clear();
+        this.friendRoot.clear();
+        this.friendConfirmationRoot.clear();
+        this.timeStampToFriend.clear();
+        this.rootToFriend.clear();
     }
 
     /**
