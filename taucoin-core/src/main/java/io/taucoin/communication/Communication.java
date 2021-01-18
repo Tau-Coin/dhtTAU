@@ -812,12 +812,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
         Iterator<GossipItem> iterator = this.gossipItemsToPut.iterator();
         int i = 0;
-        // TODO:: 等待测试新的GOSSIP_LIMIT_SIZE
         while (iterator.hasNext() && i <= ChainParam.GOSSIP_LIMIT_SIZE) {
             GossipItem gossipItem = iterator.next();
             list.add(gossipItem);
 
-            iterator.remove();
             i++;
         }
 
@@ -826,6 +824,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             while (gossip.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
                 list.remove(list.size() - 1);
                 gossip = new Gossip(list);
+            }
+
+            for (GossipItem gossipItem: list) {
+                this.gossipItemsToPut.remove(gossipItem);
             }
 
             logger.debug(gossip.toString());
