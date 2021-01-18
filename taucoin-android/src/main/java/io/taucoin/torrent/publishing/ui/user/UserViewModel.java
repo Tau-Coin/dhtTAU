@@ -21,7 +21,6 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.paging.DataSource;
 import androidx.paging.LivePagedListBuilder;
 import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
@@ -51,7 +50,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
-import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
@@ -84,6 +82,7 @@ public class UserViewModel extends AndroidViewModel {
     private CommonDialog commonDialog;
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
+    private UserSourceFactory sourceFactory;
     public UserViewModel(@NonNull Application application) {
         super(application);
         userRepo = RepositoryHelper.getUserRepository(getApplication());
@@ -92,6 +91,7 @@ public class UserViewModel extends AndroidViewModel {
         msgRepo = RepositoryHelper.getMsgRepository(getApplication());
         friendRepo = RepositoryHelper.getFriendsRepository(getApplication());
         daemon = TauDaemon.getInstance(application);
+        sourceFactory = new UserSourceFactory(userRepo);
     }
 
     public void observeNeedStartDaemon () {
@@ -382,18 +382,17 @@ public class UserViewModel extends AndroidViewModel {
     }
 
     /**
-     * 查询收藏
+     * 查询用户列表
      * @return DataSource
-     * @param order
+     * @param order 排序字段
+     * @param isAll 是否查询所有用户
+     * @param friendPk 扫描朋友公钥
      */
-    DataSource.Factory<Integer, UserAndFriend> queryUsers(int order, boolean isAll){
-        String userPK = MainApplication.getInstance().getPublicKey();
-        return userRepo.queryUsers(userPK, order, isAll);
-    }
-
-    public LiveData<PagedList<UserAndFriend>> observerUsers(int order, boolean isAll) {
-        return new LivePagedListBuilder<>(
-                queryUsers(order, isAll), Page.getPageListConfig()).build();
+    public LiveData<PagedList<UserAndFriend>> observerUsers(int order, boolean isAll, String friendPk) {
+        sourceFactory.setParameter(order, isAll, friendPk);
+        return new LivePagedListBuilder<>(sourceFactory, Page.getPageListConfig())
+                .setInitialLoadKey(Page.PAGE_SIZE)
+                .build();
     }
 
     /**

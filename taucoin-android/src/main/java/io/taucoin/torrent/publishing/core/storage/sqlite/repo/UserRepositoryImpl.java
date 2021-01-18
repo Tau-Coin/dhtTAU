@@ -3,19 +3,27 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 import android.content.Context;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
-import androidx.paging.DataSource;
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 
 /**
  * UserRepository接口实现
  */
 public class UserRepositoryImpl implements UserRepository{
 
+    private PublishSubject<String> dataSetChangedPublish = PublishSubject.create();
+    private ExecutorService sender = Executors.newSingleThreadExecutor();
     private Context appContext;
     private AppDatabase db;
 
@@ -36,7 +44,9 @@ public class UserRepositoryImpl implements UserRepository{
      */
     @Override
     public long addUser(@NonNull User user) {
-        return db.userDao().addUser(user);
+        long result = db.userDao().addUser(user);
+        submitDataSetChanged();
+        return result;
     }
 
     /**
@@ -46,7 +56,9 @@ public class UserRepositoryImpl implements UserRepository{
      */
     @Override
     public int updateUser(@NonNull User user) {
-        return db.userDao().updateUser(user);
+        int result = db.userDao().updateUser(user);
+        submitDataSetChanged();
+        return result;
     }
 
     /**
@@ -128,28 +140,51 @@ public class UserRepositoryImpl implements UserRepository{
      */
     @Override
     public long[] addUsers(User... user){
-        return db.userDao().addUsers(user);
+        long[] result = db.userDao().addUsers(user);
+        submitDataSetChanged();
+        return result;
     }
 
     /**
-     * 观察不在黑名单的列表中
-     * @param order
+     * 观察不在黑名单的用户数
+     * @param isAll
      */
     @Override
-    public DataSource.Factory<Integer, UserAndFriend> queryUsers(String userPK, int order, boolean isAll) {
+    public int getNumUsers(boolean isAll, String friendPk) {
+        if (isAll) {
+            return db.userDao().getNumAllUsers(friendPk);
+        } else {
+            return db.userDao().getNumConnectedUsers(friendPk);
+        }
+    }
+
+    /**
+     * 观察不在黑名单的用户列表
+     */
+    @Override
+    public List<UserAndFriend> getUsers(boolean isAll, int order, String friendPk, int pos, int loadSize) {
+        List<UserAndFriend> list;
         if (isAll) {
             if (order == 0) {
-                return db.userDao().queryUsersOrderByLastSeenTime(userPK);
+                list = db.userDao().queryUsersOrderByLastSeenTime(friendPk);
             } else {
-                return db.userDao().queryUsersOrderByLastCommTime(userPK);
+                list = db.userDao().queryUsersOrderByLastCommTime(friendPk);
             }
         } else {
             if (order == 0) {
-                return db.userDao().queryUsersByStateOrderByLastSeenTime(userPK);
+                list = db.userDao().queryUsersByStateOrderByLastSeenTime(friendPk);
             } else {
-                return db.userDao().queryUsersByStateOrderByLastCommTime(userPK);
+                list = db.userDao().queryUsersByStateOrderByLastCommTime(friendPk);
             }
         }
+        if (StringUtil.isNotEmpty(friendPk)) {
+            String userPk = MainApplication.getInstance().getPublicKey();
+            UserAndFriend userAndFriend = getUserAndFriend(userPk, friendPk);
+            if (userAndFriend != null && list != null) {
+                list.add(0, userAndFriend);
+            }
+        }
+        return list;
     }
 
     /**
@@ -158,5 +193,16 @@ public class UserRepositoryImpl implements UserRepository{
     @Override
     public UserAndFriend getUserAndFriend(String userPK, String publicKey){
         return db.userDao().getUserAndFriend(userPK, publicKey);
+    }
+
+    @Override
+    public Observable<String> observeDataSetChanged() {
+        return dataSetChangedPublish;
+    }
+
+    @Override
+    public void submitDataSetChanged() {
+        String dateTime = DateUtil.getDateTime();
+        sender.submit(() -> dataSetChangedPublish.onNext(dateTime));
     }
 }

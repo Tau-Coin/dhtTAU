@@ -3,8 +3,8 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.paging.DataSource;
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
@@ -84,13 +84,28 @@ public interface UserRepository {
     long[] addUsers(User... user);
 
     /**
-     * 观察不在黑名单的列表中
-     * @param order
+     * 观察不在黑名单的用户数
+     * @param isAll
      */
-    DataSource.Factory<Integer, UserAndFriend> queryUsers(String userPK, int order, boolean isAll);
+    int getNumUsers(boolean isAll, String friendPk);
+
+    /**
+     * 观察不在黑名单的用户列表
+     */
+    List<UserAndFriend> getUsers(boolean isAll, int order, String friendPk, int pos, int loadSize);
 
     /**
      * 获取用户和朋友的信息
      */
     UserAndFriend getUserAndFriend(String userPK, String publicKey);
+
+    /**
+     * 观察用户的消息的变化
+     */
+    Observable<String> observeDataSetChanged();
+
+    /**
+     * 提交数据变化
+     */
+    void submitDataSetChanged();
 }

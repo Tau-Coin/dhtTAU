@@ -149,7 +149,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         if (pagedListLiveData != null && !pagedListLiveData.hasObservers()) {
             pagedListLiveData.removeObservers(this);
         }
-        pagedListLiveData = userViewModel.observerUsers(order, page == PAGE_FRIENDS_LIST);
+        pagedListLiveData = userViewModel.observerUsers(order, page == PAGE_FRIENDS_LIST, friendPk);
         pagedListLiveData.observe(this, list -> {
             adapter.setOrder(order);
             adapter.submitList(list);

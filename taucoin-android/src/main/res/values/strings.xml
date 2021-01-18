@@ -28,8 +28,8 @@
 
     <string name="main_title">TAU</string>
     <string name="main_empty_title">Welcome to TAU</string>
-    <string name="main_empty_add_friends">Add friends</string>
-    <string name="main_empty_create_communities">Create coin communities</string>
+    <string name="main_empty_add_friends">Add Friend</string>
+    <string name="main_empty_create_communities">Create Coin Community</string>
     <string name="main_exit">Click again to exit the application!</string>
     <string name="main_balance_power">Balance %1$s, Power %2$s</string>
     <string name="main_read_only">READ\nONLY</string>

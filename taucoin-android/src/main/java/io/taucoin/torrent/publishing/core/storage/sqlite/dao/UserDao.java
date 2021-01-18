@@ -2,7 +2,6 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.dao;
 
 import java.util.List;
 
-import androidx.paging.DataSource;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -23,19 +22,28 @@ public interface UserDao {
     String QUERY_GET_CURRENT_USER_PK = "SELECT publicKey FROM Users WHERE isCurrentUser = 1";
     String QUERY_GET_USER_LIST = "SELECT * FROM Users";
     String QUERY_GET_USERS_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 1 and isCurrentUser != 1";
+
+    String QUERY_ALL_USERS_WHERE = " WHERE u.isBanned = 0 AND u.isCurrentUser != 1 AND" +
+            " u.publicKey != :friendPK";
+    String QUERY_NUM_ALL_USERS = "SELECT count(*) FROM Users u" +
+            QUERY_ALL_USERS_WHERE;
+
     String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT u.*, f.lastCommTime AS lastCommTime," +
             " f.lastSeenTime AS lastSeenTime, f.state" +
             " FROM Users u" +
-            " LEFT JOIN Friends f ON u.publicKey = f.friendPK AND f.userPK= :userPK" +
-            " WHERE u.isBanned = 0 AND u.isCurrentUser != 1";
+            " LEFT JOIN Friends f ON u.publicKey = f.friendPK AND f.userPK IN (" +
+            UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
+            QUERY_ALL_USERS_WHERE;
 
     String QUERY_USERS_ORDER_BY_LAST_SEEN_TIME = QUERY_GET_USERS_NOT_IN_BAN_LIST +
             " ORDER BY f.lastSeenTime DESC";
     String QUERY_USERS_ORDER_BY_LAST_COMM_TIME = QUERY_GET_USERS_NOT_IN_BAN_LIST +
             " ORDER BY f.lastCommTime DESC";
 
+    String QUERY_CONNECTED_USERS_WHERE = " AND state = 2";
+    String QUERY_NUM_CONNECTED_USERS = QUERY_NUM_ALL_USERS + QUERY_CONNECTED_USERS_WHERE;
     String QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST = QUERY_GET_USERS_NOT_IN_BAN_LIST +
-            " AND state = 2";
+            QUERY_CONNECTED_USERS_WHERE;
     String QUERY_USERS_STATE_ORDER_BY_LAST_SEEN_TIME = QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST +
             " ORDER BY f.lastSeenTime DESC";
     String QUERY_USERS_STATE_ORDER_BY_LAST_COMM_TIME = QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST +
@@ -123,23 +131,35 @@ public interface UserDao {
     User getUserByPublicKey(String publicKey);
 
     /**
+     * 获取不在黑名单的用户数
+     */
+    @Query(QUERY_NUM_ALL_USERS)
+    int getNumAllUsers(String friendPK);
+
+    /**
+     * 获取不在黑名单并且已经互加好友的用户数
+     */
+    @Query(QUERY_NUM_ALL_USERS)
+    int getNumConnectedUsers(String friendPK);
+
+    /**
      * 观察不在黑名单的列表中
      */
     @Transaction
     @Query(QUERY_USERS_ORDER_BY_LAST_COMM_TIME)
-    DataSource.Factory<Integer, UserAndFriend> queryUsersOrderByLastCommTime(String userPK);
+    List<UserAndFriend> queryUsersOrderByLastCommTime(String friendPK);
 
     @Transaction
     @Query(QUERY_USERS_ORDER_BY_LAST_SEEN_TIME)
-    DataSource.Factory<Integer, UserAndFriend> queryUsersOrderByLastSeenTime(String userPK);
+    List<UserAndFriend> queryUsersOrderByLastSeenTime(String friendPK);
 
     @Transaction
     @Query(QUERY_USERS_STATE_ORDER_BY_LAST_COMM_TIME)
-    DataSource.Factory<Integer, UserAndFriend> queryUsersByStateOrderByLastCommTime(String userPK);
+    List<UserAndFriend> queryUsersByStateOrderByLastCommTime(String friendPK);
 
     @Transaction
     @Query(QUERY_USERS_STATE_ORDER_BY_LAST_SEEN_TIME)
-    DataSource.Factory<Integer, UserAndFriend> queryUsersByStateOrderByLastSeenTime(String userPK);
+    List<UserAndFriend> queryUsersByStateOrderByLastSeenTime(String friendPK);
 
     /**
      * 获取用户和朋友的信息
