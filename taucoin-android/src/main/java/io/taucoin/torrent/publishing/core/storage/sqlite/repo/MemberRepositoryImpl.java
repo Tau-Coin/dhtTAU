@@ -3,15 +3,20 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 import android.content.Context;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.subjects.PublishSubject;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.model.data.Statistics;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 
 /**
  * CommunityRepository接口实现
@@ -20,6 +25,8 @@ public class MemberRepositoryImpl implements MemberRepository{
 
     private Context appContext;
     private AppDatabase db;
+    private PublishSubject<String> dataSetChangedPublish = PublishSubject.create();
+    private ExecutorService sender = Executors.newSingleThreadExecutor();
 
     /**
      * MemberRepositoryImpl 构造函数
@@ -38,7 +45,9 @@ public class MemberRepositoryImpl implements MemberRepository{
      */
     @Override
     public long addMember(@NonNull Member member) {
-        return db.memberDao().addMember(member);
+        long result = db.memberDao().addMember(member);
+        submitDataSetChanged();
+        return result;
     }
 
     /**
@@ -48,7 +57,9 @@ public class MemberRepositoryImpl implements MemberRepository{
      */
     @Override
     public int updateMember(@NonNull Member member) {
-        return db.memberDao().updateMember(member);
+        int result = db.memberDao().updateMember(member);
+        submitDataSetChanged();
+        return result;
     }
 
     /**
@@ -114,5 +125,17 @@ public class MemberRepositoryImpl implements MemberRepository{
     @Override
     public void deleteCommunityMembers(String chainID) {
         db.memberDao().deleteCommunityMembers(chainID);
+        submitDataSetChanged();
+    }
+
+    @Override
+    public Observable<String> observeDataSetChanged() {
+        return dataSetChangedPublish;
+    }
+
+    @Override
+    public void submitDataSetChanged() {
+        String dateTime = DateUtil.getDateTime();
+        sender.submit(() -> dataSetChangedPublish.onNext(dateTime));
     }
 }

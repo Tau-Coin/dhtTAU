@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import java.util.List;
 
+import io.reactivex.Observable;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 
 /**
@@ -33,4 +34,8 @@ public interface FriendRepository {
      * @return
      */
     List<String> queryConnectedFriends(String userPK, int limit);
+
+    Observable<String> observeDataSetChanged();
+
+    void submitDataSetChanged();
 }

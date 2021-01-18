@@ -1,5 +1,7 @@
 package io.taucoin.torrent.publishing.ui.user;
 
+import android.content.Context;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,8 +10,12 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.paging.PositionalDataSource;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.CompositeDisposable;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 
 /**
@@ -18,24 +24,33 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 class UserDataSource extends PositionalDataSource<UserAndFriend> {
     private static final Logger logger = LoggerFactory.getLogger("UserDataSource");
     private UserRepository userRepo;
+    private MemberRepository memRepo;
+    private FriendRepository friendRepo;
     private int order;
     private boolean isAll;
     private String friendPk;
-    private Disposable disposable;
+    private CompositeDisposable disposables = new CompositeDisposable();
 
-    UserDataSource(@NonNull UserRepository userRepo, int order, boolean isAll, String friendPk) {
-        this.userRepo = userRepo;
+    UserDataSource(int order, boolean isAll, String friendPk) {
+        Context appContext = MainApplication.getInstance();
+        this.userRepo = RepositoryHelper.getUserRepository(appContext);
+        this.memRepo = RepositoryHelper.getMemberRepository(appContext);
+        this.friendRepo = RepositoryHelper.getFriendsRepository(appContext);
         this.order = order;
         this.isAll = isAll;
         this.friendPk = friendPk;
-        disposable = userRepo.observeDataSetChanged()
-                .subscribe(s -> invalidate());
+        disposables.add(userRepo.observeDataSetChanged()
+                .subscribe(s -> invalidate()));
+        disposables.add(memRepo.observeDataSetChanged()
+                .subscribe(s -> invalidate()));
+        disposables.add(friendRepo.observeDataSetChanged()
+                .subscribe(s -> invalidate()));
     }
 
     @Override
     public void invalidate() {
-        if(disposable != null && !disposable.isDisposed()){
-            disposable.dispose();
+        if (disposables != null && disposables.isDisposed()) {
+            disposables.dispose();
         }
         super.invalidate();
     }

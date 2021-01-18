@@ -6,6 +6,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.model.data.Statistics;
@@ -69,4 +70,8 @@ public interface MemberRepository {
      * @param chainID
      */
     void deleteCommunityMembers(String chainID);
+
+    Observable<String> observeDataSetChanged();
+
+    void submitDataSetChanged();
 }

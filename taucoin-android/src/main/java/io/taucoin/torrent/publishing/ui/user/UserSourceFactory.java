@@ -3,17 +3,14 @@ package io.taucoin.torrent.publishing.ui.user;
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
-import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 
 class UserSourceFactory extends UserDataSource.Factory<Integer, UserAndFriend> {
-    private UserRepository userRepo;
     private String friendPk;
     private int order;
     private boolean isAll;
 
-    UserSourceFactory(@NonNull UserRepository userRepo) {
-        this.userRepo = userRepo;
+    UserSourceFactory() {
     }
 
     void setParameter(int order, boolean isAll, String friendPk) {
@@ -29,6 +26,6 @@ class UserSourceFactory extends UserDataSource.Factory<Integer, UserAndFriend> {
     @NonNull
     @Override
     public DataSource<Integer, UserAndFriend> create() {
-        return new UserDataSource(userRepo, order, isAll, friendPk);
+        return new UserDataSource(order, isAll, friendPk);
     }
 }

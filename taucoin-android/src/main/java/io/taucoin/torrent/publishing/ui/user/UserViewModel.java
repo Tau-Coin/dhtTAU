@@ -91,7 +91,7 @@ public class UserViewModel extends AndroidViewModel {
         msgRepo = RepositoryHelper.getMsgRepository(getApplication());
         friendRepo = RepositoryHelper.getFriendsRepository(getApplication());
         daemon = TauDaemon.getInstance(application);
-        sourceFactory = new UserSourceFactory(userRepo);
+        sourceFactory = new UserSourceFactory();
     }
 
     public void observeNeedStartDaemon () {
