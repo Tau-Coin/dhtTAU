@@ -12,12 +12,8 @@ import com.king.zxing.util.CodeUtils;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
-import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityQrCodeBinding;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
@@ -55,7 +51,7 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
      * 初始化布局
      */
     private void initView() {
-        binding.tvQrCode.setVisibility(View.GONE);
+        binding.qrCode.tvQrCode.setVisibility(View.GONE);
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
         binding.toolbarInclude.toolbar.setTitle(R.string.qr_code_title);
         setSupportActionBar(binding.toolbarInclude.toolbar);
@@ -77,11 +73,11 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
      * 显示QRCode图片
      */
     private void showQRCOdeImage(QRContent content) {
-        binding.roundButton.setText(content.getNickName());
-        binding.roundButton.setBgColor(Utils.getGroupColor(content.getPublicKey()));
+        binding.qrCode.roundButton.setText(content.getNickName());
+        binding.qrCode.roundButton.setBgColor(Utils.getGroupColor(content.getPublicKey()));
         String contentJson = new Gson().toJson(content);
         Bitmap bitmap = CodeUtils.createQRCode(contentJson, 480);
-        binding.ivQrCode.setImageBitmap(bitmap);
+        binding.qrCode.ivQrCode.setImageBitmap(bitmap);
     }
 
     /**
@@ -99,7 +95,7 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_share) {
-            userViewModel.shareQRCode(this, binding.rlQrCode, 240);
+            userViewModel.shareQRCode(this, binding.qrCode.rlQrCode, 240);
         }
         return true;
     }

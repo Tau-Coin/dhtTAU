@@ -181,6 +181,7 @@
     <string name="user_start_chat">Chat</string>
     <string name="user_add_to_contact">Add To Friends</string>
     <string name="user_share_qr">Share QR To Friend</string>
+    <string name="user_share_qr_dialog_tips">Share your QR code to friends for 100% connection</string>
 
     <string name="copy_seed">Secret copied</string>
     <string name="copy_public_key">TAU ID copied</string>
