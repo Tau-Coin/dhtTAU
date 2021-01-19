@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@color/color_white"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/tv_qr_code"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="25dp"
+            android:layout_marginEnd="40dp"
+            android:lineSpacingMultiplier="1.2"
+            android:lineSpacingExtra="0dp"
+            android:textAppearance="@style/TextAppearanceBody1" />
+
+        <RelativeLayout
+            android:id="@+id/rl_qr_code"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="30dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp">
+
+            <io.taucoin.torrent.publishing.ui.customviews.SquareImageView
+                android:id="@+id/iv_qr_code"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:contentDescription="@null"/>
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/white_rect_round_bg_no_border">
+
+                <io.taucoin.torrent.publishing.ui.customviews.RoundButton
+                    android:id="@+id/round_button"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:gravity="center"
+                    android:textAllCaps="false"
+                    android:includeFontPadding="false"
+                    android:textColor="@color/color_white"
+                    android:textStyle="bold"
+                    android:layout_margin="1dp"
+                    app:borderColor="@color/primary_light"
+                    app:borderWidth="0dp"
+                    app:radius="7dp"
+                    app:isRadiusAutoHalf="true"
+                    app:bgColor="@color/primary_light"
+                    app:textColorForPressed="@color/color_white" />
+
+            </FrameLayout>
+        </RelativeLayout>
+    </LinearLayout>
+</layout>

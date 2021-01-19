@@ -1,13 +1,21 @@
 package io.taucoin.torrent.publishing.ui.friends;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.Html;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
+
+import com.google.gson.Gson;
+import com.king.zxing.util.CodeUtils;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
@@ -24,16 +32,17 @@ import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
+import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityFriendsBinding;
+import io.taucoin.torrent.publishing.databinding.QrCodeBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
-import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
@@ -50,6 +59,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     private CommunityViewModel communityViewModel;
     private TxViewModel txViewModel;
     private FriendsListAdapter adapter;
+    private AlertDialog qrDialog;
     private CompositeDisposable disposables = new CompositeDisposable();
     // 联系人列表资源
     private LiveData<PagedList<UserAndFriend>> pagedListLiveData;
@@ -72,6 +82,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         initView();
         initFabSpeedDial();
         getMedianFee();
+        observeQRContent();
         if (BuildConfig.DEBUG) {
             userViewModel.addFriend("63ec42130442c91e23d56dc73708e06eb164883ab74c9813764c3fd0e2042dc4");
             userViewModel.addFriend("809df518ee450ded0a659aeb4bc5bec636e2cff012fc88d343b7419af974bb81");
@@ -236,9 +247,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
             onBackPressed();
         }else{
             if (user.isAdded()) {
-                Intent intent = new Intent();
-                intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
-                ActivityUtil.startActivity(intent, this, UserQRCodeActivity.class);
+                showShareQRDialog();
             } else {
                 Intent intent = new Intent();
                 intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
@@ -263,5 +272,56 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
                     ActivityUtil.shareText(this, getString(R.string.contacts_share_link_via),
                             communityInviteLink);
                 }));
+    }
+
+    /**
+     * 显示分享用户二维码的对话框
+     */
+    private void showShareQRDialog() {
+        // 查询用户二维码内容信息
+        userViewModel.queryCurrentUserAndFriends();
+    }
+
+    /**
+     * 观察二维码内容变化
+     */
+    private void observeQRContent() {
+        userViewModel.getQRContent().observe(this, qrContent -> {
+            if (qrDialog != null && qrDialog.isShowing()) {
+                qrDialog.dismiss();
+            }
+            QrCodeBinding binding = DataBindingUtil.inflate(LayoutInflater.from(this),
+                    R.layout.qr_code, null, false);
+            binding.tvQrCode.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            binding.tvQrCode.setText(R.string.user_share_qr_dialog_tips);
+            binding.roundButton.setText(qrContent.getNickName());
+            binding.roundButton.setBgColor(Utils.getGroupColor(qrContent.getPublicKey()));
+            String contentJson = new Gson().toJson(qrContent);
+            Bitmap bitmap = CodeUtils.createQRCode(contentJson, 480);
+            binding.ivQrCode.setImageBitmap(bitmap);
+            LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams)
+                    binding.rlQrCode.getLayoutParams();
+            layoutParams.topMargin = DimensionsUtil.dip2px(this, 15);
+            layoutParams.bottomMargin = DimensionsUtil.dip2px(this, 0);
+            binding.rlQrCode.setLayoutParams(layoutParams);
+            qrDialog = new AlertDialog.Builder(this)
+                    .setView(binding.getRoot())
+                    .setNegativeButton(R.string.cancel, (dialog, which) -> qrDialog.cancel())
+                    .setPositiveButton(R.string.drawer_share, (dialog, which) -> {
+                        qrDialog.cancel();
+                        userViewModel.shareQRCode(FriendsActivity.this, binding.rlQrCode, 240);
+                    })
+                    .create();
+            qrDialog.setCanceledOnTouchOutside(false);
+            qrDialog.show();
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (qrDialog != null && qrDialog.isShowing()) {
+            qrDialog.dismiss();
+        }
     }
 }
