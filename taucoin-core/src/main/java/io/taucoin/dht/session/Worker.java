@@ -107,9 +107,14 @@ class Worker {
                         break;
                     }
 
-                    if (session.dhtNodes() <= DHTNODES_THRESOLD
-                            || getCache.size() >= CACHE_SIZE_LIMIT) {
+                    if (session.dhtNodes() <= DHTNODES_THRESOLD) {
                         logger.trace("session dht nodes is too less:" + session.dhtNodes());
+                        fastBootstrap();
+                        continue;
+                    }
+
+                    if (getCache.size() >= CACHE_SIZE_LIMIT) {
+                        logger.trace("wait for a while for too much req:" + getCache.size());
                         continue;
                     }
 
@@ -228,6 +233,15 @@ class Worker {
         } else if (req instanceof MutableItemDistribution) {
             putMutableItem((MutableItemDistribution)req);
         }
+    }
+
+    // put some random data to help libtorrent discover more alive nodes.
+    private void fastBootstrap() {
+        String now = String.valueOf(System.nanoTime());
+        ImmutableItem item = new ImmutableItem(now.getBytes());
+        ImmutableItemDistribution d = new ImmutableItemDistribution(item, null, null);
+
+        putImmutableItem(d);
     }
 
     private void requestImmutableItem(ImmutableItemRequest req) {
