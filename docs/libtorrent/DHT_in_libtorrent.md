@@ -8,13 +8,15 @@ You'd better learn these two articles before reading this tutorial.
 The following discussion is based on [libtorrent-1.2.10](https://github.com/arvidn/libtorrent/releases/tag/libtorrent-1.2.10).
 在libtorrent系统中，有四层结构：
 
-	session_impl -> dht_traker -> node -> protocols, including dht_state, dht_storage, rpc_manager, routing_table etal...
+    session_impl -> dht_tracker -> node -> protocols, including dht_state, dht_storage, rpc_manager, routing_table etal...
     
     protocols包括: get_peers, get_item，sample_infohashes, put_data等等
     
     find_data 是 get_peers, get_item的父类
 
-    traversal_algorithm是所有protocols的父类，是一个核心类。
+    traversal_algorithm是所有protocols的父类，也是find_data的父类，是一个核心类。
+    
+    // 后期session的扩展和共识层，区块链挂钩, consensus_session
     
 #### Get item in libtorrent
 
