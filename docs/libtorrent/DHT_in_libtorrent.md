@@ -8,7 +8,7 @@ You'd better learn these two articles before reading this tutorial.
 The following discussion is based on [libtorrent-1.2.10](https://github.com/arvidn/libtorrent/releases/tag/libtorrent-1.2.10).
 在libtorrent系统中，有四层结构：
 
-	session_impl -> dht_traker -> node -> protocols, including rpc_manager
+	session_impl -> dht_traker -> node -> protocols, including dht_state, dht_storage, rpc_manager etal...
     
     protocols包括: get_peers, get_item，sample_infohashes, put_data等等
     
