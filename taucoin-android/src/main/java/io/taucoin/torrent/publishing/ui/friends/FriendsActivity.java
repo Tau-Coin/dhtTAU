@@ -78,7 +78,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         userViewModel = provider.get(UserViewModel.class);
         txViewModel = provider.get(TxViewModel.class);
         communityViewModel = provider.get(CommunityViewModel.class);
-        initParameter();
+        initParameter(getIntent());
         initView();
         initFabSpeedDial();
         getMedianFee();
@@ -91,13 +91,23 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         }
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        initParameter(intent);
+        initView();
+        subscribeUserList();
+    }
+
     /**
      * 初始化参数
      */
-    private void initParameter() {
-        chainID = getIntent().getStringExtra(IntentExtra.CHAIN_ID);
-        page = getIntent().getIntExtra(IntentExtra.TYPE, PAGE_FRIENDS_LIST);
-        friendPk = getIntent().getStringExtra(IntentExtra.PUBLIC_KEY);
+    private void initParameter(Intent intent) {
+        if (intent != null) {
+            chainID = intent.getStringExtra(IntentExtra.CHAIN_ID);
+            page = intent.getIntExtra(IntentExtra.TYPE, PAGE_FRIENDS_LIST);
+            friendPk = intent.getStringExtra(IntentExtra.PUBLIC_KEY);
+        }
     }
 
     /**

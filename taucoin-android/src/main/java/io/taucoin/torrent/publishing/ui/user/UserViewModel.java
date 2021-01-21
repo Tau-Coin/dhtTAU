@@ -352,13 +352,16 @@ public class UserViewModel extends AndroidViewModel {
     private void saveUserName(String publicKey, String name) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             User user;
-            if(StringUtil.isNotEmpty(publicKey)){
+            if (StringUtil.isNotEmpty(publicKey)) {
                 user = userRepo.getUserByPublicKey(publicKey);
-            }else{
+                if (StringUtil.isNotEmpty(name)) {
+                    user.localName = name;
+                }
+            } else {
                 user = userRepo.getCurrentUser();
-            }
-            if(user != null){
                 user.localName = name;
+            }
+            if (user != null) {
                 userRepo.updateUser(user);
             }
             emitter.onNext(true);
@@ -434,6 +437,11 @@ public class UserViewModel extends AndroidViewModel {
             if(null == user){
                 user = new User(publicKey, nickname);
                 userRepo.addUser(user);
+            } else {
+                if (StringUtil.isNotEmpty(nickname)) {
+                    user.localName = nickname;
+                    userRepo.updateUser(user);
+                }
             }
             String userPK = MainApplication.getInstance().getPublicKey();
             Friend friend = friendRepo.queryFriend(userPK, publicKey);
