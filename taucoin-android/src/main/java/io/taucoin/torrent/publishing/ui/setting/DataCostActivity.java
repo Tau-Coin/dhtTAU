@@ -109,14 +109,19 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
     private void handleSettingsChanged(String key) {
         if(StringUtil.isEquals(key, getString(R.string.pref_key_current_speed_list))) {
             long currentSpeed = NetworkSetting.getCurrentSpeed();
+            long averageSpeed = NetworkSetting.getAverageSpeed();
             String currentSpeedStr = getString(R.string.setting_metered_network_limit_speed,
                     Formatter.formatFileSize(this, currentSpeed).toUpperCase());
+            String averageSpeedStr = getString(R.string.setting_metered_network_limit_speed,
+                    Formatter.formatFileSize(this, averageSpeed).toUpperCase());
             String noSpeedStr = getString(R.string.setting_metered_network_limit_speed,
                     Formatter.formatFileSize(this, 0).toUpperCase());
             boolean internetState = settingsRepo.internetState();
             boolean meteredNetwork = NetworkSetting.isMeteredNetwork();
             binding.tvMeteredCurrentSpeed.setText(internetState && meteredNetwork ? currentSpeedStr : noSpeedStr);
             binding.tvWifiCurrentSpeed.setText(internetState && !meteredNetwork ? currentSpeedStr : noSpeedStr);
+            binding.tvMeteredAverageSpeed.setText(internetState && meteredNetwork ? averageSpeedStr : noSpeedStr);
+            binding.tvWifiAverageSpeed.setText(internetState && !meteredNetwork ? averageSpeedStr : noSpeedStr);
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_metered_speed_limit))) {
             long meteredSpeedLimit = NetworkSetting.getMeteredSpeedLimit();
             String meteredSpeedLimitStr = Formatter.formatFileSize(this, meteredSpeedLimit).toUpperCase();

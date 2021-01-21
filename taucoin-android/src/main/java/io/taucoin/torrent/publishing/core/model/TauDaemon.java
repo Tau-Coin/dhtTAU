@@ -483,7 +483,7 @@ public class TauDaemon {
      */
     private void showNoRemainingDataTipsDialog() {
         if (trafficTips) {
-            if (noRemainingDataTimes < NetworkSetting.speed_sample) {
+            if (noRemainingDataTimes < NetworkSetting.current_speed_sample) {
                 noRemainingDataTimes += 1;
                 return;
             }

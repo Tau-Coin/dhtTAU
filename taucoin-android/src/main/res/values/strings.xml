@@ -140,6 +140,7 @@
     <string name="setting_daily_quota_unit_g">%1$dG</string>
     <string name="setting_network_current_speed">Current Speed</string>
     <string name="setting_network_speed_limit">Speed Limit</string>
+    <string name="setting_network_average_speed">Average Speed</string>
     <string name="setting_network_available_data">Today Remaining Data</string>
     <string name="setting_metered_network_limit_speed">%1$s/s</string>
     <string name="setting_master_node">Master node</string>

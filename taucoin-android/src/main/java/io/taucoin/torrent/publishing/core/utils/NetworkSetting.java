@@ -25,7 +25,8 @@ public class NetworkSetting {
     private static final int wifiLimited;                                     // 单位MB
     private static final BigInteger fgSpeedAdjustment = BigInteger.valueOf(3);  // 网速前后台调整倍数
     private static final BigInteger bgSpeedAdjustment = BigInteger.valueOf(2);  // 网速后后台调整倍数
-    public static final long speed_sample = 10;                              // 单位s
+    public static final long current_speed_sample = 10;                              // 单位s
+    public static final long average_speed_sample = 86400;                          // 单位s，24小时
 
     private static SettingsRepository settingsRepo;
     static {
@@ -106,7 +107,7 @@ public class NetworkSetting {
         }
         List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
                 Long.class);
-        if (list.size() >= speed_sample) {
+        if (list.size() >= average_speed_sample) {
             list.remove(0);
         }
         list.add(size);
@@ -129,6 +130,27 @@ public class NetworkSetting {
      * 获取当前网络网速
      */
     public static long getCurrentSpeed() {
+        Context context = MainApplication.getInstance();
+        List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
+                Long.class);
+        long totalSpeed = 0;
+        int listSize = list.size();
+        for (int i = listSize - 1; i >= 0; i--) {
+            totalSpeed += list.get(i);
+            if (listSize > current_speed_sample && i <= listSize - current_speed_sample) {
+                break;
+            }
+        }
+        if (list.size() == 0) {
+            return 0;
+        }
+        return totalSpeed / list.size();
+    }
+
+    /**
+     * 获取网络平均网速
+     */
+    public static long getAverageSpeed() {
         Context context = MainApplication.getInstance();
         List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
                 Long.class);
