@@ -161,7 +161,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     public void onStart() {
         super.onStart();
         subscribeChatViewModel();
-        chatViewModel.writingToFriendTimer(friendPK);
+//        chatViewModel.writingToFriendTimer(friendPK);
     }
 
     @Override
