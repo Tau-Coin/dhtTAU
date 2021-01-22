@@ -73,7 +73,7 @@ public class WorkerManager {
      */
     public static void startAllWorker() {
         startPublishNewMsgWorker();
-        startReceivedConfirmationWorker();
+//        startReceivedConfirmationWorker();
     }
 
     /**
@@ -82,6 +82,6 @@ public class WorkerManager {
     public static void cancelAllWork() {
         Context context = MainApplication.getInstance();
         WorkManager.getInstance(context).cancelUniqueWork(PUBLISH_NEW_MSG_WORK_NAME);
-        WorkManager.getInstance(context).cancelUniqueWork(RECEIVED_CONFIRMATION_WORK_NAME);
+//        WorkManager.getInstance(context).cancelUniqueWork(RECEIVED_CONFIRMATION_WORK_NAME);
     }
 }

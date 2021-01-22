@@ -113,7 +113,6 @@ public class PublishNewMsgWorker extends Worker {
             }
             msg.unsent = 1;
             chatRepo.updateChatMsg(msg);
-            WorkerManager.startReceivedConfirmationWorker();
         }
     }
 
