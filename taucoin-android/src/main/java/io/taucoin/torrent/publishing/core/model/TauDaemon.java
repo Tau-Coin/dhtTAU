@@ -76,6 +76,7 @@ public class TauDaemon {
     private volatile boolean isRunning = false;
     private volatile boolean trafficTips = true; // 剩余流量用完提示
     private volatile String seed;
+    private long gossipFrequency; // 当前gossip的频率
     private long noRemainingDataTimes = 0; // 触发无剩余流量的次数
 
     private static volatile TauDaemon instance;
@@ -293,6 +294,7 @@ public class TauDaemon {
 
         rescheduleDHTBySettings();
         resetDHTSessions();
+        updateGossipTimeInterval();
         tauController.start(NetworkSetting.getDHTSessions());
     }
 
@@ -394,7 +396,6 @@ public class TauDaemon {
         boolean foregroundRunning = settingsRepo.getBooleanValue(
                 appContext.getString(R.string.pref_key_foreground_running));
         boolean isMeteredNetwork = NetworkSetting.isMeteredNetwork();
-        long gossipFrequency;
         if (foregroundRunning) {
             // APP在前台，非计费网络是5s, 计费网络是10s
             gossipFrequency = isMeteredNetwork ?
@@ -449,13 +450,37 @@ public class TauDaemon {
                         noRemainingDataTimes = 0;
                         resetReadOnly(false);
                     }
-                    logger.info("rescheduleDHTBySettings DHTSessions::{}, DHTOPInterval::{}",
-                            NetworkSetting.getDHTSessions(), tauController.getDHTEngine().getDHTOPInterval());
+                    // 更新链端主循环、Gossip、DHT操作的时间间隔
+                    updateUIInterval();
                 }
+
             }
         } catch (Exception e) {
             logger.error("rescheduleDHTBySettings errors", e);
         }
+    }
+
+    /**
+     * 更新链端主循环、Gossip、DHT操作的时间间隔以供UI显示
+     */
+    private void updateUIInterval() {
+        long mainLoopInterval = tauController.getCommunicationManager().getIntervalTime();
+        long gossipInterval = gossipFrequency * 1000; // 秒转化为毫秒
+        long dhtOpInterval = tauController.getDHTEngine().getDHTOPInterval(); // 秒转化为毫秒
+        settingsRepo.setLongValue(appContext.getString(R.string.pref_key_main_loop_interval),
+                mainLoopInterval);
+        settingsRepo.setLongValue(appContext.getString(R.string.pref_key_gossip_interval),
+                gossipInterval);
+        settingsRepo.setLongValue(appContext.getString(R.string.pref_key_dht_operation_interval),
+                tauController.getDHTEngine().getDHTOPInterval());
+        logger.info("rescheduleDHTBySettings DHTSessions::{}, " +
+                        "MainLoopInterval::{}, " +
+                        "GossipInterval::{}, " +
+                        "DHTOPInterval::{} ",
+                NetworkSetting.getDHTSessions(),
+                mainLoopInterval,
+                gossipInterval,
+                dhtOpInterval);
     }
 
     /**
