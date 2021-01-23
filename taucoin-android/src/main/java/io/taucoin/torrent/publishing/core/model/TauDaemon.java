@@ -14,13 +14,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
@@ -62,9 +59,7 @@ import io.taucoin.util.ByteUtil;
 public class TauDaemon {
     private static final String TAG = TauDaemon.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
-    private static final int minSessions = 1;
-    private static final int maxSessions = 1;
-    private static final int sessionStartedTime = 10 * 1000;
+    private static final int sessions = 1; // 启动session数
 
     private Context appContext;
     private SettingsRepository settingsRepo;
@@ -78,7 +73,6 @@ public class TauDaemon {
     private TauListenHandler tauListenHandler;
     private MsgListenHandler msgListenHandler;
     private TauInfoProvider tauInfoProvider;
-    private Disposable sessionStartedDispose; // session启动任务
     private volatile boolean isRunning = false;
     private volatile boolean trafficTips = true; // 剩余流量用完提示
     private volatile String seed;
@@ -298,9 +292,8 @@ public class TauDaemon {
                 .subscribe());
 
         rescheduleDHTBySettings();
-        resetDHTSessions(minSessions);
+        resetDHTSessions();
         tauController.start(NetworkSetting.getDHTSessions());
-        subscribeSessionStarted();
     }
 
     /**
@@ -312,10 +305,6 @@ public class TauDaemon {
         isRunning = false;
         WorkerManager.cancelAllWork();
         disposables.clear();
-        if (sessionStartedDispose != null
-                && !sessionStartedDispose.isDisposed()) {
-            sessionStartedDispose.dispose();
-        }
         tauController.stop();
     }
 
@@ -435,7 +424,7 @@ public class TauDaemon {
             // 判断有无网络连接
             if (settingsRepo.internetState()) {
                 if (isRestart) {
-                    resetDHTSessions(minSessions);
+                    resetDHTSessions();
                     tauController.restartSessions(NetworkSetting.getDHTSessions());
                     resetReadOnly();
                     logger.info("rescheduleDHTBySettings restartSessions::{}",
@@ -443,22 +432,12 @@ public class TauDaemon {
                 } else {
                     SpeedRegulate value = NetworkSetting.calculateRegulateValue();
                     if (value == SpeedRegulate.SPEED_UP) {
-//                        tauController.getDHTEngine().increaseDHTOPInterval();
-//                        tauController.getCommunicationManager().increaseIntervalTime();
+                        tauController.getDHTEngine().increaseDHTOPInterval();
+                        tauController.getCommunicationManager().increaseIntervalTime();
                     } else if (value == SpeedRegulate.SPEED_DOWN) {
-//                        tauController.getDHTEngine().decreaseDHTOPInterval();
-//                        tauController.getCommunicationManager().decreaseIntervalTime();
-                        if ((sessionStartedDispose != null && !sessionStartedDispose.isDisposed())) {
-                            return;
-                        }
-                        int dhtSessions = NetworkSetting.getDHTSessions();
-                        if (dhtSessions < maxSessions) {
-                            tauController.getDHTEngine().increaseSession();
-                            resetDHTSessions(dhtSessions + 1);
-                        }
+                        tauController.getDHTEngine().decreaseDHTOPInterval();
+                        tauController.getCommunicationManager().decreaseIntervalTime();
                     } else if (value == SpeedRegulate.NO_REMAINING_DATA) {
-//                        tauController.getDHTEngine().increaseDHTOPInterval();
-//                        tauController.getCommunicationManager().increaseIntervalTime();
                         resetReadOnly(true);
                         showNoRemainingDataTipsDialog();
                     }
@@ -525,23 +504,10 @@ public class TauDaemon {
     }
 
     /**
-     * 重置DHT Sessions个数
+     * 重置DHT Sessions个数，固定单session
      */
-    private void resetDHTSessions(int dhtSessions) {
-        NetworkSetting.updateDHTSessions(dhtSessions);
-        if (dhtSessions != maxSessions) {
-            subscribeSessionStarted();
-        }
-    }
-
-    /**
-     * 订阅Session启动稳定，sessionStartedTime稳定时间
-     */
-    private void subscribeSessionStarted() {
-        sessionStartedDispose = Observable.timer(sessionStartedTime, TimeUnit.MILLISECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe();
+    private void resetDHTSessions() {
+        NetworkSetting.updateDHTSessions(sessions);
     }
 
     /**
@@ -819,7 +785,7 @@ public class TauDaemon {
     /**
      * 统计Sessions的nodes数
      */
-    public List<Long> getSessionNodes() {
+    List<Long> getSessionNodes() {
         if (!isRunning) {
             return null;
         }
