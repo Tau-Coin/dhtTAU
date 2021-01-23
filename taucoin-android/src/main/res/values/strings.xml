@@ -168,6 +168,7 @@
     <string name="user_seed_import">Import</string>
     <string name="user_seed_generate">Generate New Secret</string>
     <string name="user_seed_empty">Secret cannot be empty!</string>
+    <string name="user_seed_invalid">Secret is invalid!</string>
     <string name="user_seed_save_tips">Please make sure your secret\nhas been saved</string>
     <string name="user_show_name">%1$s(%2$s)</string>
     <string name="user_ban">Ban</string>

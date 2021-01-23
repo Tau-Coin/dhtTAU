@@ -178,8 +178,8 @@ public class UserViewModel extends AndroidViewModel {
                     user.isCurrentUser = true;
                     userRepo.updateUser(user);
                 }
-            }catch (Exception e){
-                result = e.getMessage();
+            } catch (Exception e){
+                result = getApplication().getString(R.string.user_seed_invalid);
                 logger.debug("import seed error::{}", result);
             }
             emitter.onNext(result);
