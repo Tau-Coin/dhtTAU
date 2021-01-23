@@ -431,10 +431,12 @@ public class TauDaemon {
                             NetworkSetting.getDHTSessions());
                 } else {
                     SpeedRegulate value = NetworkSetting.calculateRegulateValue();
-                    if (value == SpeedRegulate.SPEED_UP) {
+                    if (value == SpeedRegulate.SPEED_DOWN) {
+                        // 增加时间间隔来降速
                         tauController.getDHTEngine().increaseDHTOPInterval();
                         tauController.getCommunicationManager().increaseIntervalTime();
-                    } else if (value == SpeedRegulate.SPEED_DOWN) {
+                    } else if (value == SpeedRegulate.SPEED_UP) {
+                        // 减少时间间隔来升速
                         tauController.getDHTEngine().decreaseDHTOPInterval();
                         tauController.getCommunicationManager().decreaseIntervalTime();
                     } else if (value == SpeedRegulate.NO_REMAINING_DATA) {
