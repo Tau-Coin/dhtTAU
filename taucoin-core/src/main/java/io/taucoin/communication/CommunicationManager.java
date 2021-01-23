@@ -212,4 +212,12 @@ public class CommunicationManager {
         this.communication.decreaseIntervalTime();
     }
 
+    /**
+     * 获取间隔时间
+     * @return 间隔时间
+     */
+    public int getIntervalTime() {
+        return this.communication.getIntervalTime();
+    }
+
 }

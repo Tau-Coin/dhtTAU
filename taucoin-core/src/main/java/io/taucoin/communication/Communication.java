@@ -1062,6 +1062,14 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         }
     }
 
+    /**
+     * 获取间隔时间
+     * @return 间隔时间
+     */
+    public int getIntervalTime() {
+        return this.loopIntervalTime;
+    }
+
 
     /**
      * 添加新朋友
