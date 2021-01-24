@@ -7,12 +7,19 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import io.taucoin.account.AccountManager;
 import io.taucoin.account.KeyChangedListener;
+import io.taucoin.core.DataIdentifier;
 import io.taucoin.core.FriendPair;
 import io.taucoin.db.DBException;
 import io.taucoin.db.MessageDB;
@@ -20,7 +27,12 @@ import io.taucoin.dht.DHT;
 import io.taucoin.dht.DHTEngine;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.listener.MsgStatus;
+import io.taucoin.types.Gossip;
 import io.taucoin.types.GossipItem;
+import io.taucoin.types.GossipStatus;
+import io.taucoin.types.Message;
+import io.taucoin.util.ByteArrayWrapper;
+import io.taucoin.util.ByteUtil;
 
 public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCallback, KeyChangedListener {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
@@ -58,6 +70,24 @@ public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCal
 
     // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求，LinkedHashSet确保队列的顺序性与唯一性
     private final Set<Object> queue = Collections.synchronizedSet(new LinkedHashSet<>());
+
+    // 当前我加的朋友集合（完整公钥）
+    private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
+
+    // 我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
+    private final Map<ByteArrayWrapper, BigInteger> friendLastSeen = new ConcurrentHashMap<>();
+
+    // 当前发现的等待通知的在线的朋友集合（完整公钥）
+    private final Set<ByteArrayWrapper> onlineFriendsToNotify = new CopyOnWriteArraySet<>();
+
+    // 发现的gossip item集合，CopyOnWriteArraySet是支持并发操作的集合
+    private final Set<GossipItem> gossipItems = new CopyOnWriteArraySet<>();
+
+    // 通过gossip推荐机制发现的有新消息的朋友集合（完整公钥）
+    private final Set<ByteArrayWrapper> referredFriends = new CopyOnWriteArraySet<>();
+
+    // 通过gossip机制发现的给朋友的gossip item <FriendPair, Timestamp>（非完整公钥, FriendPair均为短地址）
+    private final Map<FriendPair, BigInteger> friendGossipItem = Collections.synchronizedMap(new HashMap<>());
 
     // Communication thread.
     private Thread communicationThread;
@@ -111,6 +141,70 @@ public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCal
         System.arraycopy(receiver, 0, shortReceiver, 0, SHORT_ADDRESS_LENGTH);
 
         return new GossipItem(shortSender, shortReceiver, timestamp);
+    }
+
+    /**
+     * 从朋友列表获取完整公钥
+     * @param pubKey public key
+     * @return 完整的公钥
+     */
+    private ByteArrayWrapper getCompletePubKeyFromFriend(byte[] pubKey) {
+        for (ByteArrayWrapper key: this.friends) {
+            if (ByteUtil.startsWith(key.getData(), pubKey)) {
+                return key;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 处理朋友相关的gossip item
+     */
+    private void dealWithGossipItem() {
+        Iterator<GossipItem> it = this.gossipItems.iterator();
+
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+        // 顶层gossip是按照朋友关系进行平等遍历，未来可能根据频率心跳信号的存在来调整
+        while (it.hasNext()) {
+            GossipItem gossipItem = it.next();
+            byte[] sender = gossipItem.getSender();
+            byte[] receiver = gossipItem.getReceiver();
+
+            // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+            if (!ByteUtil.startsWith(pubKey, sender)) {
+                // 首先，判断一下是否有涉及自己的gossip，有的话则加入待访问的活跃朋友集合
+                if (ByteUtil.startsWith(pubKey, receiver)) { // 接收者是我
+                    // 寻找发送者完整公钥
+                    ByteArrayWrapper peer = getCompletePubKeyFromFriend(sender);
+                    if (null != peer) {
+                        this.referredFriends.add(peer);
+                    }
+                } else {
+                    // 寻找跟我朋友相关的gossip
+                    for (ByteArrayWrapper friend : this.friends) {
+                        if (ByteUtil.startsWith(friend.getData(), receiver)) { // 找到
+                            FriendPair pair = FriendPair.create(makeShortAddress(sender), makeShortAddress(receiver));
+
+                            BigInteger oldTimestamp = this.friendGossipItem.get(pair);
+
+                            BigInteger timeStamp = gossipItem.getTimestamp();
+
+                            // 判断是否是新数据，若是，则记录下来以待发布
+                            if (null == oldTimestamp || oldTimestamp.compareTo(timeStamp) < 0) {
+                                this.friendGossipItem.put(pair, timeStamp);
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            }
+
+            this.gossipItems.remove(gossipItem);
+//            it.remove();
+        }
     }
 
     /**
@@ -288,9 +382,72 @@ public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCal
 
     }
 
+    /**
+     * 预处理受到的gossip
+     * @param gossip 收到的gossip
+     * @param peer gossip发出的peer
+     */
+    private void preprocessGossipFromNet(Gossip gossip, ByteArrayWrapper peer) {
+
+        // 是否更新好友的在线时间（完整公钥）
+        BigInteger gossipTime = gossip.getTimestamp();
+        BigInteger lastSeen = this.friendLastSeen.get(peer);
+        if (null == lastSeen || lastSeen.compareTo(gossipTime) < 0) { // 判断是否是更新的gossip
+            this.friendLastSeen.put(peer, gossipTime);
+            this.onlineFriendsToNotify.add(peer);
+
+            if (null != gossip.getGossipList()) {
+
+                // 信任发送方自己给的gossip信息
+                byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+                for (GossipItem gossipItem : gossip.getGossipList()) {
+                    logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
+
+                    ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
+
+                    // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+                    if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
+                        logger.trace("Sender[{}] is me.", sender.toString());
+                        continue;
+                    }
+
+                    // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
+                    // 并且gossip item的receiver是我，那么会直接信任该gossip消息
+                    if (ByteUtil.startsWith(peer.getData(), gossipItem.getSender())
+                            && ByteUtil.startsWith(pubKey, gossipItem.getReceiver())) {
+                        logger.trace("Got trusted gossip:{} from online friend[{}]",
+                                gossipItem.toString(), peer.toString());
+
+                        continue;
+                    }
+
+                    // 剩余的留给主循环处理
+                    this.gossipItems.add(gossipItem);
+                }
+            }
+        }
+    }
+
     @Override
     public void onDHTItemGot(byte[] item, Object cbData) {
+        DataIdentifier dataIdentifier = (DataIdentifier) cbData;
+        switch (dataIdentifier.getDataType()) {
+            case GOSSIP_FROM_PEER: {
+                if (null == item) {
+                    logger.debug("GOSSIP_FROM_PEER from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
+                    return;
+                }
 
+                Gossip gossip = new Gossip(item);
+                preprocessGossipFromNet(gossip, dataIdentifier.getExtraInfo1());
+
+                break;
+            }
+            default: {
+                logger.info("Type mismatch.");
+            }
+        }
     }
 
     @Override
