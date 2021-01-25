@@ -6,6 +6,7 @@ import android.text.SpannableStringBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 
 import com.google.gson.Gson;
 import com.king.zxing.util.CodeUtils;
@@ -13,6 +14,7 @@ import com.king.zxing.util.CodeUtils;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityQrCodeBinding;
@@ -26,8 +28,9 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
  */
 public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnClickListener {
 
-    public static final int TYPE_QR_DISPLAY = 0;
-    public static final int TYPE_QR_SHARE = 1;
+    public static final int TYPE_QR_DISPLAY = 0x01;
+    public static final int TYPE_QR_SHARE = 0x02;
+    public static final int TYPE_QR_SHARE_ADDED = 0x03;
     private ActivityQrCodeBinding binding;
     private UserViewModel userViewModel;
     private int type;
@@ -51,7 +54,14 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
      * 初始化布局
      */
     private void initView() {
-        binding.qrCode.tvQrCode.setVisibility(View.GONE);
+        binding.qrCode.tvQrCode.setVisibility(type == TYPE_QR_SHARE_ADDED ? View.VISIBLE : View.GONE);
+        binding.qrCode.tvQrCode.setText(R.string.user_share_qr_dialog_tips);
+        if (type == TYPE_QR_SHARE_ADDED) {
+            LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams)
+                    binding.qrCode.rlQrCode.getLayoutParams();
+            layoutParams.topMargin = 0;
+            binding.qrCode.rlQrCode.setLayoutParams(layoutParams);
+        }
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
         binding.toolbarInclude.toolbar.setTitle(R.string.qr_code_title);
         setSupportActionBar(binding.toolbarInclude.toolbar);

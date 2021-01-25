@@ -21,9 +21,9 @@
             android:id="@+id/tv_qr_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:layout_marginStart="30dp"
-            android:layout_marginTop="25dp"
-            android:layout_marginEnd="40dp"
+            android:layout_marginEnd="30dp"
             android:lineSpacingMultiplier="1.2"
             android:lineSpacingExtra="0dp"
             android:textAppearance="@style/TextAppearanceBody1" />
@@ -32,10 +32,7 @@
             android:id="@+id/rl_qr_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:layout_marginBottom="30dp"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp">
+            android:layout_margin="10dp">
 
             <io.taucoin.torrent.publishing.ui.customviews.SquareImageView
                 android:id="@+id/iv_qr_code"
