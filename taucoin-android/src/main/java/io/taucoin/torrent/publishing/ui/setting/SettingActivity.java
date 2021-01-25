@@ -96,6 +96,14 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::handleSettingsChanged);
         disposables.add(disposable);
+
+        viewModel.getChangeResult().observe(this, result -> {
+            if (StringUtil.isNotEmpty(result)) {
+                ToastUtils.showShortToast(result);
+            } else {
+                subscribeCurrentUser();
+            }
+        });
     }
 
     /**
@@ -163,13 +171,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     public void onStart() {
         super.onStart();
         subscribeCurrentUser();
-        viewModel.getChangeResult().observe(this, result -> {
-            if (StringUtil.isNotEmpty(result)) {
-                ToastUtils.showShortToast(result);
-            } else {
-                subscribeCurrentUser();
-            }
-        });
     }
 
 

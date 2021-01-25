@@ -142,7 +142,6 @@ public class UserViewModel extends AndroidViewModel {
                         if(StringUtil.isEmpty(seed)){
                             ToastUtils.showShortToast(R.string.user_seed_empty);
                         }else {
-                            dialog.cancel();
                             importSeed(seed, name);
                         }
                     }
@@ -195,6 +194,9 @@ public class UserViewModel extends AndroidViewModel {
      * 导入Seed结果
      */
     private void importSeedResult(String result){
+        if (StringUtil.isEmpty(result) && commonDialog != null && commonDialog.isShowing()) {
+            commonDialog.closeDialog();
+        }
         changeResult.postValue(result);
     }
 
