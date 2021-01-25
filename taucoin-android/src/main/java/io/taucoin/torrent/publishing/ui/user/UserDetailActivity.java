@@ -164,12 +164,12 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         shareQRDialog = new CommonDialog.Builder(this)
                 .setContentView(binding.getRoot())
                 .setHorizontal()
-                .setPositiveButton(R.string.contacts_to_share, (dialog, which) -> {
+                .setPositiveButton(R.string.contacts_share, (dialog, which) -> {
                         Intent intent = new Intent();
                         intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
                         ActivityUtil.startActivity(intent, UserDetailActivity.this, UserQRCodeActivity.class);
                     })
-                .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel())
+                .setNegativeButton(R.string.contacts_later, (dialog, which) -> dialog.cancel())
                 .setCanceledOnTouchOutside(false)
                 .create();
         shareQRDialog.show();

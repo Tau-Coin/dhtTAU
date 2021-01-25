@@ -266,9 +266,9 @@
     <string name="contacts_public_key_hint">Friend\'s TAU ID</string>
     <string name="contacts_chatting" formatted="false"><Data><![CDATA[Chatting with <font color="#f19322">%1$s</font> now]]></Data></string>
     <string name="contacts_add_successfully">Add successfully!</string>
-    <string name="contacts_to_share">To share</string>
-    <string name="contacts_confirm_shared">Add friend successfully.\n
-        Please confirm whether you have shared the QR code to your friend?</string>
+    <string name="contacts_share">Share</string>
+    <string name="contacts_later">Later</string>
+    <string name="contacts_confirm_shared">Friend added, please share your QR code to the friend.</string>
     <string name="contacts_friend_already_exists">Friend already exists!</string>
     <string name="contacts_error_invalid_qr">Invalid QR code!</string>
     <string name="contacts_airdrop_successfully">You have send %1$s coins to your friends!</string>
