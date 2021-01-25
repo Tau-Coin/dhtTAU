@@ -30,6 +30,7 @@ import io.taucoin.listener.MsgStatus;
 import io.taucoin.types.Gossip;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.GossipStatus;
+import io.taucoin.types.HashList;
 import io.taucoin.types.Message;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
@@ -97,7 +98,37 @@ public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCal
         this.msgListener = msgListener;
     }
 
+    /**
+     * 初始化，获取朋友列表以及最新消息
+     * @return true if success, false otherwise
+     */
     private boolean init() {
+        try {
+            // get friends
+            Set<byte[]> friends = this.messageDB.getFriends();
+
+            if (null != friends) {
+                for (byte[] friend: friends) {
+                    ByteArrayWrapper key = new ByteArrayWrapper(friend);
+                    this.friends.add(key);
+
+                    logger.debug("My friend:{}", key.toString());
+
+                    // 获取最新消息的编码
+                    byte[] encode = this.messageDB.getLatestMessageHashListEncode(friend);
+                    HashList hashList = new HashList(encode);
+                    for (byte[] hash: hashList.getHashList()) {
+                        logger.debug("Hash:{}", Hex.toHexString(hash));
+                        this.messageDB.getMessageByHash(hash);
+                    }
+                    // TODO:: decode
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+
         return true;
     }
 

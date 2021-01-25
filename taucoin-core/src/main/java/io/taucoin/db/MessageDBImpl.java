@@ -188,4 +188,36 @@ public class MessageDBImpl implements MessageDB {
             throw new DBException(e.getMessage());
         }
     }
+
+    /**
+     * save latest message hash list encode
+     *
+     * @param pubKey public key
+     * @param encode encode of message hash list
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public void saveLatestMessageHashListEncode(byte[] pubKey, byte[] encode) throws DBException {
+        try {
+            db.put(PrefixKey.messageHashListKey(pubKey), encode);
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
+     * get latest message hash list encode
+     *
+     * @param pubKey public key
+     * @return message hash list encode
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public byte[] getLatestMessageHashListEncode(byte[] pubKey) throws DBException {
+        try {
+            return db.get(PrefixKey.messageHashListKey(pubKey));
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
 }

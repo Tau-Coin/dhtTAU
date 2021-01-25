@@ -5,13 +5,14 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 public class HashList {
-    private List<byte[]> hashList;
+    private List<byte[]> hashList = new CopyOnWriteArrayList<>();
 
     private byte[] hash;
     private byte[] rlpEncoded;

@@ -13,6 +13,7 @@ public class PrefixKey {
     private static final byte[] BLOCK_INFO = "I-".getBytes();
     private static final byte[] IMMUTABLE_POINT_BLOCK_HASH = "i-".getBytes();
     private static final byte[] MUTABLE_RANGE = "M-".getBytes();
+    private static final byte[] MESSAGE_HASH_LIST = "ML-".getBytes();
     private static final byte[] MESSAGE = "m-".getBytes();
     private static final byte[] PEER = "P-".getBytes();
     private static final byte[] COMMUNICATION_PEER = "CP-".getBytes();
@@ -382,6 +383,18 @@ public class PrefixKey {
         byte[] key = new byte[MESSAGE_ROOT_TO_FRIEND.length + pubkey.length];
         System.arraycopy(MESSAGE_ROOT_TO_FRIEND, 0, key, 0, MESSAGE_ROOT_TO_FRIEND.length);
         System.arraycopy(pubkey, 0, key, MESSAGE_ROOT_TO_FRIEND.length, pubkey.length);
+        return key;
+    }
+
+    /**
+     * message hash list key: MESSAGE_HASH_LIST + friend pubkey
+     * @param pubkey public key
+     * @return key
+     */
+    public static byte[] messageHashListKey(byte[] pubkey) {
+        byte[] key = new byte[MESSAGE_HASH_LIST.length + pubkey.length];
+        System.arraycopy(MESSAGE_HASH_LIST, 0, key, 0, MESSAGE_HASH_LIST.length);
+        System.arraycopy(pubkey, 0, key, MESSAGE_HASH_LIST.length, pubkey.length);
         return key;
     }
 

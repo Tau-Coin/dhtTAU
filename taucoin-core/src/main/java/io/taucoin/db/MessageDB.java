@@ -84,4 +84,20 @@ public interface MessageDB {
      * @throws DBException database exception database exception
      */
     byte[] getMessageByHash(byte[] hash) throws DBException;
+
+    /**
+     * save latest message hash list encode
+     * @param pubKey public key
+     * @param encode encode of message hash list
+     * @throws DBException database exception database exception
+     */
+    void saveLatestMessageHashListEncode(byte[] pubKey, byte[] encode) throws DBException;
+
+    /**
+     * get latest message hash list encode
+     * @param pubKey public key
+     * @return message hash list encode
+     * @throws DBException database exception database exception
+     */
+    byte[] getLatestMessageHashListEncode(byte[] pubKey) throws DBException;
 }
