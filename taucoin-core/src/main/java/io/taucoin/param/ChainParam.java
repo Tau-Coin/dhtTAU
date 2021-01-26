@@ -53,6 +53,9 @@ public class ChainParam {
     public static final int MUTABLE_RANGE = 288; // 1 days
     public static final int WARNING_RANGE = MUTABLE_RANGE * 3;
 
+    // 一般public key截取保留的长度
+    public static final int SHORT_ADDRESS_LENGTH = 4;
+
     public static final int MAX_HASH_NUMBER = 47;
 
     public static final int GOSSIP_LIMIT_SIZE = 49;
