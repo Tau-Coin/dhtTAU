@@ -26,6 +26,8 @@ public enum DataType {
 
     GOSSIP_FROM_PEER, // gossip information from peer
 
+    INDEX_FROM_PEER, // index data from peer
+
     MESSAGE, // message
 
     LATEST_MESSAGE, // mutable item: latest message

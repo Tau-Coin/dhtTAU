@@ -106,6 +106,9 @@ public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCal
     // 我的朋友的最新消息的哈希集合 <friend, IndexMutableData>（完整公钥）
     private final Map<ByteArrayWrapper, IndexMutableData> friendIndexData = new ConcurrentHashMap<>();
 
+    // 新发现的，等待通知UI的，我的朋友的IndexMutableData <friend, IndexMutableData>（完整公钥）
+    private final Map<ByteArrayWrapper, IndexMutableData> friendIndexMutableDataToNotify = new ConcurrentHashMap<>();
+
     // 等待通知的消息状态
     private final Map<ByteArrayWrapper, MsgStatus> msgStatus = new ConcurrentHashMap<>();
 
@@ -426,6 +429,23 @@ public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCal
     }
 
     /**
+     * 向某个peer请求gossip数据
+     * @param pubKey public key
+     */
+    private void requestGossipMutableDataFromPeer(ByteArrayWrapper pubKey) {
+        if (null != pubKey) {
+            logger.trace("Request gossip mutable data from peer:{}", pubKey.toString());
+
+            byte[] salt = ChainParam.GOSSIP_CHANNEL;
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
+            DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+
+            this.queue.add(mutableItemRequest);
+        }
+    }
+
+    /**
      * 在gossip频道发布gossip信息
      * @param gossipMutableData gossip mutable data
      */
@@ -440,6 +460,43 @@ public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCal
                     keyPair.second, encode, salt);
             DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
 
+            this.queue.add(mutableItemDistribution);
+        }
+    }
+
+    /**
+     * 向某个peer请求index数据
+     * @param pubKey public key
+     */
+    private void requestIndexMutableDataFromPeer(ByteArrayWrapper pubKey) {
+        if (null != pubKey) {
+            logger.trace("Request index mutable data from peer:{}", pubKey.toString());
+
+            Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+            byte[] salt = makeIndexChannelReceivingSalt(keyPair.first, pubKey.getData());
+            DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.INDEX_FROM_PEER, pubKey);
+            DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+
+            this.queue.add(mutableItemRequest);
+        }
+    }
+
+    /**
+     * 发布index频道的数据
+     * @param friend 当前聊天的朋友
+     */
+    private void publishIndexMutableData(byte[] friend) {
+        // put mutable item
+        Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
+        byte[] salt = makeIndexChannelSendingSalt(keyPair.first, friend);
+
+        byte[] encode = getLatestMessageHashListEncode(friend);
+
+        if (null != encode) {
+            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
+                    keyPair.second, encode, salt);
+            DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
             this.queue.add(mutableItemDistribution);
         }
     }
@@ -661,25 +718,6 @@ public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCal
         }
 
         return null;
-    }
-
-    /**
-     * 发布index频道的数据
-     * @param friend 当前聊天的朋友
-     */
-    private void publishIndexMutableData(byte[] friend) {
-        // put mutable item
-        Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
-        byte[] salt = makeIndexChannelSendingSalt(keyPair.first, friend);
-
-        byte[] encode = getLatestMessageHashListEncode(friend);
-
-        if (null != encode) {
-            DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
-                    keyPair.second, encode, salt);
-            DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
-            this.queue.add(mutableItemDistribution);
-        }
     }
 
     /**
@@ -932,6 +970,17 @@ public class Communication1 implements DHT.GetDHTItemCallback, DHT.PutDHTItemCal
 
                 Gossip gossip = new Gossip(item);
                 preprocessGossipFromNet(gossip, dataIdentifier.getExtraInfo1());
+
+                break;
+            }
+            case INDEX_FROM_PEER: {
+                if (null == item) {
+                    logger.debug("INDEX_FROM_PEER from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
+                    return;
+                }
+
+                IndexMutableData indexMutableData = new IndexMutableData(item);
+                this.friendIndexData.put(dataIdentifier.getExtraInfo1(), indexMutableData);
 
                 break;
             }
