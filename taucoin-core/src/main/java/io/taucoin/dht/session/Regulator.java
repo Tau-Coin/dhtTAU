@@ -7,7 +7,7 @@ class Regulator {
 
     public static final long DHTOPInterval_MIN = DEFAULT_DHTOPInterval; // milliseconds.
 
-    public static final long DHTOPInterval_MAX = 100 * 1000; // milliseconds.
+    public static final long DHTOPInterval_MAX = 10 * 1000; // milliseconds.
 
     private static final long STEP = 100; // milliseconds.
 
