@@ -83,6 +83,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 主循环间隔最小时间
     private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
+    // 主循环间隔最大时间
+    private final int MAX_LOOP_INTERVAL_TIME = 1000; // 1000 ms
+
     // 主循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
 
@@ -1051,6 +1054,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      */
     public void increaseIntervalTime() {
         this.loopIntervalTime = this.loopIntervalTime * 2;
+
+        if (this.loopIntervalTime > this.MAX_LOOP_INTERVAL_TIME) {
+            this.loopIntervalTime = MAX_LOOP_INTERVAL_TIME;
+        }
     }
 
     /**
@@ -1068,6 +1075,19 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      */
     public int getIntervalTime() {
         return this.loopIntervalTime;
+    }
+
+    /**
+     * 设置间隔时间
+     */
+    public void setIntervalTime(int intervalTime) {
+        if (intervalTime < MIN_LOOP_INTERVAL_TIME) {
+            this.loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
+        } else if (intervalTime > MAX_LOOP_INTERVAL_TIME) {
+            this.loopIntervalTime = MAX_LOOP_INTERVAL_TIME;
+        } else {
+            this.loopIntervalTime = intervalTime;
+        }
     }
 
 

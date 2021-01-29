@@ -220,4 +220,11 @@ public class CommunicationManager {
         return this.communication.getIntervalTime();
     }
 
+    /**
+     * 设置间隔时间
+     */
+    public void setIntervalTime(int intervalTime) {
+        this.communication.setIntervalTime(intervalTime);
+    }
+
 }
