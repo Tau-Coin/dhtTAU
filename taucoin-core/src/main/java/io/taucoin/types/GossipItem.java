@@ -38,15 +38,6 @@ public class GossipItem {
         this.parsed = true;
     }
 
-    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, GossipStatus gossipStatus) {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.timestamp = timestamp;
-        this.gossipStatus = gossipStatus;
-
-        this.parsed = true;
-    }
-
     public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot,
                       byte[] confirmationRoot, byte[] demandImmutableDataHash) {
         this.sender = sender;
