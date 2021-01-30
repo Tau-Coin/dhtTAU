@@ -15,15 +15,6 @@ public class GossipItem {
     private byte[] receiver; // 4个字节,提取的public key的前缀
     // 可能需要拉长
     private BigInteger timestamp; // 4个字节
-    // 我的最新消息的root
-    private byte[] messageRoot;  // 20个字节
-    // 我看到的对方的root
-    private byte[] confirmationRoot = null; // 20个字节
-    // 我的需求，是immutable data的hash, demand功能仅限于immutable data，
-    // 对于mutable data由时钟频率提供数据，不需要demand
-    private byte[] demandImmutableDataHash = null; // 20个字节
-    // 当前的聊天状态,可以发现对方是否处于写状态
-    private GossipStatus gossipStatus = GossipStatus.UNKNOWN; // 1个字节
 
     private byte[] hash;
     private byte[] encode; // 缓存编码
@@ -34,41 +25,6 @@ public class GossipItem {
         this.sender = sender;
         this.receiver = receiver;
         this.timestamp = timestamp;
-
-        this.parsed = true;
-    }
-
-    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot,
-                      byte[] confirmationRoot, byte[] demandImmutableDataHash) {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.timestamp = timestamp;
-        this.messageRoot = messageRoot;
-        this.confirmationRoot = confirmationRoot;
-        this.demandImmutableDataHash = demandImmutableDataHash;
-
-        this.parsed = true;
-    }
-
-    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot, byte[] confirmationRoot) {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.timestamp = timestamp;
-        this.messageRoot = messageRoot;
-        this.confirmationRoot = confirmationRoot;
-
-        this.parsed = true;
-    }
-
-    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp, byte[] messageRoot,
-                      byte[] confirmationRoot, byte[] demandImmutableDataHash, GossipStatus gossipStatus) {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.timestamp = timestamp;
-        this.messageRoot = messageRoot;
-        this.confirmationRoot = confirmationRoot;
-        this.demandImmutableDataHash = demandImmutableDataHash;
-        this.gossipStatus = gossipStatus;
 
         this.parsed = true;
     }
@@ -101,38 +57,6 @@ public class GossipItem {
         return timestamp;
     }
 
-    public byte[] getMessageRoot() {
-        if (!this.parsed) {
-            parseRLP();
-        }
-
-        return messageRoot;
-    }
-
-    public byte[] getConfirmationRoot() {
-        if (!this.parsed) {
-            parseRLP();
-        }
-
-        return confirmationRoot;
-    }
-
-    public byte[] getDemandImmutableDataHash() {
-        if (!this.parsed) {
-            parseRLP();
-        }
-
-        return demandImmutableDataHash;
-    }
-
-    public GossipStatus getGossipStatus() {
-        if (!this.parsed) {
-            parseRLP();
-        }
-
-        return gossipStatus;
-    }
-
     public byte[] getHash() {
         if (null == this.hash) {
             this.hash = HashUtil.bencodeHash(getEncoded());
@@ -150,18 +74,6 @@ public class GossipItem {
         byte[] timeBytes = messageList.get(2).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
-        this.messageRoot = messageList.get(3).getRLPData();
-        this.confirmationRoot = messageList.get(4).getRLPData();
-        this.demandImmutableDataHash = messageList.get(5).getRLPData();
-
-        byte[] statusBytes = messageList.get(6).getRLPData();
-        int statusNum = null == statusBytes ? 0: new BigInteger(1, statusBytes).intValue();
-        if (statusNum >= GossipStatus.UNKNOWN.ordinal()) {
-            this.gossipStatus = GossipStatus.UNKNOWN;
-        } else {
-            this.gossipStatus = GossipStatus.values()[statusNum];
-        }
-
         this.parsed = true;
     }
 
@@ -170,13 +82,8 @@ public class GossipItem {
             byte[] sender = RLP.encodeElement(this.sender);
             byte[] receiver = RLP.encodeElement(this.receiver);
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
-            byte[] messageRoot = RLP.encodeElement(this.messageRoot);
-            byte[] confirmationRoot = RLP.encodeElement(this.confirmationRoot);
-            byte[] demandHash = RLP.encodeElement(this.demandImmutableDataHash);
-            byte[] gossipStatus = RLP.encodeBigInteger(BigInteger.valueOf(this.gossipStatus.ordinal()));
 
-            this.encode = RLP.encodeList(sender, receiver, timestamp, messageRoot,
-                    confirmationRoot, demandHash, gossipStatus);
+            this.encode = RLP.encodeList(sender, receiver, timestamp);
         }
 
         return this.encode;
@@ -200,10 +107,6 @@ public class GossipItem {
         byte[] sender = getSender();
         byte[] receiver = getReceiver();
         BigInteger timestamp = getTimestamp();
-        byte[] messageRoot = getMessageRoot();
-        byte[] confirmationRoot = getConfirmationRoot();
-        byte[] demandHash = getDemandImmutableDataHash();
-        GossipStatus gossipStatus = getGossipStatus();
 
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -222,26 +125,6 @@ public class GossipItem {
         if (null != timestamp) {
             stringBuilder.append(", timestamp=");
             stringBuilder.append(timestamp);
-        }
-
-        if (null != messageRoot) {
-            stringBuilder.append(", messageRoot=");
-            stringBuilder.append(Hex.toHexString(messageRoot));
-        }
-
-        if (null != confirmationRoot) {
-            stringBuilder.append(", confirmationRoot=");
-            stringBuilder.append(Hex.toHexString(confirmationRoot));
-        }
-
-        if (null != demandHash) {
-            stringBuilder.append(", demandHash=");
-            stringBuilder.append(Hex.toHexString(demandHash));
-        }
-
-        if (null != gossipStatus) {
-            stringBuilder.append(", gossipStatus=");
-            stringBuilder.append(gossipStatus);
         }
 
         stringBuilder.append("}");

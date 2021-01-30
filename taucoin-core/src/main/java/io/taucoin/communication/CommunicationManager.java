@@ -67,31 +67,10 @@ public class CommunicationManager {
      * 向朋友发布新消息
      * @param friend 朋友公钥
      * @param message 新消息
-     * @param data 新消息的其它相关数据，比如可能有多级文字或者图片结构，这些数据会一起发布到dht
      * @return true:接受该消息， false:拒绝该消息
      */
-    public boolean publishNewMessage(byte[] friend, Message message, List<byte[]> data) {
-        return this.communication.publishNewMessage(friend, message, data);
-    }
-
-    /**
-     * 发布上次发送的消息到专用聊天频道
-     * @param friend 当前聊天的朋友
-     */
-    public void publishLastMessage(byte[] friend) {
-        try {
-            this.communication.publishLastMessage(friend);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 正在写给某个朋友
-     * @param friend 正在写给的朋友
-     */
-    public void writingToFriend(byte[] friend) {
-        this.communication.writingToFriend(friend);
+    public boolean publishNewMessage(byte[] friend, Message message) {
+        return this.communication.publishNewMessage(friend, message);
     }
 
     /**
@@ -161,33 +140,6 @@ public class CommunicationManager {
      */
     public int getQueueSize() {
         return this.communication.getQueueSize();
-    }
-
-    /**
-     * get my latest msg root
-     * @param pubKey public key
-     * @return root
-     */
-    public byte[] getMyLatestMsgRoot(byte[] pubKey) {
-        return this.communication.getMyLatestMsgRoot(pubKey);
-    }
-
-    /**
-     * 获取朋友最新的root
-     * @param pubKey public key
-     * @return root
-     */
-    public byte[] getFriendLatestRoot(byte[] pubKey) {
-        return this.communication.getFriendLatestRoot(pubKey);
-    }
-
-    /**
-     * 获取朋友最新的confirmation root
-     * @param pubKey public key
-     * @return confirmation root
-     */
-    public byte[] getFriendConfirmationRoot(byte[] pubKey) {
-        return this.communication.getFriendConfirmationRoot(pubKey);
     }
 
     /**

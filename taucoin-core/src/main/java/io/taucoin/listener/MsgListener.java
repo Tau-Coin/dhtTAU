@@ -20,9 +20,9 @@ public interface MsgListener {
     /**
      * 已读消息root通知
      * @param friend 发已读消息的朋友
-     * @param root 已读消息的root
+     * @param hash 已读消息的hash
      */
-    void onReadMessageRoot(byte[] friend, byte[] root);
+    void onReadMessageRoot(byte[] friend, byte[] hash);
 
     /**
      * 发现朋友通知

@@ -45,12 +45,12 @@ public class CompositeMsgListener implements MsgListener {
      * 已读消息root通知
      *
      * @param friend 发已读消息的朋友
-     * @param root   已读消息的root
+     * @param hash   已读消息的root
      */
     @Override
-    public void onReadMessageRoot(byte[] friend, byte[] root) {
+    public void onReadMessageRoot(byte[] friend, byte[] hash) {
         for (MsgListener listener : listeners) {
-            listener.onReadMessageRoot(friend, root);
+            listener.onReadMessageRoot(friend, hash);
         }
     }
 
