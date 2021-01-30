@@ -49,8 +49,10 @@ public class TauController {
      *
      * @param repoPath the directory where data is stored.
      * @param dbFactory key-value database factory implementation.
+     * @param deviceID device id
      */
-    public TauController(String repoPath, KeyValueDataBaseFactory dbFactory) {
+    public TauController(String repoPath, KeyValueDataBaseFactory dbFactory,
+            byte[] deviceID) {
 
         // set the root directory.
         Repo.setRepoPath(repoPath);
@@ -63,7 +65,8 @@ public class TauController {
         // loading the prebuilt blockchain data.
         this.chainManager = new ChainManager(compositeTauListener, dbFactory);
 
-        this.communicationManager = new CommunicationManager(compositeMsgListener, dbFactory);
+        this.communicationManager = new CommunicationManager(deviceID,
+                compositeMsgListener, dbFactory);
     }
 
     /**
@@ -74,9 +77,9 @@ public class TauController {
      * @param dbFactory key-value database factory implementation.
      */
     public TauController(String repoPath, byte[] keySeed,
-            KeyValueDataBaseFactory dbFactory) {
+            KeyValueDataBaseFactory dbFactory, byte[] deviceID) {
 
-        this(repoPath, dbFactory);
+        this(repoPath, dbFactory, deviceID);
 
         // store public key and private key.
         this.accountManager.updateKey(keySeed);
