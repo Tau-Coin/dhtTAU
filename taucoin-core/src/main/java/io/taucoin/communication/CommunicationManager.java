@@ -26,11 +26,11 @@ public class CommunicationManager {
     // message db path
     private static final String MSG_PATH = "msg";
 
-    public CommunicationManager(MsgListener listener, KeyValueDataBaseFactory dbFactory) {
+    public CommunicationManager(byte[] deviceID, MsgListener listener, KeyValueDataBaseFactory dbFactory) {
         this.listener = listener;
         this.messageDB = new MessageDBImpl(dbFactory.newDatabase());
 
-        communication = new Communication(this.messageDB, this.listener);
+        communication = new Communication(deviceID, this.messageDB, this.listener);
     }
 
     public void openMessageDB() throws Exception {

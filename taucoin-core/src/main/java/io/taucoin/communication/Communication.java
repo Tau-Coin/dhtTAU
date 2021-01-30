@@ -77,7 +77,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // message db
     private final MessageDB messageDB;
 
-    private byte[] deviceID = new byte[0];
+    private byte[] deviceID;
 
     // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求，LinkedHashSet确保队列的顺序性与唯一性
     private final Set<Object> queue = Collections.synchronizedSet(new LinkedHashSet<>());
@@ -130,7 +130,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // Communication thread.
     private Thread communicationThread;
 
-    public Communication(MessageDB messageDB, MsgListener msgListener) {
+    public Communication(byte[] deviceID, MessageDB messageDB, MsgListener msgListener) {
+        this.deviceID = deviceID;
         this.messageDB = messageDB;
         this.msgListener = msgListener;
     }
