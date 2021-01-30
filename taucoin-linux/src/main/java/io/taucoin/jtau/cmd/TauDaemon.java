@@ -48,7 +48,7 @@ public class TauDaemon implements Runnable {
 
         // new TauController through which blockchain components can be accessed.
         this.tauController = new TauController(config.getDataDir(),
-                config.getKeySeed(), this.dbFactory);
+                config.getKeySeed(), this.dbFactory, config.getDeviceID());
 
         // new TauListner and register it into tau controller.
         this.listener = new TauListenerImpl(this.tauController);

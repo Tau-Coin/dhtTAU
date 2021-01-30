@@ -4,6 +4,12 @@ import io.taucoin.jtau.util.Repo;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Random;
+
 public class Config {
 
     // default http json rpc server listening port.
@@ -30,6 +36,9 @@ public class Config {
     // interfaces quota
     private int interfacesQuota;
 
+    // device ID
+    private byte[] deviceID;
+
     /**
      * Config constructor.
      */
@@ -40,6 +49,7 @@ public class Config {
         this.dataDir = Repo.getDefaultDataDir();
         this.sessionsQuota = DEFAULT_SESSIONS_QUOTA;
         this.interfacesQuota = DEFAULT_INTERFACES_QUOTA;
+        this.deviceID = getMAC();
     }
 
     /**
@@ -130,6 +140,46 @@ public class Config {
      */
     public void setInterfacesQuota(int quota) {
         this.interfacesQuota = quota;
+    }
+
+    /**
+     * Get device ID.
+     *
+     * @return byte[]
+     */
+    public byte[] getDeviceID() {
+        return this.deviceID;
+    }
+
+    private byte[] getMAC() {
+        byte[] mac = null;
+
+        try {
+            InetAddress ia = InetAddress.getLocalHost();
+            NetworkInterface ni = NetworkInterface.getByInetAddress(ia);
+            if (ni == null) {
+                return generateRandomArray(32);
+            }
+
+            mac = ni.getHardwareAddress();
+            System.out.println("MAC address:" + Hex.toHexString(mac));
+        } catch (UnknownHostException uhe) {
+            uhe.printStackTrace();
+        } catch (SocketException se) {
+            se.printStackTrace();
+        }
+
+        if (mac == null) {
+            mac = generateRandomArray(32);
+        }
+
+        return mac;
+    }
+
+    private static byte[] generateRandomArray(int size) {
+        byte[] array = new byte[size];
+        new Random().nextBytes(array);
+        return array;
     }
 
     @Override
