@@ -29,6 +29,17 @@ public class CompositeMsgListener implements MsgListener {
     }
 
     /**
+     * 新device ID通知
+     * @param deviceID device id
+     */
+    @Override
+    public void onNewDeviceID(byte[] deviceID) {
+        for (MsgListener listener : listeners) {
+            listener.onNewDeviceID(deviceID);
+        }
+    }
+
+    /**
      * 通知消息状态
      *
      * @param root      消息哈希

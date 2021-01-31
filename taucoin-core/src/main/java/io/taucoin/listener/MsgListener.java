@@ -11,6 +11,12 @@ public interface MsgListener {
     void onNewMessage(byte[] friend, Message message);
 
     /**
+     * 新device ID通知
+     * @param deviceID device id
+     */
+    void onNewDeviceID(byte[] deviceID);
+
+    /**
      * 通知消息状态
      * @param root 消息哈希
      * @param msgStatus 消息当前状态

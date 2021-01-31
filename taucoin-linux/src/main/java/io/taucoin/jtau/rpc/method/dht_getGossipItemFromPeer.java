@@ -15,7 +15,7 @@ import io.taucoin.controller.TauController;
 import io.taucoin.dht.DHT;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.param.ChainParam;
-import io.taucoin.types.Gossip;
+import io.taucoin.types.GossipMutableData;
 
 public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
 
@@ -47,7 +47,7 @@ public class dht_getGossipItemFromPeer extends JsonRpcServerMethod {
             if (item == null) {
                 result= "Get mutable item, nothing !";
             } else {
-                Gossip gossip = new Gossip(item);
+                GossipMutableData gossip = new GossipMutableData(item);
 
                 result = gossip.toString();
             }
