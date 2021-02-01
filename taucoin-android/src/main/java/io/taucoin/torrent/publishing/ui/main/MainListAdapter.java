@@ -142,12 +142,15 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 binding.leftView.setBgColor(bgColor);
 
                 String msg = community.txMemo;
-               if (community.msgType == MessageType.PICTURE.ordinal()) {
+                String hash = community.txMemo;
+                if (community.msgType == MessageType.PICTURE.ordinal()) {
                     msg = context.getString(R.string.main_pic_messages);
+                } else if (community.msgType == MessageType.TEXT.ordinal()) {
+                    msg = null;
                 } else if (StringUtil.isEmpty(msg)) {
                     msg = context.getString(R.string.main_no_messages);
                 }
-                binding.tvUserMessage.setText(msg);
+                binding.tvUserMessage.setTextAndHash(msg, hash, community.publicKey);
                 if(community.txTimestamp > 0){
                     String time = DateUtil.getWeekTime(community.txTimestamp);
                     binding.tvMsgLastTime.setText(time);

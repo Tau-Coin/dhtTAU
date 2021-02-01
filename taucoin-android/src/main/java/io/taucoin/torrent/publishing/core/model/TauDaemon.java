@@ -31,13 +31,13 @@ import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.listener.MsgStatus;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.SpeedRegulate;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
 import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.DeviceUtils;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -76,7 +76,6 @@ public class TauDaemon {
     private volatile boolean isRunning = false;
     private volatile boolean trafficTips = true; // 剩余流量用完提示
     private volatile String seed;
-    private long gossipFrequency; // 当前gossip的频率
     private long noRemainingDataTimes = 0; // 触发无剩余流量的次数
 
     private static volatile TauDaemon instance;
@@ -104,8 +103,9 @@ public class TauDaemon {
 
         AndroidLeveldbFactory androidLeveldbFactory = new AndroidLeveldbFactory();
         String repoPath = appContext.getApplicationInfo().dataDir;
-        logger.info("TauController repoPath::{}", repoPath);
-        tauController = new TauController(repoPath, androidLeveldbFactory);
+        String deviceID = DeviceUtils.getCustomDeviceID(appContext);
+        logger.info("TauController deviceID::{}, repoPath::{}", deviceID, repoPath);
+        tauController = new TauController(repoPath, androidLeveldbFactory, deviceID.getBytes());
         tauController.registerListener(daemonListener);
         tauController.registerMsgListener(msgListener);
 
@@ -226,6 +226,11 @@ public class TauDaemon {
         }
 
         @Override
+        public void onNewDeviceID(byte[] deviceID) {
+
+        }
+
+        @Override
         public void onReadMessageRoot(byte[] friend, byte[] root) {
             msgListenHandler.onReceivedMessageRoot(friend, root);
         }
@@ -292,9 +297,8 @@ public class TauDaemon {
                 .subscribeOn(Schedulers.newThread())
                 .subscribe());
 
-        rescheduleDHTBySettings();
+        rescheduleTAUBySettings();
         resetDHTSessions();
-        updateGossipTimeInterval();
         tauController.start(NetworkSetting.getDHTSessions());
     }
 
@@ -370,7 +374,7 @@ public class TauDaemon {
     private void handleSettingsChanged(String key) {
         if (key.equals(appContext.getString(R.string.pref_key_internet_state))) {
             logger.info("SettingsChanged, internet state::{}", settingsRepo.internetState());
-            rescheduleDHTBySettings(true);
+            rescheduleTAUBySettings(true);
             enableServerMode(settingsRepo.serverMode());
         } else if (key.equals(appContext.getString(R.string.pref_key_charging_state))) {
             logger.info("SettingsChanged, charging state::{}", settingsRepo.chargingState());
@@ -379,45 +383,17 @@ public class TauDaemon {
             logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
         } else if (key.equals(appContext.getString(R.string.pref_key_foreground_running))) {
             logger.info("foreground running::{}", settingsRepo.getBooleanValue(key));
-            updateGossipTimeInterval();
         }
-    }
-
-    /**
-     * 更新Gossip的时间间隔
-     * 1、如果APP在前台，非计费网络是5s, 计费网络是10s
-     * 2、如果APP在后台，非计费网络是30s, 计费网络是60s
-     * 3、如果用户在聊天页面1s, 退出恢复1、2处理
-     */
-    public void updateGossipTimeInterval() {
-        if (!isRunning) {
-            return;
-        }
-        boolean foregroundRunning = settingsRepo.getBooleanValue(
-                appContext.getString(R.string.pref_key_foreground_running));
-        boolean isMeteredNetwork = NetworkSetting.isMeteredNetwork();
-        if (foregroundRunning) {
-            // APP在前台，非计费网络是5s, 计费网络是10s
-            gossipFrequency = isMeteredNetwork ?
-                    Frequency.GOSSIP_FREQUENCY_DEFAULT.getFrequency() :
-                    Frequency.GOSSIP_FREQUENCY_MEDIUM_HEIGHT.getFrequency();
-        } else {
-            // APP在后台，非计费网络是30s, 计费网络是60s
-            gossipFrequency = isMeteredNetwork ?
-                    Frequency.GOSSIP_FREQUENCY_LOW.getFrequency() :
-                    Frequency.GOSSIP_FREQUENCY_MEDIUM_LOW.getFrequency();
-        }
-        setGossipTimeInterval(gossipFrequency);
     }
 
     /**
      * 根据当前设置重新调度DHT
      */
-    void rescheduleDHTBySettings() {
-        rescheduleDHTBySettings(false);
+    void rescheduleTAUBySettings() {
+        rescheduleTAUBySettings(false);
     }
 
-    private synchronized void rescheduleDHTBySettings(boolean isRestart) {
+    private synchronized void rescheduleTAUBySettings(boolean isRestart) {
         if (!isRunning) {
             return;
         }
@@ -428,30 +404,28 @@ public class TauDaemon {
                     resetDHTSessions();
                     tauController.restartSessions(NetworkSetting.getDHTSessions());
                     resetReadOnly();
-                    logger.info("rescheduleDHTBySettings restartSessions::{}",
+                    logger.info("rescheduleTAUBySettings restartSessions::{}",
                             NetworkSetting.getDHTSessions());
                 } else {
-                    SpeedRegulate value = NetworkSetting.calculateRegulateValue();
-                    if (value == SpeedRegulate.SPEED_DOWN) {
-                        // 增加时间间隔来降速
-                        tauController.getDHTEngine().increaseDHTOPInterval();
-                        tauController.getCommunicationManager().increaseIntervalTime();
-                    } else if (value == SpeedRegulate.SPEED_UP) {
-                        // 减少时间间隔来升速
-                        tauController.getDHTEngine().decreaseDHTOPInterval();
-                        tauController.getCommunicationManager().decreaseIntervalTime();
-                    } else if (value == SpeedRegulate.NO_REMAINING_DATA) {
+                    float rate = NetworkSetting.calculateIntervalRate();
+                    if (rate > 0) {
+                        int mainLoopInterval = NetworkSetting.calculateMainLoopInterval(rate);
+                        int gossipInterval = NetworkSetting.calculateGossipInterval(rate);
+                        int DHTOPInterval = NetworkSetting.calculateDHTOPInterval(rate);
+                        tauController.getCommunicationManager().setIntervalTime(mainLoopInterval);
+                        tauController.getCommunicationManager().setGossipTimeInterval(gossipInterval);
+                        tauController.getDHTEngine().regulateDHTOPInterval(DHTOPInterval);
+                        // 更新UI展示链端主循环、Gossip、DHT操作的时间间隔
+                        updateUIInterval(mainLoopInterval, gossipInterval, DHTOPInterval);
+                    } else if (rate == -1) {
                         resetReadOnly(true);
                         showNoRemainingDataTipsDialog();
                     }
-
-                    if (value != SpeedRegulate.NO_REMAINING_DATA) {
+                    if (rate != -1) {
                         trafficTips = true;
                         noRemainingDataTimes = 0;
                         resetReadOnly(false);
                     }
-                    // 更新链端主循环、Gossip、DHT操作的时间间隔
-                    updateUIInterval();
                 }
 
             }
@@ -463,24 +437,21 @@ public class TauDaemon {
     /**
      * 更新链端主循环、Gossip、DHT操作的时间间隔以供UI显示
      */
-    private void updateUIInterval() {
-        long mainLoopInterval = tauController.getCommunicationManager().getIntervalTime();
-        long gossipInterval = gossipFrequency * 1000; // 秒转化为毫秒
-        long dhtOpInterval = tauController.getDHTEngine().getDHTOPInterval(); // 秒转化为毫秒
+    private void updateUIInterval(int mainLoopInterval, int gossipInterval, int DHTOPInterval) {
         settingsRepo.setLongValue(appContext.getString(R.string.pref_key_main_loop_interval),
                 mainLoopInterval);
         settingsRepo.setLongValue(appContext.getString(R.string.pref_key_gossip_interval),
                 gossipInterval);
         settingsRepo.setLongValue(appContext.getString(R.string.pref_key_dht_operation_interval),
                 tauController.getDHTEngine().getDHTOPInterval());
-        logger.info("rescheduleDHTBySettings DHTSessions::{}, " +
-                        "MainLoopInterval::{}, " +
-                        "GossipInterval::{}, " +
-                        "DHTOPInterval::{} ",
+        logger.info("Reschedule DHTSessions::{}, " +
+                        "MainLoopInterval::{}ms, " +
+                        "GossipInterval::{}s, " +
+                        "DHTOPInterval::{}ms",
                 NetworkSetting.getDHTSessions(),
                 mainLoopInterval,
                 gossipInterval,
-                dhtOpInterval);
+                DHTOPInterval);
     }
 
     /**
@@ -690,16 +661,6 @@ public class TauDaemon {
     }
 
     /**
-     * 保存消息进levelDB
-     * @param hash
-     * @param msg
-     * @throws DBException
-     */
-    public void saveMsg(byte[] hash, byte[] msg) throws DBException{
-        getCommunicationManager().getMessageDB().putMessage(hash, msg);
-    }
-
-    /**
      * 获取消息从levelDB
      * @param hash
      * @return msg
@@ -735,11 +696,10 @@ public class TauDaemon {
      * 发送消息
      * @param friendPK
      * @param message
-     * @param data
      * @return
      */
-    public boolean sendMessage(byte[] friendPK, Message message, List<byte[]> data) {
-        boolean isPublishSuccess = getCommunicationManager().publishNewMessage(friendPK, message, data);
+    public boolean sendMessage(byte[] friendPK, Message message) {
+        boolean isPublishSuccess = getCommunicationManager().publishNewMessage(friendPK, message);
         logger.debug("sendMessage isPublishSuccess{}", isPublishSuccess);
         String content = new String(message.getContent(), StandardCharsets.UTF_8);
         String hash = ByteUtil.toHexString(message.getHash());
@@ -748,65 +708,6 @@ public class TauDaemon {
                 DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6),
                 content);
         return isPublishSuccess;
-    }
-
-    /**
-     * 获取用户信息root
-     * @param userPk
-     * @return root hash
-     */
-    public byte[] getMyLatestMsgRoot(byte[] userPk) {
-        return getCommunicationManager().getMyLatestMsgRoot(userPk);
-    }
-
-    /**
-     * 获取朋友最新信息root
-     * @param friendPK
-     * @return root hash
-     */
-    public byte[] getFriendLatestRoot(byte[] friendPK) {
-        return getCommunicationManager().getFriendLatestRoot(friendPK);
-    }
-
-    /**
-     * 获取朋友已接收的最新信息root
-     * @param friendPK
-     * @return root hash
-     */
-    public byte[] getFriendConfirmationRoot(byte[] friendPK) {
-        return getCommunicationManager().getFriendConfirmationRoot(friendPK);
-    }
-
-    /**
-     * 根据APP前后台状态调整gossip的时间间隔
-     * @param timeInterval 时间间隔
-     */
-    public void setGossipTimeInterval(long timeInterval) {
-        if (!isRunning) {
-            return;
-        }
-        getCommunicationManager().setGossipTimeInterval(timeInterval);
-        logger.debug("setGossipTimeInterval::{}", timeInterval);
-    }
-
-    /**
-     * 发布Immutable数据
-     * @param data Immutable Data
-     */
-    public void publishImmutableData(byte[] data) {
-        getCommunicationManager().publishImmutableData(data);
-    }
-
-    /**
-     * 正在和朋友写动作
-     * @param friendPk
-     */
-    public void writingToFriend(String friendPk) {
-        if (!isRunning) {
-            return;
-        }
-        getCommunicationManager().writingToFriend(ByteUtil.toByte(friendPk));
-        logger.debug("writingToFriend friendPk::{} successfully", friendPk);
     }
 
     /**

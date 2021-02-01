@@ -30,9 +30,6 @@ public class ChatMsg implements Parcelable {
     public long nonce;                     // 帮助消息排序
     @NonNull
     public int unsent;                     // 0: 未发送， 1: 已发送
-    public String skipMsgHash;             // 跳跃到上一个完整Msg的hash
-    public String previousMsgHash;         // 上一条消息的hash
-    public String friendLatestMsgHash;     // 朋友最新消息hash
 
     public ChatMsg(@NonNull String hash, String senderPk, String friendPk,
                    String content, int contentType, long timestamp){
@@ -77,9 +74,6 @@ public class ChatMsg implements Parcelable {
         content = in.readString();
         nonce = in.readLong();
         unsent = in.readInt();
-        skipMsgHash = in.readString();
-        previousMsgHash = in.readString();
-        friendLatestMsgHash = in.readString();
     }
 
     @Override
@@ -93,9 +87,6 @@ public class ChatMsg implements Parcelable {
         dest.writeString(content);
         dest.writeLong(nonce);
         dest.writeInt(unsent);
-        dest.writeString(skipMsgHash);
-        dest.writeString(previousMsgHash);
-        dest.writeString(friendLatestMsgHash);
     }
 
     @Override

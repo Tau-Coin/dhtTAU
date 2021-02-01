@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -24,7 +23,6 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
-import io.taucoin.torrent.publishing.core.model.Frequency;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.model.data.Result;
@@ -51,7 +49,6 @@ public class ChatViewModel extends AndroidViewModel {
     private MutableLiveData<Result> chatResult = new MutableLiveData<>();
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
-    private Disposable writingToFriendTimer;
     private ChatSourceFactory sourceFactory;
     public ChatViewModel(@NonNull Application application) {
         super(application);
@@ -78,7 +75,6 @@ public class ChatViewModel extends AndroidViewModel {
         if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             observeDaemonRunning.dispose();
         }
-        resumeGossipTimeInternal();
     }
 
     /**
@@ -134,20 +130,6 @@ public class ChatViewModel extends AndroidViewModel {
                 } else {
                     throw new Exception("Unknown message type");
                 }
-                byte[] friendPkBytes = ByteUtil.toByte(friendPk);
-                byte[] friendLatestMsgHash = daemon.getFriendLatestRoot(friendPkBytes);
-                byte[] previousMsgDAGRoot = null;
-                byte[] skipMessageRoot = null;
-                ChatMsg latestBuiltAndUnsentMsg = chatRepo.getLatestBuiltAndUnsentMsg();
-                if (latestBuiltAndUnsentMsg != null) {
-                    previousMsgDAGRoot = ByteUtil.toByte(latestBuiltAndUnsentMsg.hash);
-                    skipMessageRoot = previousMsgDAGRoot;
-                } else {
-                    // 如果当前message的nonce为0，最新的msgRoot就是message的skipMessageRoot
-                    // 否则最新msgRoot对应的skipMessageRoot，就是message的skipMessageRoot
-                    previousMsgDAGRoot = daemon.getMyLatestMsgRoot(friendPkBytes);
-                    skipMessageRoot = previousMsgDAGRoot;
-                }
                 ChatMsg[] messages = new ChatMsg[contents.size()];
                 int contentSize = contents.size();
                 for (int i = 0; i < contentSize; i++) {
@@ -162,18 +144,12 @@ public class ChatViewModel extends AndroidViewModel {
                         contentStr = MsgSplitUtil.textMsgToString(content);
                         message = Message.CreateTextMessage(
                                 BigInteger.valueOf(timestamp),
-                                BigInteger.valueOf(nonce),
-                                previousMsgDAGRoot,
-                                friendLatestMsgHash,
-                                skipMessageRoot, content);
+                                BigInteger.valueOf(nonce), content);
                     } else {
                         contentStr = ByteUtil.toHexString(content);
                         message = Message.CreatePictureMessage(
                                 BigInteger.valueOf(timestamp),
                                 BigInteger.valueOf(nonce),
-                                previousMsgDAGRoot,
-                                friendLatestMsgHash,
-                                skipMessageRoot,
                                 content);
                     }
                     String hash = ByteUtil.toHexString(message.getHash());
@@ -184,23 +160,7 @@ public class ChatViewModel extends AndroidViewModel {
                     String senderPk = MainApplication.getInstance().getPublicKey();
                     ChatMsg chatMsg = new ChatMsg(hash, senderPk, friendPk, contentStr, type,
                             timestamp, nonce);
-                    if (previousMsgDAGRoot != null) {
-                        chatMsg.previousMsgHash = ByteUtil.toHexString(previousMsgDAGRoot);
-                        logger.trace("sendMessageTask hash::{}, previousMsgHash::{}",
-                                hash, chatMsg.previousMsgHash);
-                    }
-                    if (skipMessageRoot != null) {
-                        chatMsg.skipMsgHash = ByteUtil.toHexString(skipMessageRoot);
-                        logger.trace("sendMessageTask hash::{}, skipMsgHash::{}",
-                                hash,chatMsg.skipMsgHash);
-                    }
-                    if (friendLatestMsgHash != null) {
-                        chatMsg.friendLatestMsgHash = ByteUtil.toHexString(friendLatestMsgHash);
-                        logger.trace("sendMessageTask hash::{}, friendLatestMsgHash::{}",
-                                hash, chatMsg.friendLatestMsgHash);
-                    }
                     messages[i] = chatMsg;
-                    previousMsgDAGRoot = message.getHash();
 
                     if (i == contentSize - 1) {
                         ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash,
@@ -226,55 +186,5 @@ public class ChatViewModel extends AndroidViewModel {
 
     Observable<List<ChatMsgLog>> observerMsgLogs(String hash) {
         return chatRepo.observerMsgLogs(hash);
-    }
-
-    /**
-     * 更新Gossip时间间隔
-     * @
-     */
-    private void updateGossipTimeInternal() {
-        daemon.setGossipTimeInterval(Frequency.GOSSIP_FREQUENCY_HEIGHT.getFrequency());
-    }
-
-    /**
-     * 更新Gossip时间间隔
-     */
-    private void resumeGossipTimeInternal() {
-        if (writingToFriendTimer != null && !writingToFriendTimer.isDisposed()) {
-            writingToFriendTimer.dispose();
-        }
-        daemon.updateGossipTimeInterval();
-    }
-
-    /**
-     * 用户在聊天页面，触发定时通知朋友更新
-     * @param friendPK
-     */
-    void writingToFriendTimer(String friendPK) {
-        if (writingToFriendTimer != null && !writingToFriendTimer.isDisposed()) {
-            logger.debug("writingToFriend friendPK::{} Timer is running", friendPK);
-            return;
-        }
-        updateGossipTimeInternal();
-        writingToFriend(friendPK);
-        writingToFriendTimer = Observable.interval(
-                Frequency.GOSSIP_FREQUENCY_HEIGHT.getFrequency(), TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(aLong -> {
-                    writingToFriend(friendPK);
-                });
-    }
-
-    /**
-     * 通知朋友正在输入状态
-     * @param friendPk
-     */
-    private void writingToFriend(String friendPk) {
-        logger.debug("writingToFriend friendPk::{}", friendPk);
-        try {
-            daemon.writingToFriend(friendPk);
-        } catch (Exception e) {
-            logger.error("writingToFriend error", e);
-        }
     }
 }

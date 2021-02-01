@@ -127,7 +127,7 @@ public class TauInfoProvider {
                     if (statistics != null) {
                         NetworkSetting.updateSpeedSample(statistics);
                         TrafficUtil.saveTrafficTotal(statistics);
-                        daemon.rescheduleDHTBySettings();
+                        daemon.rescheduleTAUBySettings();
                         logger.debug("Network statistical result:: rxBytes::{}({}), txBytes::{}({})",
                                 Formatter.formatFileSize(context, statistics.getRxBytes()),
                                 statistics.getRxBytes(),

@@ -22,12 +22,12 @@ public interface CommunityDao {
     String QUERY_GET_CURRENT_USER_PK = " (SELECT publicKey FROM Users WHERE isCurrentUser = 1 limit 1) ";
     String QUERY_GET_BANNED_USER_PK = " (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1) ";
     String QUERY_NEWEST_MSG = " (SELECT * FROM (SELECT * FROM (" +
-            " SELECT timestamp, content, contentType, senderPk, friendPk, friendPk AS friendPkTemp" +
+            " SELECT timestamp, hash, contentType, senderPk, friendPk, friendPk AS friendPkTemp" +
             " FROM (SELECT * FROM ChatMessages" +
             " WHERE senderPk = " + QUERY_GET_CURRENT_USER_PK +
             " ORDER BY timestamp) GROUP BY friendPk" +
             " UNION ALL" +
-            " SELECT timestamp, content, contentType, senderPk, friendPk, senderPk AS friendPkTemp" +
+            " SELECT timestamp, hash, contentType, senderPk, friendPk, senderPk AS friendPkTemp" +
             " FROM (SELECT * FROM ChatMessages" +
             " WHERE friendPk = "+ QUERY_GET_CURRENT_USER_PK +
             " ORDER BY timestamp) GROUP BY senderPk)" +
@@ -37,7 +37,7 @@ public interface CommunityDao {
     String QUERY_GET_COMMUNITIES_NOT_IN_BLACKLIST = "SELECT a.*, b.balance, b.power," +
             " (case when a.type = 0 then" +
             " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.memo else d.content end)" +
-            " else e.content end)" +
+            " else e.hash end)" +
             " AS txMemo," +
             " (case when a.type = 0 then 0 else e.contentType end) AS msgType," +
             " (case when a.type = 0 then" +

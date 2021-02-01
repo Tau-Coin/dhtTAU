@@ -148,7 +148,7 @@
     <string name="setting_internet">Internet</string>
     <string name="setting_wake_lock">Always Awake</string>
     <string name="setting_main_loop_interval">Main Loop Interval(ms)</string>
-    <string name="setting_gossip_interval">Gossip Interval(ms)</string>
+    <string name="setting_gossip_interval">Gossip Interval(s)</string>
     <string name="setting_dht_operation_interval">DHT Operation Interval(ms)</string>
     <string name="setting_daily_traffic_limit_used_up">Daily data limit is used, proceed to use 30% more data?</string>
     <string name="setting_metered_limit_select_tips">Using telecom data may incur additional fees.\n

@@ -12,7 +12,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.SpeedRegulate;
+import io.taucoin.torrent.publishing.core.model.Interval;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 
@@ -23,10 +23,10 @@ public class NetworkSetting {
     private static final Logger logger = LoggerFactory.getLogger("NetworkSetting");
     private static final int meteredLimited;                                  // 单位MB
     private static final int wifiLimited;                                     // 单位MB
-    private static final BigInteger fgSpeedAdjustment = BigInteger.valueOf(3);  // 网速前后台调整倍数
-    private static final BigInteger bgSpeedAdjustment = BigInteger.valueOf(2);  // 网速后后台调整倍数
-    public static final long current_speed_sample = 10;                              // 单位s
-    public static final long average_speed_sample = 86400;                          // 单位s，24小时
+    public static final long current_speed_sample = 10;                       // 单位s
+    public static final long average_speed_sample = 86400;                    // 单位s，24小时
+    public static final float min_threshold = 1.0f / 4;
+    public static final float max_threshold = 3.0f / 4;
 
     private static SettingsRepository settingsRepo;
     static {
@@ -270,41 +270,90 @@ public class NetworkSetting {
     }
 
     /**
-     * 计算DHT操作的调节值
+     * 计算时间间隔时间
      */
-    public static SpeedRegulate calculateRegulateValue() {
-        BigInteger speedLimit;
+    public static float calculateIntervalRate() {
+        long speedLimit;
         if (isMeteredNetwork()) {
             // 当前网络为计费网络
-            speedLimit = BigInteger.valueOf(NetworkSetting.getMeteredSpeedLimit());
+            speedLimit = NetworkSetting.getMeteredSpeedLimit();
         } else {
             // 当前网络为非计费网络
-            speedLimit = BigInteger.valueOf(NetworkSetting.getWiFiSpeedLimit());
+            speedLimit = NetworkSetting.getWiFiSpeedLimit();
         }
-        Context context = MainApplication.getInstance();
-        if (AppUtil.isOnForeground(context)) {
-            speedLimit = speedLimit.multiply(fgSpeedAdjustment);
+        if (speedLimit > 0) {
+            long averageSpeed = NetworkSetting.getAverageSpeed();
+            return averageSpeed * 1.0f / speedLimit;
         } else {
-            speedLimit = speedLimit.divide(bgSpeedAdjustment);
+            return -1;
         }
-        return calculateRegulateValue(speedLimit);
     }
 
     /**
-     * 根据网速限制计算DHT操作的调节值
+     * 计算Gossip时间间隔
+     * @param rate 平均网速和网速限制的比率
+     * @return 返回计算的时间间隔
      */
-    private static SpeedRegulate calculateRegulateValue(BigInteger speedLimit) {
-        BigInteger currentSpeed = BigInteger.valueOf(NetworkSetting.getCurrentSpeed());
-        if (speedLimit.compareTo(BigInteger.ZERO) > 0) {
-            if (currentSpeed.compareTo(speedLimit) < 0) {
-                return SpeedRegulate.SPEED_UP;
-            } else if (currentSpeed.compareTo(speedLimit) > 0){
-                return SpeedRegulate.SPEED_DOWN;
+    public static int calculateGossipInterval(float rate) {
+        Context context = MainApplication.getInstance();
+        boolean isOnForeground = AppUtil.isOnForeground(context);
+        if (isMeteredNetwork()) {
+            if (isOnForeground) {
+                return calculateTimeInterval(rate, Interval.GOSSIP_FORE_METERED_MIN,
+                        Interval.GOSSIP_FORE_METERED_MAX);
+            } else {
+                return calculateTimeInterval(rate, Interval.GOSSIP_BACK_METERED_MIN,
+                        Interval.GOSSIP_BACK_METERED_MAX);
             }
         } else {
-            // 超出流量控制范围
-            return SpeedRegulate.NO_REMAINING_DATA;
+            if (isOnForeground) {
+                return calculateTimeInterval(rate, Interval.GOSSIP_FORE_WIFI_MIN,
+                        Interval.GOSSIP_FORE_WIFI_MAX);
+            } else {
+                return calculateTimeInterval(rate, Interval.GOSSIP_BACK_WIFI_MIN,
+                        Interval.GOSSIP_BACK_WIFI_MAX);
+            }
         }
-        return SpeedRegulate.SPEED_UNCHANGED;
+    }
+
+    /**
+     * 计算主循环时间间隔
+     * @param rate 平均网速和网速限制的比率
+     * @return 返回计算的时间间隔
+     */
+    public static int calculateMainLoopInterval(float rate) {
+        return calculateTimeInterval(rate, Interval.MAIN_LOOP_MIN,
+                Interval.MAIN_LOOP_MAX);
+    }
+
+    /**
+     * 计算DHT操作时间间隔
+     * @param rate 平均网速和网速限制的比率
+     * @return 返回计算的时间间隔
+     */
+    public static int calculateDHTOPInterval(float rate) {
+        return calculateTimeInterval(rate, Interval.DHT_OP_MIN,
+                Interval.DHT_OP_MAX);
+    }
+
+    /**
+     * 计算时间间隔
+     * @param rate 平均网速和网速限制的比率
+     * @param min 最小值
+     * @param max 最大值
+     * @return 返回计算的时间间隔
+     */
+    public static int calculateTimeInterval(float rate, Interval min, Interval max) {
+        int timeInterval;
+        if (rate <= min_threshold) {
+            timeInterval = min.getInterval();
+        } else if (rate >= max_threshold) {
+            timeInterval = max.getInterval();
+        } else {
+            timeInterval = min.getInterval();
+            timeInterval += (int)((rate - min_threshold) / (max_threshold - min_threshold)
+                    * (max.getInterval() - min.getInterval()));
+        }
+        return timeInterval;
     }
 }

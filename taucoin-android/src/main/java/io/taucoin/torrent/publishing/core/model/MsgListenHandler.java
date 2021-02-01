@@ -101,15 +101,6 @@ class MsgListenHandler {
                     ChatMsg msg = new ChatMsg(hash, friendPkStr, userPk, content,
                             message.getType().ordinal(), sentTime, message.getNonce().longValue());
                     msg.unsent = 1;
-                    if (message.getPreviousMsgDAGRoot() != null) {
-                        msg.previousMsgHash = ByteUtil.toHexString(message.getPreviousMsgDAGRoot());
-                    }
-                    if (message.getFriendLatestMessageRoot() != null) {
-                        msg.friendLatestMsgHash = ByteUtil.toHexString(message.getFriendLatestMessageRoot());
-                    }
-                    if (message.getSkipMessageRoot() != null) {
-                        msg.skipMsgHash = ByteUtil.toHexString(message.getSkipMessageRoot());
-                    }
                     chatRepo.addChatMsg(msg);
                 }
             } catch (Exception e) {

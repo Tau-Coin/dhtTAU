@@ -15,7 +15,7 @@ import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.core.model.Frequency;
+import io.taucoin.torrent.publishing.core.model.Interval;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -141,7 +141,7 @@ public class HashTextView extends TextView {
                 logger.debug("queryDataLoop error::{}", hash);
             }
             // 如果获取不到，1秒后重试
-            Thread.sleep(Frequency.FREQUENCY_RETRY.getFrequency());
+            Thread.sleep(Interval.INTERVAL_RETRY.getInterval());
         }
     }
 

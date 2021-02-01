@@ -20,7 +20,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.Frequency;
+import io.taucoin.torrent.publishing.core.model.Interval;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
@@ -164,9 +164,9 @@ public class HashImageView extends RoundImageView {
                 if (StringUtil.isNotEmpty(msg.content)) {
                     content = ByteUtil.toByte(msg.content);
                 }
-                if (StringUtil.isNotEmpty(msg.previousMsgHash)) {
-                    previousMsgHash = ByteUtil.toByte(msg.previousMsgHash);
-                }
+//                if (StringUtil.isNotEmpty(msg.previousMsgHash)) {
+//                    previousMsgHash = ByteUtil.toByte(msg.previousMsgHash);
+//                }
             } else {
                 showFragmentData(false, imageHash, emitter);
             }
@@ -175,7 +175,7 @@ public class HashImageView extends RoundImageView {
             Message msg = new Message(fragmentEncoded);
             nonce = msg.getNonce();
             content = msg.getContent();
-            previousMsgHash = msg.getPreviousMsgDAGRoot();
+//            previousMsgHash = msg.getPreviousMsgDAGRoot();
         }
         if (nonce.compareTo(BigInteger.ZERO) == 0 &&
                 StringUtil.isNotEquals(ByteUtil.toHexString(imageHash), this.imageHash)) {
@@ -209,7 +209,7 @@ public class HashImageView extends RoundImageView {
                 logger.debug("queryDataLoop error::{}", hash);
             }
             // 如果获取不到，1秒后重试
-            Thread.sleep(Frequency.FREQUENCY_RETRY.getFrequency());
+            Thread.sleep(Interval.INTERVAL_RETRY.getInterval());
         }
     }
 
