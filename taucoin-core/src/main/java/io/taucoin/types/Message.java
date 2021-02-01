@@ -146,7 +146,6 @@ public class Message {
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("Message{");
-
         if (null != hash) {
             stringBuilder.append("hash=");
             stringBuilder.append(Hex.toHexString(hash));
@@ -160,7 +159,7 @@ public class Message {
             stringBuilder.append(timestamp);
         }
         if (null != nonce) {
-            stringBuilder.append(", timestamp=");
+            stringBuilder.append(", nonce=");
             stringBuilder.append(nonce);
         }
         if (null != type) {

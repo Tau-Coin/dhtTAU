@@ -221,10 +221,12 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         if (null != linkedList) {
             int size = linkedList.size();
             if (size > 0) {
+                boolean insert = false;
                 for (int i = size - 1; i > 0; i--) {
                     // 寻找第一个时间戳不大于当前消息的消息，将当前消息加到后面即可
                     if (message.getTimestamp().compareTo(linkedList.get(i).getTimestamp()) <= 0) {
                         linkedList.add(i + 1, message);
+                        insert = true;
 
                         if (size >= ChainParam.MAX_HASH_NUMBER) {
                             linkedList.remove(0);
@@ -232,6 +234,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
                         break;
                     }
+                }
+
+                if (!insert) {
+                    linkedList.add(message);
                 }
             } else {
                 linkedList.add(message);
@@ -674,6 +680,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
         List<byte[]> list = getLatestMessageHashList(friend);
         IndexMutableData indexMutableData = new IndexMutableData(this.deviceID, list);
+        logger.debug("publishIndexMutableData:{}", indexMutableData.toString());
 
         byte[] encode = indexMutableData.getEncoded();
 

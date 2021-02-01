@@ -148,7 +148,7 @@ public class GossipMutableData {
         List<byte[]> friendList = getFriendList();
         if (null != friendList) {
             for (byte[] friend: friendList) {
-                list.add(Hex.toHexString(friend));
+                list.add("friend:" + Hex.toHexString(friend));
             }
         }
 
