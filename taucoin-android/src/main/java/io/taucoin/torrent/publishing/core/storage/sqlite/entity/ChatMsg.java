@@ -14,8 +14,7 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "ChatMessages")
 public class ChatMsg implements Parcelable {
     @NonNull
-    @PrimaryKey(autoGenerate = true)
-    public long id;
+    @PrimaryKey
     public String hash;                    // 消息的Hash
     @NonNull
     public String senderPk;                // 发送者的公钥
@@ -65,7 +64,6 @@ public class ChatMsg implements Parcelable {
 
     @Ignore
     private ChatMsg(Parcel in) {
-        id = in.readLong();
         hash = in.readString();
         senderPk = in.readString();
         friendPk = in.readString();
@@ -78,7 +76,6 @@ public class ChatMsg implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(id);
         dest.writeString(hash);
         dest.writeString(senderPk);
         dest.writeString(friendPk);
@@ -108,11 +105,11 @@ public class ChatMsg implements Parcelable {
 
     @Override
     public int hashCode() {
-        return String.valueOf(id).hashCode();
+        return hash.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof ChatMsg && (o == this || id == (((ChatMsg)o).id));
+        return o instanceof ChatMsg && (o == this || hash.equals(((ChatMsg)o).hash));
     }
 }

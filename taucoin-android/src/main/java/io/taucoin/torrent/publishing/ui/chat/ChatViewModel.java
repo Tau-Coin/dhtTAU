@@ -134,9 +134,7 @@ public class ChatViewModel extends AndroidViewModel {
                 int contentSize = contents.size();
                 for (int i = 0; i < contentSize; i++) {
                     String contentStr;
-                    byte[] content;
-                    int nonce = contentSize - 1 - i;
-                    content = contents.get(nonce);
+                    byte[] content = contents.get(i);
                     long millisTime = DateUtil.getMillisTime();
                     long timestamp = millisTime / 1000;
                     Message message;
@@ -144,12 +142,12 @@ public class ChatViewModel extends AndroidViewModel {
                         contentStr = MsgSplitUtil.textMsgToString(content);
                         message = Message.CreateTextMessage(
                                 BigInteger.valueOf(timestamp),
-                                BigInteger.valueOf(nonce), content);
+                                BigInteger.valueOf(i), content);
                     } else {
                         contentStr = ByteUtil.toHexString(content);
                         message = Message.CreatePictureMessage(
                                 BigInteger.valueOf(timestamp),
-                                BigInteger.valueOf(nonce),
+                                BigInteger.valueOf(i),
                                 content);
                     }
                     String hash = ByteUtil.toHexString(message.getHash());
@@ -159,10 +157,10 @@ public class ChatViewModel extends AndroidViewModel {
                     // 组织Message的结构，并发送到DHT和数据入库
                     String senderPk = MainApplication.getInstance().getPublicKey();
                     ChatMsg chatMsg = new ChatMsg(hash, senderPk, friendPk, contentStr, type,
-                            timestamp, nonce);
+                            timestamp, i);
                     messages[i] = chatMsg;
 
-                    if (i == contentSize - 1) {
+                    if (i == 0) {
                         ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash,
                                 ChatMsgStatus.UNSENT.getStatus(), millisTime);
                         chatRepo.addChatMsgLog(chatMsgLog);

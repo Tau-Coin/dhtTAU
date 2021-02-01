@@ -9,7 +9,6 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Observable;
-import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 
@@ -34,20 +33,20 @@ public interface ChatDao {
     String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE +
-            " ORDER BY msg.timestamp, msg.nonce, msg.id" +
+            " ORDER BY msg.timestamp, msg.nonce" +
             " LIMIT :loadSize OFFSET :startPosition ";
 
     String QUERY_UNSENT_MESSAGES = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
             " AND msg.unsent = 0" +
-            " ORDER BY msg.timestamp, msg.id";
+            " ORDER BY msg.timestamp, msg.nonce";
 
     String QUERY_BUILT_AND_UNSENT_MESSAGES = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
             " AND msg.unsent = 0 AND msg.hash NOT NULL" +
-            " ORDER BY msg.timestamp DESC, msg.id DESC" +
+            " ORDER BY msg.timestamp DESC, msg.nonce DESC" +
             " limit 1";
 
     // 查询消息未确认的HASH

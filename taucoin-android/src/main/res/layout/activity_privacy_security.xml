@@ -106,6 +106,33 @@
                     android:src="@mipmap/icon_arrow"/>
 
             </LinearLayout>
+
+            <include layout="@layout/view_line"/>
+
+            <LinearLayout
+                android:id="@+id/ll_devices"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:onClick="@{listener::onClick}"
+                android:layout_marginTop="5dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:includeFontPadding="false"
+                    android:text="@string/setting_login_devices"
+                    android:textAppearance="@style/TextAppearanceBody1"/>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:contentDescription="@null"
+                    android:src="@mipmap/icon_arrow"/>
+
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>

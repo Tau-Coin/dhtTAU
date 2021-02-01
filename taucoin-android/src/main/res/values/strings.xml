@@ -161,6 +161,7 @@
     <string name="setting_Unblock">Unblock</string>
     <string name="setting_security">Security</string>
     <string name="setting_seeds">Secrets</string>
+    <string name="setting_login_devices">Login Devices</string>
 
     <string name="user_generate_seed">Generate Secret</string>
     <string name="user_import_seed">Import Secret</string>

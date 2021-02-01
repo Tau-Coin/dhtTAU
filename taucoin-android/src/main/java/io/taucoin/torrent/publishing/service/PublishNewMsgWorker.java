@@ -88,7 +88,7 @@ public class PublishNewMsgWorker extends Worker {
             message = Message.CreateTextMessage(BigInteger.valueOf(msg.timestamp), nonce, content);
         }
         boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message);
-        logger.debug("NewMsgDAGRoot::{}, isSendSuccess::{}", msg.hash, isSendSuccess);
+        logger.debug("NewMsgHash::{}, nonce::{}, isSendSuccess::{}", msg.hash, msg.nonce, isSendSuccess);
         if (isSendSuccess) {
             msg.content = null;
             msg.unsent = 1;
