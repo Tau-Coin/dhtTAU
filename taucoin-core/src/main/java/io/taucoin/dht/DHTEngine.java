@@ -1,15 +1,19 @@
 package io.taucoin.dht;
 
+import io.taucoin.account.AccountManager;
+import io.taucoin.account.KeyChangedListener;
 import io.taucoin.dht.metrics.Counter;
 import io.taucoin.dht.session.SessionController;
 import io.taucoin.dht.session.SessionInfo;
 import io.taucoin.listener.TauListener;
 
+import com.frostwire.jlibtorrent.Pair;
 import com.frostwire.jlibtorrent.Sha1Hash;
 import com.hybhub.util.concurrent.ConcurrentSetBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 import java.util.HashMap;
@@ -52,6 +56,22 @@ public class DHTEngine {
     private Map<Sha1Hash, Object> getCache = Collections.synchronizedMap(
             new HashMap<Sha1Hash, Object>());
 
+    private Pair<byte[], byte[]> key;
+    private KeyChangedListener keyChangedHandler = new KeyChangedListener() {
+
+        @Override
+        public void onKeyChanged(Pair<byte[], byte[]> newKey) {
+            if (key != null && !Arrays.equals(key.first, newKey.first)) {
+                key = new Pair<byte[], byte[]>(newKey.first, newKey.second);
+                logger.info("Key changed and clear all caches");
+
+                requestQueue.clear();
+                putCache.clear();
+                getCache.clear();
+            }
+        }
+    };
+
     /**
      * Get DHTEngine instance.
      *
@@ -74,6 +94,10 @@ public class DHTEngine {
         this.counter = new Counter();
         this.sessionController = new SessionController(requestQueue, counter,
                 putCache, getCache);
+
+        // register the event listener of key changed.
+        this.key = null;
+        AccountManager.getInstance().addListener(keyChangedHandler);
     }
 
     /**
