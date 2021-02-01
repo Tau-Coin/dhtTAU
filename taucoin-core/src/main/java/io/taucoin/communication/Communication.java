@@ -110,6 +110,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 得到的消息集合（hash <--> Latest Message List），最新的消息放在最后，ConcurrentHashMap是支持并发操作的集合
     private final Map<ByteArrayWrapper, LinkedList<Message>> messageListMap = new ConcurrentHashMap<>();
 
+    // index mutable data更新了，需要重新发布数据的friend集合（完整公钥）
+    private final Set<ByteArrayWrapper> freshFriends = new CopyOnWriteArraySet<>();
+
     // 我的朋友的最新消息的哈希集合 <friend, IndexMutableData>（完整公钥）
     private final Map<ByteArrayWrapper, IndexMutableData> friendIndexData = new ConcurrentHashMap<>();
 
@@ -184,6 +187,14 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
+     * 将Gossip Item对应的时间戳更新到最新，发出请求访问我信号
+     * @param friend 我的朋友
+     */
+    private void touchGossipItem(ByteArrayWrapper friend) {
+        this.timeStampToFriend.put(friend, BigInteger.valueOf(System.currentTimeMillis() / 1000));
+    }
+
+    /**
      * 保存与朋友的最近的聊天信息的哈希集合
      * @throws DBException database exception
      */
@@ -231,6 +242,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         }
 
         this.messageListMap.put(pubKey, linkedList);
+
+        this.freshFriends.add(pubKey);
     }
 
     /**
@@ -470,13 +483,19 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 尝试发布gossip信息，看看时间间隔是否已到，每10s一次
+     * 尝试发布gossip信息，看看时间间隔是否已到
      */
     private void tryToPublishGossipInfo() {
         long currentTime = System.currentTimeMillis() / 1000;
 
         if (currentTime - lastGossipPublishTime > gossipPublishIntervalTime) {
             publishGossip();
+
+            // 如果有同步请求，则发布自己的index数据以便对方比对
+            for (ByteArrayWrapper friend: this.freshFriends) {
+                publishIndexMutableData(friend.getData());
+                this.freshFriends.remove(friend);
+            }
         }
     }
 
@@ -653,7 +672,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
         byte[] salt = makeIndexChannelSendingSalt(keyPair.first, friend);
 
-        byte[] encode = getLatestMessageHashListEncode(friend);
+        List<byte[]> list = getLatestMessageHashList(friend);
+        IndexMutableData indexMutableData = new IndexMutableData(this.deviceID, list);
+
+        byte[] encode = indexMutableData.getEncoded();
 
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
@@ -747,7 +769,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 // 尝试对gossip数据进行瘦身
 //                tryToSlimDownGossip();
 
-                // 尝试发布gossip数据
+                // 尝试发布gossip及相关数据
                 tryToPublishGossipInfo();
 
                 // 访问通过gossip机制推荐的活跃peer
@@ -859,7 +881,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     private void updateMessageInfoToFriend(byte[] friend, Message message) throws DBException {
         ByteArrayWrapper key = new ByteArrayWrapper(friend);
         logger.info("Update friend [{}] info.", key.toString());
-        this.timeStampToFriend.put(key, message.getTimestamp());
+        touchGossipItem(key);
 
         tryToUpdateLatestMessageList(key, message);
     }
@@ -879,8 +901,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                     saveMessageDataInDB(message);
                     updateMessageInfoToFriend(friend, message);
                     publishMessage(friend, message);
-                    publishIndexMutableData(friend);
                     publishGossip();
+                    publishIndexMutableData(friend);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
@@ -923,22 +945,20 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     /**
      * 获取最新聊天消息的哈希集合
      * @param friend friend
-     * @return encode
+     * @return hash list
      */
-    private byte[] getLatestMessageHashListEncode(byte[] friend) {
+    private ArrayList<byte[]> getLatestMessageHashList(byte[] friend) {
+        ArrayList<byte[]> list = new ArrayList<>();
+
         LinkedList<Message> linkedList = this.messageListMap.get(new ByteArrayWrapper(friend));
         if (null != linkedList && !linkedList.isEmpty()) {
-            ArrayList<byte[]> list = new ArrayList<>();
+
             for (Message message: linkedList) {
                 list.add(message.getHash());
             }
-
-            HashList hashList = new HashList(list);
-
-            return hashList.getEncoded();
         }
 
-        return null;
+        return list;
     }
 
     /**
@@ -1019,27 +1039,24 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             i++;
         }
 
-        if (!gossipItemList.isEmpty()) {
-
-            List<byte[]> friendList = new ArrayList<>();
-            byte[] friend = getFriendRandomly();
-            if (null != friend) {
-                friendList.add(friend);
-            }
-
-            GossipMutableData gossipMutableData = new GossipMutableData(this.deviceID, friendList, gossipItemList);
-            while (gossipMutableData.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
-                gossipItemList.remove(gossipItemList.size() - 1);
-                gossipMutableData = new GossipMutableData(this.deviceID, friendList, gossipItemList);
-            }
-
-            for (GossipItem gossipItem: gossipItemList) {
-                this.gossipItemsToPut.remove(gossipItem);
-            }
-
-            logger.debug(gossipMutableData.toString());
-            publishGossipMutableData(gossipMutableData);
+        List<byte[]> friendList = new ArrayList<>();
+        byte[] friend = getFriendRandomly();
+        if (null != friend) {
+            friendList.add(friend);
         }
+
+        GossipMutableData gossipMutableData = new GossipMutableData(this.deviceID, friendList, gossipItemList);
+        while (gossipMutableData.getEncoded().length >= ChainParam.DHT_ITEM_LIMIT_SIZE) {
+            gossipItemList.remove(gossipItemList.size() - 1);
+            gossipMutableData = new GossipMutableData(this.deviceID, friendList, gossipItemList);
+        }
+
+        for (GossipItem gossipItem: gossipItemList) {
+            this.gossipItemsToPut.remove(gossipItem);
+        }
+
+        logger.debug(gossipMutableData.toString());
+        publishGossipMutableData(gossipMutableData);
 
         // 记录发布时间
         this.lastGossipPublishTime = System.currentTimeMillis() / 1000;
@@ -1185,16 +1202,16 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                         this.friendsFromRemote.add(new ByteArrayWrapper(friend));
                     }
                 }
-            } else {
-                // 本设备发的数据，不用处理
-                return;
             }
+            // 本设备发的数据，只同步朋友列表即可
+            return;
         }
 
         // 是否更新好友的在线时间（完整公钥）
         BigInteger gossipTime = gossipMutableData.getTimestamp();
         BigInteger lastSeen = this.friendLastSeen.get(peer);
         if (null == lastSeen || lastSeen.compareTo(gossipTime) < 0) { // 判断是否是更新的gossip
+            logger.debug("Seen peer:{}", peer.toString());
             this.friendLastSeen.put(peer, gossipTime);
             this.onlineFriendsToNotify.add(peer);
 
@@ -1230,11 +1247,17 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
-     * 比较集合数据，从中寻找新消息或者对方缺少的数据
+     * 比较对方集合数据，从中寻找新消息或者对方缺少的数据
      * @param peer 集合数据所属的peer
      * @param indexMutableData 集合数据
      */
     private void compareIndexDataSet(ByteArrayWrapper peer, IndexMutableData indexMutableData) {
+        byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+        // 排除自己的数据
+        if (Arrays.equals(pubKey, peer.getData())) {
+            return;
+        }
+
         IndexMutableData currentIndexData = this.friendIndexData.get(peer);
         // 只处理发现的更新的数据
         if (null == currentIndexData ||
@@ -1256,6 +1279,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 }
 
                 if (!found) { // 找到新消息的哈希，则请求该消息
+                    // 发现新的同步需求，更新时间戳，发出信号
+                    touchGossipItem(peer);
                     requestMessage(hash, peer);
                 }
             }

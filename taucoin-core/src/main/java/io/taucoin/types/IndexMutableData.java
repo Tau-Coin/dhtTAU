@@ -19,10 +19,14 @@ public class IndexMutableData {
     private byte[] rlpEncoded;
     private boolean parsed = false;
 
-    public IndexMutableData(byte[] deviceID, BigInteger timestamp, List<byte[]> friendList) {
+    public IndexMutableData(byte[] deviceID, List<byte[]> hashList) {
+        this(deviceID, BigInteger.valueOf(System.currentTimeMillis() / 1000), hashList);
+    }
+
+    public IndexMutableData(byte[] deviceID, BigInteger timestamp, List<byte[]> hashList) {
         this.deviceID = deviceID;
         this.timestamp = timestamp;
-        this.hashList = friendList;
+        this.hashList = hashList;
 
         this.parsed = true;
     }

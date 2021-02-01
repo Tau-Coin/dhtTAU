@@ -68,6 +68,7 @@ public class GossipMutableData {
      * parse rlp encode
      */
     private void parseRLP() {
+        // TODO:: decode exception
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
 
