@@ -18,10 +18,11 @@ public interface MsgListener {
 
     /**
      * 通知消息状态
+     * @param friend 消息接收的俄朋友
      * @param root 消息哈希
      * @param msgStatus 消息当前状态
      */
-    void onMessageStatus(byte[] root, MsgStatus msgStatus);
+    void onMessageStatus(byte[] friend, byte[] root, MsgStatus msgStatus);
 
     /**
      * 已读消息root通知

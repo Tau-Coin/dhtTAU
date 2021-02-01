@@ -75,7 +75,7 @@ public class ChainParam {
     public static final byte[] DEMAND_CHANNEL = "#D".getBytes();
 
     // gossip
-    public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST1".getBytes();
+    public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST2".getBytes();
 
     // group chat gossip channel prefix
     public static final byte[] GROUP_CHAT_GOSSIP_CHANNEL_PREFIX = "GC_".getBytes();

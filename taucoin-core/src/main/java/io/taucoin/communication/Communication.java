@@ -75,10 +75,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // message db
     private final MessageDB messageDB;
 
-    private byte[] deviceID;
+    private final byte[] deviceID;
 
-    // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求，LinkedHashSet确保队列的顺序性与唯一性
-    private final Set<Object> queue = Collections.synchronizedSet(new LinkedHashSet<>());
+    // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求
+    private final Set<Object> queue = new CopyOnWriteArraySet<>();
 
     // 当前我加的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
@@ -118,6 +118,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
     // 等待通知的消息状态
     private final Map<ByteArrayWrapper, MsgStatus> msgStatus = new ConcurrentHashMap<>();
+
+    // 等待通知消息状态的拥有者
+    private final Map<ByteArrayWrapper, byte[]> msgStatusOwner = new ConcurrentHashMap<>();
 
     // 给我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> timeStampToFriend = new ConcurrentHashMap<>();
@@ -291,9 +294,14 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         while (iterator.hasNext()) {
             Map.Entry<ByteArrayWrapper, MsgStatus> entry = iterator.next();
 
-            logger.debug("Notify UI msg status:{}, {}", entry.getKey().toString(), entry.getValue());
-            this.msgListener.onMessageStatus(entry.getKey().getData(), entry.getValue());
+            byte[] friend = this.msgStatusOwner.get(entry.getKey());
 
+            logger.debug("Notify UI msg status:{}, {}", entry.getKey().toString(), entry.getValue());
+            if (null != friend) {
+                this.msgListener.onMessageStatus(friend, entry.getKey().getData(), entry.getValue());
+            }
+
+            this.msgStatusOwner.remove(entry.getKey());
             this.msgStatus.remove(entry.getKey());
         }
     }
@@ -524,12 +532,12 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
         // 0.2 * 10000是中间层剩余空间，大于本地队列最大长度1000，目前肯定能放下
         if ((double)size / DHTEngine.DHTQueueCapability < THRESHOLD) {
-            Set<Object> all = new LinkedHashSet<>(this.queue);
-            this.queue.removeAll(all);
-            for (Object request: all) {
+            for (Object request: this.queue) {
                 if (null != request) {
                     process(request);
                 }
+
+                this.queue.remove(request);
             }
         }
     }
@@ -567,17 +575,18 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      * 发布消息
      * @param message msg to publish
      */
-    private void publishMessage(Message message) {
+    private void publishMessage(byte[] friend, Message message) {
         if (null != message) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(message.getEncoded());
-            DataIdentifier dataIdentifier = new DataIdentifier(DataType.PUT_IMMUTABLE_DATA,
-                    new ByteArrayWrapper(message.getHash()));
+            ByteArrayWrapper hash = new ByteArrayWrapper(message.getHash());
+            DataIdentifier dataIdentifier = new DataIdentifier(DataType.PUT_IMMUTABLE_DATA, hash);
 
             DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, this, dataIdentifier);
             this.queue.add(immutableItemDistribution);
 
             logger.debug("Msg status:{}, {}", Hex.toHexString(message.getHash()), MsgStatus.TO_COMMUNICATION_QUEUE);
-            this.msgListener.onMessageStatus(message.getHash(), MsgStatus.TO_COMMUNICATION_QUEUE);
+            this.msgStatusOwner.put(hash, friend);
+            this.msgListener.onMessageStatus(friend, message.getHash(), MsgStatus.TO_COMMUNICATION_QUEUE);
         }
     }
 
@@ -692,7 +701,12 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
 
         logger.debug("Msg status:{}, {}", d.toString(), MsgStatus.TO_DHT_QUEUE);
-        this.msgListener.onMessageStatus(Hex.decode(d.getItem().hash().toHex()), MsgStatus.TO_DHT_QUEUE);
+
+        ByteArrayWrapper hash = new ByteArrayWrapper(Hex.decode(d.getItem().hash().toHex()));
+        byte[] friend = this.msgStatusOwner.get(hash);
+        if (null != friend) {
+            this.msgListener.onMessageStatus(friend, Hex.decode(d.getItem().hash().toHex()), MsgStatus.TO_DHT_QUEUE);
+        }
     }
 
     private void putMutableItem(DHT.MutableItemDistribution d) {
@@ -864,7 +878,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
                     saveMessageDataInDB(message);
                     updateMessageInfoToFriend(friend, message);
-                    publishMessage(message);
+                    publishMessage(friend, message);
                     publishIndexMutableData(friend);
                     publishGossip();
                 }
@@ -942,7 +956,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             BigInteger timeStamp = this.timeStampToFriend.get(friend);
 
             if (null == timeStamp) {
-                timeStamp = BigInteger.valueOf(currentTime);
+//                timeStamp = BigInteger.valueOf(currentTime);
+                continue;
             }
 
             GossipItem gossipItem = makeGossipItemWithShortAddress(pubKey, friend.getData(), timeStamp);

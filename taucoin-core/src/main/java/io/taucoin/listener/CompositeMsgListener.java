@@ -46,9 +46,9 @@ public class CompositeMsgListener implements MsgListener {
      * @param msgStatus 消息当前状态
      */
     @Override
-    public void onMessageStatus(byte[] root, MsgStatus msgStatus) {
+    public void onMessageStatus(byte[] friend, byte[] root, MsgStatus msgStatus) {
         for (MsgListener listener : listeners) {
-            listener.onMessageStatus(root, msgStatus);
+            listener.onMessageStatus(friend, root, msgStatus);
         }
     }
 

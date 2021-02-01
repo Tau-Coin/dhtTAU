@@ -228,7 +228,8 @@ public class TauController {
      */
     public void updateKey(byte[] seed) {
         this.accountManager.updateKey(seed);
-        this.chainManager.updateKey(this.accountManager.getKeyPair().first);
+        // TODO:: use listener
+//        this.chainManager.updateKey(this.accountManager.getKeyPair().first);
     }
 
     /**
