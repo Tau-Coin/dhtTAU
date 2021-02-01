@@ -159,12 +159,14 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                     LinkedList<Message> linkedList = new LinkedList<>();
                     // 获取最新消息的编码
                     byte[] encode = this.messageDB.getLatestMessageHashListEncode(friend);
-                    HashList hashList = new HashList(encode);
-                    for (byte[] hash: hashList.getHashList()) {
-                        logger.debug("Hash:{}", Hex.toHexString(hash));
-                        byte[] msgEncode = this.messageDB.getMessageByHash(hash);
-                        if (null != msgEncode) {
-                            linkedList.add(new Message(msgEncode));
+                    if (null != encode) {
+                        HashList hashList = new HashList(encode);
+                        for (byte[] hash : hashList.getHashList()) {
+                            logger.debug("Hash:{}", Hex.toHexString(hash));
+                            byte[] msgEncode = this.messageDB.getMessageByHash(hash);
+                            if (null != msgEncode) {
+                                linkedList.add(new Message(msgEncode));
+                            }
                         }
                     }
                     this.messageListMap.put(key, linkedList);
