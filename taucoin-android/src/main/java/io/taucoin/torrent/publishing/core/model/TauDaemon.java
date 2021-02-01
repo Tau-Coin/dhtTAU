@@ -121,6 +121,8 @@ public class TauDaemon {
         if (StringUtil.isEmpty(seed) || StringUtil.isEquals(seed, this.seed)) {
             return;
         }
+        // 清除消息处理，防止多Seed数据错乱
+        msgListenHandler.onCleared();
         this.seed = seed;
         logger.debug("updateSeed ::{}", seed);
         byte[] bytesSeed = ByteUtil.toByte(seed);
@@ -241,8 +243,8 @@ public class TauDaemon {
         }
 
         @Override
-        public void onMessageStatus(byte[] root, MsgStatus msgStatus) {
-            msgListenHandler.onMessageStatus(root, msgStatus);
+        public void onMessageStatus(byte[] friend, byte[] root, MsgStatus msgStatus) {
+            msgListenHandler.onMessageStatus(friend, root, msgStatus);
         }
     };
 

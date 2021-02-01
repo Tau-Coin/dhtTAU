@@ -165,9 +165,14 @@ public class UserViewModel extends AndroidViewModel {
                 if(currentUser != null){
                     userRepo.setCurrentUser(currentUser.publicKey, false);
                 }
+                /* 保证数据不会错乱，必须顺序执行以下逻辑 */
+                // 1、更新链端seed
+                daemon.updateSeed(seed);
+                // 2、更新本地的用户公钥
+                MainApplication.getInstance().setPublicKey(publicKey);
+                // 3、更新本地数据库数据
                 if(null == user){
                     user = new User(publicKey, seed, name, true);
-                    user.lastUpdateTime = DateUtil.getTime();
                     userRepo.addUser(user);
                 }else{
                     if(StringUtil.isNotEmpty(name)){

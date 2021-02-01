@@ -90,10 +90,10 @@ public class TauService extends Service {
                     if(StringUtil.isEmpty(seed)){
                         return;
                     }
-                    // 更新设置用户seed
-                    daemon.updateSeed(seed);
                     logger.info("Update user seed");
                     if(isAlreadyInit.compareAndSet(false, true)){
+                        // 更新设置用户seed
+                        daemon.updateSeed(seed);
                         initAndStart();
                     }
                 }));

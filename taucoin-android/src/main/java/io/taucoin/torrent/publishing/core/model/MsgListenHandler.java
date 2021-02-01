@@ -189,7 +189,7 @@ class MsgListenHandler {
      * @param root
      * @param msgStatus
      */
-    void onMessageStatus(byte[] root, MsgStatus msgStatus) {
+    void onMessageStatus(byte[] friend, byte[] root, MsgStatus msgStatus) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
                 String hash = ByteUtil.toHexString(root);
@@ -206,5 +206,14 @@ class MsgListenHandler {
                 .subscribeOn(Schedulers.io())
                 .subscribe();
         disposables.add(disposable);
+    }
+
+    /**
+     * 清除消息处理，防止多Seed数据错乱
+     */
+    void onCleared() {
+        if (disposables != null) {
+            disposables.clear();
+        }
     }
 }
