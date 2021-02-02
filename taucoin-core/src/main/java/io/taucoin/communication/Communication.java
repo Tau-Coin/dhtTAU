@@ -52,9 +52,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 判断中间层队列的门槛值，中间层队列使用率超过0.8，则增加主循环时间间隔
     private final double THRESHOLD = 0.8;
 
-    // 2 min
-    private static final int TWO_MINUTE = 120; // 120s
-
     // 主循环间隔最小时间
     private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
@@ -175,6 +172,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                             }
                         }
                     }
+
                     this.messageListMap.put(key, linkedList);
                 }
             }
@@ -199,14 +197,21 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      * @throws DBException database exception
      */
     private void saveMessageHashList() throws DBException {
-        for (Map.Entry<ByteArrayWrapper, LinkedList<Message>> entry: this.messageListMap.entrySet()) {
-            List<byte[]> list = new ArrayList<>();
-            for (Message message: entry.getValue()) {
-                list.add(message.getHash());
-            }
 
-            HashList hashList = new HashList(list);
-            this.messageDB.saveLatestMessageHashListEncode(entry.getKey().getData(), hashList.getEncoded());
+        for (Map.Entry<ByteArrayWrapper, LinkedList<Message>> entry: this.messageListMap.entrySet()) {
+
+            List<byte[]> list = new ArrayList<>();
+            LinkedList<Message> linkedList = entry.getValue();
+            if (null != linkedList) {
+
+                for (Message message : linkedList) {
+                    logger.debug("message hash:{}", Hex.toHexString(message.getHash()));
+                    list.add(message.getHash());
+                }
+
+                HashList hashList = new HashList(list);
+                this.messageDB.saveLatestMessageHashListEncode(entry.getKey().getData(), hashList.getEncoded());
+            }
         }
     }
 
@@ -380,6 +385,8 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     private void tryToMergeFriends() throws DBException {
         for (ByteArrayWrapper friend: this.friendsFromRemote) {
             addNewFriend(friend.getData());
+
+            this.msgListener.onNewFriend(friend.getData());
 
             this.friendsFromRemote.remove(friend);
         }
@@ -749,6 +756,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     private void mainLoop() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                // 合并来自多设备的朋友
+                tryToMergeFriends();
+
                 // 通知UI新设备
                 notifyUINewDevice();
 
@@ -760,9 +770,6 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
                 // 通知UI已读root
                 notifyUIReadMessageRoot();
-
-                // 合并来自多设备的朋友
-                tryToMergeFriends();
 
                 // 处理获得的消息
                 dealWithMessage();

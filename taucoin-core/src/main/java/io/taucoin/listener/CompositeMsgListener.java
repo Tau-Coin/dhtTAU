@@ -40,6 +40,18 @@ public class CompositeMsgListener implements MsgListener {
     }
 
     /**
+     * 发现的新朋友通知
+     *
+     * @param friend 发现的新朋友
+     */
+    @Override
+    public void onNewFriend(byte[] friend) {
+        for (MsgListener listener : listeners) {
+            listener.onNewFriend(friend);
+        }
+    }
+
+    /**
      * 通知消息状态
      *
      * @param root      消息哈希
