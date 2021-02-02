@@ -9,12 +9,11 @@ import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
-// 单条gossip记录，大概能放16条记录在一个mutable item中
+// 单条gossip记录，大概能放58条记录在一个mutable item中
 public class GossipItem {
     private byte[] sender; // 4个字节,提取的public key的前缀
     private byte[] receiver; // 4个字节,提取的public key的前缀
-    // 可能需要拉长
-    private BigInteger timestamp; // 4个字节
+    private BigInteger timestamp; // 4个字节，通过时间戳的更新来标记自己是否有新信息
 
     private byte[] hash;
     private byte[] encode; // 缓存编码

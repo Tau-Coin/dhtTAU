@@ -58,9 +58,11 @@ public class ChainParam {
 
     public static final int MAX_HASH_NUMBER = 47;
 
-    public static final int GOSSIP_LIMIT_SIZE = 49;
-
     public static final int DHT_ITEM_LIMIT_SIZE = 996; // 996 byte
+
+    public static final int GOSSIP_ITEM_LIMIT_SIZE = 58;
+
+    public static final int INDEX_HASH_LIMIT_SIZE = 46;
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;

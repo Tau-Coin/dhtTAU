@@ -193,6 +193,26 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
+     * 保存朋友的最新消息哈希列表
+     * @param friend 我的朋友
+     * @throws DBException database exception
+     */
+    private void saveFriendLatestMessageHashList(ByteArrayWrapper friend) throws DBException {
+        LinkedList<Message> linkedList = this.messageListMap.get(friend);
+
+        if (null != linkedList && !linkedList.isEmpty()) {
+            List<byte[]> list = new ArrayList<>();
+            for (Message message : linkedList) {
+                logger.debug("message hash:{}", Hex.toHexString(message.getHash()));
+                list.add(message.getHash());
+            }
+
+            HashList hashList = new HashList(list);
+            this.messageDB.saveLatestMessageHashListEncode(friend.getData(), hashList.getEncoded());
+        }
+    }
+
+    /**
      * 保存与朋友的最近的聊天信息的哈希集合
      * @throws DBException database exception
      */
@@ -220,8 +240,11 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      * @param pubKey 聊天的peer
      * @param message 新消息
      */
-    private void tryToUpdateLatestMessageList(ByteArrayWrapper pubKey, Message message) {
+    private void tryToUpdateLatestMessageList(ByteArrayWrapper pubKey, Message message) throws DBException {
         LinkedList<Message> linkedList = this.messageListMap.get(pubKey);
+
+        // 更新成功标志
+        boolean updated = false;
 
         if (null != linkedList) {
             int size = linkedList.size();
@@ -232,8 +255,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                     if (message.getTimestamp().compareTo(linkedList.get(i).getTimestamp()) <= 0) {
                         linkedList.add(i + 1, message);
                         insert = true;
+                        updated = true;
 
-                        if (size >= ChainParam.MAX_HASH_NUMBER) {
+                        if (size >= ChainParam.INDEX_HASH_LIMIT_SIZE) {
                             linkedList.remove(0);
                         }
 
@@ -243,18 +267,27 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
                 if (!insert) {
                     linkedList.add(message);
+                    updated = true;
                 }
             } else {
                 linkedList.add(message);
+                updated = true;
             }
         } else {
             linkedList = new LinkedList<>();
             linkedList.add(message);
+            updated = true;
         }
 
-        this.messageListMap.put(pubKey, linkedList);
+        // 更新成功
+        if (updated) {
+            this.messageListMap.put(pubKey, linkedList);
 
-        this.freshFriends.add(pubKey);
+            saveFriendLatestMessageHashList(pubKey);
+
+            // 更新成功则记为fresh节点
+            this.freshFriends.add(pubKey);
+        }
     }
 
     /**
@@ -1046,7 +1079,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
         Iterator<GossipItem> iterator = this.gossipItemsToPut.iterator();
         int i = 0;
-        while (iterator.hasNext() && i <= ChainParam.GOSSIP_LIMIT_SIZE) {
+        while (iterator.hasNext() && i <= ChainParam.GOSSIP_ITEM_LIMIT_SIZE) {
             GossipItem gossipItem = iterator.next();
             gossipItemList.add(gossipItem);
 
@@ -1082,15 +1115,18 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      * @throws DBException database exception
      */
     public void addNewFriend(byte[] pubKey) throws DBException {
-        byte[] myPubKey = AccountManager.getInstance().getKeyPair().first;
+        ByteArrayWrapper peer = new ByteArrayWrapper(pubKey);
+        // 没有才添加
+        if (!this.friends.contains(peer)) {
+            byte[] myPubKey = AccountManager.getInstance().getKeyPair().first;
 
-        // 朋友列表排除自己
-        if (!Arrays.equals(myPubKey, pubKey)) {
-            ByteArrayWrapper peer = new ByteArrayWrapper(pubKey);
-            this.friends.add(peer);
-            this.messageListMap.put(peer, new LinkedList<>());
+            // 朋友列表排除自己
+            if (!Arrays.equals(myPubKey, pubKey)) {
+                this.friends.add(peer);
+                this.messageListMap.put(peer, new LinkedList<>());
 
-            this.messageDB.addFriend(pubKey);
+                this.messageDB.addFriend(pubKey);
+            }
         }
     }
 
@@ -1180,11 +1216,11 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             communicationThread.interrupt();
         }
 
-        try {
-            saveMessageHashList();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
+//        try {
+//            saveMessageHashList();
+//        } catch (Exception e) {
+//            logger.error(e.getMessage(), e);
+//        }
 
         AccountManager.getInstance().removeListener(this);
     }
@@ -1225,7 +1261,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         BigInteger gossipTime = gossipMutableData.getTimestamp();
         BigInteger lastSeen = this.friendLastSeen.get(peer);
         if (null == lastSeen || lastSeen.compareTo(gossipTime) < 0) { // 判断是否是更新的gossip
-            logger.debug("Seen peer:{}", peer.toString());
+            logger.debug("See peer:{} again", peer.toString());
             this.friendLastSeen.put(peer, gossipTime);
             this.onlineFriendsToNotify.add(peer);
 
@@ -1294,6 +1330,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
                 if (!found) { // 找到新消息的哈希，则请求该消息
                     // 发现新的同步需求，更新时间戳，发出信号
+                    logger.debug("Found new hash:{} from peer:{}", Hex.toHexString(hash), peer.toString());
                     touchGossipItem(peer);
                     requestMessage(hash, peer);
                 }
@@ -1312,7 +1349,9 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                     }
 
                     if (!found) {// 找到对方缺少的消息的哈希，则加入需求集合
-                        this.friendDemandHash.add(new ByteArrayWrapper(message.getHash()));
+                        ByteArrayWrapper hash = new ByteArrayWrapper(message.getHash());
+                        logger.debug("Found demand hash:{} from peer:{}", hash.toString(), peer.toString());
+                        this.friendDemandHash.add(hash);
                         // 满足一个需求即可
                         break;
                     }

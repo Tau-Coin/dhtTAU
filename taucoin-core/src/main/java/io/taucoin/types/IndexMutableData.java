@@ -115,7 +115,7 @@ public class IndexMutableData {
 
         byte[] deviceID = getDeviceID();
         if (null != deviceID) {
-            list.add(new String(deviceID));
+            list.add("deviceID: " + Hex.toHexString(deviceID));
         }
 
         BigInteger timeStamp = getTimestamp();
@@ -127,7 +127,7 @@ public class IndexMutableData {
             }
         }
 
-        return "Index{ timestamp: " + timeStamp + ", "  + list + '}';
+        return "Index{timestamp: " + timeStamp + ", "  + list + '}';
     }
 
 }

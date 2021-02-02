@@ -140,7 +140,7 @@ public class GossipMutableData {
 
         byte[] deviceID = getDeviceID();
         if (null != deviceID) {
-            list.add(new String(deviceID));
+            list.add("deviceID: " + Hex.toHexString(deviceID));
         }
 
         BigInteger timeStamp = getTimestamp();
@@ -159,7 +159,7 @@ public class GossipMutableData {
             }
         }
 
-        return "Gossip{ timestamp: " + timeStamp + ", " + list + '}';
+        return "Gossip{timestamp: " + timeStamp + ", " + list + '}';
     }
 
 }
