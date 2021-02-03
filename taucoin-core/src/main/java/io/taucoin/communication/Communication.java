@@ -9,8 +9,6 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -131,8 +129,11 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // 通过gossip推荐机制发现的有新消息的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> referredFriends = new CopyOnWriteArraySet<>();
 
-    // 通过gossip机制发现的给朋友的gossip item <FriendPair, Timestamp>（非完整公钥, FriendPair均为短地址）
-    private final Map<FriendPair, BigInteger> friendGossipItem = Collections.synchronizedMap(new HashMap<>());
+    // 通过gossip机制发现的给朋友的gossip time <FriendPair, Timestamp>（非完整公钥, FriendPair均为短地址）
+    private final Map<FriendPair, BigInteger> friendGossipTime = new ConcurrentHashMap<>();
+
+    // 有更新信息的friend pair集合（完整公钥）
+    private final Set<FriendPair> freshFriendPair = new CopyOnWriteArraySet<>();
 
     // Communication thread.
     private Thread communicationThread;
@@ -249,25 +250,35 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         if (null != linkedList) {
             int size = linkedList.size();
             if (size > 0) {
-                boolean insert = false;
-                for (int i = size - 1; i > 0; i--) {
-                    // 寻找第一个时间戳不大于当前消息的消息，将当前消息加到后面即可
-                    if (message.getTimestamp().compareTo(linkedList.get(i).getTimestamp()) <= 0) {
-                        linkedList.add(i + 1, message);
-                        insert = true;
-                        updated = true;
-
-                        if (size >= ChainParam.INDEX_HASH_LIMIT_SIZE) {
-                            linkedList.remove(0);
-                        }
-
-                        break;
-                    }
-                }
-
-                if (!insert) {
+                // 先判断一下是否比最后一个消息时间戳大，如果是，则直接插入末尾
+                if (message.getTimestamp().compareTo(linkedList.get(size - 1).getTimestamp()) > 0) {
                     linkedList.add(message);
                     updated = true;
+                } else {
+                    // 寻找从后往前寻找第一个时间小于当前消息时间的消息，将当前消息插入到到该消息后面
+                    for (int i = size - 1; i > 0; i--) {
+                        // 比较当前位置消息与新消息的时间戳差值
+                        int m = linkedList.get(i).getTimestamp().compareTo(message.getTimestamp());
+
+                        // 如果差值小于零，说明找到了比当前消息时间戳小的消息位置，将消息插入到目标位置后面一位
+                        if (m < 0) {
+                            linkedList.add(i + 1, message);
+                            updated = true;
+                        } else if (0 == m && !Arrays.equals(linkedList.get(i).getHash(), message.getHash())) {
+                            // 如果时间戳一样，并且是不同的消息，则认为后来的消息时间戳更大
+                            linkedList.add(i + 1, message);
+                            updated = true;
+                        }
+
+                        // 如果更新了消息列表，则判断是否列表长度过长，过长则删掉旧数据，然后停止循环
+                        if (updated) {
+                            if (size >= ChainParam.INDEX_HASH_LIMIT_SIZE) {
+                                linkedList.remove(0);
+                            }
+
+                            break;
+                        }
+                    }
                 }
             } else {
                 linkedList.add(message);
@@ -488,13 +499,14 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                         if (ByteUtil.startsWith(friend.getData(), receiver)) { // 找到
                             FriendPair pair = FriendPair.create(makeShortAddress(sender), makeShortAddress(receiver));
 
-                            BigInteger oldTimestamp = this.friendGossipItem.get(pair);
+                            BigInteger oldTimestamp = this.friendGossipTime.get(pair);
 
                             BigInteger timeStamp = gossipItem.getTimestamp();
 
                             // 判断是否是新数据，若是，则记录下来以待发布
                             if (null == oldTimestamp || oldTimestamp.compareTo(timeStamp) < 0) {
-                                this.friendGossipItem.put(pair, timeStamp);
+                                this.friendGossipTime.put(pair, timeStamp);
+                                this.freshFriendPair.add(pair);
                             }
 
                             break;
@@ -529,19 +541,24 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     }
 
     /**
+     * 看看是否有新信息需要向朋友发布，有则发布新的index数据
+     */
+    private void tryToPublishIndexMutableData() {
+        // 如果有同步请求，则发布自己的index数据以便对方比对
+        for (ByteArrayWrapper friend: this.freshFriends) {
+            publishIndexMutableData(friend.getData());
+            this.freshFriends.remove(friend);
+        }
+    }
+
+    /**
      * 尝试发布gossip信息，看看时间间隔是否已到
      */
-    private void tryToPublishGossipInfo() {
+    private void tryToPublishGossipMutableData() {
         long currentTime = System.currentTimeMillis() / 1000;
 
         if (currentTime - lastGossipPublishTime > gossipPublishIntervalTime) {
             publishGossip();
-
-            // 如果有同步请求，则发布自己的index数据以便对方比对
-            for (ByteArrayWrapper friend: this.freshFriends) {
-                publishIndexMutableData(friend.getData());
-                this.freshFriends.remove(friend);
-            }
         }
     }
 
@@ -813,11 +830,11 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 // 相应远端的需求
                 responseRemoteDemand();
 
-                // 尝试对gossip数据进行瘦身
-//                tryToSlimDownGossip();
+                // 尝试发布gossip数据
+                tryToPublishGossipMutableData();
 
-                // 尝试发布gossip及相关数据
-                tryToPublishGossipInfo();
+                // 尝试发布index数据
+                tryToPublishIndexMutableData();
 
                 // 访问通过gossip机制推荐的活跃peer
                 visitReferredFriends();
@@ -1032,7 +1049,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         }
 
         // 2.统计其他人发给我朋友的消息
-        for (Map.Entry<FriendPair, BigInteger> entry : this.friendGossipItem.entrySet()) {
+        for (Map.Entry<FriendPair, BigInteger> entry : this.friendGossipTime.entrySet()) {
             BigInteger timestamp = entry.getValue();
             // 只添加一天以内有新消息的
             if (currentTime - timestamp.longValue() < ChainParam.ONE_DAY) {
@@ -1143,7 +1160,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         this.friendIndexData.remove(key);
         this.timeStampToFriend.remove(key);
 
-        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.friendGossipItem.entrySet().iterator();
+        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.friendGossipTime.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<FriendPair, BigInteger> entry = it.next();
             if (ByteUtil.startsWith(pubKey, entry.getKey().getReceiver())) {

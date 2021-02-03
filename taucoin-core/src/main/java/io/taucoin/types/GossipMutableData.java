@@ -10,14 +10,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
+// gossip频道的mutable data数据结构
 public class GossipMutableData {
-    private byte[] deviceID;
-    private BigInteger timestamp;
-    private List<byte[]> friendList = new CopyOnWriteArrayList<>();
-    private List<GossipItem> gossipItemList = new CopyOnWriteArrayList<>();
+    private byte[] deviceID; // 设备ID
+    private BigInteger timestamp; // 发布gossip时的时间戳
+    private List<byte[]> friendList = new CopyOnWriteArrayList<>(); // 多设备同步用的朋友列表，目前放1个朋友
+    private List<GossipItem> gossipItemList = new CopyOnWriteArrayList<>(); // gossip item数据列表，目前可放58个
 
-    private byte[] rlpEncoded;
-    private boolean parsed = false;
+    // 辅助数据
+    private byte[] rlpEncoded; // 编码数据
+    private boolean parsed = false; // 解析标志
 
     public GossipMutableData(byte[] deviceID, List<byte[]> friendList, List<GossipItem> gossipItemList) {
         this.deviceID = deviceID;

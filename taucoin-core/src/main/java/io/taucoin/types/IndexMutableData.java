@@ -10,14 +10,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
+// index频道数据结构
 public class IndexMutableData {
-    private byte[] deviceID;
-    // 记录最新消息的时间
-    private BigInteger timestamp;
-    private List<byte[]> hashList = new CopyOnWriteArrayList<>();
+    private byte[] deviceID; // 设备ID
+    private BigInteger timestamp; // 发布index数据时的时间戳
+    private List<byte[]> hashList = new CopyOnWriteArrayList<>(); // index hash数据列表，目前可放46个hash
 
-    private byte[] rlpEncoded;
-    private boolean parsed = false;
+    // 辅助数据
+    private byte[] rlpEncoded; // 编码数据
+    private boolean parsed = false; // 解析标志
 
     public IndexMutableData(byte[] deviceID, List<byte[]> hashList) {
         this(deviceID, BigInteger.valueOf(System.currentTimeMillis() / 1000), hashList);
