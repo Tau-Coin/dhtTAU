@@ -6,15 +6,13 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
-import androidx.room.PrimaryKey;
 
 /**
  * Room: 数据库存储Chat实体类
  */
-@Entity(tableName = "ChatMessages")
+@Entity(tableName = "ChatMessages", primaryKeys = {"senderPk", "friendPk", "hash"})
 public class ChatMsg implements Parcelable {
     @NonNull
-    @PrimaryKey
     public String hash;                    // 消息的Hash
     @NonNull
     public String senderPk;                // 发送者的公钥
@@ -53,13 +51,14 @@ public class ChatMsg implements Parcelable {
     }
 
     @Ignore
-    public ChatMsg(String senderPk, String friendPk,
-                   String content, int contentType, long timestamp){
+    public ChatMsg(@NonNull String hash, String senderPk, String friendPk,
+                   int contentType, long timestamp, long nonce){
+        this.hash = hash;
         this.senderPk = senderPk;
         this.friendPk = friendPk;
-        this.content = content;
         this.contentType = contentType;
         this.timestamp = timestamp;
+        this.nonce = nonce;
     }
 
     @Ignore

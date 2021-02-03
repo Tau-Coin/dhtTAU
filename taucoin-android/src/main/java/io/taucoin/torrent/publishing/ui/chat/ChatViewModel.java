@@ -161,7 +161,7 @@ public class ChatViewModel extends AndroidViewModel {
                     messages[i] = chatMsg;
 
                     if (i == 0) {
-                        ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash,
+                        ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPk, friendPk,
                                 ChatMsgStatus.UNSENT.getStatus(), millisTime);
                         chatRepo.addChatMsgLog(chatMsgLog);
                     }

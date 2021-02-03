@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
@@ -56,19 +55,17 @@ class MsgListenHandler {
             try {
                 String userPk = MainApplication.getInstance().getPublicKey();
                 String hash = ByteUtil.toHexString(message.getHash());
-                String content = new String(message.getContent(), StandardCharsets.UTF_8);
                 long sentTime = message.getTimestamp().longValue();
                 long receivedTime = DateUtil.getTime();
                 String sentTimeStr = DateUtil.formatTime(sentTime, DateUtil.pattern6);
                 String receivedTimeStr = DateUtil.formatTime(receivedTime, DateUtil.pattern6);
                 long delayTime = receivedTime - sentTime;
                 logger.debug("TAU messaging onNewMessage friendPk::{}, hash::{}, SentTime::{}, ReceivedTime::{}," +
-                                " DelayTime::{}s content::{}",
+                                " DelayTime::{}s",
                         ByteUtil.toHexString(friendPk), hash,
                         sentTimeStr,
                         receivedTimeStr,
-                        delayTime,
-                        content);
+                        delayTime);
 
                 String friendPkStr = ByteUtil.toHexString(friendPk);
                 ChatMsg chatMsg = chatRepo.queryChatMsg(userPk, hash);
@@ -98,8 +95,8 @@ class MsgListenHandler {
                         }
                         friendRepo.updateFriend(friend);
                     }
-                    ChatMsg msg = new ChatMsg(hash, friendPkStr, userPk, content,
-                            message.getType().ordinal(), sentTime, message.getNonce().longValue());
+                    ChatMsg msg = new ChatMsg(hash, friendPkStr, userPk, message.getType().ordinal(),
+                            sentTime, message.getNonce().longValue());
                     msg.unsent = 1;
                     chatRepo.addChatMsg(msg);
                 }
@@ -125,14 +122,12 @@ class MsgListenHandler {
         Disposable disposable = Flowable.create(emitter -> {
             try {
                 String hash = ByteUtil.toHexString(root);
-                ChatMsgLog msg = chatRepo.queryChatMsgLastLog(hash);
-                if (msg != null && msg.status != ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
-                    msg.status = ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus();
-                    msg.timestamp = DateUtil.getMillisTime();
-                    chatRepo.addChatMsgLog(msg);
-                    logger.trace("updateReceivedConfirmationState friendPk::{}, msgRoot::{}",
-                            friendPkStr, hash);
-                }
+                String userPk = MainApplication.getInstance().getPublicKey();
+                ChatMsgLog msgLog = new ChatMsgLog(hash, userPk, friendPkStr,
+                        ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), DateUtil.getMillisTime());
+                long result = chatRepo.addChatMsgLog(msgLog);
+                logger.trace("updateReceivedConfirmationState friendPk::{}, msgRoot::{}, result::{}",
+                        friendPkStr, hash, result);
             } catch (Exception e) {
                 logger.error("onNewMessage error", e);
             }
@@ -166,8 +161,8 @@ class MsgListenHandler {
                     }
                     long currentTime = DateUtil.getTime();
                     // 当前时间大于上次更新时间30s再更新
-                    if (currentTime - friend.lastSeenTime > 30) {
-                        friend.lastSeenTime = DateUtil.getTime();
+                    if (currentTime > friend.lastSeenTime) {
+                        friend.lastSeenTime = currentTime;
                         isUpdate = true;
                     }
                     if (isUpdate) {
@@ -196,7 +191,10 @@ class MsgListenHandler {
                 logger.trace("onMessageStatus root::{}, msgStatus::{}",
                         hash, msgStatus.name());
                 int status = msgStatus.ordinal();
-                ChatMsgLog msgLog = new ChatMsgLog(hash, status, DateUtil.getMillisTime());
+                String userPk = MainApplication.getInstance().getPublicKey();
+                String friendPk = ByteUtil.toHexString(friend);
+                ChatMsgLog msgLog = new ChatMsgLog(hash, userPk, friendPk, status,
+                        DateUtil.getMillisTime());
                 chatRepo.addChatMsgLog(msgLog);
             } catch (Exception e) {
                 logger.error("onMessageStatus error", e);

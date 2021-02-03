@@ -62,27 +62,10 @@ public interface ChatRepository {
     List<ChatMsg> getUnsentMessages();
 
     /**
-     * 获取最新已构建并且未入队列的消息
-     */
-    ChatMsg getLatestBuiltAndUnsentMsg();
-
-    /**
-     * 获取未确认接收消息的朋友
-     * @return
-     */
-    List<String> getUnConfirmationFriends();
-
-    /**
      * 添加消息日志
      * @param msgLog
      */
-    void addChatMsgLog(ChatMsgLog msgLog);
-
-    /**
-     * 查询消息的最新log
-     * @param hash
-     */
-    ChatMsgLog queryChatMsgLastLog(String hash);
+    long addChatMsgLog(ChatMsgLog msgLog);
 
     /**
      * 观察消息日志

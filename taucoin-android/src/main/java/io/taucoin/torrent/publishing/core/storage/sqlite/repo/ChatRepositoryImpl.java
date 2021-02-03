@@ -102,40 +102,12 @@ public class ChatRepositoryImpl implements ChatRepository{
     }
 
     /**
-     * 获取最新已构建并且未入队列的消息
-     * @return
-     */
-    @Override
-    public ChatMsg getLatestBuiltAndUnsentMsg() {
-        return db.chatDao().getLatestBuiltAndUnsentMsg();
-    }
-
-    /**
-     * 获取未确认接收消息的朋友
-     * @return
-     */
-    @Override
-    public List<String> getUnConfirmationFriends() {
-        int status = ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus();
-        return db.chatDao().getUnConfirmationFriends(status);
-    }
-
-    /**
      * 添加消息日志
      * @param msgLog
      */
     @Override
-    public void addChatMsgLog(ChatMsgLog msgLog) {
-        db.chatDao().addChatMsgLog(msgLog);
-    }
-
-    /**
-     * 查询消息的最新log
-     * @param hash
-     */
-    @Override
-    public ChatMsgLog queryChatMsgLastLog(String hash) {
-        return db.chatDao().queryChatMsgLastLog(hash);
+    public long addChatMsgLog(ChatMsgLog msgLog) {
+        return db.chatDao().addChatMsgLog(msgLog);
     }
 
     /**
