@@ -10,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
-// index频道数据结构
+// index频道数据结构,即XY的通信历史同步数据
 public class IndexMutableData {
     private byte[] deviceID; // 设备ID
     private BigInteger timestamp; // 发布index数据时的时间戳

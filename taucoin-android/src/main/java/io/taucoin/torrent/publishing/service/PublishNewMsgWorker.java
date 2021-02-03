@@ -82,10 +82,10 @@ public class PublishNewMsgWorker extends Worker {
         byte[] content;
         if (msg.contentType == MessageType.PICTURE.ordinal()) {
             content = ByteUtil.toByte(msg.content);
-            message = Message.CreatePictureMessage(timestamp, nonce, content);
+            message = Message.createPictureMessage(timestamp, nonce, content);
         } else {
             content = msg.content.getBytes(StandardCharsets.UTF_8);
-            message = Message.CreateTextMessage(BigInteger.valueOf(msg.timestamp), nonce, content);
+            message = Message.createTextMessage(BigInteger.valueOf(msg.timestamp), nonce, content);
         }
         boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message);
         logger.debug("NewMsgHash::{}, nonce::{}, isSendSuccess::{}", msg.hash, msg.nonce, isSendSuccess);

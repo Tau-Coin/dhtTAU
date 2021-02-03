@@ -11,6 +11,7 @@ import io.taucoin.util.RLPList;
 public class Message {
     private MessageVersion version; // 标识消息版本
     private BigInteger timestamp;
+    private byte[] previousHash; // 用于确认切分消息的顺序
     private BigInteger nonce; // 局部nonce，用于标识切分消息的顺序
     private MessageType type;  // 可以标识消息类型
     private byte[] content; // 消息体
@@ -19,17 +20,18 @@ public class Message {
     private byte[] encode; // 缓存编码
     private boolean parsed = false; // 是否解码标志
 
-    public static Message CreateTextMessage(BigInteger timestamp, BigInteger nonce, byte[] content) {
-        return new Message(MessageVersion.VERSION1, timestamp, nonce, MessageType.TEXT, content);
+    public static Message createTextMessage(BigInteger timestamp, byte[] previousHash, BigInteger nonce, byte[] content) {
+        return new Message(MessageVersion.VERSION1, timestamp, previousHash, nonce, MessageType.TEXT, content);
     }
 
-    public static Message CreatePictureMessage(BigInteger timestamp, BigInteger nonce, byte[] content) {
-        return new Message(MessageVersion.VERSION1, timestamp, nonce, MessageType.PICTURE, content);
+    public static Message createPictureMessage(BigInteger timestamp, byte[] previousHash, BigInteger nonce, byte[] content) {
+        return new Message(MessageVersion.VERSION1, timestamp, previousHash, nonce, MessageType.PICTURE, content);
     }
 
-    public Message(MessageVersion version, BigInteger timestamp, BigInteger nonce, MessageType type, byte[] content) {
+    public Message(MessageVersion version, BigInteger timestamp, byte[] previousHash, BigInteger nonce, MessageType type, byte[] content) {
         this.version = version;
         this.timestamp = timestamp;
+        this.previousHash = previousHash;
         this.nonce = nonce;
         this.type = type;
         this.content = content;
@@ -55,6 +57,14 @@ public class Message {
         }
 
         return timestamp;
+    }
+
+    public byte[] getPreviousHash() {
+        if (!this.parsed) {
+            parseRLP();
+        }
+
+        return previousHash;
     }
 
     public BigInteger getNonce() {
@@ -104,10 +114,12 @@ public class Message {
         byte[] timeBytes = messageList.get(1).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
-        byte[] nonceBytes = messageList.get(2).getRLPData();
+        this.previousHash = messageList.get(2).getRLPData();
+
+        byte[] nonceBytes = messageList.get(3).getRLPData();
         this.nonce = (null == nonceBytes) ? BigInteger.ZERO: new BigInteger(1, nonceBytes);
 
-        byte[] typeBytes = messageList.get(3).getRLPData();
+        byte[] typeBytes = messageList.get(4).getRLPData();
         int typeNum = null == typeBytes ? 0: new BigInteger(1, typeBytes).intValue();
         if (typeNum >= MessageType.UNKNOWN.ordinal()) {
             this.type = MessageType.UNKNOWN;
@@ -115,7 +127,7 @@ public class Message {
             this.type = MessageType.values()[typeNum];
         }
 
-        this.content = messageList.get(4).getRLPData();
+        this.content = messageList.get(5).getRLPData();
 
         this.parsed = true;
     }
@@ -124,11 +136,12 @@ public class Message {
         if (null == this.encode) {
             byte[] version = RLP.encodeBigInteger(BigInteger.valueOf(this.version.ordinal()));
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
+            byte[] previousHash = RLP.encodeElement(this.previousHash);
             byte[] nonce = RLP.encodeBigInteger(this.nonce);
             byte[] type = RLP.encodeBigInteger(BigInteger.valueOf(this.type.ordinal()));
             byte[] content = RLP.encodeElement(this.content);
 
-            this.encode = RLP.encodeList(version, timestamp, nonce, type, content);
+            this.encode = RLP.encodeList(version, timestamp, previousHash, nonce, type, content);
         }
 
         return this.encode;
@@ -138,6 +151,7 @@ public class Message {
     public String toString() {
         MessageVersion version = getVersion();
         BigInteger timestamp = getTimestamp();
+        byte[] previousHash = getPreviousHash();
         BigInteger nonce = getNonce();
         MessageType type = getType();
         byte[] content = getContent();
@@ -157,6 +171,10 @@ public class Message {
         if (null != timestamp) {
             stringBuilder.append(", timestamp=");
             stringBuilder.append(timestamp);
+        }
+        if (null != previousHash) {
+            stringBuilder.append("previous hash=");
+            stringBuilder.append(Hex.toHexString(previousHash));
         }
         if (null != nonce) {
             stringBuilder.append(", nonce=");

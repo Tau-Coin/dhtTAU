@@ -140,12 +140,12 @@ public class ChatViewModel extends AndroidViewModel {
                     Message message;
                     if (type == MessageType.TEXT.ordinal()) {
                         contentStr = MsgSplitUtil.textMsgToString(content);
-                        message = Message.CreateTextMessage(
+                        message = Message.createTextMessage(
                                 BigInteger.valueOf(timestamp),
                                 BigInteger.valueOf(i), content);
                     } else {
                         contentStr = ByteUtil.toHexString(content);
-                        message = Message.CreatePictureMessage(
+                        message = Message.createPictureMessage(
                                 BigInteger.valueOf(timestamp),
                                 BigInteger.valueOf(i),
                                 content);

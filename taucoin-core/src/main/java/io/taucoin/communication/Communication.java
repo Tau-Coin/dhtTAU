@@ -1324,6 +1324,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         if (Arrays.equals(pubKey, peer.getData())) {
             return;
         }
+        // TODO:：增加X1,X2数据互相比较，加速数据获取
 
         IndexMutableData currentIndexData = this.friendIndexData.get(peer);
         // 只处理发现的更新的数据
