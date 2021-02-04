@@ -70,6 +70,9 @@ public class PrivacySecurityActivity extends BaseActivity implements View.OnClic
             case R.id.ll_seeds:
                 ActivityUtil.startActivity(this, SeedActivity.class);
                 break;
+            case R.id.ll_devices:
+                ActivityUtil.startActivity(this, DevicesActivity.class);
+                break;
         }
     }
 }

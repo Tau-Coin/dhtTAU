@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        android:background="@color/color_bg"
+        android:orientation="vertical">
+
+        <include
+            android:id="@+id/toolbar_include"
+            layout="@layout/toolbar" />
+
+        <com.yanzhenjie.recyclerview.SwipeRecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
+            android:clipToPadding="false"
+            android:scrollbars="vertical"
+            android:focusable="true"
+            android:scrollbarStyle="outsideOverlay" />
+
+    </LinearLayout>
+</layout>
