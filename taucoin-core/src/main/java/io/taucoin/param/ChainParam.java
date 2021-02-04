@@ -56,6 +56,9 @@ public class ChainParam {
     // 一般public key截取保留的长度
     public static final int SHORT_ADDRESS_LENGTH = 4;
 
+    // device id限制长度
+    public static final int DEVICE_ID_LIMIT_SIZE = 32;
+
     public static final int MAX_HASH_NUMBER = 47;
 
     public static final int DHT_ITEM_LIMIT_SIZE = 996; // 996 byte

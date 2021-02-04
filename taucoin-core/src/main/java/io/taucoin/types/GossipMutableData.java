@@ -12,7 +12,6 @@ import io.taucoin.util.RLPList;
 
 // gossip频道的mutable data数据结构
 public class GossipMutableData {
-    // TODO::加长度限制:32字节
     private byte[] deviceID; // 设备ID
     private BigInteger timestamp; // 发布gossip时的时间戳
     private List<byte[]> friendList = new CopyOnWriteArrayList<>(); // 多设备同步用的朋友列表，目前放1个朋友

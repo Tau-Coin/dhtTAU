@@ -108,7 +108,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     // index mutable data更新了，需要重新发布数据的friend集合（完整公钥）
     private final Set<ByteArrayWrapper> freshFriends = new CopyOnWriteArraySet<>();
 
-    // 我的朋友的最新消息的哈希集合 <friend, IndexMutableData>（完整公钥）
+    // 我的朋友的最新消息的哈希集合 <friend（包含多设备上的我）, IndexMutableData>（完整公钥）
     private final Map<ByteArrayWrapper, IndexMutableData> friendIndexData = new ConcurrentHashMap<>();
 
     // 新发现的，等待通知UI的，我的朋友的IndexMutableData <friend, IndexMutableData>（完整公钥）
@@ -139,9 +139,28 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     private Thread communicationThread;
 
     public Communication(byte[] deviceID, MessageDB messageDB, MsgListener msgListener) {
-        this.deviceID = deviceID;
+        this.deviceID = adjustDeviceID(deviceID);
         this.messageDB = messageDB;
         this.msgListener = msgListener;
+    }
+
+    /**
+     * 调整device id长度，使之不超过长度限制
+     * @param deviceID device id
+     * @return adjusted device id
+     */
+    private byte[] adjustDeviceID(byte[] deviceID) {
+        if (null == deviceID) {
+            return new byte[1];
+        }
+
+        if (deviceID.length <= ChainParam.DEVICE_ID_LIMIT_SIZE) {
+            return deviceID;
+        }
+
+        byte[] shortDeviceID = new byte[ChainParam.DEVICE_ID_LIMIT_SIZE];
+        System.arraycopy(deviceID, 0, shortDeviceID, 0, ChainParam.DEVICE_ID_LIMIT_SIZE);
+        return shortDeviceID;
     }
 
     /**
@@ -1321,10 +1340,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
     private void compareIndexDataSet(ByteArrayWrapper peer, IndexMutableData indexMutableData) {
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
         // 排除自己的数据
-        if (Arrays.equals(pubKey, peer.getData())) {
+        if (Arrays.equals(pubKey, peer.getData()) &&
+                Arrays.equals(this.deviceID, indexMutableData.getDeviceID())) {
             return;
         }
-        // TODO:：增加X1,X2数据互相比较，加速数据获取
 
         IndexMutableData currentIndexData = this.friendIndexData.get(peer);
         // 只处理发现的更新的数据
