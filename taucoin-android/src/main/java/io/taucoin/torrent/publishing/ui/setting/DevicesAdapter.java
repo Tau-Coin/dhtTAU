@@ -1,10 +1,8 @@
 package io.taucoin.torrent.publishing.ui.setting;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
@@ -13,13 +11,15 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Device;
-import io.taucoin.torrent.publishing.databinding.ItemBlacklistBinding;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.DeviceUtils;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.databinding.ItemDeviceBinding;
 
 /**
  * 设备列表的Adapter
  */
 public class DevicesAdapter extends ListAdapter<Device, DevicesAdapter.ViewHolder> {
-    private List<Device> dataList = new ArrayList<>();
 
     DevicesAdapter() {
         super(diffCallback);
@@ -29,8 +29,8 @@ public class DevicesAdapter extends ListAdapter<Device, DevicesAdapter.ViewHolde
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        ItemBlacklistBinding binding = DataBindingUtil.inflate(inflater,
-                R.layout.item_blacklist,
+        ItemDeviceBinding binding = DataBindingUtil.inflate(inflater,
+                R.layout.item_device,
                 parent,
                 false);
 
@@ -43,24 +43,16 @@ public class DevicesAdapter extends ListAdapter<Device, DevicesAdapter.ViewHolde
         holder.bindDevice(device);
     }
 
-    /**
-     * 设置设备列表数据
-     * @param dataList 设备数据
-     */
-    void setDeviceList(List<Device> dataList) {
-        this.dataList.clear();
-        if(dataList != null){
-            this.dataList.addAll(dataList);
-        }
-        notifyDataSetChanged();
-    }
-
     static class ViewHolder extends RecyclerView.ViewHolder {
-        private ItemBlacklistBinding binding;
+        private ItemDeviceBinding binding;
+        private Context context;
+        private String deviceID;
 
-        ViewHolder(ItemBlacklistBinding binding) {
+        ViewHolder(ItemDeviceBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
+            this.context = binding.getRoot().getContext();
+            deviceID = DeviceUtils.getCustomDeviceID(this.context);
         }
 
         /**
@@ -71,6 +63,10 @@ public class DevicesAdapter extends ListAdapter<Device, DevicesAdapter.ViewHolde
                 return;
             }
             binding.tvName.setText(device.deviceID);
+            binding.tvFirstLoginTime.setText(DateUtil.formatTime(device.loginTime, DateUtil.pattern6));
+            boolean isCurrentDevice = StringUtil.isEquals(this.deviceID, device.deviceID);
+            int bgColor = isCurrentDevice ? R.color.color_bg : R.color.color_white;
+            binding.getRoot().setBackgroundColor(context.getResources().getColor(bgColor));
         }
     }
 

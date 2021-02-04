@@ -66,6 +66,9 @@ public class HashTextView extends TextView {
 
     public void setTextHash(boolean unsent, String textHash, String friendPk) {
         // 如果是图片已加载，并且显示的图片不变，直接返回
+        if (StringUtil.isEmpty(textHash)) {
+            return;
+        }
         if (isLoadSuccess && textBuilder.length() > 0
                 && StringUtil.isEquals(textHash, this.textHash)) {
             return;

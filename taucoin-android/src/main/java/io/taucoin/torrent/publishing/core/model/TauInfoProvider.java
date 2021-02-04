@@ -78,14 +78,8 @@ public class TauInfoProvider {
         return Flowable.create((emitter) -> {
             try {
                 while (!emitter.isCancelled()) {
-                    BigInteger nodes = BigInteger.ZERO;
-                    List<Long> sessionNodes = daemon.getSessionNodes();
-                    if (sessionNodes != null) {
-                        for (Long node : sessionNodes) {
-                            nodes = nodes.add(BigInteger.valueOf(node));
-                        }
-                        emitter.onNext(nodes.longValue());
-                    }
+                    long sessionNodes = daemon.getSessionNodes();
+                    emitter.onNext(sessionNodes);
                     if (!emitter.isCancelled()) {
                         Thread.sleep(STATISTICS_PERIOD);
                     }

@@ -23,11 +23,14 @@ public interface UserDao {
     String QUERY_GET_USER_LIST = "SELECT * FROM Users";
     String QUERY_GET_USERS_IN_BAN_LIST = "SELECT * FROM Users where isBanned = 1 and isCurrentUser != 1";
 
+    // 查询所有用户数据的条件
     String QUERY_ALL_USERS_WHERE = " WHERE u.isBanned = 0 AND u.isCurrentUser != 1 AND" +
             " u.publicKey != :friendPK";
+    // 查询所有用户数据
     String QUERY_NUM_ALL_USERS = "SELECT count(*) FROM Users u" +
             QUERY_ALL_USERS_WHERE;
 
+    // 查询所有用户数据的详细sql
     String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT u.*, f.lastCommTime AS lastCommTime," +
             " f.lastSeenTime AS lastSeenTime, f.state" +
             " FROM Users u" +
@@ -40,8 +43,16 @@ public interface UserDao {
     String QUERY_USERS_ORDER_BY_LAST_COMM_TIME = QUERY_GET_USERS_NOT_IN_BAN_LIST +
             " ORDER BY f.lastCommTime DESC";
 
-    String QUERY_CONNECTED_USERS_WHERE = " AND state = 2";
-    String QUERY_NUM_CONNECTED_USERS = QUERY_NUM_ALL_USERS + QUERY_CONNECTED_USERS_WHERE;
+    String QUERY_CONNECTED_USERS_WHERE = " AND f.state = 2";
+
+    // 统计所有用户数据的详细sql
+    String QUERY_NUM_CONNECTED_USERS = "SELECT count(*)" +
+            " FROM Users u" +
+            " LEFT JOIN Friends f ON u.publicKey = f.friendPK AND f.userPK IN (" +
+            UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
+            QUERY_ALL_USERS_WHERE +
+            QUERY_CONNECTED_USERS_WHERE;
+
     String QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST = QUERY_GET_USERS_NOT_IN_BAN_LIST +
             QUERY_CONNECTED_USERS_WHERE;
     String QUERY_USERS_STATE_ORDER_BY_LAST_SEEN_TIME = QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST +
@@ -139,7 +150,7 @@ public interface UserDao {
     /**
      * 获取不在黑名单并且已经互加好友的用户数
      */
-    @Query(QUERY_NUM_ALL_USERS)
+    @Query(QUERY_NUM_CONNECTED_USERS)
     int getNumConnectedUsers(String friendPK);
 
     /**

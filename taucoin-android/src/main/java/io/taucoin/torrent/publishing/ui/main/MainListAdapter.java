@@ -145,7 +145,7 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 String hash = community.txMemo;
                 if (community.msgType == MessageType.PICTURE.ordinal()) {
                     binding.tvUserMessage.setText(context.getString(R.string.main_pic_messages));
-                } else if (community.msgType == MessageType.TEXT.ordinal()) {
+                } else if (community.msgType == MessageType.TEXT.ordinal() && StringUtil.isNotEmpty(hash)) {
                     binding.tvUserMessage.setTextHash(false, hash, community.publicKey);
                 } else if (StringUtil.isEmpty(msg)) {
                     binding.tvUserMessage.setText(context.getString(R.string.main_no_messages));

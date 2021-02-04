@@ -22,7 +22,7 @@ public interface DeviceDao {
     /**
      * 添加用户设备信息
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     long addDevice(Device device);
 
     /**

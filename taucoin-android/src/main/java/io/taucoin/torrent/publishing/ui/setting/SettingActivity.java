@@ -86,7 +86,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         handleSettingsChanged(getString(R.string.pref_key_wake_lock));
         handleSettingsChanged(getString(R.string.pref_key_main_loop_interval));
         handleSettingsChanged(getString(R.string.pref_key_gossip_interval));
-        handleSettingsChanged(getString(R.string.pref_key_dht_operation_interval));
 
         binding.switchServerMode.setOnCheckedChangeListener((buttonView, isChecked) ->
                 settingsRepo.serverMode(isChecked));
@@ -161,9 +160,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_gossip_interval))) {
             long interval = settingsRepo.getLongValue(key);
             binding.tvGossip.setText(String.valueOf(interval));
-        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_dht_operation_interval))) {
-            long interval = settingsRepo.getLongValue(key);
-            binding.tvDhtOperation.setText(String.valueOf(interval));
         }
     }
 

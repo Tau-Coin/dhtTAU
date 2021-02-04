@@ -149,7 +149,6 @@
     <string name="setting_wake_lock">Always Awake</string>
     <string name="setting_main_loop_interval">Main Loop Interval(ms)</string>
     <string name="setting_gossip_interval">Gossip Interval(s)</string>
-    <string name="setting_dht_operation_interval">DHT Operation Interval(ms)</string>
     <string name="setting_daily_traffic_limit_used_up">Daily data limit is used, proceed to use 30% more data?</string>
     <string name="setting_metered_limit_select_tips">Using telecom data may incur additional fees.\n
         How much traffic do you want to use per day?</string>
@@ -162,6 +161,7 @@
     <string name="setting_security">Security</string>
     <string name="setting_seeds">Secrets</string>
     <string name="setting_login_devices">Login Devices</string>
+    <string name="setting_device_id">Device ID</string>
 
     <string name="user_generate_seed">Generate Secret</string>
     <string name="user_import_seed">Import Secret</string>

@@ -54,7 +54,7 @@ public class DevicesActivity extends BaseActivity {
         Disposable disposable = deviceRepo.observerDevices(userPk)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(devices -> adapter.setDeviceList(devices));
+                .subscribe(devices -> adapter.submitList(devices));
         disposables.add(disposable);
     }
 

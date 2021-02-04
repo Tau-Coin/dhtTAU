@@ -18,11 +18,16 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Device;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.DeviceRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.types.Message;
 import io.taucoin.util.ByteUtil;
@@ -36,11 +41,15 @@ class MsgListenHandler {
     private ChatRepository chatRepo;
     private FriendRepository friendRepo;
     private CommunityRepository communityRepo;
+    private DeviceRepository deviceRepo;
+    private UserRepository userRepo;
 
-    MsgListenHandler(Context appContext){
+    MsgListenHandler(Context appContext) {
         chatRepo = RepositoryHelper.getChatRepository(appContext);
         friendRepo = RepositoryHelper.getFriendsRepository(appContext);
         communityRepo = RepositoryHelper.getCommunityRepository(appContext);
+        deviceRepo = RepositoryHelper.getDeviceRepository(appContext);
+        userRepo = RepositoryHelper.getUserRepository(appContext);
     }
     /**
      * 处理新的消息
@@ -156,7 +165,7 @@ class MsgListenHandler {
                     if (friend.state != 2) {
                         friend.state = 2;
                         isUpdate = true;
-                        logger.info("addNewFriend successfully, friendPk::{}, timestamp::{}",
+                        logger.info("onDiscoveryFriend successfully, friendPk::{}, timestamp::{}",
                                 ByteUtil.toHexString(friendPk),
                                 DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6));
                     }
@@ -182,6 +191,7 @@ class MsgListenHandler {
 
     /**
      * 上报的消息状态变化
+     * @param friend
      * @param root
      * @param msgStatus
      */
@@ -221,20 +231,59 @@ class MsgListenHandler {
      * @param deviceID device id
      */
     void onNewDeviceID(byte[] deviceID) {
-        String userPk = MainApplication.getInstance().getPublicKey();
-        String deviceIDStr = ByteUtil.toHexString(deviceID);
-        logger.trace("onNewDeviceID userPk::{}, deviceID::{}",
-                userPk, deviceIDStr);
+        Disposable disposable = Flowable.create(emitter -> {
+            try {
+                String userPk = MainApplication.getInstance().getPublicKey();
+                String deviceIDStr = new String(deviceID);
+                logger.debug("onNewDeviceID userPk::{}, deviceID::{}",
+                        userPk, deviceIDStr);
+                Device device = new Device(userPk, deviceIDStr, DateUtil.getTime());
+                deviceRepo.addDevice(device);
+            } catch (Exception e) {
+                logger.error("onNewDeviceID error", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        disposables.add(disposable);
     }
 
     /**
      * 发现的新朋友通知
-     * @param friend 发现的新朋友
+     * @param friendPk 发现的新朋友
      */
-    void onNewFriend(byte[] friend) {
-        String userPk = MainApplication.getInstance().getPublicKey();
-        String friendPk = ByteUtil.toHexString(friend);
-        logger.trace("onNewFriend userPk::{}, friendPk::{}",
-                userPk, friendPk);
+    void onNewFriend(byte[] friendPk) {
+        Disposable disposable = Flowable.create(emitter -> {
+            try {
+                String userPk = MainApplication.getInstance().getPublicKey();
+                String friendPkStr = ByteUtil.toHexString(friendPk);
+                logger.debug("onNewFriend userPk::{}, friendPk::{}",
+                        userPk, friendPkStr);
+                User user = userRepo.getUserByPublicKey(friendPkStr);
+                if (null == user) {
+                    user = new User(friendPkStr);
+                    userRepo.addUser(user);
+                }
+                if (StringUtil.isNotEquals(userPk, friendPkStr)) {
+                    Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
+                    if (friend != null) {
+                        if (friend.state == 0) {
+                            friend.state = 1;
+                            friendRepo.updateFriend(friend);
+                        }
+                    } else {
+                        friend = new Friend(userPk, friendPkStr, 1);
+                        friendRepo.addFriend(friend);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("onNewFriend error", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        disposables.add(disposable);
     }
 }

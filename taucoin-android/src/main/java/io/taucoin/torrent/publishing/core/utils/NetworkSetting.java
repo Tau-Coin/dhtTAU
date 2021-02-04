@@ -21,12 +21,13 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
  */
 public class NetworkSetting {
     private static final Logger logger = LoggerFactory.getLogger("NetworkSetting");
-    private static final int meteredLimited;                                  // 单位MB
-    private static final int wifiLimited;                                     // 单位MB
-    public static final long current_speed_sample = 10;                       // 单位s
-    public static final long average_speed_sample = 86400;                    // 单位s，24小时
-    public static final float min_threshold = 1.0f / 4;
-    public static final float max_threshold = 3.0f / 4;
+    private static final int meteredLimited;                  // 单位MB
+    private static final int wifiLimited;                     // 单位MB
+    public static final long current_speed_sample = 10;       // 单位s
+    public static final long average_speed_sample = 86400;    // 单位s，24小时
+    public static final float min_threshold = 1.0f / 4;       // 比率最小阀值
+    public static final float max_threshold = 3.0f / 4;       // 比率最大阀值
+    public static final int less_nodes_threshold = 50;        // 节点少阀值，可能网络状况差
 
     private static SettingsRepository settingsRepo;
     static {
@@ -294,24 +295,24 @@ public class NetworkSetting {
      * @param rate 平均网速和网速限制的比率
      * @return 返回计算的时间间隔
      */
-    public static int calculateGossipInterval(float rate) {
+    public static int calculateGossipInterval(float rate, long sessionNodes) {
         Context context = MainApplication.getInstance();
         boolean isOnForeground = AppUtil.isOnForeground(context);
         if (isMeteredNetwork()) {
             if (isOnForeground) {
                 return calculateTimeInterval(rate, Interval.GOSSIP_FORE_METERED_MIN,
-                        Interval.GOSSIP_FORE_METERED_MAX);
+                        Interval.GOSSIP_FORE_METERED_MAX, sessionNodes);
             } else {
                 return calculateTimeInterval(rate, Interval.GOSSIP_BACK_METERED_MIN,
-                        Interval.GOSSIP_BACK_METERED_MAX);
+                        Interval.GOSSIP_BACK_METERED_MAX, sessionNodes);
             }
         } else {
             if (isOnForeground) {
                 return calculateTimeInterval(rate, Interval.GOSSIP_FORE_WIFI_MIN,
-                        Interval.GOSSIP_FORE_WIFI_MAX);
+                        Interval.GOSSIP_FORE_WIFI_MAX, sessionNodes);
             } else {
                 return calculateTimeInterval(rate, Interval.GOSSIP_BACK_WIFI_MIN,
-                        Interval.GOSSIP_BACK_WIFI_MAX);
+                        Interval.GOSSIP_BACK_WIFI_MAX, sessionNodes);
             }
         }
     }
@@ -321,19 +322,9 @@ public class NetworkSetting {
      * @param rate 平均网速和网速限制的比率
      * @return 返回计算的时间间隔
      */
-    public static int calculateMainLoopInterval(float rate) {
+    public static int calculateMainLoopInterval(float rate, long sessionNodes) {
         return calculateTimeInterval(rate, Interval.MAIN_LOOP_MIN,
-                Interval.MAIN_LOOP_MAX);
-    }
-
-    /**
-     * 计算DHT操作时间间隔
-     * @param rate 平均网速和网速限制的比率
-     * @return 返回计算的时间间隔
-     */
-    public static int calculateDHTOPInterval(float rate) {
-        return calculateTimeInterval(rate, Interval.DHT_OP_MIN,
-                Interval.DHT_OP_MAX);
+                Interval.MAIN_LOOP_MAX, sessionNodes);
     }
 
     /**
@@ -343,12 +334,13 @@ public class NetworkSetting {
      * @param max 最大值
      * @return 返回计算的时间间隔
      */
-    public static int calculateTimeInterval(float rate, Interval min, Interval max) {
+    private static int calculateTimeInterval(float rate, Interval min, Interval max, long sessionNodes) {
         int timeInterval;
-        if (rate <= min_threshold) {
-            timeInterval = min.getInterval();
-        } else if (rate >= max_threshold) {
+        // 比率大于等于最大阀值或sessionNodes小于等于阀值限制，使用最大时间间隔
+        if (rate >= max_threshold || sessionNodes <= less_nodes_threshold) {
             timeInterval = max.getInterval();
+        } else if (rate <= min_threshold) {
+            timeInterval = min.getInterval();
         } else {
             timeInterval = min.getInterval();
             timeInterval += (int)((rate - min_threshold) / (max_threshold - min_threshold)

@@ -10,7 +10,7 @@ import com.frostwire.jlibtorrent.Ed25519;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -123,6 +123,9 @@ public class TauDaemon {
         }
         // 清除消息处理，防止多Seed数据错乱
         msgListenHandler.onCleared();
+        // 更新用户登录的设备信息
+        String deviceID = DeviceUtils.getCustomDeviceID(appContext);
+        msgListenHandler.onNewDeviceID(deviceID.getBytes());
         this.seed = seed;
         logger.debug("updateSeed ::{}", seed);
         byte[] bytesSeed = ByteUtil.toByte(seed);
@@ -416,14 +419,13 @@ public class TauDaemon {
                 } else {
                     float rate = NetworkSetting.calculateIntervalRate();
                     if (rate > 0) {
-                        int mainLoopInterval = NetworkSetting.calculateMainLoopInterval(rate);
-                        int gossipInterval = NetworkSetting.calculateGossipInterval(rate);
-                        int DHTOPInterval = NetworkSetting.calculateDHTOPInterval(rate);
+                        long sessionNodes = getSessionNodes();
+                        int mainLoopInterval = NetworkSetting.calculateMainLoopInterval(rate, sessionNodes);
+                        int gossipInterval = NetworkSetting.calculateGossipInterval(rate, sessionNodes);
                         tauController.getCommunicationManager().setIntervalTime(mainLoopInterval);
                         tauController.getCommunicationManager().setGossipTimeInterval(gossipInterval);
-                        tauController.getDHTEngine().regulateDHTOPInterval(DHTOPInterval);
                         // 更新UI展示链端主循环、Gossip、DHT操作的时间间隔
-                        updateUIInterval(mainLoopInterval, gossipInterval, DHTOPInterval);
+                        updateUIInterval(mainLoopInterval, gossipInterval);
                     } else if (rate == -1) {
                         resetReadOnly(true);
                         showNoRemainingDataTipsDialog();
@@ -442,23 +444,19 @@ public class TauDaemon {
     }
 
     /**
-     * 更新链端主循环、Gossip、DHT操作的时间间隔以供UI显示
+     * 更新链端主循环、Gossip的时间间隔以供UI显示
      */
-    private void updateUIInterval(int mainLoopInterval, int gossipInterval, int DHTOPInterval) {
+    private void updateUIInterval(int mainLoopInterval, int gossipInterval) {
         settingsRepo.setLongValue(appContext.getString(R.string.pref_key_main_loop_interval),
                 mainLoopInterval);
         settingsRepo.setLongValue(appContext.getString(R.string.pref_key_gossip_interval),
                 gossipInterval);
-        settingsRepo.setLongValue(appContext.getString(R.string.pref_key_dht_operation_interval),
-                tauController.getDHTEngine().getDHTOPInterval());
         logger.info("Reschedule DHTSessions::{}, " +
                         "MainLoopInterval::{}ms, " +
-                        "GossipInterval::{}s, " +
-                        "DHTOPInterval::{}ms",
+                        "GossipInterval::{}s",
                 NetworkSetting.getDHTSessions(),
                 mainLoopInterval,
-                gossipInterval,
-                DHTOPInterval);
+                gossipInterval);
     }
 
     /**
@@ -721,10 +719,17 @@ public class TauDaemon {
     /**
      * 统计Sessions的nodes数
      */
-    List<Long> getSessionNodes() {
+    long getSessionNodes() {
         if (!isRunning) {
-            return null;
+            return 0;
         }
-        return tauController.getDHTEngine().getSessionNodes();
+        BigInteger nodes = BigInteger.ZERO;
+        List<Long> sessionNodes = tauController.getDHTEngine().getSessionNodes();
+        if (sessionNodes != null) {
+            for (Long node : sessionNodes) {
+                nodes = nodes.add(BigInteger.valueOf(node));
+            }
+        }
+        return nodes.longValue();
     }
 }
