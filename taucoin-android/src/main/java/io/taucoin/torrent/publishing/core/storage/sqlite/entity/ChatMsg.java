@@ -25,22 +25,24 @@ public class ChatMsg implements Parcelable {
     public int contentType;                // 消息内容类型
     @NonNull
     public long nonce;                     // 帮助消息排序
+    public String previousHash;            // 帮助消息组装显示
     @NonNull
     public int unsent;                     // 0: 未发送， 1: 已发送
 
-    public ChatMsg(@NonNull String hash, String senderPk, String friendPk,
-                   String content, int contentType, long timestamp){
+    public ChatMsg(@NonNull String hash, String senderPk, String friendPk, int contentType,
+                   long timestamp, long nonce, String previousHash){
         this.hash = hash;
         this.senderPk = senderPk;
         this.friendPk = friendPk;
-        this.content = content;
         this.contentType = contentType;
         this.timestamp = timestamp;
+        this.nonce = nonce;
+        this.previousHash = previousHash;
     }
 
     @Ignore
-    public ChatMsg(@NonNull String hash, String senderPk, String friendPk,
-                   String content, int contentType, long timestamp, long nonce){
+    public ChatMsg(@NonNull String hash, String senderPk, String friendPk, String content,
+                   int contentType, long timestamp, long nonce, String previousHash){
         this.hash = hash;
         this.senderPk = senderPk;
         this.friendPk = friendPk;
@@ -48,17 +50,7 @@ public class ChatMsg implements Parcelable {
         this.contentType = contentType;
         this.timestamp = timestamp;
         this.nonce = nonce;
-    }
-
-    @Ignore
-    public ChatMsg(@NonNull String hash, String senderPk, String friendPk,
-                   int contentType, long timestamp, long nonce){
-        this.hash = hash;
-        this.senderPk = senderPk;
-        this.friendPk = friendPk;
-        this.contentType = contentType;
-        this.timestamp = timestamp;
-        this.nonce = nonce;
+        this.previousHash = previousHash;
     }
 
     @Ignore
@@ -70,6 +62,7 @@ public class ChatMsg implements Parcelable {
         timestamp = in.readLong();
         content = in.readString();
         nonce = in.readLong();
+        previousHash = in.readString();
         unsent = in.readInt();
     }
 
@@ -82,6 +75,7 @@ public class ChatMsg implements Parcelable {
         dest.writeLong(timestamp);
         dest.writeString(content);
         dest.writeLong(nonce);
+        dest.writeString(previousHash);
         dest.writeInt(unsent);
     }
 
@@ -104,11 +98,12 @@ public class ChatMsg implements Parcelable {
 
     @Override
     public int hashCode() {
-        return hash.hashCode();
+        return hash.hashCode() + senderPk.hashCode() + friendPk.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof ChatMsg && (o == this || hash.equals(((ChatMsg)o).hash));
+        return o instanceof ChatMsg && (o == this || (hash.equals(((ChatMsg)o).hash)
+         && senderPk.equals(((ChatMsg)o).senderPk) && friendPk.equals(((ChatMsg)o).friendPk)));
     }
 }

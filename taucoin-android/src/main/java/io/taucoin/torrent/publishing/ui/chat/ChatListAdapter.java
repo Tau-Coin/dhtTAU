@@ -164,7 +164,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvMsg.setTextAndHash(msg.content, msg.hash, msg.senderPk);
+            tvMsg.setTextHash(msg.unsent == 0, msg.hash, msg.senderPk);
         }
 
         private void showStatusView(ImageView ivStats, ProgressBar tvProgress, ChatMsg msg, boolean isMine) {
@@ -238,7 +238,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
     private static final DiffUtil.ItemCallback<ChatMsg> diffCallback = new DiffUtil.ItemCallback<ChatMsg>() {
         @Override
         public boolean areContentsTheSame(@NonNull ChatMsg oldItem, @NonNull ChatMsg newItem) {
-            return oldItem.equals(newItem) && StringUtil.isEquals(oldItem.hash, newItem.hash);
+            return oldItem.equals(newItem) && StringUtil.isEquals(oldItem.content, newItem.content);
         }
 
         @Override

@@ -17,6 +17,7 @@ import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
@@ -79,16 +80,21 @@ public class PublishNewMsgWorker extends Worker {
         byte[] friendPkBytes = ByteUtil.toByte(msg.friendPk);
         BigInteger nonce = BigInteger.valueOf(msg.nonce);
         BigInteger timestamp = BigInteger.valueOf(msg.timestamp);
+        byte[] previousHash = null;
+        if (StringUtil.isNotEmpty(msg.previousHash)) {
+            previousHash = ByteUtil.toByte(msg.previousHash);
+        }
         byte[] content;
         if (msg.contentType == MessageType.PICTURE.ordinal()) {
             content = ByteUtil.toByte(msg.content);
-            message = Message.createPictureMessage(timestamp, nonce, content);
+            message = Message.createPictureMessage(timestamp, previousHash, nonce, content);
         } else {
             content = msg.content.getBytes(StandardCharsets.UTF_8);
-            message = Message.createTextMessage(BigInteger.valueOf(msg.timestamp), nonce, content);
+            message = Message.createTextMessage(timestamp, previousHash, nonce, content);
         }
         boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message);
-        logger.debug("NewMsgHash::{}, nonce::{}, isSendSuccess::{}", msg.hash, msg.nonce, isSendSuccess);
+        logger.debug("NewMsgHash::{}, nonce::{}, previousHash::{}, isSendSuccess::{}",
+                msg.hash, msg.nonce, msg.previousHash, isSendSuccess);
         if (isSendSuccess) {
             msg.content = null;
             msg.unsent = 1;

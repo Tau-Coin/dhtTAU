@@ -229,7 +229,12 @@ public class TauDaemon {
 
         @Override
         public void onNewDeviceID(byte[] deviceID) {
+            msgListenHandler.onNewDeviceID(deviceID);
+        }
 
+        @Override
+        public void onNewFriend(byte[] friend) {
+            msgListenHandler.onNewFriend(friend);
         }
 
         @Override
@@ -701,14 +706,15 @@ public class TauDaemon {
      * @return
      */
     public boolean sendMessage(byte[] friendPK, Message message) {
+        if (!isRunning) {
+            return false;
+        }
         boolean isPublishSuccess = getCommunicationManager().publishNewMessage(friendPK, message);
         logger.debug("sendMessage isPublishSuccess{}", isPublishSuccess);
-        String content = new String(message.getContent(), StandardCharsets.UTF_8);
         String hash = ByteUtil.toHexString(message.getHash());
-        logger.debug("TAU messaging sendMessage friendPk::{}, hash::{}, timestamp::{}, content::{}",
+        logger.debug("TAU messaging sendMessage friendPk::{}, hash::{}, timestamp::{}",
                 ByteUtil.toHexString(friendPK), hash,
-                DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6),
-                content);
+                DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6));
         return isPublishSuccess;
     }
 

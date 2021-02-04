@@ -132,34 +132,45 @@ public class ChatViewModel extends AndroidViewModel {
                 }
                 ChatMsg[] messages = new ChatMsg[contents.size()];
                 int contentSize = contents.size();
+                byte[] previousHash = null;
                 for (int i = 0; i < contentSize; i++) {
-                    String contentStr;
-                    byte[] content = contents.get(i);
+                    int nonce = contentSize - i - 1;
+                    byte[] content = contents.get(nonce);
                     long millisTime = DateUtil.getMillisTime();
                     long timestamp = millisTime / 1000;
+                    String contentStr;
                     Message message;
                     if (type == MessageType.TEXT.ordinal()) {
                         contentStr = MsgSplitUtil.textMsgToString(content);
                         message = Message.createTextMessage(
                                 BigInteger.valueOf(timestamp),
-                                BigInteger.valueOf(i), content);
+                                previousHash,
+                                BigInteger.valueOf(nonce), content);
                     } else {
                         contentStr = ByteUtil.toHexString(content);
                         message = Message.createPictureMessage(
                                 BigInteger.valueOf(timestamp),
-                                BigInteger.valueOf(i),
+                                previousHash,
+                                BigInteger.valueOf(nonce),
                                 content);
                     }
                     String hash = ByteUtil.toHexString(message.getHash());
-                    logger.debug("sendMessageTask hash::{}, contentType::{}, nonce::{}, contentSize::{}",
-                            hash, type, i, content.length);
-                    logger.trace("sendMessageTask hash::{}, content::{}", hash, contentStr);
+                    String previousHashStr = null;
+                    if (previousHash != null) {
+                        previousHashStr = ByteUtil.toHexString(previousHash);
+                    }
+                    logger.debug("sendMessageTask hash::{}, contentType::{}, nonce::{}, " +
+                                    "previousHash::{}, contentSize::{}",
+                            hash, type, nonce, previousHashStr, content.length);
+
                     // 组织Message的结构，并发送到DHT和数据入库
                     String senderPk = MainApplication.getInstance().getPublicKey();
                     ChatMsg chatMsg = new ChatMsg(hash, senderPk, friendPk, contentStr, type,
-                            timestamp, i);
+                            timestamp, nonce, previousHashStr);
                     messages[i] = chatMsg;
 
+                    // 更新previousHash值
+                    previousHash = message.getHash();
                     if (i == 0) {
                         ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPk, friendPk,
                                 ChatMsgStatus.UNSENT.getStatus(), millisTime);

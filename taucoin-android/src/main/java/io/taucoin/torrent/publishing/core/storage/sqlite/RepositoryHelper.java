@@ -8,6 +8,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.DeviceRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.DeviceRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FavoriteRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FavoriteRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
@@ -37,6 +39,7 @@ public class RepositoryHelper {
     private static NotificationRepositoryImpl notificationRepo;
     private static FriendRepositoryImpl friendRepo;
     private static ChatRepositoryImpl chatRepo;
+    private static DeviceRepositoryImpl deviceRepo;
 
     /**
      * 获取CommunityRepository单例
@@ -164,6 +167,19 @@ public class RepositoryHelper {
                     AppDatabase.getInstance(appContext));
 
         return chatRepo;
+    }
+
+    /**
+     * 获取DeviceRepository单例
+     * @param appContext 上下文
+     * @return DeviceRepository
+     */
+    public synchronized static DeviceRepository getDeviceRepository(@NonNull Context appContext) {
+        if (deviceRepo == null)
+            deviceRepo = new DeviceRepositoryImpl(appContext,
+                    AppDatabase.getInstance(appContext));
+
+        return deviceRepo;
     }
 
 }

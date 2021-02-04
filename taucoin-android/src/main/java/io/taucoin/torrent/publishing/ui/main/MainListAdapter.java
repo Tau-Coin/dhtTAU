@@ -144,13 +144,12 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 String msg = community.txMemo;
                 String hash = community.txMemo;
                 if (community.msgType == MessageType.PICTURE.ordinal()) {
-                    msg = context.getString(R.string.main_pic_messages);
+                    binding.tvUserMessage.setText(context.getString(R.string.main_pic_messages));
                 } else if (community.msgType == MessageType.TEXT.ordinal()) {
-                    msg = null;
+                    binding.tvUserMessage.setTextHash(false, hash, community.publicKey);
                 } else if (StringUtil.isEmpty(msg)) {
-                    msg = context.getString(R.string.main_no_messages);
+                    binding.tvUserMessage.setText(context.getString(R.string.main_no_messages));
                 }
-                binding.tvUserMessage.setTextAndHash(msg, hash, community.publicKey);
                 if(community.txTimestamp > 0){
                     String time = DateUtil.getWeekTime(community.txTimestamp);
                     binding.tvMsgLastTime.setText(time);

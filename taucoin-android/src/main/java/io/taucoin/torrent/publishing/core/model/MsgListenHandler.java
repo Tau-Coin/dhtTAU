@@ -55,6 +55,7 @@ class MsgListenHandler {
             try {
                 String userPk = MainApplication.getInstance().getPublicKey();
                 String hash = ByteUtil.toHexString(message.getHash());
+                String previousHash = ByteUtil.toHexString(message.getPreviousHash());
                 long sentTime = message.getTimestamp().longValue();
                 long receivedTime = DateUtil.getTime();
                 String sentTimeStr = DateUtil.formatTime(sentTime, DateUtil.pattern6);
@@ -96,7 +97,7 @@ class MsgListenHandler {
                         friendRepo.updateFriend(friend);
                     }
                     ChatMsg msg = new ChatMsg(hash, friendPkStr, userPk, message.getType().ordinal(),
-                            sentTime, message.getNonce().longValue());
+                            sentTime, message.getNonce().longValue(), previousHash);
                     msg.unsent = 1;
                     chatRepo.addChatMsg(msg);
                 }
@@ -213,5 +214,27 @@ class MsgListenHandler {
         if (disposables != null) {
             disposables.clear();
         }
+    }
+
+    /**
+     * 新device ID通知
+     * @param deviceID device id
+     */
+    void onNewDeviceID(byte[] deviceID) {
+        String userPk = MainApplication.getInstance().getPublicKey();
+        String deviceIDStr = ByteUtil.toHexString(deviceID);
+        logger.trace("onNewDeviceID userPk::{}, deviceID::{}",
+                userPk, deviceIDStr);
+    }
+
+    /**
+     * 发现的新朋友通知
+     * @param friend 发现的新朋友
+     */
+    void onNewFriend(byte[] friend) {
+        String userPk = MainApplication.getInstance().getPublicKey();
+        String friendPk = ByteUtil.toHexString(friend);
+        logger.trace("onNewFriend userPk::{}, friendPk::{}",
+                userPk, friendPk);
     }
 }

@@ -9,8 +9,6 @@ import android.util.AttributeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-
 import androidx.annotation.Nullable;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -39,7 +37,7 @@ public class HashImageView extends RoundImageView {
     private static final Logger logger = LoggerFactory.getLogger("HashImageView");
     private static final int heightLimit = 300;
     private static final int widthLimit = 300;
-    private static final int loadBitmapLimit = 40;
+    private static final int loadBitmapLimit = 10;
     private ChatRepository chatRepo;
     private TauDaemon daemon;
     private String imageHash;
@@ -88,16 +86,6 @@ public class HashImageView extends RoundImageView {
      * @param friendPk
      */
     public void setImageHash(boolean unsent, String imageHash, String friendPk) {
-        setImageHash(unsent, imageHash, ByteUtil.toByte(friendPk));
-    }
-
-    /**
-     * 设置ImageHash
-     * @param imageHash
-     * @param unsent
-     * @param friendPk
-     */
-    public void setImageHash(boolean unsent, String imageHash, byte[] friendPk) {
         // 如果是图片已加载，并且显示的图片不变，直接返回
         if (isLoadSuccess && totalBytes != null
                 && StringUtil.isEquals(imageHash, this.imageHash)) {
@@ -105,15 +93,15 @@ public class HashImageView extends RoundImageView {
         }
         this.imageHash = imageHash;
         this.unsent = unsent;
-        this.friendPk = friendPk;
-        setImageHash(ByteUtil.toByte(imageHash));
+        this.friendPk = ByteUtil.toByte(friendPk);
+        setImageHash(ByteUtil.toByte(imageHash), friendPk);
     }
 
     /**
      * 设置ImageHash
      * @param imageHash
      */
-    private void setImageHash(byte[] imageHash) {
+    private void setImageHash(byte[] imageHash, String friendPk) {
         logger.debug("setImageHash start::{}", this.imageHash);
         showImage(null);
         isLoadSuccess = false;
@@ -127,7 +115,7 @@ public class HashImageView extends RoundImageView {
                 if (imageHash != null) {
                     logger.debug("showHorizontalData start");
                     long startTime = System.currentTimeMillis();
-                    showFragmentData(this.unsent, imageHash, emitter);
+                    showFragmentData(this.unsent, imageHash, friendPk, emitter);
                     long endTime = System.currentTimeMillis();
                     logger.debug("showImageFromDB times::{}ms", endTime - startTime);
                 }
@@ -145,47 +133,41 @@ public class HashImageView extends RoundImageView {
     /**
      * 递归显示图片切分的片段数据
      * @param imageHash
+     * @param friendPk
      * @param emitter
      * @throws Exception
      */
-    private void showFragmentData(boolean unsent, byte[] imageHash,
-                              FlowableEmitter<Bitmap> emitter) throws Exception {
+    private void showFragmentData(boolean unsent, byte[] imageHash, String friendPk,
+                                  FlowableEmitter<Bitmap> emitter) throws Exception {
         if (emitter.isCancelled()) {
             return;
         }
-        BigInteger nonce = BigInteger.ZERO;
         byte[] content = null;
         byte[] previousMsgHash = null;
         if (unsent) {
             String hash = ByteUtil.toHexString(imageHash);
-            ChatMsg msg = chatRepo.queryChatMsg(hash);
+            ChatMsg msg = chatRepo.queryChatMsg(friendPk, hash);
             if (msg.unsent == 0) {
-                nonce = BigInteger.valueOf(msg.nonce);
                 if (StringUtil.isNotEmpty(msg.content)) {
                     content = ByteUtil.toByte(msg.content);
                 }
-//                if (StringUtil.isNotEmpty(msg.previousMsgHash)) {
-//                    previousMsgHash = ByteUtil.toByte(msg.previousMsgHash);
-//                }
+                if (StringUtil.isNotEmpty(msg.previousHash)) {
+                    previousMsgHash = ByteUtil.toByte(msg.previousHash);
+                }
             } else {
-                showFragmentData(false, imageHash, emitter);
+                showFragmentData(false, imageHash, friendPk, emitter);
             }
         } else {
             byte[] fragmentEncoded = queryDataLoop(imageHash);
             Message msg = new Message(fragmentEncoded);
-            nonce = msg.getNonce();
             content = msg.getContent();
-//            previousMsgHash = msg.getPreviousMsgDAGRoot();
-        }
-        if (nonce.compareTo(BigInteger.ZERO) == 0 &&
-                StringUtil.isNotEquals(ByteUtil.toHexString(imageHash), this.imageHash)) {
-            return;
+            previousMsgHash = msg.getPreviousHash();
         }
         if (!emitter.isCancelled()) {
             refreshImageView(content, emitter);
         }
         if (previousMsgHash != null) {
-            showFragmentData(unsent, previousMsgHash, emitter);
+            showFragmentData(unsent, previousMsgHash, friendPk, emitter);
         }
     }
 
@@ -258,7 +240,7 @@ public class HashImageView extends RoundImageView {
         // 加在View
         if (reload && StringUtil.isNotEmpty(imageHash)
                 && disposable != null && disposable.isDisposed()) {
-            setImageHash(unsent, imageHash, friendPk);
+            setImageHash(unsent, imageHash, ByteUtil.toHexString(friendPk));
         }
         reload = false;
     }

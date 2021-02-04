@@ -230,6 +230,10 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:theme="@style/transparent"/>
 
+        <activity
+            android:name=".ui.setting.DevicesActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
     </application>
 
 </manifest>

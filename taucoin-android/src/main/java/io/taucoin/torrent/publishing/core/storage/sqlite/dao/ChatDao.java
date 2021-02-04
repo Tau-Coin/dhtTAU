@@ -20,10 +20,9 @@ public interface ChatDao {
     String QUERY_GET_CHAT_MSG = "SELECT * FROM ChatMessages WHERE friendPk = :friendPk AND hash = :hash";
     String QUERY_GET_CHAT_MSG_BY_HASH = "SELECT * FROM ChatMessages WHERE hash = :hash";
 
-    String QUERY_WHERE_NONCE = " AND (msg.contentType = 0 OR (msg.contentType = 1 AND msg.nonce = 0)) ";
     String QUERY_MESSAGES_WHERE = " WHERE (msg.senderPk = :senderPk OR msg.senderPk = :friendPk)" +
             " AND (msg.friendPk = :friendPk OR msg.friendPk = :senderPk) " +
-            QUERY_WHERE_NONCE +
+            " AND msg.nonce = 0" +
             " AND msg.friendPk NOT IN" +
             UserDao.QUERY_GET_USER_PKS_IN_BAN_LIST;
 
