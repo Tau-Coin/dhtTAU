@@ -15,6 +15,7 @@ public class GossipItem {
     private byte[] receiver; // 4个字节,提取的public key的前缀
     private BigInteger timestamp; // 4个字节，通过时间戳的更新来标记自己是否有新信息
     // TODO::可以通过多加一个type来扩展信号
+    // TODO:: 在对方设备休眠时候的信号变化
 
     private byte[] hash;
     private byte[] encode; // 缓存编码

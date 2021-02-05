@@ -597,6 +597,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         } else {
             // 没有找到推荐的活跃的peer，则自己随机访问一个自己的朋友或者自己
             Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
+            // TODO:: 同步自己消息的频率问题
             if (iterator.hasNext()) {
 
                 Random random = new Random(System.currentTimeMillis());
@@ -1296,6 +1297,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         // 是否更新好友的在线时间（完整公钥）
         BigInteger gossipTime = gossipMutableData.getTimestamp();
         BigInteger lastSeen = this.friendLastSeen.get(peer);
+        // 判断时间戳，以避免处理历史数据
         if (null == lastSeen || lastSeen.compareTo(gossipTime) < 0) { // 判断是否是更新的gossip
             logger.debug("See peer:{} again", peer.toString());
             this.friendLastSeen.put(peer, gossipTime);
@@ -1310,6 +1312,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                     ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
 
                     // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+                    // XX类别是自己
                     if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
                         logger.trace("Sender[{}] is me.", sender.toString());
                         continue;
@@ -1317,15 +1320,19 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
                     // 如果是对方直接给我的gossip信息，也即gossip item的sender与请求gossip channel的peer一样，
                     // 并且gossip item的receiver是我，那么会直接信任该gossip消息
+                    // YX类别是给我的
                     if (ByteUtil.startsWith(peer.getData(), gossipItem.getSender())
                             && ByteUtil.startsWith(pubKey, gossipItem.getReceiver())) {
                         logger.trace("Got trusted gossip:{} from online friend[{}]",
                                 gossipItem.toString(), peer.toString());
+                        // 有值得信赖的gossip推荐我访问他，则将其加入推荐列表
+                        this.referredFriends.add(peer);
 
                         continue;
                     }
 
                     // 剩余的留给主循环处理
+                    // 剩下的YZ类别是别人给我朋友的
                     this.gossipItems.add(gossipItem);
                 }
             }
@@ -1346,7 +1353,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         }
 
         IndexMutableData currentIndexData = this.friendIndexData.get(peer);
-        // 只处理发现的更新的数据
+        // 判断时间戳，以避免处理历史数据，只处理发现的更新的数据
         if (null == currentIndexData ||
                 currentIndexData.getTimestamp().compareTo(indexMutableData.getTimestamp()) < 0) {
             this.friendIndexData.put(peer, indexMutableData);

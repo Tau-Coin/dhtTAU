@@ -16,6 +16,8 @@ public class IndexMutableData {
     private BigInteger timestamp; // 发布index数据时的时间戳
     private List<byte[]> hashList = new CopyOnWriteArrayList<>(); // index hash数据列表，目前可放46个hash
 
+    // TODO:: 长期历史数据的同步策略还需研究
+
     // 辅助数据
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
