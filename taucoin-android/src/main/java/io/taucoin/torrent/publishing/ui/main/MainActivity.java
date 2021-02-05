@@ -233,7 +233,6 @@ public class MainActivity extends ScanTriggerActivity {
             return;
         }
         this.user = user;
-        MainApplication.getInstance().setPublicKey(user.publicKey);
         binding.drawer.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
         binding.drawer.tvPublicKey.setTag(user.publicKey);
         binding.drawer.ivPublicKeyCopy.setTag(user.publicKey);

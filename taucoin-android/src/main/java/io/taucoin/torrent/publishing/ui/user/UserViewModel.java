@@ -165,12 +165,7 @@ public class UserViewModel extends AndroidViewModel {
                 if(currentUser != null){
                     userRepo.setCurrentUser(currentUser.publicKey, false);
                 }
-                /* 保证数据不会错乱，必须顺序执行以下逻辑 */
-                // 1、更新链端seed
-                daemon.updateSeed(seed);
-                // 2、更新本地的用户公钥
-                MainApplication.getInstance().setPublicKey(publicKey);
-                // 3、更新本地数据库数据
+                // 1、更新本地数据库数据
                 if(null == user){
                     user = new User(publicKey, seed, name, true);
                     userRepo.addUser(user);
@@ -182,6 +177,11 @@ public class UserViewModel extends AndroidViewModel {
                     user.isCurrentUser = true;
                     userRepo.updateUser(user);
                 }
+                // 2、更新本地的用户公钥
+                MainApplication.getInstance().setPublicKey(publicKey);
+                /* 保证数据不会错乱，必须顺序执行以下逻辑 */
+                // 3、更新链端seed
+                daemon.updateSeed(seed);
             } catch (Exception e){
                 result = getApplication().getString(R.string.user_seed_invalid);
                 logger.debug("import seed error::{}", result);
@@ -336,6 +336,8 @@ public class UserViewModel extends AndroidViewModel {
             if(null == user){
                 logger.info("Create default user");
                 generateSeed(null);
+            } else {
+                MainApplication.getInstance().setPublicKey(user.publicKey);
             }
             emitter.onNext(true);
             emitter.onComplete();
