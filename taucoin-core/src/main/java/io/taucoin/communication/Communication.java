@@ -1086,14 +1086,17 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      */
     private byte[] getFriendRandomly() {
         byte[] friend = null;
-        Iterator<ByteArrayWrapper> it = this.friends.iterator();
-        Random random = new Random(System.currentTimeMillis());
-        int index = random.nextInt(this.friends.size()) + 1;
+        int size = this.friends.size();
+        if (size > 0) {
+            Iterator<ByteArrayWrapper> it = this.friends.iterator();
+            Random random = new Random(System.currentTimeMillis());
+            int index = random.nextInt(size) + 1;
 
-        int i = 0;
-        while (it.hasNext() && i < index) {
-            friend = it.next().getData();
-            i++;
+            int i = 0;
+            while (it.hasNext() && i < index) {
+                friend = it.next().getData();
+                i++;
+            }
         }
 
         return friend;
