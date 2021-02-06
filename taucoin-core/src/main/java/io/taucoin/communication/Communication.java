@@ -1356,11 +1356,16 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         }
 
         IndexMutableData currentIndexData = this.friendIndexData.get(peer);
-        // 判断时间戳，以避免处理历史数据，只处理发现的更新的数据
+        // 判断时间戳，以避免处理历史数据，只处理保存和通知更新的数据
         if (null == currentIndexData ||
                 currentIndexData.getTimestamp().compareTo(indexMutableData.getTimestamp()) < 0) {
             this.friendIndexData.put(peer, indexMutableData);
             this.friendIndexDataToNotify.put(peer, indexMutableData);
+        }
+
+        // 判断时间戳，以避免处理历史数据，可以多次最新的数据，以避免上次dht get失败的情况
+        if (null == currentIndexData ||
+                currentIndexData.getTimestamp().compareTo(indexMutableData.getTimestamp()) <= 0) {
 
             // 尝试发现对方新消息
             for (byte[] hash: indexMutableData.getHashList()) {
