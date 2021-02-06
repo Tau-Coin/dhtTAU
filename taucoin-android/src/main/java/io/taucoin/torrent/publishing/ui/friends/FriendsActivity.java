@@ -125,9 +125,6 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         binding.recyclerList.setItemAnimator(animator);
         binding.recyclerList.setEmptyView(binding.emptyViewList);
         binding.recyclerList.setAdapter(adapter);
-        if(page == PAGE_ADD_MEMBERS){
-            binding.fabButton.setVisibility(View.GONE);
-        }
     }
 
     /**
@@ -146,10 +143,6 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
      * 初始化右下角悬浮按钮组件
      */
     private void initFabSpeedDial() {
-        // 自定义点击事件
-        binding.fabButton.getMainFab().setOnClickListener(v -> {
-            ActivityUtil.startActivity(this, ExchangeActivity.class);
-        });
         binding.llInviteFriends.setOnClickListener(v -> {
             ActivityUtil.startActivity(this, ExchangeActivity.class);
         });

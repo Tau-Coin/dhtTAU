@@ -80,6 +80,7 @@ public class UserViewModel extends AndroidViewModel {
     private MutableLiveData<UserAndFriend> userDetail = new MutableLiveData<>();
     private MutableLiveData<QRContent> qrContent = new MutableLiveData<>();
     private CommonDialog commonDialog;
+    private CommonDialog editNameDialog;
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
     private UserSourceFactory sourceFactory;
@@ -108,6 +109,10 @@ public class UserViewModel extends AndroidViewModel {
         if(commonDialog != null && commonDialog.isShowing()){
             commonDialog.dismiss();
             commonDialog = null;
+        }
+        if(editNameDialog != null && editNameDialog.isShowing()){
+            editNameDialog.dismiss();
+            editNameDialog = null;
         }
         if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             observeDaemonRunning.dispose();
@@ -500,26 +505,26 @@ public class UserViewModel extends AndroidViewModel {
                 R.layout.contacts_dialog, null, false);
         binding.etPublicKey.setHint(R.string.user_new_name_hint);
         binding.ivClose.setOnClickListener(v -> {
-            if (commonDialog != null) {
-                commonDialog.closeDialog();
+            if (editNameDialog != null) {
+                editNameDialog.closeDialog();
             }
         });
         binding.tvSubmit.setOnClickListener(v -> {
             String newName = StringUtil.getText(binding.etPublicKey);
             if(StringUtil.isNotEmpty(newName)){
                 saveUserName(publicKey, newName);
-                if (commonDialog != null) {
-                    commonDialog.closeDialog();
+                if (editNameDialog != null) {
+                    editNameDialog.closeDialog();
                 }
             }else{
                 ToastUtils.showShortToast(R.string.user_invalid_new_name);
             }
         });
-        commonDialog = new CommonDialog.Builder(activity)
+        editNameDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
                 .setButtonWidth(240)
                 .create();
-        commonDialog.show();
+        editNameDialog.show();
     }
 
     /**

@@ -50,7 +50,6 @@
                 android:layout_below="@+id/ll_invite_friends"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
                 android:clipToPadding="false"
                 android:scrollbars="vertical"
                 android:focusable="true"
@@ -105,16 +104,6 @@
                     android:layout_marginStart="10dp"/>
 
             </LinearLayout>
-
-            <io.taucoin.torrent.publishing.ui.customviews.ThemedSpeedDialView
-                android:id="@+id/fab_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentBottom="true"
-                app:sdMainFabClosedSrc="@mipmap/icon_qr_code_white"
-                app:sdMainFabAnimationRotateAngle="0" />
-
         </RelativeLayout>
     </LinearLayout>
 </layout>

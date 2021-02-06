@@ -14,6 +14,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -37,7 +38,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     private UserViewModel viewModel;
     private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
-    private Disposable observeCurrentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,28 +57,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
         binding.toolbarInclude.toolbar.setTitle(R.string.setting_title);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
-        binding.etUsername.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                String newName = s.toString().trim();
-                String oldName = ViewUtils.getStringTag(binding.etUsername);
-                if(StringUtil.isNotEquals(oldName, newName)){
-                    logger.debug("saveUserName::{}", newName);
-                    binding.etUsername.setTag(newName);
-                    saveUserName(newName);
-                }
-            }
-        });
 
         binding.switchServerMode.setChecked(settingsRepo.serverMode());
         handleSettingsChanged(getString(R.string.pref_key_internet_state));
@@ -106,20 +84,10 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     }
 
     /**
-     * 保存用户名
-     */
-    private void saveUserName(String name) {
-        viewModel.saveUserName(name);
-    }
-
-    /**
      * 订阅当前用户
      */
     private void subscribeCurrentUser() {
-        if (observeCurrentUser != null) {
-            disposables.remove(observeCurrentUser);
-        }
-        observeCurrentUser = viewModel.observeCurrentUser()
+        Disposable observeCurrentUser = viewModel.observeCurrentUser()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::updateUserInfo);
@@ -137,11 +105,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         logger.debug("updateUserInfo::{}", user.localName);
         binding.tvPublicKey.setText(UsersUtil.getMidHideName(user.publicKey));
         String userName = UsersUtil.getCurrentUserName(user);
-        binding.etUsername.setText(userName);
-        binding.etUsername.setTag(userName);
-        if (observeCurrentUser != null) {
-            disposables.remove(observeCurrentUser);
-        }
+        binding.tvUsername.setText(userName);
     }
 
     private void handleSettingsChanged(String key) {
@@ -169,7 +133,6 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         subscribeCurrentUser();
     }
 
-
     @Override
     protected void onStop() {
         super.onStop();
@@ -193,6 +156,10 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
             case R.id.tv_public_key:
             case R.id.tv_import_new_key:
                 viewModel.showSaveSeedDialog(this, false);
+                break;
+            case R.id.tv_username:
+                String publicKey = MainApplication.getInstance().getPublicKey();
+                viewModel.showEditNameDialog(this, publicKey);
                 break;
         }
     }

@@ -66,15 +66,16 @@
                         android:text="@string/setting_import_seed"
                         android:textAppearance="@style/TextAppearanceBody2"/>
 
-                    <EditText
-                        android:id="@+id/et_username"
+                    <TextView
+                        android:id="@+id/tv_username"
                         android:layout_width="match_parent"
-                        android:layout_height="40dp"
+                        android:layout_height="wrap_content"
                         android:background="@null"
+                        android:layout_marginTop="5dp"
                         android:singleLine="true"
-                        android:hint="@string/setting_username_app"
-                        android:inputType="text"
-                        android:autofillHints="@string/setting_username_app" />
+                        android:onClick="onClick"
+                        android:ellipsize="end"
+                        android:textAppearance="@style/TextAppearanceBody1" />
 
                     <TextView
                         android:layout_width="wrap_content"

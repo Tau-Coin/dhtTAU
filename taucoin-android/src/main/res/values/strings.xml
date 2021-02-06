@@ -52,7 +52,7 @@
     <string name="drawer_daily_data">%1$s</string>
     <string name="drawer_cpu_usage">CPU/%1$s</string>
     <string name="drawer_mem_data">Memory/%1$s</string>
-    <string name="drawer_export_seed">Export Secret</string>
+    <string name="drawer_export_seed">Export Key</string>
     <string name="drawer_wifi">Wifi</string>
     <string name="drawer_telecom">Tele\ncom</string>
 
@@ -118,7 +118,7 @@
 
     <string name="setting_title">Settings</string>
     <string name="setting_account">TAU ID</string>
-    <string name="setting_import_seed">Tap to import secret</string>
+    <string name="setting_import_seed">Tap to import key</string>
     <string name="setting_username_app">Username in app</string>
     <string name="setting_privacy_security">Privacy and Security</string>
     <string name="setting_community_setting">Community Setting</string>
@@ -159,21 +159,21 @@
     <string name="setting_blacklist_communities">Banlist Communities</string>
     <string name="setting_Unblock">Unblock</string>
     <string name="setting_security">Security</string>
-    <string name="setting_seeds">Secrets</string>
+    <string name="setting_seeds">Keys</string>
     <string name="setting_login_devices">Login Devices</string>
     <string name="setting_device_id">Device ID</string>
 
-    <string name="user_generate_seed">Generate Secret</string>
-    <string name="user_import_seed">Import Secret</string>
-    <string name="user_export_seed">Export Secret</string>
+    <string name="user_generate_seed">Generate Key</string>
+    <string name="user_import_seed">Import Key</string>
+    <string name="user_export_seed">Export Key</string>
     <string name="user_seeds_history">History</string>
     <string name="user_nickname">Nickname(optional)</string>
-    <string name="user_seed_import_hint">Paste Secret(required)</string>
+    <string name="user_seed_import_hint">Paste Key(required)</string>
     <string name="user_seed_import">Import</string>
-    <string name="user_seed_generate">Generate New Secret</string>
-    <string name="user_seed_empty">Secret cannot be empty!</string>
-    <string name="user_seed_invalid">Secret is invalid!</string>
-    <string name="user_seed_save_tips">Please make sure your secret\nhas been saved</string>
+    <string name="user_seed_generate">Generate New Key</string>
+    <string name="user_seed_empty">Key cannot be empty!</string>
+    <string name="user_seed_invalid">Key is invalid!</string>
+    <string name="user_seed_save_tips">Please make sure your key\nhas been saved</string>
     <string name="user_show_name">%1$s(%2$s)</string>
     <string name="user_ban">Ban</string>
     <string name="user_ban_list">Banlist</string>
@@ -189,7 +189,7 @@
     <string name="user_share_qr">Share QR To Friend</string>
     <string name="user_share_qr_dialog_tips">Share your QR code to friends for 100% connection</string>
 
-    <string name="copy_seed">Secret copied</string>
+    <string name="copy_seed">Key copied</string>
     <string name="copy_public_key">TAU ID copied</string>
     <string name="copy_share_link">Share link copied</string>
     <string name="copy_message_hash">Message hash copied</string>
