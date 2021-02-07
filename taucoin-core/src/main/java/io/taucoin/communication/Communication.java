@@ -223,8 +223,12 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         if (null != linkedList && !linkedList.isEmpty()) {
             List<byte[]> list = new ArrayList<>();
             for (Message message : linkedList) {
-                logger.debug("message hash:{}", Hex.toHexString(message.getHash()));
-                list.add(message.getHash());
+                try {
+                    logger.debug("message hash:{}", Hex.toHexString(message.getHash()));
+                    list.add(message.getHash());
+                } catch (RuntimeException e) {
+                    logger.error(e.getMessage(), e);
+                }
             }
 
             HashList hashList = new HashList(list);
@@ -245,8 +249,12 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
             if (null != linkedList) {
 
                 for (Message message : linkedList) {
-                    logger.debug("message hash:{}", Hex.toHexString(message.getHash()));
-                    list.add(message.getHash());
+                    try {
+                        logger.debug("message hash:{}", Hex.toHexString(message.getHash()));
+                        list.add(message.getHash());
+                    } catch (RuntimeException e) {
+                        logger.error(e.getMessage(), e);
+                    }
                 }
 
                 HashList hashList = new HashList(list);
@@ -269,35 +277,39 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         if (null != linkedList) {
             int size = linkedList.size();
             if (size > 0) {
-                // 先判断一下是否比最后一个消息时间戳大，如果是，则直接插入末尾
-                if (message.getTimestamp().compareTo(linkedList.get(size - 1).getTimestamp()) > 0) {
-                    linkedList.add(message);
-                    updated = true;
-                } else {
-                    // 寻找从后往前寻找第一个时间小于当前消息时间的消息，将当前消息插入到到该消息后面
-                    for (int i = size - 1; i > 0; i--) {
-                        // 比较当前位置消息与新消息的时间戳差值
-                        int m = linkedList.get(i).getTimestamp().compareTo(message.getTimestamp());
+                try {
+                    // 先判断一下是否比最后一个消息时间戳大，如果是，则直接插入末尾
+                    if (message.getTimestamp().compareTo(linkedList.get(size - 1).getTimestamp()) > 0) {
+                        linkedList.add(message);
+                        updated = true;
+                    } else {
+                        // 寻找从后往前寻找第一个时间小于当前消息时间的消息，将当前消息插入到到该消息后面
+                        for (int i = size - 1; i > 0; i--) {
+                            // 比较当前位置消息与新消息的时间戳差值
+                            int m = linkedList.get(i).getTimestamp().compareTo(message.getTimestamp());
 
-                        // 如果差值小于零，说明找到了比当前消息时间戳小的消息位置，将消息插入到目标位置后面一位
-                        if (m < 0) {
-                            linkedList.add(i + 1, message);
-                            updated = true;
-                        } else if (0 == m && !Arrays.equals(linkedList.get(i).getHash(), message.getHash())) {
-                            // 如果时间戳一样，并且是不同的消息，则认为后来的消息时间戳更大
-                            linkedList.add(i + 1, message);
-                            updated = true;
-                        }
-
-                        // 如果更新了消息列表，则判断是否列表长度过长，过长则删掉旧数据，然后停止循环
-                        if (updated) {
-                            if (size >= ChainParam.INDEX_HASH_LIMIT_SIZE) {
-                                linkedList.remove(0);
+                            // 如果差值小于零，说明找到了比当前消息时间戳小的消息位置，将消息插入到目标位置后面一位
+                            if (m < 0) {
+                                linkedList.add(i + 1, message);
+                                updated = true;
+                            } else if (0 == m && !Arrays.equals(linkedList.get(i).getHash(), message.getHash())) {
+                                // 如果时间戳一样，并且是不同的消息，则认为后来的消息时间戳更大
+                                linkedList.add(i + 1, message);
+                                updated = true;
                             }
 
-                            break;
+                            // 如果更新了消息列表，则判断是否列表长度过长，过长则删掉旧数据，然后停止循环
+                            if (updated) {
+                                if (size >= ChainParam.INDEX_HASH_LIMIT_SIZE) {
+                                    linkedList.remove(0);
+                                }
+
+                                break;
+                            }
                         }
                     }
+                } catch (RuntimeException e) {
+                    logger.error(e.getMessage(), e);
                 }
             } else {
                 linkedList.add(message);
@@ -413,13 +425,17 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         while (iterator.hasNext()) {
             Map.Entry<ByteArrayWrapper, IndexMutableData> entry = iterator.next();
 
-            if (null != entry.getValue()) {
-                for (byte[] hash: entry.getValue().getHashList()) {
-                    logger.debug("Notify UI read message from friend:{}, root:{}",
-                            entry.getKey().toString(), Hex.toHexString(hash));
+            try {
+                if (null != entry.getValue()) {
+                    for (byte[] hash : entry.getValue().getHashList()) {
+                        logger.debug("Notify UI read message from friend:{}, root:{}",
+                                entry.getKey().toString(), Hex.toHexString(hash));
 
-                    this.msgListener.onReadMessageRoot(entry.getKey().getData(), hash);
+                        this.msgListener.onReadMessageRoot(entry.getKey().getData(), hash);
+                    }
                 }
+            } catch (RuntimeException e) {
+                logger.error(e.getMessage(), e);
             }
 
             this.friendIndexDataToNotify.remove(entry.getKey());
@@ -471,14 +487,18 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
             ByteArrayWrapper sender = this.messageSenderMap.get(msgHash);
 
-            // save to db
-            this.messageDB.putMessage(message.getHash(), message.getEncoded());
+            try {
+                // save to db
+                this.messageDB.putMessage(message.getHash(), message.getEncoded());
 
-            logger.debug("Notify UI new message from friend:{}, hash:{}",
-                    sender.toString(), Hex.toHexString(message.getHash()));
+                logger.debug("Notify UI new message from friend:{}, hash:{}",
+                        sender.toString(), Hex.toHexString(message.getHash()));
 
-            // 通知UI新消息
-            this.msgListener.onNewMessage(sender.getData(), message);
+                // 通知UI新消息
+                this.msgListener.onNewMessage(sender.getData(), message);
+            } catch (RuntimeException e) {
+                logger.error(e.getMessage(), e);
+            }
 
             // 更新最新消息列表
             tryToUpdateLatestMessageList(sender, message);
@@ -500,38 +520,42 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
         // 顶层gossip是按照朋友关系进行平等遍历，未来可能根据频率心跳信号的存在来调整
         while (it.hasNext()) {
             GossipItem gossipItem = it.next();
-            byte[] sender = gossipItem.getSender();
-            byte[] receiver = gossipItem.getReceiver();
+            try {
+                byte[] sender = gossipItem.getSender();
+                byte[] receiver = gossipItem.getReceiver();
 
-            // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
-            if (!ByteUtil.startsWith(pubKey, sender)) {
-                // 首先，判断一下是否有涉及自己的gossip，有的话则加入待访问的活跃朋友集合
-                if (ByteUtil.startsWith(pubKey, receiver)) { // 接收者是我
-                    // 寻找发送者完整公钥
-                    ByteArrayWrapper peer = getCompletePubKeyFromFriend(sender);
-                    if (null != peer) {
-                        this.referredFriends.add(peer);
-                    }
-                } else {
-                    // 寻找跟我朋友相关的gossip
-                    for (ByteArrayWrapper friend : this.friends) {
-                        if (ByteUtil.startsWith(friend.getData(), receiver)) { // 找到
-                            FriendPair pair = FriendPair.create(makeShortAddress(sender), makeShortAddress(receiver));
+                // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+                if (!ByteUtil.startsWith(pubKey, sender)) {
+                    // 首先，判断一下是否有涉及自己的gossip，有的话则加入待访问的活跃朋友集合
+                    if (ByteUtil.startsWith(pubKey, receiver)) { // 接收者是我
+                        // 寻找发送者完整公钥
+                        ByteArrayWrapper peer = getCompletePubKeyFromFriend(sender);
+                        if (null != peer) {
+                            this.referredFriends.add(peer);
+                        }
+                    } else {
+                        // 寻找跟我朋友相关的gossip
+                        for (ByteArrayWrapper friend : this.friends) {
+                            if (ByteUtil.startsWith(friend.getData(), receiver)) { // 找到
+                                FriendPair pair = FriendPair.create(makeShortAddress(sender), makeShortAddress(receiver));
 
-                            BigInteger oldTimestamp = this.friendGossipTime.get(pair);
+                                BigInteger oldTimestamp = this.friendGossipTime.get(pair);
 
-                            BigInteger timeStamp = gossipItem.getTimestamp();
+                                BigInteger timeStamp = gossipItem.getTimestamp();
 
-                            // 判断是否是新数据，若是，则记录下来以待发布
-                            if (null == oldTimestamp || oldTimestamp.compareTo(timeStamp) < 0) {
-                                this.friendGossipTime.put(pair, timeStamp);
-                                this.freshFriendPair.add(pair);
+                                // 判断是否是新数据，若是，则记录下来以待发布
+                                if (null == oldTimestamp || oldTimestamp.compareTo(timeStamp) < 0) {
+                                    this.friendGossipTime.put(pair, timeStamp);
+                                    this.freshFriendPair.add(pair);
+                                }
+
+                                break;
                             }
-
-                            break;
                         }
                     }
                 }
+            } catch (RuntimeException e) {
+                logger.error(e.getMessage(), e);
             }
 
             this.gossipItems.remove(gossipItem);
