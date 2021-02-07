@@ -13,7 +13,7 @@ import java.util.List;
 import io.taucoin.chain.Salt;
 import io.taucoin.controller.TauController;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
-import io.taucoin.dht.DHT;
+import io.taucoin.dht2.DHT;
 import io.taucoin.types.DemandItem;
 import io.taucoin.types.HashList;
 

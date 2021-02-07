@@ -14,7 +14,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 
-import static io.taucoin.dht.DHT.*;
+import static io.taucoin.dht2.DHT.*;
 
 public class dht_getMutableItem extends JsonRpcServerMethod {
 

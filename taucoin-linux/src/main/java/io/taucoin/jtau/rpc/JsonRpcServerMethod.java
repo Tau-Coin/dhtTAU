@@ -9,12 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import io.taucoin.controller.TauController;
-import io.taucoin.dht.DHTReqResult;
+import io.taucoin.dht2.DHTReqResult;
 import io.taucoin.types.Transaction;
 
 import java.math.BigInteger;
 
-import static io.taucoin.dht.DHT.*;
+import static io.taucoin.dht2.DHT.*;
 
 /**
  * Method handler for json rpc.
@@ -144,11 +144,11 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
     }
 
     protected void dhtPut(ImmutableItem item) {
-        tauController.getDHTEngine().distribute(item);
+        tauController.getDHTEngine().distribute(item, null, null);
     }
 
     protected void dhtPut(MutableItem item) {
-        tauController.getDHTEngine().distribute(item);
+        tauController.getDHTEngine().distribute(item, null, null);
     }
 
     private static class CallbackContext {
@@ -184,7 +184,7 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
         final Object signal = new Object();
         CallbackContext context = new CallbackContext();
 
-        GetDHTItemCallback cb = new GetDHTItemCallback() {
+        GetImmutableItemCallback cb = new GetImmutableItemCallback() {
             @Override
             public void onDHTItemGot(byte[] item, Object cbData) {
                 synchronized (signal) {
@@ -221,9 +221,9 @@ public abstract class JsonRpcServerMethod implements RequestHandler {
         final Object signal = new Object();
         CallbackContext context = new CallbackContext();
 
-        GetDHTItemCallback cb = new GetDHTItemCallback() {
+        GetMutableItemCallback cb = new GetMutableItemCallback() {
             @Override
-            public void onDHTItemGot(byte[] item, Object cbData) {
+            public void onDHTItemGot(byte[] item, Object cbData, boolean auth) {
                 synchronized (signal) {
                     CallbackContext ctx = (CallbackContext)cbData;
                     ctx.setGot();

@@ -8,8 +8,8 @@ import io.taucoin.listener.CompositeMsgListener;
 import io.taucoin.listener.CompositeTauListener;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.listener.TauListener;
-import io.taucoin.dht.DHTEngine;
-import io.taucoin.dht.session.SessionController;
+import io.taucoin.dht2.DHTEngine;
+import io.taucoin.dht2.SessionStats;
 import io.taucoin.util.Repo;
 
 import com.frostwire.jlibtorrent.Pair;
@@ -90,8 +90,8 @@ public class TauController {
      *
      * @param sessionsQuota sessions quoto
      */
-    public void start(int sessionsQuota) {
-        start(sessionsQuota, SessionController.DEFUALT_INTERFACES);
+    public void start() {
+        start(1);
     }
 
     /**
@@ -100,12 +100,13 @@ public class TauController {
      * @param sessionsQuota sessions quoto
      * @param interfacesQuota interfaces quota
      */
-    public void start(int sessionsQuota, int interfacesQuota) {
+    public void start(int interfacesQuota) {
 
         registerListener(new StartListener(this, compositeTauListener));
 
         // First of all, start torrent engine.
-        dhtEngine.start(sessionsQuota, interfacesQuota);
+        //dhtEngine.start(sessionsQuota, interfacesQuota);
+        dhtEngine.start(interfacesQuota);
 
         // And then start chain manager.
         // chain manager will start followed and mined blockchains.
@@ -135,8 +136,8 @@ public class TauController {
      *
      * @param sessionsQuota sessions quota
      */
-    public boolean restartSessions(int sessionsQuota) {
-        return dhtEngine.restart(sessionsQuota, SessionController.DEFUALT_INTERFACES);
+    public boolean restartSessions() {
+        return dhtEngine.restart(1);
     }
 
     /**
@@ -145,26 +146,30 @@ public class TauController {
      * @param sessionsQuota sessions quota
      * @param interfacesQuota interfaces quota
      */
-    public boolean restartSessions(int sessionsQuota, int interfacesQuota) {
-        return dhtEngine.restart(sessionsQuota, interfacesQuota);
+    public boolean restartSessions(int interfacesQuota) {
+        return dhtEngine.restart(interfacesQuota);
     }
 
     /**
      * Increase dht session.
+     * @Deprecated
      *
      * @return boolean true indicates starting successfully, or else false.
      */
     public boolean increaseSession() {
-        return dhtEngine.increaseSession();
+        //return dhtEngine.increaseSession();
+        return false;
     }
 
     /**
      * Decrease dht session.
+     * @Deprecated
      *
      * @return boolean true indicates decreasing successfully, or else false.
      */
     public boolean decreaseSession() {
-        return dhtEngine.decreaseSession();
+        //return dhtEngine.decreaseSession();
+        return false;
     }
 
     /**

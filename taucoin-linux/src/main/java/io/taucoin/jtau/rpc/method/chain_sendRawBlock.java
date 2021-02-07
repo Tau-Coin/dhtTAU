@@ -17,14 +17,14 @@ import java.util.List;
 
 import io.taucoin.chain.ChainManager;
 import io.taucoin.controller.TauController;
-import io.taucoin.dht.util.Utils;
+import io.taucoin.dht2.util.Utils;
 import io.taucoin.util.HashUtil;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 import io.taucoin.types.Block;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteUtil;
 
-import static io.taucoin.dht.DHT.*;
+import static io.taucoin.dht2.DHT.*;
 
 public class chain_sendRawBlock extends JsonRpcServerMethod {
     private static final Logger logger = LoggerFactory.getLogger("rpc");

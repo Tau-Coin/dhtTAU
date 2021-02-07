@@ -1,8 +1,8 @@
 package io.taucoin.jtau.rpc.method;
 
 import io.taucoin.controller.TauController;
-import io.taucoin.dht.DHTEngine;
-import io.taucoin.dht.session.SessionInfo;
+import io.taucoin.dht2.DHTEngine;
+import io.taucoin.dht2.session.SessionInfo;
 import io.taucoin.jtau.rpc.JsonRpcServerMethod;
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error;
@@ -27,12 +27,9 @@ public class dht_getSessionInfos extends JsonRpcServerMethod {
     protected JSONRPC2Response worker(JSONRPC2Request req, MessageContext ctx) {
 
 		StringBuilder sb = new StringBuilder();
-        List<SessionInfo> sis = DHTEngine.getInstance().getSessionInfos();
+        SessionInfo si = DHTEngine.getInstance().getSessionInfo();
 
-        for (SessionInfo si : sis) {
-            sb.append(si.toString());
-            sb.append(",");
-        }
+        sb.append(si.toString());
 
         JSONRPC2Response response = new JSONRPC2Response(sb.toString(), req.getID());
         return response;
