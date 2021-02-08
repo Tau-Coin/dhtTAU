@@ -106,6 +106,7 @@ public class TauDaemon {
 
         switchPowerReceiver();
         switchConnectionReceiver();
+        updateUIInterval(50, 10);
     }
 
     /**
@@ -405,24 +406,24 @@ public class TauDaemon {
                     resetReadOnly();
                     logger.info("rescheduleTAUBySettings restartSessions");
                 } else {
-                    float rate = NetworkSetting.calculateIntervalRate();
-                    if (rate > 0) {
-                        long sessionNodes = getSessionNodes();
-                        int mainLoopInterval = NetworkSetting.calculateMainLoopInterval(rate, sessionNodes);
-                        int gossipInterval = NetworkSetting.calculateGossipInterval(rate, sessionNodes);
-                        tauController.getCommunicationManager().setIntervalTime(mainLoopInterval);
-                        tauController.getCommunicationManager().setGossipTimeInterval(gossipInterval);
-                        // 更新UI展示链端主循环、Gossip、DHT操作的时间间隔
-                        updateUIInterval(mainLoopInterval, gossipInterval);
-                    } else if (rate == -1) {
-                        resetReadOnly(true);
-                        showNoRemainingDataTipsDialog();
-                    }
-                    if (rate != -1) {
-                        trafficTips = true;
-                        noRemainingDataTimes = 0;
-                        resetReadOnly(false);
-                    }
+//                    float rate = NetworkSetting.calculateIntervalRate();
+//                    if (rate > 0) {
+//                        long sessionNodes = getSessionNodes();
+//                        int mainLoopInterval = NetworkSetting.calculateMainLoopInterval(rate, sessionNodes);
+//                        int gossipInterval = NetworkSetting.calculateGossipInterval(rate, sessionNodes);
+//                        tauController.getCommunicationManager().setIntervalTime(mainLoopInterval);
+//                        tauController.getCommunicationManager().setGossipTimeInterval(gossipInterval);
+//                        // 更新UI展示链端主循环、Gossip、DHT操作的时间间隔
+//                        updateUIInterval(mainLoopInterval, gossipInterval);
+//                    } else if (rate == -1) {
+//                        resetReadOnly(true);
+//                        showNoRemainingDataTipsDialog();
+//                    }
+//                    if (rate != -1) {
+//                        trafficTips = true;
+//                        noRemainingDataTimes = 0;
+//                        resetReadOnly(false);
+//                    }
                 }
 
             }
