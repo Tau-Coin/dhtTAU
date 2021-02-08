@@ -612,8 +612,8 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
         // 如果有现成的peer，则挑选一个peer访问
         if (it.hasNext()) {
             ByteArrayWrapper peer = it.next();
-            requestGossipMutableDataFromPeer(peer);
             requestIndexMutableDataFromPeer(peer);
+            requestGossipMutableDataFromPeer(peer);
 
             this.referredFriends.remove(peer);
 //            it.remove();
@@ -642,8 +642,8 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
                 }
 
                 if (null != peer) {
-                    requestGossipMutableDataFromPeer(peer);
                     requestIndexMutableDataFromPeer(peer);
+                    requestGossipMutableDataFromPeer(peer);
                 }
             }
         }
@@ -1007,9 +1007,9 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
 
                     saveMessageDataInDB(message);
                     updateMessageInfoToFriend(friend, message);
-                    publishMessage(friend, message);
                     publishGossip();
                     publishIndexMutableData(friend);
+                    publishMessage(friend, message);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
