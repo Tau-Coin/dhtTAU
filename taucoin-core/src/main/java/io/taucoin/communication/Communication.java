@@ -123,8 +123,8 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
     // 给我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> timeStampToFriend = new ConcurrentHashMap<>();
 
-    // 我收到的需求hash
-    private final Set<ByteArrayWrapper> friendDemandHash = new CopyOnWriteArraySet<>();
+    // 我从朋友收到的需求hash，<hash, friend>（完整公钥）
+    private final Map<ByteArrayWrapper, ByteArrayWrapper> friendDemandHash = new ConcurrentHashMap<>();
 
     // 通过gossip推荐机制发现的有新消息的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> referredFriends = new CopyOnWriteArraySet<>();
@@ -568,18 +568,17 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
      * @throws DBException database exception
      */
     private void responseRemoteDemand() throws DBException {
-        Iterator<ByteArrayWrapper> it = this.friendDemandHash.iterator();
-        while (it.hasNext()) {
-            ByteArrayWrapper hash = it.next();
-            logger.info("Response demand:{}", hash.toString());
+        for (Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry: this.friendDemandHash.entrySet()) {
+            logger.info("Response demand:{}", entry.getKey().toString());
 
-            byte[] data = this.messageDB.getMessageByHash(hash.getData());
+            byte[] data = this.messageDB.getMessageByHash(entry.getKey().getData());
             if (null != data) {
                 publishImmutableData(data);
+
+                touchGossipItem(entry.getValue());
             }
 
-            this.friendDemandHash.remove(hash);
-//            it.remove();
+            this.friendDemandHash.remove(entry.getKey());
         }
     }
 
@@ -1427,7 +1426,7 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
                     if (!found) {// 找到对方缺少的消息的哈希，则加入需求集合
                         ByteArrayWrapper hash = new ByteArrayWrapper(message.getHash());
                         logger.debug("Found demand hash:{} from peer:{}", hash.toString(), peer.toString());
-                        this.friendDemandHash.add(hash);
+                        this.friendDemandHash.put(hash, peer);
                         // 满足一个需求即可
                         break;
                     }
