@@ -64,12 +64,16 @@ public class DHTEngine {
 
         @Override
         public void onKeyChanged(Pair<byte[], byte[]> newKey) {
+
             if (key != null && !Arrays.equals(key.first, newKey.first)) {
                 key = new Pair<byte[], byte[]>(newKey.first, newKey.second);
                 logger.info("Key changed and clear all caches");
 
                 putCache.clear();
                 getCache.clear();
+            } else if (key == null) {
+                key = new Pair<byte[], byte[]>(newKey.first, newKey.second);
+                logger.info("update new key");
             }
         }
     };
