@@ -26,8 +26,8 @@ import io.taucoin.core.DataType;
 import io.taucoin.core.FriendPair;
 import io.taucoin.db.DBException;
 import io.taucoin.db.MessageDB;
-import io.taucoin.dht.DHT;
-import io.taucoin.dht.DHTEngine;
+import io.taucoin.dht2.DHT;
+import io.taucoin.dht2.DHTEngine;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.listener.MsgStatus;
 import io.taucoin.param.ChainParam;
@@ -41,7 +41,7 @@ import io.taucoin.util.ByteUtil;
 
 import static io.taucoin.param.ChainParam.SHORT_ADDRESS_LENGTH;
 
-public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCallback, KeyChangedListener {
+public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutableItemCallback, DHT.PutDHTItemCallback, KeyChangedListener {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 对UI使用的, Queue capability.
@@ -654,10 +654,10 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      * 将所有的请求一次发给中间层
      */
     private void tryToSendAllRequest() {
-        int size = DHTEngine.getInstance().queueOccupation();
+//        int size = DHTEngine.getInstance().queueOccupation();
 
         // 0.2 * 10000是中间层剩余空间，大于本地队列最大长度1000，目前肯定能放下
-        if ((double)size / DHTEngine.DHTQueueCapability < THRESHOLD) {
+//        if ((double)size / DHTEngine.DHTQueueCapability < THRESHOLD) {
             for (Object request: this.queue) {
                 if (null != request) {
                     process(request);
@@ -665,7 +665,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
                 this.queue.remove(request);
             }
-        }
+//        }
     }
 
     /**
@@ -887,7 +887,7 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
                 tryToSendAllRequest();
 
                 // 尝试调整间隔时间
-                adjustIntervalTime();
+//                adjustIntervalTime();
 
                 try {
                     Thread.sleep(this.loopIntervalTime);
@@ -922,11 +922,11 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
      * 调整间隔时间
      */
     private void adjustIntervalTime() {
-        int size = DHTEngine.getInstance().queueOccupation();
-        // 理想状态是直接问中间层是否资源紧张，根据资源紧张度来调整访问频率，资源紧张则降低访问频率
-        if ((double)size / DHTEngine.DHTQueueCapability > THRESHOLD) {
-            increaseIntervalTime();
-        }
+//        int size = DHTEngine.getInstance().queueOccupation();
+//        // 理想状态是直接问中间层是否资源紧张，根据资源紧张度来调整访问频率，资源紧张则降低访问频率
+//        if ((double)size / DHTEngine.DHTQueueCapability > THRESHOLD) {
+//            increaseIntervalTime();
+//        }
     }
 
     /**
@@ -1455,6 +1455,16 @@ public class Communication implements DHT.GetDHTItemCallback, DHT.PutDHTItemCall
 
                 break;
             }
+            default: {
+                logger.info("Type mismatch.");
+            }
+        }
+    }
+
+    @Override
+    public void onDHTItemGot(byte[] item, Object cbData, boolean auth) {
+        DataIdentifier dataIdentifier = (DataIdentifier) cbData;
+        switch (dataIdentifier.getDataType()) {
             case GOSSIP_FROM_PEER: {
                 if (null == item) {
                     logger.debug("GOSSIP_FROM_PEER from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
