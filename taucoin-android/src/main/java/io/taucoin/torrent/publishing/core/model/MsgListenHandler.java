@@ -201,6 +201,10 @@ class MsgListenHandler {
                 String hash = ByteUtil.toHexString(root);
                 logger.trace("onMessageStatus root::{}, msgStatus::{}",
                         hash, msgStatus.name());
+                if (msgStatus.ordinal() == MsgStatus.PUT_SUCCESS.ordinal()) {
+                    logger.trace("onMessageStatus put success hash::{}",
+                            hash);
+                }
                 int status = msgStatus.ordinal();
                 String userPk = MainApplication.getInstance().getPublicKey();
                 String friendPk = ByteUtil.toHexString(friend);
