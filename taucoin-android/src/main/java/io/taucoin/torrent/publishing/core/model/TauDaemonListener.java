@@ -1,8 +1,7 @@
 package io.taucoin.torrent.publishing.core.model;
 
-import io.taucoin.dht.SessionStats;
-
 import androidx.annotation.NonNull;
+import io.taucoin.dht2.SessionStats;
 import io.taucoin.listener.TauListener;
 import io.taucoin.types.BlockContainer;
 

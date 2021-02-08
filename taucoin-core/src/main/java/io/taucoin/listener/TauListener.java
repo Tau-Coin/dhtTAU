@@ -1,7 +1,6 @@
 package io.taucoin.listener;
 
 import io.taucoin.dht2.SessionStats;
-import io.taucoin.types.Block;
 import io.taucoin.types.BlockContainer;
 
 /**

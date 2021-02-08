@@ -5,13 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
 
-import com.frostwire.jlibtorrent.Ed25519;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -59,7 +55,6 @@ import io.taucoin.util.ByteUtil;
 public class TauDaemon {
     private static final String TAG = TauDaemon.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
-    private static final int sessions = 1; // 启动session数
 
     private Context appContext;
     private SettingsRepository settingsRepo;
@@ -129,11 +124,7 @@ public class TauDaemon {
         this.seed = seed;
         logger.debug("updateSeed ::{}", seed);
         byte[] bytesSeed = ByteUtil.toByte(seed);
-        if (isRunning) {
-            tauController.updateKey(bytesSeed);
-        } else {
-            tauController.updateKey(Ed25519.createKeypair(bytesSeed));
-        }
+        tauController.updateKey(bytesSeed);
     }
 
     /**
@@ -308,8 +299,7 @@ public class TauDaemon {
                 .subscribe());
 
         rescheduleTAUBySettings();
-        resetDHTSessions();
-        tauController.start(NetworkSetting.getDHTSessions());
+        tauController.start();
     }
 
     /**
@@ -411,11 +401,9 @@ public class TauDaemon {
             // 判断有无网络连接
             if (settingsRepo.internetState()) {
                 if (isRestart) {
-                    resetDHTSessions();
-                    tauController.restartSessions(NetworkSetting.getDHTSessions());
+                    tauController.restartSessions();
                     resetReadOnly();
-                    logger.info("rescheduleTAUBySettings restartSessions::{}",
-                            NetworkSetting.getDHTSessions());
+                    logger.info("rescheduleTAUBySettings restartSessions");
                 } else {
                     float rate = NetworkSetting.calculateIntervalRate();
                     if (rate > 0) {
@@ -451,12 +439,8 @@ public class TauDaemon {
                 mainLoopInterval);
         settingsRepo.setLongValue(appContext.getString(R.string.pref_key_gossip_interval),
                 gossipInterval);
-        logger.info("Reschedule DHTSessions::{}, " +
-                        "MainLoopInterval::{}ms, " +
-                        "GossipInterval::{}s",
-                NetworkSetting.getDHTSessions(),
-                mainLoopInterval,
-                gossipInterval);
+        logger.info("Reschedule MainLoopInterval::{}ms, GossipInterval::{}s",
+                mainLoopInterval, gossipInterval);
     }
 
     /**
@@ -504,13 +488,6 @@ public class TauDaemon {
         }
         boolean isReadOnly = NetworkSetting.isMeteredNetwork() || isForced;
         tauController.getDHTEngine().setReadOnly(isReadOnly);
-    }
-
-    /**
-     * 重置DHT Sessions个数，固定单session
-     */
-    private void resetDHTSessions() {
-        NetworkSetting.updateDHTSessions(sessions);
     }
 
     /**
@@ -723,13 +700,6 @@ public class TauDaemon {
         if (!isRunning) {
             return 0;
         }
-        BigInteger nodes = BigInteger.ZERO;
-        List<Long> sessionNodes = tauController.getDHTEngine().getSessionNodes();
-        if (sessionNodes != null) {
-            for (Long node : sessionNodes) {
-                nodes = nodes.add(BigInteger.valueOf(node));
-            }
-        }
-        return nodes.longValue();
+        return tauController.getDHTEngine().getSessionNodes();
     }
 }
