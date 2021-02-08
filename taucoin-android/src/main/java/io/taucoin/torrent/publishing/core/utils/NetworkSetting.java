@@ -145,7 +145,11 @@ public class NetworkSetting {
         if (list.size() == 0) {
             return 0;
         }
-        return totalSpeed / list.size();
+        if (list.size() >= current_speed_sample) {
+            return totalSpeed / current_speed_sample;
+        } else {
+            return totalSpeed / list.size();
+        }
     }
 
     /**
@@ -275,6 +279,10 @@ public class NetworkSetting {
      */
     public static float calculateIntervalRate() {
         long speedLimit;
+        // 无网络，返回0；不更新链端时间间隔
+        if (!settingsRepo.internetState()) {
+            return 0;
+        }
         if (isMeteredNetwork()) {
             // 当前网络为计费网络
             speedLimit = NetworkSetting.getMeteredSpeedLimit();
@@ -283,7 +291,7 @@ public class NetworkSetting {
             speedLimit = NetworkSetting.getWiFiSpeedLimit();
         }
         if (speedLimit > 0) {
-            long averageSpeed = NetworkSetting.getAverageSpeed();
+            long averageSpeed = NetworkSetting.getCurrentSpeed();
             return averageSpeed * 1.0f / speedLimit;
         } else {
             return -1;
