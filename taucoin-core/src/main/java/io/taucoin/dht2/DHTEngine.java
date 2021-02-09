@@ -43,9 +43,9 @@ public class DHTEngine {
     // libtorrent listening port
     private static final int LISTEN_PORT = 6881;
 
-    private static final long CACHE_CHECK_PERIOD = 120 * 1000; // milliseconds
+    private static final long CACHE_CHECK_PERIOD = 60 * 1000; // milliseconds
 
-    private static final long CACHE_TIMEOUT_THRESOLD = 120 * 1000; // milliseconds
+    private static final long CACHE_TIMEOUT_THRESOLD = 60 * 1000; // milliseconds
 
     private static volatile DHTEngine INSTANCE;
 
