@@ -520,13 +520,17 @@ public final class DHT {
 
     public static class Trace {
 
-        protected long start;
-        protected long end;
+        protected long start = 0;
+        protected long end = 0;
 
         public Trace() {}
 
         public void start() {
             this.start = System.nanoTime();
+        }
+
+        public long duration() {
+            return (System.nanoTime() - this.start);
         }
 
         public void end() {

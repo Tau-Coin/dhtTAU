@@ -24,7 +24,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static io.taucoin.dht2.DHT.*;
 import static io.taucoin.dht2.DHTReqResult.*;
@@ -39,6 +42,10 @@ public class DHTEngine {
 
     // libtorrent listening port
     private static final int LISTEN_PORT = 6881;
+
+    private static final long CACHE_CHECK_PERIOD = 120 * 1000; // milliseconds
+
+    private static final long CACHE_TIMEOUT_THRESOLD = 120 * 1000; // milliseconds
 
     private static volatile DHTEngine INSTANCE;
 
@@ -75,6 +82,25 @@ public class DHTEngine {
                 key = new Pair<byte[], byte[]>(newKey.first, newKey.second);
                 logger.info("update new key");
             }
+        }
+    };
+
+    private Timer getCacheCheker = new Timer(true);
+    private Timer putCacheCheker = new Timer(true);
+
+    private TimerTask getCacheTimeoutTask = new TimerTask() {
+
+        @Override
+        public void run() {
+            checkGetCache();
+        }
+    };
+
+    private TimerTask putCacheTimeoutTask = new TimerTask() {
+
+        @Override
+        public void run() {
+            checkPutCache();
         }
     };
 
@@ -137,6 +163,12 @@ public class DHTEngine {
             tauListener.onDHTStarted(false, "listen failed");
         }
 
+        putCache.clear();
+        getCache.clear();
+
+        getCacheCheker.schedule(getCacheTimeoutTask, 0, CACHE_CHECK_PERIOD);
+        putCacheCheker.schedule(putCacheTimeoutTask, 0, CACHE_CHECK_PERIOD);
+
         return ok;
     }
 
@@ -148,6 +180,8 @@ public class DHTEngine {
         session.stop();
         putCache.clear();
         getCache.clear();
+        getCacheCheker.cancel();
+        putCacheCheker.cancel();
         tauListener.onDHTStopped();
     }
 
@@ -195,13 +229,13 @@ public class DHTEngine {
             Object cbData) {
 
         if (item == null || !session.isRunning()) {
-            logger.warn("drop immutable item" + item);
+            logger.warn("drop immutable item:" + item);
             return Dropped;
         }
 
         // Drop this item if it exists.
         if (putCache.get(item.hash()) != null) {
-            logger.trace("duplicate immutable item" + item);
+            logger.trace("duplicate immutable item:" + item);
             return Duplicated;
         }
 
@@ -227,13 +261,13 @@ public class DHTEngine {
             Object cbData) {
 
         if (item == null || !session.isRunning()) {
-            logger.warn("drop mutable item" + item);
+            logger.warn("drop mutable item:" + item);
             return Dropped;
         }
 
         // Drop this item if it exists.
         if (putCache.get(item.hash()) != null) {
-            logger.trace("duplicate mutable item" + item);
+            logger.trace("duplicate mutable item:" + item);
             return Duplicated;
         }
 
@@ -485,7 +519,7 @@ public class DHTEngine {
             getCache.remove(hash);
         }
         logger.trace("mutable item got:" + Hex.toHexString(publicKey)
-                + "/" + new String(salt) + "auth:" + auth
+                + "/" + new String(salt) + ", auth:" + auth
                 + ", cache size:" + getCache.size());
     }
 
@@ -537,6 +571,56 @@ public class DHTEngine {
 
         logger.trace("mutable item put completed:" + Hex.toHexString(publicKey)
                 + "/" + new String(salt) + ", cache size:" + putCache.size());
+    }
+
+    private void checkGetCache() {
+        Iterator<Map.Entry<Sha1Hash, Object>> it = getCache.entrySet().iterator();
+
+        while (it.hasNext()) {
+            Map.Entry<Sha1Hash, Object> entry = it.next();
+            Object req = entry.getValue();
+
+            if (req instanceof ImmutableItemRequest) {
+                ImmutableItemRequest imReq = (ImmutableItemRequest)req;
+                if (imReq.duration() / 1000000 >= CACHE_TIMEOUT_THRESOLD) {
+                    logger.trace("immutable req timeout:" + imReq.toString());
+                    it.remove();
+                }
+            } else if (req instanceof MutableItemRequest) {
+                MutableItemRequest mReq = (MutableItemRequest)req;
+                if (mReq.duration() / 1000000 >= CACHE_TIMEOUT_THRESOLD) {
+                    logger.trace("mutable req timeout:" + mReq.toString());
+                    it.remove();
+                }
+            } else {
+                logger.warn("timeout unknow obj:" + req.toString());
+            }
+        }
+    }
+
+    private void checkPutCache() {
+        Iterator<Map.Entry<Sha1Hash, Object>> it = putCache.entrySet().iterator();
+
+        while (it.hasNext()) {
+            Map.Entry<Sha1Hash, Object> entry = it.next();
+            Object d = entry.getValue();
+
+            if (d instanceof ImmutableItemDistribution) {
+                ImmutableItemDistribution imPut = (ImmutableItemDistribution)d; 
+                if (imPut.duration() / 1000000 >= CACHE_TIMEOUT_THRESOLD) {
+                    logger.trace("immutable put timeout:" + imPut.toString());
+                    it.remove();
+                }
+            } else if (d instanceof MutableItemDistribution) {
+                MutableItemDistribution mPut = (MutableItemDistribution)d;
+                if (mPut.duration() / 1000000 >= CACHE_TIMEOUT_THRESOLD) {
+                    logger.trace("mutable put timeout:" + mPut.toString());
+                    it.remove();
+                }
+            } else {
+                logger.warn("timeout unknow obj:" + d.toString());
+            }
+        }
     }
 
     private static final class NetworkInterfacePolicy {
