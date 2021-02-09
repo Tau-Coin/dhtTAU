@@ -55,9 +55,6 @@ public class DHTEngine {
 
     private TauListener tauListener;
 
-    // Cache map from sha1 hash to putting immutable or mutable item request.
-    private Map<Sha1Hash, Object> putCache = new ConcurrentHashMap<Sha1Hash, Object>();
-
     // Cache map from sha1 hash to getting immutable or mutable item specification.
     private Map<Sha1Hash, Object> getCache = new ConcurrentHashMap<Sha1Hash, Object>();
 
@@ -75,7 +72,6 @@ public class DHTEngine {
                 key = new Pair<byte[], byte[]>(newKey.first, newKey.second);
                 logger.info("Key changed and clear all caches");
 
-                putCache.clear();
                 getCache.clear();
             } else if (key == null) {
                 key = new Pair<byte[], byte[]>(newKey.first, newKey.second);
@@ -85,21 +81,12 @@ public class DHTEngine {
     };
 
     private Timer getCacheCheker = new Timer(true);
-    private Timer putCacheCheker = new Timer(true);
 
     private TimerTask getCacheTimeoutTask = new TimerTask() {
 
         @Override
         public void run() {
             checkGetCache();
-        }
-    };
-
-    private TimerTask putCacheTimeoutTask = new TimerTask() {
-
-        @Override
-        public void run() {
-            checkPutCache();
         }
     };
 
@@ -162,11 +149,9 @@ public class DHTEngine {
             tauListener.onDHTStarted(false, "listen failed");
         }
 
-        putCache.clear();
         getCache.clear();
 
         getCacheCheker.schedule(getCacheTimeoutTask, 0, CACHE_CHECK_PERIOD);
-        putCacheCheker.schedule(putCacheTimeoutTask, 0, CACHE_CHECK_PERIOD);
 
         return ok;
     }
@@ -177,10 +162,8 @@ public class DHTEngine {
     public void stop() {
         session.removeListener(listener);
         session.stop();
-        putCache.clear();
         getCache.clear();
         getCacheCheker.cancel();
-        putCacheCheker.cancel();
         tauListener.onDHTStopped();
     }
 
@@ -232,12 +215,6 @@ public class DHTEngine {
             return Dropped;
         }
 
-        // Drop this item if it exists.
-        if (putCache.get(item.hash()) != null) {
-            logger.trace("duplicate immutable item:" + item);
-            return Duplicated;
-        }
-
         ImmutableItemDistribution distribution
                 = new ImmutableItemDistribution(item, cb, cbData);
 
@@ -262,12 +239,6 @@ public class DHTEngine {
         if (item == null || !session.isRunning()) {
             logger.warn("drop mutable item:" + item);
             return Dropped;
-        }
-
-        // Drop this item if it exists.
-        if (putCache.get(item.hash()) != null) {
-            logger.trace("duplicate mutable item:" + item);
-            return Duplicated;
         }
 
         MutableItemDistribution distribution
@@ -375,9 +346,7 @@ public class DHTEngine {
         logger.trace("put immutable item:" + d.toString());
         Sha1Hash hash = session.dhtPut(d.item);
 
-        // add d into putCache
         if (hash != null) {
-            putCache.put(d.hash(), d);
             return true;
         }
 
@@ -389,9 +358,7 @@ public class DHTEngine {
         logger.trace("put mutable item:" + d.toString());
         boolean ret = session.dhtPut(d.item);
 
-        // add d into putCache
         if (ret) {
-            putCache.put(d.hash(), d);
             return true;
         }
 
@@ -523,55 +490,9 @@ public class DHTEngine {
     }
 
     private void handleImmutableItemPutCompleted(DhtPutAlert a) {
-        Sha1Hash hash = a.target();
-        if (hash == null) {
-            return;
-        }
-
-        // Get put callback from putCache
-        Object distribution = putCache.get(hash);
-        if (distribution == null) {
-            logger.warn("immutable item put completed:not found cache for " + hash);
-            return;
-        }
-
-        ImmutableItemDistribution d = (ImmutableItemDistribution)distribution;
-        d.end();
-        dht_put_alert putAlert = a.swig();
-        d.onDHTItemPut(putAlert.getNum_success());
-
-        putCache.remove(hash);
-
-        logger.trace("immutable item put completed:" + hash + ", cache size:" + putCache.size());
     }
 
     private void handleMutableItemPutCompleted(DhtPutAlert a) {
-        byte[] publicKey = a.publicKey();
-        byte[] salt = a.salt();
-
-        if (publicKey == null || salt == null) {
-            return;
-        }
-
-        Sha1Hash hash = MutableItem.computeHash(publicKey, salt);
-
-        // Get put callback from putCache
-        Object distribution = putCache.get(hash);
-        if (distribution == null) {
-            logger.warn("mutable item put completed:not found cache for "
-                    + Hex.toHexString(publicKey) + "/" + new String(salt));
-            return;
-        }
-
-        MutableItemDistribution d = (MutableItemDistribution)distribution;
-        d.end();
-        dht_put_alert putAlert = a.swig();
-        d.onDHTItemPut(putAlert.getNum_success());
-
-        putCache.remove(hash);
-
-        logger.trace("mutable item put completed:" + Hex.toHexString(publicKey)
-                + "/" + new String(salt) + ", cache size:" + putCache.size());
     }
 
     private void checkGetCache() {
@@ -595,31 +516,6 @@ public class DHTEngine {
                 }
             } else {
                 logger.warn("timeout unknow obj:" + req.toString());
-            }
-        }
-    }
-
-    private void checkPutCache() {
-        Iterator<Map.Entry<Sha1Hash, Object>> it = putCache.entrySet().iterator();
-
-        while (it.hasNext()) {
-            Map.Entry<Sha1Hash, Object> entry = it.next();
-            Object d = entry.getValue();
-
-            if (d instanceof ImmutableItemDistribution) {
-                ImmutableItemDistribution imPut = (ImmutableItemDistribution)d; 
-                if (imPut.duration() / 1000000 >= CACHE_TIMEOUT_THRESOLD) {
-                    logger.trace("immutable put timeout:" + imPut.toString());
-                    it.remove();
-                }
-            } else if (d instanceof MutableItemDistribution) {
-                MutableItemDistribution mPut = (MutableItemDistribution)d;
-                if (mPut.duration() / 1000000 >= CACHE_TIMEOUT_THRESOLD) {
-                    logger.trace("mutable put timeout:" + mPut.toString());
-                    it.remove();
-                }
-            } else {
-                logger.warn("timeout unknow obj:" + d.toString());
             }
         }
     }
