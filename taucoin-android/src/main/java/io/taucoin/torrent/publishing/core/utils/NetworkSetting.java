@@ -298,32 +298,33 @@ public class NetworkSetting {
         }
     }
 
-    /**
-     * 计算Gossip时间间隔
-     * @param rate 平均网速和网速限制的比率
-     * @return 返回计算的时间间隔
-     */
-    public static int calculateGossipInterval(float rate, long sessionNodes) {
-        Context context = MainApplication.getInstance();
-        boolean isOnForeground = AppUtil.isOnForeground(context);
-        if (isMeteredNetwork()) {
-            if (isOnForeground) {
-                return calculateTimeInterval(rate, Interval.GOSSIP_FORE_METERED_MIN,
-                        Interval.GOSSIP_FORE_METERED_MAX, sessionNodes);
-            } else {
-                return calculateTimeInterval(rate, Interval.GOSSIP_BACK_METERED_MIN,
-                        Interval.GOSSIP_BACK_METERED_MAX, sessionNodes);
-            }
-        } else {
-            if (isOnForeground) {
-                return calculateTimeInterval(rate, Interval.GOSSIP_FORE_WIFI_MIN,
-                        Interval.GOSSIP_FORE_WIFI_MAX, sessionNodes);
-            } else {
-                return calculateTimeInterval(rate, Interval.GOSSIP_BACK_WIFI_MIN,
-                        Interval.GOSSIP_BACK_WIFI_MAX, sessionNodes);
-            }
-        }
-    }
+//    /**
+//     * 计算Gossip时间间隔
+//     * @param rate 平均网速和网速限制的比率
+//     * @return 返回计算的时间间隔
+//     */
+//    @Deprecated
+//    public static int calculateGossipInterval(float rate, long sessionNodes) {
+//        Context context = MainApplication.getInstance();
+//        boolean isOnForeground = AppUtil.isOnForeground(context);
+//        if (isMeteredNetwork()) {
+//            if (isOnForeground) {
+//                return calculateTimeInterval(rate, Interval.GOSSIP_FORE_METERED_MIN,
+//                        Interval.GOSSIP_FORE_METERED_MAX, sessionNodes);
+//            } else {
+//                return calculateTimeInterval(rate, Interval.GOSSIP_BACK_METERED_MIN,
+//                        Interval.GOSSIP_BACK_METERED_MAX, sessionNodes);
+//            }
+//        } else {
+//            if (isOnForeground) {
+//                return calculateTimeInterval(rate, Interval.GOSSIP_FORE_WIFI_MIN,
+//                        Interval.GOSSIP_FORE_WIFI_MAX, sessionNodes);
+//            } else {
+//                return calculateTimeInterval(rate, Interval.GOSSIP_BACK_WIFI_MIN,
+//                        Interval.GOSSIP_BACK_WIFI_MAX, sessionNodes);
+//            }
+//        }
+//    }
 
     /**
      * 计算主循环时间间隔
