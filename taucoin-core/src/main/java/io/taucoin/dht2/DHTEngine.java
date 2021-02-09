@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Iterator;
@@ -55,12 +56,10 @@ public class DHTEngine {
     private TauListener tauListener;
 
     // Cache map from sha1 hash to putting immutable or mutable item request.
-    private Map<Sha1Hash, Object> putCache = Collections.synchronizedMap(
-            new HashMap<Sha1Hash, Object>());
+    private Map<Sha1Hash, Object> putCache = new ConcurrentHashMap<Sha1Hash, Object>();
 
     // Cache map from sha1 hash to getting immutable or mutable item specification.
-    private Map<Sha1Hash, Object> getCache = Collections.synchronizedMap(
-            new HashMap<Sha1Hash, Object>());
+    private Map<Sha1Hash, Object> getCache = new ConcurrentHashMap<Sha1Hash, Object>();
 
     // The wrapper of session manager.
     private TauSession session;
