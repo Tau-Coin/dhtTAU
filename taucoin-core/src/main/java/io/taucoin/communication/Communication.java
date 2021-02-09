@@ -41,7 +41,7 @@ import io.taucoin.util.ByteUtil;
 
 import static io.taucoin.param.ChainParam.SHORT_ADDRESS_LENGTH;
 
-public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutableItemCallback, DHT.PutDHTItemCallback, KeyChangedListener {
+public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutableItemCallback, KeyChangedListener {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 对UI使用的, Queue capability.
@@ -115,10 +115,10 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
     private final Map<ByteArrayWrapper, IndexMutableData> friendIndexDataToNotify = new ConcurrentHashMap<>();
 
     // 等待通知的消息状态
-    private final Map<ByteArrayWrapper, MsgStatus> msgStatus = new ConcurrentHashMap<>();
+//    private final Map<ByteArrayWrapper, MsgStatus> msgStatus = new ConcurrentHashMap<>();
 
     // 等待通知消息状态的拥有者
-    private final Map<ByteArrayWrapper, byte[]> msgStatusOwner = new ConcurrentHashMap<>();
+//    private final Map<ByteArrayWrapper, byte[]> msgStatusOwner = new ConcurrentHashMap<>();
 
     // 给我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> timeStampToFriend = new ConcurrentHashMap<>();
@@ -389,20 +389,20 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
      * 通知UI消息状态
      */
     private void notifyUIMessageStatus() {
-        Iterator<Map.Entry<ByteArrayWrapper, MsgStatus>> iterator = this.msgStatus.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<ByteArrayWrapper, MsgStatus> entry = iterator.next();
-
-            byte[] friend = this.msgStatusOwner.get(entry.getKey());
-
-            logger.debug("Notify UI msg status:{}, {}", entry.getKey().toString(), entry.getValue());
-            if (null != friend) {
-                this.msgListener.onMessageStatus(friend, entry.getKey().getData(), entry.getValue());
-            }
-
-            this.msgStatusOwner.remove(entry.getKey());
-            this.msgStatus.remove(entry.getKey());
-        }
+//        Iterator<Map.Entry<ByteArrayWrapper, MsgStatus>> iterator = this.msgStatus.entrySet().iterator();
+//        while (iterator.hasNext()) {
+//            Map.Entry<ByteArrayWrapper, MsgStatus> entry = iterator.next();
+//
+//            byte[] friend = this.msgStatusOwner.get(entry.getKey());
+//
+//            logger.debug("Notify UI msg status:{}, {}", entry.getKey().toString(), entry.getValue());
+//            if (null != friend) {
+//                this.msgListener.onMessageStatus(friend, entry.getKey().getData(), entry.getValue());
+//            }
+//
+//            this.msgStatusOwner.remove(entry.getKey());
+//            this.msgStatus.remove(entry.getKey());
+//        }
     }
 
     /**
@@ -624,10 +624,12 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
             if (iterator.hasNext()) {
 
                 Random random = new Random(System.currentTimeMillis());
-                int index = random.nextInt(this.friends.size()) + 1;
+                // 取值范围0 ~ size，当index取size时选自己
+                int index = random.nextInt(this.friends.size() + 1);
 
                 ByteArrayWrapper peer = null;
                 if (index != this.friends.size()) {
+                    // (0 ~ size)
                     int i = 0;
                     while (iterator.hasNext()) {
                         peer = iterator.next();
@@ -703,15 +705,15 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
     private void publishMessage(byte[] friend, Message message) {
         if (null != message) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(message.getEncoded());
-            ByteArrayWrapper hash = new ByteArrayWrapper(message.getHash());
-            DataIdentifier dataIdentifier = new DataIdentifier(DataType.PUT_IMMUTABLE_DATA, hash);
+//            ByteArrayWrapper hash = new ByteArrayWrapper(message.getHash());
+//            DataIdentifier dataIdentifier = new DataIdentifier(DataType.PUT_IMMUTABLE_DATA, hash);
 
-            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, this, dataIdentifier);
+            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
             this.queue.add(immutableItemDistribution);
 
-            logger.debug("Msg status:{}, {}", Hex.toHexString(message.getHash()), MsgStatus.TO_COMMUNICATION_QUEUE);
-            this.msgStatusOwner.put(hash, friend);
-            this.msgListener.onMessageStatus(friend, message.getHash(), MsgStatus.TO_COMMUNICATION_QUEUE);
+//            logger.debug("Msg status:{}, {}", Hex.toHexString(message.getHash()), MsgStatus.TO_COMMUNICATION_QUEUE);
+//            this.msgStatusOwner.put(hash, friend);
+//            this.msgListener.onMessageStatus(friend, message.getHash(), MsgStatus.TO_COMMUNICATION_QUEUE);
         }
     }
 
@@ -829,13 +831,13 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
         logger.info("putImmutableItem:{}", d.toString());
         DHTEngine.getInstance().distribute(d.getItem(), d.getCallback(), d.getCallbackData());
 
-        logger.debug("Msg status:{}, {}", d.toString(), MsgStatus.TO_DHT_QUEUE);
+//        logger.debug("Msg status:{}, {}", d.toString(), MsgStatus.TO_DHT_QUEUE);
 
-        ByteArrayWrapper hash = new ByteArrayWrapper(Hex.decode(d.getItem().hash().toHex()));
-        byte[] friend = this.msgStatusOwner.get(hash);
-        if (null != friend) {
-            this.msgListener.onMessageStatus(friend, Hex.decode(d.getItem().hash().toHex()), MsgStatus.TO_DHT_QUEUE);
-        }
+//        ByteArrayWrapper hash = new ByteArrayWrapper(Hex.decode(d.getItem().hash().toHex()));
+//        byte[] friend = this.msgStatusOwner.get(hash);
+//        if (null != friend) {
+//            this.msgListener.onMessageStatus(friend, Hex.decode(d.getItem().hash().toHex()), MsgStatus.TO_DHT_QUEUE);
+//        }
     }
 
     private void putMutableItem(DHT.MutableItemDistribution d) {
@@ -856,7 +858,7 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
                 notifyUINewDevice();
 
                 // 通知UI消息状态
-                notifyUIMessageStatus();
+//                notifyUIMessageStatus();
 
                 // 通知UI发现的在线朋友
                 notifyUIOnlineFriend();
@@ -1323,6 +1325,11 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
         // 是否更新好友的在线时间（完整公钥）
         BigInteger gossipTime = gossipMutableData.getTimestamp();
         BigInteger lastSeen = this.friendLastSeen.get(peer);
+
+        if (null != lastSeen && lastSeen.compareTo(gossipTime) > 0) {
+            logger.debug("-----old gossip mutable data from peer:{}", peer.toString());
+        }
+
         // 判断时间戳，以避免处理历史数据
         if (null == lastSeen || lastSeen.compareTo(gossipTime) < 0) { // 判断是否是更新的gossip
             logger.debug("See peer:{} again", peer.toString());
@@ -1433,6 +1440,8 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
                 }
             }
 
+        } else {
+            logger.debug("-----old index mutable data from peer:{}", peer.toString());
         }
     }
 
@@ -1494,24 +1503,24 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
         }
     }
 
-    @Override
-    public void onDHTItemPut(int success, Object cbData) {
-        DataIdentifier dataIdentifier = (DataIdentifier) cbData;
-        switch (dataIdentifier.getDataType()) {
-            case PUT_IMMUTABLE_DATA: {
-                if (success > 0) {
-                    logger.debug("Msg status:{}, {}", dataIdentifier.getExtraInfo1().toString(), MsgStatus.PUT_SUCCESS);
-                    this.msgStatus.put(dataIdentifier.getExtraInfo1(), MsgStatus.PUT_SUCCESS);
-                } else {
-                    logger.debug("Msg status:{}, {}", dataIdentifier.getExtraInfo1().toString(), MsgStatus.PUT_FAIL);
-                    this.msgStatus.put(dataIdentifier.getExtraInfo1(), MsgStatus.PUT_FAIL);
-                }
-
-                break;
-            }
-            default: {
-                logger.info("Type mismatch.");
-            }
-        }
-    }
+//    @Override
+//    public void onDHTItemPut(int success, Object cbData) {
+//        DataIdentifier dataIdentifier = (DataIdentifier) cbData;
+//        switch (dataIdentifier.getDataType()) {
+//            case PUT_IMMUTABLE_DATA: {
+//                if (success > 0) {
+//                    logger.debug("Msg status:{}, {}", dataIdentifier.getExtraInfo1().toString(), MsgStatus.PUT_SUCCESS);
+//                    this.msgStatus.put(dataIdentifier.getExtraInfo1(), MsgStatus.PUT_SUCCESS);
+//                } else {
+//                    logger.debug("Msg status:{}, {}", dataIdentifier.getExtraInfo1().toString(), MsgStatus.PUT_FAIL);
+//                    this.msgStatus.put(dataIdentifier.getExtraInfo1(), MsgStatus.PUT_FAIL);
+//                }
+//
+//                break;
+//            }
+//            default: {
+//                logger.info("Type mismatch.");
+//            }
+//        }
+//    }
 }
