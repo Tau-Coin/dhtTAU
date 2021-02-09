@@ -536,6 +536,7 @@ public class DHTEngine {
         }
 
         ImmutableItemDistribution d = (ImmutableItemDistribution)distribution;
+        d.end();
         dht_put_alert putAlert = a.swig();
         d.onDHTItemPut(putAlert.getNum_success());
 
@@ -563,6 +564,7 @@ public class DHTEngine {
         }
 
         MutableItemDistribution d = (MutableItemDistribution)distribution;
+        d.end();
         dht_put_alert putAlert = a.swig();
         d.onDHTItemPut(putAlert.getNum_success());
 
