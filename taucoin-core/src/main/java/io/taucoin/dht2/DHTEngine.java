@@ -56,7 +56,7 @@ public class DHTEngine {
     private TauListener tauListener;
 
     // Cache map from sha1 hash to getting immutable or mutable item specification.
-    private Map<Sha1Hash, Object> getCache = new ConcurrentHashMap<Sha1Hash, Object>();
+    private static Map<Sha1Hash, Object> getCache = new ConcurrentHashMap<Sha1Hash, Object>();
 
     // The wrapper of session manager.
     private TauSession session;
@@ -82,13 +82,13 @@ public class DHTEngine {
 
     private Timer getCacheCheker = null;
 
-    private TimerTask getCacheTimeoutTask = new TimerTask() {
+    private static class GetCacheTimeoutTask extends TimerTask {
 
         @Override
         public void run() {
             checkGetCache();
         }
-    };
+    }
 
     /**
      * Get DHTEngine instance.
@@ -152,7 +152,7 @@ public class DHTEngine {
         getCache.clear();
 
         getCacheCheker = new Timer(true);
-        getCacheCheker.schedule(getCacheTimeoutTask, 0, CACHE_CHECK_PERIOD);
+        getCacheCheker.schedule(new GetCacheTimeoutTask(), 0, CACHE_CHECK_PERIOD);
 
         return ok;
     }
@@ -497,7 +497,7 @@ public class DHTEngine {
     private void handleMutableItemPutCompleted(DhtPutAlert a) {
     }
 
-    private void checkGetCache() {
+    private static void checkGetCache() {
         Iterator<Map.Entry<Sha1Hash, Object>> it = getCache.entrySet().iterator();
 
         while (it.hasNext()) {
