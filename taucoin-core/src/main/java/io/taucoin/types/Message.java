@@ -14,7 +14,7 @@ public class Message {
     private BigInteger timestamp;
     private byte[] previousHash; // 用于确认切分消息的顺序
     private BigInteger nonce; // 局部nonce，用于标识切分消息的顺序
-    private byte[] pubKey;
+    private byte[] pubKey; // 消息发送者公钥
     private MessageType type;  // 可以标识消息类型
     private byte[] encryptedContent; // 加密消息体
     private byte[] rawContent; // 加密之前的原始
