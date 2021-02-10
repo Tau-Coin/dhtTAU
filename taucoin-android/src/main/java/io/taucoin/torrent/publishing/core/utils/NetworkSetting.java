@@ -116,6 +116,8 @@ public class NetworkSetting {
 
         updateMeteredSpeedLimit();
         updateWiFiSpeedLimit();
+        logger.trace("updateSpeed AverageSpeed::{}s, CurrentSpeed::{}s",
+                getAverageSpeed(), getCurrentSpeed());
     }
 
     /**

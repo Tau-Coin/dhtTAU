@@ -24,6 +24,7 @@ import io.taucoin.torrent.publishing.core.utils.NetworkStatsUtil;
 import io.taucoin.torrent.publishing.core.utils.Sampler;
 import io.taucoin.torrent.publishing.core.utils.TrafficInfo;
 import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
+import io.taucoin.torrent.publishing.service.SystemServiceManager;
 
 /**
  * Provides runtime information about Tau, which isn't saved to the database.
@@ -108,6 +109,11 @@ public class TauInfoProvider {
             try {
                 boolean isEmulator = EmulatorUtil.isEmulator();
                 while (!emitter.isCancelled()){
+
+                    logger.debug("ConnectionReceiver isHaveNetwork::{}, isNetworkMetered::{}",
+                            SystemServiceManager.getInstance().isHaveNetwork(),
+                            SystemServiceManager.getInstance().isNetworkMetered());
+
                     Context context = MainApplication.getInstance();
                     NetworkStatistics statistics = null;
                     if (!isEmulator && Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
