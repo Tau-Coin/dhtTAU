@@ -80,7 +80,7 @@ public class DHTEngine {
         }
     };
 
-    private Timer getCacheCheker = new Timer(true);
+    private Timer getCacheCheker = null;
 
     private TimerTask getCacheTimeoutTask = new TimerTask() {
 
@@ -151,6 +151,7 @@ public class DHTEngine {
 
         getCache.clear();
 
+        getCacheCheker = new Timer(true);
         getCacheCheker.schedule(getCacheTimeoutTask, 0, CACHE_CHECK_PERIOD);
 
         return ok;
@@ -164,6 +165,7 @@ public class DHTEngine {
         session.stop();
         getCache.clear();
         getCacheCheker.cancel();
+        getCacheCheker = null;
         tauListener.onDHTStopped();
     }
 
