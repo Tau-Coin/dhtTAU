@@ -4,6 +4,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import io.taucoin.util.CryptoUtil;
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -13,28 +14,31 @@ public class Message {
     private BigInteger timestamp;
     private byte[] previousHash; // 用于确认切分消息的顺序
     private BigInteger nonce; // 局部nonce，用于标识切分消息的顺序
+    private byte[] pubKey;
     private MessageType type;  // 可以标识消息类型
-    private byte[] content; // 消息体
+    private byte[] encryptedContent; // 加密消息体
+    private byte[] rawContent; // 加密之前的原始
 
     private byte[] hash; // gossip hash 入口
     private byte[] encode; // 缓存编码
     private boolean parsed = false; // 是否解码标志
 
-    public static Message createTextMessage(BigInteger timestamp, byte[] previousHash, BigInteger nonce, byte[] content) {
-        return new Message(MessageVersion.VERSION1, timestamp, previousHash, nonce, MessageType.TEXT, content);
+    public static Message createTextMessage(BigInteger timestamp, byte[] previousHash, BigInteger nonce, byte[] pubKey, byte[] rawContent) {
+        return new Message(MessageVersion.VERSION1, timestamp, previousHash, nonce, pubKey, MessageType.TEXT, rawContent);
     }
 
-    public static Message createPictureMessage(BigInteger timestamp, byte[] previousHash, BigInteger nonce, byte[] content) {
-        return new Message(MessageVersion.VERSION1, timestamp, previousHash, nonce, MessageType.PICTURE, content);
+    public static Message createPictureMessage(BigInteger timestamp, byte[] previousHash, BigInteger nonce, byte[] pubKey, byte[] rawContent) {
+        return new Message(MessageVersion.VERSION1, timestamp, previousHash, nonce, pubKey, MessageType.PICTURE, rawContent);
     }
 
-    public Message(MessageVersion version, BigInteger timestamp, byte[] previousHash, BigInteger nonce, MessageType type, byte[] content) {
+    public Message(MessageVersion version, BigInteger timestamp, byte[] previousHash, BigInteger nonce, byte[] pubKey, MessageType type, byte[] rawContent) {
         this.version = version;
         this.timestamp = timestamp;
         this.previousHash = previousHash;
         this.nonce = nonce;
+        this.pubKey = pubKey;
         this.type = type;
-        this.content = content;
+        this.rawContent = rawContent;
 
         this.parsed = true;
     }
@@ -75,6 +79,14 @@ public class Message {
         return nonce;
     }
 
+    public byte[] getPubKey() {
+        if (!this.parsed) {
+            parseRLP();
+        }
+
+        return pubKey;
+    }
+
     public MessageType getType() {
         if (!this.parsed) {
             parseRLP();
@@ -83,12 +95,44 @@ public class Message {
         return type;
     }
 
-    public byte[] getContent() {
+    public byte[] getEncryptedContent() {
         if (!this.parsed) {
             parseRLP();
         }
 
-        return content;
+        return encryptedContent;
+    }
+
+    public byte[] getRawContent() {
+        return this.rawContent;
+    }
+
+    /**
+     * 对消息内容进行加密
+     * @param key 加解密秘钥
+     * @throws Exception data exception
+     */
+    public void encrypt(byte[] key) throws Exception {
+        if (null != this.rawContent) {
+            this.encryptedContent = CryptoUtil.encrypt(this.rawContent, key);
+        }
+    }
+
+    /**
+     * 对消息内容解密
+     * @param key 加解密秘钥
+     * @throws Exception data exception
+     */
+    public byte[] decrypt(byte[] key) throws Exception {
+        if (null == this.rawContent) {
+            if (!this.parsed) {
+                parseRLP();
+            }
+
+            this.rawContent = CryptoUtil.decrypt(this.encryptedContent, key);
+        }
+
+        return this.rawContent;
     }
 
     public byte[] getHash() {
@@ -119,7 +163,9 @@ public class Message {
         byte[] nonceBytes = messageList.get(3).getRLPData();
         this.nonce = (null == nonceBytes) ? BigInteger.ZERO: new BigInteger(1, nonceBytes);
 
-        byte[] typeBytes = messageList.get(4).getRLPData();
+        this.pubKey = messageList.get(4).getRLPData();
+
+        byte[] typeBytes = messageList.get(5).getRLPData();
         int typeNum = null == typeBytes ? 0: new BigInteger(1, typeBytes).intValue();
         if (typeNum >= MessageType.UNKNOWN.ordinal()) {
             this.type = MessageType.UNKNOWN;
@@ -127,7 +173,7 @@ public class Message {
             this.type = MessageType.values()[typeNum];
         }
 
-        this.content = messageList.get(5).getRLPData();
+        this.encryptedContent = messageList.get(5).getRLPData();
 
         this.parsed = true;
     }
@@ -138,10 +184,11 @@ public class Message {
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
             byte[] previousHash = RLP.encodeElement(this.previousHash);
             byte[] nonce = RLP.encodeBigInteger(this.nonce);
+            byte[] pubKey = RLP.encodeElement(this.pubKey);
             byte[] type = RLP.encodeBigInteger(BigInteger.valueOf(this.type.ordinal()));
-            byte[] content = RLP.encodeElement(this.content);
+            byte[] encryptedContent = RLP.encodeElement(this.encryptedContent);
 
-            this.encode = RLP.encodeList(version, timestamp, previousHash, nonce, type, content);
+            this.encode = RLP.encodeList(version, timestamp, previousHash, nonce, pubKey, type, encryptedContent);
         }
 
         return this.encode;
@@ -153,8 +200,9 @@ public class Message {
         BigInteger timestamp = getTimestamp();
         byte[] previousHash = getPreviousHash();
         BigInteger nonce = getNonce();
+        byte[] pubKey = getPubKey();
         MessageType type = getType();
-        byte[] content = getContent();
+//        byte[] content = getContent();
         byte[] hash = getHash();
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -180,14 +228,18 @@ public class Message {
             stringBuilder.append(", nonce=");
             stringBuilder.append(nonce);
         }
+        if (null != pubKey) {
+            stringBuilder.append("public key=");
+            stringBuilder.append(Hex.toHexString(pubKey));
+        }
         if (null != type) {
             stringBuilder.append(", type=");
             stringBuilder.append(type);
         }
-        if (null != content) {
-            stringBuilder.append(", content=");
-            stringBuilder.append(new String(content));
-        }
+//        if (null != content) {
+//            stringBuilder.append(", content=");
+//            stringBuilder.append(new String(content));
+//        }
 
         stringBuilder.append("}");
 
