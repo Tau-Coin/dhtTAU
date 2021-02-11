@@ -130,17 +130,17 @@ public class CommunicationManager {
      * 获取队列容量
      * @return 容量
      */
-    public int getQueueCapability() {
-        return this.communication.getQueueCapability();
-    }
+//    public int getQueueCapability() {
+//        return this.communication.getQueueCapability();
+//    }
 
     /**
      * 获取队列当前大小
      * @return 队列大小
      */
-    public int getQueueSize() {
-        return this.communication.getQueueSize();
-    }
+//    public int getQueueSize() {
+//        return this.communication.getQueueSize();
+//    }
 
     /**
      * 设置gossip时间片

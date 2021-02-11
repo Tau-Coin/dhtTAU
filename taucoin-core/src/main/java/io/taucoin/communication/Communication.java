@@ -45,10 +45,10 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 对UI使用的, Queue capability.
-    public static final int QueueCapability = 1000;
+//    public static final int QueueCapability = 1000;
 
     // 判断中间层队列的门槛值，中间层队列使用率超过0.8，则增加主循环时间间隔
-    private final double THRESHOLD = 0.8;
+//    private final double THRESHOLD = 0.8;
 
     // 主循环间隔最小时间
     private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
@@ -73,7 +73,7 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
     private final byte[] deviceID;
 
     // UI相关请求存放的queue，统一收发所有的请求，包括UI以及内部算法产生的请求
-    private final Set<Object> queue = new CopyOnWriteArraySet<>();
+//    private final Set<Object> queue = new CopyOnWriteArraySet<>();
 
     // 当前我加的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
@@ -654,7 +654,7 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
     /**
      * 将所有的请求一次发给中间层
      */
-    private void tryToSendAllRequest() {
+/*    private void tryToSendAllRequest() {
 //        int size = DHTEngine.getInstance().queueOccupation();
 
         // 0.2 * 10000是中间层剩余空间，大于本地队列最大长度1000，目前肯定能放下
@@ -667,7 +667,7 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
                 this.queue.remove(request);
             }
 //        }
-    }
+    }*/
 
     /**
      * 发布immutable data
@@ -677,8 +677,10 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
         if (null != data) {
             DHT.ImmutableItem immutableItem = new DHT.ImmutableItem(data);
 
-            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
-            this.queue.add(immutableItemDistribution);
+            DHTEngine.getInstance().distribute(immutableItem, null, null);
+
+//            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
+//            this.queue.add(immutableItemDistribution);
         }
     }
 
@@ -693,8 +695,10 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
             DHT.GetImmutableItemSpec spec = new DHT.GetImmutableItemSpec(hash);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.MESSAGE, pubKey, new ByteArrayWrapper(hash));
 
-            DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
-            this.queue.add(immutableItemRequest);
+            DHTEngine.getInstance().request(spec, this, dataIdentifier);
+
+//            DHT.ImmutableItemRequest immutableItemRequest = new DHT.ImmutableItemRequest(spec, this, dataIdentifier);
+//            this.queue.add(immutableItemRequest);
         }
     }
 
@@ -708,8 +712,10 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
 //            ByteArrayWrapper hash = new ByteArrayWrapper(message.getHash());
 //            DataIdentifier dataIdentifier = new DataIdentifier(DataType.PUT_IMMUTABLE_DATA, hash);
 
-            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
-            this.queue.add(immutableItemDistribution);
+            DHTEngine.getInstance().distribute(immutableItem, null, null);
+
+//            DHT.ImmutableItemDistribution immutableItemDistribution = new DHT.ImmutableItemDistribution(immutableItem, null, null);
+//            this.queue.add(immutableItemDistribution);
 
 //            logger.debug("Msg status:{}, {}", Hex.toHexString(message.getHash()), MsgStatus.TO_COMMUNICATION_QUEUE);
 //            this.msgStatusOwner.put(hash, friend);
@@ -728,9 +734,10 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
             byte[] salt = ChainParam.GOSSIP_CHANNEL;
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.GOSSIP_FROM_PEER, pubKey);
-            DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
 
-            this.queue.add(mutableItemRequest);
+            DHTEngine.getInstance().request(spec, this, dataIdentifier);
+//            DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+//            this.queue.add(mutableItemRequest);
         }
     }
 
@@ -747,9 +754,9 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                     keyPair.second, encode, salt);
-            DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
-
-            this.queue.add(mutableItemDistribution);
+            DHTEngine.getInstance().distribute(mutableItem, null, null);
+//            DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
+//            this.queue.add(mutableItemDistribution);
         }
     }
 
@@ -765,9 +772,9 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
             byte[] salt = makeIndexChannelReceivingSalt(keyPair.first, pubKey.getData());
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(pubKey.getData(), salt);
             DataIdentifier dataIdentifier = new DataIdentifier(DataType.INDEX_FROM_PEER, pubKey);
-            DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
-
-            this.queue.add(mutableItemRequest);
+            DHTEngine.getInstance().request(spec, this, dataIdentifier);
+//            DHT.MutableItemRequest mutableItemRequest = new DHT.MutableItemRequest(spec, this, dataIdentifier);
+//            this.queue.add(mutableItemRequest);
         }
     }
 
@@ -789,8 +796,9 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
         if (null != encode) {
             DHT.MutableItem mutableItem = new DHT.MutableItem(keyPair.first,
                     keyPair.second, encode, salt);
-            DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
-            this.queue.add(mutableItemDistribution);
+            DHTEngine.getInstance().distribute(mutableItem, null, null);
+//            DHT.MutableItemDistribution mutableItemDistribution = new DHT.MutableItemDistribution(mutableItem, null, null);
+//            this.queue.add(mutableItemDistribution);
         }
     }
 
@@ -885,7 +893,7 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
                 visitReferredFriends();
 
                 // 尝试向中间层发送所有的请求
-                tryToSendAllRequest();
+//                tryToSendAllRequest();
 
                 // 尝试调整间隔时间
 //                adjustIntervalTime();
@@ -1002,7 +1010,7 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
      * @return true:接受该消息， false:拒绝该消息
      */
     public boolean publishNewMessage(byte[] friend, Message message) {
-        if (this.queue.size() <= QueueCapability) {
+//        if (this.queue.size() <= QueueCapability) {
             try {
                 if (null != message) {
                     logger.debug("Publish message:{}", message.toString());
@@ -1018,9 +1026,9 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
             }
 
             return true;
-        } else {
-            return false;
-        }
+//        } else {
+//            return false;
+//        }
     }
 
     /**
@@ -1234,17 +1242,17 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
      * 获取队列容量
      * @return 容量
      */
-    public int getQueueCapability() {
-        return QueueCapability;
-    }
+//    public int getQueueCapability() {
+//        return QueueCapability;
+//    }
 
     /**
      * 获取队列当前大小
      * @return 队列大小
      */
-    public int getQueueSize() {
-        return this.queue.size();
-    }
+//    public int getQueueSize() {
+//        return this.queue.size();
+//    }
 
     /**
      * 设置gossip时间片

@@ -18,10 +18,10 @@ public class CryptoUtil {
     public static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
 
     /**
-     * 私钥分发
+     * 秘钥分发
      * @param publicKey 对方公钥
      * @param secretKey 我的私钥
-     * @return 加密用的私钥
+     * @return 加密用的秘钥
      */
     public static byte[] keyExchange(byte[] publicKey, byte[] secretKey) {
         if (publicKey != null && publicKey.length == 32) {
