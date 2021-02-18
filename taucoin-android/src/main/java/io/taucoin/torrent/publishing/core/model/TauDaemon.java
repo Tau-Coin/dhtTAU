@@ -383,7 +383,14 @@ public class TauDaemon {
         } else if (key.equals(appContext.getString(R.string.pref_key_is_metered_network))) {
             logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
         } else if (key.equals(appContext.getString(R.string.pref_key_foreground_running))) {
-            logger.info("foreground running::{}", settingsRepo.getBooleanValue(key));
+            boolean isForeground = settingsRepo.getBooleanValue(key);
+            logger.info("foreground running::{}", isForeground);
+            // 当APP在前台运行，并且当前有网络连接，网速为0，重新启动Session
+            if (isForeground && settingsRepo.internetState()
+                    && NetworkSetting.getCurrentSpeed() == 0) {
+                NetworkSetting.clearSpeedList();
+                rescheduleTAUBySettings(true);
+            }
         }
     }
 
