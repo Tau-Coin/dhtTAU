@@ -14,6 +14,7 @@ import androidx.databinding.ViewDataBinding;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
@@ -25,6 +26,8 @@ import io.taucoin.torrent.publishing.databinding.ItemGroupListBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.ui.Selectable;
 import io.taucoin.types.MessageType;
+import io.taucoin.util.ByteUtil;
+import io.taucoin.util.CryptoUtil;
 
 /**
  * 主页显示的群组列表的Adapter
@@ -146,7 +149,8 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 if (community.msgType == MessageType.PICTURE.ordinal()) {
                     binding.tvUserMessage.setText(context.getString(R.string.main_pic_messages));
                 } else if (community.msgType == MessageType.TEXT.ordinal() && StringUtil.isNotEmpty(hash)) {
-                    binding.tvUserMessage.setTextHash(false, hash, community.publicKey);
+                    byte[] cryptoKey = Utils.keyExchange(community.chainID, MainApplication.getInstance().getSeed());
+                    binding.tvUserMessage.setTextHash(false, hash, community.publicKey, cryptoKey);
                 } else if (StringUtil.isEmpty(msg)) {
                     binding.tvUserMessage.setText(context.getString(R.string.main_no_messages));
                 }

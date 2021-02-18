@@ -3,6 +3,9 @@ package io.taucoin.torrent.publishing;
 import android.app.Activity;
 import android.os.Bundle;
 
+import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Pair;
+
 import java.util.concurrent.Executors;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -11,8 +14,10 @@ import androidx.work.Configuration;
 import androidx.work.WorkManager;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
+import io.taucoin.util.ByteUtil;
 
 public class MainApplication extends MultiDexApplication {
     static {
@@ -21,7 +26,7 @@ public class MainApplication extends MultiDexApplication {
     }
 
     private static MainApplication instance;
-    private String publicKey;
+    private User currentUser; // 当前用户
     private int activityNumber = 0; // 当前Activity个数
     private SettingsRepository settingsRepo;
 
@@ -51,15 +56,29 @@ public class MainApplication extends MultiDexApplication {
      * @return  publicKey 公钥
      */
     public String getPublicKey() {
-        return publicKey;
+        if (currentUser != null) {
+            return currentUser.publicKey;
+        }
+        return null;
     }
 
     /**
-     * 设置全局参数 当前用户的publicKey
-     * @param publicKey 公钥
+     * 获取全局参数 当前用户的publicKey
+     * @return  publicKey 公钥
      */
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
+    public String getSeed() {
+        if (currentUser != null) {
+            return currentUser.seed;
+        }
+        return null;
+    }
+
+    /**
+     * 设置全局参数 当前用户
+     * @param user 当前用户
+     */
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
     }
 
     /**

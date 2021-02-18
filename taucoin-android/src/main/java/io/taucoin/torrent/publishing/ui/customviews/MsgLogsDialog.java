@@ -157,13 +157,9 @@ public class MsgLogsDialog extends Dialog {
                 int timePointRes;
                 if (log.status == ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
                     timePointRes = R.mipmap.icon_msg_received;
-                } else if (log.status == ChatMsgStatus.PUT_SUCCESS.getStatus()) {
+                } else if (log.status == ChatMsgStatus.SENT.getStatus()) {
                     timePointRes = R.mipmap.icon_put_success;
-                }  else if (log.status == ChatMsgStatus.TO_DHT_QUEUE.getStatus()) {
-                    timePointRes = R.mipmap.icon_transfer_queue;
-                } else if (log.status == ChatMsgStatus.TO_COMMUNICATION_QUEUE.getStatus()) {
-                    timePointRes = R.mipmap.icon_protocol_pool;
-                } else {
+                }  else {
                     timePointRes = R.mipmap.icon_msg_built;
                 }
                 binding.timePoint.setImageResource(timePointRes);

@@ -1,22 +1,14 @@
 package io.taucoin.torrent.publishing.core.model.data;
 
-import io.taucoin.listener.MsgStatus;
-
 /**
  * 消息状态枚举
  */
 public enum ChatMsgStatus {
     UNSENT(-1,
             "Message Built"),
-    TO_COMMUNICATION_QUEUE(MsgStatus.TO_COMMUNICATION_QUEUE.ordinal(),
-            "Message Processing in Protocol Pool"),
-    TO_DHT_QUEUE(MsgStatus.TO_DHT_QUEUE.ordinal(),
-            "Message in Transfer Queue"),
-    PUT_SUCCESS(MsgStatus.PUT_SUCCESS.ordinal(),
-            "DHT_PUT success"),
-    PUT_FAIL(MsgStatus.PUT_FAIL.ordinal(),
-            "DHT_PUT fail"),
-    RECEIVED_CONFIRMATION(100,
+    SENT(0,
+            "Message Sent"),
+    RECEIVED_CONFIRMATION(1,
             "Message Received by Peer");
 
     private int status;

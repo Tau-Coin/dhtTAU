@@ -36,6 +36,7 @@ public class HashTextView extends TextView {
     private TauDaemon daemon;
     private String textHash;
     private byte[] friendPk;
+    private byte[] cryptoKey;
     private boolean unsent;
     private Disposable disposable;
     private boolean isLoadSuccess;
@@ -64,7 +65,7 @@ public class HashTextView extends TextView {
         setText(textBuilder);
     }
 
-    public void setTextHash(boolean unsent, String textHash, String friendPk) {
+    public void setTextHash(boolean unsent, String textHash, String friendPk, byte[] cryptoKey) {
         // 如果是图片已加载，并且显示的图片不变，直接返回
         if (StringUtil.isEmpty(textHash)) {
             return;
@@ -73,6 +74,7 @@ public class HashTextView extends TextView {
                 && StringUtil.isEquals(textHash, this.textHash)) {
             return;
         }
+        this.cryptoKey = cryptoKey;
         this.textHash = textHash;
         this.unsent = unsent;
         this.friendPk = ByteUtil.toByte(friendPk);
@@ -148,7 +150,8 @@ public class HashTextView extends TextView {
         } else {
             byte[] fragmentEncoded = queryDataLoop(textHash);
             Message msg = new Message(fragmentEncoded);
-            content = MsgSplitUtil.textMsgToString(msg.getContent());
+            msg.decrypt(cryptoKey);
+            content = MsgSplitUtil.textMsgToString(msg.getRawContent());
             previousMsgHash = msg.getPreviousHash();
         }
         if (!emitter.isCancelled()) {
@@ -194,7 +197,7 @@ public class HashTextView extends TextView {
         // 加在View
         if (reload && StringUtil.isNotEmpty(textHash)
                 && disposable != null && disposable.isDisposed()) {
-            setTextHash(unsent, textHash, ByteUtil.toHexString(friendPk));
+            setTextHash(unsent, textHash, ByteUtil.toHexString(friendPk), cryptoKey);
         }
         reload = false;
     }

@@ -143,7 +143,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
             }
         });
 
-        adapter = new ChatListAdapter(this);
+        adapter = new ChatListAdapter(this, friendPK);
         DefaultItemAnimator animator = new DefaultItemAnimator() {
             @Override
             public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {

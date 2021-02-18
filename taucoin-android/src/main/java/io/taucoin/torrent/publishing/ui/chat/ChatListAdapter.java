@@ -7,6 +7,9 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Pair;
+
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
@@ -28,6 +31,8 @@ import io.taucoin.torrent.publishing.ui.customviews.HashImageView;
 import io.taucoin.torrent.publishing.ui.customviews.HashTextView;
 import io.taucoin.torrent.publishing.ui.customviews.RoundButton;
 import io.taucoin.types.MessageType;
+import io.taucoin.util.ByteUtil;
+import io.taucoin.util.CryptoUtil;
 
 /**
  * 聊天消息的Adapter
@@ -41,10 +46,12 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
         RIGHT_PICTURE
     }
     private ClickListener listener;
+    private byte[] cryptoKey;
 
-    ChatListAdapter(ClickListener listener) {
+    ChatListAdapter(ClickListener listener, String friendPk) {
         super(diffCallback);
         this.listener = listener;
+        this.cryptoKey = Utils.keyExchange(friendPk, MainApplication.getInstance().getSeed());
     }
 
     @NonNull
@@ -74,7 +81,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                     parent,
                     false);
         }
-        return new ViewHolder(binding, listener);
+        return new ViewHolder(binding, listener, cryptoKey);
     }
 
     @Override
@@ -123,11 +130,13 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
     static class ViewHolder extends RecyclerView.ViewHolder {
         private ViewDataBinding binding;
         private ClickListener listener;
+        private byte[] cryptoKey;
 
-        ViewHolder(ViewDataBinding binding, ClickListener listener) {
+        ViewHolder(ViewDataBinding binding, ClickListener listener, byte[] cryptoKey) {
             super(binding.getRoot());
             this.binding = binding;
             this.listener = listener;
+            this.cryptoKey = cryptoKey;
         }
 
         void bindTextRight(ItemTextRightBinding binding, ChatMsg msg, ChatMsg previousChat) {
@@ -164,7 +173,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvMsg.setTextHash(msg.unsent == 0, msg.hash, msg.senderPk);
+            tvMsg.setTextHash(msg.unsent == 0, msg.hash, msg.senderPk, cryptoKey);
         }
 
         private void showStatusView(ImageView ivStats, ProgressBar tvProgress, ChatMsg msg, boolean isMine) {
@@ -226,7 +235,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvImage.setImageHash(msg.unsent == 0, msg.hash, msg.senderPk);
+            tvImage.setImageHash(msg.unsent == 0, msg.hash, msg.senderPk, cryptoKey);
         }
     }
 

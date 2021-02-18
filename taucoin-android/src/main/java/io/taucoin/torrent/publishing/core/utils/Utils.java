@@ -21,6 +21,9 @@ import android.util.Log;
 import android.util.Patterns;
 import android.util.TypedValue;
 
+import com.frostwire.jlibtorrent.Ed25519;
+import com.frostwire.jlibtorrent.Pair;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import io.taucoin.param.ChainParam;
@@ -28,6 +31,8 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.receiver.BootReceiver;
+import io.taucoin.util.ByteUtil;
+import io.taucoin.util.CryptoUtil;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -532,5 +537,23 @@ public class Utils {
         Configuration mConfiguration = context.getResources().getConfiguration(); //获取设置的配置信息
         int ori = mConfiguration.orientation; //获取屏幕方向
         return ori == Configuration.ORIENTATION_LANDSCAPE;
+    }
+
+    /**
+     * 秘钥分发
+     * @param publicKey 对方公钥
+     * @param seed 我的Seed
+     * @return 加密用的秘钥
+     */
+    public static byte[] keyExchange(String publicKey, String seed) {
+        if (StringUtil.isNotEmpty(seed)) {
+            try {
+                byte[] seedBytes = ByteUtil.toByte(seed);
+                Pair<byte[], byte[]> keypair = Ed25519.createKeypair(seedBytes);
+                byte[] secretKey = keypair.second;
+                return CryptoUtil.keyExchange(ByteUtil.toByte(publicKey), secretKey);
+            } catch (Exception ignore) { }
+        }
+        return null;
     }
 }

@@ -117,8 +117,6 @@ public class TauDaemon {
         if (StringUtil.isEmpty(seed) || StringUtil.isEquals(seed, this.seed)) {
             return;
         }
-        // 清除消息处理，防止多Seed数据错乱
-        msgListenHandler.onCleared();
         // 更新用户登录的设备信息
         String deviceID = DeviceUtils.getCustomDeviceID(appContext);
         msgListenHandler.onNewDeviceID(deviceID.getBytes());

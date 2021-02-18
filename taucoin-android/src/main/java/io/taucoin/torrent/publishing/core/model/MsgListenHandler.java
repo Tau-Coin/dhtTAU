@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
@@ -31,6 +32,7 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.types.Message;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.CryptoUtil;
 
 /**
  * MsgListener处理程序
@@ -62,7 +64,10 @@ class MsgListenHandler {
     void onNewMessage(byte[] friendPk, Message message) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
-                String userPk = MainApplication.getInstance().getPublicKey();
+                User user = userRepo.getCurrentUser();
+                String userPk = user.publicKey;
+                String friendPkStr = ByteUtil.toHexString(friendPk);
+
                 String hash = ByteUtil.toHexString(message.getHash());
                 String previousHash = ByteUtil.toHexString(message.getPreviousHash());
                 long sentTime = message.getTimestamp().longValue();
@@ -70,18 +75,19 @@ class MsgListenHandler {
                 String sentTimeStr = DateUtil.formatTime(sentTime, DateUtil.pattern6);
                 String receivedTimeStr = DateUtil.formatTime(receivedTime, DateUtil.pattern6);
                 long delayTime = receivedTime - sentTime;
-                logger.debug("TAU messaging onNewMessage friendPk::{}, hash::{}, SentTime::{}, ReceivedTime::{}," +
-                                " DelayTime::{}s",
-                        ByteUtil.toHexString(friendPk), hash,
-                        sentTimeStr,
-                        receivedTimeStr,
-                        delayTime);
+                String senderPk = ByteUtil.toHexString(message.getPubKey());
+                String receiverPk = friendPkStr;
+                // 消息发送者和来源相同
+                if (StringUtil.isEquals(senderPk, receiverPk)) {
+                    receiverPk = userPk;
+                }
+                logger.debug("TAU messaging onNewMessage senderPk::{}, receiverPk::{}, hash::{}, " +
+                                "SentTime::{}, ReceivedTime::{}, DelayTime::{}s",
+                        senderPk, receiverPk, hash, sentTimeStr, receivedTimeStr, delayTime);
 
-                String friendPkStr = ByteUtil.toHexString(friendPk);
-                ChatMsg chatMsg = chatRepo.queryChatMsg(userPk, hash);
-                logger.debug("onNewMessage friendPk::{}, hash::{},  timestamp::{}, exist::{}",
-                        friendPkStr, hash, DateUtil.formatTime(sentTime, DateUtil.pattern6),
-                        null != chatMsg);
+                ChatMsg chatMsg = chatRepo.queryChatMsg(senderPk, hash);
+                logger.debug("onNewMessage senderPk::{}, receiverPk::{}, hash::{},  timestamp::{}, exist::{}",
+                        senderPk, receiverPk, hash, sentTimeStr, null != chatMsg);
                 // 上报的Message有可能重复, 如果本地已存在不处理
                 if (null == chatMsg) {
                     // 处理ChatName，如果为空，取显朋友显示名
@@ -105,7 +111,7 @@ class MsgListenHandler {
                         }
                         friendRepo.updateFriend(friend);
                     }
-                    ChatMsg msg = new ChatMsg(hash, friendPkStr, userPk, message.getType().ordinal(),
+                    ChatMsg msg = new ChatMsg(hash, senderPk, receiverPk, message.getType().ordinal(),
                             sentTime, message.getNonce().longValue(), previousHash);
                     msg.unsent = 1;
                     chatRepo.addChatMsg(msg);

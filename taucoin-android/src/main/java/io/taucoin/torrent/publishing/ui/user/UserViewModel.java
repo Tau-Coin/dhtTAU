@@ -183,7 +183,7 @@ public class UserViewModel extends AndroidViewModel {
                     userRepo.updateUser(user);
                 }
                 // 2、更新本地的用户公钥
-                MainApplication.getInstance().setPublicKey(publicKey);
+                MainApplication.getInstance().setCurrentUser(user);
                 /* 保证数据不会错乱，必须顺序执行以下逻辑 */
                 // 3、更新链端seed
                 daemon.updateSeed(seed);
@@ -342,7 +342,7 @@ public class UserViewModel extends AndroidViewModel {
                 logger.info("Create default user");
                 generateSeed(null);
             } else {
-                MainApplication.getInstance().setPublicKey(user.publicKey);
+                MainApplication.getInstance().setCurrentUser(user);
             }
             emitter.onNext(true);
             emitter.onComplete();

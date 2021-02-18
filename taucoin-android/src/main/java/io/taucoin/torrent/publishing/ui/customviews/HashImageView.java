@@ -42,6 +42,7 @@ public class HashImageView extends RoundImageView {
     private TauDaemon daemon;
     private String imageHash;
     private byte[] friendPk;
+    private byte[] cryptoKey;
     private boolean unsent;
     private byte[] totalBytes;
     private Disposable disposable;
@@ -85,12 +86,13 @@ public class HashImageView extends RoundImageView {
      * @param unsent
      * @param friendPk
      */
-    public void setImageHash(boolean unsent, String imageHash, String friendPk) {
+    public void setImageHash(boolean unsent, String imageHash, String friendPk, byte[] cryptoKey) {
         // 如果是图片已加载，并且显示的图片不变，直接返回
         if (isLoadSuccess && totalBytes != null
                 && StringUtil.isEquals(imageHash, this.imageHash)) {
             return;
         }
+        this.cryptoKey = cryptoKey;
         this.imageHash = imageHash;
         this.unsent = unsent;
         this.friendPk = ByteUtil.toByte(friendPk);
@@ -160,7 +162,8 @@ public class HashImageView extends RoundImageView {
         } else {
             byte[] fragmentEncoded = queryDataLoop(imageHash);
             Message msg = new Message(fragmentEncoded);
-            content = msg.getContent();
+            msg.decrypt(cryptoKey);
+            content = msg.getRawContent();
             previousMsgHash = msg.getPreviousHash();
         }
         if (!emitter.isCancelled()) {
@@ -240,7 +243,7 @@ public class HashImageView extends RoundImageView {
         // 加在View
         if (reload && StringUtil.isNotEmpty(imageHash)
                 && disposable != null && disposable.isDisposed()) {
-            setImageHash(unsent, imageHash, ByteUtil.toHexString(friendPk));
+            setImageHash(unsent, imageHash, ByteUtil.toHexString(friendPk), cryptoKey);
         }
         reload = false;
     }

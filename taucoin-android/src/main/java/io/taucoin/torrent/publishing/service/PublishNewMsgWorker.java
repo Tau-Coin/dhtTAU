@@ -14,13 +14,20 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 import io.taucoin.torrent.publishing.core.model.Interval;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.CryptoUtil;
 
 /**
  * 发布新消息Worker
@@ -31,11 +38,13 @@ public class PublishNewMsgWorker extends Worker {
     private static final Logger logger = LoggerFactory.getLogger("PublishNewMsgWorker");
     private TauDaemon daemon;
     private ChatRepository chatRepo;
+    private UserRepository userRepo;
     public PublishNewMsgWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         logger.debug("constructor");
         daemon = TauDaemon.getInstance(context);
         chatRepo = RepositoryHelper.getChatRepository(context);
+        userRepo = RepositoryHelper.getUserRepository(context);
         logger.debug("constructor isStopped::{}", isStopped());
     }
 
@@ -72,26 +81,43 @@ public class PublishNewMsgWorker extends Worker {
     /**
      * 发送消息
      */
-    private void publishMessage(@NonNull ChatMsg msg) {
+    private void publishMessage(@NonNull ChatMsg msg) throws Exception {
         if (isStopped()) {
             return;
         }
-        Message message;
         byte[] friendPkBytes = ByteUtil.toByte(msg.friendPk);
         BigInteger nonce = BigInteger.valueOf(msg.nonce);
         BigInteger timestamp = BigInteger.valueOf(msg.timestamp);
+        byte[] senderPk = ByteUtil.toByte(msg.senderPk);
+        byte[] friendPk = ByteUtil.toByte(msg.friendPk);
         byte[] previousHash = null;
         if (StringUtil.isNotEmpty(msg.previousHash)) {
             previousHash = ByteUtil.toByte(msg.previousHash);
         }
         byte[] content;
+        Message message;
+        Message message2;
         if (msg.contentType == MessageType.PICTURE.ordinal()) {
             content = ByteUtil.toByte(msg.content);
-            message = Message.createPictureMessage(timestamp, previousHash, nonce, content);
+            message = Message.createPictureMessage(timestamp, previousHash, nonce, senderPk, content);
+            message2 = Message.createPictureMessage(timestamp, previousHash, nonce, senderPk, content);
         } else {
             content = msg.content.getBytes(StandardCharsets.UTF_8);
-            message = Message.createTextMessage(timestamp, previousHash, nonce, content);
+            message = Message.createTextMessage(timestamp, previousHash, nonce, senderPk, content);
+            message2 = Message.createTextMessage(timestamp, previousHash, nonce, senderPk, content);
         }
+        User user = userRepo.getUserByPublicKey(msg.senderPk);
+        byte[] key = Utils.keyExchange(msg.friendPk, user.seed);
+        message.encrypt(key);
+        logger.debug("NewMsgHash1::{}", ByteUtil.toHexString(message.getHash()));
+        Message message11 = new Message(message.getEncoded());
+        message11.decrypt(key);
+        logger.debug("NewMsgHash11::{}", ByteUtil.toHexString(message11.getHash()));
+        message2.encrypt(key);
+        logger.debug("NewMsgHash2::{}", ByteUtil.toHexString(message2.getHash()));
+        Message message22 = new Message(message2.getEncoded());
+        message22.decrypt(key);
+        logger.debug("NewMsgHash22::{}", ByteUtil.toHexString(message22.getHash()));
         boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message);
         logger.debug("NewMsgHash::{}, nonce::{}, previousHash::{}, isSendSuccess::{}",
                 msg.hash, msg.nonce, msg.previousHash, isSendSuccess);
@@ -99,6 +125,9 @@ public class PublishNewMsgWorker extends Worker {
             msg.content = null;
             msg.unsent = 1;
             chatRepo.updateChatMsg(msg);
+            ChatMsgLog log = new ChatMsgLog(msg.hash, msg.senderPk, msg.friendPk,
+                    ChatMsgStatus.SENT.getStatus(), DateUtil.getMillisTime());
+            chatRepo.addChatMsgLog(log);
         }
     }
 
