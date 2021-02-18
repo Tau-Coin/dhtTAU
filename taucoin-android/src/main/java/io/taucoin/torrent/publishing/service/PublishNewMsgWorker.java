@@ -27,7 +27,6 @@ import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
-import io.taucoin.util.CryptoUtil;
 
 /**
  * 发布新消息Worker
@@ -85,7 +84,6 @@ public class PublishNewMsgWorker extends Worker {
         if (isStopped()) {
             return;
         }
-        byte[] friendPkBytes = ByteUtil.toByte(msg.friendPk);
         BigInteger nonce = BigInteger.valueOf(msg.nonce);
         BigInteger timestamp = BigInteger.valueOf(msg.timestamp);
         byte[] senderPk = ByteUtil.toByte(msg.senderPk);
@@ -96,31 +94,20 @@ public class PublishNewMsgWorker extends Worker {
         }
         byte[] content;
         Message message;
-        Message message2;
         if (msg.contentType == MessageType.PICTURE.ordinal()) {
             content = ByteUtil.toByte(msg.content);
             message = Message.createPictureMessage(timestamp, previousHash, nonce, senderPk, content);
-            message2 = Message.createPictureMessage(timestamp, previousHash, nonce, senderPk, content);
         } else {
             content = msg.content.getBytes(StandardCharsets.UTF_8);
             message = Message.createTextMessage(timestamp, previousHash, nonce, senderPk, content);
-            message2 = Message.createTextMessage(timestamp, previousHash, nonce, senderPk, content);
         }
         User user = userRepo.getUserByPublicKey(msg.senderPk);
         byte[] key = Utils.keyExchange(msg.friendPk, user.seed);
         message.encrypt(key);
-        logger.debug("NewMsgHash1::{}", ByteUtil.toHexString(message.getHash()));
-        Message message11 = new Message(message.getEncoded());
-        message11.decrypt(key);
-        logger.debug("NewMsgHash11::{}", ByteUtil.toHexString(message11.getHash()));
-        message2.encrypt(key);
-        logger.debug("NewMsgHash2::{}", ByteUtil.toHexString(message2.getHash()));
-        Message message22 = new Message(message2.getEncoded());
-        message22.decrypt(key);
-        logger.debug("NewMsgHash22::{}", ByteUtil.toHexString(message22.getHash()));
-        boolean isSendSuccess = daemon.sendMessage(friendPkBytes, message);
-        logger.debug("NewMsgHash::{}, nonce::{}, previousHash::{}, isSendSuccess::{}",
-                msg.hash, msg.nonce, msg.previousHash, isSendSuccess);
+        String hash = ByteUtil.toHexString(message.getHash());
+        boolean isSendSuccess = daemon.sendMessage(friendPk, message);
+        logger.debug("newMsgHash::{}, friendPk::{} nonce::{}, previousHash::{}, isSendSuccess::{}",
+                hash, msg.friendPk, msg.nonce, msg.previousHash, isSendSuccess);
         if (isSendSuccess) {
             msg.content = null;
             msg.unsent = 1;

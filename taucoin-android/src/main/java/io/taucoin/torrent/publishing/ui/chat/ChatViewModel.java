@@ -170,7 +170,7 @@ public class ChatViewModel extends AndroidViewModel {
                     if (previousHash != null) {
                         previousHashStr = ByteUtil.toHexString(previousHash);
                     }
-                    logger.debug("sendMessageTask hash::{}, contentType::{}, nonce::{}, " +
+                    logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, nonce::{}, " +
                                     "previousHash::{}, contentSize::{}",
                             hash, type, nonce, previousHashStr, content.length);
 
