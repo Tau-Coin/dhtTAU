@@ -181,7 +181,7 @@ public class ChatViewModel extends AndroidViewModel {
 
                     // 更新previousHash值
                     previousHash = message.getHash();
-                    if (i == 0) {
+                    if (nonce == 0) {
                         ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPkStr, friendPk,
                                 ChatMsgStatus.UNSENT.getStatus(), millisTime);
                         chatRepo.addChatMsgLog(chatMsgLog);
