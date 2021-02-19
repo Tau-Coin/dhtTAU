@@ -173,7 +173,7 @@ public class Message {
             this.type = MessageType.values()[typeNum];
         }
 
-        this.encryptedContent = messageList.get(5).getRLPData();
+        this.encryptedContent = messageList.get(6).getRLPData();
 
         this.parsed = true;
     }
