@@ -112,9 +112,11 @@ public class PublishNewMsgWorker extends Worker {
             msg.content = null;
             msg.unsent = 1;
             chatRepo.updateChatMsg(msg);
-            ChatMsgLog log = new ChatMsgLog(msg.hash, msg.senderPk, msg.friendPk,
-                    ChatMsgStatus.SENT.getStatus(), DateUtil.getMillisTime());
-            chatRepo.addChatMsgLog(log);
+            if (msg.nonce == 0) {
+                ChatMsgLog log = new ChatMsgLog(msg.hash, msg.senderPk, msg.friendPk,
+                        ChatMsgStatus.SENT.getStatus(), DateUtil.getMillisTime());
+                chatRepo.addChatMsgLog(log);
+            }
         }
     }
 
