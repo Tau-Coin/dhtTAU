@@ -15,6 +15,8 @@ public class MutableDataWrapper {
     public MutableDataWrapper(MutableDataType mutableDataType, byte[] data) {
         this.mutableDataType = mutableDataType;
         this.data = data;
+
+        this.parsed = true;
     }
 
     public MutableDataWrapper(byte[] encode) {
