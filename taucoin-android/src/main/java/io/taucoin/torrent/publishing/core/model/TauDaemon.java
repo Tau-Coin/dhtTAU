@@ -106,7 +106,7 @@ public class TauDaemon {
 
         switchPowerReceiver();
         switchConnectionReceiver();
-        updateUIInterval(50, 10);
+        updateUIInterval(50);
     }
 
     /**
@@ -411,20 +411,17 @@ public class TauDaemon {
                     resetReadOnly();
                     logger.info("rescheduleTAUBySettings restartSessions");
                 } else {
-//                    float rate = NetworkSetting.calculateIntervalRate();
-//                    if (rate > 0) {
-//                        long sessionNodes = getSessionNodes();
-//                        int mainLoopInterval = NetworkSetting.calculateMainLoopInterval(rate, sessionNodes);
-//                        int gossipInterval = NetworkSetting.calculateGossipInterval(rate, sessionNodes);
-//                        tauController.getCommunicationManager().setIntervalTime(mainLoopInterval);
-//                        tauController.getCommunicationManager().setGossipTimeInterval(gossipInterval);
-//                        // 更新UI展示链端主循环、Gossip、DHT操作的时间间隔
-//                        updateUIInterval(mainLoopInterval, gossipInterval);
-//                    } else if (rate == -1) {
+//                    long sessionNodes = getSessionNodes();
+//                    int interval = NetworkSetting.calculateMainLoopInterval(sessionNodes);
+//                    if (interval > 0) {
+//                        tauController.getCommunicationManager().setIntervalTime(interval);
+//                        // 更新UI展示链端主循环时间间隔
+//                        updateUIInterval(interval);
+//                    } else if (interval == -1) {
 //                        resetReadOnly(true);
 //                        showNoRemainingDataTipsDialog();
 //                    }
-//                    if (rate != -1) {
+//                    if (interval != -1) {
 //                        trafficTips = true;
 //                        noRemainingDataTimes = 0;
 //                        resetReadOnly(false);
@@ -440,13 +437,10 @@ public class TauDaemon {
     /**
      * 更新链端主循环、Gossip的时间间隔以供UI显示
      */
-    private void updateUIInterval(int mainLoopInterval, int gossipInterval) {
+    private void updateUIInterval(int mainLoopInterval) {
         settingsRepo.setLongValue(appContext.getString(R.string.pref_key_main_loop_interval),
                 mainLoopInterval);
-        settingsRepo.setLongValue(appContext.getString(R.string.pref_key_gossip_interval),
-                gossipInterval);
-        logger.info("Reschedule MainLoopInterval::{}ms, GossipInterval::{}s",
-                mainLoopInterval, gossipInterval);
+        logger.info("Reschedule MainLoopInterval::{}ms", mainLoopInterval);
     }
 
     /**

@@ -24,7 +24,6 @@ public class NetworkSetting {
     private static final int meteredLimited;                  // 单位MB
     private static final int wifiLimited;                     // 单位MB
     public static final long current_speed_sample = 10;       // 单位s
-    public static final long average_speed_sample = 86400;    // 单位s，24小时
     public static final float min_threshold = 1.0f / 4;       // 比率最小阀值
     public static final float max_threshold = 3.0f / 4;       // 比率最大阀值
     public static final int less_nodes_threshold = 50;        // 节点少阀值，可能网络状况差
@@ -108,7 +107,7 @@ public class NetworkSetting {
         }
         List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
                 Long.class);
-        if (list.size() >= average_speed_sample) {
+        if (list.size() >= current_speed_sample) {
             list.remove(0);
         }
         list.add(size);
@@ -116,8 +115,8 @@ public class NetworkSetting {
 
         updateMeteredSpeedLimit();
         updateWiFiSpeedLimit();
-        logger.trace("updateSpeed AverageSpeed::{}s, CurrentSpeed::{}s",
-                getAverageSpeed(), getCurrentSpeed());
+        logger.trace("updateSpeed WiFiAverageSpeed::{}s, MeteredAverageSpeed::{}s, CurrentSpeed::{}s",
+                getWiFiAverageSpeed(), getMeteredAverageSpeed(), getCurrentSpeed());
     }
 
     /**
@@ -140,35 +139,27 @@ public class NetworkSetting {
         int listSize = list.size();
         for (int i = listSize - 1; i >= 0; i--) {
             totalSpeed += list.get(i);
-            if (listSize > current_speed_sample && i <= listSize - current_speed_sample) {
-                break;
-            }
-        }
-        if (list.size() == 0) {
-            return 0;
-        }
-        if (list.size() >= current_speed_sample) {
-            return totalSpeed / current_speed_sample;
-        } else {
-            return totalSpeed / list.size();
-        }
-    }
-
-    /**
-     * 获取网络平均网速
-     */
-    public static long getAverageSpeed() {
-        Context context = MainApplication.getInstance();
-        List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
-                Long.class);
-        long totalSpeed = 0;
-        for (long speed : list) {
-            totalSpeed += speed;
         }
         if (list.size() == 0) {
             return 0;
         }
         return totalSpeed / list.size();
+    }
+
+    /**
+     * 获取计费网络网络平均网速
+     */
+    public static long getMeteredAverageSpeed() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_average_speed));
+    }
+
+    /**
+     * 获取WiFi网络平均网速
+     */
+    public static long getWiFiAverageSpeed() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_wifi_average_speed));
     }
 
     /**
@@ -180,19 +171,27 @@ public class NetworkSetting {
         long limit =  getMeteredLimit();
         long speedLimit = 0;
         long availableData = 0;
+        long averageSpeed = 0;
 
         BigInteger bigUnit = new BigInteger("1024");
         BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
         BigInteger bigUsage = BigInteger.valueOf(usage);
+
+        long todayAllSeconds = 24 * 60 * 60;  // 全天所有的秒数
+        long todayLastSeconds = DateUtil.getTodayLastSeconds();  // 今天剩余的秒数
+        long todayPassedSeconds = todayAllSeconds - todayLastSeconds;  // 今天过去的秒数
         if (bigLimit.compareTo(bigUsage) > 0) {
-            long todayLastSeconds = DateUtil.getTodayLastSeconds();
             availableData = bigLimit.subtract(bigUsage).longValue();
             if (todayLastSeconds > 0) {
                 speedLimit = availableData / todayLastSeconds;
             }
         }
+        if (todayPassedSeconds > 0) {
+            averageSpeed = usage / todayPassedSeconds;
+        }
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_available_data), availableData);
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_speed_limit), speedLimit);
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_average_speed), averageSpeed);
     }
 
     /**
@@ -223,6 +222,7 @@ public class NetworkSetting {
         long limit =  getWiFiLimit();
         long speedLimit = 0;
         long availableData = 0;
+        long averageSpeed = 0;
 
         BigInteger bigUnit = new BigInteger("1024");
         BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
@@ -231,15 +231,21 @@ public class NetworkSetting {
                 bigLimit.longValue(),
                 bigUsage.longValue(),
                 bigLimit.compareTo(bigUsage));
+        long todayAllSeconds = 24 * 60 * 60;  // 全天所有的秒数
+        long todayLastSeconds = DateUtil.getTodayLastSeconds();  // 今天剩余的秒数
+        long todayPassedSeconds = todayAllSeconds - todayLastSeconds;  // 今天过去的秒数
         if (bigLimit.compareTo(bigUsage) > 0) {
-            long todayLastSeconds = DateUtil.getTodayLastSeconds();
             availableData = bigLimit.subtract(bigUsage).longValue();
             if (todayLastSeconds > 0) {
                 speedLimit = availableData / todayLastSeconds;
             }
         }
+        if (todayPassedSeconds > 0) {
+            averageSpeed = usage / todayPassedSeconds;
+        }
         settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_available_data), availableData);
         settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_speed_limit), speedLimit);
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_average_speed), averageSpeed);
     }
 
     /**
@@ -277,65 +283,45 @@ public class NetworkSetting {
     }
 
     /**
-     * 计算时间间隔时间
+     * 计算主循环时间间隔
+     * @param sessionNodes session个数
+     * @return 返回计算的时间间隔
      */
-    public static float calculateIntervalRate() {
-        long speedLimit;
+    public static int calculateMainLoopInterval(long sessionNodes) {
         // 无网络，返回0；不更新链端时间间隔
         if (!settingsRepo.internetState()) {
             return 0;
         }
+        long speedLimit;
+        long averageSpeed;
         if (isMeteredNetwork()) {
             // 当前网络为计费网络
             speedLimit = NetworkSetting.getMeteredSpeedLimit();
+            averageSpeed = NetworkSetting.getMeteredAverageSpeed();
         } else {
             // 当前网络为非计费网络
             speedLimit = NetworkSetting.getWiFiSpeedLimit();
+            averageSpeed = NetworkSetting.getWiFiAverageSpeed();
+        }
+        Context appContext = MainApplication.getInstance();
+        String foregroundRunningKey = appContext.getString(R.string.pref_key_foreground_running);
+        Interval mainLoopMin;
+        Interval mainLoopMax;
+        // 时间间隔的大小，根据APP在前后台而不同
+        if (settingsRepo.getBooleanValue(foregroundRunningKey)) {
+            mainLoopMin = Interval.FORE_MAIN_LOOP_MIN;
+            mainLoopMax = Interval.FORE_MAIN_LOOP_MAX;
+        } else {
+            mainLoopMin = Interval.BACK_MAIN_LOOP_MIN;
+            mainLoopMax = Interval.BACK_MAIN_LOOP_MAX;
         }
         if (speedLimit > 0) {
-            long averageSpeed = NetworkSetting.getCurrentSpeed();
-            return averageSpeed * 1.0f / speedLimit;
+            float rate = averageSpeed * 1.0f / speedLimit;
+            return calculateTimeInterval(rate, mainLoopMin,
+                    mainLoopMax, sessionNodes);
         } else {
             return -1;
         }
-    }
-
-//    /**
-//     * 计算Gossip时间间隔
-//     * @param rate 平均网速和网速限制的比率
-//     * @return 返回计算的时间间隔
-//     */
-//    @Deprecated
-//    public static int calculateGossipInterval(float rate, long sessionNodes) {
-//        Context context = MainApplication.getInstance();
-//        boolean isOnForeground = AppUtil.isOnForeground(context);
-//        if (isMeteredNetwork()) {
-//            if (isOnForeground) {
-//                return calculateTimeInterval(rate, Interval.GOSSIP_FORE_METERED_MIN,
-//                        Interval.GOSSIP_FORE_METERED_MAX, sessionNodes);
-//            } else {
-//                return calculateTimeInterval(rate, Interval.GOSSIP_BACK_METERED_MIN,
-//                        Interval.GOSSIP_BACK_METERED_MAX, sessionNodes);
-//            }
-//        } else {
-//            if (isOnForeground) {
-//                return calculateTimeInterval(rate, Interval.GOSSIP_FORE_WIFI_MIN,
-//                        Interval.GOSSIP_FORE_WIFI_MAX, sessionNodes);
-//            } else {
-//                return calculateTimeInterval(rate, Interval.GOSSIP_BACK_WIFI_MIN,
-//                        Interval.GOSSIP_BACK_WIFI_MAX, sessionNodes);
-//            }
-//        }
-//    }
-
-    /**
-     * 计算主循环时间间隔
-     * @param rate 平均网速和网速限制的比率
-     * @return 返回计算的时间间隔
-     */
-    public static int calculateMainLoopInterval(float rate, long sessionNodes) {
-        return calculateTimeInterval(rate, Interval.MAIN_LOOP_MIN,
-                Interval.MAIN_LOOP_MAX, sessionNodes);
     }
 
     /**
