@@ -24,6 +24,18 @@ public abstract class TauDaemonListener implements TauListener {
      */
     public void onTauError(@NonNull String errorMsg) {}
 
+    @Override
+    public void onUPNPMapped(int index, int externalPort) {}
+
+    @Override
+    public void onUPNPUnmapped(int index) {}
+
+    @Override
+    public void onNATPMPMapped(int index, int externalPort) {}
+
+    @Override
+    public void onNATPMPUnmapped(int index) {}
+
     /**
      * torrent SessionStats
      */

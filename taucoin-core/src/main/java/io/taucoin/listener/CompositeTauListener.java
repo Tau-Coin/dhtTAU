@@ -87,6 +87,34 @@ public class CompositeTauListener implements TauListener {
     }
 
     @Override
+    public void onUPNPMapped(int index, int externalPort) {
+        for (TauListener listener : listeners) {
+            listener.onUPNPMapped(index, externalPort);
+        }
+    }
+
+    @Override
+    public void onUPNPUnmapped(int index) {
+        for (TauListener listener : listeners) {
+            listener.onUPNPUnmapped(index);
+        }
+    }
+
+    @Override
+    public void onNATPMPMapped(int index, int externalPort) {
+        for (TauListener listener : listeners) {
+            listener.onNATPMPMapped(index, externalPort);
+        }
+    }
+
+    @Override
+    public void onNATPMPUnmapped(int index) {
+        for (TauListener listener : listeners) {
+            listener.onNATPMPUnmapped(index);
+        }
+    }
+
+    @Override
     public void onNewBlock(byte[] chainID, BlockContainer blockContainer) {
         for (TauListener listener : listeners) {
             listener.onNewBlock(chainID, blockContainer);

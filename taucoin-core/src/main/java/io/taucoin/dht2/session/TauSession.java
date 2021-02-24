@@ -1,6 +1,7 @@
 package io.taucoin.dht2.session;
 
 import io.taucoin.dht2.util.Utils;
+import io.taucoin.listener.TauListener;
 
 import com.frostwire.jlibtorrent.*;
 import com.frostwire.jlibtorrent.alerts.*;
@@ -42,6 +43,8 @@ public class TauSession {
     // Torrent session settings.
     private SessionSettings settings;
 
+    private TauListener tauListener;
+
     private static int[] listenAlerts = new int[] {
             AlertType.LISTEN_SUCCEEDED.swig(),
             AlertType.LISTEN_FAILED.swig(),
@@ -50,6 +53,7 @@ public class TauSession {
             AlertType.DHT_PUT.swig(),
             AlertType.DHT_LOG.swig(),
             AlertType.PORTMAP.swig(),
+            AlertType.PORTMAP_ERROR.swig(),
             //AlertType.DHT_PKT.swig(),
     };
 
@@ -102,6 +106,11 @@ public class TauSession {
             } else if (type == AlertType.PORTMAP) {
                 PortmapAlert a = (PortmapAlert) alert;
                 logger.info(a.message());
+                onPortMapped(a);
+            } else if (type == AlertType.PORTMAP_ERROR) {
+                PortmapErrorAlert a = (PortmapErrorAlert) alert;
+                logger.info(a.message());
+                onPortUnmapped(a);
             } else if (type == AlertType.DHT_LOG) {
                 if (EnableTorrentLog) {
                     DhtLogAlert a = (DhtLogAlert) alert;
@@ -185,6 +194,15 @@ public class TauSession {
         listeners.remove(listener);
     }
 
+    /**
+     * Set TauListener.
+     *
+     * @param tauListener TauListener
+     */
+    public void setTauListener(TauListener tauListener) {
+        this.tauListener = tauListener;
+    }
+
     private void notifyImmutableItemGotEvent(DhtImmutableItemAlert a) {
         for (ItemGotPutListener listener : listeners) {
             listener.onImmutableItemGot(a);
@@ -199,6 +217,35 @@ public class TauSession {
     private void notifyItemPutEvent(DhtPutAlert a) {
         for (ItemGotPutListener listener : listeners) {
             listener.onItemPut(a);
+        }
+    }
+
+    private void onPortMapped(PortmapAlert a) {
+        if (tauListener == null) {
+            return;
+        }
+
+        int index = a.mapping();
+        int externalPort = a.externalPort();
+
+        if (a.mapTransport() == PortmapTransport.UPNP) {
+            tauListener.onUPNPMapped(index, externalPort);
+        } else if (a.mapTransport() == PortmapTransport.NAT_PMP) {
+            tauListener.onNATPMPMapped(index, externalPort);
+        }
+    }
+
+    private void onPortUnmapped(PortmapErrorAlert a) {
+        if (tauListener == null) {
+            return;
+        }
+
+        int index = a.mapping();
+
+        if (a.mapTransport() == PortmapTransport.UPNP) {
+            tauListener.onUPNPUnmapped(index);
+        } else if (a.mapTransport() == PortmapTransport.NAT_PMP) {
+            tauListener.onNATPMPUnmapped(index);
         }
     }
 

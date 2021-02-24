@@ -72,6 +72,18 @@ public class TauListenerImpl implements TauListener {
     }
 
     @Override
+    public void onUPNPMapped(int index, int externalPort) {}
+
+    @Override
+    public void onUPNPUnmapped(int index) {}
+
+    @Override
+    public void onNATPMPMapped(int index, int externalPort) {}
+
+    @Override
+    public void onNATPMPUnmapped(int index) {}
+
+    @Override
     public void onSessionStats(SessionStats newStats) {
         logger.debug("session stats:" + newStats);
     }

@@ -63,6 +63,30 @@ public interface TauListener {
     void onChainManagerStopped();
 
     /**
+     * This event will be notified when a NAT router was successfully found
+     * and a port was successfully mapped on it by UPNP transport.
+     */
+    void onUPNPMapped(int index, int externalPort);
+
+    /**
+     * This event will be notified when a NAT router was successfully found
+     * but some part of the port mapping request failed by UPNP transport.
+     */
+    void onUPNPUnmapped(int index);
+
+    /**
+     * This event will be notified when a NAT router was successfully found
+     * and a port was successfully mapped on it by NAT-PMP transport.
+     */
+    void onNATPMPMapped(int index, int externalPort);
+
+    /**
+     * This event will be notified when a NAT router was successfully found
+     * but some part of the port mapping request failed by NAT-PMP transport.
+     */
+    void onNATPMPUnmapped(int index);
+
+    /**
      * Session statistics will be notified periodally.
      */
     void onSessionStats(SessionStats newStats);

@@ -137,6 +137,7 @@ public class DHTEngine {
                 .setNetworkInterfaces(NetworkInterfacePolicy
                         .networkInterfaces(0, interfacesQuota));
         this.session = new TauSession(builder.build());
+        this.session.setTauListener(tauListener);
 
         boolean ok = this.session.start();
 
