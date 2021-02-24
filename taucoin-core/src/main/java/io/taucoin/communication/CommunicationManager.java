@@ -127,22 +127,6 @@ public class CommunicationManager {
     }
 
     /**
-     * 获取队列容量
-     * @return 容量
-     */
-//    public int getQueueCapability() {
-//        return this.communication.getQueueCapability();
-//    }
-
-    /**
-     * 获取队列当前大小
-     * @return 队列大小
-     */
-//    public int getQueueSize() {
-//        return this.communication.getQueueSize();
-//    }
-
-    /**
      * 设置gossip时间片
      * @param timeInterval 时间间隔，单位:s
      */
@@ -151,21 +135,7 @@ public class CommunicationManager {
     }
 
     /**
-     * 增加间隔时间
-     */
-    public void increaseIntervalTime() {
-        this.communication.increaseIntervalTime();
-    }
-
-    /**
-     * 减少间隔时间
-     */
-    public void decreaseIntervalTime() {
-        this.communication.decreaseIntervalTime();
-    }
-
-    /**
-     * 获取间隔时间
+     * 获取当前间隔时间
      * @return 间隔时间
      */
     public int getIntervalTime() {
@@ -173,10 +143,10 @@ public class CommunicationManager {
     }
 
     /**
-     * 设置间隔时间
+     * 设置最小间隔时间
      */
-    public void setIntervalTime(int intervalTime) {
-        this.communication.setIntervalTime(intervalTime);
+    public void setMinIntervalTime(int minIntervalTime) {
+        this.communication.setMinIntervalTime(minIntervalTime);
     }
 
 }

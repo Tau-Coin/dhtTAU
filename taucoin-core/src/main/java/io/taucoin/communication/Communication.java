@@ -51,7 +51,7 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
 //    private final double THRESHOLD = 0.8;
 
     // 主循环间隔最小时间
-    private final int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
+    private int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
     // 主循环间隔最大时间
     private final int MAX_LOOP_INTERVAL_TIME = 1000; // 1000 ms
@@ -896,7 +896,7 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
 //                tryToSendAllRequest();
 
                 // 尝试调整间隔时间
-//                adjustIntervalTime();
+                adjustIntervalTime();
 
                 try {
                     Thread.sleep(this.loopIntervalTime);
@@ -931,6 +931,18 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
      * 调整间隔时间
      */
     private void adjustIntervalTime() {
+        int size = this.friends.size();
+        if (size > 0) {
+            // 主循环频率：1s / 在线朋友数；最小值50ms; 最大值 1s
+            // 流量控制是控制主循环频率最小值
+            this.loopIntervalTime = MAX_LOOP_INTERVAL_TIME / size;
+
+            if (this.loopIntervalTime < MIN_LOOP_INTERVAL_TIME) {
+                this.loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
+            }
+        } else {
+            this.loopIntervalTime = MAX_LOOP_INTERVAL_TIME;
+        }
 //        int size = DHTEngine.getInstance().queueOccupation();
 //        // 理想状态是直接问中间层是否资源紧张，根据资源紧张度来调整访问频率，资源紧张则降低访问频率
 //        if ((double)size / DHTEngine.DHTQueueCapability > THRESHOLD) {
@@ -977,6 +989,13 @@ public class Communication implements DHT.GetImmutableItemCallback, DHT.GetMutab
         } else {
             this.loopIntervalTime = intervalTime;
         }
+    }
+
+    /**
+     * 设置最小间隔时间
+     */
+    public void setMinIntervalTime(int minIntervalTime) {
+        this.MIN_LOOP_INTERVAL_TIME = Math.min(minIntervalTime, MAX_LOOP_INTERVAL_TIME);
     }
 
     /**
