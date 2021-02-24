@@ -1,5 +1,7 @@
 package io.taucoin.db;
 
+import io.taucoin.core.FriendPair;
+import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteUtil;
 
 public class PrefixKey {
@@ -395,6 +397,19 @@ public class PrefixKey {
         byte[] key = new byte[MESSAGE_HASH_LIST.length + pubkey.length];
         System.arraycopy(MESSAGE_HASH_LIST, 0, key, 0, MESSAGE_HASH_LIST.length);
         System.arraycopy(pubkey, 0, key, MESSAGE_HASH_LIST.length, pubkey.length);
+        return key;
+    }
+
+    /**
+     * message hash list key: MESSAGE_HASH_LIST + friend pair
+     * @param friendPair friend pair
+     * @return key
+     */
+    public static byte[] messageHashListKey(FriendPair friendPair) {
+        byte[] key = new byte[MESSAGE_HASH_LIST.length + ChainParam.SHORT_ADDRESS_LENGTH * 2];
+        System.arraycopy(MESSAGE_HASH_LIST, 0, key, 0, MESSAGE_HASH_LIST.length);
+        System.arraycopy(friendPair.sender, 0, key, MESSAGE_HASH_LIST.length, ChainParam.SHORT_ADDRESS_LENGTH);
+        System.arraycopy(friendPair.receiver, 0, key, MESSAGE_HASH_LIST.length + ChainParam.SHORT_ADDRESS_LENGTH, ChainParam.SHORT_ADDRESS_LENGTH);
         return key;
     }
 

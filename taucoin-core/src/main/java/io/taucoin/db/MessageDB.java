@@ -2,6 +2,8 @@ package io.taucoin.db;
 
 import java.util.Set;
 
+import io.taucoin.core.FriendPair;
+
 public interface MessageDB {
     /**
      * Open database.
@@ -100,4 +102,20 @@ public interface MessageDB {
      * @throws DBException database exception database exception
      */
     byte[] getLatestMessageHashListEncode(byte[] pubKey) throws DBException;
+
+    /**
+     * save latest message hash list encode
+     * @param friendPair friend pair
+     * @param encode encode of message hash list
+     * @throws DBException database exception database exception
+     */
+    void saveLatestMessageHashListEncode(FriendPair friendPair, byte[] encode) throws DBException;
+
+    /**
+     * get latest message hash list encode
+     * @param friendPair friend pair
+     * @return message hash list encode
+     * @throws DBException database exception database exception
+     */
+    byte[] getLatestMessageHashListEncode(FriendPair friendPair) throws DBException;
 }

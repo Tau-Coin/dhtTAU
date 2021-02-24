@@ -221,33 +221,6 @@ public class CommunicationNew implements DHT.GetImmutableItemCallback, DHT.GetMu
     }
 
     /**
-     * 保存与朋友的最近的聊天信息的哈希集合
-     * @throws DBException database exception
-     */
-    private void saveMessageHashList() throws DBException {
-
-        for (Map.Entry<ByteArrayWrapper, LinkedList<Message>> entry: this.messageListMap.entrySet()) {
-
-            List<byte[]> list = new ArrayList<>();
-            LinkedList<Message> linkedList = entry.getValue();
-            if (null != linkedList) {
-
-                for (Message message : linkedList) {
-                    try {
-                        logger.debug("message hash:{}", Hex.toHexString(message.getHash()));
-                        list.add(message.getHash());
-                    } catch (RuntimeException e) {
-                        logger.error(e.getMessage(), e);
-                    }
-                }
-
-                HashList hashList = new HashList(list);
-                this.messageDB.saveLatestMessageHashListEncode(entry.getKey().getData(), hashList.getEncoded());
-            }
-        }
-    }
-
-    /**
      * 尝试往聊天消息集合里面插入新消息
      * @param pubKey 聊天的peer
      * @param message 新消息

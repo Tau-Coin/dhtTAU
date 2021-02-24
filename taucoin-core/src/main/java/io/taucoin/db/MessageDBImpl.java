@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.taucoin.core.FriendPair;
+
 public class MessageDBImpl implements MessageDB {
     private static final Logger logger = LoggerFactory.getLogger("MsgDBImpl");
 
@@ -216,6 +218,38 @@ public class MessageDBImpl implements MessageDB {
     public byte[] getLatestMessageHashListEncode(byte[] pubKey) throws DBException {
         try {
             return db.get(PrefixKey.messageHashListKey(pubKey));
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
+     * save latest message hash list encode
+     *
+     * @param friendPair friend pair
+     * @param encode     encode of message hash list
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public void saveLatestMessageHashListEncode(FriendPair friendPair, byte[] encode) throws DBException {
+        try {
+            db.put(PrefixKey.messageHashListKey(friendPair), encode);
+        } catch (Exception e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    /**
+     * get latest message hash list encode
+     *
+     * @param friendPair friend pair
+     * @return message hash list encode
+     * @throws DBException database exception database exception
+     */
+    @Override
+    public byte[] getLatestMessageHashListEncode(FriendPair friendPair) throws DBException {
+        try {
+            return db.get(PrefixKey.messageHashListKey(friendPair));
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
