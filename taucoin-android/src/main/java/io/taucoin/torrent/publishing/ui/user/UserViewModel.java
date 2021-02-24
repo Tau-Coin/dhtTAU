@@ -55,6 +55,7 @@ import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.constant.KeyQRContent;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.constant.QRContent;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
@@ -157,7 +158,7 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 导入并切换Seed
      */
-    void importSeed(String seed, String name) {
+    public void importSeed(String seed, String name) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             String result = "";
             try {
@@ -253,6 +254,30 @@ public class UserViewModel extends AndroidViewModel {
                 content.setPublicKey(user.publicKey);
                 content.setNickName(showName);
                 content.setFriendPks(friendPks);
+                emitter.onNext(content);
+            }catch (Exception e){
+                logger.error("queryCurrentUserAndFriends error ", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> qrContent.postValue(result));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 观察当前用户
+     */
+    public void queryCurrentUser() {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<QRContent>) emitter -> {
+            try {
+                User user = userRepo.getCurrentUser();
+                String showName = UsersUtil.getShowName(user);
+                KeyQRContent content = new KeyQRContent();
+                content.setSeed(user.seed);
+                content.setPublicKey(user.publicKey);
+                content.setNickName(showName);
                 emitter.onNext(content);
             }catch (Exception e){
                 logger.error("queryCurrentUserAndFriends error ", e);

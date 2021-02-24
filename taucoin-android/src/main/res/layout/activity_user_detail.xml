@@ -149,7 +149,7 @@
                     android:background="@color/color_white"
                     android:layout_marginTop="5dp"
                     android:textAppearance="@style/TextAppearanceBody1"
-                    android:textColor="@color/color_blue"
+                    android:textColor="@color/color_yellow"
                     android:gravity="center_horizontal|center"
                     android:text="@string/user_add_to_contact"/>
 
@@ -162,7 +162,7 @@
                     android:background="@color/color_white"
                     android:layout_marginTop="5dp"
                     android:textAppearance="@style/TextAppearanceBody1"
-                    android:textColor="@color/color_blue"
+                    android:textColor="@color/color_yellow"
                     android:gravity="center_horizontal|center"
                     android:text="@string/user_share_qr"/>
 
@@ -175,7 +175,7 @@
                     android:background="@color/color_white"
                     android:layout_marginTop="5dp"
                     android:textAppearance="@style/TextAppearanceBody1"
-                    android:textColor="@color/color_blue"
+                    android:textColor="@color/color_yellow"
                     android:gravity="center_horizontal|center"
                     android:text="@string/user_start_chat"/>
 

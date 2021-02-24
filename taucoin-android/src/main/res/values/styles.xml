@@ -336,7 +336,7 @@
     </style>
 
     <style name="TabLayout" parent="@android:style/TextAppearance.Widget.TabWidget">
-        <item name="android:textSize">@dimen/font_normal_size</item>
+        <item name="android:textSize">@dimen/font_small_size</item>
     </style>
 
 

@@ -163,6 +163,10 @@
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
+            android:name=".ui.qrcode.KeyQRCodeActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <activity
             android:name=".ui.qrcode.ScanQRCodeActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="100dp"
-    android:background="@color/primary">
+    android:background="@color/color_white">
 
     <ImageView
         android:layout_above="@+id/app_title"
@@ -14,7 +14,7 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:contentDescription="@null"
-        android:src="@mipmap/ic_launcher_splash" />
+        android:src="@mipmap/icon_logo_orange" />
 
     <TextView
         android:visibility="gone"

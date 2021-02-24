@@ -556,4 +556,20 @@ public class Utils {
         }
         return null;
     }
+
+    /**
+     * 秘钥验证
+     * @param seed 我的Seed
+     * @return 是否有效
+     */
+    public static boolean isKeyValid(String seed) {
+        if (StringUtil.isNotEmpty(seed)) {
+            try {
+                byte[] seedBytes = ByteUtil.toByte(seed);
+                Ed25519.createKeypair(seedBytes);
+                return true;
+            } catch (Exception ignore) { }
+        }
+        return false;
+    }
 }

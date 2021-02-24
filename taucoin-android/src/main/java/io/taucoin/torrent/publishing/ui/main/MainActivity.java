@@ -32,7 +32,6 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
-import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
@@ -43,7 +42,6 @@ import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
-import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
@@ -66,6 +64,7 @@ import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.download.DownloadViewModel;
 import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
 import io.taucoin.torrent.publishing.ui.friends.FriendsActivity;
+import io.taucoin.torrent.publishing.ui.qrcode.KeyQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.setting.DataCostActivity;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
@@ -377,8 +376,8 @@ public class MainActivity extends ScanTriggerActivity {
             ToastUtils.showShortToast(R.string.copy_public_key);
         });
         dialogBinding.llExportSeed.setOnClickListener(v -> {
-            CopyManager.copyText(user.seed);
-            ToastUtils.showShortToast(R.string.copy_seed);
+            seedDialog.closeDialog();
+            ActivityUtil.startActivity(this, KeyQRCodeActivity.class);
         });
         seedDialog = new CommonDialog.Builder(this)
                 .setContentView(dialogBinding.getRoot())

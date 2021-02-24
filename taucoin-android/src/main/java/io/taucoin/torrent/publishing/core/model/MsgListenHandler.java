@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.core.model;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteConstraintException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,6 +145,7 @@ class MsgListenHandler {
                 long result = chatRepo.addChatMsgLog(msgLog);
                 logger.trace("updateReceivedConfirmationState friendPk::{}, msgRoot::{}, result::{}",
                         friendPkStr, hash, result);
+            } catch (SQLiteConstraintException ignore) {
             } catch (Exception e) {
                 logger.error("onNewMessage error", e);
             }

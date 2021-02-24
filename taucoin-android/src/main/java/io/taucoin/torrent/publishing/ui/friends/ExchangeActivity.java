@@ -48,12 +48,12 @@ public class ExchangeActivity extends ScanTriggerActivity implements View.OnClic
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.tv_step_one:
+            case R.id.ll_step_one:
                 Intent intent = new Intent();
                 intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
                 ActivityUtil.startActivity(intent, ExchangeActivity.this, UserQRCodeActivity.class);
                 break;
-            case R.id.tv_step_two:
+            case R.id.ll_step_two:
                 openScanQRActivity();
                 break;
             default:

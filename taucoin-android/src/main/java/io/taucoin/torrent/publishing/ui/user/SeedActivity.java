@@ -11,10 +11,12 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.databinding.ActivitySeedBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.qrcode.KeyQRCodeActivity;
 
 /**
  * Seeds管理页面
@@ -83,7 +85,8 @@ public class SeedActivity extends BaseActivity implements View.OnClickListener, 
                 viewModel.showSaveSeedDialog(this, false);
                 break;
             case R.id.item_export_seed:
-                viewModel.exportSeed();
+                ActivityUtil.startActivity(this, KeyQRCodeActivity.class);
+//                viewModel.exportSeed();
                 break;
             case R.id.item_generate_seed:
                 viewModel.showSaveSeedDialog(this, true);

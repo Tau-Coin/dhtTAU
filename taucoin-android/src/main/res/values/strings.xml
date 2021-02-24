@@ -278,6 +278,7 @@
 
     <!-- Strings used for QRCode -->
     <string name="qr_code_title">My TAU ID QR Code</string>
+    <string name="key_qr_code_title">My Key QR Code</string>
     <string name="qr_code_two_steps">Two steps to connect a friend</string>
     <string name="qr_code_step_one">Share QR code to friends</string>
     <string name="qr_code_step_two">Scan friend’s QR code</string>

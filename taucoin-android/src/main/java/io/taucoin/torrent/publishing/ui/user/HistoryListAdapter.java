@@ -97,13 +97,13 @@ public class HistoryListAdapter extends ListAdapter<User, HistoryListAdapter.Vie
             }
             String showName = UsersUtil.getShowName(user);
             binding.tvName.setText(showName);
-            String publicKey = UsersUtil.getMidHideName(user.publicKey);
-            binding.tvPublicKey.setText(publicKey);
+            String seed = UsersUtil.getMidHideName(user.seed);
+            binding.tvSeed.setText(seed);
             int nameColor = user.isCurrentUser ? R.color.primary : R.color.text_primary;
             int pkColor = user.isCurrentUser ? R.color.primary : R.color.gray_dark;
             Context context = binding.getRoot().getContext();
             binding.tvName.setTextColor(context.getResources().getColor(nameColor));
-            binding.tvPublicKey.setTextColor(context.getResources().getColor(pkColor));
+            binding.tvSeed.setTextColor(context.getResources().getColor(pkColor));
             binding.getRoot().setOnClickListener(view->{
                 if(listener != null && !user.isCurrentUser){
                     listener.onItemClicked(user);

@@ -2,7 +2,6 @@ package io.taucoin.torrent.publishing.ui.qrcode;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.text.SpannableStringBuilder;
 import android.view.View;
 
 import com.king.zxing.util.CodeUtils;
@@ -15,7 +14,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
-import io.taucoin.torrent.publishing.core.utils.SpanUtils;
+import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -39,6 +38,7 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_community_qr_code);
         binding.setListener(this);
+        binding.qrCode.setListener(this);
         ViewModelProvider provider = new ViewModelProvider(this);
         communityViewModel = provider.get(CommunityViewModel.class);
         initView();
@@ -59,23 +59,20 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         String showName = UsersUtil.getCommunityName(chainID);
-        binding.tvPublicKey.setText(showName);
-        binding.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
-        binding.roundButton.setBgColor(Utils.getGroupColor(chainID));
-
-        SpannableStringBuilder scanQrCode = new SpanUtils()
-                .append(getString(R.string.qr_code_scan_friend_qr))
-                .setUnderline()
-                .create();
-        binding.tvScanQrCode.setText(scanQrCode);
+        binding.qrCode.tvName.setText(showName);
+        binding.qrCode.roundButton.setText(showName);
+        binding.qrCode.roundButton.setBgColor(Utils.getGroupColor(chainID));
+        binding.qrCode.tvQrCode.setVisibility(View.GONE);
+        binding.qrCode.ivCopy.setVisibility(View.GONE);
 
         // 获取10个社区成员的公钥
         disposables.add(communityViewModel.getCommunityMembersLimit(chainID, Constants.CHAIN_LINK_BS_LIMIT)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
-                    Bitmap bitmap = CodeUtils.createQRCode(communityInviteLink, 480);
-                    binding.ivQrCode.setImageBitmap(bitmap);
+                    int heightPix = DimensionsUtil.dip2px(this, 480);
+                    Bitmap bitmap = CodeUtils.createQRCode(communityInviteLink, heightPix);
+                    binding.qrCode.ivQrCode.setImageBitmap(bitmap);
                 }));
     }
 
@@ -90,7 +87,7 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
      */
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.tv_scan_qr_code) {
+        if (v.getId() == R.id.ll_scan_qr_code) {
             openScanQRActivityAndExit();
         }
     }
