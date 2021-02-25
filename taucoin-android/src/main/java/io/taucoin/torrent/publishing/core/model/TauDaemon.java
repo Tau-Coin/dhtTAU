@@ -10,10 +10,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
@@ -68,6 +71,7 @@ public class TauDaemon {
     private TauListenHandler tauListenHandler;
     private MsgListenHandler msgListenHandler;
     private TauInfoProvider tauInfoProvider;
+    private Disposable restartSessionTimer; // 重启Sessions定时任务
     private volatile boolean isRunning = false;
     private volatile boolean trafficTips = true; // 剩余流量用完提示
     private volatile String seed;
@@ -414,15 +418,17 @@ public class TauDaemon {
         } else if (key.equals(appContext.getString(R.string.pref_key_is_metered_network))) {
             logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
             resetMasterMode();
+        }  else if (key.equals(appContext.getString(R.string.pref_key_current_speed_list))) {
+            if (restartSessionTimer != null && !restartSessionTimer.isDisposed()
+                    && NetworkSetting.getCurrentSpeed() > 0) {
+                restartSessionTimer.dispose();
+                disposables.remove(restartSessionTimer);
+                logger.info("restartSessionTimer dispose");
+            }
         } else if (key.equals(appContext.getString(R.string.pref_key_foreground_running))) {
             boolean isForeground = settingsRepo.getBooleanValue(key);
             logger.info("foreground running::{}", isForeground);
-            // 当APP在前台运行，有网络连接, 并且还有剩余可用流量，网速为0，重新启动Session
-            if (isForeground && settingsRepo.internetState() && isHaveAvailableData()
-                    && NetworkSetting.getCurrentSpeed() == 0) {
-                NetworkSetting.clearSpeedList();
-                rescheduleTAUBySettings(true);
-            }
+            restartSessionTimer();
         } else if (key.equals(appContext.getString(R.string.pref_key_nat_pmp_mapped))) {
             logger.info("SettingsChanged, Nat-PMP mapped::{}", settingsRepo.isNATPMPMapped());
             resetMasterMode();
@@ -430,6 +436,35 @@ public class TauDaemon {
             logger.info("SettingsChanged, UPnP mapped::{}", settingsRepo.isUPnpMapped());
             resetMasterMode();
         }
+    }
+
+    /**
+     * 定时任务：APP从后台到前台触发, 网速采样时间后，网速依然为0，重启Sessions
+     */
+    private void restartSessionTimer() {
+        boolean isForeground = settingsRepo.getBooleanValue(appContext.getString(R.string.pref_key_foreground_running));
+        if (!isForeground) {
+            return;
+        }
+        if (restartSessionTimer != null && !restartSessionTimer.isDisposed()) {
+            return;
+        }
+        logger.info("restartSessionTimer start");
+        restartSessionTimer = Observable.timer(NetworkSetting.current_speed_sample, TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(time -> {
+                    // 当前有网络连接, 并且还有剩余可用流量，网速为0，重新启动Session
+                    boolean isRestart = settingsRepo.internetState() && isHaveAvailableData()
+                            && NetworkSetting.getCurrentSpeed() == 0;
+                    logger.info("restartSessionTimer isRestart::{}", isRestart);
+                    if (isRestart) {
+                        NetworkSetting.clearSpeedList();
+                        rescheduleTAUBySettings(true);
+                    }
+
+                });
+        disposables.add(restartSessionTimer);
     }
 
     /**

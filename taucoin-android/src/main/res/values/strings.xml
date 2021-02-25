@@ -147,7 +147,7 @@
     <string name="setting_charging">Charging</string>
     <string name="setting_internet">Internet</string>
     <string name="setting_wake_lock">Always Awake</string>
-    <string name="setting_upnp">UpnP</string>
+    <string name="setting_upnp">UPnP</string>
     <string name="setting_nat_pmp">NAT-PMP</string>
     <string name="setting_main_loop_interval">Main Loop Interval(ms)</string>
     <string name="setting_gossip_interval">Gossip Interval(s)</string>
