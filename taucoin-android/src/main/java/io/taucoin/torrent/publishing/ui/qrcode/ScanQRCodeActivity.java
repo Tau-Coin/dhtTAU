@@ -7,7 +7,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.frostwire.jlibtorrent.Ed25519;
-import com.frostwire.jlibtorrent.Pair;
 import com.google.gson.Gson;
 import com.king.zxing.CaptureActivity;
 import com.king.zxing.DecodeFormatManager;
@@ -42,7 +41,6 @@ import io.taucoin.torrent.publishing.ui.constant.QRContent;
 import io.taucoin.torrent.publishing.ui.friends.FriendsActivity;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.torrent.publishing.ui.user.SeedActivity;
-import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 import io.taucoin.util.ByteUtil;
 
@@ -62,6 +60,7 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
     private CommunityViewModel communityViewModel;
     private UserViewModel userViewModel;
     private String friendPk; // 识别的朋友公钥
+    private boolean scanKeyOnly; // 只识别的Key(Seed)
 
     @Override
     public int getLayoutId() {
@@ -93,6 +92,9 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
      * 初始化布局
      */
     private void initView() {
+        if (getIntent() != null) {
+            scanKeyOnly = getIntent().getBooleanExtra(IntentExtra.SCAN_KEY_ONLY, false);
+        }
         ivQrCode = findViewById(R.id.iv_qr_code);
         ivGallery = findViewById(R.id.iv_gallery);
         tvNoQrCode = findViewById(R.id.tv_no_qr_code);
@@ -120,13 +122,22 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
         try {
             if (StringUtil.isNotEmpty(scanResult)) {
                 ChainLinkUtil.ChainLink decode = ChainLinkUtil.decode(scanResult);
-                if(decode.isValid()){
+                if (decode.isValid()) {
                     String chainID = decode.getDn();
                     openChainLink(chainID, scanResult);
                     return;
                 }
                 if (Utils.isKeyValid(scanResult)) {
-                    userViewModel.importSeed(scanResult, null);
+                    if (scanKeyOnly) {
+                        // 返回上一个页面扫描结果
+                        Intent intent = new Intent();
+                        intent.putExtra(IntentExtra.DATA, scanResult);
+                        setResult(RESULT_OK, intent);
+                        onBackPressed();
+                    } else {
+                        // 直接导入扫描结果
+                        userViewModel.importSeed(scanResult, null);
+                    }
                     return;
                 }
                 QRContent content = new Gson().fromJson(scanResult, QRContent.class);
@@ -136,7 +147,6 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                     userViewModel.addFriend(content.getPublicKey(), content.getNickName());
                     return;
                 }
-
             }
         } catch (Exception ignore){ }
         showNoQrCodeView(true, false);
@@ -227,8 +237,9 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
                 onBackPressed();
                 break;
             case R.id.iv_qr_code:
-                onBackPressed();
-                ActivityUtil.startActivity(this, UserQRCodeActivity.class);
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
+                ActivityUtil.startActivity(intent, this, UserQRCodeActivity.class);
                 break;
             case R.id.iv_gallery:
                 MediaUtil.startOpenGallery(this);

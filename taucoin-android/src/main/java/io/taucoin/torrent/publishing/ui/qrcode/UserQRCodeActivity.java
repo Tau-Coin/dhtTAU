@@ -109,7 +109,7 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.ll_scan_qr_code) {
-            openScanQRActivityAndExit();
+            openScanQRActivity();
         }
     }
 }

@@ -20,23 +20,41 @@
             android:contentDescription="@null"
             android:src="@mipmap/icon_close" />
 
-        <EditText
+        <LinearLayout
+            android:id="@+id/ll_seed"
             android:layout_below="@+id/iv_close"
-            android:visibility="visible"
-            android:id="@+id/et_seed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="50dp"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:gravity="center_horizontal|bottom"
-            android:hint="@string/user_seed_import_hint"
-            android:inputType="textMultiLine"
-            android:textAppearance="@style/TextAppearanceBody1"
-            android:autofillHints="@string/user_seed_import_hint" />
+            android:orientation="horizontal">
+
+            <EditText
+                android:visibility="visible"
+                android:id="@+id/et_seed"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:minHeight="50dp"
+                android:gravity="center_horizontal|bottom"
+                android:hint="@string/user_seed_import_hint"
+                android:inputType="textMultiLine"
+                android:textAppearance="@style/TextAppearanceBody1"
+                android:autofillHints="@string/user_seed_import_hint" />
+
+            <ImageView
+                android:id="@+id/iv_scan"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:padding="2dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginStart="0dp"
+                android:contentDescription="@null"
+                android:src="@mipmap/icon_scan_orange" />
+        </LinearLayout>
 
         <EditText
-            android:layout_below="@+id/et_seed"
+            android:layout_below="@+id/ll_seed"
             android:id="@+id/et_name"
             android:layout_width="match_parent"
             android:layout_height="50dp"

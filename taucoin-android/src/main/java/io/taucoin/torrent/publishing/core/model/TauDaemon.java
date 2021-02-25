@@ -112,9 +112,10 @@ public class TauDaemon {
     private void initLocalParam() {
         switchPowerReceiver();
         switchConnectionReceiver();
-        updateUIInterval(50);
+        settingsRepo.wakeLock(false);
         settingsRepo.setUPnpMapped(false);
         settingsRepo.setNATPMPMapped(false);
+        updateUIInterval(50);
     }
 
     /**
@@ -293,21 +294,25 @@ public class TauDaemon {
 
         @Override
         public void onNATPMPMapped(int index, int externalPort) {
+            logger.info("Nat-PMP mapped::{}", true);
             settingsRepo.setNATPMPMapped(true);
         }
 
         @Override
         public void onNATPMPUnmapped(int index) {
+            logger.info("Nat-PMP mapped::{}", false);
             settingsRepo.setNATPMPMapped(false);
         }
 
         @Override
         public void onUPNPMapped(int index, int externalPort) {
+            logger.info("UPnP mapped::{}", true);
             settingsRepo.setUPnpMapped(true);
         }
 
         @Override
         public void onUPNPUnmapped(int index) {
+            logger.info("UPnP mapped::{}", false);
             settingsRepo.setUPnpMapped(false);
         }
     };
@@ -402,12 +407,13 @@ public class TauDaemon {
         if (key.equals(appContext.getString(R.string.pref_key_internet_state))) {
             logger.info("SettingsChanged, internet state::{}", settingsRepo.internetState());
             rescheduleTAUBySettings(true);
-            enableMasterMode();
+            resetMasterMode();
         } else if (key.equals(appContext.getString(R.string.pref_key_charging_state))) {
             logger.info("SettingsChanged, charging state::{}", settingsRepo.chargingState());
-            enableMasterMode();
+            resetMasterMode();
         } else if (key.equals(appContext.getString(R.string.pref_key_is_metered_network))) {
             logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
+            resetMasterMode();
         } else if (key.equals(appContext.getString(R.string.pref_key_foreground_running))) {
             boolean isForeground = settingsRepo.getBooleanValue(key);
             logger.info("foreground running::{}", isForeground);
@@ -419,10 +425,10 @@ public class TauDaemon {
             }
         } else if (key.equals(appContext.getString(R.string.pref_key_nat_pmp_mapped))) {
             logger.info("SettingsChanged, Nat-PMP mapped::{}", settingsRepo.isNATPMPMapped());
-            enableMasterMode();
+            resetMasterMode();
         } else if (key.equals(appContext.getString(R.string.pref_key_upnp_mapped))) {
             logger.info("SettingsChanged, UPnP mapped::{}", settingsRepo.isUPnpMapped());
-            enableMasterMode();
+            resetMasterMode();
         }
     }
 
@@ -489,9 +495,6 @@ public class TauDaemon {
             return;
         }
         tauController.restartSessions();
-        // 重启Session, 主动把UPnp， NAT-PMP置为false
-        settingsRepo.setUPnpMapped(false);
-        settingsRepo.setNATPMPMapped(false);
     }
 
     /**
@@ -551,24 +554,28 @@ public class TauDaemon {
     }
 
     /**
-     * 设置是否启动服务器模式
+     * 重置启动服务器模式
      */
-    public void enableMasterMode() {
+    public void resetMasterMode() {
         boolean masterMode = settingsRepo.masterMode();
         Utils.enableBootReceiver(appContext, masterMode);
         boolean UPnPMapped = settingsRepo.isUPnpMapped();
         boolean NATPMPMapped = settingsRepo.isNATPMPMapped();
+        boolean meteredNetwork = NetworkSetting.isMeteredNetwork();
+        boolean internetState = settingsRepo.internetState();
+        boolean chargingState = settingsRepo.chargingState();
         logger.info("EnableMasterMode UPnPMapped::{}, NATPMPMapped::{}, " +
-                        "masterMode::{}, chargingState::{}, internetState::{}",
-                UPnPMapped, NATPMPMapped, masterMode,
-                settingsRepo.chargingState(), settingsRepo.internetState());
+                        "masterMode::{}, chargingState::{}, internetState::{}, meteredNetwork::{}",
+                UPnPMapped, NATPMPMapped, masterMode, chargingState, internetState, meteredNetwork);
         // 当UPnP和NAT-PMP开启，APP在非计费网络网络状态下在充电状态或者打开Master Mode开关的情况下，
         // 启动CPU WakeLock
-        if (UPnPMapped && NATPMPMapped && !NetworkSetting.isMeteredNetwork() &&
-                (masterMode || settingsRepo.chargingState())) {
+        if ((UPnPMapped || NATPMPMapped) && internetState && !meteredNetwork &&
+                (masterMode || chargingState)) {
+            settingsRepo.wakeLock(true);
             keepCPUWakeLock(true);
             Scheduler.cancelWakeUpAppAlarm(appContext);
         } else {
+            settingsRepo.wakeLock(false);
             keepCPUWakeLock(false);
             Scheduler.setWakeUpAppAlarm(appContext);
         }
@@ -597,7 +604,6 @@ public class TauDaemon {
                 wakeLock.release();
             }
         }
-        settingsRepo.wakeLock(enable);
     }
 
     /**

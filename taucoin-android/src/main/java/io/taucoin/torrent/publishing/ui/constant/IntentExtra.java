@@ -13,4 +13,6 @@ public class IntentExtra {
     public static final String IMMEDIATE_EXECUTION = "immediateExecution";
     public static final String NICK_NAME = "nickname";
     public static final String CRYPTO_KEY = "cryptoKey";
+    public static final String DATA = "data";
+    public static final String SCAN_KEY_ONLY = "scanKeyOnly";
 }

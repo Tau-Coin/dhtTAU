@@ -4,8 +4,10 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
@@ -19,8 +21,11 @@ import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
  */
 public abstract class ScanTriggerActivity extends BaseActivity {
 
+    private static final int SCAN_CODE = 0X100;
     private User userTemp;
     private boolean isExit = false;
+    private TextView textView;
+    private boolean scanKeyOnly = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +45,12 @@ public abstract class ScanTriggerActivity extends BaseActivity {
         requestCameraPermissions();
     }
 
+    public void openScanQRActivity(TextView textView) {
+        this.scanKeyOnly = true;
+        this.textView = textView;
+        requestCameraPermissions();
+    }
+
     private void directOpenScanQRActivity() {
         if (isExit) {
             onBackPressed();
@@ -49,7 +60,8 @@ public abstract class ScanTriggerActivity extends BaseActivity {
         if (userTemp != null) {
             intent.putExtra(IntentExtra.BEAN, userTemp);
         }
-        ActivityUtil.startActivity(intent,this, ScanQRCodeActivity.class);
+        intent.putExtra(IntentExtra.SCAN_KEY_ONLY, scanKeyOnly);
+        ActivityUtil.startActivityForResult(intent,this, ScanQRCodeActivity.class, SCAN_CODE);
 
     }
     /**
@@ -82,6 +94,17 @@ public abstract class ScanTriggerActivity extends BaseActivity {
                 break;
             default:
                 break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == SCAN_CODE) {
+            if (data != null && textView != null) {
+                String key = data.getStringExtra(IntentExtra.DATA);
+                textView.setText(key);
+            }
         }
     }
 }

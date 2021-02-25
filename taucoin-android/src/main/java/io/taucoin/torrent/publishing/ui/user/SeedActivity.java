@@ -16,12 +16,13 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.databinding.ActivitySeedBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.KeyQRCodeActivity;
 
 /**
  * Seeds管理页面
  */
-public class SeedActivity extends BaseActivity implements View.OnClickListener, HistoryListAdapter.ClickListener {
+public class SeedActivity extends ScanTriggerActivity implements View.OnClickListener, HistoryListAdapter.ClickListener {
 
     private ActivitySeedBinding binding;
     private UserViewModel viewModel;
@@ -86,7 +87,6 @@ public class SeedActivity extends BaseActivity implements View.OnClickListener, 
                 break;
             case R.id.item_export_seed:
                 ActivityUtil.startActivity(this, KeyQRCodeActivity.class);
-//                viewModel.exportSeed();
                 break;
             case R.id.item_generate_seed:
                 viewModel.showSaveSeedDialog(this, true);

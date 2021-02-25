@@ -57,7 +57,7 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
         binding.qrCode.tvQrCode.setVisibility(View.GONE);
         binding.qrCode.ivCopy.setVisibility(View.GONE);
         DrawablesUtil.setEndDrawable(binding.qrCode.tvName, R.mipmap.icon_copy_text,
-                14);
+                16);
 
         // 查询数据
         userViewModel.queryCurrentUser();

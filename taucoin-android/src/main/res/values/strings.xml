@@ -147,6 +147,8 @@
     <string name="setting_charging">Charging</string>
     <string name="setting_internet">Internet</string>
     <string name="setting_wake_lock">Always Awake</string>
+    <string name="setting_upnp">UpnP</string>
+    <string name="setting_nat_pmp">NAT-PMP</string>
     <string name="setting_main_loop_interval">Main Loop Interval(ms)</string>
     <string name="setting_gossip_interval">Gossip Interval(s)</string>
     <string name="setting_daily_traffic_limit_used_up">Daily data limit is used, proceed to use 30% more data?</string>

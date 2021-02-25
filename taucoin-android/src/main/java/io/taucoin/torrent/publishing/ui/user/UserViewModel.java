@@ -1,7 +1,6 @@
 package io.taucoin.torrent.publishing.ui.user;
 
 import android.app.Application;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.view.LayoutInflater;
@@ -41,8 +40,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.core.utils.CopyManager;
-import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FileUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -55,6 +52,7 @@ import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.constant.KeyQRContent;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.constant.QRContent;
@@ -124,18 +122,22 @@ public class UserViewModel extends AndroidViewModel {
      * 显示保存Seed的对话框，也起到确认效果,确认后执行后续操作
      * @param generate：false导入; true:生成新的seed
      */
-    public void showSaveSeedDialog(Context context, boolean generate){
-        SeedDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(context),
+    public void showSaveSeedDialog(ScanTriggerActivity activity, boolean generate){
+        SeedDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.seed_dialog, null, false);
         if(generate){
-            binding.etSeed.setVisibility(View.GONE);
+            binding.llSeed.setVisibility(View.GONE);
+        } else {
+            binding.ivScan.setOnClickListener(v -> {
+                activity.openScanQRActivity(binding.etSeed);
+            });
         }
         binding.ivClose.setOnClickListener(v -> {
             if(commonDialog != null){
                 commonDialog.closeDialog();
             }
         });
-        commonDialog = new CommonDialog.Builder(context)
+        commonDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
                 .setButtonWidth(240)
                 .setPositiveButton(R.string.common_submit, (dialog, which) -> {
@@ -623,31 +625,6 @@ public class UserViewModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe();
-        disposables.add(disposable);
-    }
-
-    /**
-     * 到处Seed
-     */
-    void exportSeed() {
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
-            try {
-                User currentUser = userRepo.getCurrentUser();
-                emitter.onNext(currentUser.seed);
-            } catch (Exception e) {
-                logger.error("exportSeed error", e);
-                emitter.onNext("");
-            }
-            emitter.onComplete();
-        }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(seed -> {
-                    if (StringUtil.isNotEmpty(seed)) {
-                        CopyManager.copyText(seed);
-                        ToastUtils.showShortToast(R.string.copy_seed);
-                    }
-                });
         disposables.add(disposable);
     }
 }
