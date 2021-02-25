@@ -55,14 +55,14 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         binding.toolbarInclude.toolbar.setTitle(R.string.setting_title);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        binding.switchServerMode.setChecked(settingsRepo.serverMode());
+        binding.switchServerMode.setChecked(settingsRepo.masterMode());
         handleSettingsChanged(getString(R.string.pref_key_internet_state));
         handleSettingsChanged(getString(R.string.pref_key_charging_state));
         handleSettingsChanged(getString(R.string.pref_key_wake_lock));
         handleSettingsChanged(getString(R.string.pref_key_main_loop_interval));
 
         binding.switchServerMode.setOnCheckedChangeListener((buttonView, isChecked) ->
-                settingsRepo.serverMode(isChecked));
+                settingsRepo.masterMode(isChecked));
 
         Disposable disposable = settingsRepo.observeSettingsChanged()
                 .subscribeOn(Schedulers.newThread())

@@ -110,7 +110,7 @@ public class TauService extends Service {
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribe(this::handleSettingsChanged));
 
-        daemon.enableServerMode(settingsRepo.serverMode());
+        daemon.enableMasterMode();
 
         daemon.doStart();
         daemon.registerListener(daemonListener);
@@ -157,8 +157,8 @@ public class TauService extends Service {
      * @param key 改变的key
      */
     private void handleSettingsChanged(String key) {
-        if (key.equals(getString(R.string.pref_key_server_mode))){
-            daemon.enableServerMode(settingsRepo.serverMode());
+        if (key.equals(getString(R.string.pref_key_master_mode))){
+            daemon.enableMasterMode();
         }
     }
 

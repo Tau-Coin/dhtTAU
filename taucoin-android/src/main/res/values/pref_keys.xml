@@ -3,7 +3,7 @@
 
     <!-- Behavior and appearance settings -->
     <string name="pref_key_boot_start" translatable="false">pref_key_boot_start</string>
-    <string name="pref_key_server_mode" translatable="false">pref_key_server_mode</string>
+    <string name="pref_key_master_mode" translatable="false">pref_key_master_mode</string>
     <string name="pref_key_charging_state" translatable="false">pref_key_charging_state</string>
     <string name="pref_key_internet_state" translatable="false">pref_key_internet_state</string>
     <string name="pref_key_wake_lock" translatable="false">pref_key_wake_lock</string>
@@ -25,4 +25,7 @@
     <string name="pref_key_foreground_running" translatable="false">pref_key_foreground_running</string>
 
     <string name="pref_key_main_loop_interval" translatable="false">pref_key_main_loop_interval</string>
+
+    <string name="pref_key_upnp_mapped" translatable="false">pref_key_upnp_mapped</string>
+    <string name="pref_key_nat_pmp_mapped" translatable="false">pref_key_nat_pmp_mapped</string>
 </resources>

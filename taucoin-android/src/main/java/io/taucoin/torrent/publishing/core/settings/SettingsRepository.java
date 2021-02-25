@@ -30,13 +30,13 @@ public interface SettingsRepository {
      * 服务器模式
      * @return boolean 是否开启
      */
-    boolean serverMode();
+    boolean masterMode();
 
     /**
      * 设置服务器模式
      * @param val 是否开启
      */
-    void serverMode(boolean val);
+    void masterMode(boolean val);
 
     /**
      * 设置充电状态
@@ -114,6 +114,28 @@ public interface SettingsRepository {
      * @param isNeed
      */
     void setNeedPromptUser(boolean isNeed);
+
+    /**
+     * UPnP连接是否开启
+     */
+    boolean isUPnpMapped();
+
+    /**
+     * 设置UPnP连接是否开启
+     * @param isMapped
+     */
+    void setUPnpMapped(boolean isMapped);
+
+    /**
+     * NAT-PMP连接是否开启
+     */
+    boolean isNATPMPMapped();
+
+    /**
+     * 设置NAT-PMP连接是否开启
+     * @param isMapped
+     */
+    void setNATPMPMapped(boolean isMapped);
 
     long getLongValue(String key);
 

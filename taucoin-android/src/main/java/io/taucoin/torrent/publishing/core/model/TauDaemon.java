@@ -103,10 +103,18 @@ public class TauDaemon {
         tauController = new TauController(repoPath, androidLeveldbFactory, deviceID.getBytes());
         tauController.registerListener(daemonListener);
         tauController.registerMsgListener(msgListener);
+        initLocalParam();
+    }
 
+    /**
+     * 初始化本地参数
+     */
+    private void initLocalParam() {
         switchPowerReceiver();
         switchConnectionReceiver();
         updateUIInterval(50);
+        settingsRepo.setUPnpMapped(false);
+        settingsRepo.setNATPMPMapped(false);
     }
 
     /**
@@ -282,6 +290,26 @@ public class TauDaemon {
         public void onSyncBlock(byte[] chainID, BlockContainer blockContainer) {
             tauListenHandler.handleSyncBlock(chainID, blockContainer);
         }
+
+        @Override
+        public void onNATPMPMapped(int index, int externalPort) {
+            settingsRepo.setNATPMPMapped(true);
+        }
+
+        @Override
+        public void onNATPMPUnmapped(int index) {
+            settingsRepo.setNATPMPMapped(false);
+        }
+
+        @Override
+        public void onUPNPMapped(int index, int externalPort) {
+            settingsRepo.setUPnpMapped(true);
+        }
+
+        @Override
+        public void onUPNPUnmapped(int index) {
+            settingsRepo.setUPnpMapped(false);
+        }
     };
 
     /**
@@ -374,22 +402,41 @@ public class TauDaemon {
         if (key.equals(appContext.getString(R.string.pref_key_internet_state))) {
             logger.info("SettingsChanged, internet state::{}", settingsRepo.internetState());
             rescheduleTAUBySettings(true);
-            enableServerMode(settingsRepo.serverMode());
+            enableMasterMode();
         } else if (key.equals(appContext.getString(R.string.pref_key_charging_state))) {
             logger.info("SettingsChanged, charging state::{}", settingsRepo.chargingState());
-            enableServerMode(settingsRepo.serverMode());
+            enableMasterMode();
         } else if (key.equals(appContext.getString(R.string.pref_key_is_metered_network))) {
             logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
         } else if (key.equals(appContext.getString(R.string.pref_key_foreground_running))) {
             boolean isForeground = settingsRepo.getBooleanValue(key);
             logger.info("foreground running::{}", isForeground);
-            // 当APP在前台运行，并且当前有网络连接，网速为0，重新启动Session
-            if (isForeground && settingsRepo.internetState()
+            // 当APP在前台运行，有网络连接, 并且还有剩余可用流量，网速为0，重新启动Session
+            if (isForeground && settingsRepo.internetState() && isHaveAvailableData()
                     && NetworkSetting.getCurrentSpeed() == 0) {
                 NetworkSetting.clearSpeedList();
                 rescheduleTAUBySettings(true);
             }
+        } else if (key.equals(appContext.getString(R.string.pref_key_nat_pmp_mapped))) {
+            logger.info("SettingsChanged, Nat-PMP mapped::{}", settingsRepo.isNATPMPMapped());
+            enableMasterMode();
+        } else if (key.equals(appContext.getString(R.string.pref_key_upnp_mapped))) {
+            logger.info("SettingsChanged, UPnP mapped::{}", settingsRepo.isUPnpMapped());
+            enableMasterMode();
         }
+    }
+
+    /**
+     * 当前网络是否还有剩余可用流量
+     */
+    private boolean isHaveAvailableData() {
+        boolean isHaveAvailableData;
+        if (NetworkSetting.isMeteredNetwork()) {
+            isHaveAvailableData = NetworkSetting.getMeteredAvailableData() > 0;
+        } else {
+            isHaveAvailableData = NetworkSetting.getWiFiAvailableData() > 0;
+        }
+        return isHaveAvailableData;
     }
 
     /**
@@ -407,7 +454,7 @@ public class TauDaemon {
             // 判断有无网络连接
             if (settingsRepo.internetState()) {
                 if (isRestart) {
-                    tauController.restartSessions();
+                    restartSessions();
                     resetReadOnly();
                     logger.info("rescheduleTAUBySettings restartSessions");
                 } else {
@@ -432,6 +479,19 @@ public class TauDaemon {
         } catch (Exception e) {
             logger.error("rescheduleDHTBySettings errors", e);
         }
+    }
+
+    /**
+     * Restart dht sessions.
+     */
+    private void restartSessions() {
+        if (!isRunning) {
+            return;
+        }
+        tauController.restartSessions();
+        // 重启Session, 主动把UPnp， NAT-PMP置为false
+        settingsRepo.setUPnpMapped(false);
+        settingsRepo.setNATPMPMapped(false);
     }
 
     /**
@@ -493,23 +553,24 @@ public class TauDaemon {
     /**
      * 设置是否启动服务器模式
      */
-    public void enableServerMode(boolean enable) {
-        Utils.enableBootReceiver(appContext, enable);
-        logger.info("EnableServerMode, enable::{}", enable);
-        if (enable) {
+    public void enableMasterMode() {
+        boolean masterMode = settingsRepo.masterMode();
+        Utils.enableBootReceiver(appContext, masterMode);
+        boolean UPnPMapped = settingsRepo.isUPnpMapped();
+        boolean NATPMPMapped = settingsRepo.isNATPMPMapped();
+        logger.info("EnableMasterMode UPnPMapped::{}, NATPMPMapped::{}, " +
+                        "masterMode::{}, chargingState::{}, internetState::{}",
+                UPnPMapped, NATPMPMapped, masterMode,
+                settingsRepo.chargingState(), settingsRepo.internetState());
+        // 当UPnP和NAT-PMP开启，APP在非计费网络网络状态下在充电状态或者打开Master Mode开关的情况下，
+        // 启动CPU WakeLock
+        if (UPnPMapped && NATPMPMapped && !NetworkSetting.isMeteredNetwork() &&
+                (masterMode || settingsRepo.chargingState())) {
             keepCPUWakeLock(true);
             Scheduler.cancelWakeUpAppAlarm(appContext);
         } else {
-            // 设备在充电状态并网络可用的状态下，启动WakeLock
-            logger.info("EnableServerMode, chargingState::{}, internetState::{}",
-                    settingsRepo.chargingState(), settingsRepo.internetState());
-            if(settingsRepo.chargingState() && settingsRepo.internetState()){
-                keepCPUWakeLock(true);
-                Scheduler.cancelWakeUpAppAlarm(appContext);
-            }else{
-                keepCPUWakeLock(false);
-                Scheduler.setWakeUpAppAlarm(appContext);
-            }
+            keepCPUWakeLock(false);
+            Scheduler.setWakeUpAppAlarm(appContext);
         }
     }
 
@@ -518,6 +579,7 @@ public class TauDaemon {
      */
     @SuppressLint("WakelockTimeout")
     public void keepCPUWakeLock(boolean enable) {
+        logger.info("keepCPUWakeLock::{}", enable);
         if (enable) {
             if (wakeLock == null) {
                 Context context = MainApplication.getInstance();

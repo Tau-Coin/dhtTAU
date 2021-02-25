@@ -8,11 +8,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import androidx.annotation.NonNull;
 import io.reactivex.BackpressureStrategy;
@@ -76,14 +74,14 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     }
 
     @Override
-    public boolean serverMode() {
-        return pref.getBoolean(appContext.getString(R.string.pref_key_server_mode),
+    public boolean masterMode() {
+        return pref.getBoolean(appContext.getString(R.string.pref_key_master_mode),
                 Default.serverMode);
     }
 
     @Override
-    public void serverMode(boolean val) {
-        pref.edit().putBoolean(appContext.getString(R.string.pref_key_server_mode),val)
+    public void masterMode(boolean val) {
+        pref.edit().putBoolean(appContext.getString(R.string.pref_key_master_mode),val)
                 .apply();
     }
 
@@ -171,6 +169,42 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     @Override
     public void setNeedPromptUser(boolean isNeed) {
         pref.edit().putBoolean(appContext.getString(R.string.pref_key_need_prompt_user), isNeed)
+                .apply();
+    }
+
+    /**
+     * UPnP连接是否开启
+     */
+    @Override
+    public boolean isUPnpMapped() {
+        return pref.getBoolean(appContext.getString(R.string.pref_key_upnp_mapped), false);
+    }
+
+    /**
+     * 设置UPnP连接是否开启
+     * @param isMapped
+     */
+    @Override
+    public void setUPnpMapped(boolean isMapped) {
+        pref.edit().putBoolean(appContext.getString(R.string.pref_key_upnp_mapped), isMapped)
+                .apply();
+    }
+
+    /**
+     * NAT-PMP连接是否开启
+     */
+    @Override
+    public boolean isNATPMPMapped() {
+        return pref.getBoolean(appContext.getString(R.string.pref_key_nat_pmp_mapped), false);
+    }
+
+    /**
+     * 设置NAT-PMP连接是否开启
+     * @param isMapped
+     */
+    @Override
+    public void setNATPMPMapped(boolean isMapped) {
+        pref.edit().putBoolean(appContext.getString(R.string.pref_key_nat_pmp_mapped), isMapped)
                 .apply();
     }
 
