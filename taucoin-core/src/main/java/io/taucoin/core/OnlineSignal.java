@@ -9,7 +9,6 @@ import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 public class OnlineSignal {
-    BigInteger timestamp;
     Bloom senderBloomFilter = new Bloom();
     Bloom receiverBloomFilter = new Bloom();
     Bloom friendListBloomFilter = new Bloom();
@@ -20,10 +19,8 @@ public class OnlineSignal {
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
-    public OnlineSignal(BigInteger timestamp, Bloom senderBloomFilter, Bloom receiverBloomFilter,
-                        Bloom friendListBloomFilter, byte[] chattingFriend, BigInteger chattingTime,
-                        List<GossipItem> gossipItemList) {
-        this.timestamp = timestamp;
+    public OnlineSignal(Bloom senderBloomFilter, Bloom receiverBloomFilter, Bloom friendListBloomFilter,
+                        byte[] chattingFriend, BigInteger chattingTime, List<GossipItem> gossipItemList) {
         this.senderBloomFilter = senderBloomFilter;
         this.receiverBloomFilter = receiverBloomFilter;
         this.friendListBloomFilter = friendListBloomFilter;
@@ -36,14 +33,6 @@ public class OnlineSignal {
 
     public OnlineSignal(byte[] rlpEncoded) {
         this.rlpEncoded = rlpEncoded;
-    }
-
-    public BigInteger getTimestamp() {
-        if (!parsed) {
-            parseRLP();
-        }
-
-        return timestamp;
     }
 
     public Bloom getSenderBloomFilter() {
@@ -101,18 +90,15 @@ public class OnlineSignal {
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
 
-        byte[] timeBytes = list.get(0).getRLPData();
-        this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
+        this.senderBloomFilter = new Bloom(list.get(0).getRLPData());
+        this.receiverBloomFilter = new Bloom(list.get(1).getRLPData());
+        this.friendListBloomFilter = new Bloom(list.get(2).getRLPData());
+        this.chattingFriend = list.get(3).getRLPData();
 
-        this.senderBloomFilter = new Bloom(list.get(1).getRLPData());
-        this.receiverBloomFilter = new Bloom(list.get(2).getRLPData());
-        this.friendListBloomFilter = new Bloom(list.get(3).getRLPData());
-        this.chattingFriend = list.get(4).getRLPData();
-
-        byte[] chattingTimeBytes = list.get(5).getRLPData();
+        byte[] chattingTimeBytes = list.get(4).getRLPData();
         this.chattingTime = (null == chattingTimeBytes) ? BigInteger.ZERO: new BigInteger(1, chattingTimeBytes);
 
-        parseGossipList((RLPList) list.get(6));
+        parseGossipList((RLPList) list.get(5));
 
         this.parsed = true;
     }
@@ -140,7 +126,6 @@ public class OnlineSignal {
      */
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
-            byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
             byte[] senderBloomFilter = RLP.encodeElement(this.senderBloomFilter.getData());
             byte[] receiverBloomFilter = RLP.encodeElement(this.receiverBloomFilter.getData());
             byte[] friendListBloomFilter = RLP.encodeElement(this.friendListBloomFilter.getData());
@@ -148,7 +133,7 @@ public class OnlineSignal {
             byte[] chattingTime = RLP.encodeBigInteger(this.chattingTime);
             byte[] gossipListEncoded = getGossipListEncoded();
 
-            this.rlpEncoded = RLP.encodeList(timestamp, senderBloomFilter, receiverBloomFilter,
+            this.rlpEncoded = RLP.encodeList(senderBloomFilter, receiverBloomFilter,
                     friendListBloomFilter, chattingFriend, chattingTime, gossipListEncoded);
         }
 

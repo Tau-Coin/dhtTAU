@@ -30,6 +30,8 @@ public enum DataType {
 
     MESSAGE, // message
 
+    MULTIPLEX_DATA,
+
     LATEST_MESSAGE, // mutable item: latest message
 
     /************************************put相关***************************************/
