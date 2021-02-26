@@ -14,6 +14,10 @@ public class MutableDataWrapper {
     private byte[] encode; // 缓存编码
     private boolean parsed = false; // 是否解码标志
 
+    public MutableDataWrapper(MutableDataType mutableDataType, byte[] data) {
+        this(BigInteger.valueOf(System.currentTimeMillis() / 1000), mutableDataType, data);
+    }
+
     public MutableDataWrapper(BigInteger timestamp, MutableDataType mutableDataType, byte[] data) {
         this.timestamp = timestamp;
         this.mutableDataType = mutableDataType;
