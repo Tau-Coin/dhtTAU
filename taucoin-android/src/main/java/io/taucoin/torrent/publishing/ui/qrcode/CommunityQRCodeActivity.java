@@ -71,7 +71,8 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
                     int heightPix = DimensionsUtil.dip2px(this, 480);
-                    Bitmap bitmap = CodeUtils.createQRCode(communityInviteLink, heightPix);
+                    Bitmap bitmap = CodeUtils.createQRCode(communityInviteLink, heightPix,
+                            getResources().getColor(R.color.color_yellow_dark));
                     binding.qrCode.ivQrCode.setImageBitmap(bitmap);
                 }));
     }

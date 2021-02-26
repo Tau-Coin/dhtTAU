@@ -50,6 +50,7 @@
 
     <color name="color_logo">#d06a00</color>
     <color name="color_yellow">#f19322</color>
+    <color name="color_yellow_dark">#E1B447</color>
     <color name="color_yellow_light">#FB9500</color>
 
     <color name="color_white">#FFFFFF</color>
@@ -60,6 +61,7 @@
 
     <color name="color_red">#FF0000</color>
     <color name="color_red_light">#FF4E55</color>
+    <color name="color_red_dark">#CD6660</color>
 
     <color name="color_blue">#477df9</color>
     <color name="color_blue_light">#0E88EF</color>

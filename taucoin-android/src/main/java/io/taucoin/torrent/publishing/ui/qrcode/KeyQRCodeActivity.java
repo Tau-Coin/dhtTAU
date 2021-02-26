@@ -77,7 +77,8 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
         binding.qrCode.roundButton.setText(keyContent.getNickName());
         binding.qrCode.roundButton.setBgColor(Utils.getGroupColor(keyContent.getPublicKey()));
         int heightPix = DimensionsUtil.dip2px(this, 480);
-        Bitmap bitmap = CodeUtils.createQRCode(keyContent.getSeed(), heightPix);
+        Bitmap bitmap = CodeUtils.createQRCode(keyContent.getSeed(), heightPix,
+                getResources().getColor(R.color.color_red_dark));
         binding.qrCode.ivQrCode.setImageBitmap(bitmap);
     }
 
