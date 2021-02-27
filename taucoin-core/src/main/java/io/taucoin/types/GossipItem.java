@@ -22,6 +22,13 @@ public class GossipItem {
     private boolean parsed = false; // 是否解码标志
 
     // 主要用于转发的gossip item
+    public GossipItem(byte[] sender, BigInteger timestamp) {
+        this.sender = sender;
+        this.timestamp = timestamp;
+
+        this.parsed = true;
+    }
+
     public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp) {
         this.sender = sender;
         this.receiver = receiver;
