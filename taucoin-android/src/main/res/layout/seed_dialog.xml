@@ -20,41 +20,23 @@
             android:contentDescription="@null"
             android:src="@mipmap/icon_close" />
 
-        <LinearLayout
-            android:id="@+id/ll_seed"
+        <EditText
             android:layout_below="@+id/iv_close"
+            android:visibility="visible"
+            android:id="@+id/et_seed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:orientation="horizontal">
-
-            <EditText
-                android:visibility="visible"
-                android:id="@+id/et_seed"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:minHeight="50dp"
-                android:gravity="center_horizontal|bottom"
-                android:hint="@string/user_seed_import_hint"
-                android:inputType="textMultiLine"
-                android:textAppearance="@style/TextAppearanceBody1"
-                android:autofillHints="@string/user_seed_import_hint" />
-
-            <ImageView
-                android:id="@+id/iv_scan"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:padding="2dp"
-                android:layout_marginTop="15dp"
-                android:layout_marginStart="0dp"
-                android:contentDescription="@null"
-                android:src="@mipmap/icon_scan_orange" />
-        </LinearLayout>
+            android:minHeight="50dp"
+            android:gravity="center_horizontal|bottom"
+            android:hint="@string/user_seed_import_hint"
+            android:inputType="textMultiLine"
+            android:textAppearance="@style/TextAppearanceBody1"
+            android:autofillHints="@string/user_seed_import_hint" />
 
         <EditText
-            android:layout_below="@+id/ll_seed"
+            android:layout_below="@+id/et_seed"
             android:id="@+id/et_name"
             android:layout_width="match_parent"
             android:layout_height="50dp"
@@ -67,6 +49,51 @@
             android:inputType="text"
             android:textAppearance="@style/TextAppearanceBody1"
             android:autofillHints="@string/user_nickname" />
+
+        <TextView
+            android:id="@+id/tv_submit"
+            android:layout_below="@+id/et_name"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="@string/common_submit"
+            android:layout_marginStart="50dp"
+            android:layout_marginEnd="50dp"
+            android:layout_marginTop="30dp"
+            android:gravity="center_horizontal|center"
+            android:textColor="@color/color_white"
+            android:textAppearance="@style/TextAppearanceBody1"
+            android:background="@drawable/primary_rect_round_bg"/>
+
+        <LinearLayout
+            android:layout_below="@+id/tv_submit"
+            android:id="@+id/ll_scan_qr_code"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="@drawable/primary_rect_round_bg"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_vertical|center"
+            android:layout_marginStart="50dp"
+            android:layout_marginEnd="50dp"
+            android:layout_marginTop="30dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:contentDescription="@null"
+                android:src="@mipmap/icon_scan"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/color_white"
+                android:layout_marginStart="10dp"
+                android:text="@string/qr_code_scan_key_qr"
+                android:textAppearance="@style/TextAppearanceBody1"/>
+
+        </LinearLayout>
 
     </RelativeLayout>
 </layout>

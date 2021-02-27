@@ -15,6 +15,7 @@ import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.permission.EasyPermissions;
 import io.taucoin.torrent.publishing.ui.qrcode.ScanQRCodeActivity;
+import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 
 /**
  * 触发扫码的页面需要
@@ -24,7 +25,7 @@ public abstract class ScanTriggerActivity extends BaseActivity {
     private static final int SCAN_CODE = 0X100;
     private User userTemp;
     private boolean isExit = false;
-    private TextView textView;
+    private UserViewModel viewModel;
     private boolean scanKeyOnly = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +46,9 @@ public abstract class ScanTriggerActivity extends BaseActivity {
         requestCameraPermissions();
     }
 
-    public void openScanQRActivity(TextView textView) {
+    public void openScanQRActivity(UserViewModel viewModel) {
         this.scanKeyOnly = true;
-        this.textView = textView;
+        this.viewModel = viewModel;
         requestCameraPermissions();
     }
 
@@ -101,9 +102,9 @@ public abstract class ScanTriggerActivity extends BaseActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == SCAN_CODE) {
-            if (data != null && textView != null) {
+            if (data != null && viewModel != null) {
                 String key = data.getStringExtra(IntentExtra.DATA);
-                textView.setText(key);
+                viewModel.importSeed(key, null);
             }
         }
     }

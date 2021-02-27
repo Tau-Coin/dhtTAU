@@ -126,10 +126,14 @@ public class UserViewModel extends AndroidViewModel {
         SeedDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.seed_dialog, null, false);
         if(generate){
-            binding.llSeed.setVisibility(View.GONE);
+            binding.etSeed.setVisibility(View.GONE);
+            binding.llScanQrCode.setVisibility(View.GONE);
         } else {
-            binding.ivScan.setOnClickListener(v -> {
-                activity.openScanQRActivity(binding.etSeed);
+            binding.llScanQrCode.setOnClickListener(v -> {
+                if(commonDialog != null){
+                    commonDialog.closeDialog();
+                }
+                activity.openScanQRActivity(this);
             });
         }
         binding.ivClose.setOnClickListener(v -> {
@@ -137,23 +141,25 @@ public class UserViewModel extends AndroidViewModel {
                 commonDialog.closeDialog();
             }
         });
+        binding.tvSubmit.setOnClickListener(v -> {
+            String name = ViewUtils.getText(binding.etName);
+            if(generate){
+                if(commonDialog != null){
+                    commonDialog.closeDialog();
+                }
+                generateSeed(name);
+            }else{
+                String seed = ViewUtils.getText(binding.etSeed);
+                if(StringUtil.isEmpty(seed)){
+                    ToastUtils.showShortToast(R.string.user_seed_empty);
+                }else {
+                    importSeed(seed, name);
+                }
+            }
+        });
         commonDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
-                .setButtonWidth(240)
-                .setPositiveButton(R.string.common_submit, (dialog, which) -> {
-                    String name = ViewUtils.getText(binding.etName);
-                    if(generate){
-                        dialog.cancel();
-                        generateSeed(name);
-                    }else{
-                        String seed = ViewUtils.getText(binding.etSeed);
-                        if(StringUtil.isEmpty(seed)){
-                            ToastUtils.showShortToast(R.string.user_seed_empty);
-                        }else {
-                            importSeed(seed, name);
-                        }
-                    }
-                }).create();
+                .create();
         commonDialog.show();
     }
 
