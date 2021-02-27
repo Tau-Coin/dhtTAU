@@ -274,29 +274,15 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
 
     /**
      * 使用短地址来构建gossip item
-     * @param friendPair 短地址friend pair
-     * @param timestamp gossip时间戳
-     * @return gossip item
-     */
-    private GossipItem makeGossipItemWithShortAddress(FriendPair friendPair, BigInteger timestamp) {
-        return new GossipItem(friendPair.getSender(), friendPair.getReceiver(), timestamp);
-    }
-
-    /**
-     * 使用短地址来构建gossip item
      * @param sender sender public key
-     * @param receiver receiver public key
      * @param timestamp timestamp
      * @return gossip item
      */
-    private GossipItem makeGossipItemWithShortAddress(byte[] sender, byte[] receiver, BigInteger timestamp) {
+    private GossipItem makeGossipItemWithShortAddress(byte[] sender, BigInteger timestamp) {
         byte[] shortSender = new byte[SHORT_ADDRESS_LENGTH];
         System.arraycopy(sender, 0, shortSender, 0, SHORT_ADDRESS_LENGTH);
 
-        byte[] shortReceiver = new byte[SHORT_ADDRESS_LENGTH];
-        System.arraycopy(receiver, 0, shortReceiver, 0, SHORT_ADDRESS_LENGTH);
-
-        return new GossipItem(shortSender, shortReceiver, timestamp);
+        return new GossipItem(shortSender, timestamp);
     }
 
     /**

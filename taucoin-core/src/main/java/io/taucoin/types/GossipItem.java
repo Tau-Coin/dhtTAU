@@ -12,7 +12,6 @@ import io.taucoin.util.RLPList;
 // 单条gossip记录，大概能放58条记录在一个mutable item中
 public class GossipItem {
     private byte[] sender; // 4个字节,提取的public key的前缀
-    private byte[] receiver; // 4个字节,提取的public key的前缀
     private BigInteger timestamp; // 4个字节，通过时间戳的更新来标记自己是否有新信息
     // TODO::可以通过多加一个type来扩展信号
     // TODO:: 在对方设备休眠时候的信号变化
@@ -29,14 +28,6 @@ public class GossipItem {
         this.parsed = true;
     }
 
-    public GossipItem(byte[] sender, byte[] receiver, BigInteger timestamp) {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.timestamp = timestamp;
-
-        this.parsed = true;
-    }
-
     public GossipItem(byte[] encode) {
         this.encode = encode;
     }
@@ -47,14 +38,6 @@ public class GossipItem {
         }
 
         return sender;
-    }
-
-    public byte[] getReceiver() {
-        if (!this.parsed) {
-            parseRLP();
-        }
-
-        return receiver;
     }
 
     public BigInteger getTimestamp() {
@@ -78,8 +61,7 @@ public class GossipItem {
         RLPList messageList = (RLPList) params.get(0);
 
         this.sender = messageList.get(0).getRLPData();
-        this.receiver = messageList.get(1).getRLPData();
-        byte[] timeBytes = messageList.get(2).getRLPData();
+        byte[] timeBytes = messageList.get(1).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
         this.parsed = true;
@@ -88,10 +70,9 @@ public class GossipItem {
     public byte[] getEncoded() {
         if (null == this.encode) {
             byte[] sender = RLP.encodeElement(this.sender);
-            byte[] receiver = RLP.encodeElement(this.receiver);
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
 
-            this.encode = RLP.encodeList(sender, receiver, timestamp);
+            this.encode = RLP.encodeList(sender, timestamp);
         }
 
         return this.encode;
@@ -113,7 +94,6 @@ public class GossipItem {
     @Override
     public String toString() {
         byte[] sender = getSender();
-        byte[] receiver = getReceiver();
         BigInteger timestamp = getTimestamp();
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -123,11 +103,6 @@ public class GossipItem {
         if (null != sender) {
             stringBuilder.append("sender=");
             stringBuilder.append(Hex.toHexString(sender));
-        }
-
-        if (null != receiver) {
-            stringBuilder.append(", receiver=");
-            stringBuilder.append(Hex.toHexString(receiver));
         }
 
         if (null != timestamp) {

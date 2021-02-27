@@ -17,7 +17,7 @@ import io.taucoin.util.Repo;
 public class CommunicationManager {
     private static final Logger logger = LoggerFactory.getLogger("CommunicationManager");
 
-    private final Communication communication;
+    private final CommunicationNew communication;
 
     private MsgListener listener;
 
@@ -30,7 +30,7 @@ public class CommunicationManager {
         this.listener = listener;
         this.messageDB = new MessageDBImpl(dbFactory.newDatabase());
 
-        communication = new Communication(deviceID, this.messageDB, this.listener);
+        communication = new CommunicationNew(this.messageDB, this.listener);
     }
 
     public void openMessageDB() throws Exception {
@@ -74,27 +74,6 @@ public class CommunicationManager {
     }
 
     /**
-     * 请求message数据，拿到数据后会放到message db
-     * @param hash data hash
-     * @param friend 请求该数据的朋友
-     */
-    public void requestMessageData(byte[] hash, byte[] friend) {
-        try {
-            this.communication.requestMessage(hash, new ByteArrayWrapper(friend));
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 发布immutable data
-     * @param data immutable data
-     */
-    public void publishImmutableData(byte[] data) {
-        this.communication.publishImmutableData(data);
-    }
-
-    /**
      * 添加新朋友
      * @param pubKey public key
      */
@@ -124,14 +103,6 @@ public class CommunicationManager {
      */
     public List<byte[]> getAllFriends() {
         return this.communication.getAllFriends();
-    }
-
-    /**
-     * 设置gossip时间片
-     * @param timeInterval 时间间隔，单位:s
-     */
-    public void setGossipTimeInterval(long timeInterval) {
-        this.communication.setGossipTimeInterval(timeInterval);
     }
 
     /**

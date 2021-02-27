@@ -48,35 +48,35 @@ public class GossipItemTest {
 //
 //    }
 
-    @Test
-    public void testGossipListCodec() {
-        List<GossipItem> list = new ArrayList<>();
-
-        byte[] sender = Hex.decode("2a628682");
-        byte[] receiver = Hex.decode("3e87c35d");
-        BigInteger timeStamp = BigInteger.valueOf(System.currentTimeMillis() / 1000);
-
-        GossipItem gossipItem = new GossipItem(sender, receiver, timeStamp);
-
-        for (int i = 0; i < 58; i++) {
-            list.add(gossipItem);
-        }
-
-        byte[] deviceID = Hex.decode("df66086cba1c1d916fcdbc0d7b9752d9");
-        byte[] friend = Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9");
-        List<byte[]> friendList = new ArrayList<>();
-        friendList.add(friend);
-
-        GossipMutableData gossip = new GossipMutableData(deviceID, friendList, list);
-
-        System.out.print(gossip.toString());
-        System.out.print("\n");
-
-        byte[] encode = gossip.getEncoded();
-        System.out.print(encode.length); // 990 bytes
-        System.out.print("\n");
-
-        GossipMutableData gossip1 = new GossipMutableData(encode);
-        System.out.print(gossip1.toString());
-    }
+//    @Test
+//    public void testGossipListCodec() {
+//        List<GossipItem> list = new ArrayList<>();
+//
+//        byte[] sender = Hex.decode("2a628682");
+//        byte[] receiver = Hex.decode("3e87c35d");
+//        BigInteger timeStamp = BigInteger.valueOf(System.currentTimeMillis() / 1000);
+//
+//        GossipItem gossipItem = new GossipItem(sender, receiver, timeStamp);
+//
+//        for (int i = 0; i < 58; i++) {
+//            list.add(gossipItem);
+//        }
+//
+//        byte[] deviceID = Hex.decode("df66086cba1c1d916fcdbc0d7b9752d9");
+//        byte[] friend = Hex.decode("2a62868271f3d3455e4b1ea0c1f96263732d0347349f9daa3247107ce1b2b2f9");
+//        List<byte[]> friendList = new ArrayList<>();
+//        friendList.add(friend);
+//
+//        GossipMutableData gossip = new GossipMutableData(deviceID, friendList, list);
+//
+//        System.out.print(gossip.toString());
+//        System.out.print("\n");
+//
+//        byte[] encode = gossip.getEncoded();
+//        System.out.print(encode.length); // 990 bytes
+//        System.out.print("\n");
+//
+//        GossipMutableData gossip1 = new GossipMutableData(encode);
+//        System.out.print(gossip1.toString());
+//    }
 }
