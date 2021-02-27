@@ -1,12 +1,10 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
@@ -32,10 +30,8 @@ import io.taucoin.util.CryptoUtil;
 /**
  * 主页显示的群组列表的Adapter
  */
-public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAdapter.ViewHolder>
-    implements Selectable<CommunityAndMember> {
+public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAdapter.ViewHolder> {
     private ClickListener listener;
-    private List<CommunityAndMember> dataList = new ArrayList<>();
 
     MainListAdapter(ClickListener listener) {
         super(diffCallback);
@@ -63,37 +59,17 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(holder, getItemKey(position));
+        holder.bind(holder, getItem(position));
     }
 
     @Override
     public int getItemViewType(int position) {
-        return dataList.get(position).type;
+        return getCurrentList().get(position).type;
     }
 
     @Override
     public int getItemCount() {
-        return dataList.size();
-    }
-
-    @Override
-    public CommunityAndMember getItemKey(int position) {
-        return dataList.get(position);
-    }
-
-    @Override
-    public int getItemPosition(CommunityAndMember key) {
-        return getCurrentList().indexOf(key);
-    }
-
-    /**
-     * 设置列表社区展示数据
-     * @param communities 社区数据
-     */
-    void setDataList(List<CommunityAndMember> communities) {
-        dataList.clear();
-        dataList.addAll(communities);
-        notifyDataSetChanged();
+        return getCurrentList().size();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -177,7 +153,20 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
     private static final DiffUtil.ItemCallback<CommunityAndMember> diffCallback = new DiffUtil.ItemCallback<CommunityAndMember>() {
         @Override
         public boolean areContentsTheSame(@NonNull CommunityAndMember oldItem, @NonNull CommunityAndMember newItem) {
-            return oldItem.equals(newItem);
+            boolean isSame = oldItem.equals(newItem);
+            if (isSame) {
+                if (oldItem.type == 0) {
+                    isSame = oldItem.txTimestamp == newItem.txTimestamp &&
+                            oldItem.balance == newItem.balance &&
+                            oldItem.power == newItem.power &&
+                            StringUtil.isEquals(oldItem.txMemo, newItem.txMemo);
+                } else {
+                    isSame = oldItem.txTimestamp == newItem.txTimestamp &&
+                            StringUtil.isEquals(oldItem.communityName, newItem.communityName) &&
+                            StringUtil.isEquals(oldItem.txMemo, newItem.txMemo);
+                }
+            }
+            return isSame;
         }
 
         @Override

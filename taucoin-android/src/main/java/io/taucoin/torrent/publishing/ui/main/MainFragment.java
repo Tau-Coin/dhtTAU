@@ -88,7 +88,7 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
 
     private void showCommunityList(List<CommunityAndMember> communities) {
         if(communities != null){
-            adapter.setDataList(communities);
+            adapter.submitList(communities);
         }
     }
 
