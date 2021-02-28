@@ -65,7 +65,9 @@ public class ChainParam {
 
     public static final int GOSSIP_ITEM_LIMIT_SIZE = 58;
 
-    public static final int INDEX_HASH_LIMIT_SIZE = 46;
+    public static final int INDEX_HASH_LIMIT_SIZE1 = 46;
+
+    public static final int LATEST_MESSAGE_SIZE = 50;
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
@@ -80,7 +82,7 @@ public class ChainParam {
     public static final byte[] DEMAND_CHANNEL = "#D".getBytes();
 
     // gossip
-    public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST2".getBytes();
+    public static final byte[] GOSSIP_CHANNEL = "GOSSIP_TEST3".getBytes();
 
     // group chat gossip channel prefix
     public static final byte[] GROUP_CHAT_GOSSIP_CHANNEL_PREFIX = "GC_".getBytes();

@@ -10,7 +10,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +46,12 @@ import static io.taucoin.param.ChainParam.SHORT_ADDRESS_LENGTH;
 public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedListener {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
+    // 朋友禁止访问时间
+    private final int BAN_TIME = 30; // 30 s
+
+    // 判断朋友不在线时间
+    private final int LOSE_TOUCH_TIME  = 300; // 5 min
+
     // 主循环间隔最小时间
     private int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
 
@@ -63,6 +68,9 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
 
     // 当前我加的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
+
+    // 朋友被禁止访问的时间
+    private final Map<ByteArrayWrapper, BigInteger> friendBannedTime = new ConcurrentHashMap<>();
 
     // 多设备发现的朋友
     private final Set<ByteArrayWrapper> friendsFromRemote = new CopyOnWriteArraySet<>();
@@ -247,7 +255,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         // 更新成功
         if (updated) {
             // 如果更新了消息列表，则判断是否列表长度过长，过长则删掉旧数据，然后停止循环
-            if (linkedList.size() >= ChainParam.INDEX_HASH_LIMIT_SIZE) {
+            if (linkedList.size() >= ChainParam.LATEST_MESSAGE_SIZE) {
                 linkedList.remove(0);
             }
 
@@ -380,6 +388,15 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
     }
 
     /**
+     * 将打听到的朋友加入推荐列表，并从禁止列表删除
+     * @param friend 推荐的朋友
+     */
+    private void referToFriend(ByteArrayWrapper friend) {
+        this.referredFriends.add(friend);
+        this.friendBannedTime.remove(friend);
+    }
+
+    /**
      * 挑选一个推荐的朋友访问，没有则随机挑一个访问
      */
     private void visitReferredFriends() {
@@ -418,7 +435,16 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                 }
 
                 if (null != peer) {
-                    requestMutableDataFromPeer(peer);
+                    // 如果选中的朋友没在禁止列表的禁止期，则访问它
+                    BigInteger timestamp = this.friendBannedTime.get(peer);
+                    if (null == timestamp) {
+                        // 没在禁止列表
+                        requestMutableDataFromPeer(peer);
+                    } else if (System.currentTimeMillis() / 1000 > timestamp.longValue()) {
+                        // 过了禁止访问期
+                        this.friendBannedTime.remove(peer);
+                        requestMutableDataFromPeer(peer);
+                    }
                 }
             }
         }
@@ -894,7 +920,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
      * @param mutableDataWrapper 收到的mutable data
      * @param peer gossip发出的peer
      */
-    private void processMutableData(MutableDataWrapper mutableDataWrapper, ByteArrayWrapper peer) {
+    private void processMutableData(MutableDataWrapper mutableDataWrapper, ByteArrayWrapper peer, boolean auth) {
 
         // 是否更新好友的在线时间（完整公钥）
         BigInteger timestamp = mutableDataWrapper.getTimestamp();
@@ -1006,7 +1032,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                         if (null == latestTimestamp || latestTimestamp.compareTo(onlineSignal.getChattingTime()) < 0) {
                             // 记录最新的聊天时间
                             this.friendChattingTime.put(sender, onlineSignal.getChattingTime());
-                            this.referredFriends.add(sender);
+                            referToFriend(sender);
                         }
                     } else {
                         // 记录下推荐给别人的聊天时间
@@ -1037,7 +1063,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                             if (null == latestTimestamp || latestTimestamp.compareTo(gossipItem.getTimestamp()) < 0) {
                                 // 记录最新的聊天时间
                                 this.friendChattingTime.put(sender, gossipItem.getTimestamp());
-                                this.referredFriends.add(sender);
+                                referToFriend(sender);
                             }
                         }
                     }
@@ -1046,6 +1072,15 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                 }
                 case UNKNOWN: {
                     logger.error("Unknown type.");
+                }
+            }
+        } else {
+            // 如果拿到的是旧数据
+            if (auth) {
+                long currentTime = System.currentTimeMillis() / 1000;
+                if ((currentTime - timestamp.longValue()) > this.LOSE_TOUCH_TIME) {
+                    // 如果不在线已经超过五分钟, 禁止访问其30秒钟
+                    this.friendBannedTime.put(peer, BigInteger.valueOf(currentTime + this.BAN_TIME));
                 }
             }
         }
@@ -1057,13 +1092,16 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         switch (dataIdentifier.getDataType()) {
             case MULTIPLEX_DATA: {
                 if (null == item) {
-                    // TODO:: put和降低优先级
                     logger.debug("MULTIPLEX_DATA from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
+                    if (auth) {
+                        // 最后一个仍然是空，则put自己的在线信号
+                        publishFriendOnlineSignal(dataIdentifier.getExtraInfo1().getData());
+                    }
                     return;
                 }
 
                 MutableDataWrapper mutableDataWrapper = new MutableDataWrapper(item);
-                processMutableData(mutableDataWrapper, dataIdentifier.getExtraInfo1());
+                processMutableData(mutableDataWrapper, dataIdentifier.getExtraInfo1(), auth);
 
                 break;
             }
