@@ -936,11 +936,11 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         BigInteger lastSeen = this.friendLastSeen.get(peer);
 
         if (null != lastSeen && lastSeen.compareTo(timestamp) > 0) {
-            logger.debug("-----old online signal from peer:{}", peer.toString());
+            logger.debug("-----old mutable data from peer:{}", peer.toString());
         }
 
         // 判断时间戳，以避免处理历史数据
-        if (null == lastSeen || lastSeen.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
+        if (null == lastSeen || lastSeen.compareTo(timestamp) <= 0) { // 判断是否是更新的online signal
             logger.debug("See peer:{} again", peer.toString());
             this.friendLastSeen.put(peer, timestamp);
             this.onlineFriendsToNotify.add(peer);
