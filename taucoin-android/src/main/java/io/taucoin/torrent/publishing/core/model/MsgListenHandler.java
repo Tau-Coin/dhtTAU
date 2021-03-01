@@ -262,10 +262,10 @@ class MsgListenHandler {
     }
 
     /**
-     * 发现的新朋友通知
+     * 发现的新朋友通知，多台设备同Key之间同步朋友
      * @param friendPk 发现的新朋友
      */
-    void onNewFriend(byte[] friendPk) {
+    void onNewFriendFromMultiDevice(byte[] friendPk) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
                 String userPk = MainApplication.getInstance().getPublicKey();
