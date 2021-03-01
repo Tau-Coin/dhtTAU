@@ -142,9 +142,12 @@
 
                     </LinearLayout>
 
-                    <include layout="@layout/view_line"/>
+                    <include
+                        android:visibility="gone"
+                        layout="@layout/view_line"/>
 
                     <LinearLayout
+                        android:visibility="gone"
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
@@ -317,9 +320,12 @@
 
                     </LinearLayout>
 
-                    <include layout="@layout/view_line"/>
+                    <include
+                        android:visibility="gone"
+                        layout="@layout/view_line"/>
 
                     <LinearLayout
+                        android:visibility="gone"
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
