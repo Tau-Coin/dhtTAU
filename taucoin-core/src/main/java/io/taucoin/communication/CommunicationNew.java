@@ -47,10 +47,10 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 朋友禁止访问时间
-    private final int BAN_TIME = 30; // 30 s
+//    private final int BAN_TIME = 30; // 30 s
 
     // 判断朋友不在线时间
-    private final int LOSE_TOUCH_TIME  = 300; // 5 min
+//    private final int LOSE_TOUCH_TIME  = 300; // 5 min
 
     // 主循环间隔最小时间
     private int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
@@ -70,7 +70,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
 
     // 朋友被禁止访问的时间
-    private final Map<ByteArrayWrapper, BigInteger> friendBannedTime = new ConcurrentHashMap<>();
+//    private final Map<ByteArrayWrapper, BigInteger> friendBannedTime = new ConcurrentHashMap<>();
 
     // 多设备发现的朋友
     private final Set<ByteArrayWrapper> friendsFromRemote = new CopyOnWriteArraySet<>();
@@ -393,7 +393,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
      */
     private void referToFriend(ByteArrayWrapper friend) {
         this.referredFriends.add(friend);
-        this.friendBannedTime.remove(friend);
+//        this.friendBannedTime.remove(friend);
     }
 
     /**
@@ -436,15 +436,15 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
 
                 if (null != peer) {
                     // 如果选中的朋友没在禁止列表的禁止期，则访问它
-                    BigInteger timestamp = this.friendBannedTime.get(peer);
-                    if (null == timestamp) {
+//                    BigInteger timestamp = this.friendBannedTime.get(peer);
+//                    if (null == timestamp) {
                         // 没在禁止列表
                         requestMutableDataFromPeer(peer);
-                    } else if (System.currentTimeMillis() / 1000 > timestamp.longValue()) {
+//                    } else if (System.currentTimeMillis() / 1000 > timestamp.longValue()) {
                         // 过了禁止访问期
-                        this.friendBannedTime.remove(peer);
-                        requestMutableDataFromPeer(peer);
-                    }
+//                        this.friendBannedTime.remove(peer);
+//                        requestMutableDataFromPeer(peer);
+//                    }
                 }
             }
         }
@@ -910,7 +910,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
 
     @Override
     public void onKeyChanged(Pair<byte[], byte[]> newKey) {
-        this.friendBannedTime.clear();
+//        this.friendBannedTime.clear();
         this.friendLastSeen.clear();
         this.messageMap.clear();
         this.messageSenderMap.clear();
@@ -940,11 +940,12 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         }
 
         // 判断时间戳，以避免处理历史数据
-        if (null == lastSeen || lastSeen.compareTo(timestamp) <= 0) { // 判断是否是更新的online signal
-            logger.debug("See peer:{} again", peer.toString());
+        if (null == lastSeen || lastSeen.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
+            logger.debug("Newer data from peer:{}", peer.toString());
             this.friendLastSeen.put(peer, timestamp);
             this.onlineFriendsToNotify.add(peer);
-
+        }
+        if (null == lastSeen || lastSeen.compareTo(timestamp) <= 0) { // 判断是否是更新的online signal
             switch (mutableDataWrapper.getMutableDataType()) {
                 case MESSAGE: {
                     Message message = new Message(mutableDataWrapper.getData());
@@ -1086,7 +1087,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                     logger.error("Unknown type.");
                 }
             }
-        } else {
+        }/* else {
             // 如果拿到的是旧数据
             if (auth) {
                 long currentTime = System.currentTimeMillis() / 1000;
@@ -1095,7 +1096,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                     this.friendBannedTime.put(peer, BigInteger.valueOf(currentTime + this.BAN_TIME));
                 }
             }
-        }
+        }*/
     }
 
     @Override
