@@ -342,7 +342,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         for (ByteArrayWrapper friend: this.friendsFromRemote) {
             addNewFriend(friend.getData());
 
-            this.msgListener.onNewFriend(friend.getData());
+            this.msgListener.onNewFriendFromMultiDevice(friend.getData());
 
             this.friendsFromRemote.remove(friend);
         }
@@ -472,7 +472,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         Bloom receiverBloomFilter = new Bloom();
         Bloom friendListBloomFilter = new Bloom();
         byte[] chattingFriend = null;
-        BigInteger chattingTime = null;
+        BigInteger chattingTime = BigInteger.ZERO;
         List<GossipItem> gossipItemList = new ArrayList<>();
 
         FriendPair friendPair1 = new FriendPair(pubKey, friend);

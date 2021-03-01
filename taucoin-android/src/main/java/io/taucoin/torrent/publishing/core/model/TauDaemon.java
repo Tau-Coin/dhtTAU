@@ -239,7 +239,7 @@ public class TauDaemon {
         }
 
         @Override
-        public void onNewFriend(byte[] friend) {
+        public void onNewFriendFromMultiDevice(byte[] friend) {
             msgListenHandler.onNewFriend(friend);
         }
 

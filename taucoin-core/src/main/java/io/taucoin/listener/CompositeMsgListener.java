@@ -45,9 +45,9 @@ public class CompositeMsgListener implements MsgListener {
      * @param friend 发现的新朋友
      */
     @Override
-    public void onNewFriend(byte[] friend) {
+    public void onNewFriendFromMultiDevice(byte[] friend) {
         for (MsgListener listener : listeners) {
-            listener.onNewFriend(friend);
+            listener.onNewFriendFromMultiDevice(friend);
         }
     }
 

@@ -25,7 +25,7 @@ public abstract class MsgListener implements io.taucoin.listener.MsgListener {
      * @param friend 发现的新朋友
      */
     @Override
-    public void onNewFriend(byte[] friend) {}
+    public void onNewFriendFromMultiDevice(byte[] friend) {}
 
     /**
      * 通知消息状态
