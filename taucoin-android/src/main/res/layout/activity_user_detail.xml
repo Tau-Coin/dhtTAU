@@ -179,6 +179,19 @@
                     android:gravity="center_horizontal|center"
                     android:text="@string/user_start_chat"/>
 
+                <TextView
+                    android:visibility="gone"
+                    android:id="@+id/tv_ban"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:onClick="@{listener::onClick}"
+                    android:background="@color/color_white"
+                    android:layout_marginTop="5dp"
+                    android:textAppearance="@style/TextAppearanceBody1"
+                    android:textColor="@color/color_red"
+                    android:gravity="center_horizontal|center"
+                    android:text="@string/user_ban"/>
+
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </LinearLayout>

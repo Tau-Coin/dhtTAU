@@ -185,9 +185,7 @@ public class HashImageView extends RoundImageView {
         while (true) {
             try {
                 byte[] data = daemon.getMsg(hash);
-                if (null == data) {
-                    daemon.requestMessageData(hash, friendPk);
-                } else {
+                if (data != null) {
                     return data;
                 }
             } catch (Exception e) {

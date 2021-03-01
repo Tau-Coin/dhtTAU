@@ -181,6 +181,11 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
                     listener.onShareClicked(user);
                 }
             });
+            holder.binding.stateProgress.setOnClickListener(v -> {
+                if(listener != null){
+                    listener.onProcessClicked(user);
+                }
+            });
             // 新朋友高亮显示
             boolean isNewScanFriend = StringUtil.isEquals(friendPk, user.publicKey);
             bgColor = isNewScanFriend ? R.color.color_bg : R.color.color_white;
@@ -192,6 +197,7 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
         void onItemClicked(UserAndFriend item);
         void onSelectClicked();
         void onShareClicked(UserAndFriend item);
+        void onProcessClicked(UserAndFriend item);
     }
 
     static abstract class ItemCallback extends DiffUtil.ItemCallback<UserAndFriend> {

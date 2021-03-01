@@ -178,9 +178,7 @@ public class HashTextView extends TextView {
                 byte[] data = daemon.getMsg(hash);
                 logger.debug("queryDataLoop hash::{}, empty::{}",
                         ByteUtil.toHexString(hash), null == data);
-                if (null == data) {
-                    daemon.requestMessageData(hash, friendPk);
-                } else {
+                if (data != null) {
                     return data;
                 }
             } catch (Exception e) {

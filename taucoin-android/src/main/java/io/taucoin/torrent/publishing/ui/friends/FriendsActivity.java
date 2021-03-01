@@ -237,16 +237,22 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
             intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
             setResult(RESULT_OK, intent);
             onBackPressed();
-        }else{
-            if (user.isAdded()) {
-                Intent intent = new Intent();
-                intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE_ADDED);
-                ActivityUtil.startActivity(intent, this, UserQRCodeActivity.class);
-            } else {
-                Intent intent = new Intent();
-                intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
-                ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
-            }
+        } else {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
+            intent.putExtra(IntentExtra.TYPE, UserDetailActivity.TYPE_FRIENDS);
+            ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
+        }
+    }
+
+    @Override
+    public void onProcessClicked(UserAndFriend user) {
+        if (user.isAdded()) {
+            Intent intent = new Intent();
+            intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE_ADDED);
+            ActivityUtil.startActivity(intent, this, UserQRCodeActivity.class);
+        } else {
+            onItemClicked(user);
         }
     }
 

@@ -21,6 +21,7 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
+import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityUserDetailBinding;
 import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -35,6 +36,8 @@ import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
  */
 public class UserDetailActivity extends BaseActivity implements View.OnClickListener,
         UserCommunityListAdapter.ClickListener {
+    public static final int TYPE_COMMUNITY = 0x01;
+    public static final int TYPE_FRIENDS = 0x02;
     private ActivityUserDetailBinding binding;
     private UserViewModel userViewModel;
     private CommunityViewModel communityViewModel;
@@ -43,6 +46,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
     private String publicKey;
     private String nickName;
     private UserAndFriend user;
+    private int type;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +57,17 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         communityViewModel.observeNeedStartDaemon();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_user_detail);
         binding.setListener(this);
+        initParam();
         initView();
+    }
+
+    /**
+     * 初始化参数
+     */
+    private void initParam() {
+        if (getIntent() != null) {
+            type = getIntent().getIntExtra(IntentExtra.TYPE, TYPE_COMMUNITY);
+        }
     }
 
     /**
@@ -87,6 +101,10 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
 
         // 获取用户详情数据
         userViewModel.getUserDetail(publicKey);
+
+        if (type == TYPE_FRIENDS) {
+            binding.tvBan.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -196,6 +214,11 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
                 Intent intent = new Intent();
                 intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
                 ActivityUtil.startActivity(intent, UserDetailActivity.this, UserQRCodeActivity.class);
+                break;
+            case R.id.tv_ban:
+                userViewModel.setUserBlacklist(publicKey, true);
+                ToastUtils.showShortToast(R.string.blacklist_successfully);
+                onBackPressed();
                 break;
         }
     }

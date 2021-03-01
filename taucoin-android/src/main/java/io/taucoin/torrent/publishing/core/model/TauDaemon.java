@@ -756,15 +756,6 @@ public class TauDaemon {
     }
 
     /**
-     * 请求消息数据
-     * @param hash
-     * @param friendPK
-     */
-    public void requestMessageData(byte[] hash, byte[] friendPK) {
-        getCommunicationManager().requestMessageData(hash, friendPK);
-    }
-
-    /**
      * 添加朋友
      * @param friendPk 朋友公钥
      */
