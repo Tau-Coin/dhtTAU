@@ -285,7 +285,7 @@
     <string name="qr_code_step_one">Share QR code to friends</string>
     <string name="qr_code_step_two">Scan friend’s QR code</string>
     <string name="qr_code_scan_friend_qr">Scan Friend\'s QR Code</string>
-    <string name="qr_code_scan_key_qr">Scan My Key QR Code</string>
+    <string name="qr_code_scan_key_qr">Scan Key QR Code</string>
     <string name="qr_code_scan_qr">Scan QR</string>
     <string name="qr_code_scan_cancelled">Cancelled</string>
     <string name="qr_code_not_found">No QR code found</string>
