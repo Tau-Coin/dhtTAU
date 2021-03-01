@@ -8,6 +8,7 @@ import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 public class FriendList {
+    // 可以放29个朋友的公钥
     private List<byte[]> friendList = new CopyOnWriteArrayList<>();
 
     private byte[] rlpEncoded; // 编码数据

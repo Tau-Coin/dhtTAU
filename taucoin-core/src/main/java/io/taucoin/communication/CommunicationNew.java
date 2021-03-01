@@ -910,9 +910,18 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
 
     @Override
     public void onKeyChanged(Pair<byte[], byte[]> newKey) {
-        init();
-        // TODO:: check
+        this.friendBannedTime.clear();
         this.friendLastSeen.clear();
+        this.messageMap.clear();
+        this.messageSenderMap.clear();
+        this.messageListMap.clear();
+        this.friendConfirmationRootToNotify.clear();
+        this.friendChattingTime.clear();
+        this.referredFriends.clear();
+        this.friendGossipChattingTime.clear();
+        this.chattingFriend.clear();
+
+        init();
     }
 
     /**
@@ -972,11 +981,14 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                             if (!friendListBloomFilter.matches(bloom)) {
                                 // 发现不在对方朋友列表
                                 friends.add(friend.getData());
+
+                                if (friends.size() >= ChainParam.MAX_FRIEND_LIST_SIZE) {
+                                    break;
+                                }
                             }
                         }
 
                         if (!friends.isEmpty()) {
-                            // TODO:: 测出最大容量限制
                             FriendList friendList = new FriendList(friends);
                             publishFriendList(peer.getData(), friendList);
                         }

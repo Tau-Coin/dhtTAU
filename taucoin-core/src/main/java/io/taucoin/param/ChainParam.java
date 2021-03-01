@@ -69,6 +69,8 @@ public class ChainParam {
 
     public static final int LATEST_MESSAGE_SIZE = 50;
 
+    public static final int MAX_FRIEND_LIST_SIZE = 29;
+
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
 
