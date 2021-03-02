@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.annotation.SuppressLint;
+import android.app.VoiceInteractor;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -91,8 +92,6 @@ public class MainActivity extends ScanTriggerActivity {
     private CommonDialog linkDialog;
     private User user;
     private Fragment currentFragment;
-    // 是否提示用户填写nickname
-    private AtomicBoolean nickNameTips = new AtomicBoolean(true);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -238,16 +237,7 @@ public class MainActivity extends ScanTriggerActivity {
         String showName = UsersUtil.getCurrentUserName(user);
         binding.drawer.tvNoteName.setText(showName);
         binding.drawer.roundButton.setText(StringUtil.getFirstLettersOfName(showName));
-        if (nickNameTips.compareAndSet(true, false)){
-            // 如果用户没有nickname, APP启动提示一次, 并且Activity在前台
-            logger.trace("showName::{}, defaultName::{}, isForeground::{}", showName,
-                    UsersUtil.getDefaultName(user.publicKey),
-                    AppUtil.isForeground(this, MainActivity.class.getName()));
-            if (StringUtil.isEquals(showName, UsersUtil.getDefaultName(user.publicKey)) &&
-                    AppUtil.isForeground(this, MainActivity.class.getName())) {
-                userViewModel.showEditNameDialog(this, user.publicKey);
-            }
-        }
+        userViewModel.promptUserFirstStartApp(this, user);
     }
 
     @Override

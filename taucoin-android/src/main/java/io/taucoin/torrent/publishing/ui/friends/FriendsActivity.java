@@ -240,7 +240,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         } else {
             Intent intent = new Intent();
             intent.putExtra(IntentExtra.PUBLIC_KEY, user.publicKey);
-            intent.putExtra(IntentExtra.TYPE, UserDetailActivity.TYPE_FRIENDS);
+            intent.putExtra(IntentExtra.TYPE, UserDetailActivity.TYPE_FRIEND_LIST);
             ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
         }
     }

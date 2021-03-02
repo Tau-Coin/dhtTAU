@@ -21,7 +21,6 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.ActivityUserDetailBinding;
 import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -37,7 +36,8 @@ import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 public class UserDetailActivity extends BaseActivity implements View.OnClickListener,
         UserCommunityListAdapter.ClickListener {
     public static final int TYPE_COMMUNITY = 0x01;
-    public static final int TYPE_FRIENDS = 0x02;
+    public static final int TYPE_FRIEND_LIST = 0x02;
+    public static final int TYPE_CHAT_PAGE = 0x02;
     private ActivityUserDetailBinding binding;
     private UserViewModel userViewModel;
     private CommunityViewModel communityViewModel;
@@ -102,7 +102,8 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         // 获取用户详情数据
         userViewModel.getUserDetail(publicKey);
 
-        if (type == TYPE_FRIENDS) {
+        boolean isMine = StringUtil.isEquals(publicKey, MainApplication.getInstance().getPublicKey());
+        if ((type == TYPE_CHAT_PAGE || type == TYPE_FRIEND_LIST) && !isMine) {
             binding.tvBan.setVisibility(View.VISIBLE);
         }
     }
@@ -137,7 +138,8 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
     private void showUserInfo(UserAndFriend userInfo) {
         boolean isMine = StringUtil.isEquals(publicKey, MainApplication.getInstance().getPublicKey());
         binding.tvAddToContact.setVisibility(!isMine && userInfo.isDiscovered() ? View.VISIBLE : View.GONE);
-        binding.tvStartChat.setVisibility(!isMine && userInfo.isConnected() ? View.VISIBLE : View.GONE);
+        boolean isShowChat = !isMine && userInfo.isConnected() && type != TYPE_CHAT_PAGE;
+        binding.tvStartChat.setVisibility(isShowChat ? View.VISIBLE : View.GONE);
         binding.tvShareQr.setVisibility(!isMine && userInfo.isAdded() ? View.VISIBLE : View.GONE);
         this.user = userInfo;
         String showName = UsersUtil.getCurrentUserName(user);
@@ -182,12 +184,12 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         shareQRDialog = new CommonDialog.Builder(this)
                 .setContentView(binding.getRoot())
                 .setHorizontal()
-                .setPositiveButton(R.string.contacts_share, (dialog, which) -> {
+                .setPositiveButton(R.string.common_share, (dialog, which) -> {
                         Intent intent = new Intent();
                         intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
                         ActivityUtil.startActivity(intent, UserDetailActivity.this, UserQRCodeActivity.class);
                     })
-                .setNegativeButton(R.string.contacts_later, (dialog, which) -> dialog.cancel())
+                .setNegativeButton(R.string.common_later, (dialog, which) -> dialog.cancel())
                 .setCanceledOnTouchOutside(false)
                 .create();
         shareQRDialog.show();

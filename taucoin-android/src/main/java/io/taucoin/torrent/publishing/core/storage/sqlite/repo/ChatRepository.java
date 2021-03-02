@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 import java.util.List;
 
 import io.reactivex.Observable;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 
@@ -53,7 +54,7 @@ public interface ChatRepository {
 
     int getNumMessages(String friendPk);
 
-    List<ChatMsg> getMessages(String friendPk, int pos, int loadSize);
+    List<ChatMsgAndUser> getMessages(String friendPk, int pos, int loadSize);
 
     /**
      * 获取未入队列的消息

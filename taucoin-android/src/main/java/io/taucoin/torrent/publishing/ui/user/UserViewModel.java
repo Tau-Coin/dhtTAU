@@ -40,6 +40,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.FileUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -51,12 +52,15 @@ import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
+import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.constant.KeyQRContent;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.constant.QRContent;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
+import io.taucoin.torrent.publishing.ui.main.MainActivity;
+import io.taucoin.torrent.publishing.ui.setting.DataCostActivity;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -632,5 +636,53 @@ public class UserViewModel extends AndroidViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe();
         disposables.add(disposable);
+    }
+
+    /**
+     * 第一次APP启动，提示用户操作：设置昵称和每日流量限制
+     * @param activity
+     * @param user
+     */
+    public void promptUserFirstStartApp(AppCompatActivity activity, User user) {
+        String firstStartKey = activity.getString(R.string.pref_key_first_start);
+        boolean isFirstStart = settingsRepo.getBooleanValue(firstStartKey, true);
+        boolean isForeground = AppUtil.isForeground(activity, MainActivity.class.getName());
+        // 如果APP是第一次启动, 并且MainActivity也在前台
+        if (isFirstStart && isForeground) {
+            settingsRepo.setBooleanValue(firstStartKey, false);
+            // 如果用户没有nickname
+            String showName = UsersUtil.getCurrentUserName(user);
+            String defaultName = UsersUtil.getDefaultName(user.publicKey);
+            logger.trace("promptUserFirstStart showName::{}, defaultName::{}", showName, defaultName);
+            if (StringUtil.isEquals(showName, defaultName)) {
+                showEditNameDialog(activity, user.publicKey);
+            }
+            promptUserSelectDailyDataLimit(activity);
+        }
+    }
+
+    /**
+     * 提示用户设置每日流量限制
+     * @param activity
+     */
+    private void promptUserSelectDailyDataLimit(AppCompatActivity activity) {
+        if (commonDialog != null && commonDialog.isShowing()) {
+            return;
+        }
+        ViewDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
+                R.layout.view_dialog, null, false);
+        binding.tvMsg.setText(R.string.main_daily_data_limit_prompt);
+        binding.tvMsg.setTextColor(activity.getResources().getColor(R.color.color_black));
+        commonDialog = new CommonDialog.Builder(activity)
+                .setContentView(binding.getRoot())
+                .setHorizontal()
+                .setPositiveButton(R.string.common_set, (dialog, which) -> {
+                    dialog.dismiss();
+                    ActivityUtil.startActivity(activity, DataCostActivity.class);
+                })
+                .setNegativeButton(R.string.common_default, (dialog, which) -> dialog.dismiss())
+                .setCanceledOnTouchOutside(false)
+                .create();
+        commonDialog.show();
     }
 }

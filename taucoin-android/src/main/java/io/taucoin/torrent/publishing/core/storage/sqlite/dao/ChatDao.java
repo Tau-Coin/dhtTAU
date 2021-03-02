@@ -9,6 +9,7 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Observable;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 
@@ -86,7 +87,7 @@ public interface ChatDao {
      */
     @Query(QUERY_MESSAGES_BY_FRIEND_PK)
     @Transaction
-    List<ChatMsg> getMessages(String senderPk, String friendPk, int startPosition, int loadSize);
+    List<ChatMsgAndUser> getMessages(String senderPk, String friendPk, int startPosition, int loadSize);
 
     @Query(QUERY_UNSENT_MESSAGES)
     List<ChatMsg> getUnsentMessages();

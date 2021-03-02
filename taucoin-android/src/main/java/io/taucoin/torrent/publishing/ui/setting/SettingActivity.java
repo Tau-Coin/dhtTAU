@@ -159,6 +159,7 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
                 viewModel.showSaveSeedDialog(this, false);
                 break;
             case R.id.tv_username:
+            case R.id.tv_username_title:
                 String publicKey = MainApplication.getInstance().getPublicKey();
                 viewModel.showEditNameDialog(this, publicKey);
                 break;

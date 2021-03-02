@@ -7,9 +7,6 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.frostwire.jlibtorrent.Ed25519;
-import com.frostwire.jlibtorrent.Pair;
-
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
@@ -18,6 +15,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -31,13 +29,11 @@ import io.taucoin.torrent.publishing.ui.customviews.HashImageView;
 import io.taucoin.torrent.publishing.ui.customviews.HashTextView;
 import io.taucoin.torrent.publishing.ui.customviews.RoundButton;
 import io.taucoin.types.MessageType;
-import io.taucoin.util.ByteUtil;
-import io.taucoin.util.CryptoUtil;
 
 /**
  * 聊天消息的Adapter
  */
-public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.ViewHolder> {
+public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAdapter.ViewHolder> {
 
     enum ViewType {
         LEFT_TEXT,
@@ -108,7 +104,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        ChatMsg previousChat = null;
+        ChatMsgAndUser previousChat = null;
         if (position > 0) {
             previousChat = getItem(position - 1);
         }
@@ -139,33 +135,36 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             this.cryptoKey = cryptoKey;
         }
 
-        void bindTextRight(ItemTextRightBinding binding, ChatMsg msg, ChatMsg previousChat) {
+        void bindTextRight(ItemTextRightBinding binding, ChatMsgAndUser msg, ChatMsgAndUser previousChat) {
             if (null == binding || null == msg) {
                 return;
             }
             showStatusView(binding.ivStats, binding.tvProgress, msg, true);
-            bindText(binding.roundButton, binding.tvTime, binding.tvMsg,
-                    binding.tvProgress, msg, previousChat, true);
+            bindText(binding.roundButton, binding.tvTime, binding.tvMsg, msg, previousChat);
         }
 
-        void bindText(ItemTextBinding binding, ChatMsg msg, ChatMsg previousChat) {
+        void bindText(ItemTextBinding binding, ChatMsgAndUser msg, ChatMsgAndUser previousChat) {
             if (null == binding || null == msg) {
                 return;
             }
             showStatusView(binding.ivStats, binding.tvProgress, msg, false);
-            bindText(binding.roundButton, binding.tvTime, binding.tvMsg,
-                    binding.tvProgress, msg, previousChat, false);
+            bindText(binding.roundButton, binding.tvTime, binding.tvMsg, msg, previousChat);
         }
 
         private void bindText(RoundButton roundButton, TextView tvTime, HashTextView tvMsg,
-                      ProgressBar tvProgress, ChatMsg msg, ChatMsg previousChat, boolean isMine) {
+                              ChatMsgAndUser msg, ChatMsgAndUser previousChat) {
             if (null == msg) {
                 return;
             }
             roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
 
-            String showName = UsersUtil.getDefaultName(msg.senderPk);
+            String showName = UsersUtil.getShowName(msg.sender, msg.senderPk);
             roundButton.setText(StringUtil.getFirstLettersOfName(showName));
+            roundButton.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onUserClicked(msg);
+                }
+            });
 
             boolean isShowTime = isShowTime(msg, previousChat);
             if (isShowTime) {
@@ -193,7 +192,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             }
         }
 
-        private boolean isShowTime(ChatMsg chat, ChatMsg previousChat) {
+        private boolean isShowTime(ChatMsgAndUser chat, ChatMsgAndUser previousChat) {
             if (previousChat != null) {
                 int interval = DateUtil.getSeconds(previousChat.timestamp, chat.timestamp);
                 return interval > 2 * 60;
@@ -201,33 +200,35 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
             return true;
         }
 
-        void bindPictureRight(ItemPictureRightBinding binding, ChatMsg msg, ChatMsg previousChat) {
+        void bindPictureRight(ItemPictureRightBinding binding, ChatMsgAndUser msg, ChatMsgAndUser previousChat) {
             if (null == binding || null == msg) {
                 return;
             }
             showStatusView(binding.ivStats, binding.tvProgress, msg, true);
-            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage,
-                    binding.tvProgress, msg, previousChat, true);
+            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage, msg, previousChat);
         }
 
-        void bindPicture(ItemPictureBinding binding, ChatMsg msg, ChatMsg previousChat) {
+        void bindPicture(ItemPictureBinding binding, ChatMsgAndUser msg, ChatMsgAndUser previousChat) {
             if(null == binding || null == msg){
                 return;
             }
             showStatusView(binding.ivStats, binding.tvProgress, msg, false);
-            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage,
-                    binding.tvProgress, msg, previousChat, false);
+            bindPicture(binding.roundButton, binding.tvTime, binding.tvImage, msg, previousChat);
         }
 
         private void bindPicture(RoundButton roundButton, TextView tvTime, HashImageView tvImage,
-                 ProgressBar tvProgress, ChatMsg msg, ChatMsg previousChat, boolean isMine) {
+                                 ChatMsgAndUser msg, ChatMsgAndUser previousChat) {
             if (null == msg) {
                 return;
             }
             roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
-
-            String showName = UsersUtil.getDefaultName(msg.senderPk);
+            String showName = UsersUtil.getShowName(msg.sender, msg.senderPk);
             roundButton.setText(StringUtil.getFirstLettersOfName(showName));
+            roundButton.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onUserClicked(msg);
+                }
+            });
 
             boolean isShowTime = isShowTime(msg, previousChat);
             if (isShowTime) {
@@ -241,17 +242,18 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsg, ChatListAdapter.V
 
     public interface ClickListener {
         void onMsgLogsClicked(ChatMsg msg);
+        void onUserClicked(ChatMsg msg);
 //        void onItemLongClicked(View view, MsgAndReply tx);
     }
 
-    private static final DiffUtil.ItemCallback<ChatMsg> diffCallback = new DiffUtil.ItemCallback<ChatMsg>() {
+    private static final DiffUtil.ItemCallback<ChatMsgAndUser> diffCallback = new DiffUtil.ItemCallback<ChatMsgAndUser>() {
         @Override
-        public boolean areContentsTheSame(@NonNull ChatMsg oldItem, @NonNull ChatMsg newItem) {
+        public boolean areContentsTheSame(@NonNull ChatMsgAndUser oldItem, @NonNull ChatMsgAndUser newItem) {
             return oldItem.equals(newItem) && StringUtil.isEquals(oldItem.content, newItem.content);
         }
 
         @Override
-        public boolean areItemsTheSame(@NonNull ChatMsg oldItem, @NonNull ChatMsg newItem) {
+        public boolean areItemsTheSame(@NonNull ChatMsgAndUser oldItem, @NonNull ChatMsgAndUser newItem) {
             return oldItem.equals(newItem);
         }
     };

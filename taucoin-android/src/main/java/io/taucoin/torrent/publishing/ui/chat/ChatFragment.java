@@ -35,6 +35,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -46,6 +47,7 @@ import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.MsgLogsDialog;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
+import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.types.MessageType;
 
 import static android.app.Activity.RESULT_OK;
@@ -247,6 +249,14 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::showMsgLogsDialog);
         disposables.add(logsDisposable);
+    }
+
+    @Override
+    public void onUserClicked(ChatMsg msg) {
+        Intent intent = new Intent();
+        intent.putExtra(IntentExtra.PUBLIC_KEY, msg.senderPk);
+        intent.putExtra(IntentExtra.TYPE, UserDetailActivity.TYPE_CHAT_PAGE);
+        ActivityUtil.startActivity(intent, this, UserDetailActivity.class);
     }
 
     /**

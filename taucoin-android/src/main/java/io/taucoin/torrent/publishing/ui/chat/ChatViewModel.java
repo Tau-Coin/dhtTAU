@@ -23,6 +23,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -87,7 +88,7 @@ public class ChatViewModel extends AndroidViewModel {
      * @param friendPK 朋友公钥
      * @return LiveData
      */
-    LiveData<PagedList<ChatMsg>> observerChat(String friendPK) {
+    LiveData<PagedList<ChatMsgAndUser>> observerChat(String friendPK) {
         sourceFactory.setFriendPk(friendPK);
         return new LivePagedListBuilder<>(sourceFactory, Page.getPageListConfig())
                 .setInitialLoadKey(Page.PAGE_SIZE)

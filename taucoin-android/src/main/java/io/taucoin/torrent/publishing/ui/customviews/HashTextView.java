@@ -137,7 +137,7 @@ public class HashTextView extends TextView {
         if (unsent) {
             String hash = ByteUtil.toHexString(textHash);
             ChatMsg msg = chatRepo.queryChatMsg(friendPk, hash);
-            if (msg.unsent == 0) {
+            if (msg != null && msg.unsent == 0) {
                 if (StringUtil.isNotEmpty(msg.content)) {
                     content = msg.content;
                 }

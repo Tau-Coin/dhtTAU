@@ -37,7 +37,7 @@ public class HashImageView extends RoundImageView {
     private static final Logger logger = LoggerFactory.getLogger("HashImageView");
     private static final int heightLimit = 300;
     private static final int widthLimit = 300;
-    private static final int loadBitmapLimit = 10;
+    private static final int loadBitmapLimit = 20;
     private ChatRepository chatRepo;
     private TauDaemon daemon;
     private String imageHash;
@@ -149,7 +149,7 @@ public class HashImageView extends RoundImageView {
         if (unsent) {
             String hash = ByteUtil.toHexString(imageHash);
             ChatMsg msg = chatRepo.queryChatMsg(friendPk, hash);
-            if (msg.unsent == 0) {
+            if (msg != null && msg.unsent == 0) {
                 if (StringUtil.isNotEmpty(msg.content)) {
                     content = ByteUtil.toByte(msg.content);
                 }
