@@ -20,6 +20,7 @@ public class Message {
     private byte[] rawContent; // 加密之前的原始
 
     private byte[] hash; // gossip hash 入口
+    private byte[] sha3Hash; // 用于bloom，因为bencodeHash前面一部分字节完全一样不随机
     private byte[] encode; // 缓存编码
     private boolean parsed = false; // 是否解码标志
 
@@ -141,6 +142,14 @@ public class Message {
         }
 
         return this.hash;
+    }
+
+    public byte[] getSha3Hash() {
+        if (null == this.sha3Hash) {
+            this.sha3Hash = HashUtil.sha3(getEncoded());
+        }
+
+        return this.sha3Hash;
     }
 
     private void parseRLP() {

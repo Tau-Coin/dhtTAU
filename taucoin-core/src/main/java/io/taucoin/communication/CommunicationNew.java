@@ -479,7 +479,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         LinkedList<Message> messages1 = this.messageListMap.get(friendPair1);
         if (null != messages1) {
             for (Message message: messages1) {
-                Bloom bloom = Bloom.create(message.getHash());
+                Bloom bloom = Bloom.create(message.getSha3Hash());
                 senderBloomFilter.or(bloom);
             }
         }
@@ -488,13 +488,13 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         LinkedList<Message> messages2 = this.messageListMap.get(friendPair2);
         if (null != messages2) {
             for (Message message: messages2) {
-                Bloom bloom = Bloom.create(message.getHash());
+                Bloom bloom = Bloom.create(message.getSha3Hash());
                 receiverBloomFilter.or(bloom);
             }
         }
 
         for (ByteArrayWrapper peer: this.friends) {
-            Bloom bloom = Bloom.create(HashUtil.bencodeHash(peer.getData()));
+            Bloom bloom = Bloom.create(HashUtil.sha3(peer.getData()));
             friendListBloomFilter.or(bloom);
         }
 
@@ -910,6 +910,9 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
 
     @Override
     public void onKeyChanged(Pair<byte[], byte[]> newKey) {
+        ByteArrayWrapper key = new ByteArrayWrapper(newKey.first);
+        this.friends.remove(key);
+        this.friendsFromRemote.remove(key);
 //        this.friendBannedTime.clear();
         this.friendLastSeen.clear();
         this.messageMap.clear();
@@ -978,7 +981,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                         // 是另外一台设备
                         List<byte[]> friends = new ArrayList<>();
                         for (ByteArrayWrapper friend: this.friends) {
-                            Bloom bloom = Bloom.create(HashUtil.bencodeHash(friend.getData()));
+                            Bloom bloom = Bloom.create(HashUtil.sha3(friend.getData()));
                             if (!friendListBloomFilter.matches(bloom)) {
                                 // 发现不在对方朋友列表
                                 friends.add(friend.getData());
@@ -1000,7 +1003,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                         if (null != list1) {
                             boolean publish = false;
                             for (Message message: list1) {
-                                Bloom bloom = Bloom.create(message.getHash());
+                                Bloom bloom = Bloom.create(message.getSha3Hash());
                                 if (!bloom.matches(receiverBloomFilter)) {
                                     // 不匹配则说明缺少该消息，发出一个消息即可
                                     if (!publish) {
@@ -1021,7 +1024,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                         if (null != list2) {
                             boolean match = true;
                             for (Message message: list2) {
-                                Bloom bloom = Bloom.create(message.getHash());
+                                Bloom bloom = Bloom.create(message.getSha3Hash());
                                 if (!bloom.matches(senderBloomFilter)) {
                                     // 发现不匹配
                                     match = false;

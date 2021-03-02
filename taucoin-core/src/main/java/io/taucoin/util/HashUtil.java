@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
 
 /**
  * hash utils used to calculate bytes length at least more than 20 bytes
@@ -34,6 +36,10 @@ import java.security.NoSuchAlgorithmException;
  */
 public class HashUtil {
     private static final Logger logger = LoggerFactory.getLogger("HashUtil");
+
+    private static final Provider CRYPTO_PROVIDER = Security.getProvider("crypto.providerName");
+
+    private static final String HASH_256_ALGORITHM_NAME = "crypto.hash.alg256";
 
     public static byte[] sha1hash(byte[] bytes){
        MessageDigest digest;
@@ -45,6 +51,19 @@ public class HashUtil {
        byte_vector bvs = Vectors.bytes2byte_vector(digest.digest(bytes));
        sha1_hash hash = new sha1_hash(bvs);
        return  Vectors.byte_vector2bytes(hash.to_bytes());
+    }
+
+    public static byte[] sha3(byte[] input) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
+            digest.update(input);
+            return digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            logger.error("Can't find such algorithm", e);
+            throw new RuntimeException(e);
+        }
+
     }
 
     public static byte[] bencodeHash(byte[] bytes){
