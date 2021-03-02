@@ -84,6 +84,7 @@ public class UserViewModel extends AndroidViewModel {
     private MutableLiveData<QRContent> qrContent = new MutableLiveData<>();
     private CommonDialog commonDialog;
     private CommonDialog editNameDialog;
+    private CommonDialog dailyDataLimitDialog;
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
     private UserSourceFactory sourceFactory;
@@ -116,6 +117,10 @@ public class UserViewModel extends AndroidViewModel {
         if(editNameDialog != null && editNameDialog.isShowing()){
             editNameDialog.dismiss();
             editNameDialog = null;
+        }
+        if(dailyDataLimitDialog != null && dailyDataLimitDialog.isShowing()){
+            dailyDataLimitDialog.dismiss();
+            dailyDataLimitDialog = null;
         }
         if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
             observeDaemonRunning.dispose();
@@ -666,14 +671,14 @@ public class UserViewModel extends AndroidViewModel {
      * @param activity
      */
     private void promptUserSelectDailyDataLimit(AppCompatActivity activity) {
-        if (commonDialog != null && commonDialog.isShowing()) {
+        if (dailyDataLimitDialog != null && dailyDataLimitDialog.isShowing()) {
             return;
         }
         ViewDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
                 R.layout.view_dialog, null, false);
         binding.tvMsg.setText(R.string.main_daily_data_limit_prompt);
         binding.tvMsg.setTextColor(activity.getResources().getColor(R.color.color_black));
-        commonDialog = new CommonDialog.Builder(activity)
+        dailyDataLimitDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
                 .setHorizontal()
                 .setPositiveButton(R.string.common_set, (dialog, which) -> {
@@ -683,6 +688,6 @@ public class UserViewModel extends AndroidViewModel {
                 .setNegativeButton(R.string.common_default, (dialog, which) -> dialog.dismiss())
                 .setCanceledOnTouchOutside(false)
                 .create();
-        commonDialog.show();
+        dailyDataLimitDialog.show();
     }
 }
