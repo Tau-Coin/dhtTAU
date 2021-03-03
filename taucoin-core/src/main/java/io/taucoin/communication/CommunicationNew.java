@@ -255,7 +255,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         // 更新成功
         if (updated) {
             // 如果更新了消息列表，则判断是否列表长度过长，过长则删掉旧数据，然后停止循环
-            if (linkedList.size() > ChainParam.LATEST_MESSAGE_SIZE) {
+            if (linkedList.size() > ChainParam.BLOOM_FILTER_MESSAGE_SIZE) {
                 linkedList.remove(0);
             }
 
@@ -1023,17 +1023,14 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                         FriendPair friendPair2 = new FriendPair(peer.getData(), pubKey);
                         LinkedList<Message> list2 = this.messageListMap.get(friendPair2);
                         if (null != list2) {
-                            boolean match = true;
+                            // 自己合成bloom
+                            Bloom bloom = new Bloom();
                             for (Message message: list2) {
-                                Bloom bloom = Bloom.create(message.getSha1Hash());
-                                if (!senderBloomFilter.matches(bloom)) {
-                                    // 发现不匹配
-                                    match = false;
-                                    break;
-                                }
+                                Bloom msgBloom = Bloom.create(message.getSha1Hash());
+                                bloom.or(msgBloom);
                             }
 
-                            if (match) {
+                            if (senderBloomFilter.equals(bloom)) {
                                 // 两者bloom filter一样，则发布在线信号
                                 publishFriendOnlineSignal(peer.getData());
                             }
