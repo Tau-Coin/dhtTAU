@@ -1005,7 +1005,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                             boolean publish = false;
                             for (Message message: list1) {
                                 Bloom bloom = Bloom.create(message.getSha1Hash());
-                                if (!bloom.matches(receiverBloomFilter)) {
+                                if (!receiverBloomFilter.matches(bloom)) {
                                     // 不匹配则说明缺少该消息，发出一个消息即可
                                     if (!publish) {
                                         publishMessage(peer.getData(), message);
@@ -1026,7 +1026,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                             boolean match = true;
                             for (Message message: list2) {
                                 Bloom bloom = Bloom.create(message.getSha1Hash());
-                                if (!bloom.matches(senderBloomFilter)) {
+                                if (!senderBloomFilter.matches(bloom)) {
                                     // 发现不匹配
                                     match = false;
                                     break;
