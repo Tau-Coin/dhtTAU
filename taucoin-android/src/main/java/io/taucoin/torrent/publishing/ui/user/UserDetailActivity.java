@@ -37,7 +37,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         UserCommunityListAdapter.ClickListener {
     public static final int TYPE_COMMUNITY = 0x01;
     public static final int TYPE_FRIEND_LIST = 0x02;
-    public static final int TYPE_CHAT_PAGE = 0x02;
+    public static final int TYPE_CHAT_PAGE = 0x03;
     private ActivityUserDetailBinding binding;
     private UserViewModel userViewModel;
     private CommunityViewModel communityViewModel;
