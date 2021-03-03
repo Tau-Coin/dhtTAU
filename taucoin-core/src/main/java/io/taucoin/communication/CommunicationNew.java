@@ -151,7 +151,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                     this.messageListMap.put(friendPair1, linkedList1);
 
                     // 获取朋友发给我的最近的消息
-                    FriendPair friendPair2 = new FriendPair(pubKey, friend);
+                    FriendPair friendPair2 = new FriendPair(friend, pubKey);
                     LinkedList<Message> linkedList2 = new LinkedList<>();
                     // 获取最新消息的编码
                     byte[] encode2 = this.messageDB.getLatestMessageHashListEncode(friendPair2);
@@ -255,7 +255,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         // 更新成功
         if (updated) {
             // 如果更新了消息列表，则判断是否列表长度过长，过长则删掉旧数据，然后停止循环
-            if (linkedList.size() >= ChainParam.LATEST_MESSAGE_SIZE) {
+            if (linkedList.size() > ChainParam.LATEST_MESSAGE_SIZE) {
                 linkedList.remove(0);
             }
 
@@ -479,7 +479,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         LinkedList<Message> messages1 = this.messageListMap.get(friendPair1);
         if (null != messages1) {
             for (Message message: messages1) {
-                Bloom bloom = Bloom.create(message.getSha3Hash());
+                Bloom bloom = Bloom.create(message.getSha1Hash());
                 senderBloomFilter.or(bloom);
             }
         }
@@ -488,13 +488,13 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
         LinkedList<Message> messages2 = this.messageListMap.get(friendPair2);
         if (null != messages2) {
             for (Message message: messages2) {
-                Bloom bloom = Bloom.create(message.getSha3Hash());
+                Bloom bloom = Bloom.create(message.getSha1Hash());
                 receiverBloomFilter.or(bloom);
             }
         }
 
         for (ByteArrayWrapper peer: this.friends) {
-            Bloom bloom = Bloom.create(HashUtil.sha3(peer.getData()));
+            Bloom bloom = Bloom.create(HashUtil.sha1hash(peer.getData()));
             friendListBloomFilter.or(bloom);
         }
 
@@ -981,7 +981,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                         // 是另外一台设备
                         List<byte[]> friends = new ArrayList<>();
                         for (ByteArrayWrapper friend: this.friends) {
-                            Bloom bloom = Bloom.create(HashUtil.sha3(friend.getData()));
+                            Bloom bloom = Bloom.create(HashUtil.sha1hash(friend.getData()));
                             if (!friendListBloomFilter.matches(bloom)) {
                                 // 发现不在对方朋友列表
                                 friends.add(friend.getData());
@@ -999,11 +999,12 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                     } else {
                         // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
                         FriendPair friendPair1 = new FriendPair(pubKey, peer.getData());
-                        LinkedList<Message> list1 = this.messageListMap.get(friendPair1);
+                        List<Message> list1 = this.messageListMap.get(friendPair1);
+
                         if (null != list1) {
                             boolean publish = false;
                             for (Message message: list1) {
-                                Bloom bloom = Bloom.create(message.getSha3Hash());
+                                Bloom bloom = Bloom.create(message.getSha1Hash());
                                 if (!bloom.matches(receiverBloomFilter)) {
                                     // 不匹配则说明缺少该消息，发出一个消息即可
                                     if (!publish) {
@@ -1024,7 +1025,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
                         if (null != list2) {
                             boolean match = true;
                             for (Message message: list2) {
-                                Bloom bloom = Bloom.create(message.getSha3Hash());
+                                Bloom bloom = Bloom.create(message.getSha1Hash());
                                 if (!bloom.matches(senderBloomFilter)) {
                                     // 发现不匹配
                                     match = false;
