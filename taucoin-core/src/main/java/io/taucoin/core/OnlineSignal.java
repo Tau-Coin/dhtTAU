@@ -12,9 +12,9 @@ public class OnlineSignal {
     Bloom senderBloomFilter = new Bloom();
     Bloom receiverBloomFilter = new Bloom();
     Bloom friendListBloomFilter = new Bloom();
-    byte[] chattingFriend;
-    BigInteger chattingTime;
-    private List<GossipItem> gossipItemList = new CopyOnWriteArrayList<>();
+    byte[] chattingFriend; // 当前正在交谈的朋友
+    BigInteger chattingTime; // 正在交谈的时间
+    private List<GossipItem> gossipItemList = new CopyOnWriteArrayList<>(); // 打听到的信息
 
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志

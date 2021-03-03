@@ -33,7 +33,6 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.types.Message;
 import io.taucoin.util.ByteUtil;
-import io.taucoin.util.CryptoUtil;
 
 /**
  * MsgListener处理程序
@@ -70,7 +69,7 @@ class MsgListenHandler {
                 String friendPkStr = ByteUtil.toHexString(friendPk);
 
                 String hash = ByteUtil.toHexString(message.getHash());
-                String previousHash = ByteUtil.toHexString(message.getPreviousHash());
+                String previousHash = ByteUtil.toHexString(message.getLogicMsgHash());
                 long sentTime = message.getTimestamp().longValue();
                 long receivedTime = DateUtil.getTime();
                 String sentTimeStr = DateUtil.formatTime(sentTime, DateUtil.pattern6);

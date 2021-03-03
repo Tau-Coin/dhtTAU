@@ -152,7 +152,7 @@ public class HashTextView extends TextView {
             Message msg = new Message(fragmentEncoded);
             msg.decrypt(cryptoKey);
             content = MsgSplitUtil.textMsgToString(msg.getRawContent());
-            previousMsgHash = msg.getPreviousHash();
+            previousMsgHash = msg.getLogicMsgHash();
         }
         if (!emitter.isCancelled()) {
             if (StringUtil.isNotEmpty(content)) {

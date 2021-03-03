@@ -164,7 +164,7 @@ public class HashImageView extends RoundImageView {
             Message msg = new Message(fragmentEncoded);
             msg.decrypt(cryptoKey);
             content = msg.getRawContent();
-            previousMsgHash = msg.getPreviousHash();
+            previousMsgHash = msg.getLogicMsgHash();
         }
         if (!emitter.isCancelled()) {
             refreshImageView(content, emitter);
