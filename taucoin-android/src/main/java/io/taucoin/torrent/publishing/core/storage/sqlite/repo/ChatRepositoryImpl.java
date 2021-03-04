@@ -56,8 +56,8 @@ public class ChatRepositoryImpl implements ChatRepository{
     }
 
     @Override
-    public ChatMsg queryChatMsg(String friendPk, String hash) {
-        return db.chatDao().queryChatMsg(friendPk, hash);
+    public ChatMsg queryChatMsg(String senderPk, String hash) {
+        return db.chatDao().queryChatMsg(senderPk, hash);
     }
 
     /**

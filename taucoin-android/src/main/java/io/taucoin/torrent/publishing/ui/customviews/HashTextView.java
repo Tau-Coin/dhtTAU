@@ -35,7 +35,7 @@ public class HashTextView extends TextView {
     private static final Logger logger = LoggerFactory.getLogger("HashTextView");
     private TauDaemon daemon;
     private String textHash;
-    private byte[] friendPk;
+    private byte[] senderPk;
     private byte[] cryptoKey;
     private boolean unsent;
     private Disposable disposable;
@@ -65,7 +65,7 @@ public class HashTextView extends TextView {
         setText(textBuilder);
     }
 
-    public void setTextHash(boolean unsent, String textHash, String friendPk, byte[] cryptoKey) {
+    public void setTextHash(boolean unsent, String textHash, String senderPk, byte[] cryptoKey) {
         // 如果是图片已加载，并且显示的图片不变，直接返回
         if (StringUtil.isEmpty(textHash)) {
             return;
@@ -77,9 +77,9 @@ public class HashTextView extends TextView {
         this.cryptoKey = cryptoKey;
         this.textHash = textHash;
         this.unsent = unsent;
-        this.friendPk = ByteUtil.toByte(friendPk);
+        this.senderPk = ByteUtil.toByte(senderPk);
         textBuilder = new StringBuilder();
-        setTextHash(ByteUtil.toByte(textHash), friendPk);
+        setTextHash(ByteUtil.toByte(textHash), senderPk);
     }
 
     /**
@@ -123,11 +123,11 @@ public class HashTextView extends TextView {
     /**
      * 递归显示文本消息切分的片段数据
      * @param textHash
-     * @param friendPk
+     * @param senderPk
      * @param emitter
      * @throws Exception
      */
-    private void showFragmentData(boolean unsent, byte[] textHash, String friendPk,
+    private void showFragmentData(boolean unsent, byte[] textHash, String senderPk,
                                   FlowableEmitter<Boolean> emitter) throws Exception {
         if (emitter.isCancelled()) {
             return;
@@ -135,7 +135,7 @@ public class HashTextView extends TextView {
         String content = null;
         if (unsent) {
             String hash = ByteUtil.toHexString(textHash);
-            ChatMsg msg = chatRepo.queryChatMsg(friendPk, hash);
+            ChatMsg msg = chatRepo.queryChatMsg(senderPk, hash);
             if (msg != null && msg.unsent == 0) {
                 content = msg.content;
             }
@@ -182,7 +182,7 @@ public class HashTextView extends TextView {
         // 加在View
         if (reload && StringUtil.isNotEmpty(textHash)
                 && disposable != null && disposable.isDisposed()) {
-            setTextHash(unsent, textHash, ByteUtil.toHexString(friendPk), cryptoKey);
+            setTextHash(unsent, textHash, ByteUtil.toHexString(senderPk), cryptoKey);
         }
         reload = false;
     }

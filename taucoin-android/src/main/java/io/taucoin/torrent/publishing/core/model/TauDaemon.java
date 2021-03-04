@@ -106,7 +106,7 @@ public class TauDaemon {
         logger.info("TauController deviceID::{}, repoPath::{}", deviceID, repoPath);
         tauController = new TauController(repoPath, androidLeveldbFactory, deviceID.getBytes());
         tauController.registerListener(daemonListener);
-        tauController.registerMsgListener(msgListener);
+        tauController.registerMsgListener(msgListenHandler);
         initLocalParam();
     }
 
@@ -131,12 +131,26 @@ public class TauDaemon {
             return;
         }
         // 更新用户登录的设备信息
-        String deviceID = DeviceUtils.getCustomDeviceID(appContext);
-        msgListenHandler.onNewDeviceID(deviceID.getBytes());
+        updateUserDeviceInfo();
         this.seed = seed;
         logger.debug("updateSeed ::{}", seed);
         byte[] bytesSeed = ByteUtil.toByte(seed);
         tauController.updateKey(bytesSeed);
+    }
+
+    /**
+     * 更新用户登录的设备信息
+     */
+    private void updateUserDeviceInfo() {
+        Disposable disposable = Flowable.create(emitter -> {
+            String deviceID = DeviceUtils.getCustomDeviceID(appContext);
+            msgListenHandler.onNewDeviceID(deviceID.getBytes());
+            logger.debug("updateUserDeviceInfo deviceID::{}", deviceID);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        disposables.add(disposable);
     }
 
     /**
@@ -222,42 +236,6 @@ public class TauDaemon {
 
         }, BackpressureStrategy.LATEST);
     }
-
-    /**
-     * 链端事件监听逻辑处理
-     */
-    private final MsgListener msgListener = new MsgListener() {
-
-        @Override
-        public void onNewMessage(byte[] friend, Message message) {
-            msgListenHandler.onNewMessage(friend, message);
-        }
-
-        @Override
-        public void onNewDeviceID(byte[] deviceID) {
-            msgListenHandler.onNewDeviceID(deviceID);
-        }
-
-        @Override
-        public void onNewFriendFromMultiDevice(byte[] friend) {
-            msgListenHandler.onNewFriendFromMultiDevice(friend);
-        }
-
-        @Override
-        public void onReadMessageRoot(byte[] friend, byte[] root) {
-            msgListenHandler.onReceivedMessageRoot(friend, root);
-        }
-
-        @Override
-        public void onDiscoveryFriend(byte[] friend) {
-            msgListenHandler.onDiscoveryFriend(friend);
-        }
-
-        @Override
-        public void onMessageStatus(byte[] friend, byte[] root, MsgStatus msgStatus) {
-            msgListenHandler.onMessageStatus(friend, root, msgStatus);
-        }
-    };
 
     /**
      * 链端事件监听逻辑处理

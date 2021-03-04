@@ -41,7 +41,7 @@ public class HashImageView extends RoundImageView {
     private ChatRepository chatRepo;
     private TauDaemon daemon;
     private String imageHash;
-    private byte[] friendPk;
+    private byte[] senderPk;
     private byte[] cryptoKey;
     private boolean unsent;
     private byte[] totalBytes;
@@ -84,9 +84,9 @@ public class HashImageView extends RoundImageView {
      * 设置ImageHash
      * @param imageHash
      * @param unsent
-     * @param friendPk
+     * @param senderPk
      */
-    public void setImageHash(boolean unsent, String imageHash, String friendPk, byte[] cryptoKey) {
+    public void setImageHash(boolean unsent, String imageHash, String senderPk, byte[] cryptoKey) {
         // 如果是图片已加载，并且显示的图片不变，直接返回
         if (isLoadSuccess && totalBytes != null
                 && StringUtil.isEquals(imageHash, this.imageHash)) {
@@ -95,15 +95,15 @@ public class HashImageView extends RoundImageView {
         this.cryptoKey = cryptoKey;
         this.imageHash = imageHash;
         this.unsent = unsent;
-        this.friendPk = ByteUtil.toByte(friendPk);
-        setImageHash(ByteUtil.toByte(imageHash), friendPk);
+        this.senderPk = ByteUtil.toByte(senderPk);
+        setImageHash(ByteUtil.toByte(imageHash), senderPk);
     }
 
     /**
      * 设置ImageHash
      * @param imageHash
      */
-    private void setImageHash(byte[] imageHash, String friendPk) {
+    private void setImageHash(byte[] imageHash, String senderPk) {
         logger.debug("setImageHash start::{}", this.imageHash);
         showImage(null);
         isLoadSuccess = false;
@@ -117,7 +117,7 @@ public class HashImageView extends RoundImageView {
                 if (imageHash != null) {
                     logger.debug("showHorizontalData start");
                     long startTime = System.currentTimeMillis();
-                    showFragmentData(this.unsent, imageHash, friendPk, emitter);
+                    showFragmentData(this.unsent, imageHash, senderPk, emitter);
                     long endTime = System.currentTimeMillis();
                     logger.debug("showImageFromDB times::{}ms", endTime - startTime);
                 }
@@ -135,11 +135,11 @@ public class HashImageView extends RoundImageView {
     /**
      * 递归显示图片切分的片段数据
      * @param imageHash
-     * @param friendPk
+     * @param senderPk
      * @param emitter
      * @throws Exception
      */
-    private void showFragmentData(boolean unsent, byte[] imageHash, String friendPk,
+    private void showFragmentData(boolean unsent, byte[] imageHash, String senderPk,
                                   FlowableEmitter<Bitmap> emitter) throws Exception {
         if (emitter.isCancelled()) {
             return;
@@ -148,7 +148,7 @@ public class HashImageView extends RoundImageView {
         byte[] previousMsgHash = null;
         if (unsent) {
             String hash = ByteUtil.toHexString(imageHash);
-            ChatMsg msg = chatRepo.queryChatMsg(friendPk, hash);
+            ChatMsg msg = chatRepo.queryChatMsg(senderPk, hash);
             if (msg != null && msg.unsent == 0) {
                 if (StringUtil.isNotEmpty(msg.content)) {
                     content = ByteUtil.toByte(msg.content);
@@ -157,7 +157,7 @@ public class HashImageView extends RoundImageView {
 //                    previousMsgHash = ByteUtil.toByte(msg.previousHash);
 //                }
             } else {
-                showFragmentData(false, imageHash, friendPk, emitter);
+                showFragmentData(false, imageHash, senderPk, emitter);
             }
         } else {
             byte[] fragmentEncoded = queryDataLoop(imageHash);
@@ -170,7 +170,7 @@ public class HashImageView extends RoundImageView {
             refreshImageView(content, emitter);
         }
         if (previousMsgHash != null) {
-            showFragmentData(unsent, previousMsgHash, friendPk, emitter);
+            showFragmentData(unsent, previousMsgHash, senderPk, emitter);
         }
     }
 
@@ -241,7 +241,7 @@ public class HashImageView extends RoundImageView {
         // 加在View
         if (reload && StringUtil.isNotEmpty(imageHash)
                 && disposable != null && disposable.isDisposed()) {
-            setImageHash(unsent, imageHash, ByteUtil.toHexString(friendPk), cryptoKey);
+            setImageHash(unsent, imageHash, ByteUtil.toHexString(senderPk), cryptoKey);
         }
         reload = false;
     }

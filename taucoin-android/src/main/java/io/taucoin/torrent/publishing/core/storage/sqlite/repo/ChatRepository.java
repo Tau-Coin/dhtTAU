@@ -29,11 +29,11 @@ public interface ChatRepository {
 
     /**
      * 查询ChatMsg
-     * @param friendPk
+     * @param senderPk
      * @param hash
      * @return
      */
-    ChatMsg queryChatMsg(String friendPk, String hash);
+    ChatMsg queryChatMsg(String senderPk, String hash);
 
     /**
      * 查询ChatMsg
