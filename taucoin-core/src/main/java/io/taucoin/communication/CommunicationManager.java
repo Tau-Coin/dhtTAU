@@ -11,13 +11,12 @@ import io.taucoin.db.MessageDB;
 import io.taucoin.db.MessageDBImpl;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.types.Message;
-import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.Repo;
 
 public class CommunicationManager {
     private static final Logger logger = LoggerFactory.getLogger("CommunicationManager");
 
-    private final CommunicationNew communication;
+    private final Communication communication;
 
     private MsgListener listener;
 
@@ -30,7 +29,7 @@ public class CommunicationManager {
         this.listener = listener;
         this.messageDB = new MessageDBImpl(dbFactory.newDatabase());
 
-        communication = new CommunicationNew(this.messageDB, this.listener);
+        communication = new Communication(deviceID, this.messageDB, this.listener);
     }
 
     public void openMessageDB() throws Exception {

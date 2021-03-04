@@ -13,6 +13,10 @@ public class DataIdentifier {
         this.dataType = dataType;
     }
 
+    public DataIdentifier(ByteArrayWrapper extraInfo1) {
+        this.extraInfo1 = extraInfo1;
+    }
+
     public DataIdentifier(DataType dataType, ByteArrayWrapper extraInfo1) {
         this.dataType = dataType;
         this.extraInfo1 = extraInfo1;

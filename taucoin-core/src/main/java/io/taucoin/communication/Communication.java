@@ -43,7 +43,7 @@ import io.taucoin.util.HashUtil;
 
 import static io.taucoin.param.ChainParam.SHORT_ADDRESS_LENGTH;
 
-public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedListener {
+public class Communication implements DHT.GetMutableItemCallback, KeyChangedListener {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 朋友禁止访问时间
@@ -60,6 +60,9 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
 
     // 主循环间隔时间
     private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
+
+    // 设备ID
+    private final byte[] deviceID;
 
     private final MsgListener msgListener;
 
@@ -108,7 +111,8 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
     // Communication thread.
     private Thread communicationThread;
 
-    public CommunicationNew(MessageDB messageDB, MsgListener msgListener) {
+    public Communication(byte[] deviceID, MessageDB messageDB, MsgListener msgListener) {
+        this.deviceID = deviceID;
         this.messageDB = messageDB;
         this.msgListener = msgListener;
     }
@@ -594,7 +598,7 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
 
             byte[] salt = makeReceivingSalt(pubKey, peer.getData());
             DHT.GetMutableItemSpec spec = new DHT.GetMutableItemSpec(peer.getData(), salt);
-            DataIdentifier dataIdentifier = new DataIdentifier(DataType.MULTIPLEX_DATA, peer);
+            DataIdentifier dataIdentifier = new DataIdentifier(peer);
 
             DHTEngine.getInstance().request(spec, this, dataIdentifier);
         }
@@ -1103,26 +1107,17 @@ public class CommunicationNew implements DHT.GetMutableItemCallback, KeyChangedL
     @Override
     public void onDHTItemGot(byte[] item, Object cbData, boolean auth) {
         DataIdentifier dataIdentifier = (DataIdentifier) cbData;
-        switch (dataIdentifier.getDataType()) {
-            case MULTIPLEX_DATA: {
-                if (null == item) {
-                    logger.debug("MULTIPLEX_DATA from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
-                    if (auth) {
-                        // 最后一个仍然是空，则put自己的在线信号
-                        publishFriendOnlineSignal(dataIdentifier.getExtraInfo1().getData());
-                    }
-                    return;
-                }
-
-                MutableDataWrapper mutableDataWrapper = new MutableDataWrapper(item);
-                processMutableData(mutableDataWrapper, dataIdentifier.getExtraInfo1(), auth);
-
-                break;
+        if (null == item) {
+            logger.debug("MULTIPLEX DATA from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
+            if (auth) {
+                // 最后一个仍然是空，则put自己的在线信号
+                publishFriendOnlineSignal(dataIdentifier.getExtraInfo1().getData());
             }
-            default: {
-                logger.info("Type mismatch.");
-            }
+            return;
         }
+
+        MutableDataWrapper mutableDataWrapper = new MutableDataWrapper(item);
+        processMutableData(mutableDataWrapper, dataIdentifier.getExtraInfo1(), auth);
     }
 
 }
