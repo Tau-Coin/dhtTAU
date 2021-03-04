@@ -33,7 +33,7 @@ public interface ChatDao {
     String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE +
-            " ORDER BY msg.timestamp, msg.nonce" +
+            " ORDER BY msg.timestamp, msg.logicMsgHash, msg.nonce" +
             " LIMIT :loadSize OFFSET :startPosition ";
 
     String QUERY_UNSENT_MESSAGES = "SELECT msg.*" +

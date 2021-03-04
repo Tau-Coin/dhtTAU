@@ -23,17 +23,17 @@ public interface CommunityDao {
     String QUERY_GET_BANNED_USER_PK = " (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1) ";
     String QUERY_NEWEST_MSG = " (SELECT * FROM (SELECT * FROM (" +
 
-            " SELECT timestamp, hash, contentType, senderPk, friendPk, friendPk AS friendPkTemp" +
+            " SELECT timestamp, hash, contentType, logicMsgHash, senderPk, friendPk, friendPk AS friendPkTemp" +
             " FROM (SELECT * FROM ChatMessages" +
-            " WHERE nonce == 0 AND senderPk = " + QUERY_GET_CURRENT_USER_PK +
-            " ORDER BY timestamp) GROUP BY friendPk" +
+            " WHERE senderPk = " + QUERY_GET_CURRENT_USER_PK +
+            " ORDER BY timestamp, logicMsgHash, nonce) GROUP BY friendPk" +
             " UNION ALL" +
-            " SELECT timestamp, hash, contentType, senderPk, friendPk, senderPk AS friendPkTemp" +
+            " SELECT timestamp, hash, contentType, logicMsgHash, senderPk, friendPk, senderPk AS friendPkTemp" +
             " FROM (SELECT * FROM ChatMessages" +
-            " WHERE nonce == 0 AND friendPk = "+ QUERY_GET_CURRENT_USER_PK +
-            " ORDER BY timestamp) GROUP BY senderPk)" +
+            " WHERE friendPk = "+ QUERY_GET_CURRENT_USER_PK +
+            " ORDER BY timestamp, logicMsgHash, nonce) GROUP BY senderPk)" +
 
-            " ORDER BY timestamp)" +
+            " ORDER BY timestamp, logicMsgHash)" +
             " GROUP BY friendPkTemp)";
 
     String QUERY_GET_COMMUNITIES_NOT_IN_BLACKLIST = "SELECT a.*, b.balance, b.power," +
