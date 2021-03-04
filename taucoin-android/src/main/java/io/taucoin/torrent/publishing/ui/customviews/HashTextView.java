@@ -140,17 +140,15 @@ public class HashTextView extends TextView {
                 content = msg.content;
             }
         }
-        if (StringUtil.isNotEmpty(content)) {
+        if (StringUtil.isEmpty(content)) {
             byte[] fragmentEncoded = queryDataLoop(textHash);
             Message msg = new Message(fragmentEncoded);
             msg.decrypt(cryptoKey);
             content = MsgSplitUtil.textBytesToString(msg.getRawContent());
         }
         if (!emitter.isCancelled()) {
-            if (StringUtil.isNotEmpty(content)) {
-                textBuilder.append(content);
-                emitter.onNext(true);
-            }
+            textBuilder.append(content);
+            emitter.onNext(true);
         }
     }
 
@@ -171,7 +169,7 @@ public class HashTextView extends TextView {
                     return data;
                 }
             } catch (Exception e) {
-                logger.debug("queryDataLoop error::{}", hash);
+                logger.debug("queryDataLoop error::{}", ByteUtil.toHexString(hash));
             }
             // 如果获取不到，1秒后重试
             Thread.sleep(Interval.INTERVAL_RETRY.getInterval());
