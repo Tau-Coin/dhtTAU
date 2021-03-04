@@ -1,6 +1,6 @@
 #### Get operation during put item in libtorrent
 
-这里我们向提高put操作的效率，分析知道put item之前会执行get nodes的操作；
+这里我们想提高put操作的效率，分析知道put item之前会执行get nodes的操作；
 
 这个get过程起两个作用：
 
@@ -14,7 +14,7 @@
 
 1. 从当前routing table中查找K个离target相近的节点，默认的K值等于routing table中K桶的大小，默认为8；
 
-2. 从候选的K个节点中发出第一轮的add_requests请求，该过程设计到几个环节-参数：
+2. 从候选的K个节点中发出第一轮的add_requests请求，该过程涉及到几个环节-参数：
     
     1) branch_factor(并行搜索alpha因子) - 单次add_requests执行中并行连接的个数，目前有两种模式
 
@@ -50,6 +50,19 @@
             在libtorrent原版代码中，这两个条件是且关系-(results_target == 0 && outstanding == 0)，代表了返回这么多token的前提下，还需要不存在in flight的请求，才能执行done状态。
 
             timeout - short, long timeout, 它决定了一次invoke多久会变为observer::flag_failed, 否则在long_timeout的范围内始终是observer::flag_queried状态，也就会存在outstanding > 0的情况；
+
+    3) done操作的解析
+
+        done操作代表在一次业务请求(get_peers, get_item, put等等)后的结束。
+
+        业务请求api -> add_requests -> invoke -> reply -> done;
+
+        get_item的immutable item为例：
+
+            有invoke数据返回时，则调用reply方法，其中`static_cast<get_item*>(algorithm())->got_data(v, pk, seq, sig)`的调用作用明显；
+            对于immutable item而言，数据返回后会在got_data中直接触发done()操作；
+            但是对于Mutable item而言，数据
+            
 
 
 3. 后续的过程是一个递归过程，前一步骤中发出的get请求，会返回一批邻近target的节点，再次发出get请求；
