@@ -60,8 +60,22 @@ public class MsgSplitUtil {
         return list;
     }
 
-    public static String textMsgToString(byte[] msg) {
+    /**
+     * byte[]文本转化成String
+     * @param msg
+     * @return
+     */
+    public static String textBytesToString(byte[] msg) {
         return new String(msg, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * String文本转化成byte[]
+     * @param msg
+     * @return
+     */
+    private static byte[] textStringToBytes(String msg) {
+        return msg.getBytes(StandardCharsets.UTF_8);
     }
 
     /**

@@ -64,23 +64,22 @@ class MsgListenHandler {
     void onNewMessage(byte[] friendPk, Message message) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
+                // 朋友默认为发送者
+                String friendPkStr = ByteUtil.toHexString(friendPk);
+                String senderPk = friendPkStr;
+
                 User user = userRepo.getCurrentUser();
                 String userPk = user.publicKey;
-                String friendPkStr = ByteUtil.toHexString(friendPk);
+                // 当前用户默认为接受者
+                String receiverPk = userPk;
 
                 String hash = ByteUtil.toHexString(message.getHash());
-                String previousHash = ByteUtil.toHexString(message.getLogicMsgHash());
+                String logicMsgHash = ByteUtil.toHexString(message.getLogicMsgHash());
                 long sentTime = message.getTimestamp().longValue();
                 long receivedTime = DateUtil.getTime();
                 String sentTimeStr = DateUtil.formatTime(sentTime, DateUtil.pattern6);
                 String receivedTimeStr = DateUtil.formatTime(receivedTime, DateUtil.pattern6);
                 long delayTime = receivedTime - sentTime;
-                String senderPk = ByteUtil.toHexString(message.getPubKey());
-                String receiverPk = friendPkStr;
-                // 消息发送者和来源相同
-                if (StringUtil.isEquals(senderPk, receiverPk)) {
-                    receiverPk = userPk;
-                }
                 logger.debug("TAU messaging onNewMessage senderPk::{}, receiverPk::{}, hash::{}, " +
                                 "SentTime::{}, ReceivedTime::{}, DelayTime::{}s",
                         senderPk, receiverPk, hash, sentTimeStr, receivedTimeStr, delayTime);
@@ -112,7 +111,7 @@ class MsgListenHandler {
                         friendRepo.updateFriend(friend);
                     }
                     ChatMsg msg = new ChatMsg(hash, senderPk, receiverPk, message.getType().ordinal(),
-                            sentTime, message.getNonce().longValue(), previousHash);
+                            sentTime, message.getNonce().longValue(), logicMsgHash);
                     msg.unsent = 1;
                     chatRepo.addChatMsg(msg);
                 }

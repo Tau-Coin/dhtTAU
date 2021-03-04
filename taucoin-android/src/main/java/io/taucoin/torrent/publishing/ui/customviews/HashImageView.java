@@ -153,9 +153,9 @@ public class HashImageView extends RoundImageView {
                 if (StringUtil.isNotEmpty(msg.content)) {
                     content = ByteUtil.toByte(msg.content);
                 }
-                if (StringUtil.isNotEmpty(msg.previousHash)) {
-                    previousMsgHash = ByteUtil.toByte(msg.previousHash);
-                }
+//                if (StringUtil.isNotEmpty(msg.previousHash)) {
+//                    previousMsgHash = ByteUtil.toByte(msg.previousHash);
+//                }
             } else {
                 showFragmentData(false, imageHash, friendPk, emitter);
             }

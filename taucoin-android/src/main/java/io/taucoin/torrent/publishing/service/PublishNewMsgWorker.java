@@ -22,7 +22,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
-import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
@@ -86,37 +85,32 @@ public class PublishNewMsgWorker extends Worker {
         }
         BigInteger nonce = BigInteger.valueOf(msg.nonce);
         BigInteger timestamp = BigInteger.valueOf(msg.timestamp);
-        byte[] senderPk = ByteUtil.toByte(msg.senderPk);
         byte[] friendPk = ByteUtil.toByte(msg.friendPk);
-        byte[] previousHash = null;
-        if (StringUtil.isNotEmpty(msg.previousHash)) {
-            previousHash = ByteUtil.toByte(msg.previousHash);
-        }
+        byte[] logicMsgHash = ByteUtil.toByte(msg.logicMsgHash);
         byte[] content;
         Message message;
         if (msg.contentType == MessageType.PICTURE.ordinal()) {
             content = ByteUtil.toByte(msg.content);
-            message = Message.createPictureMessage(timestamp, previousHash, nonce, senderPk, content);
+            message = Message.createPictureMessage(timestamp, logicMsgHash, nonce, content);
         } else {
             content = msg.content.getBytes(StandardCharsets.UTF_8);
-            message = Message.createTextMessage(timestamp, previousHash, nonce, senderPk, content);
+            message = Message.createTextMessage(timestamp, logicMsgHash, nonce, content);
         }
         User user = userRepo.getUserByPublicKey(msg.senderPk);
         byte[] key = Utils.keyExchange(msg.friendPk, user.seed);
         message.encrypt(key);
         String hash = ByteUtil.toHexString(message.getHash());
         boolean isSendSuccess = daemon.sendMessage(friendPk, message);
-        logger.debug("newMsgHash::{}, friendPk::{} nonce::{}, previousHash::{}, isSendSuccess::{}",
-                hash, msg.friendPk, msg.nonce, msg.previousHash, isSendSuccess);
+        logger.debug("newMsgHash::{}, friendPk::{} nonce::{}, logicMsgHash::{}, isSendSuccess::{}",
+                hash, msg.friendPk, msg.nonce, msg.logicMsgHash, isSendSuccess);
         if (isSendSuccess) {
             msg.content = null;
             msg.unsent = 1;
             chatRepo.updateChatMsg(msg);
-            if (msg.nonce == 0) {
-                ChatMsgLog log = new ChatMsgLog(msg.hash, msg.senderPk, msg.friendPk,
-                        ChatMsgStatus.SENT.getStatus(), DateUtil.getMillisTime());
-                chatRepo.addChatMsgLog(log);
-            }
+
+            ChatMsgLog log = new ChatMsgLog(msg.hash, msg.senderPk, msg.friendPk,
+                    ChatMsgStatus.SENT.getStatus(), DateUtil.getMillisTime());
+            chatRepo.addChatMsgLog(log);
         }
     }
 

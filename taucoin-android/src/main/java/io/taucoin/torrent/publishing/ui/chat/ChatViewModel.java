@@ -33,6 +33,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.HashUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.service.WorkerManager;
@@ -40,7 +41,6 @@ import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
-import io.taucoin.util.CryptoUtil;
 
 /**
  * 聊天相关的ViewModel
@@ -128,65 +128,58 @@ public class ChatViewModel extends AndroidViewModel {
             Result result = new Result();
             try {
                 List<byte[]> contents;
+                String logicMsgHashStr;
                 if (type == MessageType.PICTURE.ordinal()) {
                     String progressivePath = MsgSplitUtil.compressAndScansPic(msg);
+                    logicMsgHashStr = HashUtil.makeFileSha1HashWithTimeStamp(progressivePath);
                     contents = MsgSplitUtil.splitPicMsg(progressivePath);
                 } else if(type == MessageType.TEXT.ordinal()) {
+                    logicMsgHashStr = HashUtil.makeSha1HashWithTimeStamp(msg);
                     contents = MsgSplitUtil.splitTextMsg(msg);
                 } else {
                     throw new Exception("Unknown message type");
                 }
+                byte[] logicMsgHash = ByteUtil.toByte(logicMsgHashStr);
                 User user = userRepo.getCurrentUser();
                 String senderPkStr = user.publicKey;
-                byte[] senderPk = ByteUtil.toByte(senderPkStr);
                 ChatMsg[] messages = new ChatMsg[contents.size()];
                 int contentSize = contents.size();
-                byte[] previousHash = null;
-                for (int i = 0; i < contentSize; i++) {
-                    int nonce = contentSize - i - 1;
+                for (int nonce = 0; nonce < contentSize; nonce++) {
                     byte[] content = contents.get(nonce);
                     long millisTime = DateUtil.getMillisTime();
                     long timestamp = millisTime / 1000;
                     String contentStr;
                     Message message;
                     if (type == MessageType.TEXT.ordinal()) {
-                        contentStr = MsgSplitUtil.textMsgToString(content);
+                        contentStr = MsgSplitUtil.textBytesToString(content);
                         message = Message.createTextMessage(
                                 BigInteger.valueOf(timestamp),
-                                previousHash,
+                                logicMsgHash,
                                 BigInteger.valueOf(nonce),
-                                senderPk, content);
+                                content);
                     } else {
                         contentStr = ByteUtil.toHexString(content);
                         message = Message.createPictureMessage(
                                 BigInteger.valueOf(timestamp),
-                                previousHash,
+                                logicMsgHash,
                                 BigInteger.valueOf(nonce),
-                                senderPk, content);
+                                content);
                     }
                     byte[] key = Utils.keyExchange(friendPk, user.seed);
                     message.encrypt(key);
                     String hash = ByteUtil.toHexString(message.getHash());
-                    String previousHashStr = null;
-                    if (previousHash != null) {
-                        previousHashStr = ByteUtil.toHexString(previousHash);
-                    }
                     logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, nonce::{}, " +
-                                    "previousHash::{}, contentSize::{}",
-                            hash, type, nonce, previousHashStr, content.length);
+                                    "logicMsgHash::{}, contentSize::{}",
+                            hash, type, nonce, logicMsgHashStr, content.length);
 
                     // 组织Message的结构，并发送到DHT和数据入库
                     ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPk, contentStr, type,
-                            timestamp, nonce, previousHashStr);
-                    messages[i] = chatMsg;
+                            timestamp, nonce, logicMsgHashStr);
+                    messages[nonce] = chatMsg;
 
-                    // 更新previousHash值
-                    previousHash = message.getHash();
-                    if (nonce == 0) {
-                        ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPkStr, friendPk,
-                                ChatMsgStatus.UNSENT.getStatus(), millisTime);
-                        chatRepo.addChatMsgLog(chatMsgLog);
-                    }
+                    ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPkStr, friendPk,
+                            ChatMsgStatus.UNSENT.getStatus(), millisTime);
+                    chatRepo.addChatMsgLog(chatMsgLog);
                 }
                 // 批量添加到数据库
                 chatRepo.addChatMessages(messages);

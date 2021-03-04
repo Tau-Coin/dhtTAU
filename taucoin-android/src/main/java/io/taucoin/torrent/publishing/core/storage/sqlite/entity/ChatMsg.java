@@ -25,24 +25,25 @@ public class ChatMsg implements Parcelable {
     public int contentType;                // 消息内容类型
     @NonNull
     public long nonce;                     // 帮助消息排序
-    public String previousHash;            // 帮助消息组装显示
+    @NonNull
+    public String logicMsgHash;            // 逻辑消息Hash, 包含时间戳保证唯一性
     @NonNull
     public int unsent;                     // 0: 未发送， 1: 已发送
 
     public ChatMsg(@NonNull String hash, String senderPk, String friendPk, int contentType,
-                   long timestamp, long nonce, String previousHash){
+                   long timestamp, long nonce, String logicMsgHash){
         this.hash = hash;
         this.senderPk = senderPk;
         this.friendPk = friendPk;
         this.contentType = contentType;
         this.timestamp = timestamp;
         this.nonce = nonce;
-        this.previousHash = previousHash;
+        this.logicMsgHash = logicMsgHash;
     }
 
     @Ignore
     public ChatMsg(@NonNull String hash, String senderPk, String friendPk, String content,
-                   int contentType, long timestamp, long nonce, String previousHash){
+                   int contentType, long timestamp, long nonce, String logicMsgHash){
         this.hash = hash;
         this.senderPk = senderPk;
         this.friendPk = friendPk;
@@ -50,7 +51,7 @@ public class ChatMsg implements Parcelable {
         this.contentType = contentType;
         this.timestamp = timestamp;
         this.nonce = nonce;
-        this.previousHash = previousHash;
+        this.logicMsgHash = logicMsgHash;
     }
 
     @Ignore
@@ -62,7 +63,7 @@ public class ChatMsg implements Parcelable {
         timestamp = in.readLong();
         content = in.readString();
         nonce = in.readLong();
-        previousHash = in.readString();
+        logicMsgHash = in.readString();
         unsent = in.readInt();
     }
 
@@ -75,7 +76,7 @@ public class ChatMsg implements Parcelable {
         dest.writeLong(timestamp);
         dest.writeString(content);
         dest.writeLong(nonce);
-        dest.writeString(previousHash);
+        dest.writeString(logicMsgHash);
         dest.writeInt(unsent);
     }
 

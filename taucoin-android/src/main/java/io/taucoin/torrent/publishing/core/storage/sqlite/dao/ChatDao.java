@@ -23,7 +23,7 @@ public interface ChatDao {
 
     String QUERY_MESSAGES_WHERE = " WHERE (msg.senderPk = :senderPk OR msg.senderPk = :friendPk)" +
             " AND (msg.friendPk = :friendPk OR msg.friendPk = :senderPk) " +
-            " AND msg.nonce = 0" +
+            " AND (msg.contentType = 0 OR (msg.contentType = 1 AND msg.nonce = 0)) " +
             " AND msg.friendPk NOT IN" +
             UserDao.QUERY_GET_USER_PKS_IN_BAN_LIST;
 
@@ -40,7 +40,7 @@ public interface ChatDao {
             " FROM ChatMessages msg" +
             " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
             " AND msg.unsent = 0" +
-            " ORDER BY msg.timestamp, msg.nonce";
+            " ORDER BY msg.timestamp, msg.logicMsgHash, msg.nonce";
 
     // 查询消息的所有日志
     String QUERY_CHAT_MSG_LOGS = "SELECT * FROM ChatMsgLogs WHERE hash = :hash" +

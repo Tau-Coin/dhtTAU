@@ -133,35 +133,24 @@ public class HashTextView extends TextView {
             return;
         }
         String content = null;
-        byte[] previousMsgHash = null;
         if (unsent) {
             String hash = ByteUtil.toHexString(textHash);
             ChatMsg msg = chatRepo.queryChatMsg(friendPk, hash);
             if (msg != null && msg.unsent == 0) {
-                if (StringUtil.isNotEmpty(msg.content)) {
-                    content = msg.content;
-                }
-                if (StringUtil.isNotEmpty(msg.previousHash)) {
-                    previousMsgHash = ByteUtil.toByte(msg.previousHash);
-                }
-            } else {
-                showFragmentData(false, textHash, friendPk, emitter);
+                content = msg.content;
             }
-        } else {
+        }
+        if (StringUtil.isNotEmpty(content)) {
             byte[] fragmentEncoded = queryDataLoop(textHash);
             Message msg = new Message(fragmentEncoded);
             msg.decrypt(cryptoKey);
-            content = MsgSplitUtil.textMsgToString(msg.getRawContent());
-            previousMsgHash = msg.getLogicMsgHash();
+            content = MsgSplitUtil.textBytesToString(msg.getRawContent());
         }
         if (!emitter.isCancelled()) {
             if (StringUtil.isNotEmpty(content)) {
                 textBuilder.append(content);
                 emitter.onNext(true);
             }
-        }
-        if (previousMsgHash != null) {
-            showFragmentData(unsent, previousMsgHash, friendPk, emitter);
         }
     }
 
