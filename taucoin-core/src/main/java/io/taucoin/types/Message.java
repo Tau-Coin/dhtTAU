@@ -14,8 +14,6 @@ public class Message {
     private BigInteger timestamp;
     private byte[] logicMsgHash; // 用于确认区分逻辑消息，带时间戳（可能连发两次）
     private BigInteger nonce; // 局部nonce，用于标识切分消息的顺序
-    // TODO:: remove
-    private byte[] pubKey; // 消息发送者公钥
     private MessageType type;  // 可以标识消息类型
     private byte[] encryptedContent; // 加密消息体
 
@@ -25,20 +23,19 @@ public class Message {
     private byte[] encode; // 缓存编码
     private boolean parsed = false; // 是否解码标志
 
-    public static Message createTextMessage(BigInteger timestamp, byte[] logicMsgHash, BigInteger nonce, byte[] pubKey, byte[] rawContent) {
-        return new Message(MessageVersion.VERSION1, timestamp, logicMsgHash, nonce, pubKey, MessageType.TEXT, rawContent);
+    public static Message createTextMessage(BigInteger timestamp, byte[] logicMsgHash, BigInteger nonce, byte[] rawContent) {
+        return new Message(MessageVersion.VERSION1, timestamp, logicMsgHash, nonce, MessageType.TEXT, rawContent);
     }
 
-    public static Message createPictureMessage(BigInteger timestamp, byte[] logicMsgHash, BigInteger nonce, byte[] pubKey, byte[] rawContent) {
-        return new Message(MessageVersion.VERSION1, timestamp, logicMsgHash, nonce, pubKey, MessageType.PICTURE, rawContent);
+    public static Message createPictureMessage(BigInteger timestamp, byte[] logicMsgHash, BigInteger nonce, byte[] rawContent) {
+        return new Message(MessageVersion.VERSION1, timestamp, logicMsgHash, nonce, MessageType.PICTURE, rawContent);
     }
 
-    public Message(MessageVersion version, BigInteger timestamp, byte[] logicMsgHash, BigInteger nonce, byte[] pubKey, MessageType type, byte[] rawContent) {
+    public Message(MessageVersion version, BigInteger timestamp, byte[] logicMsgHash, BigInteger nonce, MessageType type, byte[] rawContent) {
         this.version = version;
         this.timestamp = timestamp;
         this.logicMsgHash = logicMsgHash;
         this.nonce = nonce;
-        this.pubKey = pubKey;
         this.type = type;
         this.rawContent = rawContent;
 
@@ -79,14 +76,6 @@ public class Message {
         }
 
         return nonce;
-    }
-
-    public byte[] getPubKey() {
-        if (!this.parsed) {
-            parseRLP();
-        }
-
-        return pubKey;
     }
 
     public MessageType getType() {
@@ -173,9 +162,7 @@ public class Message {
         byte[] nonceBytes = messageList.get(3).getRLPData();
         this.nonce = (null == nonceBytes) ? BigInteger.ZERO: new BigInteger(1, nonceBytes);
 
-        this.pubKey = messageList.get(4).getRLPData();
-
-        byte[] typeBytes = messageList.get(5).getRLPData();
+        byte[] typeBytes = messageList.get(4).getRLPData();
         int typeNum = null == typeBytes ? 0: new BigInteger(1, typeBytes).intValue();
         if (typeNum >= MessageType.UNKNOWN.ordinal()) {
             this.type = MessageType.UNKNOWN;
@@ -183,7 +170,7 @@ public class Message {
             this.type = MessageType.values()[typeNum];
         }
 
-        this.encryptedContent = messageList.get(6).getRLPData();
+        this.encryptedContent = messageList.get(5).getRLPData();
 
         this.parsed = true;
     }
@@ -194,11 +181,10 @@ public class Message {
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
             byte[] previousHash = RLP.encodeElement(this.logicMsgHash);
             byte[] nonce = RLP.encodeBigInteger(this.nonce);
-            byte[] pubKey = RLP.encodeElement(this.pubKey);
             byte[] type = RLP.encodeBigInteger(BigInteger.valueOf(this.type.ordinal()));
             byte[] encryptedContent = RLP.encodeElement(this.encryptedContent);
 
-            this.encode = RLP.encodeList(version, timestamp, previousHash, nonce, pubKey, type, encryptedContent);
+            this.encode = RLP.encodeList(version, timestamp, previousHash, nonce, type, encryptedContent);
         }
 
         return this.encode;
@@ -210,7 +196,7 @@ public class Message {
         BigInteger timestamp = getTimestamp();
         byte[] logicMsgHash = getLogicMsgHash();
         BigInteger nonce = getNonce();
-        byte[] pubKey = getPubKey();
+//        byte[] pubKey = getPubKey();
         MessageType type = getType();
 //        byte[] content = getContent();
         byte[] hash = getHash();
@@ -238,10 +224,10 @@ public class Message {
             stringBuilder.append(", nonce=");
             stringBuilder.append(nonce);
         }
-        if (null != pubKey) {
-            stringBuilder.append("public key=");
-            stringBuilder.append(Hex.toHexString(pubKey));
-        }
+//        if (null != pubKey) {
+//            stringBuilder.append("public key=");
+//            stringBuilder.append(Hex.toHexString(pubKey));
+//        }
         if (null != type) {
             stringBuilder.append(", type=");
             stringBuilder.append(type);
