@@ -71,7 +71,7 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
                     communityViewModel.generateQRCode(this, communityInviteLink,
-                            binding.qrCode.flLogo, -1);
+                            binding.qrCode.flLogo);
                 }));
 
         communityViewModel.getQRBitmap().observe(this, bitmap -> {

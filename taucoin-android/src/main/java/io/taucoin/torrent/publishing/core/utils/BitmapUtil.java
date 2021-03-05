@@ -6,11 +6,16 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.widget.Toast;
+
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.king.zxing.util.CodeUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,7 +24,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 
+import androidx.annotation.FloatRange;
 import io.taucoin.torrent.publishing.core.model.data.DrawBean;
 
 /**
@@ -248,7 +256,7 @@ public class BitmapUtil {
 
         Bitmap qrBitmap;
         if (qrbgBitmap != null) {
-            qrBitmap = drawQRcode(qrbgBitmap,originalQrBitmap);//花式二维码
+            qrBitmap = drawQRcode(qrbgBitmap, originalQrBitmap);//花式二维码
         } else {
             qrBitmap = originalQrBitmap;
         }
@@ -284,6 +292,40 @@ public class BitmapUtil {
         Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
         canvas.drawBitmap(qrbgBitmap, null, rect, null);
         canvas.drawBitmap(originalQrBitmap, null, rect, null);
+        return bitmap;
+
+    }
+
+    /**
+     * 生成二维码
+     * @param content 二维码的内容
+     * @param heightPix 二维码的高
+     * @param logo 二维码中间的logo
+     * @param codeColor 二维码的颜色
+     * @return
+     */
+    public static Bitmap createQRCode(String content, int heightPix, Bitmap logo,
+                                      int codeColor) {
+        //配置参数
+        Map<EncodeHintType, Object> hints = new HashMap<>();
+        hints.put( EncodeHintType.CHARACTER_SET, "utf-8");
+        //容错级别
+        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+        //设置空白边距的宽度
+        hints.put(EncodeHintType.MARGIN, 0); //default is 0
+        return CodeUtils.createQRCode(content,heightPix,logo, 0.2f, hints,codeColor);
+    }
+
+    /**
+     * 创建指定宽高纯色的Bitmap
+     * @param width
+     * @param height
+     * @param color
+     * @return
+     */
+    public static Bitmap createBitmap(int width, int height, int color) {
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        bitmap.eraseColor(color);//填充颜色
         return bitmap;
 
     }
