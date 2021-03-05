@@ -12,6 +12,8 @@ import io.taucoin.util.RLPList;
 public class Message {
     private MessageVersion version; // 标识消息版本
     private BigInteger timestamp;
+    private byte[] sender;
+    private byte[] receiver;
     private byte[] logicMsgHash; // 用于确认区分逻辑消息，带时间戳（可能连发两次）
     private BigInteger nonce; // 局部nonce，用于标识切分消息的顺序
     private MessageType type;  // 可以标识消息类型
@@ -23,17 +25,22 @@ public class Message {
     private byte[] encode; // 缓存编码
     private boolean parsed = false; // 是否解码标志
 
-    public static Message createTextMessage(BigInteger timestamp, byte[] logicMsgHash, BigInteger nonce, byte[] rawContent) {
-        return new Message(MessageVersion.VERSION1, timestamp, logicMsgHash, nonce, MessageType.TEXT, rawContent);
+    public static Message createTextMessage(BigInteger timestamp, byte[] sender, byte[] receiver,
+                                            byte[] logicMsgHash, BigInteger nonce, byte[] rawContent) {
+        return new Message(MessageVersion.VERSION1, timestamp, sender, receiver, logicMsgHash, nonce, MessageType.TEXT, rawContent);
     }
 
-    public static Message createPictureMessage(BigInteger timestamp, byte[] logicMsgHash, BigInteger nonce, byte[] rawContent) {
-        return new Message(MessageVersion.VERSION1, timestamp, logicMsgHash, nonce, MessageType.PICTURE, rawContent);
+    public static Message createPictureMessage(BigInteger timestamp, byte[] sender, byte[] receiver,
+                                               byte[] logicMsgHash, BigInteger nonce, byte[] rawContent) {
+        return new Message(MessageVersion.VERSION1, timestamp, sender, receiver, logicMsgHash, nonce, MessageType.PICTURE, rawContent);
     }
 
-    public Message(MessageVersion version, BigInteger timestamp, byte[] logicMsgHash, BigInteger nonce, MessageType type, byte[] rawContent) {
+    public Message(MessageVersion version, BigInteger timestamp, byte[] sender, byte[] receiver,
+                   byte[] logicMsgHash, BigInteger nonce, MessageType type, byte[] rawContent) {
         this.version = version;
         this.timestamp = timestamp;
+        this.sender = sender;
+        this.receiver = receiver;
         this.logicMsgHash = logicMsgHash;
         this.nonce = nonce;
         this.type = type;
@@ -60,6 +67,22 @@ public class Message {
         }
 
         return timestamp;
+    }
+
+    public byte[] getSender() {
+        if (!this.parsed) {
+            parseRLP();
+        }
+
+        return sender;
+    }
+
+    public byte[] getReceiver() {
+        if (!this.parsed) {
+            parseRLP();
+        }
+
+        return receiver;
     }
 
     public byte[] getLogicMsgHash() {
@@ -157,12 +180,16 @@ public class Message {
         byte[] timeBytes = messageList.get(1).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
-        this.logicMsgHash = messageList.get(2).getRLPData();
+        this.sender = messageList.get(2).getRLPData();
 
-        byte[] nonceBytes = messageList.get(3).getRLPData();
+        this.receiver = messageList.get(3).getRLPData();
+
+        this.logicMsgHash = messageList.get(4).getRLPData();
+
+        byte[] nonceBytes = messageList.get(5).getRLPData();
         this.nonce = (null == nonceBytes) ? BigInteger.ZERO: new BigInteger(1, nonceBytes);
 
-        byte[] typeBytes = messageList.get(4).getRLPData();
+        byte[] typeBytes = messageList.get(6).getRLPData();
         int typeNum = null == typeBytes ? 0: new BigInteger(1, typeBytes).intValue();
         if (typeNum >= MessageType.UNKNOWN.ordinal()) {
             this.type = MessageType.UNKNOWN;
@@ -170,7 +197,7 @@ public class Message {
             this.type = MessageType.values()[typeNum];
         }
 
-        this.encryptedContent = messageList.get(5).getRLPData();
+        this.encryptedContent = messageList.get(7).getRLPData();
 
         this.parsed = true;
     }
@@ -179,12 +206,14 @@ public class Message {
         if (null == this.encode) {
             byte[] version = RLP.encodeBigInteger(BigInteger.valueOf(this.version.ordinal()));
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
+            byte[] sender = RLP.encodeElement(this.sender);
+            byte[] receiver = RLP.encodeElement(this.receiver);
             byte[] previousHash = RLP.encodeElement(this.logicMsgHash);
             byte[] nonce = RLP.encodeBigInteger(this.nonce);
             byte[] type = RLP.encodeBigInteger(BigInteger.valueOf(this.type.ordinal()));
             byte[] encryptedContent = RLP.encodeElement(this.encryptedContent);
 
-            this.encode = RLP.encodeList(version, timestamp, previousHash, nonce, type, encryptedContent);
+            this.encode = RLP.encodeList(version, timestamp, sender, receiver, previousHash, nonce, type, encryptedContent);
         }
 
         return this.encode;
@@ -196,7 +225,8 @@ public class Message {
         BigInteger timestamp = getTimestamp();
         byte[] logicMsgHash = getLogicMsgHash();
         BigInteger nonce = getNonce();
-//        byte[] pubKey = getPubKey();
+        byte[] sender = getSender();
+        byte[] receiver = getReceiver();
         MessageType type = getType();
 //        byte[] content = getContent();
         byte[] hash = getHash();
@@ -216,6 +246,14 @@ public class Message {
             stringBuilder.append(", timestamp=");
             stringBuilder.append(timestamp);
         }
+        if (null != sender) {
+            stringBuilder.append(", sender=");
+            stringBuilder.append(Hex.toHexString(sender));
+        }
+        if (null != receiver) {
+            stringBuilder.append(", receiver=");
+            stringBuilder.append(Hex.toHexString(receiver));
+        }
         if (null != logicMsgHash) {
             stringBuilder.append("logicMsgHash=");
             stringBuilder.append(Hex.toHexString(logicMsgHash));
@@ -224,10 +262,6 @@ public class Message {
             stringBuilder.append(", nonce=");
             stringBuilder.append(nonce);
         }
-//        if (null != pubKey) {
-//            stringBuilder.append("public key=");
-//            stringBuilder.append(Hex.toHexString(pubKey));
-//        }
         if (null != type) {
             stringBuilder.append(", type=");
             stringBuilder.append(type);
