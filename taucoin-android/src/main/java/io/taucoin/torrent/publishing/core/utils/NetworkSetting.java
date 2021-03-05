@@ -288,21 +288,6 @@ public class NetworkSetting {
      * @return 返回计算的时间间隔
      */
     public static int calculateMainLoopInterval(long sessionNodes) {
-        // 无网络，返回0；不更新链端时间间隔
-        if (!settingsRepo.internetState()) {
-            return 0;
-        }
-        long speedLimit;
-//        long averageSpeed;
-        if (isMeteredNetwork()) {
-            // 当前网络为计费网络
-            speedLimit = NetworkSetting.getMeteredSpeedLimit();
-//            averageSpeed = NetworkSetting.getMeteredAverageSpeed();
-        } else {
-            // 当前网络为非计费网络
-            speedLimit = NetworkSetting.getWiFiSpeedLimit();
-//            averageSpeed = NetworkSetting.getWiFiAverageSpeed();
-        }
         Context appContext = MainApplication.getInstance();
         String foregroundRunningKey = appContext.getString(R.string.pref_key_foreground_running);
         Interval mainLoopMin;
@@ -315,16 +300,25 @@ public class NetworkSetting {
             mainLoopMin = Interval.BACK_MAIN_LOOP_MIN;
             mainLoopMax = Interval.BACK_MAIN_LOOP_MAX;
         }
-        long currentSpeed = NetworkSetting.getCurrentSpeed();
-        float rate;
-        if (speedLimit > 0) {
-            rate = currentSpeed * 1.0f / speedLimit;
-        } else {
-            rate = max_threshold;
+        int timeInterval = mainLoopMax.getInterval();
+        // 无网络，返回0；不更新链端时间间隔
+        if (settingsRepo.internetState()) {
+            long speedLimit;
+            if (isMeteredNetwork()) {
+                // 当前网络为计费网络
+                speedLimit = NetworkSetting.getMeteredSpeedLimit();
+            } else {
+                // 当前网络为非计费网络
+                speedLimit = NetworkSetting.getWiFiSpeedLimit();
+            }
+            long currentSpeed = NetworkSetting.getCurrentSpeed();
+            if (speedLimit > 0) {
+                float rate = currentSpeed * 1.0f / speedLimit;
+                timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax, sessionNodes);
+                logger.trace("calculateMainLoopInterval currentSpeed::{}, speedLimit::{}, rate::{}, timeInterval::{}",
+                        currentSpeed, speedLimit, rate, timeInterval);
+            }
         }
-        int timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax, sessionNodes);
-        logger.trace("calculateMainLoopInterval currentSpeed::{}, speedLimit::{}, rate::{}, timeInterval::{}",
-                currentSpeed, speedLimit, rate, timeInterval);
         return timeInterval;
     }
 
