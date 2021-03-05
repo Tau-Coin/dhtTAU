@@ -1081,9 +1081,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     // 比较双方对方发的消息的bloom filter，如果相同，则发出本节点在线信号
                     FriendPair friendPair2 = new FriendPair(peer.getData(), pubKey);
                     LinkedList<Message> list2 = this.messageListMap.get(friendPair2);
+                    // 自己这边合成的bloom
+                    Bloom mySenderBloomFilter = new Bloom();
                     if (null != list2 && !list2.isEmpty()) {
-                        // 自己合成bloom
-                        Bloom mySenderBloomFilter = new Bloom();
                         int size = list2.size();
                         byte[] firstMsgHash = list2.getFirst().getSha1Hash();
                         byte[] lastMsgHash = list2.getLast().getSha1Hash();
@@ -1097,11 +1097,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
                             mySenderBloomFilter.or(bloom);
                         }
-
-                        if (senderBloomFilter.equals(mySenderBloomFilter)) {
-                            // 两者bloom filter一样，则发布在线信号
-                            publishFriendOnlineSignal(peer.getData());
-                        }
+                    }
+                    if (senderBloomFilter.equals(mySenderBloomFilter)) {
+                        // 两者bloom filter一样，则发布在线信号
+                        publishFriendOnlineSignal(peer.getData());
                     }
                 }
 
