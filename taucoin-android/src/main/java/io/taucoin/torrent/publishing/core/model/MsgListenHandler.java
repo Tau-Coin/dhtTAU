@@ -59,24 +59,21 @@ class MsgListenHandler extends MsgListener{
     public void onNewMessage(byte[] friendPk, Message message) {
         try {
             // 朋友默认为发送者
-            String senderPk = ByteUtil.toHexString(friendPk);
-
-            User user = userRepo.getCurrentUser();
-            // 当前用户默认为接受者
-            String receiverPk = user.publicKey;
-
+            String senderPk = ByteUtil.toHexString(message.getSender());
+            String receiverPk = ByteUtil.toHexString(message.getReceiver());
             String hash = ByteUtil.toHexString(message.getHash());
             String logicMsgHash = ByteUtil.toHexString(message.getLogicMsgHash());
+
             long sentTime = message.getTimestamp().longValue();
             long receivedTime = DateUtil.getTime();
-            String sentTimeStr = DateUtil.formatTime(sentTime, DateUtil.pattern6);
-            String receivedTimeStr = DateUtil.formatTime(receivedTime, DateUtil.pattern6);
-            long delayTime = receivedTime - sentTime;
 
             ChatMsg chatMsg = chatRepo.queryChatMsg(senderPk, hash);
             logger.debug("TAU messaging onNewMessage senderPk::{}, receiverPk::{}, hash::{}, " +
                             "SentTime::{}, ReceivedTime::{}, DelayTime::{}s, exist::{}",
-                    senderPk, receiverPk, hash, sentTimeStr, receivedTimeStr, delayTime, chatMsg != null);
+                    senderPk, receiverPk, hash,
+                    DateUtil.formatTime(sentTime, DateUtil.pattern6),
+                    DateUtil.formatTime(receivedTime, DateUtil.pattern6),
+                    receivedTime - sentTime, chatMsg != null);
             // 上报的Message有可能重复, 如果本地已存在不处理
             if (null == chatMsg) {
                 // 处理ChatName，如果为空，取显朋友显示名
@@ -85,7 +82,7 @@ class MsgListenHandler extends MsgListener{
                 if (null == community) {
                     community = new Community(senderPk, communityName);
                     community.type = 1;
-                    community.publicKey = senderPk;
+                    community.publicKey = receiverPk;
                     communityRepo.addCommunity(community);
                 }
                 // 更新朋友信息

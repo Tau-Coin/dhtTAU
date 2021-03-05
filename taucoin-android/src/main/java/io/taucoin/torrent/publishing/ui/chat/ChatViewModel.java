@@ -119,11 +119,11 @@ public class ChatViewModel extends AndroidViewModel {
 
     /**
      * 给朋友发信息任务
-     * @param friendPk 朋友公钥
+     * @param friendPkStr 朋友公钥
      * @param msg 消息
      * @param type 消息类型
      */
-    private void sendMessageTask(String friendPk, String msg, int type) {
+    private void sendMessageTask(String friendPkStr, String msg, int type) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
             Result result = new Result();
             try {
@@ -142,6 +142,8 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] logicMsgHash = ByteUtil.toByte(logicMsgHashStr);
                 User user = userRepo.getCurrentUser();
                 String senderPkStr = user.publicKey;
+                byte[] senderPk = ByteUtil.toByte(senderPkStr);
+                byte[] friendPk = ByteUtil.toByte(friendPkStr);
                 ChatMsg[] messages = new ChatMsg[contents.size()];
                 int contentSize = contents.size();
                 for (int nonce = 0; nonce < contentSize; nonce++) {
@@ -152,20 +154,14 @@ public class ChatViewModel extends AndroidViewModel {
                     Message message;
                     if (type == MessageType.TEXT.ordinal()) {
                         contentStr = MsgSplitUtil.textBytesToString(content);
-                        message = Message.createTextMessage(
-                                BigInteger.valueOf(timestamp),
-                                logicMsgHash,
-                                BigInteger.valueOf(nonce),
-                                content);
+                        message = Message.createTextMessage(BigInteger.valueOf(timestamp), senderPk,
+                                friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
                     } else {
                         contentStr = ByteUtil.toHexString(content);
-                        message = Message.createPictureMessage(
-                                BigInteger.valueOf(timestamp),
-                                logicMsgHash,
-                                BigInteger.valueOf(nonce),
-                                content);
+                        message = Message.createPictureMessage(BigInteger.valueOf(timestamp), senderPk,
+                                friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
                     }
-                    byte[] key = Utils.keyExchange(friendPk, user.seed);
+                    byte[] key = Utils.keyExchange(friendPkStr, user.seed);
                     message.encrypt(key);
                     String hash = ByteUtil.toHexString(message.getHash());
                     logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, nonce::{}, " +
@@ -173,11 +169,11 @@ public class ChatViewModel extends AndroidViewModel {
                             hash, type, nonce, logicMsgHashStr, content.length);
 
                     // 组织Message的结构，并发送到DHT和数据入库
-                    ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPk, contentStr, type,
+                    ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPkStr, contentStr, type,
                             timestamp, nonce, logicMsgHashStr);
                     messages[nonce] = chatMsg;
 
-                    ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPkStr, friendPk,
+                    ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPkStr, friendPkStr,
                             ChatMsgStatus.UNSENT.getStatus(), millisTime);
                     chatRepo.addChatMsgLog(chatMsgLog);
                 }

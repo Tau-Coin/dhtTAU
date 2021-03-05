@@ -249,7 +249,9 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
     private static final DiffUtil.ItemCallback<ChatMsgAndUser> diffCallback = new DiffUtil.ItemCallback<ChatMsgAndUser>() {
         @Override
         public boolean areContentsTheSame(@NonNull ChatMsgAndUser oldItem, @NonNull ChatMsgAndUser newItem) {
-            return oldItem.equals(newItem) && StringUtil.isEquals(oldItem.content, newItem.content);
+            return oldItem.equals(newItem)
+                    && StringUtil.isEquals(oldItem.logicMsgHash, newItem.logicMsgHash)
+                    && oldItem.nonce == newItem.nonce;
         }
 
         @Override

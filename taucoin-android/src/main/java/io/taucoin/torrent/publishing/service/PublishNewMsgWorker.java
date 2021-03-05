@@ -85,16 +85,19 @@ public class PublishNewMsgWorker extends Worker {
         }
         BigInteger nonce = BigInteger.valueOf(msg.nonce);
         BigInteger timestamp = BigInteger.valueOf(msg.timestamp);
+        byte[] senderPk = ByteUtil.toByte(msg.senderPk);
         byte[] friendPk = ByteUtil.toByte(msg.friendPk);
         byte[] logicMsgHash = ByteUtil.toByte(msg.logicMsgHash);
         byte[] content;
         Message message;
         if (msg.contentType == MessageType.PICTURE.ordinal()) {
             content = ByteUtil.toByte(msg.content);
-            message = Message.createPictureMessage(timestamp, logicMsgHash, nonce, content);
+            message = Message.createPictureMessage(timestamp, senderPk, friendPk, logicMsgHash,
+                    nonce, content);
         } else {
             content = msg.content.getBytes(StandardCharsets.UTF_8);
-            message = Message.createTextMessage(timestamp, logicMsgHash, nonce, content);
+            message = Message.createTextMessage(timestamp, senderPk, friendPk, logicMsgHash,
+                    nonce, content);
         }
         User user = userRepo.getUserByPublicKey(msg.senderPk);
         byte[] key = Utils.keyExchange(msg.friendPk, user.seed);
