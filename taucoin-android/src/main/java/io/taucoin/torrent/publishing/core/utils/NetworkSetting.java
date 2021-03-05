@@ -293,15 +293,15 @@ public class NetworkSetting {
             return 0;
         }
         long speedLimit;
-        long averageSpeed;
+//        long averageSpeed;
         if (isMeteredNetwork()) {
             // 当前网络为计费网络
             speedLimit = NetworkSetting.getMeteredSpeedLimit();
-            averageSpeed = NetworkSetting.getMeteredAverageSpeed();
+//            averageSpeed = NetworkSetting.getMeteredAverageSpeed();
         } else {
             // 当前网络为非计费网络
             speedLimit = NetworkSetting.getWiFiSpeedLimit();
-            averageSpeed = NetworkSetting.getWiFiAverageSpeed();
+//            averageSpeed = NetworkSetting.getWiFiAverageSpeed();
         }
         Context appContext = MainApplication.getInstance();
         String foregroundRunningKey = appContext.getString(R.string.pref_key_foreground_running);
@@ -315,13 +315,17 @@ public class NetworkSetting {
             mainLoopMin = Interval.BACK_MAIN_LOOP_MIN;
             mainLoopMax = Interval.BACK_MAIN_LOOP_MAX;
         }
+        long currentSpeed = NetworkSetting.getCurrentSpeed();
+        float rate;
         if (speedLimit > 0) {
-            float rate = averageSpeed * 1.0f / speedLimit;
-            return calculateTimeInterval(rate, mainLoopMin,
-                    mainLoopMax, sessionNodes);
+            rate = currentSpeed * 1.0f / speedLimit;
         } else {
-            return -1;
+            rate = max_threshold;
         }
+        int timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax, sessionNodes);
+        logger.trace("calculateMainLoopInterval currentSpeed::{}, speedLimit::{}, rate::{}, timeInterval::{}",
+                currentSpeed, speedLimit, rate, timeInterval);
+        return timeInterval;
     }
 
     /**

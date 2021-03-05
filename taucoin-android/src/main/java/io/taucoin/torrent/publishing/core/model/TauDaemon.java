@@ -119,7 +119,7 @@ public class TauDaemon {
         settingsRepo.wakeLock(false);
         settingsRepo.setUPnpMapped(false);
         settingsRepo.setNATPMPMapped(false);
-        updateUIInterval(50);
+        updateUIInterval(Interval.FORE_MAIN_LOOP_MIN.getInterval());
     }
 
     /**
@@ -465,6 +465,10 @@ public class TauDaemon {
         rescheduleTAUBySettings(false);
     }
 
+    /**
+     * 根据当前设置重新调度DHT
+     * @param isRestart 是否重启Session
+     */
     private synchronized void rescheduleTAUBySettings(boolean isRestart) {
         if (!isRunning) {
             return;
@@ -477,21 +481,22 @@ public class TauDaemon {
                     resetReadOnly();
                     logger.info("rescheduleTAUBySettings restartSessions");
                 } else {
-//                    long sessionNodes = getSessionNodes();
-//                    int interval = NetworkSetting.calculateMainLoopInterval(sessionNodes);
-//                    if (interval > 0) {
-//                        tauController.getCommunicationManager().setIntervalTime(interval);
-//                        // 更新UI展示链端主循环时间间隔
-//                        updateUIInterval(interval);
-//                    } else if (interval == -1) {
-//                        resetReadOnly(true);
-//                        showNoRemainingDataTipsDialog();
-//                    }
-//                    if (interval != -1) {
-//                        trafficTips = true;
-//                        noRemainingDataTimes = 0;
-//                        resetReadOnly(false);
-//                    }
+                    if (isHaveAvailableData()) {
+                        long sessionNodes = getSessionNodes();
+                        int interval = NetworkSetting.calculateMainLoopInterval(sessionNodes);
+                        if (interval > 0) {
+                            tauController.getCommunicationManager().setMinIntervalTime(interval);
+                            // 更新UI展示链端主循环时间间隔
+                            updateUIInterval(interval);
+                        }
+                        //
+                        trafficTips = true;
+                        noRemainingDataTimes = 0;
+                        resetReadOnly(false);
+                    } else {
+                        resetReadOnly(true);
+                        showNoRemainingDataTipsDialog();
+                    }
                 }
 
             }
