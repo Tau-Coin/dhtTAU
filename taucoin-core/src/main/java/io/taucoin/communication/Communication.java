@@ -1,6 +1,7 @@
 package io.taucoin.communication;
 
 import com.frostwire.jlibtorrent.Pair;
+import com.google.common.primitives.Bytes;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -346,7 +347,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         for (ByteArrayWrapper friend: this.friendsFromRemote) {
             addNewFriend(friend.getData());
 
-            this.msgListener.onNewFriendFromMultiDevice(friend.getData());
+            if (!this.friends.contains(friend)) {
+                this.msgListener.onNewFriendFromMultiDevice(friend.getData());
+            }
 
             this.friendsFromRemote.remove(friend);
         }
@@ -482,8 +485,17 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         FriendPair friendPair1 = new FriendPair(pubKey, friend);
         LinkedList<Message> messages1 = this.messageListMap.get(friendPair1);
         if (null != messages1) {
-            for (Message message: messages1) {
-                Bloom bloom = Bloom.create(message.getSha1Hash());
+            int size = messages1.size();
+            byte[] firstMsgHash = messages1.getFirst().getSha1Hash();
+            byte[] lastMsgHash = messages1.getLast().getSha1Hash();
+            Bloom bloom = Bloom.create(firstMsgHash);
+            senderBloomFilter.or(bloom);
+            bloom = Bloom.create(lastMsgHash);
+            senderBloomFilter.or(bloom);
+
+            for (int i = 0; i < size - 1; i++) {
+                byte[] mergedHash = ByteUtil.merge(messages1.get(i).getSha1Hash(), messages1.get(i + 1).getSha1Hash());
+                bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
                 senderBloomFilter.or(bloom);
             }
         }
@@ -491,8 +503,17 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         FriendPair friendPair2 = new FriendPair(friend, pubKey);
         LinkedList<Message> messages2 = this.messageListMap.get(friendPair2);
         if (null != messages2) {
-            for (Message message: messages2) {
-                Bloom bloom = Bloom.create(message.getSha1Hash());
+            int size = messages2.size();
+            byte[] firstMsgHash = messages2.getFirst().getSha1Hash();
+            byte[] lastMsgHash = messages2.getLast().getSha1Hash();
+            Bloom bloom = Bloom.create(firstMsgHash);
+            receiverBloomFilter.or(bloom);
+            bloom = Bloom.create(lastMsgHash);
+            receiverBloomFilter.or(bloom);
+
+            for (int i = 0; i < size - 1; i++) {
+                byte[] mergedHash = ByteUtil.merge(messages2.get(i).getSha1Hash(), messages2.get(i + 1).getSha1Hash());
+                bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
                 receiverBloomFilter.or(bloom);
             }
         }
@@ -936,7 +957,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @param mutableDataWrapper 收到的mutable data
      * @param peer gossip发出的peer
      */
-    private void processMutableData(MutableDataWrapper mutableDataWrapper, ByteArrayWrapper peer, boolean auth) {
+    private void processMutableData(MutableDataWrapper mutableDataWrapper, ByteArrayWrapper peer) {
 
         // 是否更新好友的在线时间（完整公钥）
         BigInteger timestamp = mutableDataWrapper.getTimestamp();
@@ -952,147 +973,186 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             this.friendLastSeen.put(peer, timestamp);
             this.onlineFriendsToNotify.add(peer);
         }
-        if (null == lastSeen || lastSeen.compareTo(timestamp) <= 0) { // 判断是否是更新的online signal
-            switch (mutableDataWrapper.getMutableDataType()) {
-                case MESSAGE: {
-                    Message message = new Message(mutableDataWrapper.getData());
-                    logger.debug("MESSAGE: Got message :{}", message.toString());
-                    this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
-                    this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), peer);
+        switch (mutableDataWrapper.getMutableDataType()) {
+            case MESSAGE: {
+                Message message = new Message(mutableDataWrapper.getData());
+                logger.debug("MESSAGE: Got message :{}", message.toString());
+                this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
+                this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), peer);
 
-                    break;
-                }
-                case FRIEND_LIST: {
+                break;
+            }
+            case FRIEND_LIST: {
+                byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+                if (Arrays.equals(pubKey, peer.getData())) {
                     FriendList friendList = new FriendList(mutableDataWrapper.getData());
                     List<byte[]> list = friendList.getFriendList();
                     if (null != list) {
-                        for (byte[] friend: list) {
+                        for (byte[] friend : list) {
                             this.friendsFromRemote.add(new ByteArrayWrapper(friend));
                         }
                     }
-
-                    break;
                 }
-                case ONLINE_SIGNAL: {
-                    byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-                    OnlineSignal onlineSignal = new OnlineSignal(mutableDataWrapper.getData());
-                    Bloom senderBloomFilter = onlineSignal.getSenderBloomFilter();
-                    Bloom receiverBloomFilter = onlineSignal.getReceiverBloomFilter();
-                    Bloom friendListBloomFilter = onlineSignal.getFriendListBloomFilter();
+                break;
+            }
+            case ONLINE_SIGNAL: {
+                byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
-                    if (Arrays.equals(pubKey, peer.getData())) {
-                        // 是另外一台设备
-                        List<byte[]> friends = new ArrayList<>();
-                        for (ByteArrayWrapper friend: this.friends) {
-                            Bloom bloom = Bloom.create(HashUtil.sha1hash(friend.getData()));
-                            if (!friendListBloomFilter.matches(bloom)) {
-                                // 发现不在对方朋友列表
-                                friends.add(friend.getData());
+                OnlineSignal onlineSignal = new OnlineSignal(mutableDataWrapper.getData());
+                Bloom senderBloomFilter = onlineSignal.getSenderBloomFilter();
+                Bloom receiverBloomFilter = onlineSignal.getReceiverBloomFilter();
+                Bloom friendListBloomFilter = onlineSignal.getFriendListBloomFilter();
 
-                                if (friends.size() >= ChainParam.MAX_FRIEND_LIST_SIZE) {
-                                    break;
-                                }
-                            }
-                        }
+                if (Arrays.equals(pubKey, peer.getData())) {
+                    // 是另外一台设备
+                    List<byte[]> friends = new ArrayList<>();
+                    for (ByteArrayWrapper friend: this.friends) {
+                        Bloom bloom = Bloom.create(HashUtil.sha1hash(friend.getData()));
+                        if (!friendListBloomFilter.matches(bloom)) {
+                            // 发现不在对方朋友列表
+                            friends.add(friend.getData());
 
-                        if (!friends.isEmpty()) {
-                            FriendList friendList = new FriendList(friends);
-                            publishFriendList(peer.getData(), friendList);
-                        }
-                    } else {
-                        // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
-                        FriendPair friendPair1 = new FriendPair(pubKey, peer.getData());
-                        List<Message> list1 = this.messageListMap.get(friendPair1);
-
-                        if (null != list1) {
-                            boolean publish = false;
-                            for (Message message: list1) {
-                                Bloom bloom = Bloom.create(message.getSha1Hash());
-                                if (!receiverBloomFilter.matches(bloom)) {
-                                    // 不匹配则说明缺少该消息，发出一个消息即可
-                                    if (!publish) {
-                                        publishMessage(peer.getData(), message);
-                                        publish = true;
-                                    }
-                                } else {
-                                    // 若匹配，则大概率对方收到了该消息，记为confirmation root，后续会通知UI
-                                    this.friendConfirmationRootToNotify.
-                                            put(new ByteArrayWrapper(message.getHash()), peer.getData());
-                                }
-                            }
-                        }
-
-                        // 比较双方对方发的消息的bloom filter，如果相同，则发出本节点在线信号
-                        FriendPair friendPair2 = new FriendPair(peer.getData(), pubKey);
-                        LinkedList<Message> list2 = this.messageListMap.get(friendPair2);
-                        if (null != list2) {
-                            // 自己合成bloom
-                            Bloom bloom = new Bloom();
-                            for (Message message: list2) {
-                                Bloom msgBloom = Bloom.create(message.getSha1Hash());
-                                bloom.or(msgBloom);
-                            }
-
-                            if (senderBloomFilter.equals(bloom)) {
-                                // 两者bloom filter一样，则发布在线信号
-                                publishFriendOnlineSignal(peer.getData());
+                            if (friends.size() >= ChainParam.MAX_FRIEND_LIST_SIZE) {
+                                break;
                             }
                         }
                     }
 
-                    byte[] chattingFriend = onlineSignal.getChattingFriend();
-                    if (Arrays.equals(pubKey, chattingFriend)) {
-                        // 如果是正在跟我聊天，判断一下上次标记聊天时间戳是否最新
-                        ByteArrayWrapper sender = new ByteArrayWrapper(chattingFriend);
+                    if (!friends.isEmpty()) {
+                        FriendList friendList = new FriendList(friends);
+                        publishFriendList(peer.getData(), friendList);
+                    }
+                } else {
+                    // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
+                    FriendPair friendPair1 = new FriendPair(pubKey, peer.getData());
+                    LinkedList<Message> list1 = this.messageListMap.get(friendPair1);
+
+                    if (null != list1) {
+                        boolean publish = false;
+
+                        int size = list1.size();
+                        byte[] firstMsgHash = list1.getFirst().getSha1Hash();
+                        byte[] lastMsgHash = list1.getLast().getSha1Hash();
+                        boolean preMergedHashMatch = true;
+                        Bloom bloom = Bloom.create(firstMsgHash);
+                        if (!receiverBloomFilter.matches(bloom)) {
+                            preMergedHashMatch = false;
+                        }
+
+                        for (int i = 0; i < size - 1; i++) {
+                            byte[] mergedHash = ByteUtil.merge(list1.get(i).getSha1Hash(), list1.get(i + 1).getSha1Hash());
+                            bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
+                            boolean match = receiverBloomFilter.matches(bloom);
+                            // 如果前后两个合并哈希都不匹配，则说明缺少该消息，发出一个缺少的消息即可
+                            if (!preMergedHashMatch && !match) {
+                                if (!publish) {
+                                    publishMessage(peer.getData(), list1.get(i));
+                                    publish = true;
+                                }
+                            } else {
+                                // 若匹配，则大概率对方收到了该消息，记为confirmation root，后续会通知UI
+                                this.friendConfirmationRootToNotify.
+                                        put(new ByteArrayWrapper(list1.get(i).getHash()), peer.getData());
+                            }
+
+                            preMergedHashMatch = match;
+                        }
+
+                        bloom = Bloom.create(lastMsgHash);
+                        boolean match = receiverBloomFilter.matches(bloom);
+                        // 如果前后两个合并哈希都不匹配，则说明缺少该消息，发出一个缺少的消息即可
+                        if (!preMergedHashMatch && !match) {
+                            if (!publish) {
+                                publishMessage(peer.getData(), list1.getLast());
+                            }
+                        } else {
+                            // 若匹配，则大概率对方收到了该消息，记为confirmation root，后续会通知UI
+                            this.friendConfirmationRootToNotify.
+                                    put(new ByteArrayWrapper(list1.getLast().getHash()), peer.getData());
+                        }
+                    }
+
+                    // 比较双方对方发的消息的bloom filter，如果相同，则发出本节点在线信号
+                    FriendPair friendPair2 = new FriendPair(peer.getData(), pubKey);
+                    LinkedList<Message> list2 = this.messageListMap.get(friendPair2);
+                    if (null != list2) {
+                        // 自己合成bloom
+                        Bloom mySenderBloomFilter = new Bloom();
+                        int size = list2.size();
+                        byte[] firstMsgHash = list2.getFirst().getSha1Hash();
+                        byte[] lastMsgHash = list2.getLast().getSha1Hash();
+                        Bloom bloom = Bloom.create(firstMsgHash);
+                        mySenderBloomFilter.or(bloom);
+                        bloom = Bloom.create(lastMsgHash);
+                        mySenderBloomFilter.or(bloom);
+
+                        for (int i = 0; i < size - 1; i++) {
+                            byte[] mergedHash = ByteUtil.merge(list2.get(i).getSha1Hash(), list2.get(i + 1).getSha1Hash());
+                            bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
+                            mySenderBloomFilter.or(bloom);
+                        }
+
+                        if (senderBloomFilter.equals(mySenderBloomFilter)) {
+                            // 两者bloom filter一样，则发布在线信号
+                            publishFriendOnlineSignal(peer.getData());
+                        }
+                    }
+                }
+
+                byte[] chattingFriend = onlineSignal.getChattingFriend();
+                if (Arrays.equals(pubKey, chattingFriend)) {
+                    // 如果是正在跟我聊天，判断一下上次标记聊天时间戳是否最新
+                    ByteArrayWrapper sender = new ByteArrayWrapper(chattingFriend);
+                    BigInteger latestTimestamp = this.friendChattingTime.get(sender);
+                    // 如果发现更新的推荐，则加入推荐列表
+                    if (null == latestTimestamp || latestTimestamp.compareTo(onlineSignal.getChattingTime()) < 0) {
+                        // 记录最新的聊天时间
+                        this.friendChattingTime.put(sender, onlineSignal.getChattingTime());
+                        referToFriend(sender);
+                    }
+                } else {
+                    // 记录下推荐给别人的聊天时间
+                    FriendPair friendPair = new FriendPair(peer.getData(), chattingFriend);
+                    BigInteger latestTimestamp = this.friendGossipChattingTime.get(friendPair);
+                    if (null == latestTimestamp || latestTimestamp.compareTo(onlineSignal.getChattingTime()) < 0) {
+                        this.friendGossipChattingTime.put(friendPair, onlineSignal.getChattingTime());
+                    }
+                }
+
+
+                if (null != onlineSignal.getGossipItemList()) {
+
+                    // 信任发送方自己给的gossip信息
+                    for (GossipItem gossipItem : onlineSignal.getGossipItemList()) {
+                        logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
+
+                        ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
+
+                        // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+                        if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
+                            logger.trace("Sender[{}] is me.", sender.toString());
+                            continue;
+                        }
+
                         BigInteger latestTimestamp = this.friendChattingTime.get(sender);
                         // 如果发现更新的推荐，则加入推荐列表
-                        if (null == latestTimestamp || latestTimestamp.compareTo(onlineSignal.getChattingTime()) < 0) {
+                        if (null == latestTimestamp || latestTimestamp.compareTo(gossipItem.getTimestamp()) < 0) {
                             // 记录最新的聊天时间
-                            this.friendChattingTime.put(sender, onlineSignal.getChattingTime());
+                            this.friendChattingTime.put(sender, gossipItem.getTimestamp());
                             referToFriend(sender);
                         }
-                    } else {
-                        // 记录下推荐给别人的聊天时间
-                        FriendPair friendPair = new FriendPair(peer.getData(), chattingFriend);
-                        BigInteger latestTimestamp = this.friendGossipChattingTime.get(friendPair);
-                        if (null == latestTimestamp || latestTimestamp.compareTo(onlineSignal.getChattingTime()) < 0) {
-                            this.friendGossipChattingTime.put(friendPair, onlineSignal.getChattingTime());
-                        }
                     }
-
-
-                    if (null != onlineSignal.getGossipItemList()) {
-
-                        // 信任发送方自己给的gossip信息
-                        for (GossipItem gossipItem : onlineSignal.getGossipItemList()) {
-                            logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
-
-                            ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
-
-                            // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
-                            if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
-                                logger.trace("Sender[{}] is me.", sender.toString());
-                                continue;
-                            }
-
-                            BigInteger latestTimestamp = this.friendChattingTime.get(sender);
-                            // 如果发现更新的推荐，则加入推荐列表
-                            if (null == latestTimestamp || latestTimestamp.compareTo(gossipItem.getTimestamp()) < 0) {
-                                // 记录最新的聊天时间
-                                this.friendChattingTime.put(sender, gossipItem.getTimestamp());
-                                referToFriend(sender);
-                            }
-                        }
-                    }
-
-                    break;
                 }
-                case UNKNOWN: {
-                    logger.error("Unknown type.");
-                }
+
+                break;
             }
-        }/* else {
+            case UNKNOWN: {
+                logger.error("Unknown type.");
+            }
+        }
+        /* else {
             // 如果拿到的是旧数据
             if (auth) {
                 long currentTime = System.currentTimeMillis() / 1000;
@@ -1117,7 +1177,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         }
 
         MutableDataWrapper mutableDataWrapper = new MutableDataWrapper(item);
-        processMutableData(mutableDataWrapper, dataIdentifier.getExtraInfo1(), auth);
+        processMutableData(mutableDataWrapper, dataIdentifier.getExtraInfo1());
     }
 
 }
