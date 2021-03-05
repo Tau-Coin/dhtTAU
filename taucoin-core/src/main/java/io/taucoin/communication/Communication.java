@@ -484,7 +484,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
         FriendPair friendPair1 = new FriendPair(pubKey, friend);
         LinkedList<Message> messages1 = this.messageListMap.get(friendPair1);
-        if (null != messages1) {
+        if (null != messages1 && !messages1.isEmpty()) {
             int size = messages1.size();
             byte[] firstMsgHash = messages1.getFirst().getSha1Hash();
             byte[] lastMsgHash = messages1.getLast().getSha1Hash();
@@ -502,7 +502,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
         FriendPair friendPair2 = new FriendPair(friend, pubKey);
         LinkedList<Message> messages2 = this.messageListMap.get(friendPair2);
-        if (null != messages2) {
+        if (null != messages2 && !messages2.isEmpty()) {
             int size = messages2.size();
             byte[] firstMsgHash = messages2.getFirst().getSha1Hash();
             byte[] lastMsgHash = messages2.getLast().getSha1Hash();
@@ -1029,26 +1029,33 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     FriendPair friendPair1 = new FriendPair(pubKey, peer.getData());
                     LinkedList<Message> list1 = this.messageListMap.get(friendPair1);
 
-                    if (null != list1) {
+                    if (null != list1 && !list1.isEmpty()) {
                         boolean publish = false;
 
                         int size = list1.size();
                         byte[] firstMsgHash = list1.getFirst().getSha1Hash();
                         byte[] lastMsgHash = list1.getLast().getSha1Hash();
-                        boolean preMergedHashMatch = true;
+
                         Bloom bloom = Bloom.create(firstMsgHash);
                         if (!receiverBloomFilter.matches(bloom)) {
-                            preMergedHashMatch = false;
+                            if (!publish) {
+                                publishMessage(peer.getData(), list1.getFirst());
+                                publish = true;
+                            }
                         }
 
                         for (int i = 0; i < size - 1; i++) {
                             byte[] mergedHash = ByteUtil.merge(list1.get(i).getSha1Hash(), list1.get(i + 1).getSha1Hash());
                             bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
-                            boolean match = receiverBloomFilter.matches(bloom);
                             // 如果前后两个合并哈希都不匹配，则说明缺少该消息，发出一个缺少的消息即可
-                            if (!preMergedHashMatch && !match) {
+                            if (!receiverBloomFilter.matches(bloom)) {
                                 if (!publish) {
-                                    publishMessage(peer.getData(), list1.get(i));
+                                    // 根据时间随机put一个
+                                    if (System.currentTimeMillis() % 2 == 0) {
+                                        publishMessage(peer.getData(), list1.get(i));
+                                    } else {
+                                        publishMessage(peer.getData(), list1.get(i + 1));
+                                    }
                                     publish = true;
                                 }
                             } else {
@@ -1056,14 +1063,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                                 this.friendConfirmationRootToNotify.
                                         put(new ByteArrayWrapper(list1.get(i).getHash()), peer.getData());
                             }
-
-                            preMergedHashMatch = match;
                         }
 
                         bloom = Bloom.create(lastMsgHash);
-                        boolean match = receiverBloomFilter.matches(bloom);
                         // 如果前后两个合并哈希都不匹配，则说明缺少该消息，发出一个缺少的消息即可
-                        if (!preMergedHashMatch && !match) {
+                        if (!receiverBloomFilter.matches(bloom)) {
                             if (!publish) {
                                 publishMessage(peer.getData(), list1.getLast());
                             }
@@ -1077,7 +1081,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     // 比较双方对方发的消息的bloom filter，如果相同，则发出本节点在线信号
                     FriendPair friendPair2 = new FriendPair(peer.getData(), pubKey);
                     LinkedList<Message> list2 = this.messageListMap.get(friendPair2);
-                    if (null != list2) {
+                    if (null != list2 && !list2.isEmpty()) {
                         // 自己合成bloom
                         Bloom mySenderBloomFilter = new Bloom();
                         int size = list2.size();
