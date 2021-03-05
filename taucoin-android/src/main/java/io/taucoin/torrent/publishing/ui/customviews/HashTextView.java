@@ -102,8 +102,8 @@ public class HashTextView extends TextView {
                     long startTime = System.currentTimeMillis();
                     showFragmentData(this.unsent, textHash, friendPk, emitter);
                     long endTime = System.currentTimeMillis();
-                    logger.debug("setTextHash textHash::{}, text::{}, times::{}ms", this.textHash,
-                            textBuilder, endTime - startTime);
+                    logger.debug("setTextHash textHash::{}, times::{}ms",
+                            this.textHash, endTime - startTime);
                 }
             } catch (InterruptedException ignore) {
             } catch (Exception e) {

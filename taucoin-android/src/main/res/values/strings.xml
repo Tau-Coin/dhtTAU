@@ -293,6 +293,9 @@
     <string name="qr_code_scan_cancelled">Cancelled</string>
     <string name="qr_code_not_found">No QR code found</string>
     <string name="qr_code_not_found_continue">Tap the screen to continue scanning</string>
+    <string name="qr_code_tau_id">TAU ID</string>
+    <string name="qr_code_tau_key">TAU key</string>
+    <string name="qr_code_tau_key_kept_secret">Key must be kept secret.\n\n\nTap to display.</string>
 
     <!-- Send text to clipboard -->
     <string name="send_text_to_clipboard">Copy</string>

@@ -65,13 +65,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp" >
 
-            <io.taucoin.torrent.publishing.ui.customviews.SquareImageView
-                android:id="@+id/iv_qr_code"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:contentDescription="@null"/>
-
             <FrameLayout
+                android:id="@+id/fl_logo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
@@ -96,6 +91,13 @@
                     app:textColorForPressed="@color/color_white" />
 
             </FrameLayout>
+
+            <io.taucoin.torrent.publishing.ui.customviews.SquareImageView
+                android:background="@color/color_white"
+                android:id="@+id/iv_qr_code"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:contentDescription="@null"/>
         </RelativeLayout>
     </LinearLayout>
 </layout>

@@ -1,6 +1,12 @@
 package io.taucoin.torrent.publishing.ui.community;
 
 import android.app.Application;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.view.View;
+
+import com.king.zxing.util.CodeUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +39,7 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
+import io.taucoin.torrent.publishing.core.model.data.DrawBean;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.model.data.Statistics;
 import io.taucoin.torrent.publishing.core.model.data.Result;
@@ -40,7 +47,9 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
+import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
@@ -68,6 +77,7 @@ public class CommunityViewModel extends AndroidViewModel {
     private MutableLiveData<Result> chatState = new MutableLiveData<>();
     private MutableLiveData<List<Community>> blackList = new MutableLiveData<>();
     private MutableLiveData<List<Community>> joinedList = new MutableLiveData<>();
+    private MutableLiveData<Bitmap> qrBitmap = new MutableLiveData<>();
 
     public CommunityViewModel(@NonNull Application application) {
         super(application);
@@ -118,6 +128,13 @@ public class CommunityViewModel extends AndroidViewModel {
      */
     public MutableLiveData<List<Community>> getBlackList() {
         return blackList;
+    }
+
+    /**
+     * 观察生成的二维码
+     */
+    public MutableLiveData<Bitmap> getQRBitmap() {
+        return qrBitmap;
     }
 
     /**
@@ -412,5 +429,50 @@ public class CommunityViewModel extends AndroidViewModel {
     Observable<Member> observerCurrentMember(String chainID) {
         String publicKey = MainApplication.getInstance().getPublicKey();
         return communityRepo.observerCurrentMember(chainID, publicKey);
+    }
+
+    /**
+     * 生成二维码
+     * @param context
+     * @param QRContent 二维码内容
+     * @param logo
+     * @param QRColor 二维码颜色
+     */
+    public void generateQRCode(Context context, String QRContent, View logo, int QRColor) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Bitmap>) emitter -> {
+            try {
+                logo.setDrawingCacheEnabled(true);
+                logo.buildDrawingCache();
+                Bitmap logoBitmap = logo.getDrawingCache();
+                if (logoBitmap != null) {
+                    int heightPix = DimensionsUtil.dip2px(context, 480);
+                    Bitmap bitmap;
+                    if (QRColor == -1) {
+                        bitmap = CodeUtils.createQRCode(QRContent, heightPix, logoBitmap);
+                    } else {
+                        bitmap = CodeUtils.createQRCode(QRContent, heightPix, logoBitmap, QRColor);
+                    }
+                    logger.debug("shareQRCode bitmap::{}", bitmap);
+                    logo.destroyDrawingCache();
+
+//                    Bitmap bgBitmap = BitmapFactory.decodeResource(context.getResources(),
+//                            R.mipmap.icon_community_qr_bg);
+//                    DrawBean bean = new DrawBean();
+//                    bean.setSize(608);
+//                    bean.setX(200);
+//                    bean.setY(200);
+//                    Bitmap lastBitmap = BitmapUtil.drawStyleQRcode(bgBitmap,
+//                            null, bitmap, bean);
+                    emitter.onNext(bitmap);
+                }
+            } catch (Exception e) {
+                logger.error("generateTAUIDQRCode error ", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> qrBitmap.postValue(result));
+        disposables.add(disposable);
     }
 }

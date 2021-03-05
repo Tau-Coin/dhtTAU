@@ -60,7 +60,7 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
 
         String showName = UsersUtil.getCommunityName(chainID);
         binding.qrCode.tvName.setText(showName);
-        binding.qrCode.roundButton.setText(showName);
+        binding.qrCode.roundButton.setText(UsersUtil.getQRCodeName(showName));
         binding.qrCode.roundButton.setBgColor(Utils.getGroupColor(chainID));
         binding.qrCode.tvQrCode.setVisibility(View.GONE);
         binding.qrCode.ivCopy.setVisibility(View.GONE);
@@ -70,11 +70,13 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
-                    int heightPix = DimensionsUtil.dip2px(this, 480);
-                    Bitmap bitmap = CodeUtils.createQRCode(communityInviteLink, heightPix,
-                            getResources().getColor(R.color.color_yellow_dark));
-                    binding.qrCode.ivQrCode.setImageBitmap(bitmap);
+                    communityViewModel.generateQRCode(this, communityInviteLink,
+                            binding.qrCode.flLogo, -1);
                 }));
+
+        communityViewModel.getQRBitmap().observe(this, bitmap -> {
+            binding.qrCode.ivQrCode.setImageBitmap(bitmap);
+        });
     }
 
     @Override

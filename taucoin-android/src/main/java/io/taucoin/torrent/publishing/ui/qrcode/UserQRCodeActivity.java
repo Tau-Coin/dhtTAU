@@ -2,17 +2,17 @@ package io.taucoin.torrent.publishing.ui.qrcode;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.SpannableStringBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.google.gson.Gson;
-import com.king.zxing.util.CodeUtils;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
+import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityQrCodeBinding;
@@ -65,6 +65,9 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
         // 查询数据
         userViewModel.queryCurrentUserAndFriends();
         userViewModel.getQRContent().observe(this, this::showQRCOdeImage);
+        userViewModel.getQRBitmap().observe(this, bitmap -> {
+            binding.qrCode.ivQrCode.setImageBitmap(bitmap);
+        });
     }
 
     /**
@@ -72,15 +75,17 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
      */
     private void showQRCOdeImage(QRContent content) {
         String midHideName = UsersUtil.getMidHideName(content.getPublicKey());
-        String name = getString(R.string.user_show_name);
-        name = String.format(name, content.getNickName(), midHideName);
-        binding.qrCode.tvName.setText(name);
-        binding.qrCode.roundButton.setText(content.getNickName());
+        SpannableStringBuilder stringBuilder = new SpanUtils()
+                .append(getString(R.string.qr_code_tau_id))
+                .setForegroundColor(getResources().getColor(R.color.gray_dark))
+                .append(" ")
+                .append(midHideName)
+                .create();
+        binding.qrCode.tvName.setText(stringBuilder);
+        binding.qrCode.roundButton.setText(UsersUtil.getQRCodeName(content.getNickName()));
         binding.qrCode.roundButton.setBgColor(Utils.getGroupColor(content.getPublicKey()));
         String contentJson = new Gson().toJson(content);
-        int heightPix = DimensionsUtil.dip2px(this, 480);
-        Bitmap bitmap = CodeUtils.createQRCode(contentJson, heightPix);
-        binding.qrCode.ivQrCode.setImageBitmap(bitmap);
+        userViewModel.generateQRCode(this, contentJson, binding.qrCode.flLogo, -1);
     }
 
     /**

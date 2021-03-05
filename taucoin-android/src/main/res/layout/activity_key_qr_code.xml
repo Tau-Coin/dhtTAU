@@ -25,12 +25,29 @@
             android:layout_height="match_parent"
             android:layout_marginTop="30dp">
 
-            <include
-                android:id="@+id/qr_code"
-                layout="@layout/qr_code"/>
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <include
+                    android:id="@+id/qr_code"
+                    layout="@layout/qr_code"/>
+
+                <io.taucoin.torrent.publishing.ui.customviews.SquareTextView
+                    android:id="@+id/tv_kept_secret"
+                    android:layout_marginStart="40dp"
+                    android:layout_marginEnd="40dp"
+                    android:layout_width="300dp"
+                    android:layout_height="0dp"
+                    android:onClick="@{listener::onClick}"
+                    android:gravity="center_horizontal|center"
+                    android:text="@string/qr_code_tau_key_kept_secret"
+                    android:textAppearance="@style/TextAppearanceBody1"/>
+
+            </FrameLayout>
 
             <LinearLayout
-                android:id="@+id/ll_scan_qr_code"
+                android:id="@+id/ll_key_copy"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
@@ -42,22 +59,15 @@
                 android:paddingStart="15dp"
                 android:paddingEnd="15dp">
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:contentDescription="@null"
-                    android:src="@mipmap/icon_scan_orange"/>
-
                 <TextView
+                    android:id="@+id/tv_key_copy"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/primary_light"
                     android:layout_marginStart="10dp"
-                    android:text="@string/qr_code_scan_friend_qr"
+                    android:drawablePadding="3dp"
                     android:textAppearance="@style/TextAppearanceBody1"/>
 
             </LinearLayout>
-
         </LinearLayout>
     </LinearLayout>
 </layout>

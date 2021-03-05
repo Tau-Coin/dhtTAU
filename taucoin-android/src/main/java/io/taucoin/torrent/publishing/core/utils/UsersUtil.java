@@ -9,6 +9,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
  */
 public class UsersUtil {
     private static final int DEFAULT_NAME_LENGTH = 4;
+    private static final int QR_NAME_LENGTH = 3;
 
     /**
      * 获取默认截取的名字
@@ -146,5 +147,17 @@ public class UsersUtil {
         } else {
             return String.valueOf((int)balance);
         }
+    }
+
+    /**
+     * 获取二维码上图片的名字
+     * @param name
+     * @return
+     */
+    public static String getQRCodeName(String name) {
+        if (StringUtil.isNotEmpty(name) && name.length() > QR_NAME_LENGTH) {
+            return name.substring(0, QR_NAME_LENGTH);
+        }
+        return name;
     }
 }

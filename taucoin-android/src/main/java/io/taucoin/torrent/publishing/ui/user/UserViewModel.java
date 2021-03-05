@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.user;
 
 import android.app.Application;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.view.LayoutInflater;
@@ -8,10 +9,12 @@ import android.view.View;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
+import com.king.zxing.util.CodeUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -41,6 +44,9 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.AppUtil;
+import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.FileUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -69,7 +75,7 @@ import io.taucoin.util.ByteUtil;
 public class UserViewModel extends AndroidViewModel {
 
     private static final Logger logger = LoggerFactory.getLogger("UserViewModel");
-    private static final String QR_CODE_NAME = "QRCode.jpg";
+    private static final String QR_CODE_NAME = "QRCode%s.jpg";
     private UserRepository userRepo;
     private FriendRepository friendRepo;
     private SettingsRepository settingsRepo;
@@ -82,6 +88,8 @@ public class UserViewModel extends AndroidViewModel {
     private MutableLiveData<List<User>> blackList = new MutableLiveData<>();
     private MutableLiveData<UserAndFriend> userDetail = new MutableLiveData<>();
     private MutableLiveData<QRContent> qrContent = new MutableLiveData<>();
+    private MutableLiveData<Bitmap> qrBitmap = new MutableLiveData<>();
+    private MutableLiveData<Bitmap> qrBlurBitmap = new MutableLiveData<>();
     private CommonDialog commonDialog;
     private CommonDialog editNameDialog;
     private CommonDialog dailyDataLimitDialog;
@@ -249,6 +257,20 @@ public class UserViewModel extends AndroidViewModel {
      */
     public MutableLiveData<QRContent> getQRContent() {
         return qrContent;
+    }
+
+    /**
+     * 观察生成的二维码
+     */
+    public MutableLiveData<Bitmap> getQRBitmap() {
+        return qrBitmap;
+    }
+
+    /**
+     * 观察生成的模糊二维码
+     */
+    public MutableLiveData<Bitmap> getQRBlurBitmap() {
+        return qrBlurBitmap;
     }
 
     /**
@@ -624,13 +646,23 @@ public class UserViewModel extends AndroidViewModel {
                     Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0,
                             w, h, matrix, true);
                     view.destroyDrawingCache();
-                    String fileName = FileUtil.getQRCodeFilePath() + QR_CODE_NAME;
 
-                    logger.debug("shareQRCode fileName::{}", fileName);
+                    // 清除旧二维码
+                    String filePath = FileUtil.getQRCodeFilePath();
+                    File dir = new File(filePath);
+                    File[] files = dir.listFiles();
+                    for (File file : files) {
+                        file.delete();
+                    }
+                    // 添加时间戳，防止数据分享的还是旧数据
+                    String fileName = String.format(QR_CODE_NAME, DateUtil.getDateTime());
+                    filePath += fileName;
 
-                        FileUtil.saveFilesDirBitmap(fileName, resizeBmp);
-                        ActivityUtil.shareFile(activity, fileName, view.getContext()
-                                .getString(R.string.contacts_share_qr_code));
+                    logger.debug("shareQRCode filePath::{}", filePath);
+
+                    FileUtil.saveFilesDirBitmap(filePath, resizeBmp);
+                    ActivityUtil.shareFile(activity, filePath, view.getContext()
+                            .getString(R.string.contacts_share_qr_code));
                 }
             } catch (Exception e) {
                 logger.error("shareQRCode error", e);
@@ -689,5 +721,61 @@ public class UserViewModel extends AndroidViewModel {
                 .setCanceledOnTouchOutside(false)
                 .create();
         dailyDataLimitDialog.show();
+    }
+
+    /**
+     * 生成二维码
+     * @param context
+     * @param QRContent 二维码内容
+     * @param logo
+     * @param QRColor 二维码颜色
+     */
+    public void generateQRCode(Context context, String QRContent, View logo, int QRColor) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Bitmap>) emitter -> {
+            try {
+                logo.setDrawingCacheEnabled(true);
+                logo.buildDrawingCache();
+                Bitmap logoBitmap = logo.getDrawingCache();
+                if (logoBitmap != null) {
+                    int heightPix = DimensionsUtil.dip2px(context, 480);
+                    Bitmap bitmap;
+                    if (QRColor == -1) {
+                        bitmap = CodeUtils.createQRCode(QRContent, heightPix, logoBitmap);
+                    } else {
+                        bitmap = CodeUtils.createQRCode(QRContent, heightPix, logoBitmap, QRColor);
+                    }
+                    logger.debug("shareQRCode bitmap::{}", bitmap);
+                    logo.destroyDrawingCache();
+                    emitter.onNext(bitmap);
+                }
+            } catch (Exception e) {
+                logger.error("generateTAUIDQRCode error ", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> qrBitmap.postValue(result));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 把二维码转化为模糊二维码
+     * @param bitmap
+     */
+    public void generateBlurQRCode(Bitmap bitmap) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Bitmap>) emitter -> {
+            try {
+                Bitmap blurBitmap = BitmapUtil.blurBitmap(bitmap, 80, false);
+                emitter.onNext(blurBitmap);
+            } catch (Exception e) {
+                logger.error("queryCurrentUserAndFriends error ", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> qrBlurBitmap.postValue(result));
+        disposables.add(disposable);
     }
 }
