@@ -113,10 +113,10 @@ public class CommunicationManager {
     }
 
     /**
-     * 设置最小间隔时间
+     * 设置间隔时间
      */
-    public void setMinIntervalTime(int minIntervalTime) {
-        this.communication.setMinIntervalTime(minIntervalTime);
+    public void setIntervalTime(int minIntervalTime) {
+        this.communication.setIntervalTime(minIntervalTime);
     }
 
 }

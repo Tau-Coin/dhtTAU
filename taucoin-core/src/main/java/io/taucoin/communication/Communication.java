@@ -1,7 +1,6 @@
 package io.taucoin.communication;
 
 import com.frostwire.jlibtorrent.Pair;
-import com.google.common.primitives.Bytes;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,6 @@ import io.taucoin.account.AccountManager;
 import io.taucoin.account.KeyChangedListener;
 import io.taucoin.core.Bloom;
 import io.taucoin.core.DataIdentifier;
-import io.taucoin.core.DataType;
 import io.taucoin.core.FriendList;
 import io.taucoin.core.FriendPair;
 import io.taucoin.core.MutableDataWrapper;
@@ -54,13 +52,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //    private final int LOSE_TOUCH_TIME  = 300; // 5 min
 
     // 主循环间隔最小时间
-    private int MIN_LOOP_INTERVAL_TIME = 50; // 50 ms
-
-    // 主循环间隔最大时间
-    private final int MAX_LOOP_INTERVAL_TIME = 1000; // 1000 ms
+    private int DEFAULT_LOOP_INTERVAL_TIME = 50; // 50 ms
 
     // 主循环间隔时间
-    private int loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
+    private int loopIntervalTime = DEFAULT_LOOP_INTERVAL_TIME;
 
     // 设备ID
     private final byte[] deviceID;
@@ -647,9 +642,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 // 访问通过gossip机制推荐的活跃peer
                 visitReferredFriends();
 
-                // 尝试调整间隔时间
-                adjustIntervalTime();
-
                 try {
                     Thread.sleep(this.loopIntervalTime);
                 } catch (InterruptedException e) {
@@ -661,7 +653,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 logger.error(e.getMessage(), e);
 
                 try {
-                    Thread.sleep(this.MIN_LOOP_INTERVAL_TIME);
+                    Thread.sleep(this.DEFAULT_LOOP_INTERVAL_TIME);
                 } catch (InterruptedException ex) {
                     logger.info(ex.getMessage(), ex);
                     Thread.currentThread().interrupt();
@@ -670,30 +662,12 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 logger.error(e.getMessage(), e);
 
                 try {
-                    Thread.sleep(this.MIN_LOOP_INTERVAL_TIME);
+                    Thread.sleep(this.DEFAULT_LOOP_INTERVAL_TIME);
                 } catch (InterruptedException ex) {
                     logger.info(ex.getMessage(), ex);
                     Thread.currentThread().interrupt();
                 }
             }
-        }
-    }
-
-    /**
-     * 调整间隔时间
-     */
-    private void adjustIntervalTime() {
-        int size = this.friends.size();
-        if (size > 0) {
-            // 主循环频率：1s / 在线朋友数；最小值50ms; 最大值 1s
-            // 流量控制是控制主循环频率最小值
-            this.loopIntervalTime = MAX_LOOP_INTERVAL_TIME / size;
-
-            if (this.loopIntervalTime < MIN_LOOP_INTERVAL_TIME) {
-                this.loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
-            }
-        } else {
-            this.loopIntervalTime = MAX_LOOP_INTERVAL_TIME;
         }
     }
 
@@ -706,23 +680,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
-     * 设置间隔时间
-     */
-    public void setIntervalTime(int intervalTime) {
-        if (intervalTime < MIN_LOOP_INTERVAL_TIME) {
-            this.loopIntervalTime = MIN_LOOP_INTERVAL_TIME;
-        } else if (intervalTime > MAX_LOOP_INTERVAL_TIME) {
-            this.loopIntervalTime = MAX_LOOP_INTERVAL_TIME;
-        } else {
-            this.loopIntervalTime = intervalTime;
-        }
-    }
-
-    /**
      * 设置最小间隔时间
      */
-    public void setMinIntervalTime(int minIntervalTime) {
-        this.MIN_LOOP_INTERVAL_TIME = Math.min(minIntervalTime, MAX_LOOP_INTERVAL_TIME);
+    public void setIntervalTime(int intervalTime) {
+        this.loopIntervalTime = intervalTime;
     }
 
     /**
@@ -1063,7 +1024,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                                 }
                             }
                             // 前后两个合并哈希都匹配，才确认收到
-                            if (previousMatch && match){
+                            if (previousMatch && match) {
                                 logger.error("confirmation root:{}", Hex.toHexString(list1.get(i).getHash()));
                                 // 若匹配，则大概率对方收到了该消息，记为confirmation root，后续会通知UI
                                 this.friendConfirmationRootToNotify.
@@ -1109,7 +1070,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         }
                     }
                     if (!senderBloomFilter.equals(mySenderBloomFilter)) {
-                        // 两者bloom filter一样，则发布在线信号
+                        // 两者bloom filter不一样，则发布在线信号
                         publishFriendOnlineSignal(peer.getData());
                     }
                 }
@@ -1182,10 +1143,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         DataIdentifier dataIdentifier = (DataIdentifier) cbData;
         if (null == item) {
             logger.debug("MULTIPLEX DATA from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
-            if (auth) {
-                // 最后一个仍然是空，则put自己的在线信号
-                publishFriendOnlineSignal(dataIdentifier.getExtraInfo1().getData());
-            }
+            // 最后一个仍然是空，则put自己的在线信号
+            publishFriendOnlineSignal(dataIdentifier.getExtraInfo1().getData());
             return;
         }
 

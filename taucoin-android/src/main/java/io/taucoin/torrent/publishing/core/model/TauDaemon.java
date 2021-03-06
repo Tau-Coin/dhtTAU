@@ -27,7 +27,6 @@ import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
 import io.taucoin.db.DBException;
 import io.taucoin.genesis.GenesisConfig;
-import io.taucoin.listener.MsgStatus;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -485,7 +484,7 @@ public class TauDaemon {
                         long sessionNodes = getSessionNodes();
                         int interval = NetworkSetting.calculateMainLoopInterval(sessionNodes);
                         if (interval > 0) {
-                            tauController.getCommunicationManager().setMinIntervalTime(interval);
+                            tauController.getCommunicationManager().setIntervalTime(interval);
                             // 更新UI展示链端主循环时间间隔
                             updateUIInterval(interval);
                         }
