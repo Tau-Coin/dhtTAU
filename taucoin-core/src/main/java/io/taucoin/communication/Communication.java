@@ -560,6 +560,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     private void publishOnlineSignal(byte[] friend, OnlineSignal onlineSignal) {
         if (null != onlineSignal) {
+            logger.debug("publish friend[{}] online signal:{}", Hex.toHexString(friend), onlineSignal.toString());
             MutableDataWrapper mutableDataWrapper = new MutableDataWrapper(MutableDataType.ONLINE_SIGNAL,
                     onlineSignal.getEncoded());
             publishMutableData(friend, mutableDataWrapper.getEncoded());
@@ -1025,6 +1026,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         publishFriendList(peer.getData(), friendList);
                     }
                 } else {
+                    logger.debug("peer:{},{}", peer.toString(), onlineSignal.toString());
                     // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
                     FriendPair friendPair1 = new FriendPair(pubKey, peer.getData());
                     LinkedList<Message> list1 = this.messageListMap.get(friendPair1);
@@ -1035,20 +1037,21 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         int size = list1.size();
                         byte[] firstMsgHash = list1.getFirst().getSha1Hash();
                         byte[] lastMsgHash = list1.getLast().getSha1Hash();
+                        boolean previousMatch = true;
 
                         Bloom bloom = Bloom.create(firstMsgHash);
                         if (!receiverBloomFilter.matches(bloom)) {
-                            if (!publish) {
-                                publishMessage(peer.getData(), list1.getFirst());
-                                publish = true;
-                            }
+                            publishMessage(peer.getData(), list1.getFirst());
+                            publish = true;
+                            previousMatch = false;
                         }
 
                         for (int i = 0; i < size - 1; i++) {
                             byte[] mergedHash = ByteUtil.merge(list1.get(i).getSha1Hash(), list1.get(i + 1).getSha1Hash());
                             bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
-                            // 如果前后两个合并哈希都不匹配，则说明缺少该消息，发出一个缺少的消息即可
-                            if (!receiverBloomFilter.matches(bloom)) {
+                            boolean match = receiverBloomFilter.matches(bloom);
+                            // 如果合并哈希不匹配，则随机发出一个缺少的消息即可
+                            if (!match) {
                                 if (!publish) {
                                     // 根据时间随机put一个
                                     if (System.currentTimeMillis() % 2 == 0) {
@@ -1058,20 +1061,27 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                                     }
                                     publish = true;
                                 }
-                            } else {
+                            }
+                            // 前后两个合并哈希都匹配，才确认收到
+                            if (previousMatch && match){
+                                logger.error("confirmation root:{}", Hex.toHexString(list1.get(i).getHash()));
                                 // 若匹配，则大概率对方收到了该消息，记为confirmation root，后续会通知UI
                                 this.friendConfirmationRootToNotify.
                                         put(new ByteArrayWrapper(list1.get(i).getHash()), peer.getData());
                             }
+
+                            previousMatch = match;
                         }
 
                         bloom = Bloom.create(lastMsgHash);
-                        // 如果前后两个合并哈希都不匹配，则说明缺少该消息，发出一个缺少的消息即可
-                        if (!receiverBloomFilter.matches(bloom)) {
+                        boolean match = receiverBloomFilter.matches(bloom);
+                        if (!match) {
                             if (!publish) {
                                 publishMessage(peer.getData(), list1.getLast());
                             }
-                        } else {
+                        }
+                        // 前后两个合并哈希都匹配，才确认收到
+                        if (previousMatch && match) {
                             // 若匹配，则大概率对方收到了该消息，记为confirmation root，后续会通知UI
                             this.friendConfirmationRootToNotify.
                                     put(new ByteArrayWrapper(list1.getLast().getHash()), peer.getData());
@@ -1098,7 +1108,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             mySenderBloomFilter.or(bloom);
                         }
                     }
-                    if (senderBloomFilter.equals(mySenderBloomFilter)) {
+                    if (!senderBloomFilter.equals(mySenderBloomFilter)) {
                         // 两者bloom filter一样，则发布在线信号
                         publishFriendOnlineSignal(peer.getData());
                     }

@@ -1,10 +1,14 @@
 package io.taucoin.core;
 
+import org.spongycastle.util.encoders.Hex;
+
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.taucoin.types.GossipItem;
+import io.taucoin.types.MessageType;
+import io.taucoin.types.MessageVersion;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
@@ -138,5 +142,42 @@ public class OnlineSignal {
         }
 
         return rlpEncoded;
+    }
+
+    @Override
+    public String toString() {
+        Bloom senderBloomFilter = getSenderBloomFilter();
+        Bloom receiverBloomFilter = getReceiverBloomFilter();
+        Bloom friendListBloomFilter = getFriendListBloomFilter();
+        BigInteger chattingTime = getChattingTime();
+        byte[] chattingFriend = getChattingFriend();
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("OnlineSignal{");
+        if (null != senderBloomFilter) {
+            stringBuilder.append("sender bloom filter=");
+            stringBuilder.append(senderBloomFilter);
+        }
+        if (null != receiverBloomFilter) {
+            stringBuilder.append(", receiver bloom filter=");
+            stringBuilder.append(receiverBloomFilter);
+        }
+        if (null != friendListBloomFilter) {
+            stringBuilder.append(", friend list bloom filter=");
+            stringBuilder.append(friendListBloomFilter);
+        }
+        if (null != chattingTime) {
+            stringBuilder.append(", chatting time=");
+            stringBuilder.append(chattingTime);
+        }
+        if (null != chattingFriend) {
+            stringBuilder.append(", chatting friend=");
+            stringBuilder.append(Hex.toHexString(chattingFriend));
+        }
+
+        stringBuilder.append("}");
+
+        return stringBuilder.toString();
     }
 }
