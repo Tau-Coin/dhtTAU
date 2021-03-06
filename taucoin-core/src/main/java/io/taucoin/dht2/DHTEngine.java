@@ -272,11 +272,12 @@ public class DHTEngine {
 
         ImmutableItemRequest req = new ImmutableItemRequest(spec, cb, cbData);
 
+        /*
         // Drop this request if it exists.
         if (getCache.get(req.hash()) != null) {
             logger.trace("duplicate immutable item req:" + req);
             return Duplicated;
-        }
+        }*/
 
         if (requestImmutableItemAsync(req)) {
             return Success;
@@ -303,11 +304,12 @@ public class DHTEngine {
 
         MutableItemRequest req = new MutableItemRequest(spec, cb, cbData);
 
+        /*
         // Drop this request if it exists.
         if (getCache.get(req.hash()) != null) {
             logger.trace("duplicate mutable item req:" + req);
             return Duplicated;
-        }
+        }*/
 
         if (requestMutableItemAsync(req)) {
             return Success;
