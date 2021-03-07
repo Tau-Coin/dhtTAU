@@ -105,7 +105,7 @@ public interface MessageDB {
 
     /**
      * save latest message hash list encode
-     * @param friendPair friend pair
+     * @param friendPair friend pair, <my pubKey, friend pubKey>
      * @param encode encode of message hash list
      * @throws DBException database exception database exception
      */
@@ -113,7 +113,7 @@ public interface MessageDB {
 
     /**
      * get latest message hash list encode
-     * @param friendPair friend pair
+     * @param friendPair friend pair, <my pubKey, friend pubKey>
      * @return message hash list encode
      * @throws DBException database exception database exception
      */
