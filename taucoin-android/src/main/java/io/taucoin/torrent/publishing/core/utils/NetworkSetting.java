@@ -26,7 +26,6 @@ public class NetworkSetting {
     public static final long current_speed_sample = 10;       // 单位s
     public static final float min_threshold = 1.0f / 4;       // 比率最小阀值
     public static final float max_threshold = 3.0f / 4;       // 比率最大阀值
-    public static final int less_nodes_threshold = 50;        // 节点少阀值，可能网络状况差
 
     private static SettingsRepository settingsRepo;
     static {
@@ -284,10 +283,9 @@ public class NetworkSetting {
 
     /**
      * 计算主循环时间间隔
-     * @param sessionNodes session个数
      * @return 返回计算的时间间隔
      */
-    public static int calculateMainLoopInterval(long sessionNodes) {
+    public static int calculateMainLoopInterval() {
         Context appContext = MainApplication.getInstance();
         String foregroundRunningKey = appContext.getString(R.string.pref_key_foreground_running);
         Interval mainLoopMin;
@@ -314,9 +312,9 @@ public class NetworkSetting {
             long currentSpeed = NetworkSetting.getCurrentSpeed();
             if (speedLimit > 0) {
                 float rate = currentSpeed * 1.0f / speedLimit;
-                timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax, sessionNodes);
-                logger.trace("calculateMainLoopInterval currentSpeed::{}, speedLimit::{}, rate::{}, timeInterval::{}",
-                        currentSpeed, speedLimit, rate, timeInterval);
+                timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax);
+                logger.trace("calculateMainLoopInterval currentSpeed::{}, speedLimit::{}, rate::{}," +
+                                " timeInterval::{}", currentSpeed, speedLimit, rate, timeInterval);
             }
         }
         return timeInterval;
@@ -329,10 +327,10 @@ public class NetworkSetting {
      * @param max 最大值
      * @return 返回计算的时间间隔
      */
-    private static int calculateTimeInterval(float rate, Interval min, Interval max, long sessionNodes) {
+    private static int calculateTimeInterval(float rate, Interval min, Interval max) {
         int timeInterval;
-        // 比率大于等于最大阀值或sessionNodes小于等于阀值限制，使用最大时间间隔
-        if (rate >= max_threshold || sessionNodes <= less_nodes_threshold) {
+        // 比率大于等于最大阀值限制，使用最大时间间隔
+        if (rate >= max_threshold) {
             timeInterval = max.getInterval();
         } else if (rate <= min_threshold) {
             timeInterval = min.getInterval();

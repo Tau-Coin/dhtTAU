@@ -481,14 +481,11 @@ public class TauDaemon {
                     logger.info("rescheduleTAUBySettings restartSessions");
                 } else {
                     if (isHaveAvailableData()) {
-                        long sessionNodes = getSessionNodes();
-                        int interval = NetworkSetting.calculateMainLoopInterval(sessionNodes);
-                        if (interval > 0) {
-                            tauController.getCommunicationManager().setIntervalTime(interval);
-                            // 更新UI展示链端主循环时间间隔
-                            updateUIInterval(interval);
-                        }
-                        //
+                        int interval = NetworkSetting.calculateMainLoopInterval();
+                        tauController.getCommunicationManager().setIntervalTime(interval);
+                        // 更新UI展示链端主循环时间间隔
+                        updateUIInterval(interval);
+                        // 重置无可用流量提示对话框的参数
                         trafficTips = true;
                         noRemainingDataTimes = 0;
                         resetReadOnly(false);
