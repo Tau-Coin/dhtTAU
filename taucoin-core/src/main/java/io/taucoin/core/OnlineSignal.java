@@ -12,13 +12,23 @@ import io.taucoin.util.RLPList;
 
 public class OnlineSignal {
     Bloom messageBloomFilter = new Bloom();
-    Bloom friendListBloomFilter = new Bloom();
+    Bloom friendListBloomFilter = null;
     byte[] chattingFriend; // 当前正在交谈的朋友
     BigInteger chattingTime; // 正在交谈的时间
     private List<GossipItem> gossipItemList = new CopyOnWriteArrayList<>(); // 打听到的信息
 
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
+
+    public OnlineSignal(Bloom messageBloomFilter, byte[] chattingFriend,
+                        BigInteger chattingTime, List<GossipItem> gossipItemList) {
+        this.messageBloomFilter = messageBloomFilter;
+        this.chattingFriend = chattingFriend;
+        this.chattingTime = chattingTime;
+        this.gossipItemList = gossipItemList;
+
+        this.parsed = true;
+    }
 
     public OnlineSignal(Bloom messageBloomFilter, Bloom friendListBloomFilter, byte[] chattingFriend,
                         BigInteger chattingTime, List<GossipItem> gossipItemList) {
@@ -83,7 +93,10 @@ public class OnlineSignal {
         RLPList list = (RLPList) params.get(0);
 
         this.messageBloomFilter = new Bloom(list.get(0).getRLPData());
-        this.friendListBloomFilter = new Bloom(list.get(1).getRLPData());
+
+        byte[] friendBloomBytes = list.get(1).getRLPData();
+        this.friendListBloomFilter = (null == friendBloomBytes) ? null: new Bloom(friendBloomBytes);
+
         this.chattingFriend = list.get(2).getRLPData();
 
         byte[] chattingTimeBytes = list.get(3).getRLPData();
@@ -118,7 +131,10 @@ public class OnlineSignal {
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
             byte[] messageBloomFilter = RLP.encodeElement(this.messageBloomFilter.getData());
-            byte[] friendListBloomFilter = RLP.encodeElement(this.friendListBloomFilter.getData());
+            byte[] friendListBloomFilter = RLP.encodeElement(null);
+            if (null != this.friendListBloomFilter) {
+                friendListBloomFilter = RLP.encodeElement(this.friendListBloomFilter.getData());
+            }
             byte[] chattingFriend = RLP.encodeElement(this.chattingFriend);
             byte[] chattingTime = RLP.encodeBigInteger(this.chattingTime);
             byte[] gossipListEncoded = getGossipListEncoded();
