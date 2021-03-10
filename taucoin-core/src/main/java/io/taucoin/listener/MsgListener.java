@@ -1,5 +1,7 @@
 package io.taucoin.listener;
 
+import java.math.BigInteger;
+
 import io.taucoin.types.Message;
 
 public interface MsgListener {
@@ -40,8 +42,9 @@ public interface MsgListener {
     /**
      * 发现朋友通知
      * @param friend 发现的添加我为好友的朋友
+     * @param timestamp 发现朋友的在线时间
      */
-    void onDiscoveryFriend(byte[] friend);
+    void onDiscoveryFriend(byte[] friend, BigInteger timestamp);
 
     /**
      * This event will be notified if error happens during running time.

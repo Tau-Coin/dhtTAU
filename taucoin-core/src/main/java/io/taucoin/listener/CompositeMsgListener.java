@@ -1,5 +1,6 @@
 package io.taucoin.listener;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -81,11 +82,11 @@ public class CompositeMsgListener implements MsgListener {
      * 发现朋友通知
      *
      * @param friend 发现的添加我为好友的朋友
+     * @param timestamp 发现朋友的在线时间
      */
-    @Override
-    public void onDiscoveryFriend(byte[] friend) {
+    public void onDiscoveryFriend(byte[] friend, BigInteger timestamp) {
         for (MsgListener listener : listeners) {
-            listener.onDiscoveryFriend(friend);
+            listener.onDiscoveryFriend(friend, timestamp);
         }
     }
 

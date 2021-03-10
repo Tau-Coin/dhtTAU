@@ -79,7 +79,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private final Map<ByteArrayWrapper, BigInteger> friendLastSeen = new ConcurrentHashMap<>();
 
     // 当前发现的等待通知的在线的朋友集合（完整公钥）
-    private final Set<ByteArrayWrapper> onlineFriendsToNotify = new CopyOnWriteArraySet<>();
+    private final Map<ByteArrayWrapper, BigInteger> onlineFriendsToNotify = new ConcurrentHashMap<>();;
 
     // 得到的消息集合（hash <--> Message），ConcurrentHashMap是支持并发操作的集合
     private final Map<ByteArrayWrapper, Message> messageMap = new ConcurrentHashMap<>();
@@ -293,11 +293,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * 通知UI发现的还在线的朋友
      */
     private void notifyUIOnlineFriend() {
-        for (ByteArrayWrapper friend: this.onlineFriendsToNotify) {
-            logger.trace("Notify UI online friend:{}", friend.toString());
-            this.msgListener.onDiscoveryFriend(friend.getData());
+        for (Map.Entry<ByteArrayWrapper, BigInteger> entry: this.onlineFriendsToNotify.entrySet()) {
+            logger.trace("Notify UI online friend:{}", entry.getKey().toString());
+            this.msgListener.onDiscoveryFriend(entry.getKey().getData(), entry.getValue());
 
-            this.onlineFriendsToNotify.remove(friend);
+            this.onlineFriendsToNotify.remove(entry.getKey());
         }
     }
 
@@ -1073,7 +1073,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null == lastSeen || lastSeen.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
             logger.debug("Newer data from peer:{}", peer.toString());
             this.friendLastSeen.put(peer, timestamp);
-            this.onlineFriendsToNotify.add(peer);
+            this.onlineFriendsToNotify.put(peer, timestamp);
         }
         switch (mutableDataWrapper.getMutableDataType()) {
             case MESSAGE: {
