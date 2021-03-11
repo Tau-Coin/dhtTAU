@@ -365,12 +365,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             try {
                 // save to db
                 this.messageDB.putMessage(message.getHash(), message.getEncoded());
-
-                logger.debug("Notify UI new message from friend:{}, hash:{}",
-                        sender.toString(), Hex.toHexString(message.getHash()));
-
-                // 通知UI新消息
-                this.msgListener.onNewMessage(sender.getData(), message);
             } catch (RuntimeException e) {
                 logger.error(e.getMessage(), e);
             }
@@ -538,6 +532,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
             this.onlineSignalCache.remove(entry.getKey());
         }
+        // TODO:: 考虑put频率过高的问题，等待优化
 
         // 发送在线信号
         for (ByteArrayWrapper peer: peersToPutOnlineSignal) {
@@ -1081,6 +1076,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 logger.debug("MESSAGE: Got message :{}", message.toString());
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
                 this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), peer);
+
+                this.msgListener.onNewMessage(peer.getData(), message);
 
                 break;
             }
