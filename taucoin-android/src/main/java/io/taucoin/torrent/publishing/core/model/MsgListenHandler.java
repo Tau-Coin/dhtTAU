@@ -134,33 +134,34 @@ class MsgListenHandler extends MsgListener{
     /**
      * 发现朋友
      * @param friendPk 朋友公钥
+     * @param timestamp 朋友在线时间
      */
     @Override
-    public void onDiscoveryFriend(byte[] friendPk) {
+    public void onDiscoveryFriend(byte[] friendPk, BigInteger timestamp) {
         logger.debug("onDiscoveryFriend friendPk::{}",
                 ByteUtil.toHexString(friendPk));
         try {
             String userPk = MainApplication.getInstance().getPublicKey();
             String friendPkStr = ByteUtil.toHexString(friendPk);
             Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
+            long latestOnlineTime = timestamp.longValue();
             if (friend != null) {
                 boolean isUpdate = false;
                 if (friend.state != 2) {
                     friend.state = 2;
                     isUpdate = true;
-                    logger.info("onDiscoveryFriend successfully, friendPk::{}, timestamp::{}",
-                            ByteUtil.toHexString(friendPk),
-                            DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6));
                 }
-                long currentTime = DateUtil.getTime();
-                // 当前时间大于上次更新时间30s再更新
-                if (currentTime > friend.lastSeenTime) {
-                    friend.lastSeenTime = currentTime;
+                // 当前时间大于上次更新时间
+                if (latestOnlineTime > friend.lastSeenTime) {
+                    friend.lastSeenTime = latestOnlineTime;
                     isUpdate = true;
                 }
                 if (isUpdate) {
                     friendRepo.updateFriend(friend);
                 }
+                logger.info("onDiscoveryFriend friendPk::{}, timestamp::{}",
+                        ByteUtil.toHexString(friendPk),
+                        DateUtil.formatTime(latestOnlineTime, DateUtil.pattern6));
             }
         } catch (Exception e) {
             logger.error("onDiscoveryFriend error", e);

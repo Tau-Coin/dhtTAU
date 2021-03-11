@@ -1,5 +1,7 @@
 package io.taucoin.torrent.publishing.core.model;
 
+import java.math.BigInteger;
+
 import io.taucoin.listener.MsgStatus;
 import io.taucoin.types.Message;
 
@@ -47,9 +49,10 @@ public abstract class MsgListener implements io.taucoin.listener.MsgListener {
     /**
      * 发现朋友通知
      * @param friend 发现的添加我为好友的朋友
+     * @param timestamp 朋友在线时间
      */
     @Override
-    public void onDiscoveryFriend(byte[] friend) {}
+    public void onDiscoveryFriend(byte[] friend, BigInteger timestamp) {}
 
     /**
      * This event will be notified if error happens during running time.
