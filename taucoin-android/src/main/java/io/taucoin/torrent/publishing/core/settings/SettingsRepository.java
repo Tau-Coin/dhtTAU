@@ -27,18 +27,6 @@ public interface SettingsRepository {
     void bootStart(boolean val);
 
     /**
-     * 服务器模式
-     * @return boolean 是否开启
-     */
-    boolean masterMode();
-
-    /**
-     * 设置服务器模式
-     * @param val 是否开启
-     */
-    void masterMode(boolean val);
-
-    /**
      * 设置充电状态
      * @param val 是否在充电
      */

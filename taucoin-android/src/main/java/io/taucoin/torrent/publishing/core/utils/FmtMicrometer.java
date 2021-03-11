@@ -188,4 +188,15 @@ public class FmtMicrometer {
             return amount;
         }
     }
+
+    public static String formatTwoDecimal(double num) {
+        try {
+            BigDecimal number = new BigDecimal(num);
+            DecimalFormat df = getDecimalFormatInstance();
+            df.applyPattern("0.##");
+            return df.format(number);
+        } catch (Exception e) {
+            return new BigInteger("0").toString();
+        }
+    }
 }

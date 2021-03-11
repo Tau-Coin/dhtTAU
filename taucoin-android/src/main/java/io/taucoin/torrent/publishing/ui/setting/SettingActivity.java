@@ -55,7 +55,7 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
         binding.toolbarInclude.toolbar.setTitle(R.string.setting_title);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        binding.switchServerMode.setChecked(settingsRepo.masterMode());
+        binding.switchWakeLock.setChecked(settingsRepo.wakeLock());
         handleSettingsChanged(getString(R.string.pref_key_internet_state));
         handleSettingsChanged(getString(R.string.pref_key_charging_state));
         handleSettingsChanged(getString(R.string.pref_key_wake_lock));
@@ -63,8 +63,8 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
         handleSettingsChanged(getString(R.string.pref_key_upnp_mapped));
         handleSettingsChanged(getString(R.string.pref_key_nat_pmp_mapped));
 
-        binding.switchServerMode.setOnCheckedChangeListener((buttonView, isChecked) ->
-                settingsRepo.masterMode(isChecked));
+        binding.switchWakeLock.setOnCheckedChangeListener((buttonView, isChecked) ->
+                settingsRepo.wakeLock(isChecked));
 
         Disposable disposable = settingsRepo.observeSettingsChanged()
                 .subscribeOn(Schedulers.newThread())
@@ -113,9 +113,6 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_charging_state))) {
             boolean chargingState = settingsRepo.chargingState();
             binding.tvCharging.setText(chargingState ? R.string.common_on : R.string.common_off);
-        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_wake_lock))) {
-            boolean wakeLock = settingsRepo.wakeLock();
-            binding.tvWakeLock.setText(wakeLock ? R.string.common_on : R.string.common_off);
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval))) {
             long interval = settingsRepo.getLongValue(key);
             binding.tvMainLoop.setText(String.valueOf(interval));

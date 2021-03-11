@@ -46,6 +46,9 @@
     <string name="main_other_transaction">Other Transaction</string>
     <string name="main_no_messages">[No messages]</string>
     <string name="main_pic_messages">[Picture]</string>
+    <string name="main_work_frequency">The working frequency is %s Hz</string>
+    <string name="main_work_frequency_tips">The working frequency is the loop laps of the core program 1s,
+        and the program will automatically adjust according to the flow usage.</string>
 
     <!-- Strings used for main drawer content -->
     <string name="drawer_new_community">New Community</string>

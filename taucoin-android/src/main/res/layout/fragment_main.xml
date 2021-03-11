@@ -7,53 +7,82 @@
             type="android.view.View.OnClickListener" />
     </data>
 
-    <RelativeLayout
-        android:id="@+id/refresh_layout"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
-            android:id="@+id/group_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
-            android:clipToPadding="false"
-            android:scrollbars="vertical"
-            android:focusable="true"
-            android:scrollbarStyle="outsideOverlay" />
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
-            android:id="@+id/empty_view_group_list"
-            android:visibility="visible"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/tv_add_friends"
-                android:layout_width="220dp"
-                android:layout_height="44dp"
-                android:text="@string/main_empty_add_friends"
-                android:background="@drawable/primary_rect_round_bg"
-                android:gravity="center_vertical|center"
-                android:textColor="@color/color_white"
-                style="@style/TextAppearanceBody1" />
+                android:id="@+id/tv_frequency"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:gravity="center_vertical"
+                android:onClick="@{listener.onClick}"
+                android:focusable="true"
+                android:text="asdasd"
+                android:focusableInTouchMode="true"/>
 
-            <TextView
-                android:id="@+id/tv_create_communities"
-                android:layout_width="220dp"
-                android:layout_height="44dp"
-                android:layout_marginTop="25dp"
-                android:lineSpacingExtra="5dp"
-                android:background="@drawable/black_rect_round_bg"
-                android:gravity="center_vertical|center"
-                android:textColor="@color/color_white"
-                android:text="@string/main_empty_create_communities"
-                style="@style/TextAppearanceBody1" />
+            <include layout="@layout/view_line"/>
 
+            <RelativeLayout
+                android:id="@+id/refresh_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
+                    android:id="@+id/group_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
+                    android:nestedScrollingEnabled="false"
+                    android:clipToPadding="false"
+                    android:scrollbars="vertical"
+                    android:focusable="true"
+                    android:scrollbarStyle="outsideOverlay" />
+
+                <LinearLayout
+                    android:id="@+id/empty_view_group_list"
+                    android:visibility="visible"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_add_friends"
+                        android:layout_width="220dp"
+                        android:layout_height="44dp"
+                        android:text="@string/main_empty_add_friends"
+                        android:background="@drawable/primary_rect_round_bg"
+                        android:gravity="center_vertical|center"
+                        android:textColor="@color/color_white"
+                        android:onClick="@{listener.onClick}"
+                        style="@style/TextAppearanceBody1" />
+
+                    <TextView
+                        android:id="@+id/tv_create_communities"
+                        android:layout_width="220dp"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="25dp"
+                        android:lineSpacingExtra="5dp"
+                        android:background="@drawable/black_rect_round_bg"
+                        android:gravity="center_vertical|center"
+                        android:textColor="@color/color_white"
+                        android:text="@string/main_empty_create_communities"
+                        android:onClick="@{listener.onClick}"
+                        style="@style/TextAppearanceBody1" />
+
+                </LinearLayout>
+            </RelativeLayout>
         </LinearLayout>
-
-    </RelativeLayout>
+    </androidx.core.widget.NestedScrollView>
 </layout>

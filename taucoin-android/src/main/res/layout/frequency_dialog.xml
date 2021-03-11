@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="30dp"
+        android:paddingEnd="0dp"
+        android:paddingBottom="20dp"
+        android:background="@color/color_white">
+
+        <ImageView
+            android:id="@+id/iv_close"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            android:contentDescription="@null"
+            android:src="@mipmap/icon_close" />
+
+        <io.taucoin.torrent.publishing.ui.customviews.MultilineTextView
+            android:layout_below="@+id/iv_close"
+            android:id="@+id/tv_msg"
+            android:paddingStart="0dp"
+            android:paddingEnd="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="5dp"
+            android:textAppearance="@style/TextAppearanceBody1"/>
+
+    </RelativeLayout>
+</layout>

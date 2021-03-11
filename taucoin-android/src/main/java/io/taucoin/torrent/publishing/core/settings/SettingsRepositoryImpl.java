@@ -25,7 +25,6 @@ import io.taucoin.torrent.publishing.core.utils.StringUtil;
 public class SettingsRepositoryImpl implements SettingsRepository {
     private static class Default {
         static final boolean bootStart = true;
-        static final boolean serverMode = false;
         static final boolean chargingState = false;
         static final boolean internetState = false;
         static final boolean wakeLock = false;
@@ -70,18 +69,6 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     @Override
     public void bootStart(boolean val) {
         pref.edit().putBoolean(appContext.getString(R.string.pref_key_boot_start),val)
-                .apply();
-    }
-
-    @Override
-    public boolean masterMode() {
-        return pref.getBoolean(appContext.getString(R.string.pref_key_master_mode),
-                Default.serverMode);
-    }
-
-    @Override
-    public void masterMode(boolean val) {
-        pref.edit().putBoolean(appContext.getString(R.string.pref_key_master_mode),val)
                 .apply();
     }
 

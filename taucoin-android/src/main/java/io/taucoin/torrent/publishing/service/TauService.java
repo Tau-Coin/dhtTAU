@@ -110,7 +110,7 @@ public class TauService extends Service {
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribe(this::handleSettingsChanged));
 
-        daemon.resetMasterMode();
+        daemon.resetWakeLock();
 
         daemon.doStart();
         daemon.registerListener(daemonListener);
@@ -123,7 +123,7 @@ public class TauService extends Service {
         logger.info("stopService");
         disposables.clear();
         daemon.unregisterListener(daemonListener);
-        daemon.keepCPUWakeLock(false);
+        daemon.resetWakeLock(false);
 
         isAlreadyRunning.set(false);
         stopForeground(true);
@@ -157,8 +157,8 @@ public class TauService extends Service {
      * @param key 改变的key
      */
     private void handleSettingsChanged(String key) {
-        if (key.equals(getString(R.string.pref_key_master_mode))){
-            daemon.resetMasterMode();
+        if (key.equals(getString(R.string.pref_key_wake_lock))){
+            daemon.resetWakeLock();
         }
     }
 
