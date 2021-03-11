@@ -74,7 +74,7 @@ public class MsgSplitUtil {
      * @param msg
      * @return
      */
-    private static byte[] textStringToBytes(String msg) {
+    public static byte[] textStringToBytes(String msg) {
         return msg.getBytes(StandardCharsets.UTF_8);
     }
 

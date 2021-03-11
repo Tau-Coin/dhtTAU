@@ -37,7 +37,6 @@ public class HashTextView extends TextView {
     private String textHash;
     private byte[] senderPk;
     private byte[] cryptoKey;
-    private boolean unsent;
     private Disposable disposable;
     private boolean isLoadSuccess;
     private ChatRepository chatRepo;
@@ -65,7 +64,7 @@ public class HashTextView extends TextView {
         setText(textBuilder);
     }
 
-    public void setTextHash(boolean unsent, String textHash, String senderPk, byte[] cryptoKey) {
+    public void setTextHash(String textHash, String senderPk, byte[] cryptoKey) {
         // 如果是图片已加载，并且显示的图片不变，直接返回
         if (StringUtil.isEmpty(textHash)) {
             return;
@@ -76,7 +75,6 @@ public class HashTextView extends TextView {
         }
         this.cryptoKey = cryptoKey;
         this.textHash = textHash;
-        this.unsent = unsent;
         this.senderPk = ByteUtil.toByte(senderPk);
         textBuilder = new StringBuilder();
         setTextHash(ByteUtil.toByte(textHash), senderPk);
@@ -100,7 +98,7 @@ public class HashTextView extends TextView {
             try {
                 if (StringUtil.isNotEmpty(this.textHash)) {
                     long startTime = System.currentTimeMillis();
-                    showFragmentData(this.unsent, textHash, friendPk, emitter);
+                    showFragmentData(textHash, friendPk, emitter);
                     long endTime = System.currentTimeMillis();
                     logger.debug("setTextHash textHash::{}, times::{}ms",
                             this.textHash, endTime - startTime);
@@ -127,18 +125,16 @@ public class HashTextView extends TextView {
      * @param emitter
      * @throws Exception
      */
-    private void showFragmentData(boolean unsent, byte[] textHash, String senderPk,
+    private void showFragmentData(byte[] textHash, String senderPk,
                                   FlowableEmitter<Boolean> emitter) throws Exception {
         if (emitter.isCancelled()) {
             return;
         }
         String content = null;
-        if (unsent) {
-            String hash = ByteUtil.toHexString(textHash);
-            ChatMsg msg = chatRepo.queryChatMsg(senderPk, hash);
-            if (msg != null && msg.unsent == 0) {
-                content = msg.content;
-            }
+        String hash = ByteUtil.toHexString(textHash);
+        ChatMsg chatMsg = chatRepo.queryChatMsg(senderPk, hash);
+        if (chatMsg != null) {
+            content = chatMsg.content;
         }
         if (StringUtil.isEmpty(content)) {
             byte[] fragmentEncoded = queryDataLoop(textHash);
@@ -182,7 +178,7 @@ public class HashTextView extends TextView {
         // 加在View
         if (reload && StringUtil.isNotEmpty(textHash)
                 && disposable != null && disposable.isDisposed()) {
-            setTextHash(unsent, textHash, ByteUtil.toHexString(senderPk), cryptoKey);
+            setTextHash(textHash, ByteUtil.toHexString(senderPk), cryptoKey);
         }
         reload = false;
     }

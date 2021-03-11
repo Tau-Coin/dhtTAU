@@ -126,7 +126,7 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                     binding.tvUserMessage.setText(context.getString(R.string.main_pic_messages));
                 } else if (community.msgType == MessageType.TEXT.ordinal() && StringUtil.isNotEmpty(hash)) {
                     byte[] cryptoKey = Utils.keyExchange(community.chainID, MainApplication.getInstance().getSeed());
-                    binding.tvUserMessage.setTextHash(false, hash, community.publicKey, cryptoKey);
+                    binding.tvUserMessage.setTextHash(hash, community.publicKey, cryptoKey);
                 } else if (StringUtil.isEmpty(msg)) {
                     binding.tvUserMessage.setText(context.getString(R.string.main_no_messages));
                 }

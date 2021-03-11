@@ -150,14 +150,12 @@ public class ChatViewModel extends AndroidViewModel {
                     byte[] content = contents.get(nonce);
                     long millisTime = DateUtil.getMillisTime();
                     long timestamp = millisTime / 1000;
-                    String contentStr;
+                    String contentStr = MsgSplitUtil.textBytesToString(content);
                     Message message;
                     if (type == MessageType.TEXT.ordinal()) {
-                        contentStr = MsgSplitUtil.textBytesToString(content);
                         message = Message.createTextMessage(BigInteger.valueOf(timestamp), senderPk,
                                 friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
                     } else {
-                        contentStr = ByteUtil.toHexString(content);
                         message = Message.createPictureMessage(BigInteger.valueOf(timestamp), senderPk,
                                 friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
                     }

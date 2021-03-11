@@ -22,6 +22,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
@@ -88,14 +89,12 @@ public class PublishNewMsgWorker extends Worker {
         byte[] senderPk = ByteUtil.toByte(msg.senderPk);
         byte[] friendPk = ByteUtil.toByte(msg.friendPk);
         byte[] logicMsgHash = ByteUtil.toByte(msg.logicMsgHash);
-        byte[] content;
+        byte[] content = MsgSplitUtil.textStringToBytes(msg.content);
         Message message;
         if (msg.contentType == MessageType.PICTURE.ordinal()) {
-            content = ByteUtil.toByte(msg.content);
             message = Message.createPictureMessage(timestamp, senderPk, friendPk, logicMsgHash,
                     nonce, content);
         } else {
-            content = msg.content.getBytes(StandardCharsets.UTF_8);
             message = Message.createTextMessage(timestamp, senderPk, friendPk, logicMsgHash,
                     nonce, content);
         }
@@ -107,10 +106,8 @@ public class PublishNewMsgWorker extends Worker {
         logger.debug("newMsgHash::{}, friendPk::{} nonce::{}, logicMsgHash::{}, isSendSuccess::{}",
                 hash, msg.friendPk, msg.nonce, msg.logicMsgHash, isSendSuccess);
         if (isSendSuccess) {
-            msg.content = null;
             msg.unsent = 1;
             chatRepo.updateChatMsg(msg);
-
             ChatMsgLog log = new ChatMsgLog(msg.hash, msg.senderPk, msg.friendPk,
                     ChatMsgStatus.SENT.getStatus(), DateUtil.getMillisTime());
             chatRepo.addChatMsgLog(log);
