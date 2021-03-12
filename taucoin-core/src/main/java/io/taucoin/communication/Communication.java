@@ -46,8 +46,8 @@ import static io.taucoin.param.ChainParam.SHORT_ADDRESS_LENGTH;
 public class Communication implements DHT.GetMutableItemCallback, KeyChangedListener {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
-    // 朋友禁止访问时间
-//    private final int BAN_TIME = 30; // 30 s
+    // 朋友禁止访问时间，根据dht short time设定
+    private final int BAN_TIME = 1; // 1 s
 
     // 判断朋友不在线时间
 //    private final int LOSE_TOUCH_TIME  = 300; // 5 min
@@ -70,7 +70,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
 
     // 朋友被禁止访问的时间
-//    private final Map<ByteArrayWrapper, BigInteger> friendBannedTime = new ConcurrentHashMap<>();
+    private final Map<ByteArrayWrapper, BigInteger> friendBannedTime = new ConcurrentHashMap<>();
 
     // 多设备发现的朋友
     private final Set<ByteArrayWrapper> friendsFromRemote = new CopyOnWriteArraySet<>();
@@ -553,25 +553,22 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * 挑选一个推荐的朋友访问，没有则随机挑一个访问
      */
     private void visitReferredFriends() {
+        ByteArrayWrapper peer = null;
         Iterator<ByteArrayWrapper> it = this.referredFriends.iterator();
         // 如果有现成的peer，则挑选一个peer访问
         if (it.hasNext()) {
-            ByteArrayWrapper peer = it.next();
-            requestMutableDataFromPeer(peer);
+            peer = it.next();
 
             this.referredFriends.remove(peer);
-//            it.remove();
         } else {
             // 没有找到推荐的活跃的peer，则自己随机访问一个自己的朋友或者自己
             Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
-            // TODO:: 同步自己消息的频率问题
             if (iterator.hasNext()) {
 
                 Random random = new Random(System.currentTimeMillis());
                 // 取值范围0 ~ size，当index取size时选自己
                 int index = random.nextInt(this.friends.size() + 1);
 
-                ByteArrayWrapper peer = null;
                 if (index != this.friends.size()) {
                     // (0 ~ size)
                     int i = 0;
@@ -586,19 +583,17 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 } else {
                     peer = new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first);
                 }
+            }
+        }
 
-                if (null != peer) {
-                    // 如果选中的朋友没在禁止列表的禁止期，则访问它
-//                    BigInteger timestamp = this.friendBannedTime.get(peer);
-//                    if (null == timestamp) {
-                        // 没在禁止列表
-                        requestMutableDataFromPeer(peer);
-//                    } else if (System.currentTimeMillis() / 1000 > timestamp.longValue()) {
-                        // 过了禁止访问期
-//                        this.friendBannedTime.remove(peer);
-//                        requestMutableDataFromPeer(peer);
-//                    }
-                }
+        if (null != peer) {
+            // 如果选中的朋友没在禁止列表的禁止期，则访问它
+            long currentTime = System.currentTimeMillis() / 1000;
+            BigInteger timestamp = this.friendBannedTime.get(peer);
+            if (null == timestamp || currentTime - this.BAN_TIME >= timestamp.longValue() ) {
+                // 没在禁止列表
+                requestMutableDataFromPeer(peer);
+                this.friendBannedTime.put(peer, BigInteger.valueOf(currentTime + this.BAN_TIME));
             }
         }
     }
