@@ -16,6 +16,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -51,6 +52,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
 
         handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
         handleSettingsChanged(getString(R.string.pref_key_current_speed_list));
+        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval));
 
         // 先更新，再显示
         NetworkSetting.updateMeteredSpeedLimit();
@@ -151,10 +153,10 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
 
             if (meteredNetwork) {
                 binding.llRoot.removeView(binding.llMetered);
-                binding.llRoot.addView(binding.llMetered, 0);
+                binding.llRoot.addView(binding.llMetered, 1);
             } else {
                 binding.llRoot.removeView(binding.llWifi);
-                binding.llRoot.addView(binding.llWifi, 0);
+                binding.llRoot.addView(binding.llWifi, 1);
             }
         } else if (key.equals(getString(R.string.pref_key_internet_state))) {
             handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
@@ -170,6 +172,14 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             adapterMetered.updateSelectLimit(NetworkSetting.getMeteredLimit());
         } else if (key.equals(getString(R.string.pref_key_wifi_limit))) {
             adapterWiFi.updateSelectLimit(NetworkSetting.getWiFiLimit());
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval))) {
+            long interval = settingsRepo.getLongValue(key);
+            if (interval > 0) {
+                double frequency = 1.0 * 1000 / interval;
+                String tvFrequency = getString(R.string.setting_working_frequency_value);
+                tvFrequency = String.format(tvFrequency, FmtMicrometer.formatTwoDecimal(frequency));
+                binding.tvWorkingFrequency.setText(tvFrequency);
+            }
         }
     }
 

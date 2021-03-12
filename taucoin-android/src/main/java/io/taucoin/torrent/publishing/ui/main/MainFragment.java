@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.ui.main;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -116,7 +117,7 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
                 double frequency = 1.0 * 1000 / interval;
                 String tvFrequency = getString(R.string.main_work_frequency);
                 tvFrequency = String.format(tvFrequency, FmtMicrometer.formatTwoDecimal(frequency));
-                binding.tvFrequency.setText(tvFrequency);
+                binding.tvFrequency.setText(Html.fromHtml(tvFrequency));
             }
         }
     }
