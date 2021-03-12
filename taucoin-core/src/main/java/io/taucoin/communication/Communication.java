@@ -26,7 +26,7 @@ import io.taucoin.core.DataIdentifier;
 import io.taucoin.core.FriendList;
 import io.taucoin.core.FriendPair;
 import io.taucoin.core.MutableDataWrapper;
-import io.taucoin.core.OnlineSignal;
+import io.taucoin.core.NewMsgSignal;
 import io.taucoin.db.DBException;
 import io.taucoin.db.MessageDB;
 import io.taucoin.dht2.DHT;
@@ -70,7 +70,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
 
     // 朋友被延迟访问的时间
-    private final Map<ByteArrayWrapper, BigInteger> friendBannedTime = new ConcurrentHashMap<>();
+    private final Map<ByteArrayWrapper, BigInteger> friendDelayTime = new ConcurrentHashMap<>();
 
     // 多设备发现的朋友
     private final Set<ByteArrayWrapper> friendsFromRemote = new CopyOnWriteArraySet<>();
@@ -78,7 +78,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // TODO:: 1. 对方上次给我发信息的时间； 2. 对方在新时间
     // TODO:: 对方在线可能是个隐私问题，需要从YY中获得
     // 我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
-    private final Map<ByteArrayWrapper, BigInteger> friendLastCommunicated = new ConcurrentHashMap<>();
+    private final Map<ByteArrayWrapper, BigInteger> lastCommunicatedTime = new ConcurrentHashMap<>();
+
+    // 最新的新消息信号时间 <friend, timestamp>（完整公钥）
+    private final Map<ByteArrayWrapper, BigInteger> latestNewMsgSignalTime = new ConcurrentHashMap<>();
+
+    // 最新的的新消息信号集合（peer <--> 新消息信号）
+    private final Map<ByteArrayWrapper, NewMsgSignal> latestNewMsgSignals = new ConcurrentHashMap<>();
+
+    // 待处理的新消息信号集合（peer <--> 新消息信号）
+    private final Map<ByteArrayWrapper, NewMsgSignal> newMsgSignalCache = new ConcurrentHashMap<>();
 
     // 当前发现的等待通知的在线的朋友集合（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> onlineFriendsToNotify = new ConcurrentHashMap<>();;
@@ -86,17 +95,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // 得到的消息集合（hash <--> Message），ConcurrentHashMap是支持并发操作的集合
     private final Map<ByteArrayWrapper, Message> messageMap = new ConcurrentHashMap<>();
 
-    // 得到的消息与发送者对照表（Message hash <--> Sender）
-    private final Map<ByteArrayWrapper, ByteArrayWrapper> messageSenderMap = new ConcurrentHashMap<>();
-
     // 与朋友通信消息的集合（friend pair（完整公钥） <--> Latest Message List），最新的消息放在最后，ConcurrentHashMap是支持并发操作的集合
     private final Map<ByteArrayWrapper, LinkedList<Message>> messageListMap = new ConcurrentHashMap<>();
-
-    // 待处理的在线信号集合（peer <--> 在线信号）
-    private final Map<ByteArrayWrapper, OnlineSignal> onlineSignalCache = new ConcurrentHashMap<>();
-
-    // 最新的在线信号时间 <friend, timestamp>（完整公钥）
-    private final Map<ByteArrayWrapper, BigInteger> latestOnlineSignalTime = new ConcurrentHashMap<>();
 
     // 发现的我的朋友跟我聊天的最新时间 <friend, time>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> friendChattingTime = new ConcurrentHashMap<>();
@@ -105,7 +105,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private final Set<ByteArrayWrapper> referredFriends = new CopyOnWriteArraySet<>();
 
     // 通过gossip机制打听到的跟朋友聊天的time <FriendPair, Timestamp>（完整公钥）
-    private final Map<FriendPair, BigInteger> friendGossipChattingTime = new ConcurrentHashMap<>();
+    private final Map<FriendPair, BigInteger> gossipChattingTime = new ConcurrentHashMap<>();
 
     // 当前正在聊天的朋友（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> chattingFriend = new ConcurrentHashMap<>();
@@ -345,8 +345,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             Message message = entry.getValue();
             ByteArrayWrapper msgHash = entry.getKey();
 
-            ByteArrayWrapper sender = this.messageSenderMap.get(msgHash);
-
             try {
                 // save to db
                 this.messageDB.putMessage(message.getHash(), message.getEncoded());
@@ -355,9 +353,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
 
             // 更新最新消息列表
-            tryToUpdateLatestMessageList(sender, message);
+            tryToUpdateLatestMessageList(new ByteArrayWrapper(message.getSender()), message);
 
-            this.messageSenderMap.remove(msgHash);
             this.messageMap.remove(msgHash);
 //            iterator.remove();
         }
@@ -369,14 +366,14 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private void dealWithOnlineSignal() {
         Set<ByteArrayWrapper> peersToPutOnlineSignal = new HashSet<>();
 
-        for (Map.Entry<ByteArrayWrapper, OnlineSignal> entry: this.onlineSignalCache.entrySet()) {
+        for (Map.Entry<ByteArrayWrapper, NewMsgSignal> entry: this.newMsgSignalCache.entrySet()) {
             boolean publish = false;
 
             ByteArrayWrapper peer = entry.getKey();
-            OnlineSignal onlineSignal = entry.getValue();
+            NewMsgSignal newMsgSignal = entry.getValue();
 
-            Bloom messageBloomFilter = onlineSignal.getMessageBloomFilter();
-            Bloom friendListBloomFilter = onlineSignal.getFriendListBloomFilter();
+            Bloom messageBloomFilter = newMsgSignal.getMessageBloomFilter();
+            Bloom friendListBloomFilter = newMsgSignal.getFriendListBloomFilter();
 
             byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
             if (Arrays.equals(pubKey, peer.getData()) && null != friendListBloomFilter) {
@@ -399,7 +396,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     publishFriendList(peer.getData(), friendList);
                 }
             } else {
-                logger.debug("peer:{},{}", peer.toString(), onlineSignal.toString());
+                logger.debug("peer:{},{}", peer.toString(), newMsgSignal.toString());
                 // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
                 LinkedList<Message> list = this.messageListMap.get(peer);
 
@@ -442,31 +439,31 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 }
             }
 
-            byte[] chattingFriend = onlineSignal.getChattingFriend();
+            byte[] chattingFriend = newMsgSignal.getChattingFriend();
             if (Arrays.equals(pubKey, chattingFriend)) {
                 // 如果是正在跟我聊天，判断一下上次标记聊天时间戳是否最新
                 ByteArrayWrapper sender = new ByteArrayWrapper(chattingFriend);
                 BigInteger latestTimestamp = this.friendChattingTime.get(sender);
                 // 如果发现更新的推荐，则加入推荐列表
-                if (null == latestTimestamp || latestTimestamp.compareTo(onlineSignal.getChattingTime()) < 0) {
+                if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getChattingTime()) < 0) {
                     // 记录最新的聊天时间
-                    this.friendChattingTime.put(sender, onlineSignal.getChattingTime());
+                    this.friendChattingTime.put(sender, newMsgSignal.getChattingTime());
                     referToFriend(sender);
                 }
             } else {
                 // 记录下推荐给别人的聊天时间
                 FriendPair friendPair = new FriendPair(peer.getData(), chattingFriend);
-                BigInteger latestTimestamp = this.friendGossipChattingTime.get(friendPair);
-                if (null == latestTimestamp || latestTimestamp.compareTo(onlineSignal.getChattingTime()) < 0) {
-                    this.friendGossipChattingTime.put(friendPair, onlineSignal.getChattingTime());
+                BigInteger latestTimestamp = this.gossipChattingTime.get(friendPair);
+                if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getChattingTime()) < 0) {
+                    this.gossipChattingTime.put(friendPair, newMsgSignal.getChattingTime());
                 }
             }
 
 
-            if (null != onlineSignal.getGossipItemList()) {
+            if (null != newMsgSignal.getGossipItemList()) {
 
                 // 信任发送方自己给的gossip信息
-                for (GossipItem gossipItem : onlineSignal.getGossipItemList()) {
+                for (GossipItem gossipItem : newMsgSignal.getGossipItemList()) {
                     logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
 
                     ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
@@ -492,7 +489,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 peersToPutOnlineSignal.add(peer);
 //            }
 
-            this.onlineSignalCache.remove(entry.getKey());
+            this.newMsgSignalCache.remove(entry.getKey());
         }
         // TODO:: 考虑put频率过高的问题，等待优化
 
@@ -551,11 +548,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null != peer) {
             // 如果选中的朋友没在禁止列表的禁止期，则访问它
             long currentTime = System.currentTimeMillis() / 1000;
-            BigInteger timestamp = this.friendBannedTime.get(peer);
+            BigInteger timestamp = this.friendDelayTime.get(peer);
             if (null == timestamp || currentTime - this.DELAY_TIME >= timestamp.longValue() ) {
                 // 没在禁止列表
                 requestMutableDataFromPeer(peer);
-                this.friendBannedTime.put(peer, BigInteger.valueOf(currentTime + this.DELAY_TIME));
+                this.friendDelayTime.put(peer, BigInteger.valueOf(currentTime + this.DELAY_TIME));
             }
         }
     }
@@ -565,9 +562,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @param friend 该朋友
      */
     private void publishFriendOnlineSignal(byte[] friend) {
-        OnlineSignal onlineSignal = makePeerOnlineSignal(friend);
+        NewMsgSignal newMsgSignal = makePeerOnlineSignal(friend);
 
-        publishOnlineSignal(friend, onlineSignal);
+        publishOnlineSignal(friend, newMsgSignal);
     }
 
     /**
@@ -575,14 +572,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @param friend 某朋友
      * @return 在线信号
      */
-    private OnlineSignal makePeerOnlineSignal(byte[] friend) {
+    private NewMsgSignal makePeerOnlineSignal(byte[] friend) {
         Bloom messageBloomFilter = new Bloom();
+        byte[] bloomReceiptHash = null;
         Bloom friendListBloomFilter = null;
         byte[] chattingFriend = null;
         BigInteger chattingTime = BigInteger.ZERO;
         List<GossipItem> gossipItemList = new ArrayList<>();
 
         ByteArrayWrapper key = new ByteArrayWrapper(friend);
+
         LinkedList<Message> messages = this.messageListMap.get(key);
         if (null != messages && !messages.isEmpty()) {
             logger.error("---peer:{}, {}", Hex.toHexString(friend), messages.toString());
@@ -599,6 +598,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
                 messageBloomFilter.or(bloom);
             }
+        }
+
+        NewMsgSignal latestNewMsgSignal = this.latestNewMsgSignals.get(key);
+        if (null != latestNewMsgSignal) {
+            bloomReceiptHash = latestNewMsgSignal.getBloomReceiptHash();
         }
 
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
@@ -620,7 +624,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         }
 
         // TODO:: 测量极限容量
-        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.friendGossipChattingTime.entrySet().iterator();
+        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.gossipChattingTime.entrySet().iterator();
         int i = 1;
         while (it.hasNext()) {
             Map.Entry<FriendPair, BigInteger> entry = it.next();
@@ -637,19 +641,20 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
-        return new OnlineSignal(messageBloomFilter, friendListBloomFilter, chattingFriend, chattingTime, gossipItemList);
+        return new NewMsgSignal(messageBloomFilter, bloomReceiptHash, friendListBloomFilter,
+                chattingFriend, chattingTime, gossipItemList);
     }
 
     /**
      * 发布在线信号
      * @param friend 发送对象
-     * @param onlineSignal 发送的在线信号
+     * @param newMsgSignal 发送的在线信号
      */
-    private void publishOnlineSignal(byte[] friend, OnlineSignal onlineSignal) {
-        if (null != onlineSignal) {
-            logger.debug("publish friend[{}] online signal:{}", Hex.toHexString(friend), onlineSignal.toString());
+    private void publishOnlineSignal(byte[] friend, NewMsgSignal newMsgSignal) {
+        if (null != newMsgSignal) {
+            logger.debug("publish friend[{}] online signal:{}", Hex.toHexString(friend), newMsgSignal.toString());
             MutableDataWrapper mutableDataWrapper = new MutableDataWrapper(MutableDataType.ONLINE_SIGNAL,
-                    onlineSignal.getEncoded());
+                    newMsgSignal.getEncoded());
             publishMutableData(friend, mutableDataWrapper.getEncoded());
         }
     }
@@ -924,7 +929,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         ByteArrayWrapper key = new ByteArrayWrapper(pubKey);
         this.friends.remove(key);
 
-        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.friendGossipChattingTime.entrySet().iterator();
+        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.gossipChattingTime.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<FriendPair, BigInteger> entry = it.next();
             if (ByteUtil.startsWith(pubKey, entry.getKey().getReceiver())) {
@@ -990,13 +995,13 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         this.friends.remove(key);
         this.friendsFromRemote.remove(key);
 //        this.friendBannedTime.clear();
-        this.friendLastCommunicated.clear();
+        this.lastCommunicatedTime.clear();
+        this.latestNewMsgSignals.clear();
         this.messageMap.clear();
-        this.messageSenderMap.clear();
         this.messageListMap.clear();
         this.friendChattingTime.clear();
         this.referredFriends.clear();
-        this.friendGossipChattingTime.clear();
+        this.gossipChattingTime.clear();
         this.chattingFriend.clear();
 
         init();
@@ -1011,7 +1016,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
         // 是否更新好友的在线时间（完整公钥）
         BigInteger timestamp = mutableDataWrapper.getTimestamp();
-        BigInteger lastCommunicated = this.friendLastCommunicated.get(peer);
+        BigInteger lastCommunicated = this.lastCommunicatedTime.get(peer);
 
         if (null != lastCommunicated && lastCommunicated.compareTo(timestamp) > 0) {
             logger.debug("-----old mutable data from peer:{}", peer.toString());
@@ -1020,7 +1025,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         // 判断时间戳，以避免处理历史数据
         if (null == lastCommunicated || lastCommunicated.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
             logger.debug("Newer data from peer:{}", peer.toString());
-            this.friendLastCommunicated.put(peer, timestamp);
+            this.lastCommunicatedTime.put(peer, timestamp);
             this.onlineFriendsToNotify.put(peer, timestamp);
         }
         switch (mutableDataWrapper.getMutableDataType()) {
@@ -1028,7 +1033,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 Message message = new Message(mutableDataWrapper.getData());
                 logger.debug("MESSAGE: Got message :{}", message.toString());
                 this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
-                this.messageSenderMap.put(new ByteArrayWrapper(message.getHash()), peer);
 
                 this.msgListener.onNewMessage(peer.getData(), message);
 
@@ -1050,19 +1054,21 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 break;
             }
             case ONLINE_SIGNAL: {
-                BigInteger latestOnlineSignalTime = this.latestOnlineSignalTime.get(peer);
+                NewMsgSignal newMsgSignal = new NewMsgSignal(mutableDataWrapper.getData());
+
+                BigInteger latestNewMsgSignalTime = this.latestNewMsgSignalTime.get(peer);
                 // 判断时间戳，以避免处理历史数据
-                if (null == latestOnlineSignalTime || latestOnlineSignalTime.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
+                if (null == latestNewMsgSignalTime || latestNewMsgSignalTime.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
                     logger.debug("Newer online signal from peer:{}", peer.toString());
-                    this.latestOnlineSignalTime.put(peer, timestamp);
+                    this.latestNewMsgSignalTime.put(peer, timestamp);
+                    this.latestNewMsgSignals.put(peer, newMsgSignal);
                 }
 
                 // 处理更新的或者和当前记录的一样新的在线信号，避免上次处理对方完，对方依旧没有满足的问题
-                if (null == latestOnlineSignalTime || latestOnlineSignalTime.compareTo(timestamp) <= 0) {
-                    OnlineSignal onlineSignal = new OnlineSignal(mutableDataWrapper.getData());
-                    this.onlineSignalCache.put(peer, onlineSignal);
+                if (null == latestNewMsgSignalTime || latestNewMsgSignalTime.compareTo(timestamp) <= 0) {
+                    this.newMsgSignalCache.put(peer, newMsgSignal);
 
-                    Bloom messageBloomFilter = onlineSignal.getMessageBloomFilter();
+                    Bloom messageBloomFilter = newMsgSignal.getMessageBloomFilter();
 
                     byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
@@ -1118,16 +1124,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 logger.error("Unknown type.");
             }
         }
-        /* else {
-            // 如果拿到的是旧数据
-            if (auth) {
-                long currentTime = System.currentTimeMillis() / 1000;
-                if ((currentTime - timestamp.longValue()) > this.LOSE_TOUCH_TIME) {
-                    // 如果不在线已经超过五分钟, 禁止访问其30秒钟
-                    this.friendBannedTime.put(peer, BigInteger.valueOf(currentTime + this.BAN_TIME));
-                }
-            }
-        }*/
     }
 
     @Override
