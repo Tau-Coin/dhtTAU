@@ -1,10 +1,8 @@
 package io.taucoin.torrent.publishing.ui.qrcode;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
-
-import com.king.zxing.util.CodeUtils;
+import android.view.ViewTreeObserver;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
@@ -14,7 +12,6 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -31,6 +28,7 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
     private CompositeDisposable disposables = new CompositeDisposable();
     private ActivityCommunityQrCodeBinding binding;
     private CommunityViewModel communityViewModel;
+    private ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener;
     private String chainID;
 
     @Override
@@ -70,13 +68,31 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
-                    communityViewModel.generateQRCode(this, communityInviteLink,
-                            binding.qrCode.flLogo);
+                    generateCommunityQRCode(communityInviteLink);
                 }));
 
         communityViewModel.getQRBitmap().observe(this, bitmap -> {
             binding.qrCode.ivQrCode.setImageBitmap(bitmap);
         });
+    }
+
+    /**
+     *
+     * @param communityInviteLink
+     */
+    private void generateCommunityQRCode(String communityInviteLink) {
+        onGlobalLayoutListener = () -> {
+            communityViewModel.generateQRCode(this, communityInviteLink,
+                    binding.qrCode.flLogo);
+        };
+        // view重绘时回调
+        binding.qrCode.flLogo.getViewTreeObserver().addOnDrawListener(() -> {
+            if (onGlobalLayoutListener != null) {
+                binding.qrCode.flLogo.getViewTreeObserver().removeOnGlobalLayoutListener(onGlobalLayoutListener);
+            }
+        });
+        // view加载完成时回调
+        binding.qrCode.flLogo.getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
     }
 
     @Override

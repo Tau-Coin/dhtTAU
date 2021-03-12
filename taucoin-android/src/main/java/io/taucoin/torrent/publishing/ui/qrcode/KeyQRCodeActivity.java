@@ -6,6 +6,7 @@ import android.text.SpannableStringBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 
 
 import androidx.databinding.DataBindingUtil;
@@ -32,6 +33,7 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
     private ActivityKeyQrCodeBinding binding;
     private UserViewModel userViewModel;
     private Bitmap QRBitmap = null;
+    private ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,8 +90,27 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
         binding.qrCode.tvQrCode.setTag(keyContent.getSeed());
         binding.qrCode.roundButton.setText(UsersUtil.getQRCodeName(keyContent.getNickName()));
         binding.qrCode.roundButton.setBgColor(Utils.getGroupColor(keyContent.getPublicKey()));
-        userViewModel.generateQRCode(this, keyContent.getSeed(), binding.qrCode.flLogo,
-                getResources().getColor(R.color.color_red_dark));
+
+        onGlobalLayoutListener = () -> {
+            userViewModel.generateQRCode(this, keyContent.getSeed(), binding.qrCode.flLogo,
+                    getResources().getColor(R.color.color_red_dark));
+        };
+        // view重绘时回调
+        binding.qrCode.flLogo.getViewTreeObserver().addOnDrawListener(() -> {
+            if (onGlobalLayoutListener != null) {
+                binding.qrCode.flLogo.getViewTreeObserver().removeOnGlobalLayoutListener(onGlobalLayoutListener);
+            }
+        });
+        // view加载完成时回调
+        binding.qrCode.flLogo.getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (onGlobalLayoutListener != null) {
+            binding.qrCode.flLogo.getViewTreeObserver().removeOnGlobalLayoutListener(onGlobalLayoutListener);
+        }
     }
 
     /**

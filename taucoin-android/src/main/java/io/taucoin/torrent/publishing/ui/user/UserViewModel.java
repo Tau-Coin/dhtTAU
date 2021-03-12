@@ -746,7 +746,9 @@ public class UserViewModel extends AndroidViewModel {
                     }
                     logger.debug("shareQRCode bitmap::{}", bitmap);
                     logo.destroyDrawingCache();
-                    emitter.onNext(bitmap);
+                    if (bitmap != null) {
+                        emitter.onNext(bitmap);
+                    }
                 }
             } catch (Exception e) {
                 logger.error("generateTAUIDQRCode error ", e);
