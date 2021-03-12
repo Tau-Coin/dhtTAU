@@ -64,19 +64,37 @@ public class HashTextView extends TextView {
         setText(textBuilder);
     }
 
+    public void setTextHash(String textHash, String content, String senderPk, byte[] cryptoKey) {
+        if (isLoadSuccess && textBuilder != null && textBuilder.length() > 0
+                && StringUtil.isEquals(textHash, this.textHash)) {
+            return;
+        }
+        if (StringUtil.isNotEmpty(content)) {
+            textBuilder = new StringBuilder();
+            textBuilder.append(content);
+            isLoadSuccess = true;
+            this.cryptoKey = cryptoKey;
+            this.textHash = textHash;
+            this.senderPk = ByteUtil.toByte(senderPk);
+            showText();
+        } else {
+            setTextHash(textHash, senderPk, cryptoKey);
+        }
+    }
+
     public void setTextHash(String textHash, String senderPk, byte[] cryptoKey) {
         // 如果是图片已加载，并且显示的图片不变，直接返回
         if (StringUtil.isEmpty(textHash)) {
             return;
         }
-        if (isLoadSuccess && textBuilder.length() > 0
+        if (isLoadSuccess && textBuilder != null && textBuilder.length() > 0
                 && StringUtil.isEquals(textHash, this.textHash)) {
             return;
         }
+        textBuilder = new StringBuilder();
         this.cryptoKey = cryptoKey;
         this.textHash = textHash;
         this.senderPk = ByteUtil.toByte(senderPk);
-        textBuilder = new StringBuilder();
         setTextHash(ByteUtil.toByte(textHash), senderPk);
     }
 

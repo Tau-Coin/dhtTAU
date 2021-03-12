@@ -146,17 +146,11 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
         });
 
         adapter = new ChatListAdapter(this, friendPK);
-        DefaultItemAnimator animator = new DefaultItemAnimator() {
-            @Override
-            public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {
-                return true;
-            }
-        };
         LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
-//        layoutManager.setReverseLayout(true);
         binding.msgList.setLayoutManager(layoutManager);
-        binding.msgList.setItemAnimator(animator);
+        binding.msgList.setItemAnimator(null);
         binding.msgList.setAdapter(adapter);
+
     }
 
     @Override
@@ -172,10 +166,17 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     }
 
     private final Runnable handleUpdateAdapter = () -> {
-        if (binding.msgList.getLayoutManager() != null) {
-            int bottomPosition = adapter.getItemCount() - 1;
-            logger.debug("handleUpdateAdapter scrollToPosition::{}", bottomPosition);
-            binding.msgList.getLayoutManager().scrollToPosition(bottomPosition);
+//        if (binding.msgList.getLayoutManager() != null) {
+//            int bottomPosition = adapter.getItemCount() - 1;
+//
+////            binding.msgList.getLayoutManager().scrollToPosition(bottomPosition);
+//        }
+        int bottomPosition = adapter.getItemCount() - 1;
+        logger.debug("handleUpdateAdapter scrollToPosition::{}", bottomPosition);
+        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.msgList.getLayoutManager();
+        if (layoutManager != null) {
+            // 滚动到底部
+            layoutManager.scrollToPositionWithOffset(bottomPosition, 0);
         }
     };
 
