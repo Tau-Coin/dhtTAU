@@ -70,11 +70,12 @@ public class CompositeMsgListener implements MsgListener {
      *
      * @param friend 发已读消息的朋友
      * @param hash   已读消息的root
+     * @param timestamp 对方收到消息的时间
      */
     @Override
-    public void onReadMessageRoot(byte[] friend, byte[] hash) {
+    public void onReadMessageRoot(byte[] friend, byte[] hash, BigInteger timestamp) {
         for (MsgListener listener : listeners) {
-            listener.onReadMessageRoot(friend, hash);
+            listener.onReadMessageRoot(friend, hash, timestamp);
         }
     }
 

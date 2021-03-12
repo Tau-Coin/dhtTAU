@@ -36,8 +36,9 @@ public interface MsgListener {
      * 已读消息root通知
      * @param friend 发已读消息的朋友
      * @param hash 已读消息的hash
+     * @param timestamp 对方收到消息的时间
      */
-    void onReadMessageRoot(byte[] friend, byte[] hash);
+    void onReadMessageRoot(byte[] friend, byte[] hash, BigInteger timestamp);
 
     /**
      * 发现朋友通知

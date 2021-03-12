@@ -46,8 +46,8 @@ import static io.taucoin.param.ChainParam.SHORT_ADDRESS_LENGTH;
 public class Communication implements DHT.GetMutableItemCallback, KeyChangedListener {
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
-    // 朋友禁止访问时间，根据dht short time设定
-    private final int BAN_TIME = 1; // 1 s
+    // 朋友延迟访问时间，根据dht short time设定
+    private final int DELAY_TIME = 1; // 1 s
 
     // 判断朋友不在线时间
 //    private final int LOSE_TOUCH_TIME  = 300; // 5 min
@@ -69,14 +69,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // 当前我加的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
 
-    // 朋友被禁止访问的时间
+    // 朋友被延迟访问的时间
     private final Map<ByteArrayWrapper, BigInteger> friendBannedTime = new ConcurrentHashMap<>();
 
     // 多设备发现的朋友
     private final Set<ByteArrayWrapper> friendsFromRemote = new CopyOnWriteArraySet<>();
 
+    // TODO:: 1. 对方上次给我发信息的时间； 2. 对方在新时间
+    // TODO:: 对方在线可能是个隐私问题，需要从YY中获得
     // 我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
-    private final Map<ByteArrayWrapper, BigInteger> friendLastSeen = new ConcurrentHashMap<>();
+    private final Map<ByteArrayWrapper, BigInteger> friendLastCommunicated = new ConcurrentHashMap<>();
 
     // 当前发现的等待通知的在线的朋友集合（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> onlineFriendsToNotify = new ConcurrentHashMap<>();;
@@ -92,9 +94,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
     // 待处理的在线信号集合（peer <--> 在线信号）
     private final Map<ByteArrayWrapper, OnlineSignal> onlineSignalCache = new ConcurrentHashMap<>();
-
-    // 新发现的，等待通知UI的confirmation root <message hash, friend>（完整公钥）
-    private final Map<ByteArrayWrapper, byte[]> friendConfirmationRootToNotify = new ConcurrentHashMap<>();
 
     // 最新的在线信号时间 <friend, timestamp>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> latestOnlineSignalTime = new ConcurrentHashMap<>();
@@ -302,20 +301,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
-     * 通知UI新发现的朋友的已读消息的root
-     */
-    private void notifyUIReadMessageRoot() {
-        for (Map.Entry<ByteArrayWrapper, byte[]> entry : this.friendConfirmationRootToNotify.entrySet()) {
-            logger.debug("Notify UI read message from friend:{}, root:{}",
-                    Hex.toHexString(entry.getValue()), entry.getKey().toString());
-
-            this.msgListener.onReadMessageRoot(entry.getValue(), entry.getKey().getData());
-
-            this.friendConfirmationRootToNotify.remove(entry.getKey());
-        }
-    }
-
-    /**
      * 从朋友列表获取完整公钥
      * @param pubKey public key
      * @return 完整的公钥
@@ -347,10 +332,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
-     * 处理收到的消息
+     * 处理收到的消息，包括存储数据库 //TODO
      * @throws DBException database exception
      */
-    private void dealWithMessage() throws DBException {
+    private void dealWithMessages() throws DBException {
 
         // 将消息存入数据库并通知UI，尝试获取下一条消息
         Iterator<Map.Entry<ByteArrayWrapper, Message>> iterator = this.messageMap.entrySet().iterator();
@@ -379,7 +364,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
-     * 处理收到的在线信号
+     * 处理收到的在线信号，//TODO：：参考github记录
      */
     private void dealWithOnlineSignal() {
         Set<ByteArrayWrapper> peersToPutOnlineSignal = new HashSet<>();
@@ -422,14 +407,12 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     int size = list.size();
                     byte[] firstMsgHash = list.getFirst().getSha1Hash();
                     byte[] lastMsgHash = list.getLast().getSha1Hash();
-                    boolean previousMatch = true;
 
                     Bloom bloom = Bloom.create(firstMsgHash);
                     if (!messageBloomFilter.matches(bloom)) {
                         logger.error("Put [{}] message to {}", 0, peer.toString());
                         publishMessage(peer.getData(), list.getFirst());
                         publish = true;
-                        previousMatch = false;
                     }
 
                     for (int i = 0; i < size - 1; i++) {
@@ -448,18 +431,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             }
                             publish = true;
                         }
-                        // 前后两个合并哈希都匹配，才确认收到
-                        if (previousMatch && match) {
-                            Message message = list.get(i);
-                            if (Arrays.equals(pubKey, message.getSender())) {
-                                logger.error("confirmation root:{}", Hex.toHexString(message.getHash()));
-                                // 若匹配，则大概率对方收到了该消息，记为confirmation root，后续会通知UI
-                                this.friendConfirmationRootToNotify.
-                                        put(new ByteArrayWrapper(message.getHash()), peer.getData());
-                            }
-                        }
-
-                        previousMatch = match;
                     }
 
                     bloom = Bloom.create(lastMsgHash);
@@ -467,15 +438,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     if (!match && !publish) {
                         logger.error("Put last message to {}", peer.toString());
                         publishMessage(peer.getData(), list.getLast());
-                    }
-                    // 前后两个合并哈希都匹配，才确认收到
-                    if (previousMatch && match) {
-                        Message message = list.getLast();
-                        if (Arrays.equals(pubKey, message.getSender())) {
-                            // 若匹配，则大概率对方收到了该消息，记为confirmation root，后续会通知UI
-                            this.friendConfirmationRootToNotify.
-                                    put(new ByteArrayWrapper(message.getHash()), peer.getData());
-                        }
                     }
                 }
             }
@@ -590,10 +552,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             // 如果选中的朋友没在禁止列表的禁止期，则访问它
             long currentTime = System.currentTimeMillis() / 1000;
             BigInteger timestamp = this.friendBannedTime.get(peer);
-            if (null == timestamp || currentTime - this.BAN_TIME >= timestamp.longValue() ) {
+            if (null == timestamp || currentTime - this.DELAY_TIME >= timestamp.longValue() ) {
                 // 没在禁止列表
                 requestMutableDataFromPeer(peer);
-                this.friendBannedTime.put(peer, BigInteger.valueOf(currentTime + this.BAN_TIME));
+                this.friendBannedTime.put(peer, BigInteger.valueOf(currentTime + this.DELAY_TIME));
             }
         }
     }
@@ -763,11 +725,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 // 通知UI发现的在线朋友
                 notifyUIOnlineFriend();
 
-                // 通知UI已读root
-                notifyUIReadMessageRoot();
-
                 // 处理获得的消息
-                dealWithMessage();
+                dealWithMessages();
 
                 // 处理在线信号
                 dealWithOnlineSignal();
@@ -1031,11 +990,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         this.friends.remove(key);
         this.friendsFromRemote.remove(key);
 //        this.friendBannedTime.clear();
-        this.friendLastSeen.clear();
+        this.friendLastCommunicated.clear();
         this.messageMap.clear();
         this.messageSenderMap.clear();
         this.messageListMap.clear();
-        this.friendConfirmationRootToNotify.clear();
         this.friendChattingTime.clear();
         this.referredFriends.clear();
         this.friendGossipChattingTime.clear();
@@ -1053,16 +1011,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
         // 是否更新好友的在线时间（完整公钥）
         BigInteger timestamp = mutableDataWrapper.getTimestamp();
-        BigInteger lastSeen = this.friendLastSeen.get(peer);
+        BigInteger lastCommunicated = this.friendLastCommunicated.get(peer);
 
-        if (null != lastSeen && lastSeen.compareTo(timestamp) > 0) {
+        if (null != lastCommunicated && lastCommunicated.compareTo(timestamp) > 0) {
             logger.debug("-----old mutable data from peer:{}", peer.toString());
         }
 
         // 判断时间戳，以避免处理历史数据
-        if (null == lastSeen || lastSeen.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
+        if (null == lastCommunicated || lastCommunicated.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
             logger.debug("Newer data from peer:{}", peer.toString());
-            this.friendLastSeen.put(peer, timestamp);
+            this.friendLastCommunicated.put(peer, timestamp);
             this.onlineFriendsToNotify.put(peer, timestamp);
         }
         switch (mutableDataWrapper.getMutableDataType()) {
@@ -1103,6 +1061,55 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 if (null == latestOnlineSignalTime || latestOnlineSignalTime.compareTo(timestamp) <= 0) {
                     OnlineSignal onlineSignal = new OnlineSignal(mutableDataWrapper.getData());
                     this.onlineSignalCache.put(peer, onlineSignal);
+
+                    Bloom messageBloomFilter = onlineSignal.getMessageBloomFilter();
+
+                    byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+
+                    // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
+                    LinkedList<Message> list = this.messageListMap.get(peer);
+
+                    if (null != list && !list.isEmpty()) {
+                        int size = list.size();
+                        byte[] firstMsgHash = list.getFirst().getSha1Hash();
+                        byte[] lastMsgHash = list.getLast().getSha1Hash();
+                        boolean previousMatch = true;
+
+                        Bloom bloom = Bloom.create(firstMsgHash);
+                        if (!messageBloomFilter.matches(bloom)) {
+                            previousMatch = false;
+                        }
+
+                        for (int i = 0; i < size - 1; i++) {
+                            byte[] mergedHash = ByteUtil.merge(list.get(i).getSha1Hash(), list.get(i + 1).getSha1Hash());
+                            bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
+                            boolean match = messageBloomFilter.matches(bloom);
+                            // 前后两个合并哈希都匹配，才确认收到
+                            if (previousMatch && match) {
+                                Message message = list.get(i);
+                                if (Arrays.equals(pubKey, message.getSender())) {
+                                    logger.debug("Notify UI confirmation root:{}", Hex.toHexString(message.getHash()));
+                                    // 若匹配，则大概率对方收到了该消息，记为confirmation root，通知UI
+                                    this.msgListener.onReadMessageRoot(peer.getData(), message.getHash(), timestamp);
+                                }
+                            }
+
+                            previousMatch = match;
+                        }
+
+                        bloom = Bloom.create(lastMsgHash);
+                        boolean match = messageBloomFilter.matches(bloom);
+                        // 前后两个合并哈希都匹配，才确认收到
+                        if (previousMatch && match) {
+                            Message message = list.getLast();
+                            if (Arrays.equals(pubKey, message.getSender())) {
+                                logger.debug("Notify UI confirmation root:{}", Hex.toHexString(message.getHash()));
+                                // 若匹配，则大概率对方收到了该消息，记为confirmation root，通知UI
+                                this.msgListener.onReadMessageRoot(peer.getData(), message.getHash(), timestamp);
+                            }
+                        }
+                    }
+
                 }
 
                 break;
