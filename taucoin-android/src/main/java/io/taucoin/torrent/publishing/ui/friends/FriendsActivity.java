@@ -58,7 +58,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     private int page;
     private String friendPk; // 新扫描的朋友的公钥
     private long medianFee;
-    private int order = 0; // 0:last seen, 1:last communication
+    private int order = 1; // 0:last seen, 1:last communication
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,20 +109,9 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         adapter = new FriendsListAdapter(this, page, order, friendPk);
-        /*
-         * A RecyclerView by default creates another copy of the ViewHolder in order to
-         * fade the views into each other. This causes the problem because the old ViewHolder gets
-         * the payload but then the new one doesn't. So needs to explicitly tell it to reuse the old one.
-         */
-        DefaultItemAnimator animator = new DefaultItemAnimator() {
-            @Override
-            public boolean canReuseUpdatedViewHolder(@NonNull RecyclerView.ViewHolder viewHolder) {
-                return true;
-            }
-        };
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         binding.recyclerList.setLayoutManager(layoutManager);
-        binding.recyclerList.setItemAnimator(animator);
+        binding.recyclerList.setItemAnimator(null);
         binding.recyclerList.setEmptyView(binding.emptyViewList);
         binding.recyclerList.setAdapter(adapter);
     }
@@ -186,8 +175,10 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         MenuItem menuRankC = menu.findItem(R.id.menu_rank_c);
         MenuItem menuRankA = menu.findItem(R.id.menu_rank_a);
         menuItem.setVisible(page == PAGE_ADD_MEMBERS);
-        menuRankC.setVisible(page == PAGE_FRIENDS_LIST && order == 0);
-        menuRankA.setVisible(page == PAGE_FRIENDS_LIST && order != 0);
+//        menuRankC.setVisible(page == PAGE_FRIENDS_LIST && order == 0);
+//        menuRankA.setVisible(page == PAGE_FRIENDS_LIST && order != 0);
+        menuRankC.setVisible(false);
+        menuRankA.setVisible(false);
         return super.onPrepareOptionsMenu(menu);
     }
 

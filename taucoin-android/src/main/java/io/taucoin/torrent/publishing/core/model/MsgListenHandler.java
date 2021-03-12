@@ -94,18 +94,6 @@ class MsgListenHandler extends MsgListener{
                         community.publicKey = receiverPk;
                         communityRepo.addCommunity(community);
                     }
-                    // 更新朋友信息
-                    Friend friend = friendRepo.queryFriend(receiverPk, senderPk);
-                    if (friend != null) {
-                        friend.state = 2;
-                        friend.lastSeenTime = DateUtil.getTime();
-                        BigInteger currentCommTime = BigInteger.valueOf(sentTime);
-                        BigInteger lastCommTime = BigInteger.valueOf(friend.lastCommTime);
-                        if (currentCommTime.compareTo(lastCommTime) > 0) {
-                            friend.lastCommTime = sentTime;
-                        }
-                        friendRepo.updateFriend(friend);
-                    }
 
                     User user = userRepo.getCurrentUser();
                     // 原始数据解密
@@ -161,7 +149,7 @@ class MsgListenHandler extends MsgListener{
     /**
      * 发现朋友
      * @param friendPk 朋友公钥
-     * @param timestamp 朋友在线时间
+     * @param timestamp 和朋友通信时间
      */
     @Override
     public void onDiscoveryFriend(byte[] friendPk, BigInteger timestamp) {
@@ -172,7 +160,7 @@ class MsgListenHandler extends MsgListener{
                 String userPk = MainApplication.getInstance().getPublicKey();
                 String friendPkStr = ByteUtil.toHexString(friendPk);
                 Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
-                long latestOnlineTime = timestamp.longValue();
+                long lastCommTime = timestamp.longValue();
                 if (friend != null) {
                     boolean isUpdate = false;
                     if (friend.state != 2) {
@@ -180,16 +168,16 @@ class MsgListenHandler extends MsgListener{
                         isUpdate = true;
                     }
                     // 当前时间大于上次更新时间
-                    if (latestOnlineTime > friend.lastSeenTime) {
-                        friend.lastSeenTime = latestOnlineTime;
+                    if (lastCommTime > friend.lastCommTime) {
+                        friend.lastCommTime = lastCommTime;
                         isUpdate = true;
                     }
                     if (isUpdate) {
                         friendRepo.updateFriend(friend);
                     }
-                    logger.info("onDiscoveryFriend friendPk::{}, timestamp::{}",
+                    logger.info("onDiscoveryFriend friendPk::{}, lastCommTime::{}",
                             ByteUtil.toHexString(friendPk),
-                            DateUtil.formatTime(latestOnlineTime, DateUtil.pattern6));
+                            DateUtil.formatTime(lastCommTime, DateUtil.pattern6));
                 }
             } catch (Exception e) {
                 logger.error("onDiscoveryFriend error", e);
