@@ -134,7 +134,7 @@ class MsgListenHandler extends MsgListener{
      * @param root 消息root
      */
     @Override
-    public void onReadMessageRoot(byte[] friendPk, byte[] root) {
+    public void onReadMessageRoot(byte[] friendPk, byte[] root, BigInteger timestamp) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
                 String hash = ByteUtil.toHexString(root);
@@ -143,7 +143,7 @@ class MsgListenHandler extends MsgListener{
                         friendPkStr, hash);
                 String userPk = MainApplication.getInstance().getPublicKey();
                 ChatMsgLog msgLog = new ChatMsgLog(hash, userPk, friendPkStr,
-                        ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), DateUtil.getMillisTime());
+                        ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), timestamp.longValue());
                 long result = chatRepo.addChatMsgLog(msgLog);
                 logger.trace("updateReceivedConfirmationState friendPk::{}, msgRoot::{}, result::{}",
                         friendPkStr, hash, result);

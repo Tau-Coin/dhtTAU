@@ -147,7 +147,6 @@ public class MsgLogsDialog extends Dialog {
                 // 消息是否送达送达
                 boolean highlight = pos == 0;
                 int color = highlight ? R.color.color_black : R.color.gray_dark;
-                binding.tvTime.setText(DateUtil.format(log.timestamp, DateUtil.pattern9));
                 binding.tvTime.setTextColor(context.getResources().getColor(color));
                 binding.tvStatus.setText(ChatMsgStatus.getStatusInfo(log.status));
                 binding.tvStatus.setTextColor(context.getResources().getColor(color));
@@ -155,13 +154,18 @@ public class MsgLogsDialog extends Dialog {
                 binding.timeLineBottom.setVisibility(pos == size - 1 ? View.GONE : View.VISIBLE);
 
                 int timePointRes;
+                String time;
                 if (log.status == ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
                     timePointRes = R.mipmap.icon_msg_received;
+                    time = DateUtil.format(log.timestamp, DateUtil.pattern6);
                 } else if (log.status == ChatMsgStatus.SENT.getStatus()) {
                     timePointRes = R.mipmap.icon_put_success;
+                    time = DateUtil.format(log.timestamp, DateUtil.pattern9);
                 }  else {
                     timePointRes = R.mipmap.icon_msg_built;
+                    time = DateUtil.format(log.timestamp, DateUtil.pattern9);
                 }
+                binding.tvTime.setText(time);
                 binding.timePoint.setImageResource(timePointRes);
             }
         }

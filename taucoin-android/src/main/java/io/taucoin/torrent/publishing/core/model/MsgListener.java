@@ -42,9 +42,10 @@ public abstract class MsgListener implements io.taucoin.listener.MsgListener {
      * 已读消息root通知
      * @param friend 发已读消息的朋友
      * @param hash 已读消息的hash
+     * @param timestamp 已读消息的时间
      */
     @Override
-    public void onReadMessageRoot(byte[] friend, byte[] hash) {}
+    public void onReadMessageRoot(byte[] friend, byte[] hash, BigInteger timestamp) {}
 
     /**
      * 发现朋友通知
