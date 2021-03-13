@@ -3,9 +3,6 @@ package io.taucoin.torrent.publishing;
 import android.app.Activity;
 import android.os.Bundle;
 
-import com.frostwire.jlibtorrent.Ed25519;
-import com.frostwire.jlibtorrent.Pair;
-
 import java.util.concurrent.Executors;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -15,9 +12,7 @@ import androidx.work.WorkManager;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
-import io.taucoin.util.ByteUtil;
 
 public class MainApplication extends MultiDexApplication {
     static {
@@ -35,7 +30,7 @@ public class MainApplication extends MultiDexApplication {
         super.onCreate();
         instance = this;
 
-        TauNotifier.getInstance(this).makeNotifyChans();
+        TauNotifier.getInstance(this).makeNotifyChannels();
         registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
         settingsRepo = RepositoryHelper.getSettingsRepository(this);
 

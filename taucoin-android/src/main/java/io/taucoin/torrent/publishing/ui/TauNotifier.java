@@ -29,8 +29,10 @@ public class TauNotifier {
     private static final String TAG = TauNotifier.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
 
-    public static final String FOREGROUND_NOTIFY_CHAN_ID = "io.taucoin.torrent.publishing.FOREGROUND_NOTIFY_CHAN";
-    public static final String DEFAULT_NOTIFY_CHAN_ID = "io.taucoin.torrent.publishing.DEFAULT_NOTIFY_CHAN_ID";
+    // 前台服务通知渠道ID
+    private static final String FOREGROUND_NOTIFY_CHANNEL_ID = "io.taucoin.torrent.publishing.FOREGROUND_NOTIFY_CHANNEL_ID";
+    // 默认通知渠道ID
+    private static final String DEFAULT_NOTIFY_CHANNEL_ID = "io.taucoin.torrent.publishing.DEFAULT_NOTIFY_CHANNEL_ID";
 
     // 服务启动的通知ID
     private static final int SERVICE_STARTED_NOTIFICATION_ID = -1;
@@ -58,20 +60,20 @@ public class TauNotifier {
     /**
      * 创建通知渠道
      */
-    public void makeNotifyChans() {
+    public void makeNotifyChannels() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O){
             return;
         }
         ArrayList<NotificationChannel> channels = new ArrayList<>();
-
-        channels.add(new NotificationChannel(DEFAULT_NOTIFY_CHAN_ID,
-                appContext.getString(R.string.def),
-                NotificationManager.IMPORTANCE_DEFAULT));
-        NotificationChannel foregroundChan = new NotificationChannel(FOREGROUND_NOTIFY_CHAN_ID,
-                appContext.getString(R.string.foreground_notification),
-                NotificationManager.IMPORTANCE_LOW);
-        foregroundChan.setShowBadge(false);
-        channels.add(foregroundChan);
+        // 添加默认通知渠道
+        NotificationChannel defaultChannel = new NotificationChannel(DEFAULT_NOTIFY_CHANNEL_ID,
+                appContext.getString(R.string.def), NotificationManager.IMPORTANCE_DEFAULT);
+        channels.add(defaultChannel);
+        // 添加前台服务通知渠道
+        NotificationChannel foregroundChannel = new NotificationChannel(FOREGROUND_NOTIFY_CHANNEL_ID,
+                appContext.getString(R.string.foreground_notification), NotificationManager.IMPORTANCE_LOW);
+        foregroundChannel.setShowBadge(false);
+        channels.add(foregroundChannel);
 
         notifyManager.createNotificationChannels(channels);
     }
@@ -91,7 +93,8 @@ public class TauNotifier {
         PendingIntent startupPendingIntent = PendingIntent.getActivity(context, 0, startupIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder foregroundNotify = new NotificationCompat.Builder(context, FOREGROUND_NOTIFY_CHAN_ID)
+        NotificationCompat.Builder foregroundNotify = new NotificationCompat.Builder(context,
+                FOREGROUND_NOTIFY_CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(startupPendingIntent)
                 .setContentTitle(context.getString(R.string.app_running_in_the_background))
