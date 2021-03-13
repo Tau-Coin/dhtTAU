@@ -255,6 +255,32 @@ public class DHTEngine {
     }
 
     /**
+     * Put mutable item batch asynchronously.
+     *
+     * @param items mutable item batch.
+     * @param cb callback interface
+     * @param cbData callback data
+     * @return DHTReqResult
+     */
+    public DHTReqResult distribute(MutableItemBatch items, PutDHTItemCallback cb,
+            Object cbData) {
+
+        if (items == null || !session.isRunning()) {
+            logger.warn("drop mutable item batch:" + items);
+            return Dropped;
+        }
+
+        MutableItemBatchDistribution distribution
+                = new MutableItemBatchDistribution(items, cb, cbData);
+
+        if (putMutableItemBatch(distribution)) {
+            return Success;
+        }
+
+        return Dropped;
+    }
+
+    /**
      * Request immutable item asynchronously.
      *
      * @param spec immutable item specification
@@ -362,6 +388,18 @@ public class DHTEngine {
         d.start();
         logger.trace("put mutable item:" + d.toString());
         boolean ret = session.dhtPut(d.item);
+
+        if (ret) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean putMutableItemBatch(MutableItemBatchDistribution d) {
+        d.start();
+        logger.trace("put mutable item batch:" + d.toString());
+        boolean ret = session.dhtPut(d.items);
 
         if (ret) {
             return true;

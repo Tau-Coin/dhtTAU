@@ -386,6 +386,28 @@ public class TauSession {
     }
 
     /**
+     * Put mutable item batch.
+     *
+     * @param item mutable item batch
+     */
+    public boolean dhtPut(MutableItemBatch batch) {
+
+        if (!sessionManager.isRunning()) {
+            logger.warn("Session is not running");
+            return false;
+        }
+
+        logger.trace("put dht item batch:" + batch);
+        /*
+        sessionManager.dhtPutItem(batch.publicKey, batch.privateKey,
+                batch.entryList, batch.salt);
+         */
+
+        return true;
+    }
+
+
+    /**
      * dht gets immutable item.
      *
      * @param spec getting immutable item specification

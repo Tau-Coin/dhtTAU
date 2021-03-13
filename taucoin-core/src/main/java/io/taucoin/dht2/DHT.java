@@ -1,6 +1,7 @@
 package io.taucoin.dht2;
 
 import io.taucoin.dht2.util.Utils;
+import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
 import io.taucoin.util.FastByteComparisons;
 import io.taucoin.util.HashUtil;
@@ -14,6 +15,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * This class defines some structures about getting and putting immutable and mutable items.
@@ -145,6 +148,69 @@ public final class DHT {
             sha1_hash hash = new sha1_hash(bvs);
 
             return new Sha1Hash(hash);
+        }
+    }
+
+    // Put many mutable items in one time call to forstwire 'dhtput'.
+    public static class MutableItemBatch {
+
+        public byte[] publicKey;
+        public byte[] privateKey;
+        public List<Entry> entryList;
+        public byte[] salt;
+
+        private Sha1Hash hash;
+
+        public MutableItemBatch(byte[] publicKey, byte[] privateKey,
+                List<ByteArrayWrapper> items, byte[] salt) {
+            this.publicKey = publicKey;
+            this.privateKey = privateKey;
+            this.salt = salt;
+            this.hash = MutableItem.computeHash(this.publicKey, this.salt);
+            // construct entry list
+            this.entryList = fromBytesArray(items);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof MutableItemBatch)) {
+                return false;
+            }
+
+            MutableItemBatch items = (MutableItemBatch)obj;
+
+            return hashCode() == items.hashCode();
+        }
+
+        @Override
+        public int hashCode() {
+            return hash.swig().hash_code();
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("MutableItemBatch(");
+            sb.append("pubkey:" + Hex.toHexString(publicKey));
+            sb.append(", salt:" + new String(salt));
+            sb.append(")");
+
+            return sb.toString();
+        }
+
+        public Sha1Hash hash() {
+            return hash;
+        }
+
+        public static List<Entry> fromBytesArray(List<ByteArrayWrapper> items) {
+            List<Entry> entryList = new ArrayList<Entry>();
+
+            for (ByteArrayWrapper i : items) {
+                entryList.add(Utils.fromStringBytes(i.getData()));
+            }
+
+            return entryList;
         }
     }
 
@@ -515,6 +581,68 @@ public final class DHT {
         @Override
         public String toString() {
             return item.toString();
+        }
+    }
+
+    /**
+     * The wrapper of mutable item distribution.
+     */
+    public static class MutableItemBatchDistribution extends Trace {
+
+        public MutableItemBatch items;
+
+        public PutDHTItemCallback callback;
+
+        private Object callBackData;
+
+        public MutableItemBatchDistribution(MutableItemBatch items,
+                PutDHTItemCallback callback, Object cbData) {
+            this.items = items;
+            this.callback = callback;
+            this.callBackData = cbData;
+        }
+
+        public MutableItemBatch getItems() {
+            return this.items;
+        }
+
+        public Object getCallbackData() {
+            return this.callBackData;
+        }
+
+        public PutDHTItemCallback getCallback() {
+            return this.callback;
+        }
+
+        public Sha1Hash hash() {
+            return this.items.hash();
+        }
+
+        public void onDHTItemPut(int success) {
+            if (callback != null) {
+                callback.onDHTItemPut(success, this.callBackData);
+            }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof MutableItemDistribution)) {
+                return false;
+            }
+
+            MutableItemBatchDistribution d = (MutableItemBatchDistribution)obj;
+
+            return items.equals(d.items);
+        }
+
+        @Override
+        public int hashCode() {
+            return items.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return items.toString();
         }
     }
 
