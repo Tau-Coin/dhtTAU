@@ -44,6 +44,9 @@ public class ChainParam {
     //default genesis power equal to power/year.
     public static final BigInteger DefaultGeneisisPower = new BigInteger("105120");
 
+    // MAX ITEM SIZE IN ONE PUT
+    public static final int MAX_DHT_PUT_ITEM_SIZE = 8;
+
     // time
     public static final int DEFAULT_BLOCK_TIME = 300;
     public static final int DEFAULT_MIN_BLOCK_TIME = 60;

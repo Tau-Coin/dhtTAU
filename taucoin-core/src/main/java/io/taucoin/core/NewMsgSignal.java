@@ -119,7 +119,7 @@ public class NewMsgSignal {
         this.bloomReceiptHash = list.get(1).getRLPData();
 
         byte[] friendBloomBytes = list.get(2).getRLPData();
-        this.friendListBloomFilter = (null == friendBloomBytes) ? null: new Bloom(friendBloomBytes);
+        this.friendListBloomFilter = (null == friendBloomBytes) ? new Bloom(): new Bloom(friendBloomBytes);
 
         this.chattingFriend = list.get(3).getRLPData();
 
