@@ -171,6 +171,15 @@ public final class DHT {
             this.entryList = fromBytesArray(items);
         }
 
+        public boolean isValid() {
+            if (publicKey == null || privateKey == null || salt == null
+                    || entryList == null || entryList.isEmpty()) {
+                return false;
+            }
+
+            return true;
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof MutableItemBatch)) {

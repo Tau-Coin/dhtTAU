@@ -265,7 +265,7 @@ public class DHTEngine {
     public DHTReqResult distribute(MutableItemBatch items, PutDHTItemCallback cb,
             Object cbData) {
 
-        if (items == null || !session.isRunning()) {
+        if (items == null || !session.isRunning() || !items.isValid()) {
             logger.warn("drop mutable item batch:" + items);
             return Dropped;
         }
