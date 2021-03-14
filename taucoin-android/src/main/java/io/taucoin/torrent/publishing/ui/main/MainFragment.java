@@ -159,9 +159,9 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
             case R.id.tv_create_communities:
                 ActivityUtil.startActivity(this, CommunityCreateActivity.class);
                 break;
-            case R.id.tv_frequency:
-                viewModel.showWorkFrequencyDialog(activity);
-                break;
+//            case R.id.tv_frequency:
+//                viewModel.showWorkFrequencyDialog(activity);
+//                break;
         }
     }
 }

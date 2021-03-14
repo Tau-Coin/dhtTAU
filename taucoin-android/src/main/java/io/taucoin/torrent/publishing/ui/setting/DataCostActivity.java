@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.setting;
 
 import android.os.Bundle;
+import android.text.Html;
 import android.view.View;
 
 import com.google.common.primitives.Ints;
@@ -176,9 +177,9 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             long interval = settingsRepo.getLongValue(key);
             if (interval > 0) {
                 double frequency = 1.0 * 1000 / interval;
-                String tvFrequency = getString(R.string.setting_working_frequency_value);
+                String tvFrequency = getString(R.string.main_work_frequency);
                 tvFrequency = String.format(tvFrequency, FmtMicrometer.formatTwoDecimal(frequency));
-                binding.tvWorkingFrequency.setText(tvFrequency);
+                binding.tvWorkingFrequency.setText(Html.fromHtml(tvFrequency));
             }
         }
     }

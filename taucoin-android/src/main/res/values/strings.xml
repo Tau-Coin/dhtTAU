@@ -46,7 +46,7 @@
     <string name="main_other_transaction">Other Transaction</string>
     <string name="main_no_messages">[No messages]</string>
     <string name="main_pic_messages">[Picture]</string>
-    <string name="main_work_frequency" formatted="false"><Data><![CDATA[The working frequency is <font color="#f19322">%s Hz</font>]]></Data></string>
+    <string name="main_work_frequency" formatted="false"><Data><![CDATA[Response Frequency <font color="#f19322">%s</font> time per second]]></Data></string>
     <string name="main_work_frequency_tips">The working frequency is the loop laps of the core program 1s,
         and the program will automatically adjust according to the flow usage.</string>
 
@@ -146,8 +146,6 @@
     <string name="setting_daily_quota">Daily data limit</string>
     <string name="setting_daily_quota_unit_m">%1$dM</string>
     <string name="setting_daily_quota_unit_g">%1$dG</string>
-    <string name="setting_working_frequency">Working Frequency</string>
-    <string name="setting_working_frequency_value">%s Hz</string>
     <string name="setting_network_current_speed">Current Speed</string>
     <string name="setting_network_speed_limit">Speed Limit</string>
     <string name="setting_network_average_speed">Average Speed</string>
