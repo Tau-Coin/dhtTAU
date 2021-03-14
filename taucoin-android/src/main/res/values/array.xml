@@ -10,17 +10,15 @@
     </array>
 
     <integer-array name="metered_limit">
-        <item>30</item>
-        <item>90</item>
-        <item>200</item>
-        <item>500</item>
+        <item>100</item>
+        <item>300</item>
+        <item>600</item>
         <item>1024</item>
     </integer-array>
 
     <integer-array name="wifi_limit">
-        <item>100</item>
         <item>300</item>
-        <item>500</item>
+        <item>600</item>
         <item>1024</item>
         <item>10240</item>
     </integer-array>
