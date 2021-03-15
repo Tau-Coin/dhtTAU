@@ -130,11 +130,15 @@ class MsgListenHandler extends MsgListener{
                 logger.trace("onReadMessageRoot friendPk::{}，MessageRoot::{}",
                         friendPkStr, hash);
                 String userPk = MainApplication.getInstance().getPublicKey();
-                ChatMsgLog msgLog = new ChatMsgLog(hash, userPk, friendPkStr,
-                        ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), timestamp.longValue());
-                long result = chatRepo.addChatMsgLog(msgLog);
-                logger.trace("updateReceivedConfirmationState friendPk::{}, msgRoot::{}, result::{}",
-                        friendPkStr, hash, result);
+                ChatMsgLog msgLog = chatRepo.queryChatMsgLog(hash, userPk, friendPkStr,
+                        ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus());
+                logger.trace("onReadMessageRoot friendPk::{}, msgRoot::{}, exist::{}",
+                        friendPkStr, hash, msgLog != null);
+                if (null == msgLog) {
+                    msgLog = new ChatMsgLog(hash, userPk, friendPkStr,
+                            ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), timestamp.longValue());
+                   chatRepo.addChatMsgLog(msgLog);
+                }
             } catch (SQLiteConstraintException ignore) {
             } catch (Exception e) {
                 logger.error("onReadMessageRoot error", e);

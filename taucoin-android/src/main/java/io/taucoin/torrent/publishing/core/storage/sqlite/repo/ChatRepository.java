@@ -74,4 +74,14 @@ public interface ChatRepository {
      * @return
      */
     Observable<List<ChatMsgLog>> observerMsgLogs(String hash);
+
+    /**
+     * 查询聊天消息日志
+     * @param hash
+     * @param userPk
+     * @param friendPkStr
+     * @param status
+     * @return
+     */
+    ChatMsgLog queryChatMsgLog(String hash, String userPk, String friendPkStr, int status);
 }

@@ -51,7 +51,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:includeFontPadding="false"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
+                            android:textAppearance="@style/TextAppearanceBody2"/>
 
                         <TextView
                             android:visibility="gone"
@@ -59,7 +59,7 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
                             android:layout_marginEnd="5dp"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
+                            android:textAppearance="@style/TextAppearanceBody2"/>
 
                     </LinearLayout>
 

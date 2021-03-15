@@ -17,21 +17,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <TextView
-                android:id="@+id/tv_frequency"
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:gravity="center_vertical"
-                android:onClick="@{listener.onClick}"
-                android:focusable="true"
-                android:text="asdasd"
-                android:focusableInTouchMode="true"/>
-
-            <include layout="@layout/view_line"/>
-
             <RelativeLayout
                 android:id="@+id/refresh_layout"
                 android:layout_width="match_parent"

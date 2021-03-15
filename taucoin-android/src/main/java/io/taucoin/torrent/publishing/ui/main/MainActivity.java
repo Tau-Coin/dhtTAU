@@ -1,10 +1,10 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.annotation.SuppressLint;
-import android.app.VoiceInteractor;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,6 +29,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
@@ -37,11 +37,13 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
+import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
@@ -86,6 +88,7 @@ public class MainActivity extends ScanTriggerActivity {
     private CommunityViewModel communityViewModel;
     private DownloadViewModel downloadViewModel;
     private NotificationViewModel notificationViewModel;
+    private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Subject<Integer> mBackClick = PublishSubject.create();
     private CommonDialog seedDialog;
@@ -104,6 +107,7 @@ public class MainActivity extends ScanTriggerActivity {
         notificationViewModel = provider.get(NotificationViewModel.class);
         downloadViewModel = provider.get(DownloadViewModel.class);
         infoProvider = TauInfoProvider.getInstance(getApplicationContext());
+        settingsRepo = RepositoryHelper.getSettingsRepository(getApplicationContext());
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main_drawer);
         initLayout();
         checkCurrentUser();
@@ -158,6 +162,7 @@ public class MainActivity extends ScanTriggerActivity {
         binding.drawerLayout.addDrawerListener(toggle);
 
         updateDHTStats();
+        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval));
 
         if (Utils.isTablet()) {
             updateViewChanged();
@@ -246,6 +251,7 @@ public class MainActivity extends ScanTriggerActivity {
         subscribeCurrentUser();
         subscribeCPUAndMemStatistics();
         subscribeNeedStartDaemon();
+        subscribeSettingsChanged();
 //        downloadViewModel.checkAppVersion(this);
     }
 
@@ -273,6 +279,29 @@ public class MainActivity extends ScanTriggerActivity {
             boolean isShowLinkDialog = showOpenExternalLinkDialog(content);
             if(isShowLinkDialog){
                 CopyManager.clearClipboardContent();
+            }
+        }
+    }
+
+    /**
+     * 订阅配置文件改变
+     */
+    private void subscribeSettingsChanged() {
+        Disposable disposable = settingsRepo.observeSettingsChanged()
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::handleSettingsChanged);
+        disposables.add(disposable);
+    }
+
+    private void handleSettingsChanged(String key) {
+        if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval))) {
+            long interval = settingsRepo.getLongValue(key);
+            if (interval > 0) {
+                double frequency = 1.0 * 1000 / interval;
+                String tvFrequency = getString(R.string.drawer_frequency);
+                tvFrequency = String.format(tvFrequency, FmtMicrometer.formatTwoDecimal(frequency));
+                binding.drawer.itemFrequency.setRightText(Html.fromHtml(tvFrequency));
             }
         }
     }

@@ -120,4 +120,17 @@ public class ChatRepositoryImpl implements ChatRepository{
     public Observable<List<ChatMsgLog>> observerMsgLogs(String hash) {
         return db.chatDao().observerMsgLogs(hash);
     }
+
+    /**
+     * 查询聊天消息日志
+     * @param hash
+     * @param userPk
+     * @param friendPk
+     * @param status
+     * @return
+     */
+    @Override
+    public ChatMsgLog queryChatMsgLog(String hash, String userPk, String friendPk, int status) {
+        return db.chatDao().queryChatMsgLog(hash, userPk, friendPk, status);
+    }
 }

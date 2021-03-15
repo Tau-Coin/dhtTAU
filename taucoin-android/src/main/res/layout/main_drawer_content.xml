@@ -161,6 +161,14 @@
                     <include layout="@layout/view_line"/>
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                        android:id="@+id/item_frequency"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="5dp"
+                        app:leftImage="@mipmap/icon_frequency"
+                        app:rightText="@string/drawer_frequency"/>
+
+                    <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_dht_nodes"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"

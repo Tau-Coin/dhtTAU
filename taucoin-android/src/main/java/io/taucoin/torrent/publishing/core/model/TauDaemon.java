@@ -130,30 +130,14 @@ public class TauDaemon {
             return;
         }
         // 更新用户登录的设备信息
-        updateUserDeviceInfo();
+        String deviceID = DeviceUtils.getCustomDeviceID(appContext);
+        msgListenHandler.onNewDeviceID(deviceID.getBytes());
+        logger.debug("updateUserDeviceInfo deviceID::{}", deviceID);
+
         this.seed = seed;
         logger.debug("updateSeed ::{}", seed);
         byte[] bytesSeed = ByteUtil.toByte(seed);
         tauController.updateKey(bytesSeed);
-    }
-
-    /**
-     * 更新用户登录的设备信息
-     */
-    private void updateUserDeviceInfo() {
-        Disposable disposable = Flowable.create(emitter -> {
-            String deviceID = DeviceUtils.getCustomDeviceID(appContext);
-            msgListenHandler.onNewDeviceID(deviceID.getBytes());
-            logger.debug("updateUserDeviceInfo deviceID::{}", deviceID);
-            emitter.onComplete();
-        }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .subscribe();
-        disposables.add(disposable);
-    }
-
-    public boolean isTauRunning() {
-        return isRunning;
     }
 
     /**

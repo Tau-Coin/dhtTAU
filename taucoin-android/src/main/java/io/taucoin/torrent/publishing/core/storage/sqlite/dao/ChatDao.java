@@ -44,7 +44,11 @@ public interface ChatDao {
 
     // 查询消息的所有日志
     String QUERY_CHAT_MSG_LOGS = "SELECT * FROM ChatMsgLogs WHERE hash = :hash" +
-            " ORDER BY status DESC";
+            " GROUP BY status ORDER BY status DESC";
+
+    // 查询消息单独状态日志数据
+    String QUERY_CHAT_MSG_LOG = "SELECT * FROM ChatMsgLogs WHERE hash = :hash AND senderPk = :senderPk" +
+            " AND friendPk = :friendPk AND status = :status";
 
     /**
      * 添加聊天信息
@@ -100,4 +104,10 @@ public interface ChatDao {
 
     @Query(QUERY_CHAT_MSG_LOGS)
     Observable<List<ChatMsgLog>> observerMsgLogs(String hash);
+
+    /**
+     * 查询聊天消息日志
+     */
+    @Query(QUERY_CHAT_MSG_LOG)
+    ChatMsgLog queryChatMsgLog(String hash, String senderPk, String friendPk, int status);
 }
