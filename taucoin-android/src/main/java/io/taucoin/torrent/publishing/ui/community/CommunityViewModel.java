@@ -40,6 +40,7 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
+import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
 import io.taucoin.torrent.publishing.core.model.data.DrawBean;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.model.data.Statistics;
@@ -413,7 +414,7 @@ public class CommunityViewModel extends AndroidViewModel {
         return communityRepo.getCommunityByChainIDSingle(chainID);
     }
 
-    public Observable<Community> observerCommunityByChainID(String chainID) {
+    public Observable<CommunityAndFriend> observerCommunityByChainID(String chainID) {
         return communityRepo.observerCommunityByChainID(chainID);
     }
 
