@@ -73,6 +73,21 @@ public class CommunicationManager {
     }
 
     /**
+     * 当留在该朋友聊天页面时，只访问该朋友
+     * @param peer 要访问的朋友
+     */
+    public void startVisitFriend(byte[] peer) {
+        this.communication.startVisitFriend(peer);
+    }
+
+    /**
+     * 当离开朋友聊天页面时，取消对朋友的单独访问
+     */
+    public void stopVisitFriend() {
+        this.communication.stopVisitFriend();
+    }
+
+    /**
      * 添加新朋友
      * @param pubKey public key
      */

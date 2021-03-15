@@ -112,6 +112,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // 当前正在聊天的朋友（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> chattingFriend = new ConcurrentHashMap<>();
 
+    private byte[] visitingFriend =  null;
+
     // Communication thread.
     private Thread communicationThread;
 
@@ -615,34 +617,38 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     private void visitReferredFriends() {
         ByteArrayWrapper peer = null;
-        Iterator<ByteArrayWrapper> it = this.referredFriends.iterator();
-        // 如果有现成的peer，则挑选一个peer访问
-        if (it.hasNext()) {
-            peer = it.next();
-
-            this.referredFriends.remove(peer);
+        if (null != this.visitingFriend) {
+            peer = new ByteArrayWrapper(this.visitingFriend);
         } else {
-            // 没有找到推荐的活跃的peer，则自己随机访问一个自己的朋友或者自己
-            Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
-            if (iterator.hasNext()) {
+            Iterator<ByteArrayWrapper> it = this.referredFriends.iterator();
+            // 如果有现成的peer，则挑选一个peer访问
+            if (it.hasNext()) {
+                peer = it.next();
 
-                Random random = new Random(System.currentTimeMillis());
-                // 取值范围0 ~ size，当index取size时选自己
-                int index = random.nextInt(this.friends.size() + 1);
+                this.referredFriends.remove(peer);
+            } else {
+                // 没有找到推荐的活跃的peer，则自己随机访问一个自己的朋友或者自己
+                Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
+                if (iterator.hasNext()) {
 
-                if (index != this.friends.size()) {
-                    // (0 ~ size)
-                    int i = 0;
-                    while (iterator.hasNext()) {
-                        peer = iterator.next();
-                        if (i == index) {
-                            break;
+                    Random random = new Random(System.currentTimeMillis());
+                    // 取值范围0 ~ size，当index取size时选自己
+                    int index = random.nextInt(this.friends.size() + 1);
+
+                    if (index != this.friends.size()) {
+                        // (0 ~ size)
+                        int i = 0;
+                        while (iterator.hasNext()) {
+                            peer = iterator.next();
+                            if (i == index) {
+                                break;
+                            }
+
+                            i++;
                         }
-
-                        i++;
+                    } else {
+                        peer = new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first);
                     }
-                } else {
-                    peer = new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first);
                 }
             }
         }
@@ -840,6 +846,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private void mainLoop() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                logger.error("Interval time:{}", this.loopIntervalTime);
                 // 合并来自多设备的朋友
                 tryToMergeFriends();
 
@@ -1068,6 +1075,21 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     public void chattingWithFriend(ByteArrayWrapper peer) {
         this.chattingFriend.put(peer, BigInteger.valueOf(System.currentTimeMillis() / 1000));
+    }
+
+    /**
+     * 当留在该朋友聊天页面时，只访问该朋友
+     * @param peer 要访问的朋友
+     */
+    public void startVisitFriend(byte[] peer) {
+        this.visitingFriend = peer;
+    }
+
+    /**
+     * 当离开朋友聊天页面时，取消对朋友的单独访问
+     */
+    public void stopVisitFriend() {
+        this.visitingFriend = null;
     }
 
     /**
