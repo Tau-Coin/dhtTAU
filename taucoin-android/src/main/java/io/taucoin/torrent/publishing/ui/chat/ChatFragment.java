@@ -40,6 +40,7 @@ import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentChatBinding;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
@@ -166,11 +167,6 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     }
 
     private final Runnable handleUpdateAdapter = () -> {
-//        if (binding.msgList.getLayoutManager() != null) {
-//            int bottomPosition = adapter.getItemCount() - 1;
-//
-////            binding.msgList.getLayoutManager().scrollToPosition(bottomPosition);
-//        }
         int bottomPosition = adapter.getItemCount() - 1;
         logger.debug("handleUpdateAdapter scrollToPosition::{}", bottomPosition);
         LinearLayoutManager layoutManager = (LinearLayoutManager) binding.msgList.getLayoutManager();
@@ -192,7 +188,8 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(community -> {
-                    binding.toolbarInclude.tvTitle.setText(community.communityName);
+                    String friendNickName = UsersUtil.getShowName(community.friend, community.chainID);
+                    binding.toolbarInclude.tvTitle.setText(friendNickName);
                 }));
         chatViewModel.getChatResult().observe(this, result -> {
             if (!result.isSuccess()) {

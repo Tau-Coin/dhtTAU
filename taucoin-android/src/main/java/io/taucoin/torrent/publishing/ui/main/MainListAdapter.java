@@ -1,7 +1,6 @@
 package io.taucoin.torrent.publishing.ui.main;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,14 +17,12 @@ import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemChatListBinding;
 import io.taucoin.torrent.publishing.databinding.ItemGroupListBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
-import io.taucoin.torrent.publishing.ui.Selectable;
 import io.taucoin.types.MessageType;
-import io.taucoin.util.ByteUtil;
-import io.taucoin.util.CryptoUtil;
 
 /**
  * 主页显示的群组列表的Adapter
@@ -114,8 +111,9 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
                 binding.readOnly.setVisibility(isReadOnly ? View.VISIBLE : View.INVISIBLE);
             } else if (holder.binding instanceof ItemChatListBinding) {
                 ItemChatListBinding binding = (ItemChatListBinding) holder.binding;
-                binding.tvGroupName.setText(community.communityName);
-                String firstLetters = StringUtil.getFirstLettersOfName(community.communityName);
+                String friendNickName = UsersUtil.getShowName(community.friend, community.chainID);
+                binding.tvGroupName.setText(friendNickName);
+                String firstLetters = StringUtil.getFirstLettersOfName(friendNickName);
                 binding.leftView.setText(firstLetters);
                 int bgColor = Utils.getGroupColor(community.chainID);
                 binding.leftView.setBgColor(bgColor);
