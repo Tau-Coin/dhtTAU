@@ -9,6 +9,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -344,7 +345,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private void processReceivedMessages() throws DBException {
 
         // 将消息存入数据库并通知UI，尝试获取下一条消息
-
         for (Map.Entry<ByteArrayWrapper, Message> entry : this.messageMap.entrySet()) {
             Message message = entry.getValue();
             ByteArrayWrapper msgHash = entry.getKey();
@@ -367,7 +367,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
 
             this.messageMap.remove(msgHash);
-//            iterator.remove();
         }
     }
 
@@ -389,6 +388,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 NewMsgSignal newMsgSignal = entry.getValue();
 
                 Bloom localMsgBloomFilter = new Bloom();
+                Bloom messageBloomFilter = newMsgSignal.getMessageBloomFilter();
                 Bloom friendListBloomFilter = newMsgSignal.getFriendListBloomFilter();
 
                 byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
@@ -408,6 +408,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
                 LinkedList<Message> list = this.messageListMap.get(peer);
 
+                // 查看对方是否缺消息，并合成本地的消息过滤器
                 if (null != list && !list.isEmpty()) {
                     int size = list.size();
                     byte[] firstMsgHash = list.getFirst().getSha1Hash();
@@ -415,26 +416,43 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                     Bloom bloom = Bloom.create(firstMsgHash);
                     localMsgBloomFilter.or(bloom);
+                    if (!messageBloomFilter.matches(bloom) && !this.publishFriends.contains(peer)) {
+                        logger.debug("Message mismatch, add peer[{}] to publish list", peer.toString());
+                        this.publishFriends.add(peer);
+                    }
 
                     for (int i = 0; i < size - 1; i++) {
                         byte[] mergedHash = ByteUtil.merge(list.get(i).getSha1Hash(), list.get(i + 1).getSha1Hash());
                         bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
                         localMsgBloomFilter.or(bloom);
+
+                        if (!messageBloomFilter.matches(bloom) && !this.publishFriends.contains(peer)) {
+                            logger.debug("Message mismatch, add peer[{}] to publish list", peer.toString());
+                            this.publishFriends.add(peer);
+                        }
                     }
 
                     bloom = Bloom.create(lastMsgHash);
                     localMsgBloomFilter.or(bloom);
+                    if (!messageBloomFilter.matches(bloom) && !this.publishFriends.contains(peer)) {
+                        logger.debug("Message mismatch, add peer[{}] to publish list", peer.toString());
+                        this.publishFriends.add(peer);
+                    }
                 }
 
                 // 如果你没看到我最新的bloom filter（即bloom收据哈希对不上），则发布我的在线信号
-                byte[] bloomReceiptHash = newMsgSignal.getBloomReceiptHash();
-                if (null != bloomReceiptHash) {
-                    if (!Arrays.equals(HashUtil.sha1hash(localMsgBloomFilter.getData()), bloomReceiptHash)) {
-                        this.publishFriends.add(peer);
-                    }
-                } else {
-                    if (!Arrays.equals(localMsgBloomFilter.getData(), new Bloom().getData())) {
-                        this.publishFriends.add(peer);
+                if (!this.publishFriends.contains(peer)) {
+                    byte[] bloomReceiptHash = newMsgSignal.getBloomReceiptHash();
+                    if (null != bloomReceiptHash) {
+                        if (!Arrays.equals(HashUtil.sha1hash(localMsgBloomFilter.getData()), bloomReceiptHash)) {
+                            logger.debug("Bloom receipt hash from peer:{} is not same.", peer.toString());
+                            this.publishFriends.add(peer);
+                        }
+                    } else {
+                        if (!Arrays.equals(localMsgBloomFilter.getData(), new Bloom().getData())) {
+                            logger.debug("Bloom receipt hash from peer:{} is not same.", peer.toString());
+                            this.publishFriends.add(peer);
+                        }
                     }
                 }
 
@@ -483,8 +501,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     }
                 }
             } catch (RuntimeException e) {
-                logger.error(e.getMessage(), e);
-                this.newMsgSignalCache.remove(entry.getKey());
+                logger.error(entry.getKey().toString() + ":" + e.getMessage(), e);
             }
 
             this.newMsgSignalCache.remove(entry.getKey());
@@ -496,7 +513,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     private void publishFriendMutableData() {
         for (ByteArrayWrapper peer: this.publishFriends) {
-            publishFriendMutableData(peer);
+            try {
+                publishFriendMutableData(peer);
+            } catch (RuntimeException e) {
+                logger.error(peer.toString() + ":" + e.getMessage(), e);
+            }
 
             this.publishFriends.remove(peer);
         }
@@ -507,12 +528,12 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @param peer 发布数据的对象
      */
     private void publishFriendMutableData(ByteArrayWrapper peer) {
-        List<ByteArrayWrapper> dataToPut = new ArrayList<>();
+        Set<ByteArrayWrapper> dataSet = new HashSet<>();
 
         NewMsgSignal myNewMsgSignal = makeNewMsgSignal(peer);
         MutableDataWrapper mutableDataWrapper = new MutableDataWrapper(MutableDataType.NEW_MSG_SIGNAL,
                 myNewMsgSignal.getEncoded());
-        dataToPut.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
+        dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
 
         NewMsgSignal newMsgSignal = this.latestNewMsgSignals.get(peer);
 
@@ -538,15 +559,14 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                 if (!friends.isEmpty()) {
                     FriendList friendList = new FriendList(friends);
-                    if (dataToPut.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
+                    if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
                         mutableDataWrapper = new MutableDataWrapper(MutableDataType.FRIEND_LIST,
                                 friendList.getEncoded());
-                        dataToPut.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
+                        dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
                     }
                 }
             }
 
-            logger.debug("peer:{},{}", peer.toString(), newMsgSignal.toString());
             // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
             LinkedList<Message> list = this.messageListMap.get(peer);
 
@@ -557,11 +577,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                 Bloom bloom = Bloom.create(firstMsgHash);
                 if (!messageBloomFilter.matches(bloom)) {
-                    logger.error("Put [{}] message to {}", 0, peer.toString());
-                    if (dataToPut.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
+                    logger.debug("Put message[{}] to {}", list.getFirst().toString(), peer.toString());
+                    if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
                         mutableDataWrapper = new MutableDataWrapper(MutableDataType.MESSAGE,
                                 list.getFirst().getEncoded());
-                        dataToPut.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
+                        dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
                     }
                 }
 
@@ -571,36 +591,40 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     boolean match = messageBloomFilter.matches(bloom);
                     // 如果合并哈希不匹配，则随机发出一个缺少的消息即可
                     if (!match) {
-                        if (dataToPut.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
+                        if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
+                            logger.debug("Put message[{}] to {}", list.get(i).toString(), peer.toString());
                             mutableDataWrapper = new MutableDataWrapper(MutableDataType.MESSAGE,
                                     list.get(i).getEncoded());
-                            dataToPut.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
+                            dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
                         }
-                        if (dataToPut.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
+                        if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
+                            logger.debug("Put message[{}] to {}", list.get(i + 1).toString(), peer.toString());
                             mutableDataWrapper = new MutableDataWrapper(MutableDataType.MESSAGE,
                                     list.get(i + 1).getEncoded());
-                            dataToPut.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
+                            dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
                         }
-                        if (dataToPut.size() >= ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
+                        if (dataSet.size() >= ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
                             break;
                         }
+                    } else {
+                        logger.debug("Match (i, i+1): [{}, {}]", i, i + 1);
                     }
                 }
 
                 bloom = Bloom.create(lastMsgHash);
                 boolean match = messageBloomFilter.matches(bloom);
                 if (!match) {
-                    logger.error("Put last message to {}", peer.toString());
-                    if (dataToPut.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
+                    logger.debug("Put message[{}] to {}", list.getLast().toString(), peer.toString());
+                    if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
                         mutableDataWrapper = new MutableDataWrapper(MutableDataType.MESSAGE,
                                 list.getLast().getEncoded());
-                        dataToPut.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
+                        dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
                     }
                 }
             }
         }
 
-        publishMutableData(peer.getData(), dataToPut);
+        publishMutableData(peer.getData(), new ArrayList<>(dataSet));
     }
 
     /**
@@ -812,6 +836,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @param list 发布的数据列表
      */
     private void publishMutableData(byte[] peer, List<ByteArrayWrapper> list) {
+        logger.debug("Put mutable data to peer:{}", Hex.toHexString(peer));
         Pair<byte[], byte[]> keyPair = AccountManager.getInstance().getKeyPair();
 
         if (null != list && !list.isEmpty()) {
