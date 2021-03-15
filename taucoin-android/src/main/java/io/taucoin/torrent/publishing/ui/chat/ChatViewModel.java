@@ -35,6 +35,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.HashUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.service.WorkerManager;
 import io.taucoin.torrent.publishing.ui.constant.Page;
@@ -54,6 +55,7 @@ public class ChatViewModel extends AndroidViewModel {
     private MutableLiveData<Result> chatResult = new MutableLiveData<>();
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
+    private Disposable visitFriend;
     private ChatSourceFactory sourceFactory;
     public ChatViewModel(@NonNull Application application) {
         super(application);
@@ -191,7 +193,37 @@ public class ChatViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
+    /**
+     * 观察消息日志信息
+     */
     Observable<List<ChatMsgLog>> observerMsgLogs(String hash) {
         return chatRepo.observerMsgLogs(hash);
+    }
+
+    /**
+     * 当留在该朋友聊天页面时，只访问该朋友
+     * @param friendPk 要访问的朋友
+     */
+    void startVisitFriend(String friendPk) {
+        if (StringUtil.isEmpty(friendPk)) {
+            return;
+        }
+        visitFriend = daemon.observeDaemonRunning()
+            .subscribeOn(Schedulers.io())
+            .subscribe((isRunning) -> {
+                if (isRunning) {
+                    daemon.startVisitFriend(friendPk);
+                }
+            });
+    }
+
+    /**
+     * 当离开朋友聊天页面时，取消对朋友的单独访问
+     */
+    void stopVisitFriend() {
+        if (visitFriend != null && !visitFriend.isDisposed()) {
+            visitFriend.dispose();
+        }
+        daemon.stopVisitFriend();
     }
 }

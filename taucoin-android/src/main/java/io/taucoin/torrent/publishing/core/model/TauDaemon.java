@@ -754,4 +754,28 @@ public class TauDaemon {
         }
         return tauController.getDHTEngine().getSessionNodes();
     }
+
+    /**
+     * 当留在该朋友聊天页面时，只访问该朋友
+     * @param friendPkStr 要访问的朋友
+     */
+    public void startVisitFriend(String friendPkStr) {
+        if (!isRunning) {
+            return;
+        }
+        byte[] friendPk = ByteUtil.toByte(friendPkStr);
+        tauController.getCommunicationManager().startVisitFriend(friendPk);
+        logger.debug("startVisitFriend friendPk{}", friendPkStr);
+    }
+
+    /**
+     * 当离开朋友聊天页面时，取消对朋友的单独访问
+     */
+    public void stopVisitFriend() {
+        if (!isRunning) {
+            return;
+        }
+        tauController.getCommunicationManager().stopVisitFriend();
+        logger.debug("stopVisitFriend");
+    }
 }
