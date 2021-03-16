@@ -45,6 +45,7 @@ import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
+import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
@@ -162,7 +163,7 @@ public class MainActivity extends ScanTriggerActivity {
         binding.drawerLayout.addDrawerListener(toggle);
 
         updateDHTStats();
-        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval));
+        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
 
         if (Utils.isTablet()) {
             updateViewChanged();
@@ -295,14 +296,11 @@ public class MainActivity extends ScanTriggerActivity {
     }
 
     private void handleSettingsChanged(String key) {
-        if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval))) {
-            long interval = settingsRepo.getLongValue(key);
-            if (interval > 0) {
-                double frequency = 1.0 * 1000 / interval;
-                String tvFrequency = getString(R.string.drawer_frequency);
-                tvFrequency = String.format(tvFrequency, FmtMicrometer.formatTwoDecimal(frequency));
-                binding.drawer.itemFrequency.setRightText(Html.fromHtml(tvFrequency));
-            }
+        if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval_list))) {
+            double frequency = FrequencyUtil.getMainLoopFrequency();
+            String tvFrequency = getString(R.string.drawer_frequency);
+            tvFrequency = String.format(tvFrequency, FmtMicrometer.formatTwoDecimal(frequency));
+            binding.drawer.itemFrequency.setRightText(Html.fromHtml(tvFrequency));
         }
     }
 

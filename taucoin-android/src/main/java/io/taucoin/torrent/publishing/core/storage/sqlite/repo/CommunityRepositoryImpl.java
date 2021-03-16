@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
+import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
@@ -100,7 +100,7 @@ public class CommunityRepositoryImpl implements CommunityRepository{
     }
 
     @Override
-    public Observable<CommunityAndFriend> observerCommunityByChainID(String chainID) {
+    public Observable<FriendAndUser> observerCommunityByChainID(String chainID) {
         return db.communityDao().observerCommunityByChainID(chainID);
     }
 

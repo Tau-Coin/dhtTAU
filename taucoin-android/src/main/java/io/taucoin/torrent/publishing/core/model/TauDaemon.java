@@ -36,6 +36,7 @@ import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.DeviceUtils;
+import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -118,7 +119,9 @@ public class TauDaemon {
         settingsRepo.wakeLock(false);
         settingsRepo.setUPnpMapped(false);
         settingsRepo.setNATPMPMapped(false);
-        updateUIInterval(Interval.FORE_MAIN_LOOP_MIN.getInterval());
+        // 初始化主循环频率
+        FrequencyUtil.clearMainLoopIntervalList();
+        FrequencyUtil.updateMainLoopInterval(Interval.FORE_MAIN_LOOP_MIN.getInterval());
     }
 
     /**
@@ -464,10 +467,10 @@ public class TauDaemon {
                     logger.info("rescheduleTAUBySettings restartSessions");
                 } else {
                     if (isHaveAvailableData()) {
-                        int interval = NetworkSetting.calculateMainLoopInterval();
-                        tauController.getCommunicationManager().setIntervalTime(interval);
                         // 更新UI展示链端主循环时间间隔
-                        updateUIInterval(interval);
+                        NetworkSetting.calculateMainLoopInterval();
+                        int interval = FrequencyUtil.getMainLoopInterval();
+                        tauController.getCommunicationManager().setIntervalTime(interval);
                         // 重置无可用流量提示对话框的参数
                         trafficTips = true;
                         noRemainingDataTimes = 0;
@@ -492,15 +495,6 @@ public class TauDaemon {
             return;
         }
         tauController.restartSessions();
-    }
-
-    /**
-     * 更新链端主循环、Gossip的时间间隔以供UI显示
-     */
-    private void updateUIInterval(int mainLoopInterval) {
-        settingsRepo.setLongValue(appContext.getString(R.string.pref_key_main_loop_interval),
-                mainLoopInterval);
-        logger.info("Reschedule MainLoopInterval::{}ms", mainLoopInterval);
     }
 
     /**
@@ -737,7 +731,7 @@ public class TauDaemon {
             return false;
         }
         boolean isPublishSuccess = getCommunicationManager().publishNewMessage(friendPK, message);
-        logger.debug("sendMessage isPublishSuccess{}", isPublishSuccess);
+        logger.debug("sendMessage isPublishSuccess::{}", isPublishSuccess);
         String hash = ByteUtil.toHexString(message.getHash());
         logger.debug("TAU messaging sendMessage friendPk::{}, hash::{}, timestamp::{}",
                 ByteUtil.toHexString(friendPK), hash,

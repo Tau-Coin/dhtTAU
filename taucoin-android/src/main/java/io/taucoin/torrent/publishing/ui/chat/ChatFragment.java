@@ -46,6 +46,7 @@ import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.MsgLogsDialog;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
+import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.types.MessageType;
 
@@ -187,8 +188,10 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
         disposables.add(communityViewModel.observerCommunityByChainID(friendPK)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(community -> {
-                    String friendNickName = UsersUtil.getShowName(community.friend, community.chainID);
+                .subscribe(friend -> {
+                    binding.llBottomInput.setVisibility(friend.state == 2 ? View.VISIBLE : View.GONE);
+                    binding.llShareQr.setVisibility(friend.state != 2 ? View.VISIBLE : View.GONE);
+                    String friendNickName = UsersUtil.getShowName(friend.user, friend.chainID);
                     binding.toolbarInclude.tvTitle.setText(friendNickName);
                 }));
         chatViewModel.getChatResult().observe(this, result -> {
@@ -206,6 +209,11 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 break;
             case R.id.tv_send:
                 sendMessage();
+                break;
+            case R.id.ll_share_qr:
+                Intent intent = new Intent();
+                intent.putExtra(IntentExtra.TYPE, UserQRCodeActivity.TYPE_QR_SHARE);
+                ActivityUtil.startActivity(intent, activity, UserQRCodeActivity.class);
                 break;
             default:
                 break;

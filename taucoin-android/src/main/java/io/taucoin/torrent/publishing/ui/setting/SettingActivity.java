@@ -17,6 +17,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -59,7 +60,7 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
         handleSettingsChanged(getString(R.string.pref_key_internet_state));
         handleSettingsChanged(getString(R.string.pref_key_charging_state));
         handleSettingsChanged(getString(R.string.pref_key_wake_lock));
-        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval));
+        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
         handleSettingsChanged(getString(R.string.pref_key_upnp_mapped));
         handleSettingsChanged(getString(R.string.pref_key_nat_pmp_mapped));
 
@@ -113,8 +114,8 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_charging_state))) {
             boolean chargingState = settingsRepo.chargingState();
             binding.tvCharging.setText(chargingState ? R.string.common_on : R.string.common_off);
-        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval))) {
-            long interval = settingsRepo.getLongValue(key);
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval_list))) {
+            long interval = FrequencyUtil.getMainLoopInterval();
             binding.tvMainLoop.setText(String.valueOf(interval));
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_upnp_mapped))) {
             boolean isMapped = settingsRepo.isUPnpMapped();

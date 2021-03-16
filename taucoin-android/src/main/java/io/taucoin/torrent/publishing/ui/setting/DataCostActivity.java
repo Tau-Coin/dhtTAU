@@ -19,6 +19,7 @@ import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
+import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityDataCostBinding;
@@ -53,7 +54,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
 
         handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
         handleSettingsChanged(getString(R.string.pref_key_current_speed_list));
-        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval));
+        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
 
         // 先更新，再显示
         NetworkSetting.updateMeteredSpeedLimit();
@@ -173,14 +174,11 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             adapterMetered.updateSelectLimit(NetworkSetting.getMeteredLimit());
         } else if (key.equals(getString(R.string.pref_key_wifi_limit))) {
             adapterWiFi.updateSelectLimit(NetworkSetting.getWiFiLimit());
-        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval))) {
-            long interval = settingsRepo.getLongValue(key);
-            if (interval > 0) {
-                double frequency = 1.0 * 1000 / interval;
-                String tvFrequency = getString(R.string.main_work_frequency);
-                tvFrequency = String.format(tvFrequency, FmtMicrometer.formatTwoDecimal(frequency));
-                binding.tvWorkingFrequency.setText(Html.fromHtml(tvFrequency));
-            }
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval_list))) {
+            double frequency = FrequencyUtil.getMainLoopFrequency();
+            String tvFrequency = getString(R.string.main_work_frequency);
+            tvFrequency = String.format(tvFrequency, FmtMicrometer.formatTwoDecimal(frequency));
+            binding.tvWorkingFrequency.setText(Html.fromHtml(tvFrequency));
         }
     }
 

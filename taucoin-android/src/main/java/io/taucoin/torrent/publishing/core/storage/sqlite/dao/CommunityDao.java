@@ -11,7 +11,7 @@ import androidx.room.Update;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
+import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
@@ -74,6 +74,11 @@ public interface CommunityDao {
     String QUERY_CURRENT_MEMBER = "SELECT * FROM Members" +
             " WHERE chainID = :chainID AND publicKey = :publicKey";
 
+    String QUERY_FRIEND_AND_USER = "SELECT c.*, f.state FROM Communities c" +
+            " LEFT JOIN Friends f " +
+            " ON c.chainID = f.friendPK and f.userPK =" + QUERY_GET_CURRENT_USER_PK +
+            " WHERE c.chainID = :chainID";
+
     /**
      * 添加新的社区
      */
@@ -124,9 +129,9 @@ public interface CommunityDao {
     @Query(QUERY_GET_COMMUNITY_BY_CHAIN_ID)
     Single<Community> getCommunityByChainIDSingle(String chainID);
 
-    @Query(QUERY_GET_COMMUNITY_BY_CHAIN_ID)
+    @Query(QUERY_FRIEND_AND_USER)
     @Transaction
-    Observable<CommunityAndFriend> observerCommunityByChainID(String chainID);
+    Observable<FriendAndUser> observerCommunityByChainID(String chainID);
 
     @Query(QUERY_CLEAR_COMMUNITY_STATE)
     void clearCommunityState(String chainID);

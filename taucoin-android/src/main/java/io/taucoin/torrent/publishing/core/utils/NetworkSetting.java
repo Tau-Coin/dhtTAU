@@ -285,7 +285,7 @@ public class NetworkSetting {
      * 计算主循环时间间隔
      * @return 返回计算的时间间隔
      */
-    public static int calculateMainLoopInterval() {
+    public static void calculateMainLoopInterval() {
         Context appContext = MainApplication.getInstance();
         String foregroundRunningKey = appContext.getString(R.string.pref_key_foreground_running);
         Interval mainLoopMin;
@@ -317,7 +317,7 @@ public class NetworkSetting {
                                 " timeInterval::{}", currentSpeed, speedLimit, rate, timeInterval);
             }
         }
-        return timeInterval;
+        FrequencyUtil.updateMainLoopInterval(timeInterval);
     }
 
     /**

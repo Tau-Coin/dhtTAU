@@ -38,7 +38,9 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
@@ -61,12 +63,14 @@ import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
+import io.taucoin.torrent.publishing.ui.chat.ChatViewModel;
 import io.taucoin.torrent.publishing.ui.constant.KeyQRContent;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.constant.QRContent;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.torrent.publishing.ui.setting.DataCostActivity;
+import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -81,6 +85,7 @@ public class UserViewModel extends AndroidViewModel {
     private SettingsRepository settingsRepo;
     private TxRepository txRepo;
     private MsgRepository msgRepo;
+    private CommunityRepository communityRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
     private MutableLiveData<Boolean> addFriendResult = new MutableLiveData<>();
@@ -96,6 +101,7 @@ public class UserViewModel extends AndroidViewModel {
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
     private UserSourceFactory sourceFactory;
+    private ChatViewModel chatViewModel;
     public UserViewModel(@NonNull Application application) {
         super(application);
         userRepo = RepositoryHelper.getUserRepository(getApplication());
@@ -103,8 +109,10 @@ public class UserViewModel extends AndroidViewModel {
         txRepo = RepositoryHelper.getTxRepository(getApplication());
         msgRepo = RepositoryHelper.getMsgRepository(getApplication());
         friendRepo = RepositoryHelper.getFriendsRepository(getApplication());
+        communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
         daemon = TauDaemon.getInstance(application);
         sourceFactory = new UserSourceFactory();
+        chatViewModel = new ChatViewModel(application);
     }
 
     public void observeNeedStartDaemon () {
@@ -478,13 +486,6 @@ public class UserViewModel extends AndroidViewModel {
 
     /**
      * 添加朋友
-     */
-    public void addFriend(String publicKey) {
-        addFriend(publicKey, null);
-    }
-
-    /**
-     * 添加朋友
      * 根据BuildConfig.DEBUG 添加测试代码，多次调用添加测试朋友
      * @param publicKey
      * @param nickname
@@ -525,7 +526,21 @@ public class UserViewModel extends AndroidViewModel {
                 friend = new Friend(userPK, publicKey, 1);
                 friendRepo.addFriend(friend);
                 isExist = false;
+                // 1、添加朋友，并发送默认消息
                 daemon.addNewFriend(ByteUtil.toByte(publicKey));
+                // 2、发送默认消息
+                String msg = getApplication().getString(R.string.contacts_have_added);
+                chatViewModel.syncSendMessageTask(publicKey, msg, MessageType.TEXT.ordinal());
+
+                // 3、添加朋友聊天，主页显示
+                String communityName = UsersUtil.getDefaultName(publicKey);
+                Community community = communityRepo.getChatByFriendPk(publicKey);
+                if (null == community) {
+                    community = new Community(publicKey, communityName);
+                    community.type = 1;
+                    community.publicKey = userPK;
+                    communityRepo.addCommunity(community);
+                }
             }
             emitter.onNext(isExist);
             emitter.onComplete();

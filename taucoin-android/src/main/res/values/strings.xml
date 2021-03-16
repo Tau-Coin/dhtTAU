@@ -261,6 +261,7 @@
 
     <!-- Strings used for connected peers -->
     <string name="contacts_exchange_qr">Exchange QR code to add friends</string>
+    <string name="contacts_have_added">I have added you as a friend.</string>
     <string name="contacts_discovered">Discovered</string>
     <string name="contacts_added">Added</string>
     <string name="contacts_share_qr_code">Share QR Code to</string>

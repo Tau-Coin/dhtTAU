@@ -284,6 +284,15 @@ class MsgListenHandler extends MsgListener{
                         friend = new Friend(userPk, friendPkStr, 1);
                         friendRepo.addFriend(friend);
                     }
+
+                    String communityName = UsersUtil.getDefaultName(friendPkStr);
+                    Community community = communityRepo.getChatByFriendPk(friendPkStr);
+                    if (null == community) {
+                        community = new Community(friendPkStr, communityName);
+                        community.type = 1;
+                        community.publicKey = userPk;
+                        communityRepo.addCommunity(community);
+                    }
                 }
             } catch (Exception e) {
                 logger.error("onNewFriend error", e);

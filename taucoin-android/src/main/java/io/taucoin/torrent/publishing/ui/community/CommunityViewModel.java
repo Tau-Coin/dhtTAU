@@ -7,8 +7,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.view.View;
 
-import com.king.zxing.util.CodeUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +38,7 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
+import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
 import io.taucoin.torrent.publishing.core.model.data.DrawBean;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.model.data.Statistics;
@@ -59,7 +57,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.ui.constant.Page;
-import io.taucoin.torrent.publishing.ui.transaction.TxViewModel;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -414,7 +411,7 @@ public class CommunityViewModel extends AndroidViewModel {
         return communityRepo.getCommunityByChainIDSingle(chainID);
     }
 
-    public Observable<CommunityAndFriend> observerCommunityByChainID(String chainID) {
+    public Observable<FriendAndUser> observerCommunityByChainID(String chainID) {
         return communityRepo.observerCommunityByChainID(chainID);
     }
 

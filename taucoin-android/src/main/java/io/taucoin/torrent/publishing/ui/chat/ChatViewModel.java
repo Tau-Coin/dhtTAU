@@ -120,70 +120,14 @@ public class ChatViewModel extends AndroidViewModel {
     }
 
     /**
-     * 给朋友发信息任务
+     * 异步给朋友发信息任务
      * @param friendPkStr 朋友公钥
      * @param msg 消息
      * @param type 消息类型
      */
     private void sendMessageTask(String friendPkStr, String msg, int type) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
-            Result result = new Result();
-            try {
-                List<byte[]> contents;
-                String logicMsgHashStr;
-                if (type == MessageType.PICTURE.ordinal()) {
-                    String progressivePath = MsgSplitUtil.compressAndScansPic(msg);
-                    logicMsgHashStr = HashUtil.makeFileSha1HashWithTimeStamp(progressivePath);
-                    contents = MsgSplitUtil.splitPicMsg(progressivePath);
-                } else if(type == MessageType.TEXT.ordinal()) {
-                    logicMsgHashStr = HashUtil.makeSha1HashWithTimeStamp(msg);
-                    contents = MsgSplitUtil.splitTextMsg(msg);
-                } else {
-                    throw new Exception("Unknown message type");
-                }
-                byte[] logicMsgHash = ByteUtil.toByte(logicMsgHashStr);
-                User user = userRepo.getCurrentUser();
-                String senderPkStr = user.publicKey;
-                byte[] senderPk = ByteUtil.toByte(senderPkStr);
-                byte[] friendPk = ByteUtil.toByte(friendPkStr);
-                ChatMsg[] messages = new ChatMsg[contents.size()];
-                int contentSize = contents.size();
-                for (int nonce = 0; nonce < contentSize; nonce++) {
-                    byte[] content = contents.get(nonce);
-                    long millisTime = DateUtil.getMillisTime();
-                    long timestamp = millisTime / 1000;
-                    String contentStr = MsgSplitUtil.textBytesToString(content);
-                    Message message;
-                    if (type == MessageType.TEXT.ordinal()) {
-                        message = Message.createTextMessage(BigInteger.valueOf(timestamp), senderPk,
-                                friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
-                    } else {
-                        message = Message.createPictureMessage(BigInteger.valueOf(timestamp), senderPk,
-                                friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
-                    }
-                    byte[] key = Utils.keyExchange(friendPkStr, user.seed);
-                    message.encrypt(key);
-                    String hash = ByteUtil.toHexString(message.getHash());
-                    logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, nonce::{}, " +
-                                    "logicMsgHash::{}, contentSize::{}",
-                            hash, type, nonce, logicMsgHashStr, content.length);
-
-                    // 组织Message的结构，并发送到DHT和数据入库
-                    ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPkStr, contentStr, type,
-                            timestamp, nonce, logicMsgHashStr);
-                    messages[nonce] = chatMsg;
-
-                    ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPkStr, friendPkStr,
-                            ChatMsgStatus.UNSENT.getStatus(), millisTime);
-                    chatRepo.addChatMsgLog(chatMsgLog);
-                }
-                // 批量添加到数据库
-                chatRepo.addChatMessages(messages);
-                WorkerManager.startPublishNewMsgWorker();
-            } catch (Exception e) {
-                logger.error("sendMessageTask error", e);
-                result.setFailMsg(e.getMessage());
-            }
+            Result result = syncSendMessageTask(friendPkStr, msg, type);
             emitter.onNext(result);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -191,6 +135,73 @@ public class ChatViewModel extends AndroidViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(result -> chatResult.postValue(result));
         disposables.add(disposable);
+    }
+
+    /**
+     * 同步给朋友发信息任务
+     * @param friendPkStr 朋友公钥
+     * @param msg 消息
+     * @param type 消息类型
+     */
+    public Result syncSendMessageTask(String friendPkStr, String msg, int type) {
+        Result result = new Result();
+        try {
+            List<byte[]> contents;
+            String logicMsgHashStr;
+            if (type == MessageType.PICTURE.ordinal()) {
+                String progressivePath = MsgSplitUtil.compressAndScansPic(msg);
+                logicMsgHashStr = HashUtil.makeFileSha1HashWithTimeStamp(progressivePath);
+                contents = MsgSplitUtil.splitPicMsg(progressivePath);
+            } else if(type == MessageType.TEXT.ordinal()) {
+                logicMsgHashStr = HashUtil.makeSha1HashWithTimeStamp(msg);
+                contents = MsgSplitUtil.splitTextMsg(msg);
+            } else {
+                throw new Exception("Unknown message type");
+            }
+            byte[] logicMsgHash = ByteUtil.toByte(logicMsgHashStr);
+            User user = userRepo.getCurrentUser();
+            String senderPkStr = user.publicKey;
+            byte[] senderPk = ByteUtil.toByte(senderPkStr);
+            byte[] friendPk = ByteUtil.toByte(friendPkStr);
+            ChatMsg[] messages = new ChatMsg[contents.size()];
+            int contentSize = contents.size();
+            for (int nonce = 0; nonce < contentSize; nonce++) {
+                byte[] content = contents.get(nonce);
+                long millisTime = DateUtil.getMillisTime();
+                long timestamp = millisTime / 1000;
+                String contentStr = MsgSplitUtil.textBytesToString(content);
+                Message message;
+                if (type == MessageType.TEXT.ordinal()) {
+                    message = Message.createTextMessage(BigInteger.valueOf(timestamp), senderPk,
+                            friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
+                } else {
+                    message = Message.createPictureMessage(BigInteger.valueOf(timestamp), senderPk,
+                            friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
+                }
+                byte[] key = Utils.keyExchange(friendPkStr, user.seed);
+                message.encrypt(key);
+                String hash = ByteUtil.toHexString(message.getHash());
+                logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, nonce::{}, " +
+                                "logicMsgHash::{}, contentSize::{}",
+                        hash, type, nonce, logicMsgHashStr, content.length);
+
+                // 组织Message的结构，并发送到DHT和数据入库
+                ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPkStr, contentStr, type,
+                        timestamp, nonce, logicMsgHashStr);
+                messages[nonce] = chatMsg;
+
+                ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPkStr, friendPkStr,
+                        ChatMsgStatus.UNSENT.getStatus(), millisTime);
+                chatRepo.addChatMsgLog(chatMsgLog);
+            }
+            // 批量添加到数据库
+            chatRepo.addChatMessages(messages);
+            WorkerManager.startPublishNewMsgWorker();
+        } catch (Exception e) {
+            logger.error("sendMessageTask error", e);
+            result.setFailMsg(e.getMessage());
+        }
+        return result;
     }
 
     /**
