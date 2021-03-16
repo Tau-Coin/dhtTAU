@@ -97,7 +97,13 @@ class MsgListenHandler extends MsgListener{
 
                     User user = userRepo.getCurrentUser();
                     // 原始数据解密
-                    byte[] cryptoKey = Utils.keyExchange(senderPk, user.seed);
+                    byte[] cryptoKey;
+                    // 判断消息的发送者是否是自己
+                    if (StringUtil.isEquals(senderPk, user.publicKey)) {
+                        cryptoKey = Utils.keyExchange(receiverPk, user.seed);
+                    } else {
+                        cryptoKey = Utils.keyExchange(senderPk, user.seed);
+                    }
                     message.decrypt(cryptoKey);
 
                     String content = MsgSplitUtil.textBytesToString(message.getRawContent());
