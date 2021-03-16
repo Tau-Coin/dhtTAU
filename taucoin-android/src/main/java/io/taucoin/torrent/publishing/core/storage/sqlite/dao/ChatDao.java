@@ -99,7 +99,7 @@ public interface ChatDao {
     /**
      * 添加消息日志
      */
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert()
     long addChatMsgLog(ChatMsgLog msgLog);
 
     @Query(QUERY_CHAT_MSG_LOGS)

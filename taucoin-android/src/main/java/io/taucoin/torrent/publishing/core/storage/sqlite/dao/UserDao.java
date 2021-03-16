@@ -74,7 +74,7 @@ public interface UserDao {
     /**
      * 添加新的User/Seed
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert()
     long addUser(User user);
 
     /**

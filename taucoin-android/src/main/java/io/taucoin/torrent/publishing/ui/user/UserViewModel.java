@@ -494,7 +494,7 @@ public class UserViewModel extends AndroidViewModel {
                 && !observeDaemonRunning.isDisposed()) {
             return;
         }
-        Disposable disposable = daemon.observeDaemonRunning()
+        observeDaemonRunning = daemon.observeDaemonRunning()
                 .subscribeOn(Schedulers.io())
                 .subscribe((isRunning) -> {
                     if (isRunning) {
@@ -504,9 +504,6 @@ public class UserViewModel extends AndroidViewModel {
                         }
                     }
                 });
-        if (!BuildConfig.DEBUG) {
-            observeDaemonRunning = disposable;
-        }
     }
 
     private void addFriendTask(String publicKey, String nickname) {

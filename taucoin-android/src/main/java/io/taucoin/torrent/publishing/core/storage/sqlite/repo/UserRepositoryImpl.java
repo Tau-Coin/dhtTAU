@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteConstraintException;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -43,10 +44,11 @@ public class UserRepositoryImpl implements UserRepository{
      * @return 结果
      */
     @Override
-    public long addUser(@NonNull User user) {
-        long result = db.userDao().addUser(user);
-        submitDataSetChanged();
-        return result;
+    public void addUser(@NonNull User user) {
+        try {
+            db.userDao().addUser(user);
+            submitDataSetChanged();
+        } catch (SQLiteConstraintException ignore) { }
     }
 
     /**

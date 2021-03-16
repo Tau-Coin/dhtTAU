@@ -18,7 +18,7 @@ public interface UserRepository {
      * @param user User实例
      * @return 结果
      */
-    long addUser(@NonNull User user);
+    void addUser(@NonNull User user);
 
     /**
      * 更新的User/Seed

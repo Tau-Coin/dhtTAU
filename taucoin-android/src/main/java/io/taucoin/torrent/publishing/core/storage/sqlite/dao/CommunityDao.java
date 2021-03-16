@@ -62,7 +62,8 @@ public interface CommunityDao {
             " ON (a.chainID = e.senderPk AND a.publicKey = e.friendPk)" +
             " OR (a.chainID = e.friendPk AND a.publicKey = e.senderPk)" +
             " WHERE (a.type = 0 AND isBanned = 0)" +
-            " OR (a.type = 1 AND a.chainID NOT IN " + QUERY_GET_BANNED_USER_PK + ")" +
+            " OR (a.type = 1 AND a.chainID NOT IN " + QUERY_GET_BANNED_USER_PK +
+            " AND a.publicKey = " + QUERY_GET_CURRENT_USER_PK + ")" +
             " ORDER BY txTimestamp DESC";
     String QUERY_GET_COMMUNITIES_IN_BLACKLIST = "SELECT * FROM Communities where isBanned = 1";
     String QUERY_GET_COMMUNITY_BY_CHAIN_ID = "SELECT * FROM Communities WHERE chainID = :chainID";
