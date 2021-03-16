@@ -103,7 +103,6 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         binding.recyclerList.setLayoutManager(layoutManager);
         binding.recyclerList.setItemAnimator(null);
-        binding.recyclerList.setEmptyView(binding.emptyViewList);
         binding.recyclerList.setAdapter(adapter);
     }
 
