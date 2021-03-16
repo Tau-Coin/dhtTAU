@@ -66,6 +66,8 @@ public class ChainParam {
 
     public static final int DHT_ITEM_LIMIT_SIZE = 996; // 996 byte
 
+    public static final int MESSAGE_LIST_SAFE_SIZE = 960;
+
     public static final int GOSSIP_ITEM_LIMIT_SIZE = 58;
 
     public static final int INDEX_HASH_LIMIT_SIZE1 = 46;

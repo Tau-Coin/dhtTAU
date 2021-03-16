@@ -25,6 +25,7 @@ import io.taucoin.core.Bloom;
 import io.taucoin.core.DataIdentifier;
 import io.taucoin.core.FriendList;
 import io.taucoin.core.FriendPair;
+import io.taucoin.core.MessageList;
 import io.taucoin.core.MutableDataWrapper;
 import io.taucoin.core.NewMsgSignal;
 import io.taucoin.db.DBException;
@@ -528,7 +529,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @param peer 发布数据的对象
      */
     private void publishFriendMutableData(ByteArrayWrapper peer) {
-        Set<ByteArrayWrapper> dataSet = new HashSet<>();
+        List<ByteArrayWrapper> dataSet = new ArrayList<>();
+        Set<Message> messageSet = new HashSet<>();
 
         NewMsgSignal myNewMsgSignal = makeNewMsgSignal(peer);
         MutableDataWrapper mutableDataWrapper = new MutableDataWrapper(MutableDataType.NEW_MSG_SIGNAL,
@@ -577,12 +579,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                 Bloom bloom = Bloom.create(firstMsgHash);
                 if (!messageBloomFilter.matches(bloom)) {
-                    logger.debug("Put message[{}] to {}", list.getFirst().toString(), peer.toString());
-                    if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
-                        mutableDataWrapper = new MutableDataWrapper(MutableDataType.MESSAGE,
-                                list.getFirst().getEncoded());
-                        dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
-                    }
+                    messageSet.add(list.getFirst());
                 }
 
                 for (int i = 0; i < size - 1; i++) {
@@ -591,21 +588,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     boolean match = messageBloomFilter.matches(bloom);
                     // 如果合并哈希不匹配，则随机发出一个缺少的消息即可
                     if (!match) {
-                        if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
-                            logger.debug("Put message[{}] to {}", list.get(i).toString(), peer.toString());
-                            mutableDataWrapper = new MutableDataWrapper(MutableDataType.MESSAGE,
-                                    list.get(i).getEncoded());
-                            dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
-                        }
-                        if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
-                            logger.debug("Put message[{}] to {}", list.get(i + 1).toString(), peer.toString());
-                            mutableDataWrapper = new MutableDataWrapper(MutableDataType.MESSAGE,
-                                    list.get(i + 1).getEncoded());
-                            dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
-                        }
-                        if (dataSet.size() >= ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
-                            break;
-                        }
+                        messageSet.add(list.get(i));
+                        messageSet.add(list.get(i + 1));
                     } else {
                         logger.debug("Match (i, i+1): [{}, {}]", i, i + 1);
                     }
@@ -614,17 +598,40 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 bloom = Bloom.create(lastMsgHash);
                 boolean match = messageBloomFilter.matches(bloom);
                 if (!match) {
-                    logger.debug("Put message[{}] to {}", list.getLast().toString(), peer.toString());
-                    if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
-                        mutableDataWrapper = new MutableDataWrapper(MutableDataType.MESSAGE,
-                                list.getLast().getEncoded());
-                        dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
-                    }
+                    messageSet.add(list.getLast());
                 }
             }
         }
 
-        publishMutableData(peer.getData(), new ArrayList<>(dataSet));
+        while (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE && !messageSet.isEmpty()) {
+            List<Message> messages = new ArrayList<>();
+            MessageList messageList = new MessageList(messages);
+
+            Iterator<Message> iterator = messageSet.iterator();
+            // 构造一个尺寸安全的消息列表
+            while (iterator.hasNext()) {
+                Message message= iterator.next();
+                if (messageList.getEncoded().length + message.getEncoded().length <= ChainParam.MESSAGE_LIST_SAFE_SIZE) {
+                    // 如果还能装载，继续填装
+                    messages.add(message);
+                    messageList = new MessageList(messages);
+
+                    // 用过的消息删掉
+                    iterator.remove();
+                } else {
+                    break;
+                }
+            }
+
+            // 如果消息列表里面有消息
+            if (!messages.isEmpty()) {
+                mutableDataWrapper = new MutableDataWrapper(MutableDataType.MESSAGE_LIST,
+                        messageList.getEncoded());
+                dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
+            }
+        }
+
+        publishMutableData(peer.getData(), dataSet);
     }
 
     /**
@@ -1187,12 +1194,17 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             this.onlineFriendsToNotify.put(peer, timestamp);
         }
         switch (mutableDataWrapper.getMutableDataType()) {
-            case MESSAGE: {
-                Message message = new Message(mutableDataWrapper.getData());
-                logger.debug("MESSAGE: Got message :{}", message.toString());
-                this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
+            case MESSAGE_LIST: {
+                MessageList messageList = new MessageList(mutableDataWrapper.getData());
+                List<Message> messages = messageList.getMessageList();
+                if (null != messages) {
+                    for (Message message: messages) {
+                        logger.debug("MESSAGE: Got message :{}", message.toString());
+                        this.messageMap.put(new ByteArrayWrapper(message.getHash()), message);
 
-                this.msgListener.onNewMessage(peer.getData(), message);
+                        this.msgListener.onNewMessage(peer.getData(), message);
+                    }
+                }
 
                 break;
             }

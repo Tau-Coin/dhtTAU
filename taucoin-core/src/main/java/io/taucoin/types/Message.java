@@ -3,6 +3,7 @@ package io.taucoin.types;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import io.taucoin.util.CryptoUtil;
 import io.taucoin.util.HashUtil;
@@ -217,6 +218,19 @@ public class Message {
         }
 
         return this.encode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Message message = (Message) o;
+        return Arrays.equals(getHash(), message.getHash());
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(getHash());
     }
 
     @Override

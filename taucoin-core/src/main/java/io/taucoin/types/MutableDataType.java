@@ -2,7 +2,7 @@ package io.taucoin.types;
 
 public enum MutableDataType {
     NEW_MSG_SIGNAL,
-    MESSAGE,
+    MESSAGE_LIST,
     FRIEND_LIST,
     UNKNOWN,
 }
