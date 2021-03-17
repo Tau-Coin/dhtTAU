@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
 
 import org.slf4j.Logger;
@@ -16,8 +17,11 @@ import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
+import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
@@ -32,7 +36,7 @@ public class TauNotifier {
     // 前台服务通知渠道ID
     private static final String FOREGROUND_NOTIFY_CHANNEL_ID = "io.taucoin.torrent.publishing.FOREGROUND_NOTIFY_CHANNEL_ID";
     // 默认通知渠道ID
-    private static final String DEFAULT_NOTIFY_CHANNEL_ID = "io.taucoin.torrent.publishing.DEFAULT_NOTIFY_CHANNEL_ID";
+    private static final String CHAT_NOTIFY_CHANNEL_ID = "io.taucoin.torrent.publishing.CHAT_NOTIFY_CHANNEL_ID";
 
     // 服务启动的通知ID
     private static final int SERVICE_STARTED_NOTIFICATION_ID = -1;
@@ -41,6 +45,10 @@ public class TauNotifier {
 
     private Context appContext;
     private NotificationManager notifyManager;
+
+    public static TauNotifier getInstance() {
+        return getInstance(MainApplication.getInstance());
+    }
 
     public static TauNotifier getInstance(@NonNull Context appContext) {
         if (INSTANCE == null) {
@@ -66,8 +74,8 @@ public class TauNotifier {
         }
         ArrayList<NotificationChannel> channels = new ArrayList<>();
         // 添加默认通知渠道
-        NotificationChannel defaultChannel = new NotificationChannel(DEFAULT_NOTIFY_CHANNEL_ID,
-                appContext.getString(R.string.def), NotificationManager.IMPORTANCE_DEFAULT);
+        NotificationChannel defaultChannel = new NotificationChannel(CHAT_NOTIFY_CHANNEL_ID,
+                appContext.getString(R.string.chat_channel), NotificationManager.IMPORTANCE_HIGH);
         channels.add(defaultChannel);
         // 添加前台服务通知渠道
         NotificationChannel foregroundChannel = new NotificationChannel(FOREGROUND_NOTIFY_CHANNEL_ID,
@@ -111,20 +119,57 @@ public class TauNotifier {
     }
 
     /**
-     * 创建关闭动作
-     * @param service 对应的Service
+     * 创建聊天消息通知
+     * @param friendPk
+     * @param friendName
+     * @param msgRes
      */
-    private static NotificationCompat.Action makeShutdownAction(Service service) {
-        Context context = service.getApplicationContext();
-        Intent shutdownIntent = new Intent(context, NotificationReceiver.class);
-        shutdownIntent.setAction(NotificationReceiver.NOTIFY_ACTION_SHUTDOWN_APP);
-        PendingIntent shutdownPendingIntent = PendingIntent.getBroadcast(context, 0,
-                shutdownIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    public void makeChatMsgNotify(String friendPk, String friendName, int msgRes) {
+        makeChatMsgNotify(friendPk, friendName, appContext.getString(msgRes));
+    }
 
-        return new NotificationCompat.Action.Builder(
-                R.mipmap.ic_power_settings_new_white_24dp,
-                context.getString(R.string.app_shutdown),
-                shutdownPendingIntent)
+    /**
+     * 创建聊天消息通知
+     * @param friendPk
+     * @param friendName
+     * @param msg
+     */
+    public void makeChatMsgNotify(String friendPk, String friendName, String msg) {
+        int bgColor = Utils.getGroupColor(friendPk);
+        String firstLettersName = StringUtil.getFirstLettersOfName(friendName);
+        Bitmap bitmap = BitmapUtil.createLogoBitmap(bgColor, firstLettersName);
+        Intent intent = new Intent(appContext, MainActivity.class);//点击通知后进入的活动
+        // 这两句非常重要，使之前的活动不出栈
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(appContext, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);// 允许更新
+        Notification notification = new NotificationCompat.Builder(appContext, CHAT_NOTIFY_CHANNEL_ID)
+                .setAutoCancel(true)
+                .setContentTitle(friendName)
+                .setContentText(msg)
+                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setLargeIcon(bitmap)
+                .setContentIntent(pendingIntent)
                 .build();
+        notifyManager.notify(friendPk.hashCode(), notification);
+    }
+
+    /**
+     * 关闭当前朋友的通知
+     * @param friendPk
+     */
+    public void cancelChatMsgNotify(String friendPk) {
+        notifyManager.cancel(friendPk.hashCode());
+    }
+
+    /**
+     * 关闭当前用户的所有通知
+     */
+    public void cancelAllNotify() {
+        notifyManager.cancelAll();
     }
 }

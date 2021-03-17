@@ -255,7 +255,7 @@
     <!-- Strings used for notifier -->
     <string name="app_running_in_the_background">TAU running in the background</string>
     <string name="app_shutdown">Shutdown</string>
-    <string name="def">Default</string>
+    <string name="chat_channel">Chat</string>
     <string name="finished">Finished</string>
     <string name="foreground_notification">Foreground notification</string>
 

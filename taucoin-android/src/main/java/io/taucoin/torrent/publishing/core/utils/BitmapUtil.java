@@ -1,33 +1,23 @@
 package io.taucoin.torrent.publishing.core.utils;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.net.Uri;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.widget.Toast;
+import android.graphics.RectF;
 
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.king.zxing.util.CodeUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import androidx.annotation.FloatRange;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.data.DrawBean;
 
 /**
@@ -328,5 +318,50 @@ public class BitmapUtil {
         bitmap.eraseColor(color);//填充颜色
         return bitmap;
 
+    }
+
+    /**
+     * 创建用户头像Bitmap
+//     * @param bitmap
+     * @return
+     */
+    public static Bitmap createLogoBitmap(int bgColor, String text) {
+        Context context = MainApplication.getInstance();
+        int width = DimensionsUtil.dip2px(context, 50);
+        int height = width;
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+        final Paint paint = new Paint();
+        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+        final RectF rectF = new RectF(rect);
+        final float roundPx = DimensionsUtil.dip2px(context, 7);
+        paint.setAntiAlias(true);
+        canvas.drawARGB(0, 0, 0, 0);
+        paint.setColor(bgColor);
+        canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+
+        final Paint textPaint = new Paint();
+        textPaint.setTextSize(DimensionsUtil.dip2px(context, 16));
+        textPaint.setColor(Color.WHITE);
+        textPaint.setFakeBoldText(true);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+
+        // 计算baseline
+        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+        float distance= (fontMetrics.bottom - fontMetrics.top) / 2 - fontMetrics.bottom;
+        float baseline = rectF.centerY() + distance;
+        canvas.drawText(text, rectF.centerX(), baseline, textPaint);
+
+        // 画两条线标记位置
+//        textPaint.setStrokeWidth(4);
+//        textPaint.setColor(Color.RED);
+//        canvas.drawLine(0, y, 2000, y, textPaint);
+//        paint.setColor(Color.BLUE);
+//        canvas.drawLine(x, 0, x, 2000, textPaint);
+
+        canvas.drawBitmap(bitmap, 0, 0, new Paint(Paint.ANTI_ALIAS_FLAG));
+        return bitmap;
     }
 }

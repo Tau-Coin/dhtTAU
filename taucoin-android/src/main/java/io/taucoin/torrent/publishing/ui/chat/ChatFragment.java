@@ -42,6 +42,7 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentChatBinding;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
+import io.taucoin.torrent.publishing.ui.TauNotifier;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.MsgLogsDialog;
@@ -183,6 +184,8 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     private void subscribeChatViewModel() {
         chatViewModel.observerChat(friendPK).observe(this, messages -> {
             adapter.submitList(messages, handleUpdateAdapter);
+            // 关闭当前朋友的消息通知
+            TauNotifier.getInstance().cancelChatMsgNotify(friendPK);
             logger.debug("messages.size::{}", messages.size());
         });
         disposables.add(communityViewModel.observerCommunityByChainID(friendPK)

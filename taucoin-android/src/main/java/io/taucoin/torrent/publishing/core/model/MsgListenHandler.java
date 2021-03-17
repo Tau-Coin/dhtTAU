@@ -15,6 +15,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.listener.MsgStatus;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
@@ -33,7 +34,9 @@ import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
+import io.taucoin.torrent.publishing.ui.TauNotifier;
 import io.taucoin.types.Message;
+import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
 
 /**
@@ -111,6 +114,18 @@ class MsgListenHandler extends MsgListener{
                             sentTime, message.getNonce().longValue(), logicMsgHash);
                     msg.unsent = 1;
                     chatRepo.addChatMsg(msg);
+
+                    // 只通知朋友的消息
+                    if (StringUtil.isNotEquals(senderPk, user.publicKey)) {
+                        User friend = userRepo.getUserByPublicKey(senderPk);
+                        String friendName = UsersUtil.getShowName(friend);
+                        if (msg.contentType == MessageType.TEXT.ordinal()) {
+                            TauNotifier.getInstance().makeChatMsgNotify(senderPk, friendName, content);
+                        } else if (msg.contentType == MessageType.PICTURE.ordinal()) {
+                            TauNotifier.getInstance().makeChatMsgNotify(senderPk, friendName,
+                                    R.string.main_pic_messages);
+                        }
+                    }
                 }
             } catch (Exception e) {
                 logger.error("onNewMessage error", e);

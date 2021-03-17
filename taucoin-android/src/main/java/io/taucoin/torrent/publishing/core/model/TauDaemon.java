@@ -759,7 +759,7 @@ public class TauDaemon {
         }
         byte[] friendPk = ByteUtil.toByte(friendPkStr);
         tauController.getCommunicationManager().startVisitFriend(friendPk);
-        logger.debug("startVisitFriend friendPk{}", friendPkStr);
+        logger.debug("startVisitFriend friendPk::{}", friendPkStr);
     }
 
     /**
