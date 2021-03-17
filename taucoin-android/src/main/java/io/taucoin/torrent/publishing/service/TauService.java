@@ -126,6 +126,7 @@ public class TauService extends Service {
         daemon.resetWakeLock(false);
 
         isAlreadyRunning.set(false);
+        TauNotifier.getInstance().cancelAllNotify();
         stopForeground(true);
         stopSelf();
         AppUtil.appSafeExit();
