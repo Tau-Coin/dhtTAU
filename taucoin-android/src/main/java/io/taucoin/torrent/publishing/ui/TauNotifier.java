@@ -142,7 +142,7 @@ public class TauNotifier {
         // 点击通知后进入的活动
         Intent intent = new Intent(appContext, MainActivity.class);
         // 解决PendingIntent的extra数据不准确问题
-        intent.setAction(Long.toString(System.currentTimeMillis()));
+        intent.setAction(friendPk);
         intent.putExtra(IntentExtra.CHAIN_ID, friendPk);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra(IntentExtra.TYPE, 1);
@@ -159,13 +159,16 @@ public class TauNotifier {
                 .setWhen(System.currentTimeMillis())
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setDefaults(Notification.DEFAULT_ALL)
+                // 悬浮框
+                .setTicker(friendName)
+                .setPriority(Notification.PRIORITY_HIGH)
                 .setLargeIcon(bitmap)
-                .setFullScreenIntent(pendingIntent,true)
                 .setContentIntent(pendingIntent);
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-//            notifyBuilder.setGroupSummary(false)
-//                    .setGroup("group");
-//        }
+        // 3条以上通知取消合并
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            notifyBuilder.setGroupSummary(false)
+                    .setGroup("group");
+        }
         notifyManager.notify(friendPk.hashCode(), notifyBuilder.build());
     }
 
