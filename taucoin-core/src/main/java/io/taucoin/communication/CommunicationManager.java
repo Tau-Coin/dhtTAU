@@ -57,6 +57,13 @@ public class CommunicationManager {
         this.messageDB.close();
     }
 
+    /**
+     * 中止主循环睡眠
+     */
+    public void interruptSleep() {
+        this.communication.interruptSleep();
+    }
+
 
     public MessageDB getMessageDB() {
         return messageDB;

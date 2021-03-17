@@ -59,6 +59,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // 主循环间隔时间
     private int loopIntervalTime = DEFAULT_LOOP_INTERVAL_TIME;
 
+    private boolean quit = false;
+
     // 设备ID
     private final byte[] deviceID;
 
@@ -876,7 +878,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * 主循环
      */
     private void mainLoop() {
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted() || !quit) {
             try {
                 logger.error("Interval time:{}", this.loopIntervalTime);
                 // 合并来自多设备的朋友
@@ -1130,6 +1132,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @return boolean successful or not.
      */
     public boolean start() {
+        this.quit = false;
 
         AccountManager.getInstance().addListener(this);
 
@@ -1147,11 +1150,22 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * Stop thread
      */
     public void stop() {
+        this.quit = true;
+
         if (null != communicationThread) {
             communicationThread.interrupt();
         }
 
         AccountManager.getInstance().removeListener(this);
+    }
+
+    /**
+     * 中止主循环睡眠
+     */
+    public void interruptSleep() {
+        if (null != communicationThread) {
+            communicationThread.interrupt();
+        }
     }
 
     @Override
