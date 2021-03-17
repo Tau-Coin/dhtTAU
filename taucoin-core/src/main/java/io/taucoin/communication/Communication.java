@@ -4,6 +4,7 @@ import com.frostwire.jlibtorrent.Pair;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -40,6 +41,7 @@ import io.taucoin.types.Message;
 import io.taucoin.types.MutableDataType;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.FastByteComparisons;
 import io.taucoin.util.HashUtil;
 
 import static io.taucoin.param.ChainParam.SHORT_ADDRESS_LENGTH;
@@ -226,18 +228,25 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             // 如果差值小于零，说明找到了比当前消息时间戳小的消息位置，将消息插入到目标位置后面一位
                             if (diff < 0) {
                                 updated = true;
-                            } else if (diff == 0) {
-                                // 如果时间戳一样，并且是不同的消息，则认为后来的消息时间戳更大
-                                if (!Arrays.equals(reference.getHash(), message.getHash())) {
-                                    updated = true;
-                                } else {
-                                    // 如果哈希一样，则本身已经在列表中，不再进行查找
-                                    break;
-                                }
-                            }
-                            if (updated) {
                                 int i = linkedList.indexOf(reference);
                                 linkedList.add(i + 1, message);
+                                break;
+                            } else if (diff == 0) {
+                                byte[] referenceHash = reference.getHash();
+                                byte[] msgHash = message.getHash();
+                                if (!Arrays.equals(referenceHash, msgHash)) {
+                                    updated = true;
+                                    int i = linkedList.indexOf(reference);
+                                    // 如果时间戳一样，再比较哈希的大小决定插入的位置
+                                    if (FastByteComparisons.compareTo(msgHash, 0,
+                                            msgHash.length, referenceHash, 0, referenceHash.length) > 0) {
+                                        linkedList.add(i + 1, message);
+                                    } else {
+                                        linkedList.add(i, message);
+                                    }
+                                }
+                                // 如果哈希一样，则本身已经在列表中，也不再进行查找
+
                                 break;
                             }
                         }
