@@ -22,6 +22,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
+import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
@@ -138,14 +139,20 @@ public class TauNotifier {
         int bgColor = Utils.getGroupColor(friendPk);
         String firstLettersName = StringUtil.getFirstLettersOfName(friendName);
         Bitmap bitmap = BitmapUtil.createLogoBitmap(bgColor, firstLettersName);
-        Intent intent = new Intent(appContext, MainActivity.class);//点击通知后进入的活动
-        // 这两句非常重要，使之前的活动不出栈
-        intent.setAction(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        // 点击通知后进入的活动
+        Intent intent = new Intent(appContext, MainActivity.class);
+        // 解决PendingIntent的extra数据不准确问题
+        intent.setAction(Long.toString(System.currentTimeMillis()));
+        intent.putExtra(IntentExtra.CHAIN_ID, friendPk);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra(IntentExtra.TYPE, 1);
+//        // 这两句非常重要，使之前的活动不出栈
+//        intent.setAction(Intent.ACTION_MAIN);
+//        intent.addCategory(Intent.CATEGORY_LAUNCHER);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(appContext, 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);// 允许更新
-        Notification notification = new NotificationCompat.Builder(appContext, CHAT_NOTIFY_CHANNEL_ID)
+                PendingIntent.FLAG_UPDATE_CURRENT); // 允许更新
+        NotificationCompat.Builder notifyBuilder = new NotificationCompat.Builder(appContext, CHAT_NOTIFY_CHANNEL_ID)
                 .setAutoCancel(true)
                 .setContentTitle(friendName)
                 .setContentText(msg)
@@ -153,9 +160,13 @@ public class TauNotifier {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setDefaults(Notification.DEFAULT_ALL)
                 .setLargeIcon(bitmap)
-                .setContentIntent(pendingIntent)
-                .build();
-        notifyManager.notify(friendPk.hashCode(), notification);
+                .setFullScreenIntent(pendingIntent,true)
+                .setContentIntent(pendingIntent);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//            notifyBuilder.setGroupSummary(false)
+//                    .setGroup("group");
+//        }
+        notifyManager.notify(friendPk.hashCode(), notifyBuilder.build());
     }
 
     /**
