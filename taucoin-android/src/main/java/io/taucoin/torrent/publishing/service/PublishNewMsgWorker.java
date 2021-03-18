@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -102,7 +101,9 @@ public class PublishNewMsgWorker extends Worker {
         byte[] key = Utils.keyExchange(msg.friendPk, user.seed);
         message.encrypt(key);
         String hash = ByteUtil.toHexString(message.getHash());
+        logger.trace("Daemon sendMessage start");
         boolean isSendSuccess = daemon.sendMessage(friendPk, message);
+        logger.trace("Daemon sendMessage end");
         logger.debug("newMsgHash::{}, friendPk::{} nonce::{}, logicMsgHash::{}, isSendSuccess::{}",
                 hash, msg.friendPk, msg.nonce, msg.logicMsgHash, isSendSuccess);
         if (isSendSuccess) {
