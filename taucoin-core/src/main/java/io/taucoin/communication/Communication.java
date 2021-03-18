@@ -622,23 +622,20 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             // 构造一个尺寸安全的消息列表
             while (iterator.hasNext()) {
                 Message message= iterator.next();
-                int length = message.getEncoded().length;
-                if (length > ChainParam.MESSAGE_LIST_SAFE_SIZE) {
-                    logger.error("Message:{} is oversize(length:{})",
-                            Hex.toHexString(message.getHash()), length);
-                    // 删掉尺寸过大的消息
-                    iterator.remove();
-                }
 
-                if (messageList.getEncoded().length + length <= ChainParam.MESSAGE_LIST_SAFE_SIZE) {
-                    // 如果还能装载，继续填装
-                    messages.add(message);
-                    messageList = new MessageList(messages);
+                if (validateMessage(message)) {
+                    if (messageList.getEncoded().length + message.getEncoded().length <= ChainParam.MESSAGE_LIST_SAFE_SIZE) {
+                        // 如果还能装载，继续填装
+                        messages.add(message);
+                        messageList = new MessageList(messages);
 
-                    // 用过的消息删掉
-                    iterator.remove();
+                        // 用过的消息删掉
+                        iterator.remove();
+                    } else {
+                        break;
+                    }
                 } else {
-                    break;
+                    iterator.remove();
                 }
             }
 
@@ -972,6 +969,24 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
+     * 验证消息，目前只验证编码长度
+     * @param message 消息
+     * @return true/false
+     */
+    private boolean validateMessage(Message message) {
+        if (null != message) {
+            if (message.getEncoded().length > ChainParam.MESSAGE_LIST_SAFE_SIZE) {
+                logger.error("Oversize message:{}", Hex.toHexString(message.getHash()));
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * 向朋友发布新消息
      * @param friend 朋友公钥
      * @param message 新消息
@@ -980,6 +995,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     public boolean publishNewMessage(byte[] friend, Message message) {
         try {
             if (null != message) {
+                if (!validateMessage(message)) {
+                    return false;
+                }
+
                 logger.debug("Publish message:{}", message.toString());
 
                 ByteArrayWrapper peer = new ByteArrayWrapper(friend);
