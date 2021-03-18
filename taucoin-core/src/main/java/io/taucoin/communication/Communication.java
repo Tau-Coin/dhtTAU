@@ -622,7 +622,15 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             // 构造一个尺寸安全的消息列表
             while (iterator.hasNext()) {
                 Message message= iterator.next();
-                if (messageList.getEncoded().length + message.getEncoded().length <= ChainParam.MESSAGE_LIST_SAFE_SIZE) {
+                int length = message.getEncoded().length;
+                if (length > ChainParam.MESSAGE_LIST_SAFE_SIZE) {
+                    logger.error("Message:{} is oversize(length:{})",
+                            Hex.toHexString(message.getHash()), length);
+                    // 删掉尺寸过大的消息
+                    iterator.remove();
+                }
+
+                if (messageList.getEncoded().length + length <= ChainParam.MESSAGE_LIST_SAFE_SIZE) {
                     // 如果还能装载，继续填装
                     messages.add(message);
                     messageList = new MessageList(messages);
