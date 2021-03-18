@@ -22,7 +22,7 @@ import io.taucoin.util.HashUtil;
  */
 public class MsgSplitUtil {
     private static final Logger logger = LoggerFactory.getLogger("MsgSplit");
-    private static final int BYTE_LIMIT = 900; // 消息拆分字节限制
+    private static final int BYTE_LIMIT = 850; // 消息拆分字节限制
 
     /**
      * 拆分文本消息

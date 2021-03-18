@@ -54,7 +54,6 @@ public class ChatViewModel extends AndroidViewModel {
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<Result> chatResult = new MutableLiveData<>();
     private TauDaemon daemon;
-    private Disposable observeDaemonRunning;
     private Disposable visitFriend;
     private ChatSourceFactory sourceFactory;
     public ChatViewModel(@NonNull Application application) {
@@ -80,9 +79,6 @@ public class ChatViewModel extends AndroidViewModel {
     protected void onCleared() {
         super.onCleared();
         disposables.clear();
-        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
-            observeDaemonRunning.dispose();
-        }
     }
 
     /**
@@ -98,36 +94,14 @@ public class ChatViewModel extends AndroidViewModel {
     }
 
     /**
-     * 给朋友发信息任务
-     * @param friendPK 朋友公钥
-     * @param msg 消息
-     * @param type 消息类型
-     */
-    void sendMessage(String friendPK, String msg, int type) {
-        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
-            return;
-        }
-        observeDaemonRunning = daemon.observeDaemonRunning()
-                .subscribeOn(Schedulers.io())
-                .subscribe((isRunning) -> {
-                    if (isRunning) {
-                        sendMessageTask(friendPK, msg, type);
-                        if (observeDaemonRunning != null) {
-                            observeDaemonRunning.dispose();
-                        }
-                    }
-                });
-    }
-
-    /**
      * 异步给朋友发信息任务
-     * @param friendPkStr 朋友公钥
+     * @param friendPk 朋友公钥
      * @param msg 消息
      * @param type 消息类型
      */
-    private void sendMessageTask(String friendPkStr, String msg, int type) {
+    void sendMessage(String friendPk, String msg, int type) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
-            Result result = syncSendMessageTask(friendPkStr, msg, type);
+            Result result = syncSendMessageTask(friendPk, msg, type);
             emitter.onNext(result);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -182,8 +156,12 @@ public class ChatViewModel extends AndroidViewModel {
                 message.encrypt(key);
                 String hash = ByteUtil.toHexString(message.getHash());
                 logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, nonce::{}, " +
-                                "logicMsgHash::{}, contentSize::{}",
-                        hash, type, nonce, logicMsgHashStr, content.length);
+                                "rawLength::{}, encryptedLength::{}, " +
+                                "encodedLength::{}, logicMsgHash::{}",
+                        hash, type, nonce, content.length,
+                        message.getEncryptedContent().length,
+                        message.getEncoded().length,
+                        logicMsgHashStr);
 
                 // 组织Message的结构，并发送到DHT和数据入库
                 ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPkStr, contentStr, type,
