@@ -1,13 +1,18 @@
 package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
@@ -21,9 +26,12 @@ import io.taucoin.torrent.publishing.core.utils.DateUtil;
  */
 public class ChatRepositoryImpl implements ChatRepository{
 
+    private static final int minChangeTime = 500; // 最小改变时间，防止频繁刷新，单位：ms
     private Context appContext;
     private AppDatabase db;
     private PublishSubject<String> dataSetChangedPublish = PublishSubject.create();
+    private Disposable changeTimer;
+    private long lastChangTime;
     private ExecutorService sender = Executors.newSingleThreadExecutor();
 
     /**
@@ -55,6 +63,11 @@ public class ChatRepositoryImpl implements ChatRepository{
     }
 
     @Override
+    public void updateMsgSendStatus(ChatMsg chat) {
+        db.chatDao().updateChat(chat);
+    }
+
+    @Override
     public ChatMsg queryChatMsg(String senderPk, String hash) {
         return db.chatDao().queryChatMsg(senderPk, hash);
     }
@@ -76,8 +89,32 @@ public class ChatRepositoryImpl implements ChatRepository{
 
     @Override
     public void submitDataSetChanged() {
-        String dateTime = DateUtil.getDateTime();
-        sender.submit(() -> dataSetChangedPublish.onNext(dateTime));
+        long currentTime = System.currentTimeMillis();
+        Log.d("1111111", "currentTime::" + currentTime
+                + " lastChangTime::" + lastChangTime + " test::" + (currentTime - lastChangTime));
+        if (currentTime - lastChangTime >= minChangeTime) {
+            lastChangTime = currentTime;
+            sender.submit(() -> {
+                Log.d("1111111", "submit submit submit");
+                String dateTime = DateUtil.getDateTime();
+                dataSetChangedPublish.onNext(dateTime);
+            });
+        } else {
+            if (changeTimer != null && !changeTimer.isDisposed()) {
+                Log.d("1111111", "exist exist exist");
+                return;
+            }
+            changeTimer = Observable.timer(minChangeTime, TimeUnit.MILLISECONDS)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(aLong -> {
+                        lastChangTime = currentTime;
+                        sender.submit(() -> {
+                            Log.d("1111111", "timer timer timer");
+                            String dateTime = DateUtil.getDateTime();
+                            dataSetChangedPublish.onNext(dateTime);
+                        });
+                    });
+        }
     }
 
     @Override

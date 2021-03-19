@@ -5,7 +5,9 @@ import android.app.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -112,6 +114,49 @@ public class ChatViewModel extends AndroidViewModel {
     }
 
     /**
+     * 批量测试入口
+     * 异步给朋友发信息任务
+     * @param friendPk 朋友公钥
+     */
+    void sendBatchDebugMessage(String friendPk, int time) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            InputStream inputStream = null;
+            try {
+                for (int i = 0; i < time; i++) {
+                    if (null == inputStream) {
+                        inputStream = getApplication().getAssets().open("tianlongbabu1-4.txt");
+                    } else {
+                        int availableSize = inputStream.available();
+                        if (availableSize < 10 * 1024) {
+                            inputStream = getApplication().getAssets().open("tianlongbabu1-4.txt");
+                        }
+                    }
+                    byte[] bytes = new byte[10 * 1024];
+                    int read = inputStream.read(bytes);
+                    if (read > 0) {
+                        String msg = (i + 1) + "、" + new String(bytes, StandardCharsets.UTF_8);
+                        sendMessage(friendPk, msg, MessageType.TEXT.ordinal());
+                        Thread.sleep(1000);
+                    }
+                }
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (Exception e) {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            }
+            emitter.onNext(true);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
+        disposables.add(disposable);
+    }
+
+    /**
      * 同步给朋友发信息任务
      * @param friendPkStr 朋友公钥
      * @param msg 消息
@@ -155,13 +200,14 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] key = Utils.keyExchange(friendPkStr, user.seed);
                 message.encrypt(key);
                 String hash = ByteUtil.toHexString(message.getHash());
-                logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, nonce::{}, " +
-                                "rawLength::{}, encryptedLength::{}, " +
-                                "encodedLength::{}, logicMsgHash::{}",
+                byte[] encryptedContent = message.getEncryptedContent();
+                logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, " +
+                                "nonce::{}, rawLength::{}, encryptedLength::{}, " +
+                                "encodedLength::{}, logicMsgHash::{}, millisTime::{}",
                         hash, type, nonce, content.length,
-                        message.getEncryptedContent().length,
+                        null == encryptedContent ? 0 : encryptedContent.length,
                         message.getEncoded().length,
-                        logicMsgHashStr);
+                        logicMsgHashStr, DateUtil.format(millisTime, DateUtil.pattern9));
 
                 // 组织Message的结构，并发送到DHT和数据入库
                 ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPkStr, contentStr, type,

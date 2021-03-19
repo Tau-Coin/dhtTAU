@@ -121,6 +121,11 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
             ItemTextBinding binding = (ItemTextBinding) holder.binding;
             holder.bindText(binding, getItem(position), previousChat);
         }
+        if (holder.binding != null) {
+            holder.binding.getRoot().setOnClickListener(v -> {
+                listener.onItemClicked(getItem(position));
+            });
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -243,6 +248,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
     public interface ClickListener {
         void onMsgLogsClicked(ChatMsg msg);
         void onUserClicked(ChatMsg msg);
+        void onItemClicked(ChatMsg msg);
 //        void onItemLongClicked(View view, MsgAndReply tx);
     }
 

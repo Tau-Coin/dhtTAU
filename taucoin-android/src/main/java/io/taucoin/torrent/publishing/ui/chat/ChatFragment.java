@@ -143,6 +143,10 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 MediaUtil.startOpenGallery(activity);
             } else if (R.string.chat_take_picture == title) {
                 MediaUtil.startOpenCamera(activity);
+            } else if (R.string.common_debug10 == title) {
+                chatViewModel.sendBatchDebugMessage(friendPK, 10);
+            } else if (R.string.common_debug10000 == title) {
+                chatViewModel.sendBatchDebugMessage(friendPK, 10000);
             }
         });
 
@@ -246,6 +250,13 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
         String message = ViewUtils.getText(binding.etMessage);
         chatViewModel.sendMessage(friendPK, message, MessageType.TEXT.ordinal());
         binding.etMessage.getText().clear();
+    }
+
+    @Override
+    public void onItemClicked(ChatMsg msg) {
+        KeyboardUtils.hideSoftInput(activity);
+        binding.chatAdd.setVisibility(View.GONE);
+        handler.post(handleUpdateAdapter);
     }
 
     @Override

@@ -28,6 +28,11 @@ public interface ChatRepository {
     void updateChatMsg(ChatMsg chat);
 
     /**
+     * 更新Chat发送状态，不触发UI刷新
+     */
+    void updateMsgSendStatus(ChatMsg chat);
+
+    /**
      * 查询ChatMsg
      * @param senderPk
      * @param hash

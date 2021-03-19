@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import io.taucoin.torrent.publishing.BuildConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.databinding.ChatAddBinding;
 import io.taucoin.torrent.publishing.databinding.ItemChatAddListBinding;
@@ -59,6 +60,12 @@ public class ChatAddView extends LinearLayout {
 
         ItemAdapter() {
             super(diffCallback);
+            if (BuildConfig.DEBUG) {
+                icons = new int[]{R.mipmap.icon_album_black, R.mipmap.icon_take_picture,
+                        R.mipmap.icon_debug, R.mipmap.icon_debug};
+                titles =  new int[]{R.string.chat_album, R.string.chat_take_picture,
+                        R.string.common_debug10, R.string.common_debug10000};
+            }
         }
 
         public void setListener(OnItemClickListener listener) {

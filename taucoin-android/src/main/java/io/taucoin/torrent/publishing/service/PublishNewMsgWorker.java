@@ -101,14 +101,12 @@ public class PublishNewMsgWorker extends Worker {
         byte[] key = Utils.keyExchange(msg.friendPk, user.seed);
         message.encrypt(key);
         String hash = ByteUtil.toHexString(message.getHash());
-        logger.trace("Daemon sendMessage start");
         boolean isSendSuccess = daemon.sendMessage(friendPk, message);
-        logger.trace("Daemon sendMessage end");
         logger.debug("newMsgHash::{}, friendPk::{} nonce::{}, logicMsgHash::{}, isSendSuccess::{}",
                 hash, msg.friendPk, msg.nonce, msg.logicMsgHash, isSendSuccess);
         if (isSendSuccess) {
             msg.unsent = 1;
-            chatRepo.updateChatMsg(msg);
+            chatRepo.updateMsgSendStatus(msg);
             ChatMsgLog log = new ChatMsgLog(msg.hash, msg.senderPk, msg.friendPk,
                     ChatMsgStatus.SENT.getStatus(), DateUtil.getMillisTime());
             chatRepo.addChatMsgLog(log);
