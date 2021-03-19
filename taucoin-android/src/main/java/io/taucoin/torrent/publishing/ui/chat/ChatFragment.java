@@ -1,11 +1,13 @@
 package io.taucoin.torrent.publishing.ui.chat;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -104,6 +106,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     /**
      * 初始化布局
      */
+    @SuppressLint("ClickableViewAccessibility")
     private void initLayout() {
         binding.toolbarInclude.ivBack.setOnClickListener(v -> {
             KeyboardUtils.hideSoftInput(activity);
@@ -155,6 +158,12 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
         binding.msgList.setLayoutManager(layoutManager);
         binding.msgList.setItemAnimator(null);
         binding.msgList.setAdapter(adapter);
+        binding.msgList.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                onClick(binding.msgList);
+            }
+            return false;
+        });
 
     }
 
@@ -211,6 +220,11 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     @Override
     public void onClick(View v) {
         switch (v.getId()){
+            case R.id.msg_list:
+                KeyboardUtils.hideSoftInput(activity);
+                binding.chatAdd.setVisibility(View.GONE);
+                handler.post(handleUpdateAdapter);
+                break;
             case R.id.iv_add:
                 showOrHideChatAddView(true);
                 break;
@@ -250,13 +264,6 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
         String message = ViewUtils.getText(binding.etMessage);
         chatViewModel.sendMessage(friendPK, message, MessageType.TEXT.ordinal());
         binding.etMessage.getText().clear();
-    }
-
-    @Override
-    public void onItemClicked(ChatMsg msg) {
-        KeyboardUtils.hideSoftInput(activity);
-        binding.chatAdd.setVisibility(View.GONE);
-        handler.post(handleUpdateAdapter);
     }
 
     @Override
