@@ -223,7 +223,6 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
             case R.id.msg_list:
                 KeyboardUtils.hideSoftInput(activity);
                 binding.chatAdd.setVisibility(View.GONE);
-                handler.post(handleUpdateAdapter);
                 break;
             case R.id.iv_add:
                 showOrHideChatAddView(true);
