@@ -64,7 +64,7 @@ public class ChatAddView extends LinearLayout {
                 icons = new int[]{R.mipmap.icon_album_black, R.mipmap.icon_take_picture,
                         R.mipmap.icon_debug, R.mipmap.icon_debug};
                 titles =  new int[]{R.string.chat_album, R.string.chat_take_picture,
-                        R.string.common_debug10, R.string.common_debug10000};
+                        R.string.common_debug100, R.string.common_debug10000};
             }
         }
 

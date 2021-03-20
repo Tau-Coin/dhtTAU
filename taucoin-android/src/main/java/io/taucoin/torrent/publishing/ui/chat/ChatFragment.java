@@ -146,10 +146,10 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 MediaUtil.startOpenGallery(activity);
             } else if (R.string.chat_take_picture == title) {
                 MediaUtil.startOpenCamera(activity);
-            } else if (R.string.common_debug10 == title) {
-                chatViewModel.sendBatchDebugMessage(friendPK, 10);
+            } else if (R.string.common_debug100 == title) {
+                chatViewModel.sendBatchDebugDigitMessage(friendPK, 100);
             } else if (R.string.common_debug10000 == title) {
-                chatViewModel.sendBatchDebugMessage(friendPK, 10000);
+                chatViewModel.sendBatchDebugDigitMessage(friendPK, 10000);
             }
         });
 

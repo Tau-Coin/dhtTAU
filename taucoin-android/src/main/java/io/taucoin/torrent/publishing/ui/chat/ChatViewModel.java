@@ -156,6 +156,24 @@ public class ChatViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
+    void sendBatchDebugDigitMessage(String friendPk, int time) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            try {
+                for (int i = 0; i < time; i++) {
+                    syncSendMessageTask(friendPk, String.valueOf(i + 1), MessageType.TEXT.ordinal());
+                    Thread.sleep(1000);
+                }
+            } catch (Exception ignore) {
+            }
+            emitter.onNext(true);
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
+        disposables.add(disposable);
+    }
+
     /**
      * 同步给朋友发信息任务
      * @param friendPkStr 朋友公钥

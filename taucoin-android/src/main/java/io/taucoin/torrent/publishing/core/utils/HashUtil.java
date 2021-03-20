@@ -37,7 +37,7 @@ public class HashUtil {
      * @return
      */
     public static String makeSha1HashWithTimeStamp(String str) {
-        str += DateUtil.getDateTime();
+        str = System.currentTimeMillis() + str;
         return makeSha1Hash(str);
     }
 
@@ -97,7 +97,7 @@ public class HashUtil {
                 FileChannel ch = in.getChannel();
                 MappedByteBuffer byteBuffer = ch.map(FileChannel.MapMode.READ_ONLY, 0,
                         file.length());
-                byteBuffer.put(DateUtil.getDateTime().getBytes());
+                byteBuffer.put(String.valueOf(System.currentTimeMillis()).getBytes());
                 messageDigest.update(byteBuffer);
                 return bytesToString(messageDigest.digest());
             } catch (IOException ignore) {

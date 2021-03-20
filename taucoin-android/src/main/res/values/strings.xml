@@ -26,7 +26,7 @@
     <string name="common_default">Default</string>
     <string name="common_share">Share</string>
     <string name="common_later">Later</string>
-    <string name="common_debug10">10</string>
+    <string name="common_debug100">100</string>
     <string name="common_debug10000">10000</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
