@@ -10,6 +10,7 @@ import io.taucoin.db.KeyValueDataBaseFactory;
 import io.taucoin.db.MessageDB;
 import io.taucoin.db.MessageDBImpl;
 import io.taucoin.listener.MsgListener;
+import io.taucoin.repository.AppRepository;
 import io.taucoin.types.Message;
 import io.taucoin.util.Repo;
 
@@ -21,12 +22,15 @@ public class CommunicationManager {
     private MsgListener listener;
 
     private final MessageDB messageDB;
+    private final AppRepository appRepository;
 
     // message db path
     private static final String MSG_PATH = "msg";
 
-    public CommunicationManager(byte[] deviceID, MsgListener listener, KeyValueDataBaseFactory dbFactory) {
+    public CommunicationManager(byte[] deviceID, MsgListener listener, KeyValueDataBaseFactory dbFactory,
+                                AppRepository appRepository) {
         this.listener = listener;
+        this.appRepository = appRepository;
         this.messageDB = new MessageDBImpl(dbFactory.newDatabase());
 
         communication = new Communication(deviceID, this.messageDB, this.listener);

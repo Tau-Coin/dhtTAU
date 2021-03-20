@@ -10,6 +10,7 @@ import io.taucoin.listener.MsgListener;
 import io.taucoin.listener.TauListener;
 import io.taucoin.dht2.DHTEngine;
 import io.taucoin.dht2.SessionStats;
+import io.taucoin.repository.AppRepository;
 import io.taucoin.util.Repo;
 
 import com.frostwire.jlibtorrent.Pair;
@@ -52,7 +53,7 @@ public class TauController {
      * @param deviceID device id
      */
     public TauController(String repoPath, KeyValueDataBaseFactory dbFactory,
-            byte[] deviceID) {
+                         AppRepository appRepository, byte[] deviceID) {
 
         // set the root directory.
         Repo.setRepoPath(repoPath);
@@ -66,7 +67,7 @@ public class TauController {
         this.chainManager = new ChainManager(compositeTauListener, dbFactory);
 
         this.communicationManager = new CommunicationManager(deviceID,
-                compositeMsgListener, dbFactory);
+                compositeMsgListener, dbFactory, appRepository);
     }
 
     /**
@@ -79,7 +80,7 @@ public class TauController {
     public TauController(String repoPath, byte[] keySeed,
             KeyValueDataBaseFactory dbFactory, byte[] deviceID) {
 
-        this(repoPath, dbFactory, deviceID);
+        this(repoPath, dbFactory, null, deviceID);
 
         // store public key and private key.
         this.accountManager.updateKey(keySeed);

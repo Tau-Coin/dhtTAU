@@ -27,6 +27,7 @@ import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
 import io.taucoin.db.DBException;
 import io.taucoin.genesis.GenesisConfig;
+import io.taucoin.repository.AppRepository;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -104,7 +105,9 @@ public class TauDaemon {
         String repoPath = appContext.getApplicationInfo().dataDir;
         String deviceID = DeviceUtils.getCustomDeviceID(appContext);
         logger.info("TauController deviceID::{}, repoPath::{}", deviceID, repoPath);
-        tauController = new TauController(repoPath, androidLeveldbFactory, deviceID.getBytes());
+        AppRepository appRepository = RepositoryHelper.getAppRepository(appContext);
+        tauController = new TauController(repoPath, androidLeveldbFactory,
+                appRepository, deviceID.getBytes());
         tauController.registerListener(daemonListener);
         tauController.registerMsgListener(msgListenHandler);
         initLocalParam();
