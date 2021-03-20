@@ -473,6 +473,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             logger.error("HashUtil.sha1hash(localMsgBloomFilter.getData()):{}", Hex.toHexString(HashUtil.sha1hash(localMsgBloomFilter.getData())));
                             logger.error("------------------------------------------------:{}", Hex.toHexString(bloomReceiptHash));
                             this.publishFriends.add(peer);
+                        } else {
+                            logger.error("========bloomReceiptHash:{} is the same", Hex.toHexString(bloomReceiptHash));
                         }
                     } else {
                         logger.error("+++++++++++:{}", newMsgSignal.toString());
@@ -1304,10 +1306,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     logger.error("Newer online signal:{} from peer:{}", newMsgSignal.toString(), peer.toString());
                     this.latestNewMsgSignalTime.put(peer, timestamp);
                     this.latestNewMsgSignals.put(peer, newMsgSignal);
-                }
-
-                // 处理更新的或者和当前记录的一样新的在线信号，避免上次处理对方完，对方依旧没有满足的问题
-                if (null == latestNewMsgSignalTime || latestNewMsgSignalTime.compareTo(timestamp) <= 0) {
                     this.newMsgSignalCache.put(peer, newMsgSignal);
 
                     Bloom messageBloomFilter = newMsgSignal.getMessageBloomFilter();
