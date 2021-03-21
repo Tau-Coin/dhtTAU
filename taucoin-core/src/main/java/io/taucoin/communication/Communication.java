@@ -552,6 +552,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     private void publishFriendMutableData(ByteArrayWrapper peer) {
         List<ByteArrayWrapper> dataSet = new ArrayList<>();
+        // 关于此处使用的发现对方缺少的消息集合，使用linked hash set，而不是set或者list的原因:
+        // 1. 不使用list的原因，是因为每个消息是前后两个相结合生成的bloom filter，因此，每个消息会被使用两次，
+        // 因而也就有可能被添加进集合两次，list不具有去重作用
+        // 2. 不使用set的原因，是识别对方缺少消息机制存在假阴性问题（也就是不缺该消息，却会被判定为缺少该消息），
+        // 而set不像list那样是有序的，如果这样把set集合里面的消息put给对方，对方可能会拿到一些互相不相邻的消息，
+        // 而这些不相邻的消息，由于假阴性问题的存在，仍然会重新会被判定为不存在而重新put，
+        // 这样就会导致一直put这多个对方已有的数据，从而陷入死局
+        // 3. 使用linked hash set这种既有顺序，又有唯一性保证的集合，能实现按顺序put，只要按顺序put，
+        // 消息之间是相邻的，那么最多只有右边界的消息是假阴性的，这样dht put的8个一个item中最多只有一个是假阴性的，
+        // 其它7个（若有7个）肯定是对方缺少的消息，这样不会陷入死局，对方会逐渐拿到缺少的数据
         LinkedHashSet<Message> linkedMessageSet = new LinkedHashSet<>();
 
         NewMsgSignal myNewMsgSignal = makeNewMsgSignal(peer);
