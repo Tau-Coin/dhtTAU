@@ -111,26 +111,6 @@ public class CommunicationManager {
     }
 
     /**
-     * 删除朋友
-     * @param pubKey public key
-     */
-    public void delFriend(byte[] pubKey) {
-        try {
-            this.communication.delFriend(pubKey);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 获取所有的朋友
-     * @return friend list
-     */
-    public List<byte[]> getAllFriends() {
-        return this.communication.getAllFriends();
-    }
-
-    /**
      * 获取当前间隔时间
      * @return 间隔时间
      */

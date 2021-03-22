@@ -421,7 +421,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         Bloom bloom = Bloom.create(HashUtil.sha1hash(friend.getData()));
                         if (!friendListBloomFilter.matches(bloom)) {
                             // 发现不在对方朋友列表
-                            this.publishFriends.add(friend);
+                            this.publishFriends.add(peer);
                             break;
                         }
                     }
@@ -439,28 +439,21 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                     Bloom bloom = Bloom.create(firstMsgHash);
                     localMsgBloomFilter.or(bloom);
-                    if (!messageBloomFilter.matches(bloom) && !this.publishFriends.contains(peer)) {
-                        logger.debug("Message mismatch, add peer[{}] to publish list", peer.toString());
-                        this.publishFriends.add(peer);
-                    }
 
                     for (int i = 0; i < size - 1; i++) {
                         byte[] mergedHash = ByteUtil.merge(list.get(i).getSha1Hash(), list.get(i + 1).getSha1Hash());
                         bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
                         localMsgBloomFilter.or(bloom);
-
-                        if (!messageBloomFilter.matches(bloom) && !this.publishFriends.contains(peer)) {
-                            logger.debug("Message mismatch, add peer[{}] to publish list", peer.toString());
-                            this.publishFriends.add(peer);
-                        }
                     }
 
                     bloom = Bloom.create(lastMsgHash);
                     localMsgBloomFilter.or(bloom);
-                    if (!messageBloomFilter.matches(bloom) && !this.publishFriends.contains(peer)) {
-                        logger.debug("Message mismatch, add peer[{}] to publish list", peer.toString());
-                        this.publishFriends.add(peer);
-                    }
+                }
+
+                // 两者的bloom filter不一样，put我的让对方看到
+                if (!localMsgBloomFilter.equals(messageBloomFilter)) {
+                    logger.debug("Bloom filter mismatch, add peer[{}] to publish list", peer.toString());
+                    this.publishFriends.add(peer);
                 }
 
                 // 如果你没看到我最新的bloom filter（即bloom收据哈希对不上），则发布我的在线信号
@@ -1122,40 +1115,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 this.messageDB.addFriend(pubKey);
             }
         }
-    }
-
-    /**
-     * 删除朋友
-     * @param pubKey public key
-     * @throws DBException database exception
-     */
-    public void delFriend(byte[] pubKey) throws DBException {
-        // TODO:: to check
-        this.messageDB.delFriend(pubKey);
-
-        ByteArrayWrapper key = new ByteArrayWrapper(pubKey);
-        this.friends.remove(key);
-
-        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.gossipChattingTime.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<FriendPair, BigInteger> entry = it.next();
-            if (ByteUtil.startsWith(pubKey, entry.getKey().getReceiver())) {
-                it.remove();
-            }
-        }
-    }
-
-    /**
-     * 获取所有的朋友
-     * @return 所有朋友的公钥
-     */
-    public List<byte[]> getAllFriends() {
-        List<byte[]> list = new ArrayList<>();
-        for (ByteArrayWrapper friend: this.friends) {
-            list.add(friend.getData());
-        }
-
-        return list;
     }
 
     /**
