@@ -38,7 +38,7 @@ public interface ChatDao {
             " FROM ChatMessages msg" +
             " WHERE ((msg.senderPk = :senderPk AND msg.receiverPk = :receiverPk)" +
             " OR (msg.senderPk = :receiverPk AND msg.receiverPk = :senderPk)) " +
-            " ORDER BY msg.timestamp, msg.hash" +
+            " ORDER BY msg.timestamp, msg.logicMsgHash, msg.nonce" +
             " LIMIT :loadSize OFFSET :startPosition ";
 
     String QUERY_UNSENT_MESSAGES = "SELECT msg.*" +
