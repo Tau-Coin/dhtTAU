@@ -270,4 +270,15 @@ public class SettingsRepositoryImpl implements SettingsRepository {
         }
         return list;
     }
+
+    @Override
+    public void setChattingFriend(String friend) {
+        pref.edit().putString(appContext.getString(R.string.pref_key_chatting_friend), friend)
+                .apply();
+    }
+
+    @Override
+    public String getChattingFriend() {
+        return pref.getString(appContext.getString(R.string.pref_key_chatting_friend), null);
+    }
 }

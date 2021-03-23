@@ -40,7 +40,6 @@ import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
-import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
@@ -512,7 +511,7 @@ public class UserViewModel extends AndroidViewModel {
                 // 1、添加朋友
                 friend = new Friend(userPK, publicKey, 1);
                 friendRepo.addFriend(friend);
-                daemon.addNewFriend(ByteUtil.toByte(publicKey));
+
                 isExist = false;
                 // 2、发送默认消息
                 String msg = getApplication().getString(R.string.contacts_have_added);

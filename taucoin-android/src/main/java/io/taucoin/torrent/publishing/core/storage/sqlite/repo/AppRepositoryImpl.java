@@ -11,8 +11,12 @@ import java.util.Set;
 import androidx.annotation.NonNull;
 import io.taucoin.repository.AppRepository;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
@@ -84,5 +88,27 @@ public class AppRepositoryImpl implements AppRepository {
             }
         } catch (Exception ignore) { }
         return msgList;
+    }
+
+    /**
+     * 获取和自己正在聊天的朋友
+     * @return 朋友公钥
+     */
+    public byte[] getChattingFriend() {
+        Context context = MainApplication.getInstance();
+        SettingsRepository settingsRepo = RepositoryHelper.getSettingsRepository(context);
+        String friend = settingsRepo.getChattingFriend();
+        if (StringUtil.isNotEmpty(friend)) {
+            return ByteUtil.toByte(friend);
+        }
+        return null;
+    }
+
+    /**
+     * 获取主循环的时间间隔
+     * @return 时间间隔
+     */
+    public int getMainLoopInterval() {
+        return FrequencyUtil.getMainLoopInterval();
     }
 }

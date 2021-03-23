@@ -28,4 +28,6 @@
 
     <string name="pref_key_upnp_mapped" translatable="false">pref_key_upnp_mapped</string>
     <string name="pref_key_nat_pmp_mapped" translatable="false">pref_key_nat_pmp_mapped</string>
+
+    <string name="pref_key_chatting_friend" translatable="false">pref_key_chatting_friend</string>
 </resources>

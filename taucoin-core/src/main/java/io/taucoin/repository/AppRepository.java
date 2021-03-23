@@ -23,4 +23,16 @@ public interface AppRepository {
      * @return 消息列表
      */
     List<Message> getLatestMessageList(byte[] friendPk, int num);
+
+    /**
+     * 获取和自己正在聊天的朋友
+     * @return 朋友公钥
+     */
+    byte[] getChattingFriend();
+
+    /**
+     * 获取主循环的时间间隔
+     * @return 时间间隔
+     */
+    int getMainLoopInterval();
 }

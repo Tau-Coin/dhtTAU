@@ -28,6 +28,7 @@ import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.model.data.Result;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
@@ -52,15 +53,16 @@ public class ChatViewModel extends AndroidViewModel {
     private static final Logger logger = LoggerFactory.getLogger("ChatViewModel");
     private ChatRepository chatRepo;
     private UserRepository userRepo;
+    private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<Result> chatResult = new MutableLiveData<>();
     private TauDaemon daemon;
-    private Disposable visitFriend;
     private ChatSourceFactory sourceFactory;
     public ChatViewModel(@NonNull Application application) {
         super(application);
         chatRepo = RepositoryHelper.getChatRepository(getApplication());
         userRepo = RepositoryHelper.getUserRepository(getApplication());
+        settingsRepo = RepositoryHelper.getSettingsRepository(getApplication());
         daemon = TauDaemon.getInstance(application);
         sourceFactory = new ChatSourceFactory(chatRepo);
     }
@@ -162,6 +164,11 @@ public class ChatViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
+    /**
+     * 批量测试入口
+     * 异步给朋友发数字信息任务
+     * @param friendPk 朋友公钥
+     */
     void sendBatchDebugDigitMessage(String friendPk, int time) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             try {
@@ -170,7 +177,6 @@ public class ChatViewModel extends AndroidViewModel {
                         break;
                     }
                     syncSendMessageTask(friendPk, String.valueOf(i + 1), MessageType.TEXT.ordinal());
-//                    Thread.sleep(1000);
                 }
             } catch (Exception ignore) {
             }
@@ -245,9 +251,6 @@ public class ChatViewModel extends AndroidViewModel {
                 ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash,
                         ChatMsgStatus.UNSENT.getStatus(), millisTime);
                 chatRepo.addChatMsgLog(chatMsgLog);
-
-                // 更新链端消息列表
-//                daemon.updateMessagesList(friendPk, message);
             }
             // 批量添加到数据库
             chatRepo.addChatMessages(messages);
@@ -273,22 +276,13 @@ public class ChatViewModel extends AndroidViewModel {
         if (StringUtil.isEmpty(friendPk)) {
             return;
         }
-        visitFriend = daemon.observeDaemonRunning()
-            .subscribeOn(Schedulers.io())
-            .subscribe((isRunning) -> {
-                if (isRunning) {
-                    daemon.startVisitFriend(friendPk);
-                }
-            });
+        settingsRepo.setChattingFriend(friendPk);
     }
 
     /**
      * 当离开朋友聊天页面时，取消对朋友的单独访问
      */
     void stopVisitFriend() {
-        if (visitFriend != null && !visitFriend.isDisposed()) {
-            visitFriend.dispose();
-        }
-        daemon.stopVisitFriend();
+        settingsRepo.setChattingFriend(null);
     }
 }

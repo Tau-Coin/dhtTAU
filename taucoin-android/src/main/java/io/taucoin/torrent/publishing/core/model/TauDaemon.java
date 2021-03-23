@@ -22,7 +22,6 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.disposables.Disposables;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.chain.ChainManager;
-import io.taucoin.communication.CommunicationManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
 import io.taucoin.genesis.GenesisConfig;
@@ -34,7 +33,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.leveldb.AndroidLeveldbFactory;
 import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
-import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.DeviceUtils;
 import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
@@ -47,7 +45,6 @@ import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
 import io.taucoin.torrent.publishing.ui.setting.TrafficTipsActivity;
 import io.taucoin.types.BlockContainer;
-import io.taucoin.types.Message;
 import io.taucoin.types.Transaction;
 import io.taucoin.util.ByteUtil;
 
@@ -468,8 +465,6 @@ public class TauDaemon {
                     if (isHaveAvailableData()) {
                         // 更新UI展示链端主循环时间间隔
                         NetworkSetting.calculateMainLoopInterval();
-                        int interval = FrequencyUtil.getMainLoopInterval();
-                        tauController.getCommunicationManager().setIntervalTime(interval);
                         // 重置无可用流量提示对话框的参数
                         trafficTips = true;
                         noRemainingDataTimes = 0;
@@ -692,42 +687,6 @@ public class TauDaemon {
         return new byte[20];
     }
 
-    private CommunicationManager getCommunicationManager() {
-        return tauController.getCommunicationManager();
-    }
-
-    /**
-     * 添加朋友
-     * @param friendPk 朋友公钥
-     */
-    public void addNewFriend(byte[] friendPk) {
-        if (!isRunning) {
-            return;
-        }
-        getCommunicationManager().addNewFriend(friendPk);
-        logger.info("addNewFriend friendPk::{}, timestamp::{}", ByteUtil.toHexString(friendPk),
-                DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6));
-    }
-
-    /**
-     * 更新链端消息列表
-     * @param friendPK
-     * @param message
-     * @return
-     */
-    public boolean updateMessagesList(byte[] friendPK, Message message) {
-        if (!isRunning) {
-            return false;
-        }
-        boolean isPublishSuccess = getCommunicationManager().publishNewMessage(friendPK, message);
-        logger.debug("updateMessagesList isPublishSuccess::{}", isPublishSuccess);
-        String hash = ByteUtil.toHexString(message.getHash());
-        logger.debug("updateMessagesList friendPk::{}, hash::{}, timestamp::{}",
-                ByteUtil.toHexString(friendPK), hash,
-                DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6));
-        return isPublishSuccess;
-    }
-
     /**
      * 统计Sessions的nodes数
      */
@@ -736,29 +695,5 @@ public class TauDaemon {
             return 0;
         }
         return tauController.getDHTEngine().getSessionNodes();
-    }
-
-    /**
-     * 当留在该朋友聊天页面时，只访问该朋友
-     * @param friendPkStr 要访问的朋友
-     */
-    public void startVisitFriend(String friendPkStr) {
-        if (!isRunning) {
-            return;
-        }
-        byte[] friendPk = ByteUtil.toByte(friendPkStr);
-        tauController.getCommunicationManager().startVisitFriend(friendPk);
-        logger.debug("startVisitFriend friendPk::{}", friendPkStr);
-    }
-
-    /**
-     * 当离开朋友聊天页面时，取消对朋友的单独访问
-     */
-    public void stopVisitFriend() {
-        if (!isRunning) {
-            return;
-        }
-        tauController.getCommunicationManager().stopVisitFriend();
-        logger.debug("stopVisitFriend");
     }
 }

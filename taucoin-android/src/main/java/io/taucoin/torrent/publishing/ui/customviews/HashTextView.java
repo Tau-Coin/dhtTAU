@@ -56,6 +56,15 @@ public class HashTextView extends TextView {
     }
 
     public void setTextContent(String content, String senderPk, String receiverPk) {
+        setTextContent(content, null, senderPk, receiverPk);
+    }
+
+    public void setTextContent(String content, byte[] rawContent, String senderPk, String receiverPk) {
+        if (rawContent != null) {
+            String rawContentStr = MsgSplitUtil.textBytesToString(rawContent);
+            showText(rawContentStr);
+            return;
+        }
         if (isLoadSuccess && StringUtil.isNotEmpty(this.content)
                 && StringUtil.isEquals(this.content, content)) {
             logger.trace("showTextContent isLoadSuccess::{}, isEquals::{}::", isLoadSuccess,
@@ -81,8 +90,8 @@ public class HashTextView extends TextView {
                     cryptoKey = Utils.keyExchange(senderPk, MainApplication.getInstance().getSeed());
                 }
                 long keyExchangeTime = System.currentTimeMillis() - startTime;
-                byte[] rawContent = CryptoUtil.decrypt(encryptedContent, cryptoKey);
-                String rawContentStr = MsgSplitUtil.textBytesToString(rawContent);
+                byte[] rawContentTemp = CryptoUtil.decrypt(encryptedContent, cryptoKey);
+                String rawContentStr = MsgSplitUtil.textBytesToString(rawContentTemp);
                 long decryptTime = System.currentTimeMillis() - startTime;
                 String rawContentLog = rawContentStr.length() > 50 ?
                         rawContentStr.substring(0, 10) : rawContentStr;

@@ -172,7 +172,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
                 tvTime.setText(time);
             }
             tvTime.setVisibility(isShowTime ? View.VISIBLE : View.GONE);
-            tvMsg.setTextContent(msg.content, msg.senderPk, msg.receiverPk);
+            tvMsg.setTextContent(msg.content, msg.rawContent, msg.senderPk, msg.receiverPk);
         }
 
         private void showStatusView(ImageView ivStats, ProgressBar tvProgress, ChatMsg msg, boolean isMine) {

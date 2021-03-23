@@ -125,6 +125,17 @@ public interface SettingsRepository {
      */
     void setNATPMPMapped(boolean isMapped);
 
+    /**
+     * 设置正在聊天的朋友
+     * @param friend 朋友公钥
+     */
+    void setChattingFriend(String friend);
+
+    /**
+     * 获取正在聊天的朋友
+     */
+    String getChattingFriend();
+
     long getLongValue(String key);
 
     long getLongValue(String key, long defValue);
