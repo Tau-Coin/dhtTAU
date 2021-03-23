@@ -237,7 +237,7 @@ public class TxViewModel extends AndroidViewModel {
         long txType = tx.txType;
         User user = userRepo.getUserByPublicKey(tx.senderPk);
         if(user != null){
-            user.lastUpdateTime = DateUtil.getTime();
+//            user.lastUpdateTime = DateUtil.getTime();
             userRepo.updateUser(user);
         }
         if(txType == TypesConfig.TxType.WCoinsType.ordinal()){

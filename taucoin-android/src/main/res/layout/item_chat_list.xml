@@ -28,6 +28,14 @@
             app:bgColor="@color/primary_light"
             app:textColorForPressed="@color/color_white" />
 
+        <View
+            android:id="@+id/msg_unread"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginStart="44dp"
+            android:layout_marginTop="5dp"
+            android:background="@drawable/red_rect_round_bg"/>
+
         <LinearLayout
             android:id="@+id/middle_view"
             android:layout_toEndOf="@+id/left_view"

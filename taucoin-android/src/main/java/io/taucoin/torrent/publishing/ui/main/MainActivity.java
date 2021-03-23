@@ -37,6 +37,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
+import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
@@ -480,25 +481,25 @@ public class MainActivity extends ScanTriggerActivity {
     }
 
     public void updateMainRightFragment(int type, String ID) {
-        Community community = new Community();
-        community.type = type;
-        community.chainID = ID;
-        updateMainRightFragment(community);
+        CommunityAndFriend bean = new CommunityAndFriend();
+        bean.type = type;
+        bean.ID = ID;
+        updateMainRightFragment(bean);
     }
     /**
      * 更新主页右面Fragment
      */
-    public void updateMainRightFragment(Community community) {
+    public void updateMainRightFragment(CommunityAndFriend bean) {
         // 创建修改实例
         Fragment newFragment = null;
         Bundle bundle = new Bundle();
-        if (community != null) {
-            if (community.type == 0) {
+        if (bean != null) {
+            if (bean.type == 0) {
                 newFragment = new CommunityFragment();
-            } else if (community.type == 1) {
+            } else if (bean.type == 1) {
                 newFragment = new ChatFragment();
             }
-            bundle.putString(IntentExtra.CHAIN_ID, community.chainID);
+            bundle.putString(IntentExtra.ID, bean.ID);
         }
         currentFragment = newFragment;
         if (null == newFragment) {

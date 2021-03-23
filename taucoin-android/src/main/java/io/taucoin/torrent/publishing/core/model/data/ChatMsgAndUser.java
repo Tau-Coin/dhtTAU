@@ -14,8 +14,8 @@ public class ChatMsgAndUser extends ChatMsg {
             entityColumn = "publicKey")
     public User sender;              // 发送者的信息
 
-    public ChatMsgAndUser(@NonNull String hash, String senderPk, String friendPk, int contentType,
+    public ChatMsgAndUser(@NonNull String hash, String senderPk, String receiverPk, int contentType,
                           long timestamp, long nonce, String logicMsgHash) {
-        super(hash, senderPk, friendPk, contentType, timestamp, nonce, logicMsgHash);
+        super(hash, senderPk, receiverPk, contentType, timestamp, nonce, logicMsgHash);
     }
 }

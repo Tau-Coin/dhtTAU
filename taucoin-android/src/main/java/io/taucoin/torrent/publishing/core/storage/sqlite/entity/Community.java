@@ -15,11 +15,10 @@ import androidx.room.PrimaryKey;
 public class Community implements Parcelable {
     @NonNull
     @PrimaryKey
-    public String chainID;                  // 社区的chainID或者chat中朋友的Public Key
+    public String chainID;                  // 社区的chainID
     @NonNull
     public String communityName;            // 社区名字
-    @NonNull
-    public int type;                        // 0: 社区， 1: chat
+
     public long totalBlocks;                // 社区总区块数（不上链）
     public long syncBlock;                  // 已同步到区块数（不上链）
     public boolean isBanned = false;        // 社区是否被用户拉入黑名单（不上链）
@@ -27,7 +26,7 @@ public class Community implements Parcelable {
     public long totalCoin;                  // 社区总的币量（不上链，不入数据库）
     @Ignore
     public int blockInAvg;                  // 社区创建者的公钥平均出块时间（不上链，不入数据库）
-    public String publicKey;                // 社区创建者的公钥 或者 当前Chat中的登录用户公钥
+    public String publicKey;                // 社区创建者的公钥
 
     public Community(@NonNull String chainID, @NonNull String communityName){
         this.communityName = communityName;
@@ -55,7 +54,6 @@ public class Community implements Parcelable {
     protected Community(Parcel in) {
         chainID = in.readString();
         communityName = in.readString();
-        type = in.readInt();
         totalBlocks = in.readLong();
         syncBlock = in.readLong();
         isBanned = in.readByte() != 0;
@@ -69,7 +67,6 @@ public class Community implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(chainID);
         dest.writeString(communityName);
-        dest.writeInt(type);
         dest.writeLong(totalBlocks);
         dest.writeLong(syncBlock);
         dest.writeByte((byte) (isBanned ? 1 : 0));

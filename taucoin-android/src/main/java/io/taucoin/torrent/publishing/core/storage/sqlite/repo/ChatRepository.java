@@ -55,7 +55,7 @@ public interface ChatRepository {
     /**
      * 提交数据变化
      */
-    void submitDataSetChanged();
+    void submitDataSetChanged(ChatMsg chat);
 
     int getNumMessages(String friendPk);
 
@@ -83,10 +83,8 @@ public interface ChatRepository {
     /**
      * 查询聊天消息日志
      * @param hash
-     * @param userPk
-     * @param friendPkStr
      * @param status
      * @return
      */
-    ChatMsgLog queryChatMsgLog(String hash, String userPk, String friendPkStr, int status);
+    ChatMsgLog queryChatMsgLog(String hash, int status);
 }

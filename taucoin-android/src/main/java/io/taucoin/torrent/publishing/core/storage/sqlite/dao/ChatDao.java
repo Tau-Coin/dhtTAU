@@ -21,11 +21,9 @@ public interface ChatDao {
     String QUERY_GET_CHAT_MSG = "SELECT * FROM ChatMessages WHERE senderPk = :senderPk AND hash = :hash";
     String QUERY_GET_CHAT_MSG_BY_HASH = "SELECT * FROM ChatMessages WHERE hash = :hash";
 
-    String QUERY_MESSAGES_WHERE = " WHERE (msg.senderPk = :senderPk OR msg.senderPk = :friendPk)" +
-            " AND (msg.friendPk = :friendPk OR msg.friendPk = :senderPk) " +
-            " AND (msg.contentType = 0 OR (msg.contentType = 1 AND msg.nonce = 0)) " +
-            " AND msg.friendPk NOT IN" +
-            UserDao.QUERY_GET_USER_PKS_IN_BAN_LIST;
+    String QUERY_MESSAGES_WHERE = " WHERE ((msg.senderPk = :senderPk AND msg.receiverPk = :receiverPk)" +
+            " OR (msg.senderPk = :receiverPk AND msg.receiverPk = :senderPk)) " +
+            " AND (msg.contentType = 0 OR (msg.contentType = 1 AND msg.nonce = 0))";
 
     String QUERY_NUM_MESSAGES = "SELECT count(*) FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE;
@@ -34,6 +32,13 @@ public interface ChatDao {
             " FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE +
             " ORDER BY msg.timestamp, msg.logicMsgHash, msg.nonce" +
+            " LIMIT :loadSize OFFSET :startPosition ";
+
+    String QUERY_MESSAGE_LIST = "SELECT msg.*" +
+            " FROM ChatMessages msg" +
+            " WHERE ((msg.senderPk = :senderPk AND msg.receiverPk = :receiverPk)" +
+            " OR (msg.senderPk = :receiverPk AND msg.receiverPk = :senderPk)) " +
+            " ORDER BY msg.timestamp, msg.hash" +
             " LIMIT :loadSize OFFSET :startPosition ";
 
     String QUERY_UNSENT_MESSAGES = "SELECT msg.*" +
@@ -47,8 +52,7 @@ public interface ChatDao {
             " GROUP BY status ORDER BY status DESC";
 
     // 查询消息单独状态日志数据
-    String QUERY_CHAT_MSG_LOG = "SELECT * FROM ChatMsgLogs WHERE hash = :hash AND senderPk = :senderPk" +
-            " AND friendPk = :friendPk AND status = :status";
+    String QUERY_CHAT_MSG_LOG = "SELECT * FROM ChatMsgLogs WHERE hash = :hash AND status = :status";
 
     /**
      * 添加聊天信息
@@ -76,22 +80,25 @@ public interface ChatDao {
 
     /**
      * 获取社区的消息
-     * @param friendPk 朋友公钥
+     * @param receiverPk 朋友公钥
      * @return 消息总数
      */
     @Query(QUERY_NUM_MESSAGES)
-    int getNumMessages(String senderPk, String friendPk);
+    int getNumMessages(String senderPk, String receiverPk);
 
     /**
      * 获取聊天的消息
-     * @param friendPk 朋友公钥
+     * @param receiverPk 朋友公钥
      * @param startPosition 数据开始位置
      * @param loadSize 加载数据大小
      * @return List<Chat>
      */
     @Query(QUERY_MESSAGES_BY_FRIEND_PK)
     @Transaction
-    List<ChatMsgAndUser> getMessages(String senderPk, String friendPk, int startPosition, int loadSize);
+    List<ChatMsgAndUser> getMessages(String senderPk, String receiverPk, int startPosition, int loadSize);
+
+    @Query(QUERY_MESSAGE_LIST)
+    List<ChatMsg> getMessageList(String senderPk, String receiverPk, int startPosition, int loadSize);
 
     @Query(QUERY_UNSENT_MESSAGES)
     List<ChatMsg> getUnsentMessages();
@@ -109,5 +116,5 @@ public interface ChatDao {
      * 查询聊天消息日志
      */
     @Query(QUERY_CHAT_MSG_LOG)
-    ChatMsgLog queryChatMsgLog(String hash, String senderPk, String friendPk, int status);
+    ChatMsgLog queryChatMsgLog(String hash, int status);
 }

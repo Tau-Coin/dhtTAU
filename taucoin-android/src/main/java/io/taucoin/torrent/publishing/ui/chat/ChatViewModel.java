@@ -39,7 +39,6 @@ import io.taucoin.torrent.publishing.core.utils.HashUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
-import io.taucoin.torrent.publishing.service.WorkerManager;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
@@ -81,6 +80,10 @@ public class ChatViewModel extends AndroidViewModel {
     protected void onCleared() {
         super.onCleared();
         disposables.clear();
+        if (sourceFactory != null) {
+            sourceFactory.onCleared();
+            sourceFactory = null;
+        }
     }
 
     /**
@@ -123,6 +126,9 @@ public class ChatViewModel extends AndroidViewModel {
             InputStream inputStream = null;
             try {
                 for (int i = 0; i < time; i++) {
+                    if (emitter.isCancelled()) {
+                        break;
+                    }
                     if (null == inputStream) {
                         inputStream = getApplication().getAssets().open("tianlongbabu1-4.txt");
                     } else {
@@ -160,8 +166,11 @@ public class ChatViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             try {
                 for (int i = 0; i < time; i++) {
+                    if (emitter.isCancelled()) {
+                        break;
+                    }
                     syncSendMessageTask(friendPk, String.valueOf(i + 1), MessageType.TEXT.ordinal());
-                    Thread.sleep(1000);
+//                    Thread.sleep(1000);
                 }
             } catch (Exception ignore) {
             }
@@ -206,7 +215,6 @@ public class ChatViewModel extends AndroidViewModel {
                 byte[] content = contents.get(nonce);
                 long millisTime = DateUtil.getMillisTime();
                 long timestamp = millisTime / 1000;
-                String contentStr = MsgSplitUtil.textBytesToString(content);
                 Message message;
                 if (type == MessageType.TEXT.ordinal()) {
                     message = Message.createTextMessage(BigInteger.valueOf(timestamp), senderPk,
@@ -228,17 +236,21 @@ public class ChatViewModel extends AndroidViewModel {
                         logicMsgHashStr, DateUtil.format(millisTime, DateUtil.pattern9));
 
                 // 组织Message的结构，并发送到DHT和数据入库
+                String contentStr = ByteUtil.toHexString(encryptedContent);
                 ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPkStr, contentStr, type,
                         timestamp, nonce, logicMsgHashStr);
                 messages[nonce] = chatMsg;
 
-                ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash, senderPkStr, friendPkStr,
+                // 更新消息日志信息
+                ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash,
                         ChatMsgStatus.UNSENT.getStatus(), millisTime);
                 chatRepo.addChatMsgLog(chatMsgLog);
+
+                // 更新链端消息列表
+//                daemon.updateMessagesList(friendPk, message);
             }
             // 批量添加到数据库
             chatRepo.addChatMessages(messages);
-            WorkerManager.startPublishNewMsgWorker();
         } catch (Exception e) {
             logger.error("sendMessageTask error", e);
             result.setFailMsg(e.getMessage());

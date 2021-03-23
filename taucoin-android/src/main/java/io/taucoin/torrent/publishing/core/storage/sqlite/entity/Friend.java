@@ -18,7 +18,8 @@ public class Friend implements Parcelable {
     public String friendPK;            // 朋友的公钥
     public long lastCommTime;          // 朋友之间上次交流时间
     public long lastSeenTime;          // 上次看到朋友的时间
-    public int state;                  // 朋友的状态；0：discovered; 1: Added; 2: Connected
+    public int status;                 // 对应枚举类FriendStatus中状态
+    public int msgUnread;              // 是否存在消息未读 0：已读，1：未读
 
     public Friend(@NonNull String userPK, @NonNull String friendPK){
         this.userPK = userPK;
@@ -26,10 +27,10 @@ public class Friend implements Parcelable {
     }
 
     @Ignore
-    public Friend(@NonNull String userPK, @NonNull String friendPK, int state){
+    public Friend(@NonNull String userPK, @NonNull String friendPK, int status){
         this.userPK = userPK;
         this.friendPK = friendPK;
-        this.state = state;
+        this.status = status;
     }
 
     protected Friend(Parcel in) {
@@ -37,16 +38,19 @@ public class Friend implements Parcelable {
         friendPK = in.readString();
         lastCommTime = in.readLong();
         lastSeenTime = in.readLong();
-        state = in.readInt();
+        status = in.readInt();
+        msgUnread = in.readInt();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(userPK);
         dest.writeString(friendPK);
-        dest.writeInt(state);
+        dest.writeInt(status);
         dest.writeLong(lastCommTime);
         dest.writeLong(lastSeenTime);
+        dest.writeInt(status);
+        dest.writeInt(msgUnread);
     }
 
     @Override

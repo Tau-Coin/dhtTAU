@@ -9,6 +9,7 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Flowable;
+import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
@@ -32,9 +33,9 @@ public interface UserDao {
 
     // 查询所有用户数据的详细sql
     String QUERY_GET_USERS_NOT_IN_BAN_LIST = "SELECT u.*, f.lastCommTime AS lastCommTime," +
-            " f.lastSeenTime AS lastSeenTime, f.state" +
+            " f.lastSeenTime AS lastSeenTime, f.status" +
             " FROM Users u" +
-            " LEFT JOIN Friends f ON u.publicKey = f.friendPK AND f.userPK IN (" +
+            " LEFT JOIN Friends f ON u.publicKey = f.friendPK AND f.userPK = (" +
             UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
             QUERY_ALL_USERS_WHERE;
 
@@ -43,33 +44,38 @@ public interface UserDao {
     String QUERY_USERS_ORDER_BY_LAST_COMM_TIME = QUERY_GET_USERS_NOT_IN_BAN_LIST +
             " ORDER BY f.lastCommTime DESC";
 
-    String QUERY_CONNECTED_USERS_WHERE = " AND f.state = 2";
+    String QUERY_CONNECTED_USERS_WHERE = " AND f.status = 2";
 
     // 统计所有用户数据的详细sql
     String QUERY_NUM_CONNECTED_USERS = "SELECT count(*)" +
             " FROM Users u" +
-            " LEFT JOIN Friends f ON u.publicKey = f.friendPK AND f.userPK IN (" +
+            " LEFT JOIN Friends f ON u.publicKey = f.friendPK AND f.userPK = (" +
             UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
             QUERY_ALL_USERS_WHERE +
             QUERY_CONNECTED_USERS_WHERE;
 
-    String QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST = QUERY_GET_USERS_NOT_IN_BAN_LIST +
+    String QUERY_GET_USERS_STATUS_NOT_IN_BAN_LIST = QUERY_GET_USERS_NOT_IN_BAN_LIST +
             QUERY_CONNECTED_USERS_WHERE;
-    String QUERY_USERS_STATE_ORDER_BY_LAST_SEEN_TIME = QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST +
+    String QUERY_USERS_STATUS_ORDER_BY_LAST_SEEN_TIME = QUERY_GET_USERS_STATUS_NOT_IN_BAN_LIST +
             " ORDER BY f.lastSeenTime DESC";
-    String QUERY_USERS_STATE_ORDER_BY_LAST_COMM_TIME = QUERY_GET_USERS_STATE_NOT_IN_BAN_LIST +
+    String QUERY_USERS_STATUS_ORDER_BY_LAST_COMM_TIME = QUERY_GET_USERS_STATUS_NOT_IN_BAN_LIST +
             " ORDER BY f.lastCommTime DESC";
 
     String QUERY_SET_CURRENT_USER = "UPDATE Users SET isCurrentUser = :isCurrentUser WHERE publicKey = :publicKey";
     String QUERY_ADD_USER_BLACKLIST = "UPDATE Users SET isBanned = :isBanned WHERE publicKey = :publicKey";
     String QUERY_SEED_HISTORY_LIST = "SELECT * FROM Users WHERE isBanned = 0 and seed not null";
     String QUERY_USER_BY_PUBLIC_KEY = "SELECT * FROM Users WHERE publicKey = :publicKey";
-    String QUERY_FRIEND_BY_PUBLIC_KEY = "SELECT u.*, f.lastCommTime AS lastCommTime," +
-            " f.lastSeenTime AS lastSeenTime, f.state" +
+
+    String QUERY_FRIEND_INFO_BY_PUBLIC_KEY = "SELECT u.*, f.lastCommTime AS lastCommTime," +
+            " f.lastSeenTime AS lastSeenTime, f.status" +
             " FROM Users u" +
-            " LEFT JOIN Friends f ON u.publicKey = f.friendPK and f.userPK= :userPK" +
+            " LEFT JOIN Friends f ON u.publicKey = f.friendPK and f.userPK = (" + QUERY_GET_CURRENT_USER_PK + ")" +
             " where u.publicKey = :publicKey";
+
     String QUERY_GET_USER_PKS_IN_BAN_LIST = " (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1) ";
+
+    String QUERY_FRIEND_BY_PUBLIC_KEY = "SELECT * FROM Friends" +
+            " where friendPk =:friendPk and userPK = (" + QUERY_GET_CURRENT_USER_PK + ")";
 
     /**
      * 添加新的User/Seed
@@ -165,17 +171,24 @@ public interface UserDao {
     List<UserAndFriend> queryUsersOrderByLastSeenTime(String friendPK);
 
     @Transaction
-    @Query(QUERY_USERS_STATE_ORDER_BY_LAST_COMM_TIME)
-    List<UserAndFriend> queryUsersByStateOrderByLastCommTime(String friendPK);
+    @Query(QUERY_USERS_STATUS_ORDER_BY_LAST_COMM_TIME)
+    List<UserAndFriend> queryUsersByStatusOrderByLastCommTime(String friendPK);
 
     @Transaction
-    @Query(QUERY_USERS_STATE_ORDER_BY_LAST_SEEN_TIME)
-    List<UserAndFriend> queryUsersByStateOrderByLastSeenTime(String friendPK);
+    @Query(QUERY_USERS_STATUS_ORDER_BY_LAST_SEEN_TIME)
+    List<UserAndFriend> queryUsersByStatusOrderByLastSeenTime(String friendPK);
 
     /**
      * 获取用户和朋友的信息
      */
     @Transaction
+    @Query(QUERY_FRIEND_INFO_BY_PUBLIC_KEY)
+    UserAndFriend getFriend(String publicKey);
+
+    /**
+     * 观察朋友信息变化
+     */
     @Query(QUERY_FRIEND_BY_PUBLIC_KEY)
-    UserAndFriend getUserAndFriend(String userPK, String publicKey);
+    @Transaction
+    Flowable<FriendAndUser> observeFriend(String friendPk);
 }

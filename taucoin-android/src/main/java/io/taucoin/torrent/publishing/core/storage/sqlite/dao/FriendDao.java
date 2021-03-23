@@ -18,8 +18,12 @@ public interface FriendDao {
             " WHERE userPK = :userPK AND friendPK = :friendPK";
 
     String QUERY_CONNECTED_FRIENDS = "SELECT friendPK FROM Friends" +
-            " WHERE userPK = :userPK AND state = 2" +
+            " WHERE userPK = :userPK AND status = 2" +
             " limit :limit";
+
+    String QUERY_ALL_FRIENDS = "SELECT friendPK FROM Friends" +
+            " WHERE userPK = (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
+            " AND status != 0";
 
     /**
      * 添加新社区成员
@@ -35,4 +39,7 @@ public interface FriendDao {
 
     @Query(QUERY_CONNECTED_FRIENDS)
     List<String> queryConnectedFriends(String userPK, int limit);
+
+    @Query(QUERY_ALL_FRIENDS)
+    List<String> queryAllFriends();
 }

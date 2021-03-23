@@ -32,13 +32,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.BuildConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
+import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
+import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
@@ -86,7 +86,6 @@ public class UserViewModel extends AndroidViewModel {
     private SettingsRepository settingsRepo;
     private TxRepository txRepo;
     private MsgRepository msgRepo;
-    private CommunityRepository communityRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
     private MutableLiveData<Boolean> addFriendResult = new MutableLiveData<>();
@@ -100,7 +99,6 @@ public class UserViewModel extends AndroidViewModel {
     private CommonDialog editNameDialog;
     private CommonDialog dailyDataLimitDialog;
     private TauDaemon daemon;
-    private Disposable observeDaemonRunning;
     private UserSourceFactory sourceFactory;
     private ChatViewModel chatViewModel;
     public UserViewModel(@NonNull Application application) {
@@ -110,7 +108,6 @@ public class UserViewModel extends AndroidViewModel {
         txRepo = RepositoryHelper.getTxRepository(getApplication());
         msgRepo = RepositoryHelper.getMsgRepository(getApplication());
         friendRepo = RepositoryHelper.getFriendsRepository(getApplication());
-        communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
         daemon = TauDaemon.getInstance(application);
         sourceFactory = new UserSourceFactory();
         chatViewModel = new ChatViewModel(application);
@@ -138,9 +135,6 @@ public class UserViewModel extends AndroidViewModel {
         if(dailyDataLimitDialog != null && dailyDataLimitDialog.isShowing()){
             dailyDataLimitDialog.dismiss();
             dailyDataLimitDialog = null;
-        }
-        if (observeDaemonRunning != null && !observeDaemonRunning.isDisposed()) {
-            observeDaemonRunning.dispose();
         }
     }
 
@@ -217,12 +211,18 @@ public class UserViewModel extends AndroidViewModel {
                     user.isCurrentUser = true;
                     userRepo.updateUser(user);
                 }
-                // 2、更新本地的用户公钥
+                // 2、把自己当作自己的朋友
+                Friend friend = friendRepo.queryFriend(publicKey, publicKey);
+                if (null == friend) {
+                    friend = new Friend(publicKey, publicKey, FriendStatus.ADDED.getStatus());
+                    friendRepo.addFriend(friend);
+                }
+                // 3、更新本地的用户公钥
                 MainApplication.getInstance().setCurrentUser(user);
                 /* 保证数据不会错乱，必须顺序执行以下逻辑 */
-                // 3、更新链端seed
+                // 4、更新链端seed
                 daemon.updateSeed(seed);
-                // 4、关闭所有消息通知
+                // 5、关闭所有消息通知
                 TauNotifier.getInstance().cancelAllNotify();
             } catch (Exception e){
                 result = getApplication().getString(R.string.user_seed_invalid);
@@ -305,7 +305,7 @@ public class UserViewModel extends AndroidViewModel {
                 content.setNickName(showName);
                 content.setFriendPks(friendPks);
                 emitter.onNext(content);
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.error("queryCurrentUserAndFriends error ", e);
             }
             emitter.onComplete();
@@ -494,23 +494,6 @@ public class UserViewModel extends AndroidViewModel {
      * @param nickname
      */
     public void addFriend(String publicKey, String nickname) {
-        if (!BuildConfig.DEBUG && observeDaemonRunning != null
-                && !observeDaemonRunning.isDisposed()) {
-            return;
-        }
-        observeDaemonRunning = daemon.observeDaemonRunning()
-                .subscribeOn(Schedulers.io())
-                .subscribe((isRunning) -> {
-                    if (isRunning) {
-                        addFriendTask(publicKey, nickname);
-                        if (observeDaemonRunning != null) {
-                            observeDaemonRunning.dispose();
-                        }
-                    }
-                });
-    }
-
-    private void addFriendTask(String publicKey, String nickname) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             User user = userRepo.getUserByPublicKey(publicKey);
             if(null == user){
@@ -526,24 +509,14 @@ public class UserViewModel extends AndroidViewModel {
             Friend friend = friendRepo.queryFriend(userPK, publicKey);
             boolean isExist = true;
             if (null == friend) {
+                // 1、添加朋友
                 friend = new Friend(userPK, publicKey, 1);
                 friendRepo.addFriend(friend);
-                isExist = false;
-                // 1、添加朋友，并发送默认消息
                 daemon.addNewFriend(ByteUtil.toByte(publicKey));
+                isExist = false;
                 // 2、发送默认消息
                 String msg = getApplication().getString(R.string.contacts_have_added);
                 chatViewModel.syncSendMessageTask(publicKey, msg, MessageType.TEXT.ordinal());
-
-                // 3、添加朋友聊天，主页显示
-                String communityName = UsersUtil.getDefaultName(publicKey);
-                Community community = communityRepo.getChatByFriendPk(publicKey);
-                if (null == community) {
-                    community = new Community(publicKey, communityName);
-                    community.type = 1;
-                    community.publicKey = userPK;
-                    communityRepo.addCommunity(community);
-                }
             }
             emitter.onNext(isExist);
             emitter.onComplete();
@@ -560,8 +533,7 @@ public class UserViewModel extends AndroidViewModel {
      */
     public void getUserDetail(String publicKey) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<UserAndFriend>) emitter -> {
-            String userPK = MainApplication.getInstance().getPublicKey();
-            UserAndFriend userAndFriend = userRepo.getUserAndFriend(userPK, publicKey);
+            UserAndFriend userAndFriend = userRepo.getFriend(publicKey);
             if(null == userAndFriend){
                 userAndFriend = new UserAndFriend(publicKey);
             }
@@ -793,6 +765,36 @@ public class UserViewModel extends AndroidViewModel {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(result -> qrBlurBitmap.postValue(result));
+        disposables.add(disposable);
+    }
+
+    /**
+     * 观察朋友信息变化
+     */
+    public Flowable<FriendAndUser> observeFriend(String friendPk) {
+        return userRepo.observeFriend(friendPk);
+    }
+
+    /**
+     * 清除朋友的消息未读状态
+     */
+    public void clearMsgUnread(String friendPK) {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+            try {
+                String userPk = MainApplication.getInstance().getPublicKey();
+                Friend friend = friendRepo.queryFriend(userPk, friendPK);
+                if (friend.msgUnread > 0) {
+                    friend.msgUnread = 0;
+                    friendRepo.updateFriend(friend);
+                }
+            } catch (Exception e) {
+                logger.error("clearMsgUnread error ", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
         disposables.add(disposable);
     }
 }

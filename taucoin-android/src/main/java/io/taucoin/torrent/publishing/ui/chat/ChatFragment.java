@@ -45,12 +45,12 @@ import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.FragmentChatBinding;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
-import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.customviews.MsgLogsDialog;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
+import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 import io.taucoin.types.MessageType;
 
 import static android.app.Activity.RESULT_OK;
@@ -65,7 +65,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     private static final Logger logger = LoggerFactory.getLogger("ChatFragment");
     private FragmentChatBinding binding;
     private ChatViewModel chatViewModel;
-    private CommunityViewModel communityViewModel;
+    private UserViewModel userViewModel;
     private ChatListAdapter adapter;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Disposable logsDisposable;
@@ -87,7 +87,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
         super.onActivityCreated(savedInstanceState);
         activity = (MainActivity) getActivity();
         ViewModelProvider provider = new ViewModelProvider(this);
-        communityViewModel = provider.get(CommunityViewModel.class);
+        userViewModel = provider.get(UserViewModel.class);
         chatViewModel = provider.get(ChatViewModel.class);
         chatViewModel.observeNeedStartDaemon();
         initParameter();
@@ -99,7 +99,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
      */
     private void initParameter() {
         if(getArguments() != null){
-            friendPK = getArguments().getString(IntentExtra.CHAIN_ID);
+            friendPK = getArguments().getString(IntentExtra.ID);
         }
     }
 
@@ -149,7 +149,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
             } else if (R.string.common_debug100 == title) {
                 chatViewModel.sendBatchDebugDigitMessage(friendPK, 100);
             } else if (R.string.common_debug10000 == title) {
-                chatViewModel.sendBatchDebugDigitMessage(friendPK, 10000);
+                chatViewModel.sendBatchDebugDigitMessage(friendPK, 1000);
             }
         });
 
@@ -199,15 +199,16 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
             adapter.submitList(messages, handleUpdateAdapter);
             // 关闭当前朋友的消息通知
             TauNotifier.getInstance().cancelChatMsgNotify(friendPK);
+            userViewModel.clearMsgUnread(friendPK);
             logger.debug("messages.size::{}", messages.size());
         });
-        disposables.add(communityViewModel.observerCommunityByChainID(friendPK)
+        disposables.add(userViewModel.observeFriend(friendPK)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(friend -> {
-                    binding.llBottomInput.setVisibility(friend.state == 2 ? View.VISIBLE : View.GONE);
-                    binding.llShareQr.setVisibility(friend.state != 2 ? View.VISIBLE : View.GONE);
-                    String friendNickName = UsersUtil.getShowName(friend.user, friend.chainID);
+                    binding.llBottomInput.setVisibility(friend.status == 2 ? View.VISIBLE : View.GONE);
+                    binding.llShareQr.setVisibility(friend.status != 2 ? View.VISIBLE : View.GONE);
+                    String friendNickName = UsersUtil.getShowName(friend.user, friend.friendPK);
                     binding.toolbarInclude.tvTitle.setText(friendNickName);
                 }));
         chatViewModel.getChatResult().observe(this, result -> {

@@ -11,12 +11,8 @@ import androidx.room.Ignore;
  * Room: 数据库存储ChatMsgLog实体类
  * 聊天消息状态
  */
-@Entity(tableName = "ChatMsgLogs", primaryKeys = {"senderPk", "friendPk", "hash", "status"})
+@Entity(tableName = "ChatMsgLogs", primaryKeys = {"hash", "status"})
 public class ChatMsgLog implements Parcelable {
-    @NonNull
-    public String senderPk;                // 发送者的公钥
-    @NonNull
-    public String friendPk;                // 朋友公钥
     @NonNull
     public String hash;                    // 消息的Hash
     @NonNull
@@ -24,11 +20,8 @@ public class ChatMsgLog implements Parcelable {
     @NonNull
     public long timestamp;                 // 消息状态对应的时间
 
-    public ChatMsgLog(@NonNull String hash, @NonNull String senderPk, @NonNull String friendPk,
-                      int status, long timestamp){
+    public ChatMsgLog(@NonNull String hash, int status, long timestamp){
         this.hash = hash;
-        this.senderPk = senderPk;
-        this.friendPk = friendPk;
         this.status = status;
         this.timestamp = timestamp;
     }
@@ -36,8 +29,6 @@ public class ChatMsgLog implements Parcelable {
     @Ignore
     private ChatMsgLog(Parcel in) {
         hash = in.readString();
-        senderPk = in.readString();
-        friendPk = in.readString();
         status = in.readInt();
         timestamp = in.readLong();
     }
@@ -45,8 +36,6 @@ public class ChatMsgLog implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(hash);
-        dest.writeString(senderPk);
-        dest.writeString(friendPk);
         dest.writeInt(status);
         dest.writeLong(timestamp);
     }

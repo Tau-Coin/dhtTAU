@@ -214,7 +214,7 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
     private static final ItemCallback diffCallback = new ItemCallback() {
         @Override
         public boolean areContentsTheSame(@NonNull UserAndFriend oldItem, @NonNull UserAndFriend newItem) {
-            return oldItem.equals(newItem) && oldOrder == order && oldItem.state == newItem.state;
+            return oldItem.equals(newItem) && oldOrder == order && oldItem.status == newItem.status;
         }
 
         @Override

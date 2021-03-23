@@ -246,21 +246,21 @@ class TauListenHandler {
      * @param timeStamp 时间戳
      */
     private void saveUserInfo(String publicKey, long timeStamp) {
-        User user = userRepo.getUserByPublicKey(publicKey);
-        if(null == user){
-            user = new User(publicKey);
-            user.lastUpdateTime = timeStamp;
-            userRepo.addUser(user);
-            logger.info("SaveUserInfo to local, publicKey::{}, onlineTime::{}",
-                    publicKey, timeStamp);
-        }else{
-            if(user.lastUpdateTime < timeStamp){
-                user.lastUpdateTime = timeStamp;
-                userRepo.addUser(user);
-                logger.info("Update onlineTime, publicKey::{}, onlineTime::{}",
-                        publicKey, timeStamp);
-            }
-        }
+//        User user = userRepo.getUserByPublicKey(publicKey);
+//        if(null == user){
+//            user = new User(publicKey);
+////            user.lastUpdateTime = timeStamp;
+//            userRepo.addUser(user);
+//            logger.info("SaveUserInfo to local, publicKey::{}, onlineTime::{}",
+//                    publicKey, timeStamp);
+//        }else{
+//            if(user.lastUpdateTime < timeStamp){
+//                user.lastUpdateTime = timeStamp;
+//                userRepo.addUser(user);
+//                logger.info("Update onlineTime, publicKey::{}, onlineTime::{}",
+//                        publicKey, timeStamp);
+//            }
+//        }
     }
 
     /**

@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 import android.content.Context;
 import android.database.sqlite.SQLiteConstraintException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,6 +13,7 @@ import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
@@ -174,17 +176,24 @@ public class UserRepositoryImpl implements UserRepository{
             }
         } else {
             if (order == 0) {
-                list = db.userDao().queryUsersByStateOrderByLastSeenTime(friendPk);
+                list = db.userDao().queryUsersByStatusOrderByLastSeenTime(friendPk);
             } else {
-                list = db.userDao().queryUsersByStateOrderByLastCommTime(friendPk);
+                list = db.userDao().queryUsersByStatusOrderByLastCommTime(friendPk);
             }
         }
+        if (null == list) {
+            list = new ArrayList<>();
+        }
         if (StringUtil.isNotEmpty(friendPk)) {
-            String userPk = MainApplication.getInstance().getPublicKey();
-            UserAndFriend userAndFriend = getUserAndFriend(userPk, friendPk);
-            if (userAndFriend != null && list != null) {
+            UserAndFriend userAndFriend = getFriend(friendPk);
+            if (userAndFriend != null) {
                 list.add(0, userAndFriend);
             }
+        }
+        String mySelf = MainApplication.getInstance().getPublicKey();
+        UserAndFriend self = getFriend(mySelf);
+        if (mySelf != null) {
+            list.add(0, self);
         }
         return list;
     }
@@ -193,8 +202,17 @@ public class UserRepositoryImpl implements UserRepository{
      * 获取用户和朋友的信息
      */
     @Override
-    public UserAndFriend getUserAndFriend(String userPK, String publicKey){
-        return db.userDao().getUserAndFriend(userPK, publicKey);
+    public UserAndFriend getFriend(String publicKey){
+        return db.userDao().getFriend(publicKey);
+    }
+
+
+    /**
+     * 观察朋友信息变化
+     */
+    @Override
+    public Flowable<FriendAndUser> observeFriend(String friendPk) {
+        return db.userDao().observeFriend(friendPk);
     }
 
     @Override

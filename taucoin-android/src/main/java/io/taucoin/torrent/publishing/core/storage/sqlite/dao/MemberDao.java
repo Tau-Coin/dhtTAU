@@ -42,7 +42,9 @@ public interface MemberDao {
             " (SELECT COUNT(*) AS members FROM Members WHERE chainID =:chainID and " + WHERE_ON_CHAIN + ") a," +
             " (SELECT COUNT(*) AS online FROM Members WHERE chainID =:chainID and " + WHERE_ON_CHAIN +
             " and publicKey IN" +
-            " (SELECT publicKey FROM Users WHERE lastUpdateTime > strftime('%s', 'now','-" + Constants.ONLINE_HOURS + "') OR isCurrentUser = 1)) b";
+            " (SELECT publicKey FROM Users WHERE " +
+//            "lastUpdateTime > strftime('%s', 'now','-" + Constants.ONLINE_HOURS + "') OR " +
+            "isCurrentUser = 1)) b";
 
     String QUERY_DELETE_COMMUNITY_MEMBERS = "DELETE FROM Members where chainID =:chainID";
     /**

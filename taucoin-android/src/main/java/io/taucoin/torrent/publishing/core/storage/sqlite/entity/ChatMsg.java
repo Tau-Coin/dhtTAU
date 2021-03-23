@@ -10,14 +10,14 @@ import androidx.room.Ignore;
 /**
  * Room: 数据库存储Chat实体类
  */
-@Entity(tableName = "ChatMessages", primaryKeys = {"senderPk", "friendPk", "hash"})
+@Entity(tableName = "ChatMessages", primaryKeys = "hash")
 public class ChatMsg implements Parcelable {
     @NonNull
     public String hash;                    // 消息的Hash
     @NonNull
     public String senderPk;                // 发送者的公钥
     @NonNull
-    public String friendPk;                // 朋友公钥
+    public String receiverPk;              // 接收者的公钥
     @NonNull
     public long timestamp;                 // 时间戳
     public String content;                 // 消息内容
@@ -30,11 +30,11 @@ public class ChatMsg implements Parcelable {
     @NonNull
     public int unsent;                     // 0: 未发送， 1: 已发送
 
-    public ChatMsg(@NonNull String hash, String senderPk, String friendPk, int contentType,
+    public ChatMsg(@NonNull String hash, String senderPk, String receiverPk, int contentType,
                    long timestamp, long nonce, String logicMsgHash){
         this.hash = hash;
         this.senderPk = senderPk;
-        this.friendPk = friendPk;
+        this.receiverPk = receiverPk;
         this.contentType = contentType;
         this.timestamp = timestamp;
         this.nonce = nonce;
@@ -42,11 +42,11 @@ public class ChatMsg implements Parcelable {
     }
 
     @Ignore
-    public ChatMsg(@NonNull String hash, String senderPk, String friendPk, String content,
+    public ChatMsg(@NonNull String hash, String senderPk, String receiverPk, String content,
                    int contentType, long timestamp, long nonce, String logicMsgHash){
         this.hash = hash;
         this.senderPk = senderPk;
-        this.friendPk = friendPk;
+        this.receiverPk = receiverPk;
         this.content = content;
         this.contentType = contentType;
         this.timestamp = timestamp;
@@ -58,7 +58,7 @@ public class ChatMsg implements Parcelable {
     private ChatMsg(Parcel in) {
         hash = in.readString();
         senderPk = in.readString();
-        friendPk = in.readString();
+        receiverPk = in.readString();
         contentType = in.readInt();
         timestamp = in.readLong();
         content = in.readString();
@@ -71,7 +71,7 @@ public class ChatMsg implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(hash);
         dest.writeString(senderPk);
-        dest.writeString(friendPk);
+        dest.writeString(receiverPk);
         dest.writeInt(contentType);
         dest.writeLong(timestamp);
         dest.writeString(content);
@@ -99,12 +99,12 @@ public class ChatMsg implements Parcelable {
 
     @Override
     public int hashCode() {
-        return hash.hashCode() + senderPk.hashCode() + friendPk.hashCode();
+        return hash.hashCode() + senderPk.hashCode() + receiverPk.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
         return o instanceof ChatMsg && (o == this || (hash.equals(((ChatMsg)o).hash)
-         && senderPk.equals(((ChatMsg)o).senderPk) && friendPk.equals(((ChatMsg)o).friendPk)));
+         && senderPk.equals(((ChatMsg)o).senderPk) && receiverPk.equals(((ChatMsg)o).receiverPk)));
     }
 }

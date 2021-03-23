@@ -20,6 +20,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
 
 /**
  * FriendRepository接口实现
@@ -31,7 +32,7 @@ public class ChatRepositoryImpl implements ChatRepository{
     private AppDatabase db;
     private PublishSubject<String> dataSetChangedPublish = PublishSubject.create();
     private Disposable changeTimer;
-    private long lastChangTime;
+    private boolean isNeedRefresh = false;
     private ExecutorService sender = Executors.newSingleThreadExecutor();
 
     /**
@@ -47,19 +48,21 @@ public class ChatRepositoryImpl implements ChatRepository{
     @Override
     public void addChatMsg(ChatMsg chat) {
         db.chatDao().addChat(chat);
-        submitDataSetChanged();
+        submitDataSetChanged(chat);
     }
 
     @Override
     public void addChatMessages(ChatMsg... chats) {
         db.chatDao().addChats(chats);
-        submitDataSetChanged();
+        if (chats != null && chats.length > 0) {
+            submitDataSetChanged(chats[0]);
+        }
     }
 
     @Override
     public void updateChatMsg(ChatMsg chat) {
         db.chatDao().updateChat(chat);
-        submitDataSetChanged();
+        submitDataSetChanged(chat);
     }
 
     @Override
@@ -88,33 +91,33 @@ public class ChatRepositoryImpl implements ChatRepository{
     }
 
     @Override
-    public void submitDataSetChanged() {
-        long currentTime = System.currentTimeMillis();
-        Log.d("1111111", "currentTime::" + currentTime
-                + " lastChangTime::" + lastChangTime + " test::" + (currentTime - lastChangTime));
-        if (currentTime - lastChangTime >= minChangeTime) {
-            lastChangTime = currentTime;
-            sender.submit(() -> {
-                Log.d("1111111", "submit submit submit");
-                String dateTime = DateUtil.getDateTime();
-                dataSetChangedPublish.onNext(dateTime);
-            });
-        } else {
-            if (changeTimer != null && !changeTimer.isDisposed()) {
-                Log.d("1111111", "exist exist exist");
-                return;
-            }
-            changeTimer = Observable.timer(minChangeTime, TimeUnit.MILLISECONDS)
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(aLong -> {
-                        lastChangTime = currentTime;
-                        sender.submit(() -> {
-                            Log.d("1111111", "timer timer timer");
-                            String dateTime = DateUtil.getDateTime();
-                            dataSetChangedPublish.onNext(dateTime);
-                        });
-                    });
+    public void submitDataSetChanged(ChatMsg chat) {
+        String usersPk = chat.senderPk + chat.receiverPk;
+        submitDataSetChangedDirect(usersPk);
+    }
+
+    private void createChangeTimer(String usersPk) {
+        changeTimer = Observable.timer(minChangeTime, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io())
+                .subscribe(aLong -> {
+                    if (isNeedRefresh) {
+                        isNeedRefresh = false;
+                        changeTimer.dispose();
+                        submitDataSetChangedDirect(usersPk);
+                    }
+                });
+    }
+
+    private void submitDataSetChangedDirect(String usersPk) {
+        if (changeTimer != null && !changeTimer.isDisposed()) {
+            isNeedRefresh = true;
+            return;
         }
+        createChangeTimer(usersPk);
+        String changeResult = usersPk + DateUtil.getDateTime();
+        sender.submit(() -> {
+            dataSetChangedPublish.onNext(changeResult);
+        });
     }
 
     @Override
@@ -160,13 +163,11 @@ public class ChatRepositoryImpl implements ChatRepository{
     /**
      * 查询聊天消息日志
      * @param hash
-     * @param userPk
-     * @param friendPk
      * @param status
      * @return
      */
     @Override
-    public ChatMsgLog queryChatMsgLog(String hash, String userPk, String friendPk, int status) {
-        return db.chatDao().queryChatMsgLog(hash, userPk, friendPk, status);
+    public ChatMsgLog queryChatMsgLog(String hash, int status) {
+        return db.chatDao().queryChatMsgLog(hash, status);
     }
 }

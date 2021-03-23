@@ -13,19 +13,17 @@ import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.listener.MsgStatus;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
+import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Device;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
-import io.taucoin.torrent.publishing.core.storage.sqlite.repo.CommunityRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.DeviceRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
@@ -47,14 +45,12 @@ class MsgListenHandler extends MsgListener{
     private CompositeDisposable disposables = new CompositeDisposable();
     private ChatRepository chatRepo;
     private FriendRepository friendRepo;
-    private CommunityRepository communityRepo;
     private DeviceRepository deviceRepo;
     private UserRepository userRepo;
 
     MsgListenHandler(Context appContext) {
         chatRepo = RepositoryHelper.getChatRepository(appContext);
         friendRepo = RepositoryHelper.getFriendsRepository(appContext);
-        communityRepo = RepositoryHelper.getCommunityRepository(appContext);
         deviceRepo = RepositoryHelper.getDeviceRepository(appContext);
         userRepo = RepositoryHelper.getUserRepository(appContext);
     }
@@ -88,16 +84,6 @@ class MsgListenHandler extends MsgListener{
                         receivedTime - sentTime, chatMsg != null);
                 // 上报的Message有可能重复, 如果本地已存在不处理
                 if (null == chatMsg) {
-                    // 处理ChatName，如果为空，取显朋友显示名
-                    String communityName = UsersUtil.getDefaultName(senderPk);
-                    Community community = communityRepo.getChatByFriendPk(senderPk);
-                    if (null == community) {
-                        community = new Community(senderPk, communityName);
-                        community.type = 1;
-                        community.publicKey = receiverPk;
-                        communityRepo.addCommunity(community);
-                    }
-
                     User user = userRepo.getCurrentUser();
                     // 原始数据解密
                     byte[] cryptoKey;
@@ -109,17 +95,27 @@ class MsgListenHandler extends MsgListener{
                     }
                     message.decrypt(cryptoKey);
 
-                    String content = MsgSplitUtil.textBytesToString(message.getRawContent());
-                    ChatMsg msg = new ChatMsg(hash, senderPk, receiverPk, content, message.getType().ordinal(),
-                            sentTime, message.getNonce().longValue(), logicMsgHash);
+                    // 保存消息数据
+                    String encryptedContent = ByteUtil.toHexString(message.getEncryptedContent());
+                    ChatMsg msg = new ChatMsg(hash, senderPk, receiverPk, encryptedContent,
+                            message.getType().ordinal(), sentTime, message.getNonce().longValue(),
+                            logicMsgHash);
                     msg.unsent = 1;
                     chatRepo.addChatMsg(msg);
 
                     // 只通知朋友的消息
                     if (StringUtil.isNotEquals(senderPk, user.publicKey)) {
-                        User friend = userRepo.getUserByPublicKey(senderPk);
-                        String friendName = UsersUtil.getShowName(friend);
+                        // 标记消息未读
+                        Friend friend = friendRepo.queryFriend(user.publicKey, senderPk);
+                        if (friend != null && friend.msgUnread == 0) {
+                            friend.msgUnread = 1;
+                            friendRepo.updateFriend(friend);
+                        }
+                        // 通知栏消息通知
+                        User friendUser = userRepo.getUserByPublicKey(senderPk);
+                        String friendName = UsersUtil.getShowName(friendUser);
                         if (msg.contentType == MessageType.TEXT.ordinal()) {
+                            String content = MsgSplitUtil.textBytesToString(message.getRawContent());
                             TauNotifier.getInstance().makeChatMsgNotify(senderPk, friendName, content);
                         } else if (msg.contentType == MessageType.PICTURE.ordinal()) {
                             TauNotifier.getInstance().makeChatMsgNotify(senderPk, friendName,
@@ -150,14 +146,13 @@ class MsgListenHandler extends MsgListener{
                 String friendPkStr = ByteUtil.toHexString(friendPk);
                 logger.trace("onReadMessageRoot friendPk::{}，MessageRoot::{}",
                         friendPkStr, hash);
-                String userPk = MainApplication.getInstance().getPublicKey();
-                ChatMsgLog msgLog = chatRepo.queryChatMsgLog(hash, userPk, friendPkStr,
+                ChatMsgLog msgLog = chatRepo.queryChatMsgLog(hash,
                         ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus());
                 logger.trace("onReadMessageRoot friendPk::{}, msgRoot::{}, exist::{}",
                         friendPkStr, hash, msgLog != null);
                 if (null == msgLog) {
-                    msgLog = new ChatMsgLog(hash, userPk, friendPkStr,
-                            ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(), timestamp.longValue());
+                    msgLog = new ChatMsgLog(hash, ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(),
+                            timestamp.longValue());
                    chatRepo.addChatMsgLog(msgLog);
                 }
             } catch (SQLiteConstraintException ignore) {
@@ -188,8 +183,8 @@ class MsgListenHandler extends MsgListener{
                 long lastCommTime = timestamp.longValue();
                 if (friend != null) {
                     boolean isUpdate = false;
-                    if (friend.state != 2) {
-                        friend.state = 2;
+                    if (friend.status != FriendStatus.CONNECTED.getStatus()) {
+                        friend.status = FriendStatus.CONNECTED.getStatus();
                         isUpdate = true;
                     }
                     // 当前时间大于上次更新时间
@@ -206,39 +201,6 @@ class MsgListenHandler extends MsgListener{
                 }
             } catch (Exception e) {
                 logger.error("onDiscoveryFriend error", e);
-            }
-            emitter.onComplete();
-        }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .subscribe();
-        disposables.add(disposable);
-    }
-
-    /**
-     * 上报的消息状态变化
-     * @param friend
-     * @param root
-     * @param msgStatus
-     */
-    @Override
-    public void onMessageStatus(byte[] friend, byte[] root, MsgStatus msgStatus) {
-        Disposable disposable = Flowable.create(emitter -> {
-            try {
-                String hash = ByteUtil.toHexString(root);
-                logger.trace("onMessageStatus root::{}, msgStatus::{}",
-                        hash, msgStatus.name());
-                if (msgStatus.ordinal() == MsgStatus.PUT_SUCCESS.ordinal()) {
-                    logger.trace("onMessageStatus put success hash::{}",
-                            hash);
-                }
-                int status = msgStatus.ordinal();
-                String userPk = MainApplication.getInstance().getPublicKey();
-                String friendPk = ByteUtil.toHexString(friend);
-                ChatMsgLog msgLog = new ChatMsgLog(hash, userPk, friendPk, status,
-                        DateUtil.getMillisTime());
-                chatRepo.addChatMsgLog(msgLog);
-            } catch (Exception e) {
-                logger.error("onMessageStatus error", e);
             }
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
@@ -291,22 +253,13 @@ class MsgListenHandler extends MsgListener{
                 if (StringUtil.isNotEquals(userPk, friendPkStr)) {
                     Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
                     if (friend != null) {
-                        if (friend.state == 0) {
-                            friend.state = 1;
+                        if (friend.status == FriendStatus.DISCOVERED.getStatus()) {
+                            friend.status = FriendStatus.ADDED.getStatus();
                             friendRepo.updateFriend(friend);
                         }
                     } else {
-                        friend = new Friend(userPk, friendPkStr, 1);
+                        friend = new Friend(userPk, friendPkStr, FriendStatus.ADDED.getStatus());
                         friendRepo.addFriend(friend);
-                    }
-
-                    String communityName = UsersUtil.getDefaultName(friendPkStr);
-                    Community community = communityRepo.getChatByFriendPk(friendPkStr);
-                    if (null == community) {
-                        community = new Community(friendPkStr, communityName);
-                        community.type = 1;
-                        community.publicKey = userPk;
-                        communityRepo.addCommunity(community);
                     }
                 }
             } catch (Exception e) {

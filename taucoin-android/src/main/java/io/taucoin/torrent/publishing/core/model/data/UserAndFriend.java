@@ -16,21 +16,21 @@ public class UserAndFriend extends User {
     public List<Member> members;                  // 所在社区列表
     public long lastCommTime;
     public long lastSeenTime;
-    public int state;
+    public int status;
 
     public UserAndFriend(@NonNull String publicKey) {
         super(publicKey);
     }
 
     public boolean isDiscovered() {
-        return state == 0;
+        return status == 0;
     }
 
     public boolean isAdded() {
-        return state == 1;
+        return status == 1;
     }
 
     public boolean isConnected() {
-        return state == 2;
+        return status == 2;
     }
 }

@@ -38,11 +38,13 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
 import io.taucoin.torrent.publishing.core.model.data.DrawBean;
+import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
 import io.taucoin.torrent.publishing.core.model.data.MemberAndUser;
 import io.taucoin.torrent.publishing.core.model.data.Statistics;
 import io.taucoin.torrent.publishing.core.model.data.Result;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MemberRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
@@ -67,6 +69,7 @@ public class CommunityViewModel extends AndroidViewModel {
     private static final Logger logger = LoggerFactory.getLogger("CommunityViewModel");
     private CommunityRepository communityRepo;
     private MemberRepository memberRepo;
+    private FriendRepository friendRepo;
     private UserRepository userRepo;
     private TauDaemon daemon;
     private Disposable observeDaemonRunning;
@@ -83,6 +86,7 @@ public class CommunityViewModel extends AndroidViewModel {
         communityRepo = RepositoryHelper.getCommunityRepository(getApplication());
         memberRepo = RepositoryHelper.getMemberRepository(getApplication());
         userRepo = RepositoryHelper.getUserRepository(getApplication());
+        friendRepo = RepositoryHelper.getFriendsRepository(getApplication());
         daemon = TauDaemon.getInstance(getApplication());
     }
 
@@ -341,20 +345,12 @@ public class CommunityViewModel extends AndroidViewModel {
             Result result = new Result();
             try {
                 // 处理ChatName，如果为空，取显朋友显示名
-                User friend = userRepo.getUserByPublicKey(friendPk);
-                String communityName = UsersUtil.getShowName(friend);
-                Community community = communityRepo.getCommunityByChainID(friendPk);
-                if (null == community) {
-                    community = new Community(friendPk, communityName);
-                    community.type = 1;
-                    community.publicKey = MainApplication.getInstance().getPublicKey();
-                    communityRepo.addCommunity(community);
-                } else {
-                    community.type = 1;
-                    community.publicKey = MainApplication.getInstance().getPublicKey();
-                    communityRepo.updateCommunity(community);
+                String userPk = MainApplication.getInstance().getPublicKey();
+                Friend friend = friendRepo.queryFriend(userPk, friendPk);
+                if (friend != null) {
+                    friend.status = FriendStatus.CONNECTED.getStatus();
                 }
-                result.setMsg(community.chainID);
+                result.setMsg(friendPk);
             }catch (Exception e){
                 result.setFailMsg(e.getMessage());
             }
@@ -411,7 +407,7 @@ public class CommunityViewModel extends AndroidViewModel {
         return communityRepo.getCommunityByChainIDSingle(chainID);
     }
 
-    public Observable<FriendAndUser> observerCommunityByChainID(String chainID) {
+    public Observable<Community> observerCommunityByChainID(String chainID) {
         return communityRepo.observerCommunityByChainID(chainID);
     }
 

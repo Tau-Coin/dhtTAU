@@ -2,21 +2,20 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
-import io.reactivex.Observable;
-import io.reactivex.subjects.PublishSubject;
 import io.taucoin.repository.AppRepository;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
-import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.types.Message;
+import io.taucoin.types.MessageType;
+import io.taucoin.util.ByteUtil;
 
 /**
  * FriendRepository接口实现
@@ -43,6 +42,12 @@ public class AppRepositoryImpl implements AppRepository {
     @Override
     public Set<byte[]> getAllFriends() {
         Set<byte[]> set = new HashSet<>();
+        try {
+            List<String> friendList = db.friendDao().queryAllFriends();
+            for (String friend : friendList) {
+                set.add(ByteUtil.toByte(friend));
+            }
+        } catch (Exception ignore) { }
         return set;
     }
 
@@ -54,7 +59,30 @@ public class AppRepositoryImpl implements AppRepository {
      */
     @Override
     public List<Message> getLatestMessageList(byte[] friendPk, int num) {
-        List<Message> list = new ArrayList<>();
-        return list;
+        List<Message> msgList = new ArrayList<>();
+        try {
+            String userPkStr = MainApplication.getInstance().getPublicKey();
+            String friendPkStr = ByteUtil.toHexString(friendPk);
+            List<ChatMsg> chatMsgList = db.chatDao().getMessageList(userPkStr, friendPkStr, 0, num);
+            for (ChatMsg msg : chatMsgList) {
+                BigInteger nonce = BigInteger.valueOf(msg.nonce);
+                BigInteger timestamp = BigInteger.valueOf(msg.timestamp);
+                byte[] senderPk = ByteUtil.toByte(msg.senderPk);
+                byte[] receiverPk = ByteUtil.toByte(msg.receiverPk);
+                byte[] logicMsgHash = ByteUtil.toByte(msg.logicMsgHash);
+                byte[] content = ByteUtil.toByte(msg.content);
+                Message message;
+                if (msg.contentType == MessageType.PICTURE.ordinal()) {
+                    message = Message.createPictureMessage(timestamp, senderPk, receiverPk, logicMsgHash,
+                            nonce, content);
+                } else {
+                    message = Message.createTextMessage(timestamp, senderPk, receiverPk, logicMsgHash,
+                            nonce, content);
+                }
+                message.setEncryptedContent(content);
+                msgList.add(message);
+            }
+        } catch (Exception ignore) { }
+        return msgList;
     }
 }

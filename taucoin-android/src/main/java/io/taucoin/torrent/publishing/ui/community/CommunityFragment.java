@@ -90,7 +90,7 @@ public class CommunityFragment extends BaseFragment implements View.OnClickListe
      */
     private void initParameter() {
         if(getArguments() != null){
-            chainID = getArguments().getString(IntentExtra.CHAIN_ID);
+            chainID = getArguments().getString(IntentExtra.ID);
         }
     }
 

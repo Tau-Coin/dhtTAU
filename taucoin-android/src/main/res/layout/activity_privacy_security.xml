@@ -48,9 +48,12 @@
                 android:textAppearance="@style/TextAppearanceBody1"/>
 
 
-            <include layout="@layout/view_line"/>
+            <include
+                android:visibility="gone"
+                layout="@layout/view_line"/>
 
             <TextView
+                android:visibility="gone"
                 android:id="@+id/tv_blacklist_communities"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"

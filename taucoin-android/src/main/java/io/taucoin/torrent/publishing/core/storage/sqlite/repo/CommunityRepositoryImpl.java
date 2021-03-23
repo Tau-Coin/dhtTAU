@@ -8,8 +8,7 @@ import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
-import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
+import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
@@ -61,8 +60,8 @@ public class CommunityRepositoryImpl implements CommunityRepository{
      * @return 被观察的社区数据列表
      */
     @Override
-    public Flowable<List<CommunityAndMember>> observeCommunitiesNotInBlacklist() {
-        return db.communityDao().observeCommunitiesNotInBlacklist();
+    public Flowable<List<CommunityAndFriend>> observeCommunitiesAndFriends() {
+        return db.communityDao().observeCommunitiesAndFriends();
     }
 
     /**
@@ -100,7 +99,7 @@ public class CommunityRepositoryImpl implements CommunityRepository{
     }
 
     @Override
-    public Observable<FriendAndUser> observerCommunityByChainID(String chainID) {
+    public Observable<Community> observerCommunityByChainID(String chainID) {
         return db.communityDao().observerCommunityByChainID(chainID);
     }
 

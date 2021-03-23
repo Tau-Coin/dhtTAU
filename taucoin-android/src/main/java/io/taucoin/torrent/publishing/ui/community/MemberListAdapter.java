@@ -72,10 +72,10 @@ public class MemberListAdapter extends PagedListAdapter<MemberAndUser,
             holder.binding.leftView.setText(firstLetters);
 
             String time = "";
-            if(member.user != null && member.user.lastUpdateTime > 0){
-                time = DateUtil.formatTime(member.user.lastUpdateTime, DateUtil.pattern5);
-                time = context.getResources().getString(R.string.contacts_last_seen, time);
-            }
+//            if(member.user != null && member.user.lastUpdateTime > 0){
+//                time = DateUtil.formatTime(member.user.lastUpdateTime, DateUtil.pattern5);
+//                time = context.getResources().getString(R.string.contacts_last_seen, time);
+//            }
             holder.binding.tvTime.setText(time);
             holder.binding.tvCommunities.setVisibility(View.GONE);
             holder.binding.ivShare.setVisibility(View.VISIBLE);

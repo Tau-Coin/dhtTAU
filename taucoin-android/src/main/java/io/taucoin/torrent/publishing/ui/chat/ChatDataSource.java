@@ -23,7 +23,19 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
         this.chatRepo = chatRepo;
         this.friendPk = friendPk;
         disposable = chatRepo.observeDataSetChanged()
-                .subscribe(s -> invalidate());
+                .subscribe(result -> {
+                    // 跟当前用户有关系的才触发刷新
+                    if (StringUtil.isNotEmpty(result)
+                            && result.contains(friendPk)) {
+                        invalidate();
+                    }
+                });
+    }
+
+    void onCleared() {
+        if(disposable != null && !disposable.isDisposed()){
+            disposable.dispose();
+        }
     }
 
     @Override

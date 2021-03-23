@@ -11,20 +11,16 @@ import org.slf4j.LoggerFactory;
 import androidx.annotation.Nullable;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
-import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.core.model.Interval;
-import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
-import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.types.Message;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.CryptoUtil;
 
 /**
  * 根据文本信息的Hash，递归获取全部信息并显示
@@ -33,15 +29,12 @@ import io.taucoin.util.ByteUtil;
 public class HashTextView extends TextView {
 
     private static final Logger logger = LoggerFactory.getLogger("HashTextView");
-    private TauDaemon daemon;
-    private String textHash;
-    private byte[] senderPk;
-    private byte[] cryptoKey;
+    private String content;
+    private String senderPk;
+    private String receiverPk;
     private Disposable disposable;
     private boolean isLoadSuccess;
-    private ChatRepository chatRepo;
     private boolean reload = false;
-    private StringBuilder textBuilder;
 
     public HashTextView(Context context) {
         this(context, null);
@@ -53,150 +46,69 @@ public class HashTextView extends TextView {
 
     public HashTextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        daemon = TauDaemon.getInstance(context);
-        chatRepo = RepositoryHelper.getChatRepository(context);
     }
 
     /**
      * 显示Text
      */
-    private void showText() {
-        setText(textBuilder);
+    private void showText(String text) {
+        setText(text);
     }
 
-    public void setTextHash(String textHash, String content, String senderPk, byte[] cryptoKey) {
-        if (isLoadSuccess && textBuilder != null && textBuilder.length() > 0
-                && StringUtil.isEquals(textHash, this.textHash)) {
+    public void setTextContent(String content, String senderPk, String receiverPk) {
+        if (isLoadSuccess && StringUtil.isNotEmpty(this.content)
+                && StringUtil.isEquals(this.content, content)) {
+            logger.trace("showTextContent isLoadSuccess::{}, isEquals::{}::", isLoadSuccess,
+                    StringUtil.isEquals(this.content, content));
             return;
         }
-        if (StringUtil.isNotEmpty(content)) {
-            textBuilder = new StringBuilder();
-            textBuilder.append(content);
-            isLoadSuccess = true;
-            this.cryptoKey = cryptoKey;
-            this.textHash = textHash;
-            this.senderPk = ByteUtil.toByte(senderPk);
-            showText();
-        } else {
-            setTextHash(textHash, senderPk, cryptoKey);
-        }
-    }
-
-    public void setTextHash(String textHash, String senderPk, byte[] cryptoKey) {
-        // 如果是图片已加载，并且显示的图片不变，直接返回
-        if (StringUtil.isEmpty(textHash)) {
-            return;
-        }
-        if (isLoadSuccess && textBuilder != null && textBuilder.length() > 0
-                && StringUtil.isEquals(textHash, this.textHash)) {
-            return;
-        }
-        textBuilder = new StringBuilder();
-        this.cryptoKey = cryptoKey;
-        this.textHash = textHash;
-        this.senderPk = ByteUtil.toByte(senderPk);
-        setTextHash(ByteUtil.toByte(textHash), senderPk);
-    }
-
-    /**
-     * 设置TextHash
-     */
-    private void setTextHash(byte[] textHash, String friendPk) {
-        logger.debug("setTextHash::{}", this.textHash);
-        if (disposable != null && !disposable.isDisposed()) {
-            disposable.dispose();
-        }
-        showText();
+        this.content = content;
+        this.senderPk = senderPk;
+        this.receiverPk = receiverPk;
         isLoadSuccess = false;
-        logger.debug("setTextHash start::{}", this.textHash);
+        showText(null);
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
-        disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+        disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             try {
-                if (StringUtil.isNotEmpty(this.textHash)) {
-                    long startTime = System.currentTimeMillis();
-                    showFragmentData(textHash, friendPk, emitter);
-                    long endTime = System.currentTimeMillis();
-                    logger.debug("setTextHash textHash::{}, times::{}ms",
-                            this.textHash, endTime - startTime);
+                byte[] encryptedContent = ByteUtil.toByte(content);
+                byte[] cryptoKey;
+                long startTime = System.currentTimeMillis();
+                if (StringUtil.isEquals(senderPk, MainApplication.getInstance().getPublicKey())) {
+                    cryptoKey = Utils.keyExchange(receiverPk, MainApplication.getInstance().getSeed());
+                } else {
+                    cryptoKey = Utils.keyExchange(senderPk, MainApplication.getInstance().getSeed());
                 }
-            } catch (InterruptedException ignore) {
+                long keyExchangeTime = System.currentTimeMillis() - startTime;
+                byte[] rawContent = CryptoUtil.decrypt(encryptedContent, cryptoKey);
+                String rawContentStr = MsgSplitUtil.textBytesToString(rawContent);
+                long decryptTime = System.currentTimeMillis() - startTime;
+                String rawContentLog = rawContentStr.length() > 50 ?
+                        rawContentStr.substring(0, 10) : rawContentStr;
+                logger.trace("showTextContent decryptTime::{}, keyExchangeTime::{}, rawContent::{}",
+                        decryptTime, keyExchangeTime, rawContentLog);
+                emitter.onNext(rawContentStr);
             } catch (Exception e) {
-                logger.error("showTextFromDB error", e);
+                logger.error("showTextContent error::", e);
             }
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(result -> {
-                    if (result) {
-                        showText();
-                    }
+                    isLoadSuccess = true;
+                    showText(result);
                 });
-    }
-
-    /**
-     * 递归显示文本消息切分的片段数据
-     * @param textHash
-     * @param senderPk
-     * @param emitter
-     * @throws Exception
-     */
-    private void showFragmentData(byte[] textHash, String senderPk,
-                                  FlowableEmitter<Boolean> emitter) throws Exception {
-        if (emitter.isCancelled()) {
-            return;
-        }
-        String content = null;
-        String hash = ByteUtil.toHexString(textHash);
-        ChatMsg chatMsg = chatRepo.queryChatMsg(senderPk, hash);
-        if (chatMsg != null) {
-            content = chatMsg.content;
-        }
-        if (StringUtil.isEmpty(content)) {
-            byte[] fragmentEncoded = queryDataLoop(textHash);
-            Message msg = new Message(fragmentEncoded);
-            msg.decrypt(cryptoKey);
-            content = MsgSplitUtil.textBytesToString(msg.getRawContent());
-        }
-        if (!emitter.isCancelled()) {
-            textBuilder.append(content);
-            emitter.onNext(true);
-        }
-    }
-
-    /**
-     * 循环查询数据
-     * 如果查询不到或或者异常，1s后重试
-     * @param hash
-     * @return
-     * @throws InterruptedException
-     */
-    private byte[] queryDataLoop(byte[] hash) throws InterruptedException {
-        while (true) {
-            try {
-                byte[] data = daemon.getMsg(hash);
-                logger.debug("queryDataLoop hash::{}, empty::{}",
-                        ByteUtil.toHexString(hash), null == data);
-                if (data != null) {
-                    return data;
-                }
-            } catch (Exception e) {
-                logger.debug("queryDataLoop error::{}", ByteUtil.toHexString(hash));
-            }
-            // 如果获取不到，1秒后重试
-            Thread.sleep(Interval.INTERVAL_RETRY.getInterval());
-        }
     }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         // 加在View
-        if (reload && StringUtil.isNotEmpty(textHash)
+        if (reload && StringUtil.isNotEmpty(content)
                 && disposable != null && disposable.isDisposed()) {
-            setTextHash(textHash, ByteUtil.toHexString(senderPk), cryptoKey);
+            setTextContent(content, senderPk, receiverPk);
         }
         reload = false;
     }

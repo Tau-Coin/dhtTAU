@@ -11,9 +11,8 @@ import androidx.databinding.ViewDataBinding;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
-import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.CommunityAndMember;
+import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -21,13 +20,12 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ItemChatListBinding;
 import io.taucoin.torrent.publishing.databinding.ItemGroupListBinding;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.types.MessageType;
 
 /**
  * 主页显示的群组列表的Adapter
  */
-public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAdapter.ViewHolder> {
+public class MainListAdapter extends ListAdapter<CommunityAndFriend, MainListAdapter.ViewHolder> {
     private ClickListener listener;
 
     MainListAdapter(ClickListener listener) {
@@ -81,94 +79,95 @@ public class MainListAdapter extends ListAdapter<CommunityAndMember, MainListAda
             this.listener = listener;
         }
 
-        void bind(ViewHolder holder, CommunityAndMember community) {
-            if(null == holder || null == community){
+        void bind(ViewHolder holder, CommunityAndFriend bean) {
+            if(null == holder || null == bean){
                 return;
             }
             if (holder.binding instanceof ItemGroupListBinding) {
                 ItemGroupListBinding binding = (ItemGroupListBinding) holder.binding;
-                if(community.txTimestamp > 0){
-                    String time = DateUtil.getWeekTime(community.txTimestamp);
+                if(bean.timestamp > 0){
+                    String time = DateUtil.getWeekTime(bean.timestamp);
                     binding.tvMsgLastTime.setText(time);
                 }else{
                     binding.tvMsgLastTime.setText(null);
                 }
-                binding.tvGroupName.setText(community.communityName);
-                String firstLetters = StringUtil.getFirstLettersOfName(community.communityName);
+                String communityName = UsersUtil.getCommunityName(bean.ID);
+                binding.tvGroupName.setText(communityName);
+                String firstLetters = StringUtil.getFirstLettersOfName(communityName);
                 binding.leftView.setText(firstLetters);
-                String balance = FmtMicrometer.fmtBalance(community.balance);
-                String power = FmtMicrometer.fmtLong(community.power);
+                String balance = FmtMicrometer.fmtBalance(bean.balance);
+                String power = FmtMicrometer.fmtLong(bean.power);
                 binding.tvBalancePower.setText(context.getString(R.string.main_balance_power, balance, power));
 
-                binding.tvUserMessage.setVisibility(StringUtil.isNotEmpty(community.txMemo) ?
+                binding.tvUserMessage.setVisibility(StringUtil.isNotEmpty(bean.msg) ?
                         View.VISIBLE : View.GONE);
-                binding.tvUserMessage.setText(community.txMemo);
+                binding.tvUserMessage.setText(bean.msg);
 
-                int bgColor = Utils.getGroupColor(community.chainID);
+                int bgColor = Utils.getGroupColor(bean.ID);
                 binding.leftView.setBgColor(bgColor);
                 binding.readOnly.setBgColor(bgColor);
-                boolean isReadOnly = community.balance <= 0 && community.power <= 0;
+                boolean isReadOnly = bean.balance <= 0 && bean.power <= 0;
                 binding.readOnly.setVisibility(isReadOnly ? View.VISIBLE : View.INVISIBLE);
             } else if (holder.binding instanceof ItemChatListBinding) {
                 ItemChatListBinding binding = (ItemChatListBinding) holder.binding;
-                String friendNickName = UsersUtil.getShowName(community.friend, community.chainID);
+                String friendNickName = UsersUtil.getShowName(bean.friend, bean.ID);
                 binding.tvGroupName.setText(friendNickName);
                 String firstLetters = StringUtil.getFirstLettersOfName(friendNickName);
                 binding.leftView.setText(firstLetters);
-                int bgColor = Utils.getGroupColor(community.chainID);
+                int bgColor = Utils.getGroupColor(bean.ID);
                 binding.leftView.setBgColor(bgColor);
 
-                String msg = community.txMemo;
-                String hash = community.txMemo;
-                if (community.msgType == MessageType.PICTURE.ordinal()) {
+                String msg = bean.msg;
+                String hash = bean.msg;
+                if (bean.msgType == MessageType.PICTURE.ordinal()) {
                     binding.tvUserMessage.setText(context.getString(R.string.main_pic_messages));
-                } else if (community.msgType == MessageType.TEXT.ordinal() && StringUtil.isNotEmpty(hash)) {
-                    byte[] cryptoKey = Utils.keyExchange(community.chainID, MainApplication.getInstance().getSeed());
-                    binding.tvUserMessage.setTextHash(hash, community.publicKey, cryptoKey);
+                } else if (bean.msgType == MessageType.TEXT.ordinal() && StringUtil.isNotEmpty(hash)) {
+                    binding.tvUserMessage.setTextContent(bean.msg, bean.senderPk, bean.receiverPk);
                 } else if (StringUtil.isEmpty(msg)) {
                     binding.tvUserMessage.setText(context.getString(R.string.main_no_messages));
                 }
-                if(community.txTimestamp > 0){
-                    String time = DateUtil.getWeekTime(community.txTimestamp);
+                if (bean.timestamp > 0) {
+                    String time = DateUtil.getWeekTime(bean.timestamp);
                     binding.tvMsgLastTime.setText(time);
-                }else{
+                } else {
                     binding.tvMsgLastTime.setText(null);
                 }
                 binding.readOnly.setVisibility(View.INVISIBLE);
+                binding.msgUnread.setVisibility(bean.msgUnread > 0 ? View.VISIBLE : View.GONE);
             }
             holder.binding.getRoot().setOnClickListener(v -> {
-                if(listener != null){
-                    listener.onItemClicked(community);
+                if (listener != null) {
+                    listener.onItemClicked(bean);
                 }
             });
         }
     }
 
     public interface ClickListener {
-        void onItemClicked(Community item);
+        void onItemClicked(CommunityAndFriend item);
     }
 
-    private static final DiffUtil.ItemCallback<CommunityAndMember> diffCallback = new DiffUtil.ItemCallback<CommunityAndMember>() {
+    private static final DiffUtil.ItemCallback<CommunityAndFriend> diffCallback = new DiffUtil.ItemCallback<CommunityAndFriend>() {
         @Override
-        public boolean areContentsTheSame(@NonNull CommunityAndMember oldItem, @NonNull CommunityAndMember newItem) {
+        public boolean areContentsTheSame(@NonNull CommunityAndFriend oldItem, @NonNull CommunityAndFriend newItem) {
             boolean isSame = oldItem.equals(newItem);
             if (isSame) {
                 if (oldItem.type == 0) {
-                    isSame = oldItem.txTimestamp == newItem.txTimestamp &&
+                    isSame = oldItem.timestamp == newItem.timestamp &&
                             oldItem.balance == newItem.balance &&
                             oldItem.power == newItem.power &&
-                            StringUtil.isEquals(oldItem.txMemo, newItem.txMemo);
+                            StringUtil.isEquals(oldItem.msg, newItem.msg);
                 } else {
-                    isSame = oldItem.txTimestamp == newItem.txTimestamp &&
-                            StringUtil.isEquals(oldItem.communityName, newItem.communityName) &&
-                            StringUtil.isEquals(oldItem.txMemo, newItem.txMemo);
+                    isSame = oldItem.timestamp == newItem.timestamp &&
+                            oldItem.msgUnread == newItem.msgUnread &&
+                            StringUtil.isEquals(oldItem.msg, newItem.msg);
                 }
             }
             return isSame;
         }
 
         @Override
-        public boolean areItemsTheSame(@NonNull CommunityAndMember oldItem, @NonNull CommunityAndMember newItem) {
+        public boolean areItemsTheSame(@NonNull CommunityAndFriend oldItem, @NonNull CommunityAndFriend newItem) {
             return oldItem.equals(newItem);
         }
     };

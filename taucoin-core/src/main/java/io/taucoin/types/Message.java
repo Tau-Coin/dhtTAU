@@ -118,6 +118,10 @@ public class Message {
         return encryptedContent;
     }
 
+    public void setEncryptedContent(byte[] encryptedContent) {
+        this.encryptedContent = encryptedContent;
+    }
+
     public byte[] getRawContent() {
         return this.rawContent;
     }

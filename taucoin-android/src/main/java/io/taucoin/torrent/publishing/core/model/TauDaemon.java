@@ -25,7 +25,6 @@ import io.taucoin.chain.ChainManager;
 import io.taucoin.communication.CommunicationManager;
 import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
-import io.taucoin.db.DBException;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.repository.AppRepository;
 import io.taucoin.torrent.publishing.MainApplication;
@@ -42,7 +41,6 @@ import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
-import io.taucoin.torrent.publishing.service.WorkerManager;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.receiver.PowerReceiver;
 import io.taucoin.torrent.publishing.service.Scheduler;
@@ -239,7 +237,6 @@ public class TauDaemon {
             if (success) {
                 logger.debug("Tau start successfully");
                 isRunning = true;
-                WorkerManager.startAllWorker();
                 handleSettingsChanged(appContext.getString(R.string.pref_key_foreground_running));
                 resetReadOnly();
             } else {
@@ -316,7 +313,6 @@ public class TauDaemon {
         if (!isRunning)
             return;
         isRunning = false;
-        WorkerManager.cancelAllWork();
         disposables.clear();
         tauController.stop();
     }
@@ -701,16 +697,6 @@ public class TauDaemon {
     }
 
     /**
-     * 获取消息从levelDB
-     * @param hash
-     * @return msg
-     * @throws DBException
-     */
-    public byte[] getMsg(byte[] hash) throws DBException {
-        return  getCommunicationManager().getMessageDB().getMessageByHash(hash);
-    }
-
-    /**
      * 添加朋友
      * @param friendPk 朋友公钥
      */
@@ -724,19 +710,19 @@ public class TauDaemon {
     }
 
     /**
-     * 发送消息
+     * 更新链端消息列表
      * @param friendPK
      * @param message
      * @return
      */
-    public boolean sendMessage(byte[] friendPK, Message message) {
+    public boolean updateMessagesList(byte[] friendPK, Message message) {
         if (!isRunning) {
             return false;
         }
         boolean isPublishSuccess = getCommunicationManager().publishNewMessage(friendPK, message);
-        logger.debug("sendMessage isPublishSuccess::{}", isPublishSuccess);
+        logger.debug("updateMessagesList isPublishSuccess::{}", isPublishSuccess);
         String hash = ByteUtil.toHexString(message.getHash());
-        logger.debug("TAU messaging sendMessage friendPk::{}, hash::{}, timestamp::{}",
+        logger.debug("updateMessagesList friendPk::{}, hash::{}, timestamp::{}",
                 ByteUtil.toHexString(friendPK), hash,
                 DateUtil.formatTime(DateUtil.getTime(), DateUtil.pattern6));
         return isPublishSuccess;

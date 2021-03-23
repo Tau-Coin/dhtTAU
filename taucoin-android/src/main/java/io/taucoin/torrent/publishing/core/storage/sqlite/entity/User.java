@@ -19,7 +19,6 @@ public class User implements Parcelable {
     public String seed;                     // 用户的seed
     public String localName;                // 用户本地备注名
     public boolean isCurrentUser = false;   // 是否是当前用户
-    public long lastUpdateTime;             // 用户最后一次交易和出块时间
     public boolean isBanned = false;        // 用户是否被用户拉入黑名单
 
     public User(@NonNull String publicKey, String seed, String localName, boolean isCurrentUser){
@@ -46,7 +45,6 @@ public class User implements Parcelable {
         seed = in.readString();
         localName = in.readString();
         isCurrentUser = in.readByte() != 0;
-        lastUpdateTime = in.readLong();
         isBanned = in.readByte() != 0;
     }
 
@@ -56,7 +54,6 @@ public class User implements Parcelable {
         dest.writeString(seed);
         dest.writeString(localName);
         dest.writeByte((byte) (isCurrentUser ? 1 : 0));
-        dest.writeLong(lastUpdateTime);
         dest.writeByte((byte) (isBanned ? 1 : 0));
     }
 

@@ -18,16 +18,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.Interval;
-import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
-import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.types.Message;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.CryptoUtil;
 
 /**
  * 根据图片信息的Hash，递归获取全部信息并显示
@@ -40,7 +37,6 @@ public class HashImageView extends RoundImageView {
     private static final int widthLimit = 300;
     private static final int loadBitmapLimit = 20;
     private ChatRepository chatRepo;
-    private TauDaemon daemon;
     private String imageHash;
     private byte[] senderPk;
     private byte[] cryptoKey;
@@ -61,7 +57,6 @@ public class HashImageView extends RoundImageView {
 
     public HashImageView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        daemon = TauDaemon.getInstance(context);
         chatRepo = RepositoryHelper.getChatRepository(context);
         options = new BitmapFactory.Options();
     }
@@ -143,45 +138,16 @@ public class HashImageView extends RoundImageView {
             return;
         }
         byte[] content = null;
-        byte[] previousMsgHash = null;
         String hash = ByteUtil.toHexString(imageHash);
         ChatMsg chatMsg = chatRepo.queryChatMsg(senderPk, hash);
         if (chatMsg != null) {
             if (StringUtil.isNotEmpty(chatMsg.content)) {
-                content = MsgSplitUtil.textStringToBytes(chatMsg.content);
+                byte[] encryptedContent = ByteUtil.toByte(chatMsg.content);
+                content = CryptoUtil.decrypt(encryptedContent, cryptoKey);
             }
-        }
-        if (null == content) {
-            byte[] fragmentEncoded = queryDataLoop(imageHash);
-            Message message = new Message(fragmentEncoded);
-            message.decrypt(cryptoKey);
-            content = message.getRawContent();
-            previousMsgHash = message.getLogicMsgHash();
         }
         if (!emitter.isCancelled()) {
             refreshImageView(content, emitter);
-        }
-    }
-
-    /**
-     * 循环查询数据
-     * 如果查询不到或或者异常，1s后重试
-     * @param hash
-     * @return
-     * @throws InterruptedException
-     */
-    private byte[] queryDataLoop(byte[] hash) throws InterruptedException {
-        while (true) {
-            try {
-                byte[] data = daemon.getMsg(hash);
-                if (data != null) {
-                    return data;
-                }
-            } catch (Exception e) {
-                logger.debug("queryDataLoop error::{}", hash);
-            }
-            // 如果获取不到，1秒后重试
-            Thread.sleep(Interval.INTERVAL_RETRY.getInterval());
         }
     }
 
