@@ -36,6 +36,7 @@ import io.taucoin.dht2.DHT;
 import io.taucoin.dht2.DHTEngine;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.param.ChainParam;
+import io.taucoin.repository.AppRepository;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.HashList;
 import io.taucoin.types.Message;
@@ -69,17 +70,13 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
     private final MsgListener msgListener;
 
-    // message db
-    private final MessageDB messageDB;
+    private final AppRepository repository;
 
     // 当前我加的朋友集合（完整公钥）
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
 
     // 朋友被延迟访问的时间
     private final Map<ByteArrayWrapper, BigInteger> friendDelayTime = new ConcurrentHashMap<>();
-
-    // 多设备发现的朋友
-    private final Set<ByteArrayWrapper> friendsFromRemote = new CopyOnWriteArraySet<>();
 
     // TODO:: 1. 对方上次给我发信息的时间； 2. 对方在新时间
     // TODO:: 对方在线可能是个隐私问题，需要从YY中获得
@@ -96,7 +93,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private final Map<ByteArrayWrapper, NewMsgSignal> newMsgSignalCache = new ConcurrentHashMap<>();
 
     // 当前发现的等待通知的在线的朋友集合（完整公钥）
-    private final Map<ByteArrayWrapper, BigInteger> onlineFriendsToNotify = new ConcurrentHashMap<>();;
+//    private final Map<ByteArrayWrapper, BigInteger> onlineFriendsToNotify = new ConcurrentHashMap<>();
 
     // 得到的消息集合（hash <--> Message），ConcurrentHashMap是支持并发操作的集合
     private final Map<ByteArrayWrapper, Message> messageMap = new ConcurrentHashMap<>();
@@ -124,10 +121,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // Communication thread.
     private Thread communicationThread;
 
-    public Communication(byte[] deviceID, MessageDB messageDB, MsgListener msgListener) {
+    public Communication(byte[] deviceID, MsgListener msgListener, AppRepository repository) {
         this.deviceID = deviceID;
-        this.messageDB = messageDB;
         this.msgListener = msgListener;
+        this.repository = repository;
     }
 
 
@@ -138,31 +135,20 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private boolean init() {
         try {
             // get friends
-            Set<byte[]> friends = this.messageDB.getFriends();
-            // 我的公钥
-            byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+            Set<byte[]> friends = this.repository.getAllFriends();
 
             if (null != friends) {
                 for (byte[] friend: friends) {
                     ByteArrayWrapper key = new ByteArrayWrapper(friend);
+
+                    logger.debug("Add friend:{}", key.toString());
                     this.friends.add(key);
 
-                    logger.debug("My friend:{}", key.toString());
+                    List<Message> messageList = this.repository.getLatestMessageList(friend, ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
 
-                    // 获取我发给朋友的最近的消息
-                    FriendPair friendPair = new FriendPair(pubKey, friend);
                     LinkedList<Message> linkedList = new LinkedList<>();
-                    // 获取最新消息的编码
-                    byte[] encode = this.messageDB.getLatestMessageHashListEncode(friendPair);
-                    if (null != encode) {
-                        HashList hashList = new HashList(encode);
-                        for (byte[] hash : hashList.getHashList()) {
-                            logger.debug("Hash:{}", Hex.toHexString(hash));
-                            byte[] msgEncode = this.messageDB.getMessageByHash(hash);
-                            if (null != msgEncode) {
-                                linkedList.add(new Message(msgEncode));
-                            }
-                        }
+                    if (null != messageList) {
+                        linkedList.addAll(messageList);
                     }
 
                     this.messageListMap.put(key, linkedList);
@@ -177,29 +163,58 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
+     * 检查朋友列表是否变动，变动则进行增删调整
+     */
+    private void checkFriends() {
+        Set<byte[]> friends = this.repository.getAllFriends();
+
+        if (null != friends) {
+            // 移除已经删除的朋友
+            for (ByteArrayWrapper localFriend: this.friends) {
+                boolean found = false;
+                for (byte[] friend: friends) {
+                    if (Arrays.equals(localFriend.getData(), friend)) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    removeFriend(localFriend.getData());
+                }
+            }
+
+            // 添加新朋友
+            for (byte[] friend: friends) {
+                addNewFriend(friend);
+            }
+        }
+    }
+
+    /**
      * 保存朋友的最新消息哈希列表
      * @param friend 通信的朋友
      * @throws DBException database exception
      */
-    private void saveFriendLatestMessageHashList(ByteArrayWrapper friend) throws DBException {
-        LinkedList<Message> linkedList = this.messageListMap.get(friend);
-
-        if (null != linkedList && !linkedList.isEmpty()) {
-            List<byte[]> list = new ArrayList<>();
-            for (Message message : linkedList) {
-                try {
-                    list.add(message.getHash());
-                } catch (RuntimeException e) {
-                    logger.error(e.getMessage(), e);
-                }
-            }
-
-            HashList hashList = new HashList(list);
-            byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
-            FriendPair friendPair = new FriendPair(pubKey, friend.getData());
-            this.messageDB.saveLatestMessageHashListEncode(friendPair, hashList.getEncoded());
-        }
-    }
+//    private void saveFriendLatestMessageHashList(ByteArrayWrapper friend) throws DBException {
+//        LinkedList<Message> linkedList = this.messageListMap.get(friend);
+//
+//        if (null != linkedList && !linkedList.isEmpty()) {
+//            List<byte[]> list = new ArrayList<>();
+//            for (Message message : linkedList) {
+//                try {
+//                    list.add(message.getHash());
+//                } catch (RuntimeException e) {
+//                    logger.error(e.getMessage(), e);
+//                }
+//            }
+//
+//            HashList hashList = new HashList(list);
+//            byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
+//            FriendPair friendPair = new FriendPair(pubKey, friend.getData());
+//            this.messageDB.saveLatestMessageHashListEncode(friendPair, hashList.getEncoded());
+//        }
+//    }
 
     /**
      * 尝试往聊天消息集合里面插入新消息
@@ -284,7 +299,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
             this.messageListMap.put(friend, linkedList);
 
-            saveFriendLatestMessageHashList(friend);
+//            saveFriendLatestMessageHashList(friend);
         }
 
         return updated;
@@ -321,14 +336,14 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     /**
      * 通知UI发现的还在线的朋友
      */
-    private void notifyUIOnlineFriend() {
-        for (Map.Entry<ByteArrayWrapper, BigInteger> entry: this.onlineFriendsToNotify.entrySet()) {
-            logger.trace("Notify UI online friend:{}", entry.getKey().toString());
-            this.msgListener.onDiscoveryFriend(entry.getKey().getData(), entry.getValue());
-
-            this.onlineFriendsToNotify.remove(entry.getKey());
-        }
-    }
+//    private void notifyUIOnlineFriend() {
+//        for (Map.Entry<ByteArrayWrapper, BigInteger> entry: this.onlineFriendsToNotify.entrySet()) {
+//            logger.trace("Notify UI online friend:{}", entry.getKey().toString());
+//            this.msgListener.onDiscoveryFriend(entry.getKey().getData(), entry.getValue());
+//
+//            this.onlineFriendsToNotify.remove(entry.getKey());
+//        }
+//    }
 
     /**
      * 从朋友列表获取完整公钥
@@ -349,17 +364,17 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * 合并来自多设备的朋友列表
      * @throws DBException database exception
      */
-    private void tryToMergeFriends() throws DBException {
-        for (ByteArrayWrapper friend: this.friendsFromRemote) {
-            addNewFriend(friend.getData());
-
-            if (!this.friends.contains(friend)) {
-                this.msgListener.onNewFriendFromMultiDevice(friend.getData());
-            }
-
-            this.friendsFromRemote.remove(friend);
-        }
-    }
+//    private void tryToMergeFriends() throws DBException {
+//        for (ByteArrayWrapper friend: this.friendsFromRemote) {
+//            addNewFriend(friend.getData());
+//
+//            if (!this.friends.contains(friend)) {
+//                this.msgListener.onNewFriendFromMultiDevice(friend.getData());
+//            }
+//
+//            this.friendsFromRemote.remove(friend);
+//        }
+//    }
 
     /**
      * 处理收到的消息，包括存储数据库，更新消息列表
@@ -373,13 +388,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             ByteArrayWrapper msgHash = entry.getKey();
 
             try {
-                try {
-                    // save to db
-                    this.messageDB.putMessage(message.getHash(), message.getEncoded());
-                } catch (RuntimeException e) {
-                    logger.error(e.getMessage(), e);
-                }
-
                 // 更新最新消息列表
                 ByteArrayWrapper peer = new ByteArrayWrapper(message.getSender());
                 if (tryToUpdateLatestMessageList(peer, message)) {
@@ -907,11 +915,13 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private void mainLoop() {
         while (!Thread.currentThread().isInterrupted() || !quit) {
             try {
+                checkFriends();
+
                 // 合并来自多设备的朋友
-                tryToMergeFriends();
+//                tryToMergeFriends();
 
                 // 通知UI发现的在线朋友
-                notifyUIOnlineFriend();
+//                notifyUIOnlineFriend();
 
                 // 处理获得的消息
                 processReceivedMessages();
@@ -974,11 +984,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @param message msg
      * @throws DBException database exception
      */
-    private void saveMessageDataInDB(Message message) throws DBException {
-        if (null != message) {
-            this.messageDB.putMessage(message.getHash(), message.getEncoded());
-        }
-    }
+//    private void saveMessageDataInDB(Message message) throws DBException {
+//        if (null != message) {
+//            this.messageDB.putMessage(message.getHash(), message.getEncoded());
+//        }
+//    }
 
     /**
      * 验证消息，目前只验证编码长度
@@ -1016,7 +1026,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 ByteArrayWrapper peer = new ByteArrayWrapper(friend);
 
                 chattingWithFriend(peer);
-                saveMessageDataInDB(message);
+//                saveMessageDataInDB(message);
                 tryToUpdateLatestMessageList(peer, message);
                 publishFriendMutableData(peer);
             }
@@ -1098,23 +1108,41 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
     /**
      * 添加新朋友
-     * @param pubKey public key
-     * @throws DBException database exception
+     * @param friend public key
      */
-    public void addNewFriend(byte[] pubKey) throws DBException {
-        ByteArrayWrapper peer = new ByteArrayWrapper(pubKey);
+    public void addNewFriend(byte[] friend) {
+        ByteArrayWrapper key = new ByteArrayWrapper(friend);
         // 没有才添加
-        if (!this.friends.contains(peer)) {
+        if (!this.friends.contains(key)) {
             byte[] myPubKey = AccountManager.getInstance().getKeyPair().first;
 
             // 朋友列表排除自己
-            if (!Arrays.equals(myPubKey, pubKey)) {
-                this.friends.add(peer);
-                this.messageListMap.put(peer, new LinkedList<>());
+            if (!Arrays.equals(myPubKey, friend)) {
+                logger.debug("Add friend:{}", key.toString());
+                this.friends.add(key);
 
-                this.messageDB.addFriend(pubKey);
+                List<Message> messageList = this.repository.getLatestMessageList(friend, ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
+
+                LinkedList<Message> linkedList = new LinkedList<>();
+                if (null != messageList) {
+                    linkedList.addAll(messageList);
+                }
+
+                this.messageListMap.put(key, linkedList);
             }
         }
+    }
+
+    /**
+     * 删除朋友
+     * @param friend public key
+     */
+    public void removeFriend(byte[] friend) {
+        // TODO
+        ByteArrayWrapper key = new ByteArrayWrapper(friend);
+
+        this.friends.remove(key);
+        this.messageListMap.remove(key);
     }
 
     /**
@@ -1150,10 +1178,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
         AccountManager.getInstance().addListener(this);
 
-        if (!init()) {
-            return false;
-        }
-
         communicationThread = new Thread(this::mainLoop);
         communicationThread.start();
 
@@ -1186,7 +1210,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     public void onKeyChanged(Pair<byte[], byte[]> newKey) {
         ByteArrayWrapper key = new ByteArrayWrapper(newKey.first);
         this.friends.remove(key);
-        this.friendsFromRemote.remove(key);
 //        this.friendBannedTime.clear();
         this.lastCommunicatedTime.clear();
         this.latestNewMsgSignals.clear();
@@ -1219,7 +1242,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null == lastCommunicated || lastCommunicated.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
             logger.debug("Newer data from peer:{}", peer.toString());
             this.lastCommunicatedTime.put(peer, timestamp);
-            this.onlineFriendsToNotify.put(peer, timestamp);
+            this.msgListener.onDiscoveryFriend(peer.getData(), timestamp);
+//            this.onlineFriendsToNotify.put(peer, timestamp);
         }
         switch (mutableDataWrapper.getMutableDataType()) {
             case MESSAGE_LIST: {
@@ -1244,7 +1268,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     List<byte[]> list = friendList.getFriendList();
                     if (null != list) {
                         for (byte[] friend : list) {
-                            this.friendsFromRemote.add(new ByteArrayWrapper(friend));
+                            if (!this.friends.contains(friend)) {
+                                this.msgListener.onNewFriendFromMultiDevice(friend);
+                            }
                         }
                     }
                 }

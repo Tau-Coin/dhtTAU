@@ -21,7 +21,7 @@ public class CommunicationManager {
 
     private MsgListener listener;
 
-    private final MessageDB messageDB;
+//    private final MessageDB messageDB;
     private final AppRepository appRepository;
 
     // message db path
@@ -31,24 +31,24 @@ public class CommunicationManager {
                                 AppRepository appRepository) {
         this.listener = listener;
         this.appRepository = appRepository;
-        this.messageDB = new MessageDBImpl(dbFactory.newDatabase());
+//        this.messageDB = new MessageDBImpl(dbFactory.newDatabase());
 
-        communication = new Communication(deviceID, this.messageDB, this.listener);
+        communication = new Communication(deviceID, this.listener, appRepository);
     }
 
-    public void openMessageDB() throws Exception {
-        try {
-            this.messageDB.open(Repo.getRepoPath() + File.separator + MSG_PATH);
-        } catch (Exception e) {
-            throw e;
-        }
-    }
+//    public void openMessageDB() throws Exception {
+//        try {
+//            this.messageDB.open(Repo.getRepoPath() + File.separator + MSG_PATH);
+//        } catch (Exception e) {
+//            throw e;
+//        }
+//    }
 
     public void start() {
 
         // Open the db for repo and block
         try {
-            openMessageDB();
+//            openMessageDB();
             communication.start();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -58,7 +58,7 @@ public class CommunicationManager {
     public void stop() {
         communication.stop();
 
-        this.messageDB.close();
+//        this.messageDB.close();
     }
 
     /**
@@ -69,9 +69,9 @@ public class CommunicationManager {
     }
 
 
-    public MessageDB getMessageDB() {
-        return messageDB;
-    }
+//    public MessageDB getMessageDB() {
+//        return messageDB;
+//    }
 
     /**
      * 向朋友发布新消息
@@ -102,13 +102,13 @@ public class CommunicationManager {
      * 添加新朋友
      * @param pubKey public key
      */
-    public void addNewFriend(byte[] pubKey) {
-        try {
-            this.communication.addNewFriend(pubKey);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
+//    public void addNewFriend(byte[] pubKey) {
+//        try {
+//            this.communication.addNewFriend(pubKey);
+//        } catch (Exception e) {
+//            logger.error(e.getMessage(), e);
+//        }
+//    }
 
     /**
      * 获取当前间隔时间
