@@ -5,11 +5,11 @@ package io.taucoin.torrent.publishing.core.model.data;
  */
 public enum ChatMsgStatus {
     UNSENT(-1,
-            "Message Built"),
+            "Message built"),
     SENT(0,
-            "Message Sent"),
+            "Message sync-ing"),
     RECEIVED_CONFIRMATION(1,
-            "Message Received by Peer");
+            "Message sync confirmed");
 
     private int status;
     private String statusInfo;
