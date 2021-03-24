@@ -33,6 +33,13 @@ public interface MsgListener {
     void onMessageStatus(byte[] friend, byte[] root, MsgStatus msgStatus);
 
     /**
+     * 正在同步的消息
+     * @param message 同步的消息
+     * @param timestamp 同步时间
+     */
+    void onSyncMessage(Message message, BigInteger timestamp);
+
+    /**
      * 已读消息root通知
      * @param friend 发已读消息的朋友
      * @param hash 已读消息的hash

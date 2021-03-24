@@ -66,6 +66,19 @@ public class CompositeMsgListener implements MsgListener {
     }
 
     /**
+     * 正在同步的消息
+     *
+     * @param message 同步的消息
+     * @param timestamp 同步时间
+     */
+    @Override
+    public void onSyncMessage(Message message, BigInteger timestamp) {
+        for (MsgListener listener : listeners) {
+            listener.onSyncMessage(message, timestamp);
+        }
+    }
+
+    /**
      * 已读消息root通知
      *
      * @param friend 发已读消息的朋友
