@@ -48,6 +48,14 @@ public abstract class MsgListener implements io.taucoin.listener.MsgListener {
     public void onReadMessageRoot(byte[] friend, byte[] hash, BigInteger timestamp) {}
 
     /**
+     * 正在同步的消息
+     * @param message 同步的消息
+     * @param timestamp 同步时间
+     */
+    @Override
+    public void onSyncMessage(Message message, BigInteger timestamp) {}
+
+    /**
      * 发现朋友通知
      * @param friend 发现的添加我为好友的朋友
      * @param timestamp 朋友在线时间

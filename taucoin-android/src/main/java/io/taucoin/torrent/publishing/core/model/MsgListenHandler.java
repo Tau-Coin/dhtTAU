@@ -134,6 +134,35 @@ class MsgListenHandler extends MsgListener{
     }
 
     /**
+     * 消息正在同步
+     * @param message 当前同步的消息
+     * @param timestamp 开始同步时间
+     */
+    @Override
+    public void onSyncMessage(Message message, BigInteger timestamp) {
+        Disposable disposable = Flowable.create(emitter -> {
+            try {
+                String hash = ByteUtil.toHexString(message.getHash());
+                ChatMsgLog msgLog = chatRepo.queryChatMsgLog(hash,
+                        ChatMsgStatus.SYNCING.getStatus());
+                logger.trace("onSyncMessage MessageHash::{}, exist::{}", hash, msgLog != null);
+                if (null == msgLog) {
+                    msgLog = new ChatMsgLog(hash, ChatMsgStatus.SYNCING.getStatus(),
+                            timestamp.longValue());
+                    chatRepo.addChatMsgLog(msgLog);
+                }
+            } catch (SQLiteConstraintException ignore) {
+            } catch (Exception e) {
+                logger.error("onSyncMessage error", e);
+            }
+            emitter.onComplete();
+        }, BackpressureStrategy.LATEST)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        disposables.add(disposable);
+    }
+
+    /**
      * 消息已被接收
      * @param friendPk byte[] 朋友公钥
      * @param root 消息root
@@ -143,15 +172,11 @@ class MsgListenHandler extends MsgListener{
         Disposable disposable = Flowable.create(emitter -> {
             try {
                 String hash = ByteUtil.toHexString(root);
-                String friendPkStr = ByteUtil.toHexString(friendPk);
-                logger.trace("onReadMessageRoot friendPk::{}，MessageRoot::{}",
-                        friendPkStr, hash);
                 ChatMsgLog msgLog = chatRepo.queryChatMsgLog(hash,
-                        ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus());
-                logger.trace("onReadMessageRoot friendPk::{}, msgRoot::{}, exist::{}",
-                        friendPkStr, hash, msgLog != null);
+                        ChatMsgStatus.SYNC_CONFIRMED.getStatus());
+                logger.trace("onReadMessageRoot MessageHash::{}, exist::{}", hash, msgLog != null);
                 if (null == msgLog) {
-                    msgLog = new ChatMsgLog(hash, ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus(),
+                    msgLog = new ChatMsgLog(hash, ChatMsgStatus.SYNC_CONFIRMED.getStatus(),
                             timestamp.longValue());
                    chatRepo.addChatMsgLog(msgLog);
                 }

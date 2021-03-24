@@ -4,11 +4,11 @@ package io.taucoin.torrent.publishing.core.model.data;
  * 消息状态枚举
  */
 public enum ChatMsgStatus {
-    UNSENT(-1,
+    BUILT(-1,
             "Message built"),
-    SENT(0,
+    SYNCING(0,
             "Message sync-ing"),
-    RECEIVED_CONFIRMATION(1,
+    SYNC_CONFIRMED(1,
             "Message sync confirmed");
 
     private int status;
