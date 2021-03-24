@@ -463,8 +463,6 @@ public class TauDaemon {
                     logger.info("rescheduleTAUBySettings restartSessions");
                 } else {
                     if (isHaveAvailableData()) {
-                        // 更新UI展示链端主循环时间间隔
-                        NetworkSetting.calculateMainLoopInterval();
                         // 重置无可用流量提示对话框的参数
                         trafficTips = true;
                         noRemainingDataTimes = 0;

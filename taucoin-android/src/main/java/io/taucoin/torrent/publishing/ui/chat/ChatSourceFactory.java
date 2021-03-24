@@ -11,7 +11,6 @@ class ChatSourceFactory extends MsgDataSource.Factory<Integer, ChatMsgAndUser> {
     private ChatRepository chatRepo;
     private String friendPk;
     private byte[] friendCryptoKey;
-    private byte[] userCryptoKey;
     private ChatDataSource chatDataSource;
 
     ChatSourceFactory(@NonNull ChatRepository chatRepo) {
@@ -20,8 +19,6 @@ class ChatSourceFactory extends MsgDataSource.Factory<Integer, ChatMsgAndUser> {
 
     void setFriendPk(@NonNull String friendPk) {
         this.friendPk = friendPk;
-        String userPk = MainApplication.getInstance().getPublicKey();
-        userCryptoKey = Utils.keyExchange(userPk, MainApplication.getInstance().getSeed());
         friendCryptoKey = Utils.keyExchange(friendPk, MainApplication.getInstance().getSeed());
     }
 
@@ -34,7 +31,7 @@ class ChatSourceFactory extends MsgDataSource.Factory<Integer, ChatMsgAndUser> {
     @NonNull
     @Override
     public DataSource<Integer, ChatMsgAndUser> create() {
-        chatDataSource = new ChatDataSource(chatRepo, friendPk, userCryptoKey, friendCryptoKey);
+        chatDataSource = new ChatDataSource(chatRepo, friendPk, friendCryptoKey);
         return chatDataSource;
     }
 }

@@ -125,8 +125,13 @@ public class TauInfoProvider {
                         statistics = TrafficInfo.getTrafficUsed(context);
                     }
                     if (statistics != null) {
+                        // 更新网速采样数据
                         NetworkSetting.updateSpeedSample(statistics);
+                        // 保存流量统计
                         TrafficUtil.saveTrafficTotal(statistics);
+                        // 更新UI展示链端主循环时间间隔
+                        NetworkSetting.calculateMainLoopInterval();
+                        // 重新调度TAU工作通过设置
                         daemon.rescheduleTAUBySettings();
                         logger.debug("Network statistical result:: rxBytes::{}({}), txBytes::{}({})",
                                 Formatter.formatFileSize(context, statistics.getRxBytes()),
