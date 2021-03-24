@@ -20,14 +20,12 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
     private ChatRepository chatRepo;
     private String friendPk;
     private byte[] friendCryptoKey;
-    private byte[] userCryptoKey;
     private Disposable disposable;
 
-    ChatDataSource(@NonNull ChatRepository chatRepo, @NonNull String friendPk, byte[] userCryptoKey,
+    ChatDataSource(@NonNull ChatRepository chatRepo, @NonNull String friendPk,
                    byte[] friendCryptoKey) {
         this.chatRepo = chatRepo;
         this.friendPk = friendPk;
-        this.userCryptoKey = userCryptoKey;
         this.friendCryptoKey = friendCryptoKey;
         disposable = chatRepo.observeDataSetChanged()
                 .subscribe(result -> {
@@ -77,11 +75,7 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
         for (ChatMsgAndUser msg : messages) {
             byte[] content = ByteUtil.toByte(msg.content);
             try {
-                if (StringUtil.isEquals(friendPk, msg.senderPk)) {
-                    msg.rawContent = CryptoUtil.decrypt(content, userCryptoKey);
-                } else {
-                    msg.rawContent = CryptoUtil.decrypt(content, friendCryptoKey);
-                }
+                msg.rawContent = CryptoUtil.decrypt(content, friendCryptoKey);
                 msg.content = null;
             } catch (Exception e) {
                 logger.error("loadInitial decrypt error::", e);
