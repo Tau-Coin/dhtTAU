@@ -4,17 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import io.taucoin.types.GossipItem;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
+// TODO::考虑加密
 public class FriendList {
+    private byte[] deviceID;
     // 可以放29个朋友的公钥
     private List<byte[]> friendList = new CopyOnWriteArrayList<>();
 
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
-    public FriendList(List<byte[]> friendList) {
+    public FriendList(byte[] deviceID, List<byte[]> friendList) {
+        this.deviceID = deviceID;
         this.friendList = friendList;
 
         this.parsed = true;
@@ -22,6 +26,14 @@ public class FriendList {
 
     public FriendList(byte[] rlpEncoded) {
         this.rlpEncoded = rlpEncoded;
+    }
+
+    public byte[] getDeviceID() {
+        if (!parsed) {
+            parseRLP();
+        }
+
+        return deviceID;
     }
 
     public List<byte[]> getFriendList() {
@@ -32,6 +44,13 @@ public class FriendList {
         return friendList;
     }
 
+    private void parseFriendList(RLPList list) {
+        this.friendList = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            this.friendList.add(list.get(i).getRLPData());
+        }
+    }
+
     /**
      * parse rlp encode
      */
@@ -39,12 +58,27 @@ public class FriendList {
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
 
-        this.friendList = new ArrayList<>();
-        for (int i = 0; i < list.size(); i++) {
-            this.friendList.add(list.get(i).getRLPData());
-        }
+        this.deviceID = list.get(0).getRLPData();
+
+        parseFriendList((RLPList) list.get(1));
 
         this.parsed = true;
+    }
+
+    public byte[] getFriendListEncoded() {
+        if (null != this.friendList) {
+            byte[][] encodeList = new byte[this.friendList.size()][];
+
+            int i = 0;
+            for (byte[] friend : this.friendList) {
+                encodeList[i] = RLP.encodeElement(friend);
+                i++;
+            }
+
+            return RLP.encodeList(encodeList);
+        }
+
+        return null;
     }
 
     /**
@@ -53,17 +87,10 @@ public class FriendList {
      */
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
-            if (null != this.friendList && !this.friendList.isEmpty()) {
-                byte[][] encodeList = new byte[this.friendList.size()][];
+            byte[] deviceID = RLP.encodeElement(this.deviceID);
+            byte[] friendListEncode = getFriendListEncoded();
 
-                int i = 0;
-                for (byte[] friend : this.friendList) {
-                    encodeList[i] = RLP.encodeElement(friend);
-                    i++;
-                }
-
-                rlpEncoded = RLP.encodeList(encodeList);
-            }
+            this.rlpEncoded = RLP.encodeList(deviceID, friendListEncode);
         }
 
         return rlpEncoded;

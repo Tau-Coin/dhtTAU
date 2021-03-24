@@ -539,7 +539,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 }
 
                 if (!friends.isEmpty()) {
-                    FriendList friendList = new FriendList(friends);
+                    FriendList friendList = new FriendList(this.deviceID, friends);
                     if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
                         mutableDataWrapper = new MutableDataWrapper(MutableDataType.FRIEND_LIST,
                                 friendList.getEncoded());
@@ -1138,11 +1138,18 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                 if (Arrays.equals(pubKey, peer.getData())) {
                     FriendList friendList = new FriendList(mutableDataWrapper.getData());
-                    List<byte[]> list = friendList.getFriendList();
-                    if (null != list) {
-                        for (byte[] friend : list) {
-                            if (!this.friends.contains(friend)) {
-                                this.msgListener.onNewFriendFromMultiDevice(friend);
+
+                    // 如果来自不同的设备
+                    byte[] deviceID = friendList.getDeviceID();
+                    if (!Arrays.equals(this.deviceID, deviceID)) {
+                        this.msgListener.onNewDeviceID(deviceID);
+
+                        List<byte[]> list = friendList.getFriendList();
+                        if (null != list) {
+                            for (byte[] friend : list) {
+                                if (!this.friends.contains(friend)) {
+                                    this.msgListener.onNewFriendFromMultiDevice(friend);
+                                }
                             }
                         }
                     }
