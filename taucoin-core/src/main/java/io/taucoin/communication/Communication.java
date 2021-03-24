@@ -99,6 +99,12 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // 通过gossip机制打听到的跟朋友聊天的time <FriendPair, Timestamp>（完整公钥）
     private final Map<FriendPair, BigInteger> gossipChattingTime = new ConcurrentHashMap<>();
 
+    // 每10次get，进行一次put
+    private final int GET_THRESHOLD = 10;
+
+    // get计数器
+    private final Map<ByteArrayWrapper, Integer> counter = new ConcurrentHashMap<>();
+
     // Communication thread.
     private Thread communicationThread;
 
@@ -629,6 +635,30 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
+     * 更新访问计数器，在达到一定的访问次数时，进行一次put
+     * @param peer 更新的朋友
+     */
+    private void updateCounter(ByteArrayWrapper peer) {
+        Integer counter = this.counter.get(peer);
+        if (null != counter) {
+            counter++;
+
+            if (counter >= this.GET_THRESHOLD) {
+                // 达到10次后，进行一次put，并将计数器归零
+                this.counter.put(peer, 0);
+
+                this.publishFriends.add(peer);
+            } else {
+                // 否则，更新计数器
+                this.counter.put(peer, counter);
+            }
+        } else {
+            // 没有访问记录，则记下该次
+            this.counter.put(peer, 1);
+        }
+    }
+
+    /**
      * 挑选一个推荐的朋友访问，没有则随机挑一个访问
      */
     private void visitReferredFriends() {
@@ -672,6 +702,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         }
 
         if (null != peer) {
+            updateCounter(peer);
+
             // 如果选中的朋友没在禁止列表的禁止期，则访问它
             long currentTime = System.currentTimeMillis() / 1000;
             BigInteger timestamp = this.friendDelayTime.get(peer);
@@ -869,11 +901,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 // 处理新消息信号
                 processNewMsgSignals();
 
-                // 发布需要发布数据的peer的数据
-                publishFriendMutableData();
-
                 // 访问通过gossip机制推荐的活跃peer
                 visitReferredFriends();
+
+                // 发布需要发布数据的peer的数据
+                publishFriendMutableData();
 
                 try {
                     this.loopIntervalTime = this.repository.getMainLoopInterval();
@@ -1232,7 +1264,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null == item) {
             logger.debug("MULTIPLEX DATA from peer[{}] is empty", dataIdentifier.getExtraInfo1().toString());
             // 最后一个仍然是空，则put自己的新消息信号
-            publishFriendMutableData(dataIdentifier.getExtraInfo1());
+//            publishFriendMutableData(dataIdentifier.getExtraInfo1());
             return;
         }
 
