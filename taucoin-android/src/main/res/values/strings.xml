@@ -48,9 +48,6 @@
     <string name="main_other_transaction">Other Transaction</string>
     <string name="main_no_messages">[No messages]</string>
     <string name="main_pic_messages">[Picture]</string>
-    <string name="main_work_frequency" formatted="false"><Data><![CDATA[Response Frequency <font color="#f19322">%s</font> time per second]]></Data></string>
-    <string name="main_work_frequency_tips">The working frequency is the loop laps of the core program 1s,
-        and the program will automatically adjust according to the flow usage.</string>
 
     <!-- Strings used for main drawer content -->
     <string name="drawer_new_community">New Community</string>
@@ -144,8 +141,10 @@
     <string name="setting_storage">Storage</string>
     <string name="setting_journal_path">Journal storage path</string>
     <string name="setting_share_journal">Share All Journal</string>
-    <string name="setting_wifi_network_title">WiFi Network</string>
-    <string name="setting_metered_network_title">Metered Network</string>
+    <string name="setting_wifi_network_title">WiFi Free Network</string>
+    <string name="setting_metered_network_title">Metered Paid Network</string>
+    <string name="setting_work_frequency">Walking Frequency</string>
+    <string name="setting_work_frequency_assuming">Assuming user and TAU direct interaction less than 2 hours a day.</string>
     <string name="setting_daily_quota">Daily data limit</string>
     <string name="setting_daily_quota_unit_m">%1$dM</string>
     <string name="setting_daily_quota_unit_g">%1$dG</string>

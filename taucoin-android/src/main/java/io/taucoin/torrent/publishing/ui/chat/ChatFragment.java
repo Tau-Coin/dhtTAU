@@ -33,6 +33,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
@@ -206,8 +207,10 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(friend -> {
-                    binding.llBottomInput.setVisibility(friend.status == 2 ? View.VISIBLE : View.GONE);
-                    binding.llShareQr.setVisibility(friend.status != 2 ? View.VISIBLE : View.GONE);
+                    binding.llBottomInput.setVisibility(friend.status == FriendStatus.CONNECTED.getStatus()
+                            ? View.VISIBLE : View.GONE);
+                    binding.llShareQr.setVisibility(friend.status != FriendStatus.CONNECTED.getStatus()
+                            ? View.VISIBLE : View.GONE);
                     String friendNickName = UsersUtil.getShowName(friend.user, friend.friendPK);
                     binding.toolbarInclude.tvTitle.setText(friendNickName);
                 }));
