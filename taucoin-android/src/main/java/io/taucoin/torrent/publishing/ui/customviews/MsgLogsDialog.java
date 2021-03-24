@@ -155,12 +155,12 @@ public class MsgLogsDialog extends Dialog {
 
                 int timePointRes;
                 String time;
-                if (log.status == ChatMsgStatus.RECEIVED_CONFIRMATION.getStatus()) {
+                if (log.status == ChatMsgStatus.SYNC_CONFIRMED.getStatus()) {
                     timePointRes = R.mipmap.icon_msg_received;
                     time = DateUtil.formatTime(log.timestamp, DateUtil.pattern6);
-                } else if (log.status == ChatMsgStatus.SENT.getStatus()) {
+                } else if (log.status == ChatMsgStatus.SYNCING.getStatus()) {
                     timePointRes = R.mipmap.icon_put_success;
-                    time = DateUtil.format(log.timestamp, DateUtil.pattern9);
+                    time = DateUtil.formatTime(log.timestamp, DateUtil.pattern9);
                 }  else {
                     timePointRes = R.mipmap.icon_msg_built;
                     time = DateUtil.format(log.timestamp, DateUtil.pattern9);

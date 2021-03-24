@@ -249,7 +249,7 @@ public class ChatViewModel extends AndroidViewModel {
 
                 // 更新消息日志信息
                 ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash,
-                        ChatMsgStatus.UNSENT.getStatus(), millisTime);
+                        ChatMsgStatus.BUILT.getStatus(), millisTime);
                 chatRepo.addChatMsgLog(chatMsgLog);
             }
             // 批量添加到数据库
