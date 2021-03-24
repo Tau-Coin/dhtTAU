@@ -31,21 +31,21 @@ public interface ChatDao {
     String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE +
-            " ORDER BY msg.timestamp, msg.logicMsgHash, msg.nonce" +
+            " ORDER BY msg.timestamp, msg.logicMsgHash COLLATE UNICODE, msg.nonce" +
             " LIMIT :loadSize OFFSET :startPosition ";
 
     String QUERY_MESSAGE_LIST = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             " WHERE ((msg.senderPk = :senderPk AND msg.receiverPk = :receiverPk)" +
             " OR (msg.senderPk = :receiverPk AND msg.receiverPk = :senderPk)) " +
-            " ORDER BY msg.timestamp, msg.logicMsgHash, msg.nonce" +
+            " ORDER BY msg.timestamp, msg.logicMsgHash COLLATE UNICODE, msg.nonce" +
             " LIMIT :loadSize OFFSET :startPosition ";
 
     String QUERY_UNSENT_MESSAGES = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             " WHERE msg.senderPk in (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
             " AND msg.unsent = 0" +
-            " ORDER BY msg.timestamp, msg.logicMsgHash, msg.nonce";
+            " ORDER BY msg.timestamp, msg.logicMsgHash COLLATE UNICODE, msg.nonce";
 
     // 查询消息的所有日志
     String QUERY_CHAT_MSG_LOGS = "SELECT * FROM ChatMsgLogs WHERE hash = :hash" +
