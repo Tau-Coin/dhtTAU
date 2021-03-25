@@ -4,16 +4,13 @@ import com.frostwire.jlibtorrent.Pair;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -31,19 +28,16 @@ import io.taucoin.core.MessageList;
 import io.taucoin.core.MutableDataWrapper;
 import io.taucoin.core.NewMsgSignal;
 import io.taucoin.db.DBException;
-import io.taucoin.db.MessageDB;
 import io.taucoin.dht2.DHT;
 import io.taucoin.dht2.DHTEngine;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.param.ChainParam;
 import io.taucoin.repository.AppRepository;
 import io.taucoin.types.GossipItem;
-import io.taucoin.types.HashList;
 import io.taucoin.types.Message;
 import io.taucoin.types.MutableDataType;
 import io.taucoin.util.ByteArrayWrapper;
 import io.taucoin.util.ByteUtil;
-import io.taucoin.util.FastByteComparisons;
 import io.taucoin.util.HashUtil;
 
 import static io.taucoin.param.ChainParam.SHORT_ADDRESS_LENGTH;
@@ -681,9 +675,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                     Random random = new Random(System.currentTimeMillis());
                     // 取值范围0 ~ size，当index取size时选自己
-                    int index = random.nextInt(this.friends.size() + 1);
+                    int index = random.nextInt(this.friends.size());
 
-                    if (index != this.friends.size()) {
+//                    if (index != this.friends.size()) {
                         // (0 ~ size)
                         int i = 0;
                         while (iterator.hasNext()) {
@@ -694,9 +688,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                             i++;
                         }
-                    } else {
-                        peer = new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first);
-                    }
+//                    } else {
+//                        peer = new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first);
+//                    }
                 }
             }
         }
@@ -1060,14 +1054,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     public void addNewFriend(byte[] friend) {
         ByteArrayWrapper key = new ByteArrayWrapper(friend);
+        logger.debug("Add friend:{}", key.toString());
+        this.friends.add(key);
         // 没有才添加
-        if (!this.friends.contains(key)) {
-            byte[] myPubKey = AccountManager.getInstance().getKeyPair().first;
+//        if (!this.friends.contains(key)) {
+//            byte[] myPubKey = AccountManager.getInstance().getKeyPair().first;
 
             // 朋友列表排除自己
-            if (!Arrays.equals(myPubKey, friend)) {
-                logger.debug("Add friend:{}", key.toString());
-                this.friends.add(key);
+//            if (!Arrays.equals(myPubKey, friend)) {
+//                logger.debug("Add friend:{}", key.toString());
+//                this.friends.add(key);
 
 //                List<Message> messageList = this.repository.getLatestMessageList(friend, ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
 //
@@ -1077,8 +1073,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //                }
 //
 //                this.messageListMap.put(key, linkedList);
-            }
-        }
+//            }
+//        }
     }
 
     /**
@@ -1179,7 +1175,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         List<byte[]> list = friendList.getFriendList();
                         if (null != list) {
                             for (byte[] friend : list) {
-                                if (!this.friends.contains(friend)) {
+                                if (!this.friends.contains(new ByteArrayWrapper(friend))) {
                                     this.msgListener.onNewFriendFromMultiDevice(friend);
                                 }
                             }
@@ -1226,7 +1222,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             if (previousMatch && match) {
                                 Message message = list.get(i);
                                 if (Arrays.equals(pubKey, message.getSender())) {
-                                    logger.debug("Notify UI confirmation root:{}", Hex.toHexString(message.getHash()));
+//                                    logger.debug("Notify UI confirmation root:{}", Hex.toHexString(message.getHash()));
                                     // 若匹配，则大概率对方收到了该消息，记为confirmation root，通知UI
                                     this.msgListener.onReadMessageRoot(peer.getData(), message.getHash(), timestamp);
                                 }
@@ -1241,7 +1237,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         if (previousMatch && match) {
                             Message message = list.get(size - 1);
                             if (Arrays.equals(pubKey, message.getSender())) {
-                                logger.debug("Notify UI confirmation root:{}", Hex.toHexString(message.getHash()));
+//                                logger.debug("Notify UI confirmation root:{}", Hex.toHexString(message.getHash()));
                                 // 若匹配，则大概率对方收到了该消息，记为confirmation root，通知UI
                                 this.msgListener.onReadMessageRoot(peer.getData(), message.getHash(), timestamp);
                             }
