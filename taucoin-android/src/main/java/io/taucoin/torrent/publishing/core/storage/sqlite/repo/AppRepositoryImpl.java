@@ -68,7 +68,8 @@ public class AppRepositoryImpl implements AppRepository {
             String userPkStr = MainApplication.getInstance().getPublicKey();
             String friendPkStr = ByteUtil.toHexString(friendPk);
             List<ChatMsg> chatMsgList = db.chatDao().getMessageList(userPkStr, friendPkStr, 0, num);
-            for (ChatMsg msg : chatMsgList) {
+            for (int i = chatMsgList.size() - 1; i >= 0; i--) {
+                ChatMsg msg = chatMsgList.get(i);
                 BigInteger nonce = BigInteger.valueOf(msg.nonce);
                 BigInteger timestamp = BigInteger.valueOf(msg.timestamp);
                 byte[] senderPk = ByteUtil.toByte(msg.senderPk);
