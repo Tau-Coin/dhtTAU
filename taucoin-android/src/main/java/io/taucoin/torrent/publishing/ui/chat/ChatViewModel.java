@@ -158,7 +158,7 @@ public class ChatViewModel extends AndroidViewModel {
             emitter.onNext(true);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(Schedulers.single())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe();
         disposables.add(disposable);
@@ -183,7 +183,7 @@ public class ChatViewModel extends AndroidViewModel {
             emitter.onNext(true);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(Schedulers.single())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe();
         disposables.add(disposable);

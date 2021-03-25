@@ -114,7 +114,6 @@ public class TauDaemon {
     private void initLocalParam() {
         switchPowerReceiver();
         switchConnectionReceiver();
-        settingsRepo.wakeLock(false);
         settingsRepo.setUPnpMapped(false);
         settingsRepo.setNATPMPMapped(false);
         // 初始化主循环频率
@@ -409,7 +408,7 @@ public class TauDaemon {
             return;
         }
         logger.info("restartSessionTimer start");
-        restartSessionTimer = Observable.timer(NetworkSetting.current_speed_sample, TimeUnit.SECONDS)
+        restartSessionTimer = Observable.timer(NetworkSetting.CURRENT_SPEED_SAMPLE, TimeUnit.SECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(time -> {
@@ -495,7 +494,7 @@ public class TauDaemon {
      */
     private void showNoRemainingDataTipsDialog() {
         if (trafficTips) {
-            if (noRemainingDataTimes < NetworkSetting.current_speed_sample) {
+            if (noRemainingDataTimes < NetworkSetting.CURRENT_SPEED_SAMPLE) {
                 noRemainingDataTimes += 1;
                 return;
             }

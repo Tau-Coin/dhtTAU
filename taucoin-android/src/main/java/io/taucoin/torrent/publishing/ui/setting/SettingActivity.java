@@ -56,16 +56,17 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
         binding.toolbarInclude.toolbar.setTitle(R.string.setting_title);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        binding.switchWakeLock.setChecked(settingsRepo.wakeLock());
+        boolean isWakeLock = settingsRepo.wakeLock();
+        binding.switchWakeLock.setChecked(isWakeLock);
         handleSettingsChanged(getString(R.string.pref_key_internet_state));
         handleSettingsChanged(getString(R.string.pref_key_charging_state));
-        handleSettingsChanged(getString(R.string.pref_key_wake_lock));
         handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
         handleSettingsChanged(getString(R.string.pref_key_upnp_mapped));
         handleSettingsChanged(getString(R.string.pref_key_nat_pmp_mapped));
 
         binding.switchWakeLock.setOnCheckedChangeListener((buttonView, isChecked) ->
-                settingsRepo.wakeLock(isChecked));
+                    settingsRepo.wakeLock(isChecked)
+                );
 
         Disposable disposable = settingsRepo.observeSettingsChanged()
                 .subscribeOn(Schedulers.newThread())

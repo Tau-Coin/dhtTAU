@@ -14,14 +14,13 @@
     <string name="pref_key_wifi_limit" translatable="false">pref_key_wifi_limit</string>
     <string name="pref_key_current_speed_list" translatable="false">pref_key_current_speed_list</string>
     <string name="pref_key_metered_speed_limit" translatable="false">pref_key_metered_speed_limit</string>
-    <string name="pref_key_metered_average_speed" translatable="false">pref_key_metered_average_speed</string>
     <string name="pref_key_metered_available_data" translatable="false">pref_key_metered_available_data</string>
-    <string name="pref_key_wifi_average_speed" translatable="false">pref_key_wifi_average_speed</string>
     <string name="pref_key_wifi_speed_limit" translatable="false">pref_key_wifi_speed_limit</string>
     <string name="pref_key_wifi_available_data" translatable="false">pref_key_wifi_available_data</string>
     <string name="pref_key_is_metered_network" translatable="false">pref_key_is_metered_network</string>
     <string name="pref_key_sessions" translatable="false">pref_key_sessions</string>
     <string name="pref_key_foreground_running" translatable="false">pref_key_foreground_running</string>
+    <string name="pref_key_foreground_running_time" translatable="false">pref_key_foreground_running_time</string>
     <string name="pref_key_first_start" translatable="false">pref_key_first_start</string>
 
     <string name="pref_key_main_loop_interval_list" translatable="false">pref_key_main_loop_interval_list</string>
