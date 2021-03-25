@@ -7,7 +7,7 @@ import androidx.paging.PagedList;
  */
 public class Page {
     // 每页大小
-    public static final int PAGE_SIZE = 10;
+    public static final int PAGE_SIZE = 20;
 
     // 是否启动占位符
     public static final boolean ENABLE_PLACEHOLDERS = false;

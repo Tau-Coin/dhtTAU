@@ -21,6 +21,7 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
     private String friendPk;
     private byte[] friendCryptoKey;
     private Disposable disposable;
+    private long initialDataNum; // 初次加载数据条数
 
     ChatDataSource(@NonNull ChatRepository chatRepo, @NonNull String friendPk,
                    byte[] friendCryptoKey) {
@@ -59,6 +60,7 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
         }
         long startTime = System.currentTimeMillis();
         int numMessages = chatRepo.getNumMessages(friendPk);
+        initialDataNum = numMessages;
         long getNumTime = System.currentTimeMillis();
         logger.trace("loadInitial getNumTime::{}", getNumTime - startTime);
         int pos;
@@ -84,8 +86,8 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
         long endTime = System.currentTimeMillis();
         logger.trace("loadInitial decryptTime Time::{}", endTime - getMessagesTime);
 
-        logger.debug("loadInitial pos::{}, loadSize::{}, resultSize::{}, numMessages::{}, queryTime::{}",
-                pos, loadSize, messages.size(), numMessages, endTime - startTime);
+        logger.debug("loadInitial friendPk::{}, pos::{}, loadSize::{}, resultSize::{}, numMessages::{}, queryTime::{}",
+                friendPk, pos, loadSize, messages.size(), numMessages, endTime - startTime);
         if (messages.isEmpty()) {
             callback.onResult(messages, 0);
         } else {
@@ -105,16 +107,25 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
         int numMessages = chatRepo.getNumMessages(friendPk);
         int pos = params.startPosition;
         int loadSize = params.loadSize;
-        if (pos < numMessages) {
+        if (pos < numMessages && initialDataNum == numMessages) {
             // 开始位置小于数据总数
             messages = chatRepo.getMessages(friendPk, pos, loadSize);
         } else {
             // 否则数据为空
             messages = new ArrayList<>(0);
         }
+        for (ChatMsgAndUser msg : messages) {
+            byte[] content = ByteUtil.toByte(msg.content);
+            try {
+                msg.rawContent = CryptoUtil.decrypt(content, friendCryptoKey);
+                msg.content = null;
+            } catch (Exception e) {
+                logger.error("loadInitial decrypt error::", e);
+            }
+        }
         long endTime = System.currentTimeMillis();
-        logger.debug("loadRange pos::{}, loadSize::{}, resultSize::{}, numEntries::{}, queryTime::{}",
-                pos, loadSize, messages.size(), numMessages, endTime - startTime);
+        logger.debug("loadRange friendPk::{},  pos::{}, loadSize::{}, resultSize::{}, numEntries::{}, queryTime::{}",
+                friendPk, pos, loadSize, messages.size(), numMessages, endTime - startTime);
         callback.onResult(messages);
     }
 }
