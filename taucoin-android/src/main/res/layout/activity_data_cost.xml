@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
         <variable
@@ -51,7 +52,7 @@
                             android:layout_weight="1"
                             android:includeFontPadding="false"
                             android:text="@string/setting_work_frequency"
-                            android:textAppearance="@style/TextAppearanceBody2"/>
+                            android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <TextView
                             android:id="@+id/tv_working_frequency"
@@ -59,22 +60,27 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
                             android:layout_marginEnd="5dp"
-                            android:textAppearance="@style/TextAppearanceBody2"/>
+                            android:textAppearance="@style/TextAppearanceBody1"/>
 
                     </LinearLayout>
 
                     <include layout="@layout/view_line"/>
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
                         android:gravity="center_vertical"
                         android:includeFontPadding="false"
                         android:paddingTop="10dp"
                         android:paddingBottom="10dp"
                         android:layout_marginEnd="5dp"
+                        android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMaxTextSize="16dp"
+                        app:autoSizeMinTextSize="2dp"
+                        app:autoSizeStepGranularity="0.5dp"
                         android:text="@string/setting_work_frequency_assuming"
-                        android:textAppearance="@style/TextAppearanceBody2"/>
+                        android:textAppearance="@style/TextAppearanceBody1"/>
 
                 </LinearLayout>
 
