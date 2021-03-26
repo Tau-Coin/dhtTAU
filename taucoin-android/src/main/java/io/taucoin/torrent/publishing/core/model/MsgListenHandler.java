@@ -28,7 +28,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.DeviceRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
-import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -115,7 +114,7 @@ class MsgListenHandler extends MsgListener{
                         User friendUser = userRepo.getUserByPublicKey(senderPk);
                         String friendName = UsersUtil.getShowName(friendUser);
                         if (msg.contentType == MessageType.TEXT.ordinal()) {
-                            String content = MsgSplitUtil.textBytesToString(message.getRawContent());
+                            String content = Utils.textBytesToString(message.getRawContent());
                             TauNotifier.getInstance().makeChatMsgNotify(senderPk, friendName, content);
                         } else if (msg.contentType == MessageType.PICTURE.ordinal()) {
                             TauNotifier.getInstance().makeChatMsgNotify(senderPk, friendName,

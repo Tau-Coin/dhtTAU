@@ -15,8 +15,11 @@ import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
+import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
@@ -111,5 +114,20 @@ public class AppRepositoryImpl implements AppRepository {
      */
     public int getMainLoopInterval() {
         return FrequencyUtil.getMainLoopInterval();
+    }
+
+    /**
+     * 获取朋友的昵称
+     * 朋友的公钥
+     * @return 昵称
+     */
+    @Override
+    public byte[] getFriendNickName(byte[] friendPk) {
+        String friendPkStr = ByteUtil.toHexString(friendPk);
+        User friend = db.userDao().getUserByPublicKey(friendPkStr);
+        if (friend != null && StringUtil.isNotEmpty(friend.localName)) {
+            return Utils.textStringToBytes(friend.localName);
+        }
+        return null;
     }
 }

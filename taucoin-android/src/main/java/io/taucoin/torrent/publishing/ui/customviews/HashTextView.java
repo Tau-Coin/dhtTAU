@@ -16,7 +16,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
-import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.util.ByteUtil;
@@ -61,7 +60,7 @@ public class HashTextView extends TextView {
 
     public void setTextContent(String content, byte[] rawContent, String senderPk, String receiverPk) {
         if (rawContent != null) {
-            String rawContentStr = MsgSplitUtil.textBytesToString(rawContent);
+            String rawContentStr = Utils.textBytesToString(rawContent);
             showText(rawContentStr);
             return;
         }
@@ -91,7 +90,7 @@ public class HashTextView extends TextView {
                 }
                 long keyExchangeTime = System.currentTimeMillis() - startTime;
                 byte[] rawContentTemp = CryptoUtil.decrypt(encryptedContent, cryptoKey);
-                String rawContentStr = MsgSplitUtil.textBytesToString(rawContentTemp);
+                String rawContentStr = Utils.textBytesToString(rawContentTemp);
                 long decryptTime = System.currentTimeMillis() - startTime;
                 String rawContentLog = rawContentStr.length() > 50 ?
                         rawContentStr.substring(0, 10) : rawContentStr;

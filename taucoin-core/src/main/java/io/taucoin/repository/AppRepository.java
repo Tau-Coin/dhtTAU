@@ -35,4 +35,11 @@ public interface AppRepository {
      * @return 时间间隔
      */
     int getMainLoopInterval();
+
+    /**
+     * 获取朋友的昵称
+     * 朋友的公钥
+     * @return 昵称
+     */
+    byte[] getFriendNickName(byte[] friendPk);
 }
