@@ -203,6 +203,17 @@ public class DHTEngine {
     }
 
     /**
+     * Set the number of concurrent search request the node will send when
+     * announcing and refreshing the routing table. This parameter is called
+     * alpha in the kademlia paper.
+     *
+     * @param value
+     */
+    public void setSearchBranching(int value) {
+        session.setSearchBranching(value);
+    }
+
+    /**
      * Put immutable item asynchronously.
      *
      * @param item immutable item.

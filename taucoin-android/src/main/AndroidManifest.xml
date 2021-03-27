@@ -168,7 +168,7 @@
 
         <activity
             android:name=".ui.qrcode.ScanQRCodeActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"/>
+            android:theme="@style/CaptureTheme"/>
 
         <activity
             android:name=".ui.user.UserDetailActivity"
