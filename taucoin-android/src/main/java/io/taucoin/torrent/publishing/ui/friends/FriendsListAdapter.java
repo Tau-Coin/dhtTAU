@@ -108,7 +108,7 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
                 });
                 holder.binding.cbSelect.setChecked(selectedList.contains(user.publicKey));
             }
-            String showName = UsersUtil.getShowName(user, user.publicKey);
+            String showName = UsersUtil.getShowNameWithYourself(user, user.publicKey);
             SpanUtils showNameBuilder = new SpanUtils()
                     .append(showName);
             int stateProgress = 100;

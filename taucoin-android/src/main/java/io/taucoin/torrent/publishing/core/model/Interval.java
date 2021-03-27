@@ -5,7 +5,7 @@ package io.taucoin.torrent.publishing.core.model;
  */
 public enum Interval {
     // 单位ms
-    FORE_MAIN_LOOP_MIN(10),                     // 前台链端主循环最小时间间隔
+    FORE_MAIN_LOOP_MIN(50),                     // 前台链端主循环最小时间间隔
     FORE_MAIN_LOOP_MAX(1000),                   // 前台链端主循环最大时间间隔
 
     // 单位ms

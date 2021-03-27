@@ -26,7 +26,7 @@ public class NetworkSetting {
     public static final long CURRENT_SPEED_SAMPLE = 10;        // 单位s
     private static final float MIN_THRESHOLD = 1.0f / 4;       // 比率最小阀值
     private static final float MAX_THRESHOLD = 3.0f / 4;       // 比率最大阀值
-    private static final long FORE_DAY_TIME = 2 * 60 * 60;     // 假设前台固定全天的时间为2小时
+    public static final long FORE_DAY_TIME = 2 * 60 * 60;     // 假设前台固定全天的时间为2小时
 
     private static SettingsRepository settingsRepo;
     static {
@@ -133,9 +133,16 @@ public class NetworkSetting {
      * 更新APP前台运行时间
      */
     private static void updateForegroundRunningTime() {
+        updateForegroundRunningTime(getForegroundRunningTime() + 1);
+    }
+
+    /**
+     * 更新APP前台运行时间
+     */
+    public static void updateForegroundRunningTime(long foregroundRunningTime) {
         Context appContext = MainApplication.getInstance();
         String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_foreground_running_time);
-        settingsRepo.setLongValue(foregroundRunningTimeKey, getForegroundRunningTime() + 1);
+        settingsRepo.setLongValue(foregroundRunningTimeKey, foregroundRunningTime);
     }
 
     /**
