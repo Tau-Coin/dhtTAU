@@ -1,6 +1,5 @@
 package io.taucoin.torrent.publishing.ui.qrcode;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.view.Menu;
@@ -13,6 +12,7 @@ import com.google.gson.Gson;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
@@ -37,6 +37,7 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ActivityUtil.setRequestedOrientation(this);
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_qr_code);
         binding.setListener(this);
