@@ -10,12 +10,14 @@ import java.util.Set;
 
 import androidx.annotation.NonNull;
 import io.taucoin.repository.AppRepository;
+import io.taucoin.repository.NicknameBean;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -119,15 +121,18 @@ public class AppRepositoryImpl implements AppRepository {
     /**
      * 获取朋友的昵称
      * 朋友的公钥
-     * @return 昵称
+     * @return 昵称信息类
      */
     @Override
-    public byte[] getFriendNickName(byte[] friendPk) {
+    public NicknameBean getFriendNickName(byte[] friendPk) {
         String friendPkStr = ByteUtil.toHexString(friendPk);
         User friend = db.userDao().getUserByPublicKey(friendPkStr);
+        NicknameBean bean = new NicknameBean();
+        bean.setFriendPk(friendPk);
         if (friend != null && StringUtil.isNotEmpty(friend.localName)) {
-            return Utils.textStringToBytes(friend.localName);
+            bean.setNickname(Utils.textStringToBytes(friend.localName));
+            bean.setTimestamp(BigInteger.valueOf(DateUtil.getTime()));
         }
-        return null;
+        return bean;
     }
 }
