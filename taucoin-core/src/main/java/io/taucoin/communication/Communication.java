@@ -22,7 +22,8 @@ import io.taucoin.account.AccountManager;
 import io.taucoin.account.KeyChangedListener;
 import io.taucoin.core.Bloom;
 import io.taucoin.core.DataIdentifier;
-import io.taucoin.core.FriendList;
+import io.taucoin.core.FriendInfo;
+import io.taucoin.core.FriendInfoList;
 import io.taucoin.core.FriendPair;
 import io.taucoin.core.MessageList;
 import io.taucoin.core.MutableDataWrapper;
@@ -33,6 +34,7 @@ import io.taucoin.dht2.DHTEngine;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.param.ChainParam;
 import io.taucoin.repository.AppRepository;
+import io.taucoin.repository.NicknameBean;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.Message;
 import io.taucoin.types.MutableDataType;
@@ -526,24 +528,27 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
             if (Arrays.equals(pubKey, peer.getData()) && null != friendListBloomFilter) {
                 // 是另外一台设备
-                List<byte[]> friends = new ArrayList<>();
+                List<FriendInfo> friendInfos = new ArrayList<>();
                 for (ByteArrayWrapper friend : this.friends) {
                     Bloom bloom = Bloom.create(HashUtil.sha1hash(friend.getData()));
                     if (!friendListBloomFilter.matches(bloom)) {
                         // 发现不在对方朋友列表
-                        friends.add(friend.getData());
+                        NicknameBean nicknameBean = this.repository.getFriendNickName(friend.getData());
+                        if (null != nicknameBean) {
+                            friendInfos.add(new FriendInfo(friend.getData(), nicknameBean.getNickname(), nicknameBean.getTimestamp()));
 
-                        if (friends.size() >= ChainParam.MAX_FRIEND_LIST_SIZE) {
-                            break;
+                            if (friendInfos.size() >= ChainParam.MAX_FRIEND_LIST_SIZE) {
+                                break;
+                            }
                         }
                     }
                 }
 
-                if (!friends.isEmpty()) {
-                    FriendList friendList = new FriendList(this.deviceID, friends);
+                if (!friendInfos.isEmpty()) {
+                    FriendInfoList friendInfoList = new FriendInfoList(this.deviceID, friendInfos);
                     if (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE) {
                         mutableDataWrapper = new MutableDataWrapper(MutableDataType.FRIEND_LIST,
-                                friendList.getEncoded());
+                                friendInfoList.getEncoded());
                         dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
                     }
                 }
@@ -1197,18 +1202,19 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
                 if (Arrays.equals(pubKey, peer.getData())) {
-                    FriendList friendList = new FriendList(mutableDataWrapper.getData());
+                    FriendInfoList friendInfoList = new FriendInfoList(mutableDataWrapper.getData());
 
                     // 如果来自不同的设备
-                    byte[] deviceID = friendList.getDeviceID();
+                    byte[] deviceID = friendInfoList.getDeviceID();
                     if (!Arrays.equals(this.deviceID, deviceID)) {
                         this.msgListener.onNewDeviceID(deviceID);
 
-                        List<byte[]> list = friendList.getFriendList();
+                        List<FriendInfo> list = friendInfoList.getFriendInfoList();
                         if (null != list) {
-                            for (byte[] friend : list) {
-                                if (!this.friends.contains(new ByteArrayWrapper(friend))) {
-                                    this.msgListener.onNewFriendFromMultiDevice(friend);
+                            for (FriendInfo friendInfo : list) {
+                                if (!this.friends.contains(new ByteArrayWrapper(friendInfo.getPubKey()))) {
+                                    this.msgListener.onNewFriendFromMultiDevice(friendInfo.getPubKey(),
+                                            friendInfo.getNickname(), friendInfo.getTimestamp());
                                 }
                             }
                         }

@@ -44,11 +44,13 @@ public class CompositeMsgListener implements MsgListener {
      * 发现的新朋友通知
      *
      * @param friend 发现的新朋友
+     * @param nickname 昵称
+     * @param timestamp 起名字的时间戳
      */
     @Override
-    public void onNewFriendFromMultiDevice(byte[] friend) {
+    public void onNewFriendFromMultiDevice(byte[] friend, byte[] nickname, BigInteger timestamp) {
         for (MsgListener listener : listeners) {
-            listener.onNewFriendFromMultiDevice(friend);
+            listener.onNewFriendFromMultiDevice(friend, nickname, timestamp);
         }
     }
 

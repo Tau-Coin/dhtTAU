@@ -20,9 +20,11 @@ public interface MsgListener {
 
     /**
      * 多设备的新朋友通知
-     * @param friend 发现的新朋友
+     * @param friend 发现的新朋友公钥
+     * @param nickname 昵称
+     * @param timestamp 起名字的时间戳
      */
-    void onNewFriendFromMultiDevice(byte[] friend);
+    void onNewFriendFromMultiDevice(byte[] friend, byte[] nickname, BigInteger timestamp);
 
     /**
      * 通知消息状态

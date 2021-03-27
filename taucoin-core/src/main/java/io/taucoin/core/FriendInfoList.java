@@ -4,27 +4,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import io.taucoin.types.GossipItem;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 // TODO::考虑加密
-public class FriendList {
+public class FriendInfoList {
     private byte[] deviceID;
-    // 可以放29个朋友的公钥
-    private List<byte[]> friendList = new CopyOnWriteArrayList<>();
+    // TODO:: 可以放29个朋友的公钥? 需要重新测试
+    private List<FriendInfo> friendInfoList = new CopyOnWriteArrayList<>();
 
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
-    public FriendList(byte[] deviceID, List<byte[]> friendList) {
+    public FriendInfoList(byte[] deviceID, List<FriendInfo> friendInfoList) {
         this.deviceID = deviceID;
-        this.friendList = friendList;
+        this.friendInfoList = friendInfoList;
 
         this.parsed = true;
     }
 
-    public FriendList(byte[] rlpEncoded) {
+    public FriendInfoList(byte[] rlpEncoded) {
         this.rlpEncoded = rlpEncoded;
     }
 
@@ -36,18 +35,18 @@ public class FriendList {
         return deviceID;
     }
 
-    public List<byte[]> getFriendList() {
+    public List<FriendInfo> getFriendInfoList() {
         if (!parsed) {
             parseRLP();
         }
 
-        return friendList;
+        return friendInfoList;
     }
 
     private void parseFriendList(RLPList list) {
-        this.friendList = new ArrayList<>();
+        this.friendInfoList = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
-            this.friendList.add(list.get(i).getRLPData());
+            this.friendInfoList.add(new FriendInfo(list.get(i).getRLPData()));
         }
     }
 
@@ -66,12 +65,12 @@ public class FriendList {
     }
 
     public byte[] getFriendListEncoded() {
-        if (null != this.friendList) {
-            byte[][] encodeList = new byte[this.friendList.size()][];
+        if (null != this.friendInfoList) {
+            byte[][] encodeList = new byte[this.friendInfoList.size()][];
 
             int i = 0;
-            for (byte[] friend : this.friendList) {
-                encodeList[i] = RLP.encodeElement(friend);
+            for (FriendInfo friendInfo : this.friendInfoList) {
+                encodeList[i] = RLP.encodeElement(friendInfo.getEncoded());
                 i++;
             }
 

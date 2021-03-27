@@ -75,7 +75,7 @@ public class ChainParam {
     // bloom filter在选3个点，256*8的位长，放200个元素的情况下，假阳性概率为0.01637
     public static final int BLOOM_FILTER_MESSAGE_SIZE = 200;
 
-    public static final int MAX_FRIEND_LIST_SIZE = 29;
+    public static final int MAX_FRIEND_LIST_SIZE = 16;
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
