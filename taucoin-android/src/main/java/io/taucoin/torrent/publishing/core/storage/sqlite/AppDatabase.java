@@ -1,11 +1,15 @@
 package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import android.content.Context;
+import android.util.Log;
+
+import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.ChatDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.CommunityDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.DeviceDao;
@@ -80,6 +84,25 @@ public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase buildDatabase(Context appContext) {
         return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME)
                 .addMigrations(DatabaseMigration.getMigrations(appContext))
+                .addCallback(new Callback() {
+                    @Override
+                    public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                        super.onCreate(db);
+                    }
+
+                    @Override
+                    public void onOpen(@NonNull SupportSQLiteDatabase db) {
+                        super.onOpen(db);
+                        Log.d("buildDatabase", "enableWriteAheadLogging::" + db.enableWriteAheadLogging());
+                        Log.d("buildDatabase", "isWriteAheadLoggingEnabled::" + db.isWriteAheadLoggingEnabled());
+                        Log.d("buildDatabase", "isDatabaseIntegrityOk::" + db.isDatabaseIntegrityOk());
+                    }
+
+                    @Override
+                    public void onDestructiveMigration(@NonNull SupportSQLiteDatabase db) {
+                        super.onDestructiveMigration(db);
+                    }
+                })
                 .build();
     }
 }
