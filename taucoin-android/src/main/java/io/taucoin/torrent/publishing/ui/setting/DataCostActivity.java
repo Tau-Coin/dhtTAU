@@ -169,7 +169,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             if (foregroundRunningTime < NetworkSetting.FORE_DAY_TIME) {
                 modelRes = R.string.setting_work_frequency_in_2_hours;
             } else {
-                modelRes = R.string.setting_work_frequency_in_2_hours;
+                modelRes = R.string.setting_work_frequency_not_in_2_hours;
             }
             binding.tvWorkFrequencyModel.setText(getString(modelRes));
         }
