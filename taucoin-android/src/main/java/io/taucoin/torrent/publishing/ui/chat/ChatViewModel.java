@@ -36,6 +36,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.HashUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -123,7 +124,7 @@ public class ChatViewModel extends AndroidViewModel {
      * 异步给朋友发信息任务
      * @param friendPk 朋友公钥
      */
-    void sendBatchDebugMessage(String friendPk, int time) {
+    void sendBatchDebugMessage(String friendPk, int time, int msgSize) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             InputStream inputStream = null;
             try {
@@ -135,16 +136,15 @@ public class ChatViewModel extends AndroidViewModel {
                         inputStream = getApplication().getAssets().open("tianlongbabu1-4.txt");
                     } else {
                         int availableSize = inputStream.available();
-                        if (availableSize < 10 * 1024) {
+                        if (availableSize < msgSize) {
                             inputStream = getApplication().getAssets().open("tianlongbabu1-4.txt");
                         }
                     }
-                    byte[] bytes = new byte[10 * 1024];
+                    byte[] bytes = new byte[msgSize];
                     int read = inputStream.read(bytes);
                     if (read > 0) {
                         String msg = (i + 1) + "、" + new String(bytes, StandardCharsets.UTF_8);
                         sendMessage(friendPk, msg, MessageType.TEXT.ordinal());
-                        Thread.sleep(1000);
                     }
                 }
                 if (inputStream != null) {
@@ -164,19 +164,32 @@ public class ChatViewModel extends AndroidViewModel {
         disposables.add(disposable);
     }
 
+    private char getMsgPosition() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        if (testChatPos >= chars.length()) {
+            testChatPos = 0;
+        }
+        char randomChar = chars.charAt(testChatPos);
+        testChatPos += 1;
+        return randomChar;
+    }
+
     /**
      * 批量测试入口
      * 异步给朋友发数字信息任务
      * @param friendPk 朋友公钥
      */
+    private int testChatPos = 0;
     void sendBatchDebugDigitMessage(String friendPk, int time) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             try {
+                char randomChar = getMsgPosition();
                 for (int i = 0; i < time; i++) {
                     if (emitter.isCancelled()) {
                         break;
                     }
-                    syncSendMessageTask(friendPk, String.valueOf(i + 1), MessageType.TEXT.ordinal());
+                    String msg = randomChar + FmtMicrometer.fmtTestData( i + 1);
+                    syncSendMessageTask(friendPk, msg, MessageType.TEXT.ordinal());
                 }
             } catch (Exception ignore) {
             }
