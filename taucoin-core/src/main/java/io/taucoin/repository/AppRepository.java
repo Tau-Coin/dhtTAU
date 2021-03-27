@@ -39,7 +39,7 @@ public interface AppRepository {
     /**
      * 获取朋友的昵称
      * 朋友的公钥
-     * @return 昵称
+     * @return 昵称信息类
      */
-    byte[] getFriendNickName(byte[] friendPk);
+    NicknameBean getFriendNickName(byte[] friendPk);
 }
