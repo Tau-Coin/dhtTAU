@@ -256,13 +256,14 @@ class MsgListenHandler extends MsgListener{
                 .subscribe();
         disposables.add(disposable);
     }
-
     /**
-     * 发现的新朋友通知，多台设备同Key之间同步朋友
-     * @param friendPk 发现的新朋友
+     * 多设备的新朋友通知
+     * @param friendPk 发现的新朋友公钥
+     * @param nickname 昵称
+     * @param timestamp 起名字的时间戳
      */
     @Override
-    public void onNewFriendFromMultiDevice(byte[] friendPk) {
+    public void onNewFriendFromMultiDevice(byte[] friendPk, byte[] nickname, BigInteger timestamp) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
                 String userPk = MainApplication.getInstance().getPublicKey();

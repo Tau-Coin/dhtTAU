@@ -23,11 +23,13 @@ public abstract class MsgListener implements io.taucoin.listener.MsgListener {
     public void onNewDeviceID(byte[] deviceID) {}
 
     /**
-     * 发现的新朋友通知
-     * @param friend 发现的新朋友
+     * 多设备的新朋友通知
+     * @param friend 发现的新朋友公钥
+     * @param nickname 昵称
+     * @param timestamp 起名字的时间戳
      */
     @Override
-    public void onNewFriendFromMultiDevice(byte[] friend) {}
+    public void onNewFriendFromMultiDevice(byte[] friend, byte[] nickname, BigInteger timestamp) {}
 
     /**
      * 通知消息状态
