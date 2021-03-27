@@ -54,6 +54,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
         handleSettingsChanged(getString(R.string.pref_key_current_speed_list));
         handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
+        handleSettingsChanged(getString(R.string.pref_key_foreground_running_time));
 
         // 先更新，再显示
         NetworkSetting.updateMeteredSpeedLimit();
@@ -162,6 +163,15 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval_list))) {
             double frequency = FrequencyUtil.getMainLoopFrequency();
             binding.tvWorkingFrequency.setText(FmtMicrometer.formatTwoDecimal(frequency));
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_foreground_running_time))) {
+            long foregroundRunningTime = settingsRepo.getLongValue(key);
+            int modelRes;
+            if (foregroundRunningTime < NetworkSetting.FORE_DAY_TIME) {
+                modelRes = R.string.setting_work_frequency_in_2_hours;
+            } else {
+                modelRes = R.string.setting_work_frequency_in_2_hours;
+            }
+            binding.tvWorkFrequencyModel.setText(getString(modelRes));
         }
     }
 

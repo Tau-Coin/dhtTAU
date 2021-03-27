@@ -24,6 +24,7 @@
     <string name="exit">Exit</string>
     <string name="common_set">Set</string>
     <string name="common_default">Default</string>
+    <string name="common_minimum">Minimum</string>
     <string name="common_share">Share</string>
     <string name="common_later">Later</string>
     <string name="common_debug100">100</string>
@@ -40,7 +41,7 @@
     <string name="main_balance_power">Balance %1$s, Power %2$s</string>
     <string name="main_read_only">READ\nONLY</string>
     <string name="main_open_link">Open the link?</string>
-    <string name="main_daily_data_limit_prompt">The default daily data limit has been set for you, or you can set it yourself.</string>
+    <string name="main_daily_data_limit_prompt">Daily Data Limits.</string>
 
     <string name="main_publish_video">Publish Video</string>
     <string name="main_new_community">New Community</string>
@@ -144,7 +145,8 @@
     <string name="setting_wifi_network_title">WiFi - likely free internet</string>
     <string name="setting_metered_network_title">Metered - likely paid internet</string>
     <string name="setting_work_frequency">Walking Frequency</string>
-    <string name="setting_work_frequency_assuming">Target User TAU screen time &#060; 2 hours per day</string>
+    <string name="setting_work_frequency_in_2_hours">Target TAU screen time &#060; 2 hours per day - currently in the high speed zone according to data setting.</string>
+    <string name="setting_work_frequency_not_in_2_hours">Target TAU screen time &#060; 2 hours per day - currently out of the high speed zone according to data setting.</string>
     <string name="setting_daily_quota">Daily data limit</string>
     <string name="setting_daily_quota_unit_m">%1$dM</string>
     <string name="setting_daily_quota_unit_g">%1$dG</string>
@@ -263,6 +265,7 @@
     <!-- Strings used for connected peers -->
     <string name="contacts_exchange_qr">Exchange QR code to add friends</string>
     <string name="contacts_have_added">I have added you as a friend.</string>
+    <string name="contacts_yourself">&#160;-&#160;yourself</string>
     <string name="contacts_discovered">Discovered</string>
     <string name="contacts_added">Added</string>
     <string name="contacts_share_qr_code">Share QR Code to</string>

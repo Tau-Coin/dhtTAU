@@ -110,7 +110,7 @@ public class MainListAdapter extends ListAdapter<CommunityAndFriend, MainListAda
                 binding.readOnly.setVisibility(isReadOnly ? View.VISIBLE : View.INVISIBLE);
             } else if (holder.binding instanceof ItemChatListBinding) {
                 ItemChatListBinding binding = (ItemChatListBinding) holder.binding;
-                String friendNickName = UsersUtil.getShowName(bean.friend, bean.ID);
+                String friendNickName = UsersUtil.getShowNameWithYourself(bean.friend, bean.ID);
                 binding.tvGroupName.setText(friendNickName);
                 String firstLetters = StringUtil.getFirstLettersOfName(friendNickName);
                 binding.leftView.setText(firstLetters);
@@ -160,7 +160,9 @@ public class MainListAdapter extends ListAdapter<CommunityAndFriend, MainListAda
                 } else {
                     isSame = oldItem.timestamp == newItem.timestamp &&
                             oldItem.msgUnread == newItem.msgUnread &&
-                            StringUtil.isEquals(oldItem.msg, newItem.msg);
+                            StringUtil.isEquals(oldItem.msg, newItem.msg) &&
+                            StringUtil.isEquals(oldItem.friend != null ? oldItem.friend.localName : null,
+                                    newItem.friend != null ? newItem.friend.localName : null);
                 }
             }
             return isSame;

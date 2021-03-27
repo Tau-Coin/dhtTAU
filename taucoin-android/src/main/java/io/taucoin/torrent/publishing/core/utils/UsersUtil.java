@@ -2,6 +2,8 @@ package io.taucoin.torrent.publishing.core.utils;
 
 import androidx.annotation.NonNull;
 import io.taucoin.param.ChainParam;
+import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
 /**
@@ -60,6 +62,14 @@ public class UsersUtil {
      */
     public static String getShowName(@NonNull User user) {
         return getShowName(user.publicKey, user.localName);
+    }
+
+    public static String getShowNameWithYourself(User user, String publicKey) {
+        String showName = getShowName(user, publicKey);
+        if (StringUtil.isEquals(publicKey, MainApplication.getInstance().getPublicKey())) {
+            showName += MainApplication.getInstance().getString(R.string.contacts_yourself);
+        }
+        return showName;
     }
 
     /**

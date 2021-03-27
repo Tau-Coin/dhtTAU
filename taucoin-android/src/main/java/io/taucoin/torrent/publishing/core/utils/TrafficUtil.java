@@ -98,6 +98,8 @@ public class TrafficUtil {
             settingsRepo.setLongValue(TRAFFIC_VALUE + TRAFFIC_UP, 0);
             settingsRepo.setLongValue(TRAFFIC_VALUE + TRAFFIC_METERED, 0);
             resetTrafficTotalOld();
+            // 同时重置前台运行时间
+            NetworkSetting.updateForegroundRunningTime(0);
         }
     }
 

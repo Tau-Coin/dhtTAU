@@ -703,7 +703,7 @@ public class UserViewModel extends AndroidViewModel {
                     dialog.dismiss();
                     ActivityUtil.startActivity(activity, DataCostActivity.class);
                 })
-                .setNegativeButton(R.string.common_default, (dialog, which) -> dialog.dismiss())
+                .setNegativeButton(R.string.common_minimum, (dialog, which) -> dialog.dismiss())
                 .setCanceledOnTouchOutside(false)
                 .create();
         dailyDataLimitDialog.show();
