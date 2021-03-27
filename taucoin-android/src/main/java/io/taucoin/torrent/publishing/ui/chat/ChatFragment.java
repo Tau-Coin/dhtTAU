@@ -32,6 +32,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.BuildConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
@@ -147,10 +148,14 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 MediaUtil.startOpenGallery(activity);
             } else if (R.string.chat_take_picture == title) {
                 MediaUtil.startOpenCamera(activity);
-            } else if (R.string.common_debug100 == title) {
+            } else if (R.string.common_debug_digit1 == title) {
                 chatViewModel.sendBatchDebugDigitMessage(friendPK, 100);
-            } else if (R.string.common_debug10000 == title) {
+            } else if (R.string.common_debug_digit2 == title) {
                 chatViewModel.sendBatchDebugDigitMessage(friendPK, 1000);
+            } else if (R.string.common_debug_str1== title) {
+                chatViewModel.sendBatchDebugMessage(friendPK, 100, 10 * 1024);
+            } else if (R.string.common_debug_str2 == title) {
+                chatViewModel.sendBatchDebugMessage(friendPK, 1000, 1024);
             }
         });
 
@@ -255,7 +260,9 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(aLong -> {
-                    binding.chatAdd.setVisibility(isShow ? View.VISIBLE : View.GONE);
+                    if (BuildConfig.DEBUG) {
+                        binding.chatAdd.setVisibility(isShow ? View.VISIBLE : View.GONE);
+                    }
                     handler.post(handleUpdateAdapter);
                 }));
     }

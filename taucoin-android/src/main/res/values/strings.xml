@@ -27,8 +27,10 @@
     <string name="common_minimum">Minimum</string>
     <string name="common_share">Share</string>
     <string name="common_later">Later</string>
-    <string name="common_debug100">100</string>
-    <string name="common_debug10000">1000</string>
+    <string name="common_debug_digit1">1-100</string>
+    <string name="common_debug_digit2">1-1000</string>
+    <string name="common_debug_str1">100*10KB</string>
+    <string name="common_debug_str2">1000*1KB</string>
 
     <string name="open_navigation_drawer">Open navigation drawer</string>
     <string name="close_navigation_drawer">Close navigation drawer</string>

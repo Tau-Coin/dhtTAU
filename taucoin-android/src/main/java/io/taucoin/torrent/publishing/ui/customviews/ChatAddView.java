@@ -61,10 +61,10 @@ public class ChatAddView extends LinearLayout {
         ItemAdapter() {
             super(diffCallback);
             if (BuildConfig.DEBUG) {
-                icons = new int[]{R.mipmap.icon_album_black, R.mipmap.icon_take_picture,
+                icons = new int[]{R.mipmap.icon_debug, R.mipmap.icon_debug,
                         R.mipmap.icon_debug, R.mipmap.icon_debug};
-                titles =  new int[]{R.string.chat_album, R.string.chat_take_picture,
-                        R.string.common_debug100, R.string.common_debug10000};
+                titles =  new int[]{R.string.common_debug_digit1, R.string.common_debug_digit2,
+                        R.string.common_debug_str1, R.string.common_debug_str2};
             }
         }
 

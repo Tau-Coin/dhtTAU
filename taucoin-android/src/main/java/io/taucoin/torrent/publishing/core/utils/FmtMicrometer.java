@@ -199,4 +199,12 @@ public class FmtMicrometer {
             return new BigInteger("0").toString();
         }
     }
+
+    public static String fmtTestData(long balance) {
+        DecimalFormat df = getDecimalFormatInstance();
+        df.applyPattern("00000");
+        df.setRoundingMode(RoundingMode.FLOOR);
+        BigDecimal bigDecimal = new BigDecimal(balance);
+        return df.format(bigDecimal);
+    }
 }
