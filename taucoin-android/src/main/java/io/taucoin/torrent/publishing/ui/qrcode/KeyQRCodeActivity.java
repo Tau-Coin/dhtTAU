@@ -12,6 +12,7 @@ import android.view.ViewTreeObserver;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.DrawablesUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
@@ -38,6 +39,7 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ActivityUtil.setRequestedOrientation(this);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_key_qr_code);
         binding.setListener(this);
         binding.qrCode.setListener(this);
