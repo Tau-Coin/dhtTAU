@@ -61,7 +61,7 @@ public class UsersUtil {
      * @return 显示名字
      */
     public static String getShowName(@NonNull User user) {
-        return getShowName(user.publicKey, user.localName);
+        return getShowName(user.publicKey, user.nickname);
     }
 
     public static String getShowNameWithYourself(User user, String publicKey) {
@@ -81,7 +81,7 @@ public class UsersUtil {
         if(null == user){
             return UsersUtil.getDefaultName(publicKey);
         }else{
-            return getShowName(user.publicKey, user.localName);
+            return getShowName(user.publicKey, user.nickname);
         }
     }
 
@@ -102,8 +102,8 @@ public class UsersUtil {
      * @return 显示名字
      */
     public static String getCurrentUserName(@NonNull User user) {
-        if(StringUtil.isNotEmpty(user.localName)){
-            return user.localName;
+        if(StringUtil.isNotEmpty(user.nickname)){
+            return user.nickname;
         }else{
             return UsersUtil.getDefaultName(user.publicKey);
         }

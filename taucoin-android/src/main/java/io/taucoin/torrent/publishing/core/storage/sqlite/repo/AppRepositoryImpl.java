@@ -17,9 +17,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
-import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.types.Message;
@@ -80,14 +78,14 @@ public class AppRepositoryImpl implements AppRepository {
                 byte[] senderPk = ByteUtil.toByte(msg.senderPk);
                 byte[] receiverPk = ByteUtil.toByte(msg.receiverPk);
                 byte[] logicMsgHash = ByteUtil.toByte(msg.logicMsgHash);
-                byte[] content = ByteUtil.toByte(msg.content);
+                byte[] content = msg.content;
                 Message message;
                 if (msg.contentType == MessageType.PICTURE.ordinal()) {
                     message = Message.createPictureMessage(timestamp, senderPk, receiverPk, logicMsgHash,
-                            nonce, content);
+                            nonce, null);
                 } else {
                     message = Message.createTextMessage(timestamp, senderPk, receiverPk, logicMsgHash,
-                            nonce, content);
+                            nonce, null);
                 }
                 message.setEncryptedContent(content);
                 msgList.add(message);
@@ -129,9 +127,9 @@ public class AppRepositoryImpl implements AppRepository {
         User friend = db.userDao().getUserByPublicKey(friendPkStr);
         NicknameBean bean = new NicknameBean();
         bean.setFriendPk(friendPk);
-        if (friend != null && StringUtil.isNotEmpty(friend.localName)) {
-            bean.setNickname(Utils.textStringToBytes(friend.localName));
-            bean.setTimestamp(BigInteger.valueOf(DateUtil.getTime()));
+        if (friend != null && StringUtil.isNotEmpty(friend.nickname)) {
+            bean.setNickname(Utils.textStringToBytes(friend.nickname));
+            bean.setTimestamp(BigInteger.valueOf(friend.updateTime));
         }
         return bean;
     }

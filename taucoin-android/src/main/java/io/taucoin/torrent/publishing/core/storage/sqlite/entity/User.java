@@ -17,21 +17,23 @@ public class User implements Parcelable {
     @PrimaryKey
     public String publicKey;                // 用户的公钥
     public String seed;                     // 用户的seed
-    public String localName;                // 用户本地备注名
+    public String nickname;                 // 用户昵称
+    public long updateTime;               // 用户昵称更新时间
     public boolean isCurrentUser = false;   // 是否是当前用户
     public boolean isBanned = false;        // 用户是否被用户拉入黑名单
 
-    public User(@NonNull String publicKey, String seed, String localName, boolean isCurrentUser){
+    public User(@NonNull String publicKey, String seed, String nickname, boolean isCurrentUser){
         this.publicKey = publicKey;
         this.seed = seed;
-        this.localName = localName;
+        this.nickname = nickname;
         this.isCurrentUser = isCurrentUser;
     }
 
     @Ignore
-    public User(@NonNull String publicKey, String localName){
+    public User(@NonNull String publicKey, String nickname, long updateTime){
         this.publicKey = publicKey;
-        this.localName = localName;
+        this.nickname = nickname;
+        this.updateTime = updateTime;
     }
 
     @Ignore
@@ -43,18 +45,20 @@ public class User implements Parcelable {
     protected User(Parcel in) {
         publicKey = in.readString();
         seed = in.readString();
-        localName = in.readString();
+        nickname = in.readString();
         isCurrentUser = in.readByte() != 0;
         isBanned = in.readByte() != 0;
+        updateTime = in.readLong();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(publicKey);
         dest.writeString(seed);
-        dest.writeString(localName);
+        dest.writeString(nickname);
         dest.writeByte((byte) (isCurrentUser ? 1 : 0));
         dest.writeByte((byte) (isBanned ? 1 : 0));
+        dest.writeLong(updateTime);
     }
 
     @Override

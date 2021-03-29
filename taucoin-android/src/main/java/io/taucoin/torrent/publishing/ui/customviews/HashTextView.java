@@ -8,6 +8,8 @@ import android.widget.TextView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
 import androidx.annotation.Nullable;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -28,7 +30,7 @@ import io.taucoin.util.CryptoUtil;
 public class HashTextView extends TextView {
 
     private static final Logger logger = LoggerFactory.getLogger("HashTextView");
-    private String content;
+    private byte[] content;
     private String senderPk;
     private String receiverPk;
     private Disposable disposable;
@@ -54,20 +56,20 @@ public class HashTextView extends TextView {
         setText(text);
     }
 
-    public void setTextContent(String content, String senderPk, String receiverPk) {
+    public void setTextContent(byte[] content, String senderPk, String receiverPk) {
         setTextContent(content, null, senderPk, receiverPk);
     }
 
-    public void setTextContent(String content, byte[] rawContent, String senderPk, String receiverPk) {
+    public void setTextContent(byte[] content, byte[] rawContent, String senderPk, String receiverPk) {
         if (rawContent != null) {
             String rawContentStr = Utils.textBytesToString(rawContent);
             showText(rawContentStr);
             return;
         }
-        if (isLoadSuccess && StringUtil.isNotEmpty(this.content)
-                && StringUtil.isEquals(this.content, content)) {
+        if (isLoadSuccess && content != null
+                && Arrays.equals(this.content, content)) {
             logger.trace("showTextContent isLoadSuccess::{}, isEquals::{}::", isLoadSuccess,
-                    StringUtil.isEquals(this.content, content));
+                    Arrays.equals(this.content, content));
             return;
         }
         this.content = content;
@@ -80,7 +82,6 @@ public class HashTextView extends TextView {
         }
         disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
             try {
-                byte[] encryptedContent = ByteUtil.toByte(content);
                 byte[] cryptoKey;
                 long startTime = System.currentTimeMillis();
                 if (StringUtil.isEquals(senderPk, MainApplication.getInstance().getPublicKey())) {
@@ -89,7 +90,7 @@ public class HashTextView extends TextView {
                     cryptoKey = Utils.keyExchange(senderPk, MainApplication.getInstance().getSeed());
                 }
                 long keyExchangeTime = System.currentTimeMillis() - startTime;
-                byte[] rawContentTemp = CryptoUtil.decrypt(encryptedContent, cryptoKey);
+                byte[] rawContentTemp = CryptoUtil.decrypt(content, cryptoKey);
                 String rawContentStr = Utils.textBytesToString(rawContentTemp);
                 long decryptTime = System.currentTimeMillis() - startTime;
                 String rawContentLog = rawContentStr.length() > 50 ?
@@ -114,7 +115,7 @@ public class HashTextView extends TextView {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         // 加在View
-        if (reload && StringUtil.isNotEmpty(content)
+        if (reload && content != null
                 && disposable != null && disposable.isDisposed()) {
             setTextContent(content, senderPk, receiverPk);
         }

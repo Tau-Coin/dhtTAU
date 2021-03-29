@@ -206,7 +206,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         switch (v.getId()){
             case R.id.tv_add_to_contact:
                 showProgressDialog();
-                userViewModel.addFriend(publicKey, nickName);
+                userViewModel.addFriend(publicKey);
                 break;
             case R.id.tv_start_chat:
                 showProgressDialog();

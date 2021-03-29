@@ -141,9 +141,8 @@ public class HashImageView extends RoundImageView {
         String hash = ByteUtil.toHexString(imageHash);
         ChatMsg chatMsg = chatRepo.queryChatMsg(senderPk, hash);
         if (chatMsg != null) {
-            if (StringUtil.isNotEmpty(chatMsg.content)) {
-                byte[] encryptedContent = ByteUtil.toByte(chatMsg.content);
-                content = CryptoUtil.decrypt(encryptedContent, cryptoKey);
+            if (chatMsg.content != null) {
+                content = CryptoUtil.decrypt(chatMsg.content, cryptoKey);
             }
         }
         if (!emitter.isCancelled()) {

@@ -50,7 +50,7 @@
                         android:background="@drawable/primary_rect_round_bg"
                         android:gravity="center_vertical|center"
                         android:textColor="@color/color_white"
-                        android:onClick="@{listener.onClick}"
+                        android:onClick="@{listener::onClick}"
                         style="@style/TextAppearanceBody1" />
 
                     <TextView
@@ -63,7 +63,7 @@
                         android:gravity="center_vertical|center"
                         android:textColor="@color/color_white"
                         android:text="@string/main_empty_create_communities"
-                        android:onClick="@{listener.onClick}"
+                        android:onClick="@{listener::onClick}"
                         style="@style/TextAppearanceBody1" />
 
                 </LinearLayout>

@@ -38,9 +38,9 @@ public interface CommunityDao {
 
     String QUERY_COMMUNITIES = "SELECT a.chainID AS ID, b.balance AS balance, b.power AS power," +
             " 0 AS type, 0 AS msgType, '' AS senderPk, '' AS receiverPk, " +
-            " 0 AS msgUnread," +
+            " 0 AS msgUnread, '' AS msg," +
             " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.memo else d.content end)" +
-            " AS msg," +
+            " AS memo," +
             " (case when (d.timestamp IS NULL OR c.timestamp >= d.timestamp) then c.timestamp else d.timestamp end)" +
             " AS timestamp" +
             " FROM Communities AS a" +
@@ -59,7 +59,7 @@ public interface CommunityDao {
             " 1 AS type, cm.contentType AS msgType," +
             " cm.senderPk AS senderPk, cm.receiverPk AS receiverPk," +
             " f.msgUnread AS msgUnread," +
-            " cm.content AS msg, cm.timestamp AS timestamp" +
+            " cm.content AS msg, '' AS memo, cm.timestamp AS timestamp" +
             " FROM Friends f" +
             " LEFT JOIN " + QUERY_NEWEST_MSG + " AS cm" +
             " ON (f.userPK = cm.senderPk AND f.friendPK = cm.receiverPk)" +

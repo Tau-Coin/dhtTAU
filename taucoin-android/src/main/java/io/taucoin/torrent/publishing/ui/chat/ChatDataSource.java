@@ -12,7 +12,6 @@ import io.reactivex.disposables.Disposable;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.util.ByteUtil;
 import io.taucoin.util.CryptoUtil;
 
 class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
@@ -75,9 +74,9 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
         long getMessagesTime = System.currentTimeMillis();
         logger.trace("loadInitial getMessagesTime::{}", getMessagesTime - getNumTime);
         for (ChatMsgAndUser msg : messages) {
-            byte[] content = ByteUtil.toByte(msg.content);
+            byte[] encryptedContent = msg.content;
             try {
-                msg.rawContent = CryptoUtil.decrypt(content, friendCryptoKey);
+                msg.rawContent = CryptoUtil.decrypt(encryptedContent, friendCryptoKey);
                 msg.content = null;
             } catch (Exception e) {
                 logger.error("loadInitial decrypt error::", e);
@@ -115,9 +114,9 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
             messages = new ArrayList<>(0);
         }
         for (ChatMsgAndUser msg : messages) {
-            byte[] content = ByteUtil.toByte(msg.content);
+            byte[] encryptedContent = msg.content;
             try {
-                msg.rawContent = CryptoUtil.decrypt(content, friendCryptoKey);
+                msg.rawContent = CryptoUtil.decrypt(encryptedContent, friendCryptoKey);
                 msg.content = null;
             } catch (Exception e) {
                 logger.error("loadInitial decrypt error::", e);

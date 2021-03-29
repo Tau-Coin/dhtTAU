@@ -186,7 +186,7 @@ public class TxListAdapter extends PagedListAdapter<UserAndTx, TxListAdapter.Vie
             if (null == oldItem.sender && null == newItem.sender) {
                 isSame = true;
             } else if(null != oldItem.sender && null != newItem.sender){
-                isSame =  StringUtil.isEquals(oldItem.sender.localName, newItem.sender.localName);
+                isSame =  StringUtil.isEquals(oldItem.sender.nickname, newItem.sender.nickname);
             }
             if(isSame && oldItem.senderBalance != newItem.senderBalance){
                 isSame = false;

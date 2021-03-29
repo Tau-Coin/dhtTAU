@@ -95,7 +95,7 @@ class MsgListenHandler extends MsgListener{
                     message.decrypt(cryptoKey);
 
                     // 保存消息数据
-                    String encryptedContent = ByteUtil.toHexString(message.getEncryptedContent());
+                    byte[] encryptedContent = message.getEncryptedContent();
                     ChatMsg msg = new ChatMsg(hash, senderPk, receiverPk, encryptedContent,
                             message.getType().ordinal(), sentTime, message.getNonce().longValue(),
                             logicMsgHash);
@@ -271,10 +271,24 @@ class MsgListenHandler extends MsgListener{
                 logger.debug("onNewFriend userPk::{}, friendPk::{}",
                         userPk, friendPkStr);
                 User user = userRepo.getUserByPublicKey(friendPkStr);
+                // 多设备朋友同步
                 if (null == user) {
                     user = new User(friendPkStr);
+                    if (nickname != null && timestamp != null) {
+                        user.nickname = Utils.textBytesToString(nickname);;
+                        user.updateTime = timestamp.longValue();
+                    }
                     userRepo.addUser(user);
+                } else {
+                    // 多设备朋友昵称同步
+                    if (nickname != null && timestamp != null &&
+                            timestamp.compareTo(BigInteger.valueOf(user.updateTime)) > 0) {
+                        user.nickname = Utils.textBytesToString(nickname);
+                        user.updateTime = timestamp.longValue();
+                        userRepo.updateUser(user);
+                    }
                 }
+                // 多设备朋友关系状态同步
                 if (StringUtil.isNotEquals(userPk, friendPkStr)) {
                     Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
                     if (friend != null) {

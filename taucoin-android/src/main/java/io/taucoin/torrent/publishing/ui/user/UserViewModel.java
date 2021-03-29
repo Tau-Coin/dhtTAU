@@ -204,7 +204,8 @@ public class UserViewModel extends AndroidViewModel {
                     userRepo.addUser(user);
                 }else{
                     if(StringUtil.isNotEmpty(name)){
-                        user.localName = name;
+                        user.nickname = name;
+                        user.updateTime = DateUtil.getTime();
                     }
                     user.seed = seed;
                     user.isCurrentUser = true;
@@ -442,14 +443,14 @@ public class UserViewModel extends AndroidViewModel {
             User user;
             if (StringUtil.isNotEmpty(publicKey)) {
                 user = userRepo.getUserByPublicKey(publicKey);
-                if (StringUtil.isNotEmpty(name)) {
-                    user.localName = name;
-                }
             } else {
                 user = userRepo.getCurrentUser();
-                user.localName = name;
             }
             if (user != null) {
+                if (StringUtil.isNotEmpty(name)) {
+                    user.nickname = name;
+                    user.updateTime = DateUtil.getTime();
+                }
                 userRepo.updateUser(user);
             }
             emitter.onNext(true);
@@ -490,17 +491,31 @@ public class UserViewModel extends AndroidViewModel {
      * 添加朋友
      * 根据BuildConfig.DEBUG 添加测试代码，多次调用添加测试朋友
      * @param publicKey
+     */
+    public void addFriend(String publicKey) {
+        addFriend(publicKey, null);
+    }
+
+    /**
+     * 添加朋友
+     * 根据BuildConfig.DEBUG 添加测试代码，多次调用添加测试朋友
+     * @param publicKey
      * @param nickname
      */
     public void addFriend(String publicKey, String nickname) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             User user = userRepo.getUserByPublicKey(publicKey);
             if(null == user){
-                user = new User(publicKey, nickname);
+                user = new User(publicKey);
+                if (StringUtil.isNotEmpty(nickname)) {
+                    user.nickname = nickname;
+                    user.updateTime = DateUtil.getTime();
+                }
                 userRepo.addUser(user);
             } else {
-                if (StringUtil.isNotEmpty(nickname)) {
-                    user.localName = nickname;
+                if (StringUtil.isEmpty(user.nickname) && StringUtil.isNotEmpty(nickname)) {
+                    user.nickname = nickname;
+                    user.updateTime = DateUtil.getTime();
                     userRepo.updateUser(user);
                 }
             }

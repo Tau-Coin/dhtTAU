@@ -20,7 +20,7 @@ public class ChatMsg implements Parcelable {
     public String receiverPk;              // 接收者的公钥
     @NonNull
     public long timestamp;                 // 时间戳
-    public String content;                 // 消息内容
+    public byte[] content;                 // 消息内容
     @NonNull
     public int contentType;                // 消息内容类型
     @NonNull
@@ -42,7 +42,7 @@ public class ChatMsg implements Parcelable {
     }
 
     @Ignore
-    public ChatMsg(@NonNull String hash, String senderPk, String receiverPk, String content,
+    public ChatMsg(@NonNull String hash, String senderPk, String receiverPk, byte[] content,
                    int contentType, long timestamp, long nonce, String logicMsgHash){
         this.hash = hash;
         this.senderPk = senderPk;
@@ -61,10 +61,10 @@ public class ChatMsg implements Parcelable {
         receiverPk = in.readString();
         contentType = in.readInt();
         timestamp = in.readLong();
-        content = in.readString();
         nonce = in.readLong();
         logicMsgHash = in.readString();
         unsent = in.readInt();
+        in.readByteArray(content);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ChatMsg implements Parcelable {
         dest.writeString(receiverPk);
         dest.writeInt(contentType);
         dest.writeLong(timestamp);
-        dest.writeString(content);
+        dest.writeByteArray(content);
         dest.writeLong(nonce);
         dest.writeString(logicMsgHash);
         dest.writeInt(unsent);

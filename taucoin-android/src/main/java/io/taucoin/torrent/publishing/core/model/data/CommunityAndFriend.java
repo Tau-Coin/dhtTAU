@@ -21,7 +21,8 @@ public class CommunityAndFriend {
     public int type;                        // 消息类型 0: 社区， 1：朋友
     public int msgUnread;                   // 消息是否未读
     public int msgType;                     // 消息类型 对应MessageType枚举类型
-    public String msg;                      // 交易备注信息
+    public byte[] msg;                      // 交易备注信息
+    public String memo;                     // 交易备注信息
     public long timestamp;                  // 交易时间戳
 
     @Relation(parentColumn = "ID",

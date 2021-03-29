@@ -255,8 +255,7 @@ public class ChatViewModel extends AndroidViewModel {
                         logicMsgHashStr, DateUtil.format(millisTime, DateUtil.pattern9));
 
                 // 组织Message的结构，并发送到DHT和数据入库
-                String contentStr = ByteUtil.toHexString(encryptedContent);
-                ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPkStr, contentStr, type,
+                ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPkStr, encryptedContent, type,
                         timestamp, nonce, logicMsgHashStr);
                 messages[nonce] = chatMsg;
 

@@ -5,6 +5,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.Arrays;
+
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
@@ -99,9 +101,9 @@ public class MainListAdapter extends ListAdapter<CommunityAndFriend, MainListAda
                 String power = FmtMicrometer.fmtLong(bean.power);
                 binding.tvBalancePower.setText(context.getString(R.string.main_balance_power, balance, power));
 
-                binding.tvUserMessage.setVisibility(StringUtil.isNotEmpty(bean.msg) ?
+                binding.tvUserMessage.setVisibility(StringUtil.isNotEmpty(bean.memo) ?
                         View.VISIBLE : View.GONE);
-                binding.tvUserMessage.setText(bean.msg);
+                binding.tvUserMessage.setText(bean.memo);
 
                 int bgColor = Utils.getGroupColor(bean.ID);
                 binding.leftView.setBgColor(bgColor);
@@ -117,13 +119,12 @@ public class MainListAdapter extends ListAdapter<CommunityAndFriend, MainListAda
                 int bgColor = Utils.getGroupColor(bean.ID);
                 binding.leftView.setBgColor(bgColor);
 
-                String msg = bean.msg;
-                String hash = bean.msg;
+                byte[] msg = bean.msg;
                 if (bean.msgType == MessageType.PICTURE.ordinal()) {
                     binding.tvUserMessage.setText(context.getString(R.string.main_pic_messages));
-                } else if (bean.msgType == MessageType.TEXT.ordinal() && StringUtil.isNotEmpty(hash)) {
+                } else if (bean.msgType == MessageType.TEXT.ordinal() && msg != null) {
                     binding.tvUserMessage.setTextContent(bean.msg, bean.senderPk, bean.receiverPk);
-                } else if (StringUtil.isEmpty(msg)) {
+                } else if (null == msg) {
                     binding.tvUserMessage.setText(context.getString(R.string.main_no_messages));
                 }
                 if (bean.timestamp > 0) {
@@ -156,13 +157,13 @@ public class MainListAdapter extends ListAdapter<CommunityAndFriend, MainListAda
                     isSame = oldItem.timestamp == newItem.timestamp &&
                             oldItem.balance == newItem.balance &&
                             oldItem.power == newItem.power &&
-                            StringUtil.isEquals(oldItem.msg, newItem.msg);
+                            StringUtil.isEquals(oldItem.memo, newItem.memo);
                 } else {
                     isSame = oldItem.timestamp == newItem.timestamp &&
                             oldItem.msgUnread == newItem.msgUnread &&
-                            StringUtil.isEquals(oldItem.msg, newItem.msg) &&
-                            StringUtil.isEquals(oldItem.friend != null ? oldItem.friend.localName : null,
-                                    newItem.friend != null ? newItem.friend.localName : null);
+                            Arrays.equals(oldItem.msg, newItem.msg) &&
+                            StringUtil.isEquals(oldItem.friend != null ? oldItem.friend.nickname : null,
+                                    newItem.friend != null ? newItem.friend.nickname : null);
                 }
             }
             return isSame;
