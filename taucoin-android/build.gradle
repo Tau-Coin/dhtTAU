@@ -163,4 +163,7 @@ dependencies {
 //    implementation 'com.facebook.stetho:stetho:1.5.0'
 
     implementation 'com.github.hf:leveldb:1.19.0@aar'
+
+    // 数据库调试
+    debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
 }
