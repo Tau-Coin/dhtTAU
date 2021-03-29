@@ -3,6 +3,7 @@ package io.taucoin.core;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -82,6 +83,19 @@ public class FriendInfo {
         }
 
         return rlpEncoded;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FriendInfo that = (FriendInfo) o;
+        return Arrays.equals(pubKey, that.pubKey);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(pubKey);
     }
 
     @Override
