@@ -51,19 +51,6 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         binding.toolbarInclude.toolbar.setTitle(R.string.drawer_data_cost);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
-        handleSettingsChanged(getString(R.string.pref_key_current_speed_list));
-        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
-        handleSettingsChanged(getString(R.string.pref_key_foreground_running_time));
-
-        // 先更新，再显示
-        NetworkSetting.updateMeteredSpeedLimit();
-        handleSettingsChanged(getString(R.string.pref_key_metered_speed_limit));
-        handleSettingsChanged(getString(R.string.pref_key_metered_available_data));
-        NetworkSetting.updateWiFiSpeedLimit();
-        handleSettingsChanged(getString(R.string.pref_key_wifi_speed_limit));
-        handleSettingsChanged(getString(R.string.pref_key_wifi_available_data));
-
         LinearLayoutManager layoutManagerMetered = new LinearLayoutManager(this);
         layoutManagerMetered.setOrientation(RecyclerView.HORIZONTAL);
         binding.rvMeteredDailyQuota.setLayoutManager(layoutManagerMetered);
@@ -83,6 +70,19 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         int[] wifiLimits = getResources().getIntArray(R.array.wifi_limit);
         List<Integer> wifiList = Ints.asList(wifiLimits);
         adapterWiFi.submitList(wifiList);
+
+        handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
+        handleSettingsChanged(getString(R.string.pref_key_current_speed_list));
+        handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
+        handleSettingsChanged(getString(R.string.pref_key_foreground_running_time));
+
+        // 先更新，再显示
+        NetworkSetting.updateMeteredSpeedLimit();
+        handleSettingsChanged(getString(R.string.pref_key_metered_speed_limit));
+        handleSettingsChanged(getString(R.string.pref_key_metered_available_data));
+        NetworkSetting.updateWiFiSpeedLimit();
+        handleSettingsChanged(getString(R.string.pref_key_wifi_speed_limit));
+        handleSettingsChanged(getString(R.string.pref_key_wifi_available_data));
     }
 
 
@@ -95,6 +95,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             NetworkSetting.setWiFiLimit(limit);
             NetworkSetting.updateWiFiSpeedLimit();
         }
+        handleSettingsChanged(getString(R.string.pref_key_foreground_running_time));
     }
 
     @Override
@@ -164,14 +165,19 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             double frequency = FrequencyUtil.getMainLoopFrequency();
             binding.tvWorkingFrequency.setText(FmtMicrometer.formatTwoDecimal(frequency));
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_foreground_running_time))) {
-            long foregroundRunningTime = settingsRepo.getLongValue(key);
-            int modelRes;
-            if (foregroundRunningTime < NetworkSetting.FORE_DAY_TIME) {
-                modelRes = R.string.setting_work_frequency_in_2_hours;
+            int screenTime = settingsRepo.getIntValue(key);
+            String model;
+            int limitHours = NetworkSetting.getScreenTimeLimitHours();
+            int screenTimeLimit = limitHours * 60 * 60;
+            if (screenTime < screenTimeLimit) {
+                String hours = FmtMicrometer.formatTwoDecimal(screenTime * 1.0f / 3600);
+                model = getString(R.string.setting_work_frequency_in_screen_time,
+                        limitHours, hours);
             } else {
-                modelRes = R.string.setting_work_frequency_not_in_2_hours;
+                model = getString(R.string.setting_work_frequency_not_in_screen_time,
+                        limitHours, limitHours);
             }
-            binding.tvWorkFrequencyModel.setText(getString(modelRes));
+            binding.tvWorkFrequencyModel.setText(model);
         }
     }
 

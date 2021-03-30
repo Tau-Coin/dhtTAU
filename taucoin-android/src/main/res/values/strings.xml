@@ -43,7 +43,7 @@
     <string name="main_balance_power">Balance %1$s, Power %2$s</string>
     <string name="main_read_only">READ\nONLY</string>
     <string name="main_open_link">Open the link?</string>
-    <string name="main_daily_data_limit_prompt">Daily Data Limits.</string>
+    <string name="main_daily_data_limit_prompt">Choose Daily Data Limits</string>
 
     <string name="main_publish_video">Publish Video</string>
     <string name="main_new_community">New Community</string>
@@ -128,9 +128,9 @@
     <string name="community_added_members">+ Add Members Now</string>
 
     <string name="setting_title">Settings</string>
-    <string name="setting_account">TAU ID</string>
+    <string name="setting_account">My Public Key</string>
     <string name="setting_import_seed">Tap to import key</string>
-    <string name="setting_username_app">Username in app</string>
+    <string name="setting_username_app">Nickname in app</string>
     <string name="setting_privacy_security">Privacy and Security</string>
     <string name="setting_community_setting">Community Setting</string>
     <string name="setting_journal">Journal</string>
@@ -147,9 +147,10 @@
     <string name="setting_wifi_network_title">WiFi - likely free internet</string>
     <string name="setting_metered_network_title">Metered - likely paid internet</string>
     <string name="setting_work_frequency">Walking Frequency</string>
-    <string name="setting_work_frequency_in_2_hours">Target TAU screen time &#060; 2 hours per day - currently in the high speed zone according to data setting.</string>
-    <string name="setting_work_frequency_not_in_2_hours">Target TAU screen time &#060; 2 hours per day - currently out of the high speed zone according to data setting.</string>
-    <string name="setting_daily_quota">Daily data limit</string>
+    <string name="setting_work_frequency_in_screen_time">Target screen time is daily %1$d hours, in which you spent %2$s hour now.</string>
+    <string name="setting_work_frequency_not_in_screen_time">Target screen time is daily %1$d hours, and now you are over %2$d hours.
+        Please increase data limit to add screen time.</string>
+    <string name="setting_daily_quota">Daily Data Limit</string>
     <string name="setting_daily_quota_unit_m">%1$dM</string>
     <string name="setting_daily_quota_unit_g">%1$dG</string>
     <string name="setting_network_current_speed">Current Speed</string>
@@ -197,7 +198,8 @@
     <string name="user_mutual_communities">Mutual Communities:</string>
     <string name="user_community_name">C/%1$s</string>
     <string name="user_new_name_hint">Nick Name</string>
-    <string name="user_invalid_new_name">Invalid Nick Name</string>
+    <string name="user_invalid_new_name">Invalid Nickname</string>
+    <string name="user_new_name_too_long">Nickname too long</string>
     <string name="user_no_messages_from">No messages from</string>
     <string name="user_until_removed">until removed from the ban list.</string>
     <string name="user_start_chat">Chat</string>
@@ -206,7 +208,7 @@
     <string name="user_share_qr_dialog_tips">Share your QR code to friends for 100% connection</string>
 
     <string name="copy_seed">Key copied</string>
-    <string name="copy_public_key">TAU ID copied</string>
+    <string name="copy_public_key">My Public Key copied</string>
     <string name="copy_share_link">Share link copied</string>
     <string name="copy_message_hash">Message hash copied</string>
     <string name="copy_successfully">Copy successfully</string>
@@ -217,7 +219,7 @@
 
     <!-- Strings used for transactions -->
     <string name="tx_send">Send</string>
-    <string name="tx_public_key_hint">TAU ID</string>
+    <string name="tx_public_key_hint">My Public Key</string>
     <string name="tx_amount_hint">Amount</string>
     <string name="tx_memo_hint">Memo</string>
     <string name="tx_median_fee">Transaction median fee/%1$s %2$s</string>
@@ -239,7 +241,7 @@
     <string name="tx_fee_hint">Fee</string>
     <string name="tx_median_fee_tips">Transaction median fee:%1$s</string>
     <string name="tx_fee_tips">*More transaction fees more opportunities be packaged miners.</string>
-    <string name="tx_error_invalid_pk">Invalid receiver\'s TAU ID!</string>
+    <string name="tx_error_invalid_pk">Invalid receiver\'s Public Key!</string>
     <string name="tx_error_invalid_amount">Invalid Transaction amount</string>
     <string name="tx_error_no_enough_coins">Insufficient Balance :\nAmount + Transaction Fee > Balance</string>
     <string name="tx_error_no_enough_coins_for_fee">Insufficient Balance :\nTransaction Fee > Balance</string>
@@ -281,7 +283,7 @@
     <string name="contacts_community">TAU</string>
     <string name="contacts_sms">SMS</string>
     <string name="contacts_chat_name_hint">Chat Name(Optional)</string>
-    <string name="contacts_public_key_hint">Friend\'s TAU ID</string>
+    <string name="contacts_public_key_hint">Friend\'s Public Key</string>
     <string name="contacts_chatting" formatted="false"><Data><![CDATA[Chatting with <font color="#f19322">%1$s</font> now]]></Data></string>
     <string name="contacts_add_successfully">Add successfully!</string>
     <string name="contacts_confirm_shared">Friend added, please share your QR code to the friend.</string>
@@ -292,7 +294,7 @@
     &nbsp;<font color="#f19322">%2$s</font>&nbsp;%3$s&nbsp;(including %4$s fee).]]></Data></string>
 
     <!-- Strings used for QRCode -->
-    <string name="qr_code_title">My TAU ID QR Code</string>
+    <string name="qr_code_title">My Public Key QR Code</string>
     <string name="key_qr_code_title">My Key QR Code</string>
     <string name="qr_code_two_steps">Two steps to connect a friend</string>
     <string name="qr_code_step_one">Share QR code to friends</string>
@@ -303,7 +305,7 @@
     <string name="qr_code_scan_cancelled">Cancelled</string>
     <string name="qr_code_not_found">No QR code found</string>
     <string name="qr_code_not_found_continue">Tap the screen to continue scanning</string>
-    <string name="qr_code_tau_id">TAU ID</string>
+    <string name="qr_code_tau_id">Public Key</string>
     <string name="qr_code_tau_key">TAU key</string>
     <string name="qr_code_tau_key_kept_secret">Key must be kept secret.\n\n\nTap to display.</string>
 

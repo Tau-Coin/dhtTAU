@@ -267,9 +267,32 @@ public class ActivityUtil {
     }
 
     /**
-     * 分享文件
-     * @param activity
-     * @param path
+     * 分享图片
+     * @param activity 上下文
+     * @param path 图片路径
+     * @param shareTitle 分享标题
+     */
+    public static void sharePic(AppCompatActivity activity, String path, String shareTitle) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        intent.setType("image/jpg");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        intent.putExtra(Intent.EXTRA_STREAM, FileUtil.getUriForFile(new File(path)));
+        try {
+            activity.startActivity(Intent.createChooser(intent, shareTitle));
+        } catch (android.content.ActivityNotFoundException ex) {
+            ToastUtils.showShortToast(R.string.app_share_error);
+        }
+    }
+
+    /**
+     * 分享单个文件
+     * @param activity 上下文
+     * @param path 文件路径
+     * @param shareTitle 分享标题
      */
     public static void shareFile(AppCompatActivity activity, String path, String shareTitle) {
         Intent intent = new Intent();
@@ -287,6 +310,12 @@ public class ActivityUtil {
         }
     }
 
+    /**
+     * 分享多个文件
+     * @param activity 上下文
+     * @param list 文件列表
+     * @param shareTitle 分享标题
+     */
     public static void shareFiles(AppCompatActivity activity, List<File> list, String shareTitle) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND_MULTIPLE);

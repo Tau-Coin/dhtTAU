@@ -218,11 +218,13 @@
                             android:text="@string/setting_wake_lock"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
-                        <Switch
-                            android:id="@+id/switch_wake_lock"
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:checked="true"/>
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/common_on"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
 
                     </LinearLayout>
 

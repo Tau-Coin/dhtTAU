@@ -24,4 +24,12 @@
         <item>1024</item>
         <item>10240</item>
     </integer-array>
+
+    <integer-array name="screen_time">
+        <item>2</item>
+        <item>4</item>
+        <item>6</item>
+        <item>8</item>
+        <item>10</item>
+    </integer-array>
 </resources>
