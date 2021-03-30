@@ -135,10 +135,10 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
 
             String time = "";
             if (order == 0 && user.lastSeenTime > 0) {
-                time = DateUtil.formatTime(user.lastSeenTime, DateUtil.pattern5);
+                time = DateUtil.formatTime(user.lastSeenTime, DateUtil.pattern6);
                 time = context.getResources().getString(R.string.contacts_last_seen, time);
             } else if (order != 0 && user.lastCommTime > 0) {
-                time = DateUtil.formatTime(user.lastCommTime, DateUtil.pattern5);
+                time = DateUtil.formatTime(user.lastCommTime, DateUtil.pattern6);
                 time = context.getResources().getString(R.string.contacts_last_communication, time);
             }
             holder.binding.tvTime.setVisibility(StringUtil.isEmpty(time) ? View.GONE : View.VISIBLE);
@@ -214,7 +214,10 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
     private static final ItemCallback diffCallback = new ItemCallback() {
         @Override
         public boolean areContentsTheSame(@NonNull UserAndFriend oldItem, @NonNull UserAndFriend newItem) {
-            return oldItem.equals(newItem) && oldOrder == order && oldItem.status == newItem.status;
+            return oldItem.equals(newItem) && oldOrder == order &&
+                    oldItem.status == newItem.status &&
+                    ((order == 0 && oldItem.lastSeenTime == newItem.lastSeenTime) ||
+                            (order == 1 && oldItem.lastCommTime == newItem.lastCommTime));
         }
 
         @Override

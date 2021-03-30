@@ -84,14 +84,15 @@ class MsgListenHandler extends MsgListener{
                 // 上报的Message有可能重复, 如果本地已存在不处理
                 if (null == chatMsg) {
                     User user = userRepo.getCurrentUser();
-                    // 原始数据解密
-                    byte[] cryptoKey;
                     // 判断消息的发送者是否是自己
+                    String friendPkStr;
                     if (StringUtil.isEquals(senderPk, user.publicKey)) {
-                        cryptoKey = Utils.keyExchange(receiverPk, user.seed);
+                        friendPkStr = receiverPk;
                     } else {
-                        cryptoKey = Utils.keyExchange(senderPk, user.seed);
+                        friendPkStr = senderPk;
                     }
+                    // 原始数据解密
+                    byte[] cryptoKey = Utils.keyExchange(friendPkStr, user.seed);;
                     message.decrypt(cryptoKey);
 
                     // 保存消息数据
@@ -102,14 +103,25 @@ class MsgListenHandler extends MsgListener{
                     msg.unsent = 1;
                     chatRepo.addChatMsg(msg);
 
-                    // 只通知朋友的消息
-                    if (StringUtil.isNotEquals(senderPk, user.publicKey)) {
-                        // 标记消息未读
-                        Friend friend = friendRepo.queryFriend(user.publicKey, senderPk);
-                        if (friend != null && friend.msgUnread == 0) {
+                    // 标记消息未读, 更新上次交流的时间
+                    Friend friend = friendRepo.queryFriend(user.publicKey, friendPkStr);
+                    boolean isNeedUpdate = false;
+                    if (friend != null) {
+                        if (friend.msgUnread == 0) {
                             friend.msgUnread = 1;
+                            isNeedUpdate = true;
+                        }
+                        long lastCommTime = friend.lastCommTime;
+                        if (sentTime > lastCommTime) {
+                            friend.lastCommTime = sentTime;
+                            isNeedUpdate = true;
+                        }
+                        if (isNeedUpdate) {
                             friendRepo.updateFriend(friend);
                         }
+                    }
+                    // 只通知朋友的消息
+                    if (StringUtil.isNotEquals(senderPk, user.publicKey)) {
                         // 通知栏消息通知
                         User friendUser = userRepo.getUserByPublicKey(senderPk);
                         String friendName = UsersUtil.getShowName(friendUser);
@@ -204,7 +216,7 @@ class MsgListenHandler extends MsgListener{
                 String userPk = MainApplication.getInstance().getPublicKey();
                 String friendPkStr = ByteUtil.toHexString(friendPk);
                 Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
-                long lastCommTime = timestamp.longValue();
+                long lastSeenTime = timestamp.longValue();
                 if (friend != null) {
                     boolean isUpdate = false;
                     if (friend.status != FriendStatus.CONNECTED.getStatus()) {
@@ -212,16 +224,16 @@ class MsgListenHandler extends MsgListener{
                         isUpdate = true;
                     }
                     // 当前时间大于上次更新时间
-                    if (lastCommTime > friend.lastCommTime) {
-                        friend.lastCommTime = lastCommTime;
+                    if (lastSeenTime > friend.lastSeenTime) {
+                        friend.lastSeenTime = lastSeenTime;
                         isUpdate = true;
                     }
                     if (isUpdate) {
                         friendRepo.updateFriend(friend);
                     }
-                    logger.info("onDiscoveryFriend friendPk::{}, lastCommTime::{}",
+                    logger.info("onDiscoveryFriend friendPk::{}, lastSeenTime::{}",
                             ByteUtil.toHexString(friendPk),
-                            DateUtil.formatTime(lastCommTime, DateUtil.pattern6));
+                            DateUtil.formatTime(lastSeenTime, DateUtil.pattern6));
                 }
             } catch (Exception e) {
                 logger.error("onDiscoveryFriend error", e);

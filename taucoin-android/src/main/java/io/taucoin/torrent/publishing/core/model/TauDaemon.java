@@ -538,25 +538,11 @@ public class TauDaemon {
     /**
      * 重置唤醒锁
      */
-    public void resetWakeLock() {
-        boolean wakeLock = settingsRepo.wakeLock();
-        resetWakeLock(wakeLock);
-    }
-
-    /**
-     * 重置唤醒锁
-     */
-    public void resetWakeLock(boolean wakeLock) {
+    public void resetWakeLock(boolean enable) {
         // 启动/禁止设备启动广播接收器
-        Utils.enableBootReceiver(appContext, wakeLock);
+        Utils.enableBootReceiver(appContext, enable);
         // 启动CPU WakeLock
-        if (wakeLock) {
-            keepCPUWakeLock(true);
-            Scheduler.cancelWakeUpAppAlarm(appContext);
-        } else {
-            keepCPUWakeLock(false);
-            Scheduler.setWakeUpAppAlarm(appContext);
-        }
+        keepCPUWakeLock(enable);
     }
 
     /**

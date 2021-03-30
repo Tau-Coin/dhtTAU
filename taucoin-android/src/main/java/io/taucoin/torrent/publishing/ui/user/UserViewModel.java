@@ -55,6 +55,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
@@ -64,6 +65,7 @@ import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
 import io.taucoin.torrent.publishing.ui.chat.ChatViewModel;
+import io.taucoin.torrent.publishing.ui.constant.Constants;
 import io.taucoin.torrent.publishing.ui.constant.KeyQRContent;
 import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.constant.QRContent;
@@ -576,12 +578,17 @@ public class UserViewModel extends AndroidViewModel {
         });
         binding.tvSubmit.setOnClickListener(v -> {
             String newName = StringUtil.getText(binding.etPublicKey);
-            if(StringUtil.isNotEmpty(newName)){
-                saveUserName(publicKey, newName);
-                if (editNameDialog != null) {
-                    editNameDialog.closeDialog();
+            if (StringUtil.isNotEmpty(newName)) {
+                int nicknameLength = Utils.textStringToBytes(newName).length;
+                if (nicknameLength > Constants.NICKNAME_LENGTH) {
+                    ToastUtils.showShortToast(R.string.user_new_name_too_long);
+                } else {
+                    saveUserName(publicKey, newName);
+                    if (editNameDialog != null) {
+                        editNameDialog.closeDialog();
+                    }
                 }
-            }else{
+            } else {
                 ToastUtils.showShortToast(R.string.user_invalid_new_name);
             }
         });
@@ -662,7 +669,7 @@ public class UserViewModel extends AndroidViewModel {
                     logger.debug("shareQRCode filePath::{}", filePath);
 
                     FileUtil.saveFilesDirBitmap(filePath, resizeBmp);
-                    ActivityUtil.shareFile(activity, filePath, view.getContext()
+                    ActivityUtil.sharePic(activity, filePath, view.getContext()
                             .getString(R.string.contacts_share_qr_code));
                 }
             } catch (Exception e) {

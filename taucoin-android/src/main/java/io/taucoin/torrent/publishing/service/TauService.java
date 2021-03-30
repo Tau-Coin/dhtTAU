@@ -107,10 +107,7 @@ public class TauService extends Service {
 
         TauNotifier.makeForegroundNotify(this);
 
-        disposables.add(settingsRepo.observeSettingsChanged()
-                .subscribe(this::handleSettingsChanged));
-
-        daemon.resetWakeLock();
+        daemon.resetWakeLock(true);
 
         daemon.doStart();
         daemon.registerListener(daemonListener);
@@ -151,16 +148,6 @@ public class TauService extends Service {
         disposables.add(Completable.fromRunnable(() -> daemon.doStop())
                 .subscribeOn(Schedulers.computation())
                 .subscribe());
-    }
-
-    /**
-     * 处理设置的改变
-     * @param key 改变的key
-     */
-    private void handleSettingsChanged(String key) {
-        if (key.equals(getString(R.string.pref_key_wake_lock))){
-            daemon.resetWakeLock();
-        }
     }
 
     @Override

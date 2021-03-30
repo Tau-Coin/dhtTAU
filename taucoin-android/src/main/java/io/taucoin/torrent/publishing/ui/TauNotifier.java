@@ -77,6 +77,9 @@ public class TauNotifier {
         // 添加默认通知渠道
         NotificationChannel defaultChannel = new NotificationChannel(CHAT_NOTIFY_CHANNEL_ID,
                 appContext.getString(R.string.chat_channel), NotificationManager.IMPORTANCE_HIGH);
+        defaultChannel.enableVibration(false);
+        defaultChannel.enableLights(false);
+        defaultChannel.setSound(null, null);
         channels.add(defaultChannel);
         // 添加前台服务通知渠道
         NotificationChannel foregroundChannel = new NotificationChannel(FOREGROUND_NOTIFY_CHANNEL_ID,

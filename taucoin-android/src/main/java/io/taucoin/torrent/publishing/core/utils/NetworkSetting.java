@@ -2,6 +2,8 @@ package io.taucoin.torrent.publishing.core.utils;
 
 import android.content.Context;
 
+import com.google.common.primitives.Ints;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +28,6 @@ public class NetworkSetting {
     public static final long CURRENT_SPEED_SAMPLE = 10;        // 单位s
     private static final float MIN_THRESHOLD = 1.0f / 4;       // 比率最小阀值
     private static final float MAX_THRESHOLD = 3.0f / 4;       // 比率最大阀值
-    public static final long FORE_DAY_TIME = 2 * 60 * 60;     // 假设前台固定全天的时间为2小时
 
     private static SettingsRepository settingsRepo;
     static {
@@ -139,19 +140,19 @@ public class NetworkSetting {
     /**
      * 更新APP前台运行时间
      */
-    public static void updateForegroundRunningTime(long foregroundRunningTime) {
+    public static void updateForegroundRunningTime(int foregroundRunningTime) {
         Context appContext = MainApplication.getInstance();
         String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_foreground_running_time);
-        settingsRepo.setLongValue(foregroundRunningTimeKey, foregroundRunningTime);
+        settingsRepo.setIntValue(foregroundRunningTimeKey, foregroundRunningTime);
     }
 
     /**
      * 获取APP前台运行时间
      */
-    private static long getForegroundRunningTime() {
+    private static int getForegroundRunningTime() {
         Context appContext = MainApplication.getInstance();
         String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_foreground_running_time);
-        return settingsRepo.getLongValue(foregroundRunningTimeKey, 0);
+        return settingsRepo.getIntValue(foregroundRunningTimeKey, 0);
     }
 
     /**
@@ -198,7 +199,7 @@ public class NetworkSetting {
         long todayLastSeconds = 0; // 今天剩余的秒数
         // 根据APP在前后台而不同
         if (isForegroundRunning()) {
-            todayLastSeconds = FORE_DAY_TIME - getForegroundRunningTime();
+            todayLastSeconds = getScreenTimeLimitSecond(true) - getForegroundRunningTime();
         }
         if (todayLastSeconds <= 0) {
             todayLastSeconds = DateUtil.getTodayLastSeconds();
@@ -211,6 +212,45 @@ public class NetworkSetting {
         }
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_available_data), availableData);
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_speed_limit), speedLimit);
+    }
+
+    /**
+     * 获取每天APP高速前台时间限制 单位h
+     */
+    private static int getScreenTimeLimitSecond(boolean isMeteredNetwork) {
+        return getScreenTimeLimitHours(isMeteredNetwork) * 60 * 60;
+    }
+
+    /**
+     * 获取每天APP高速前台时间限制 单位s
+     */
+    public static int getScreenTimeLimitHours() {
+        boolean isMeteredNetwork = NetworkSetting.isMeteredNetwork();
+        return getScreenTimeLimitHours(isMeteredNetwork);
+    }
+
+    /**
+     * 获取每天APP高速前台时间限制 单位s
+     */
+    private static int getScreenTimeLimitHours(boolean isMeteredNetwork) {
+        Context context = MainApplication.getInstance();
+        int selectIndex;
+        if (isMeteredNetwork) {
+            int selectLimit = NetworkSetting.getMeteredLimit();
+            int[] meteredLimits = context.getResources().getIntArray(R.array.metered_limit);
+            List<Integer> meteredList = Ints.asList(meteredLimits);
+            selectIndex = meteredList.indexOf(selectLimit);
+        } else {
+            int selectLimit = NetworkSetting.getWiFiLimit();
+            int[] wifiLimits = context.getResources().getIntArray(R.array.wifi_limit);
+            List<Integer> wifiList = Ints.asList(wifiLimits);
+            selectIndex = wifiList.indexOf(selectLimit);
+        }
+        int[] screenTimes = context.getResources().getIntArray(R.array.screen_time);
+        if (selectIndex >= screenTimes.length) {
+            selectIndex = 0;
+        }
+        return screenTimes[selectIndex];
     }
 
     /**
@@ -238,7 +278,7 @@ public class NetworkSetting {
         long usage = total - TrafficUtil.getMeteredTrafficTotal();
         logger.trace("updateWiFiSpeedLimit total::{}, MeteredTotal::{}, wifiUsage::{}", total,
                 TrafficUtil.getMeteredTrafficTotal(), usage);
-        long limit =  getWiFiLimit();
+        long limit = getWiFiLimit();
         long speedLimit = 0;
         long availableData = 0;
 
@@ -253,7 +293,7 @@ public class NetworkSetting {
         long todayLastSeconds = 0; // 今天剩余的秒数
         // 根据APP在前后台而不同
         if (isForegroundRunning()) {
-            todayLastSeconds = FORE_DAY_TIME - getForegroundRunningTime();
+            todayLastSeconds = getScreenTimeLimitSecond(false) - getForegroundRunningTime();
         }
         if (todayLastSeconds <= 0) {
             todayLastSeconds = DateUtil.getTodayLastSeconds();

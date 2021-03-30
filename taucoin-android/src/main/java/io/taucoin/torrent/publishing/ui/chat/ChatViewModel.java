@@ -133,11 +133,11 @@ public class ChatViewModel extends AndroidViewModel {
                         break;
                     }
                     if (null == inputStream) {
-                        inputStream = getApplication().getAssets().open("tianlongbabu1-4.txt");
+                        inputStream = getApplication().getAssets().open("HarryPotter1-8.txt");
                     } else {
                         int availableSize = inputStream.available();
                         if (availableSize < msgSize) {
-                            inputStream = getApplication().getAssets().open("tianlongbabu1-4.txt");
+                            inputStream = getApplication().getAssets().open("HarryPotter1-8.txt");
                         }
                     }
                     byte[] bytes = new byte[msgSize];
@@ -284,7 +284,7 @@ public class ChatViewModel extends AndroidViewModel {
      * 当留在该朋友聊天页面时，只访问该朋友
      * @param friendPk 要访问的朋友
      */
-    void startVisitFriend(String friendPk) {
+    public void startVisitFriend(String friendPk) {
         if (StringUtil.isEmpty(friendPk)) {
             return;
         }
@@ -294,7 +294,7 @@ public class ChatViewModel extends AndroidViewModel {
     /**
      * 当离开朋友聊天页面时，取消对朋友的单独访问
      */
-    void stopVisitFriend() {
+    public void stopVisitFriend() {
         settingsRepo.setChattingFriend(null);
     }
 }

@@ -28,6 +28,7 @@ import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityFriendsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.chat.ChatViewModel;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
@@ -46,6 +47,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     private UserViewModel userViewModel;
     private CommunityViewModel communityViewModel;
     private TxViewModel txViewModel;
+    private ChatViewModel chatViewModel;
     private FriendsListAdapter adapter;
     private CompositeDisposable disposables = new CompositeDisposable();
     // 联系人列表资源
@@ -55,7 +57,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     private int page;
     private String friendPk; // 新扫描的朋友的公钥
     private long medianFee;
-    private int order = 1; // 0:last seen, 1:last communication
+    private int order = 0; // 0:last seen, 1:last communication
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +66,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
         txViewModel = provider.get(TxViewModel.class);
+        chatViewModel = provider.get(ChatViewModel.class);
         communityViewModel = provider.get(CommunityViewModel.class);
         initParameter(getIntent());
         initView();
@@ -142,11 +145,13 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     public void onStart() {
         super.onStart();
         subscribeUserList();
+        chatViewModel.startVisitFriend(friendPk);
     }
 
     @Override
     public void onStop() {
         super.onStop();
+        chatViewModel.stopVisitFriend();
         disposables.clear();
     }
 
@@ -165,10 +170,8 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         MenuItem menuRankC = menu.findItem(R.id.menu_rank_c);
         MenuItem menuRankA = menu.findItem(R.id.menu_rank_a);
         menuItem.setVisible(page == PAGE_ADD_MEMBERS);
-//        menuRankC.setVisible(page == PAGE_FRIENDS_LIST && order == 0);
-//        menuRankA.setVisible(page == PAGE_FRIENDS_LIST && order != 0);
-        menuRankC.setVisible(false);
-        menuRankA.setVisible(false);
+        menuRankC.setVisible(page == PAGE_FRIENDS_LIST && order == 0);
+        menuRankA.setVisible(page == PAGE_FRIENDS_LIST && order != 0);
         return super.onPrepareOptionsMenu(menu);
     }
 
