@@ -689,7 +689,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
         if (null != peer) {
 //            updateCounter(peer);
-            this.publishFriends.add(peer);
 
             // 如果选中的朋友没在禁止列表的禁止期，则访问它
             long currentTime = System.currentTimeMillis() / 1000;
@@ -697,6 +696,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             if (null == timestamp || currentTime - this.DELAY_TIME >= timestamp.longValue() ) {
                 // 没在禁止列表
                 requestMutableDataFromPeer(peer);
+                this.publishFriends.add(peer);
                 this.friendDelayTime.put(peer, BigInteger.valueOf(currentTime + this.DELAY_TIME));
             }
         }
@@ -1045,7 +1045,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     public void addNewFriend(byte[] friend) {
         ByteArrayWrapper key = new ByteArrayWrapper(friend);
-        logger.debug("Add friend:{}", key.toString());
         this.friends.add(key);
         // 没有才添加
 //        if (!this.friends.contains(key)) {
@@ -1214,7 +1213,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 long currentTime = System.currentTimeMillis() / 1000;
                 // 判断时间戳，以避免处理历史数据
                 if (timestamp.longValue() > currentTime - this.ACCEPT_DATA_TIME) {
-                    logger.debug("Newer online signal:{} from peer:{}", newMsgSignal.toString(), peer.toString());
+                    logger.debug("Accepted online signal:{} from peer:{}", newMsgSignal.toString(), peer.toString());
                     // 添加到缓存，等待处理
                     LinkedHashSet<NewMsgSignal> linkedList = this.newMsgSignalCache.get(peer);
                     if (null == linkedList) {
