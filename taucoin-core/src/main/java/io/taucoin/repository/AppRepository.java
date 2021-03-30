@@ -3,6 +3,7 @@ package io.taucoin.repository;
 import java.util.List;
 import java.util.Set;
 
+import io.taucoin.core.FriendInfo;
 import io.taucoin.types.Message;
 
 /**
@@ -37,9 +38,9 @@ public interface AppRepository {
     int getMainLoopInterval();
 
     /**
-     * 获取朋友的昵称
+     * 获取朋友的信息
      * 朋友的公钥
-     * @return 昵称信息类
+     * @return 朋友信息类
      */
-    NicknameBean getFriendNickName(byte[] friendPk);
+    FriendInfo getFriendInfo(byte[] friendPk);
 }

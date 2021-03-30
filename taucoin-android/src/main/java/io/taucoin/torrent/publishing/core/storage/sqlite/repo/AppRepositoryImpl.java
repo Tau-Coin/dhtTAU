@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
+import io.taucoin.core.FriendInfo;
 import io.taucoin.repository.AppRepository;
-import io.taucoin.repository.NicknameBean;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
@@ -125,15 +125,15 @@ public class AppRepositoryImpl implements AppRepository {
      * @return 昵称信息类
      */
     @Override
-    public NicknameBean getFriendNickName(byte[] friendPk) {
+    public FriendInfo getFriendInfo(byte[] friendPk) {
         String friendPkStr = ByteUtil.toHexString(friendPk);
         User friend = db.userDao().getUserByPublicKey(friendPkStr);
-        NicknameBean bean = new NicknameBean();
-        bean.setFriendPk(friendPk);
+        byte[] nickname = null;
+        BigInteger timestamp = BigInteger.ZERO;
         if (friend != null && StringUtil.isNotEmpty(friend.nickname)) {
-            bean.setNickname(Utils.textStringToBytes(friend.nickname));
-            bean.setTimestamp(BigInteger.valueOf(friend.updateTime));
+            nickname = Utils.textStringToBytes(friend.nickname);
+            timestamp = BigInteger.valueOf(friend.updateTime);
         }
-        return bean;
+        return new FriendInfo(friendPk, nickname, timestamp);
     }
 }

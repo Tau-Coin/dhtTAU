@@ -35,7 +35,6 @@ import io.taucoin.dht2.DHTEngine;
 import io.taucoin.listener.MsgListener;
 import io.taucoin.param.ChainParam;
 import io.taucoin.repository.AppRepository;
-import io.taucoin.repository.NicknameBean;
 import io.taucoin.types.GossipItem;
 import io.taucoin.types.Message;
 import io.taucoin.types.MutableDataType;
@@ -514,9 +513,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         Bloom bloom = Bloom.create(HashUtil.sha1hash(friend.getData()));
                         if (!friendListBloomFilter.matches(bloom)) {
                             // 发现不在对方朋友列表
-                            NicknameBean nicknameBean = this.repository.getFriendNickName(friend.getData());
-                            if (null != nicknameBean) {
-                                friendInfoSet.add(new FriendInfo(friend.getData(), nicknameBean.getNickname(), nicknameBean.getTimestamp()));
+                            FriendInfo friendInfo = this.repository.getFriendInfo(friend.getData());
+                            if (null != friendInfo) {
+                                friendInfoSet.add(friendInfo);
 
                                 if (friendInfoSet.size() >= ChainParam.MAX_FRIEND_LIST_SIZE) {
                                     break;
