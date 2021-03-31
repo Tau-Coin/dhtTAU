@@ -12,6 +12,7 @@ import androidx.work.WorkManager;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
+import io.taucoin.torrent.publishing.core.utils.CrashHandler;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
 
 public class MainApplication extends MultiDexApplication {
@@ -29,6 +30,10 @@ public class MainApplication extends MultiDexApplication {
     public void onCreate() {
         super.onCreate();
         instance = this;
+
+        // Crash处理
+        CrashHandler crashHandler = CrashHandler.getInstance();
+        crashHandler.init(getApplicationContext());
 
         TauNotifier.getInstance(this).makeNotifyChannels();
         registerActivityLifecycleCallbacks(activityLifecycleCallbacks);

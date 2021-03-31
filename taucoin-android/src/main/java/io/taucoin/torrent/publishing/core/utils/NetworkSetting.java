@@ -134,6 +134,9 @@ public class NetworkSetting {
      * 更新APP前台运行时间
      */
     private static void updateForegroundRunningTime() {
+        if (!isForegroundRunning()) {
+            return;
+        }
         updateForegroundRunningTime(getForegroundRunningTime() + 1);
     }
 

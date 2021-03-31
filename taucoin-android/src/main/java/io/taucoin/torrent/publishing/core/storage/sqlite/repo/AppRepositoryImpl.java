@@ -136,4 +136,22 @@ public class AppRepositoryImpl implements AppRepository {
         }
         return new FriendInfo(friendPk, nickname, timestamp);
     }
+
+    /**
+     * 获取活跃的朋友
+     * @return 活跃的朋友列表
+     */
+    @Override
+    public List<byte[]> getActiveFriends() {
+        List<byte[]> activeFriends = new ArrayList<>();
+        try {
+            List<String> friends = db.friendDao().getActiveFriends();
+            if (friends != null && friends.size() > 0) {
+                for (String friend : friends) {
+                    activeFriends.add(ByteUtil.toByte(friend));
+                }
+            }
+        } catch (Exception ignore) { }
+        return activeFriends;
+    }
 }
