@@ -75,7 +75,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // TODO:: 1. 对方上次给我发信息的时间； 2. 对方在新时间
     // TODO:: 对方在线可能是个隐私问题，需要从YY中获得
     // 我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
-    private final Map<ByteArrayWrapper, BigInteger> lastCommunicatedTime = new ConcurrentHashMap<>();
+    private final Map<ByteArrayWrapper, BigInteger> lastSeen = new ConcurrentHashMap<>();
 
     private final Map<ByteArrayWrapper, LinkedHashSet<NewMsgSignal>> newMsgSignalCache = new ConcurrentHashMap<>();
 
@@ -101,7 +101,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
-     * 检查朋友列表是否变动，变动则进行增删调整
+     * 检查朋友列表是否变动，变动则进行增删调整，避免内存泄露
      */
     private void checkFriends() {
         Set<byte[]> friends = this.repository.getAllFriends();
@@ -495,6 +495,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 myNewMsgSignal.getEncoded());
         dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
 
+        // 取出所有30s以内的新消息信号，用来构建本次put的消息集合
         LinkedHashSet<NewMsgSignal> newMsgSignals = this.newMsgSignalCache.get(peer);
 
         if (null != newMsgSignals) {
@@ -653,6 +654,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null != chattingFriend) {
             peer = new ByteArrayWrapper(chattingFriend);
         } else {
+            // TODO：：有spam可能，等待朋友分级方案
             Iterator<ByteArrayWrapper> it = this.referredFriends.iterator();
             // 如果有现成的peer，则挑选一个peer访问
             if (it.hasNext()) {
@@ -689,13 +691,15 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null != peer) {
 //            updateCounter(peer);
 
-            // 如果选中的朋友没在禁止列表的禁止期，则访问它
+            // 如果选中的朋友没在延迟列表的延迟期(1 s)，则访问它
             long currentTime = System.currentTimeMillis() / 1000;
             BigInteger timestamp = this.friendDelayTime.get(peer);
             if (null == timestamp || currentTime - this.DELAY_TIME >= timestamp.longValue() ) {
-                // 没在禁止列表
+                // 没在延迟列表
                 requestMutableDataFromPeer(peer);
+                // 加入put列表
                 this.publishFriends.add(peer);
+                // 更新延迟时间
                 this.friendDelayTime.put(peer, BigInteger.valueOf(currentTime + this.DELAY_TIME));
             }
         }
@@ -1108,7 +1112,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private void clearPeerCache(ByteArrayWrapper peer) {
         this.friends.remove(peer);
         this.friendDelayTime.remove(peer);
-        this.lastCommunicatedTime.remove(peer);
+        this.lastSeen.remove(peer);
 //        this.latestNewMsgSignalTime.remove(peer);
 //        this.latestNewMsgSignals.remove(peer);
 //        this.newMsgPeers.remove(peer);
@@ -1130,7 +1134,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private void clearAllCache() {
         this.friends.clear();
         this.friendDelayTime.clear();
-        this.lastCommunicatedTime.clear();
+        this.lastSeen.clear();
 //        this.latestNewMsgSignalTime.clear();
 //        this.latestNewMsgSignals.clear();
 //        this.newMsgPeers.clear();
@@ -1154,16 +1158,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
         // 是否更新好友的在线时间（完整公钥）
         BigInteger timestamp = mutableDataWrapper.getTimestamp();
-        BigInteger lastCommunicated = this.lastCommunicatedTime.get(peer);
+        BigInteger lastSeen = this.lastSeen.get(peer);
 
-        if (null != lastCommunicated && lastCommunicated.compareTo(timestamp) > 0) {
+        if (null != lastSeen && lastSeen.compareTo(timestamp) > 0) {
             logger.debug("-----old mutable data from peer:{}", peer.toString());
         }
 
         // 判断时间戳，以避免处理历史数据
-        if (null == lastCommunicated || lastCommunicated.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
+        if (null == lastSeen || lastSeen.compareTo(timestamp) < 0) { // 判断是否是更新的online signal
             logger.debug("Newer data from peer:{}", peer.toString());
-            this.lastCommunicatedTime.put(peer, timestamp);
+            this.lastSeen.put(peer, timestamp);
             this.msgListener.onDiscoveryFriend(peer.getData(), timestamp);
 //            this.onlineFriendsToNotify.put(peer, timestamp);
         }
