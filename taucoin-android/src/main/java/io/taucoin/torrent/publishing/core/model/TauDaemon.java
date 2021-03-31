@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.core.model;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiManager;
 import android.os.PowerManager;
 
 import org.slf4j.Logger;
@@ -62,6 +63,7 @@ public class TauDaemon {
     private ConnectionReceiver connectionReceiver = new ConnectionReceiver();
     private TauController tauController;
     private PowerManager.WakeLock wakeLock;
+    private WifiManager.WifiLock wifiLock;
     private SystemServiceManager systemServiceManager;
     private ExecutorService exec = Executors.newSingleThreadExecutor();
     private TauListenHandler tauListenHandler;
@@ -543,6 +545,8 @@ public class TauDaemon {
         Utils.enableBootReceiver(appContext, enable);
         // 启动CPU WakeLock
         keepCPUWakeLock(enable);
+        // 启动Wifi WakeLock
+        keepWifiWakeLock(enable);
     }
 
     /**
@@ -553,8 +557,8 @@ public class TauDaemon {
         logger.info("keepCPUWakeLock::{}", enable);
         if (enable) {
             if (wakeLock == null) {
-                Context context = MainApplication.getInstance();
-                PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
+                PowerManager pm = (PowerManager) appContext.getSystemService(Context.POWER_SERVICE);
+                // 保持CPU 运转，屏幕和键盘灯有可能是关闭的。
                 wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
             }
             if (!wakeLock.isHeld()){
@@ -566,6 +570,32 @@ public class TauDaemon {
             }
             if (wakeLock.isHeld()){
                 wakeLock.release();
+            }
+        }
+    }
+
+    /**
+     * 保持Wifi唤醒锁定
+     */
+    private void keepWifiWakeLock(boolean enable) {
+        logger.info("keepWifiWakeLock::{}", enable);
+        if (enable) {
+            if (wifiLock == null) {
+
+                WifiManager wifiManager = (WifiManager) appContext.getApplicationContext()
+                        .getSystemService(Context.WIFI_SERVICE);
+                // 扫描，自动的尝试去连接一个曾经配置过的点，保持最佳性能
+                wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, TAG);
+            }
+            if (!wifiLock.isHeld()){
+                wifiLock.acquire();
+            }
+        } else {
+            if (wifiLock == null){
+                return;
+            }
+            if (wifiLock.isHeld()){
+                wifiLock.release();
             }
         }
     }
