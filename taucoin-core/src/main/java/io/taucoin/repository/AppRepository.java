@@ -43,4 +43,11 @@ public interface AppRepository {
      * @return 朋友信息类
      */
     FriendInfo getFriendInfo(byte[] friendPk);
+
+
+    /**
+     * 获取活跃的朋友
+     * @return 活跃的朋友列表
+     */
+    List<byte[]> getActiveFriends();
 }

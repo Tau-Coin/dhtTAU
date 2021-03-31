@@ -25,6 +25,10 @@ public interface FriendDao {
             " WHERE userPK = (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
             " AND status != 0";
 
+    String QUERY_ACTIVE_FRIENDS = "SELECT friendPK FROM Friends" +
+            " WHERE userPK = (" + UserDao.QUERY_GET_CURRENT_USER_PK + ")" +
+            " AND status != 0";
+
     /**
      * 添加新社区成员
      */
@@ -42,4 +46,11 @@ public interface FriendDao {
 
     @Query(QUERY_ALL_FRIENDS)
     List<String> queryAllFriends();
+
+    /**
+     * 获取活跃的朋友 (LAST COMM 在一周内 && Last seen 在10 minutes）
+     * @return 活跃的朋友列表
+     */
+    @Query(QUERY_ACTIVE_FRIENDS)
+    List<String> getActiveFriends();
 }
