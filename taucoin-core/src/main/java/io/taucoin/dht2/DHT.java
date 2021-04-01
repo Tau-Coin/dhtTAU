@@ -158,14 +158,21 @@ public final class DHT {
         public byte[] privateKey;
         public List<Entry> entryList;
         public byte[] salt;
+        public int branch_factor;
 
         private Sha1Hash hash;
 
         public MutableItemBatch(byte[] publicKey, byte[] privateKey,
                 List<ByteArrayWrapper> items, byte[] salt) {
+            this(publicKey, privateKey, items, salt, 16 /*(items.size() + 1) / 2*/);
+        }
+
+        public MutableItemBatch(byte[] publicKey, byte[] privateKey,
+                List<ByteArrayWrapper> items, byte[] salt, int branch_factor) {
             this.publicKey = publicKey;
             this.privateKey = privateKey;
             this.salt = salt;
+            this.branch_factor = branch_factor;
             this.hash = MutableItem.computeHash(this.publicKey, this.salt);
             // construct entry list
             this.entryList = fromBytesArray(items);

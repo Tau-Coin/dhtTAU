@@ -413,7 +413,7 @@ public class TauSession {
 
         logger.trace("put dht item batch:" + batch);
         sessionManager.dhtPutItem(batch.publicKey, batch.privateKey,
-                batch.entryList, batch.salt);
+                batch.entryList, batch.salt, batch.branch_factor);
 
         return true;
     }
