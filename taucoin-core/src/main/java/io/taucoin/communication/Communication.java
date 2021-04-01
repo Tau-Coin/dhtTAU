@@ -620,10 +620,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //        this.friendBannedTime.remove(friend);
     }
 
-    /**
-     * 更新访问计数器，在达到一定的访问次数时，进行一次put
-     * @param peer 更新的朋友
-     */
+//    /**
+//     * 更新访问计数器，在达到一定的访问次数时，进行一次put
+//     * @param peer 更新的朋友
+//     */
 //    private void updateCounter(ByteArrayWrapper peer) {
 //        Integer counter = this.counter.get(peer);
 //        if (null != counter) {
@@ -651,40 +651,106 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         ByteArrayWrapper peer = null;
 
         byte[] chattingFriend = this.repository.getChattingFriend();
-        if (null != chattingFriend) {
+
+        Random random = new Random(System.currentTimeMillis());
+        int index = random.nextInt(10);
+
+        // 90%的概率选中该朋友
+        if (null != chattingFriend && index < 9) {
             peer = new ByteArrayWrapper(chattingFriend);
         } else {
-            // TODO：：有spam可能，等待朋友分级方案
             Iterator<ByteArrayWrapper> it = this.referredFriends.iterator();
-            // 如果有现成的peer，则挑选一个peer访问
-            if (it.hasNext()) {
+
+            // 防止产生随机数的种子一样，以时间和上次随机数之和作为种子
+            random = new Random(System.currentTimeMillis() + index);
+            index = random.nextInt(10);
+
+            // 如果有现成的peer，则50%的概率挑选一个peer访问
+            if (it.hasNext() && index < 5) {
                 peer = it.next();
 
                 this.referredFriends.remove(peer);
             } else {
-                // 没有找到推荐的活跃的peer，则自己随机访问一个自己的朋友或者自己
-                Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
-                if (iterator.hasNext()) {
+                List<byte[]> activeFriends = this.repository.getActiveFriends();
 
-                    Random random = new Random(System.currentTimeMillis());
-                    // 取值范围0 ~ size，当index取size时选自己
-                    int index = random.nextInt(this.friends.size());
+                random = new Random(System.currentTimeMillis() + index);
+                index = random.nextInt(10);
 
-//                    if (index != this.friends.size()) {
-                        // (0 ~ size)
+                if (null != activeFriends) {
+                    if (!activeFriends.isEmpty() && index < 7) {
+                        Iterator<byte[]> iterator = activeFriends.iterator();
+
+                        random = new Random(System.currentTimeMillis() + index);
+                        index = random.nextInt(activeFriends.size());
+
                         int i = 0;
                         while (iterator.hasNext()) {
-                            peer = iterator.next();
+                            byte[] pubKey = iterator.next();
                             if (i == index) {
+                                peer = new ByteArrayWrapper(pubKey);
                                 break;
                             }
 
                             i++;
                         }
+                    } else {
+                        List<byte[]> otherFriends = new ArrayList<>();
+
+                        for (ByteArrayWrapper friend: this.friends) {
+                            boolean found = false;
+                            for (byte[] activeFriend: activeFriends) {
+                                if (Arrays.equals(friend.getData(), activeFriend)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (!found) {
+                                otherFriends.add(friend.getData());
+                            }
+                        }
+
+                        Iterator<byte[]> iterator = otherFriends.iterator();
+
+                        random = new Random(System.currentTimeMillis() + index);
+                        index = random.nextInt(activeFriends.size());
+
+                        int i = 0;
+                        while (iterator.hasNext()) {
+                            byte[] pubKey = iterator.next();
+                            if (i == index) {
+                                peer = new ByteArrayWrapper(pubKey);
+                                break;
+                            }
+
+                            i++;
+                        }
+                    }
+                }
+
+                // 没有找到推荐的活跃的peer，则自己随机访问一个自己的朋友或者自己
+//                Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
+//                if (iterator.hasNext()) {
+
+//                    Random random = new Random(System.currentTimeMillis());
+                    // 取值范围0 ~ size，当index取size时选自己
+//                    int index = random.nextInt(this.friends.size());
+
+//                    if (index != this.friends.size()) {
+                        // (0 ~ size)
+//                        int i = 0;
+//                        while (iterator.hasNext()) {
+//                            peer = iterator.next();
+//                            if (i == index) {
+//                                break;
+//                            }
+//
+//                            i++;
+//                        }
 //                    } else {
 //                        peer = new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first);
 //                    }
-                }
+//                }
             }
         }
 
