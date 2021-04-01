@@ -655,7 +655,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         Random random = new Random(System.currentTimeMillis());
         int index = random.nextInt(10);
 
-        // 90%的概率选中该朋友
+        // 90%的概率选中正在聊天的朋友
         if (null != chattingFriend && index < 9) {
             peer = new ByteArrayWrapper(chattingFriend);
         } else {
@@ -665,7 +665,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             random = new Random(System.currentTimeMillis() + index);
             index = random.nextInt(10);
 
-            // 如果有现成的peer，则50%的概率挑选一个peer访问
+            // 如果有推荐的peer，则50%的概率挑选一个peer访问
             if (it.hasNext() && index < 5) {
                 peer = it.next();
 
@@ -676,6 +676,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 random = new Random(System.currentTimeMillis() + index);
                 index = random.nextInt(10);
 
+                // 70%的概率选中LAST COMM 在一周内 && Last seen 在10 minutes的朋友
                 if (null != activeFriends) {
                     if (!activeFriends.isEmpty() && index < 7) {
                         Iterator<byte[]> iterator = activeFriends.iterator();
@@ -694,6 +695,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             i++;
                         }
                     } else {
+                        // 剩下的在其它朋友里面挑选
                         List<byte[]> otherFriends = new ArrayList<>();
 
                         for (ByteArrayWrapper friend: this.friends) {
@@ -710,47 +712,25 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             }
                         }
 
-                        Iterator<byte[]> iterator = otherFriends.iterator();
+                        if (!otherFriends.isEmpty()) {
+                            Iterator<byte[]> iterator = otherFriends.iterator();
 
-                        random = new Random(System.currentTimeMillis() + index);
-                        index = random.nextInt(activeFriends.size());
+                            random = new Random(System.currentTimeMillis() + index);
+                            index = random.nextInt(otherFriends.size());
 
-                        int i = 0;
-                        while (iterator.hasNext()) {
-                            byte[] pubKey = iterator.next();
-                            if (i == index) {
-                                peer = new ByteArrayWrapper(pubKey);
-                                break;
+                            int i = 0;
+                            while (iterator.hasNext()) {
+                                byte[] pubKey = iterator.next();
+                                if (i == index) {
+                                    peer = new ByteArrayWrapper(pubKey);
+                                    break;
+                                }
+
+                                i++;
                             }
-
-                            i++;
                         }
                     }
                 }
-
-                // 没有找到推荐的活跃的peer，则自己随机访问一个自己的朋友或者自己
-//                Iterator<ByteArrayWrapper> iterator = this.friends.iterator();
-//                if (iterator.hasNext()) {
-
-//                    Random random = new Random(System.currentTimeMillis());
-                    // 取值范围0 ~ size，当index取size时选自己
-//                    int index = random.nextInt(this.friends.size());
-
-//                    if (index != this.friends.size()) {
-                        // (0 ~ size)
-//                        int i = 0;
-//                        while (iterator.hasNext()) {
-//                            peer = iterator.next();
-//                            if (i == index) {
-//                                break;
-//                            }
-//
-//                            i++;
-//                        }
-//                    } else {
-//                        peer = new ByteArrayWrapper(AccountManager.getInstance().getKeyPair().first);
-//                    }
-//                }
             }
         }
 
