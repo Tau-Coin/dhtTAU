@@ -504,7 +504,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             Iterator<NewMsgSignal> iterator = linkedList.descendingIterator();
             while (iterator.hasNext()) {
                 NewMsgSignal newMsgSignal = iterator.next();
-                Bloom messageBloomFilter = newMsgSignal.getMessageBloomFilter();
+                byte[] hashPrefixArray = newMsgSignal.getHashPrefixArray();
                 Bloom friendListBloomFilter = newMsgSignal.getFriendListBloomFilter();
 
                 byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
@@ -530,30 +530,19 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
 
                 if (null != messageList && !messageList.isEmpty()) {
-                    int size = messageList.size();
-                    byte[] firstMsgHash = messageList.get(0).getSha1Hash();
-                    byte[] lastMsgHash = messageList.get(size - 1).getSha1Hash();
-
-                    Bloom bloom = Bloom.create(firstMsgHash);
-                    if (!messageBloomFilter.matches(bloom)) {
-                        linkedMessageSet.add(messageList.get(0));
-                    }
-
-                    for (int i = 0; i < size - 1; i++) {
-                        byte[] mergedHash = ByteUtil.merge(messageList.get(i).getSha1Hash(), messageList.get(i + 1).getSha1Hash());
-                        bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
-                        boolean match = messageBloomFilter.matches(bloom);
-                        // 如果合并哈希不匹配，则随机发出一个缺少的消息即可
-                        if (!match) {
-                            linkedMessageSet.add(messageList.get(i));
-                            linkedMessageSet.add(messageList.get(i + 1));
+                    for (Message message: messageList) {
+                        byte[] hash = message.getHash();
+                        boolean found = false;
+                        for (byte b : hashPrefixArray) {
+                            if (hash[0] == b) {
+                                found = true;
+                                break;
+                            }
                         }
-                    }
 
-                    bloom = Bloom.create(lastMsgHash);
-                    boolean match = messageBloomFilter.matches(bloom);
-                    if (!match) {
-                        linkedMessageSet.add(messageList.get(size - 1));
+                        if (!found) {
+                            linkedMessageSet.add(message);
+                        }
                     }
                 }
             }
@@ -767,7 +756,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @return 在线信号
      */
     private NewMsgSignal makeNewMsgSignal(ByteArrayWrapper peer) {
-        Bloom messageBloomFilter = new Bloom();
+        byte[] hashPrefixArray = null;
         Bloom friendListBloomFilter = null;
         byte[] chattingFriend = this.repository.getChattingFriend();
         BigInteger chattingTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
@@ -776,17 +765,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
         if (null != messageList && !messageList.isEmpty()) {
             int size = messageList.size();
-            byte[] firstMsgHash = messageList.get(0).getSha1Hash();
-            byte[] lastMsgHash = messageList.get(size - 1).getSha1Hash();
-            Bloom bloom = Bloom.create(firstMsgHash);
-            messageBloomFilter.or(bloom);
-            bloom = Bloom.create(lastMsgHash);
-            messageBloomFilter.or(bloom);
-
-            for (int i = 0; i < size - 1; i++) {
-                byte[] mergedHash = ByteUtil.merge(messageList.get(i).getSha1Hash(), messageList.get(i + 1).getSha1Hash());
-                bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
-                messageBloomFilter.or(bloom);
+            hashPrefixArray = new byte[size];
+            for (int i = 0; i < size; i++) {
+                byte[] hash = messageList.get(i).getHash();
+                hashPrefixArray[i] = hash[0];
             }
         }
 
@@ -817,7 +799,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
-        return new NewMsgSignal(messageBloomFilter, friendListBloomFilter,
+        return new NewMsgSignal(hashPrefixArray, friendListBloomFilter,
                 chattingFriend, chattingTime, gossipItemList);
     }
 
@@ -1272,50 +1254,21 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                     // 添加成功，说明之前没处理过，才会处理
                     if (linkedList.add(newMsgSignal)) {
-                        Bloom messageBloomFilter = newMsgSignal.getMessageBloomFilter();
+                        byte[] hashPrefixArray = newMsgSignal.getHashPrefixArray();
 
                         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
 
                         // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
-                        List<Message> list = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
+                        List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
 
-                        if (null != list && !list.isEmpty()) {
-                            int size = list.size();
-                            byte[] firstMsgHash = list.get(0).getSha1Hash();
-                            byte[] lastMsgHash = list.get(size - 1).getSha1Hash();
-                            boolean previousMatch = true;
-
-                            Bloom bloom = Bloom.create(firstMsgHash);
-                            if (!messageBloomFilter.matches(bloom)) {
-                                previousMatch = false;
-                            }
-
-                            for (int i = 0; i < size - 1; i++) {
-                                byte[] mergedHash = ByteUtil.merge(list.get(i).getSha1Hash(), list.get(i + 1).getSha1Hash());
-                                bloom = Bloom.create(HashUtil.sha1hash(mergedHash));
-                                boolean match = messageBloomFilter.matches(bloom);
-                                // 前后两个合并哈希都匹配，才确认收到
-                                if (previousMatch && match) {
-                                    Message message = list.get(i);
-                                    if (Arrays.equals(pubKey, message.getSender())) {
-//                                    logger.debug("Notify UI confirmation root:{}", Hex.toHexString(message.getHash()));
-                                        // 若匹配，则大概率对方收到了该消息，记为confirmation root，通知UI
+                        if (null != messageList && !messageList.isEmpty()) {
+                            for (Message message: messageList) {
+                                byte[] hash = message.getHash();
+                                for (byte b : hashPrefixArray) {
+                                    if (hash[0] == b) {
                                         this.msgListener.onReadMessageRoot(peer.getData(), message.getHash(), timestamp);
+                                        break;
                                     }
-                                }
-
-                                previousMatch = match;
-                            }
-
-                            bloom = Bloom.create(lastMsgHash);
-                            boolean match = messageBloomFilter.matches(bloom);
-                            // 前后两个合并哈希都匹配，才确认收到
-                            if (previousMatch && match) {
-                                Message message = list.get(size - 1);
-                                if (Arrays.equals(pubKey, message.getSender())) {
-//                                logger.debug("Notify UI confirmation root:{}", Hex.toHexString(message.getHash()));
-                                    // 若匹配，则大概率对方收到了该消息，记为confirmation root，通知UI
-                                    this.msgListener.onReadMessageRoot(peer.getData(), message.getHash(), timestamp);
                                 }
                             }
                         }

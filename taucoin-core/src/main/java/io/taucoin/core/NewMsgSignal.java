@@ -7,12 +7,11 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.taucoin.types.GossipItem;
-import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 public class NewMsgSignal {
-    Bloom messageBloomFilter = new Bloom();
+    byte[] hashPrefixArray;
     Bloom friendListBloomFilter = null;
     // TODO：：推荐策略重新考虑
     byte[] chattingFriend; // 当前正在交谈的朋友
@@ -22,9 +21,9 @@ public class NewMsgSignal {
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
-    public NewMsgSignal(Bloom messageBloomFilter, byte[] chattingFriend,
+    public NewMsgSignal(byte[] hashPrefixArray, byte[] chattingFriend,
                         BigInteger chattingTime, List<GossipItem> gossipItemList) {
-        this.messageBloomFilter = messageBloomFilter;
+        this.hashPrefixArray = hashPrefixArray;
         this.chattingFriend = chattingFriend;
         this.chattingTime = chattingTime;
         this.gossipItemList = gossipItemList;
@@ -32,9 +31,9 @@ public class NewMsgSignal {
         this.parsed = true;
     }
 
-    public NewMsgSignal(Bloom messageBloomFilter, Bloom friendListBloomFilter,
+    public NewMsgSignal(byte[] hashPrefixArray, Bloom friendListBloomFilter,
                         byte[] chattingFriend, BigInteger chattingTime, List<GossipItem> gossipItemList) {
-        this.messageBloomFilter = messageBloomFilter;
+        this.hashPrefixArray = hashPrefixArray;
         this.friendListBloomFilter = friendListBloomFilter;
         this.chattingFriend = chattingFriend;
         this.chattingTime = chattingTime;
@@ -47,12 +46,12 @@ public class NewMsgSignal {
         this.rlpEncoded = rlpEncoded;
     }
 
-    public Bloom getMessageBloomFilter() {
+    public byte[] getHashPrefixArray() {
         if (!parsed) {
             parseRLP();
         }
 
-        return messageBloomFilter;
+        return hashPrefixArray;
     }
 
     public Bloom getFriendListBloomFilter() {
@@ -94,7 +93,7 @@ public class NewMsgSignal {
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
 
-        this.messageBloomFilter = new Bloom(list.get(0).getRLPData());
+        this.hashPrefixArray = list.get(0).getRLPData();
 
         byte[] friendBloomBytes = list.get(1).getRLPData();
         this.friendListBloomFilter = (null == friendBloomBytes) ? new Bloom(): new Bloom(friendBloomBytes);
@@ -132,7 +131,7 @@ public class NewMsgSignal {
      */
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
-            byte[] messageBloomFilter = RLP.encodeElement(this.messageBloomFilter.getData());
+            byte[] hashPrefixArray = RLP.encodeElement(this.hashPrefixArray);
             byte[] friendListBloomFilter = RLP.encodeElement(null);
             if (null != this.friendListBloomFilter) {
                 friendListBloomFilter = RLP.encodeElement(this.friendListBloomFilter.getData());
@@ -141,7 +140,7 @@ public class NewMsgSignal {
             byte[] chattingTime = RLP.encodeBigInteger(this.chattingTime);
             byte[] gossipListEncoded = getGossipListEncoded();
 
-            this.rlpEncoded = RLP.encodeList(messageBloomFilter, friendListBloomFilter,
+            this.rlpEncoded = RLP.encodeList(hashPrefixArray, friendListBloomFilter,
                     chattingFriend, chattingTime, gossipListEncoded);
         }
 
@@ -150,7 +149,7 @@ public class NewMsgSignal {
 
     @Override
     public String toString() {
-        Bloom messageBloomFilter = getMessageBloomFilter();
+        byte[] hashPrefixArray = getHashPrefixArray();
         Bloom friendListBloomFilter = getFriendListBloomFilter();
         BigInteger chattingTime = getChattingTime();
         byte[] chattingFriend = getChattingFriend();
@@ -158,9 +157,9 @@ public class NewMsgSignal {
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("OnlineSignal{");
-        if (null != messageBloomFilter) {
-            stringBuilder.append("message bloom filter=");
-            stringBuilder.append(messageBloomFilter);
+        if (null != hashPrefixArray) {
+            stringBuilder.append("hash prefix array=");
+            stringBuilder.append(Hex.toHexString(hashPrefixArray));
         }
         if (null != friendListBloomFilter) {
             stringBuilder.append(", friend list bloom filter=");
