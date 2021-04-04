@@ -77,6 +77,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // 我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> lastSeen = new ConcurrentHashMap<>();
 
+    // 用于记录新消息信号的处理历史，避免历史数据重复处理，目前设计保留30个
+    private final Map<ByteArrayWrapper, LinkedHashSet<NewMsgSignal>> newMsgSignalHistory = new ConcurrentHashMap<>();
+
+    // 待处理的新消息信号集合
     private final Map<ByteArrayWrapper, LinkedHashSet<NewMsgSignal>> newMsgSignalCache = new ConcurrentHashMap<>();
 
     // 发现的我的朋友跟我聊天的最新时间 <friend, time>（完整公钥）
