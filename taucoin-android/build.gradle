@@ -85,7 +85,7 @@ configurations {
     all*.exclude group: 'com.google.guava', module: 'listenablefuture'
 }
 
-def ROOM_VERSION = "2.2.5"
+def ROOM_VERSION = "2.2.6"
 def ACRA_VERSION = "5.5.0"
 def DAGGER_VERSION = "2.27"
 

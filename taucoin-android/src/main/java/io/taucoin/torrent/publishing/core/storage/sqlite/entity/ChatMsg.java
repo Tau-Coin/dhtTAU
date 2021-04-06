@@ -6,11 +6,13 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
+import androidx.room.Index;
 
 /**
  * Room: 数据库存储Chat实体类
  */
-@Entity(tableName = "ChatMessages", primaryKeys = "hash")
+@Entity(tableName = "ChatMessages", primaryKeys = "hash",
+        indices = {@Index(value = {"timestamp", "logicMsgHash", "nonce"})})
 public class ChatMsg implements Parcelable {
     @NonNull
     public String hash;                    // 消息的Hash
@@ -20,7 +22,6 @@ public class ChatMsg implements Parcelable {
     public String receiverPk;              // 接收者的公钥
     @NonNull
     public long timestamp;                 // 时间戳
-    public byte[] content;                 // 消息内容
     @NonNull
     public int contentType;                // 消息内容类型
     @NonNull
@@ -29,6 +30,7 @@ public class ChatMsg implements Parcelable {
     public String logicMsgHash;            // 逻辑消息Hash, 包含时间戳保证唯一性
     @NonNull
     public int unsent;                     // 0: 未发送， 1: 已发送
+    public byte[] content;                 // 消息内容
 
     public ChatMsg(@NonNull String hash, String senderPk, String receiverPk, int contentType,
                    long timestamp, long nonce, String logicMsgHash){
