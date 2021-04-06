@@ -2,6 +2,9 @@ package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -28,7 +31,7 @@ import io.taucoin.util.ByteUtil;
  * FriendRepository接口实现
  */
 public class AppRepositoryImpl implements AppRepository {
-
+    private static final Logger logger = LoggerFactory.getLogger("AppRepositoryImpl");
     private Context appContext;
     private AppDatabase db;
 
@@ -66,11 +69,13 @@ public class AppRepositoryImpl implements AppRepository {
      */
     @Override
     public List<Message> getLatestMessageList(byte[] friendPk, int num) {
+        long startTime = System.currentTimeMillis();
         List<Message> msgList = new ArrayList<>();
         try {
             String userPkStr = MainApplication.getInstance().getPublicKey();
             String friendPkStr = ByteUtil.toHexString(friendPk);
             List<ChatMsg> chatMsgList = db.chatDao().getMessageList(userPkStr, friendPkStr, 0, num);
+            long endTime2 = System.currentTimeMillis();
             if (null == chatMsgList || chatMsgList.size() == 0) {
                 return msgList;
             }
@@ -93,6 +98,10 @@ public class AppRepositoryImpl implements AppRepository {
                 message.setEncryptedContent(content);
                 msgList.add(message);
             }
+            long endTime3 = System.currentTimeMillis();
+            logger.trace("getLatestMessageList friendPk::{}, size::{}, getMessageList::{}, for::{}",
+                    ByteUtil.toHexString(friendPk), chatMsgList.size(),
+                    (endTime2 - startTime), (endTime3 - endTime2));
         } catch (Exception ignore) { }
         return msgList;
     }

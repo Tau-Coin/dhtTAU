@@ -1,9 +1,10 @@
 package io.taucoin.torrent.publishing.core.storage.sqlite;
 
 import android.content.Context;
-import android.util.Log;
+import android.database.Cursor;
 
-import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import androidx.annotation.NonNull;
 import androidx.room.Database;
@@ -45,6 +46,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
         Device.class
     }, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
+    private static final Logger logger = LoggerFactory.getLogger("AppDatabase");
     private static final String DATABASE_NAME = "tau.db";
 
     private static volatile AppDatabase INSTANCE;
@@ -93,9 +95,24 @@ public abstract class AppDatabase extends RoomDatabase {
                     @Override
                     public void onOpen(@NonNull SupportSQLiteDatabase db) {
                         super.onOpen(db);
-                        Log.d("buildDatabase", "enableWriteAheadLogging::" + db.enableWriteAheadLogging());
-                        Log.d("buildDatabase", "isWriteAheadLoggingEnabled::" + db.isWriteAheadLoggingEnabled());
-                        Log.d("buildDatabase", "isDatabaseIntegrityOk::" + db.isDatabaseIntegrityOk());
+                        db.execSQL("PRAGMA cache_size = -51200");  // 缓存大小修改为50MB
+                        queryPragma(db, "PRAGMA cache_size");
+                        queryPragma(db, "PRAGMA cache_spill");
+                        queryPragma(db, "PRAGMA page_size");
+                    }
+
+                    void queryPragma(SupportSQLiteDatabase db, String query) {
+                        Cursor cursor = db.query(query);
+                        if (cursor != null && cursor.getCount() > 0) {
+                            cursor.moveToFirst();
+                            String[] names = cursor.getColumnNames();
+                            for (String name : names) {
+                                logger.debug("queryPragma name::{}", name);
+                                int index = cursor.getColumnIndex(name);
+                                logger.debug("queryPragma value::{}", cursor.getString(index));
+                            }
+                            cursor.close();
+                        }
                     }
 
                     @Override
