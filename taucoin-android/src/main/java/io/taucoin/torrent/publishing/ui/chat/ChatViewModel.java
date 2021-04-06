@@ -142,6 +142,7 @@ public class ChatViewModel extends AndroidViewModel {
                 baos.close();
 
                 int srcPos = 0;
+                byte[] bytes = new byte[msgSize];
                 for (int i = 0; i < time; i++) {
                     if (emitter.isCancelled()) {
                         break;
@@ -149,7 +150,6 @@ public class ChatViewModel extends AndroidViewModel {
                     if (srcPos + msgSize > buffer.length) {
                         srcPos = 0;
                     }
-                    byte[] bytes = new byte[msgSize];
                     System.arraycopy(buffer, srcPos, bytes, 0, bytes.length);
                     srcPos += msgSize;
 
