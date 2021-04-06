@@ -137,10 +137,10 @@ public class ChatViewModel extends AndroidViewModel {
                 while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
                     baos.write(data, 0, nRead);
                 }
+                byte[] buffer = baos.toByteArray();
                 inputStream.close();
                 baos.close();
 
-                byte[] buffer = baos.toByteArray();
                 int srcPos = 0;
                 for (int i = 0; i < time; i++) {
                     if (emitter.isCancelled()) {
