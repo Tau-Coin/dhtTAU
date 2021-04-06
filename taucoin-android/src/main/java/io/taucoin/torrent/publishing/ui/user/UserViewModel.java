@@ -35,7 +35,6 @@ import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
 import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -792,7 +791,7 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 观察朋友信息变化
      */
-    public Flowable<FriendAndUser> observeFriend(String friendPk) {
+    public Flowable<Friend> observeFriend(String friendPk) {
         return userRepo.observeFriend(friendPk);
     }
 

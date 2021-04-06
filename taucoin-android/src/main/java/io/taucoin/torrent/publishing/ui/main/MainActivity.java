@@ -497,6 +497,7 @@ public class MainActivity extends ScanTriggerActivity {
             if (bean.type == 0) {
                 newFragment = new CommunityFragment();
             } else if (bean.type == 1) {
+                bundle.putParcelable(IntentExtra.BEAN, bean.friend);
                 newFragment = new ChatFragment();
             }
             bundle.putString(IntentExtra.ID, bean.ID);

@@ -31,7 +31,7 @@ public interface ChatDao {
     String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE +
-            " ORDER BY msg.timestamp, msg.logicMsgHash COLLATE UNICODE, msg.nonce" +
+            " ORDER BY msg.timestamp DESC, msg.logicMsgHash COLLATE UNICODE DESC, msg.nonce DESC" +
             " LIMIT :loadSize OFFSET :startPosition ";
 
     String QUERY_MESSAGE_LIST = "SELECT msg.*" +
@@ -94,7 +94,6 @@ public interface ChatDao {
      * @return List<Chat>
      */
     @Query(QUERY_MESSAGES_BY_FRIEND_PK)
-    @Transaction
     List<ChatMsgAndUser> getMessages(String senderPk, String receiverPk, int startPosition, int loadSize);
 
     @Query(QUERY_MESSAGE_LIST)

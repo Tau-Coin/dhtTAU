@@ -17,6 +17,7 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
@@ -42,12 +43,17 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
         RIGHT_PICTURE
     }
     private ClickListener listener;
+    private User friend;
     private byte[] cryptoKey;
 
     ChatListAdapter(ClickListener listener, String friendPk) {
         super(diffCallback);
         this.listener = listener;
         this.cryptoKey = Utils.keyExchange(friendPk, MainApplication.getInstance().getSeed());
+    }
+
+    public void setFriend(User friend) {
+        this.friend = friend;
     }
 
     @NonNull
@@ -77,7 +83,7 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
                     parent,
                     false);
         }
-        return new ViewHolder(binding, listener, cryptoKey);
+        return new ViewHolder(binding, listener, friend, cryptoKey);
     }
 
     @Override
@@ -126,12 +132,14 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
     static class ViewHolder extends RecyclerView.ViewHolder {
         private ViewDataBinding binding;
         private ClickListener listener;
+        private User friend;
         private byte[] cryptoKey;
 
-        ViewHolder(ViewDataBinding binding, ClickListener listener, byte[] cryptoKey) {
+        ViewHolder(ViewDataBinding binding, ClickListener listener, User friend, byte[] cryptoKey) {
             super(binding.getRoot());
             this.binding = binding;
             this.listener = listener;
+            this.friend = friend;
             this.cryptoKey = cryptoKey;
         }
 
@@ -158,7 +166,12 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
             }
             roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
 
-            String showName = UsersUtil.getShowName(msg.sender, msg.senderPk);
+            String showName;
+            if (StringUtil.isEquals(msg.senderPk, MainApplication.getInstance().getPublicKey())) {
+                showName = UsersUtil.getShowName(MainApplication.getInstance().getCurrentUser(), msg.senderPk);
+            } else {
+                showName = UsersUtil.getShowName(friend, msg.senderPk);
+            }
             roundButton.setText(StringUtil.getFirstLettersOfName(showName));
             roundButton.setOnClickListener(v -> {
                 if (listener != null) {
@@ -222,7 +235,12 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
                 return;
             }
             roundButton.setBgColor(Utils.getGroupColor(msg.senderPk));
-            String showName = UsersUtil.getShowName(msg.sender, msg.senderPk);
+            String showName;
+            if (StringUtil.isEquals(msg.senderPk, MainApplication.getInstance().getPublicKey())) {
+                showName = UsersUtil.getShowName(MainApplication.getInstance().getCurrentUser(), msg.senderPk);
+            } else {
+                showName = UsersUtil.getShowName(friend, msg.senderPk);
+            }
             roundButton.setText(StringUtil.getFirstLettersOfName(showName));
             roundButton.setOnClickListener(v -> {
                 if (listener != null) {

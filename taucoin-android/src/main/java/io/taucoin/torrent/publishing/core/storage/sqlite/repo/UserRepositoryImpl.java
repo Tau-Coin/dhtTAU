@@ -13,9 +13,9 @@ import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 import io.taucoin.torrent.publishing.MainApplication;
-import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -211,7 +211,7 @@ public class UserRepositoryImpl implements UserRepository{
      * 观察朋友信息变化
      */
     @Override
-    public Flowable<FriendAndUser> observeFriend(String friendPk) {
+    public Flowable<Friend> observeFriend(String friendPk) {
         return db.userDao().observeFriend(friendPk);
     }
 

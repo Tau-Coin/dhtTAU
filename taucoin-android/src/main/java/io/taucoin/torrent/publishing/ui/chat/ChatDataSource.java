@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -62,14 +63,8 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
         initialDataNum = numMessages;
         long getNumTime = System.currentTimeMillis();
         logger.trace("loadInitial getNumTime::{}", getNumTime - startTime);
-        int pos;
+        int pos = 0;
         int loadSize = params.requestedLoadSize;
-        // 初始加载大小大于等于数据总数，开始位置为0，否则为二者之差
-        if (loadSize >= numMessages) {
-            pos = 0;
-        } else {
-            pos = numMessages - loadSize;
-        }
         List<ChatMsgAndUser> messages = chatRepo.getMessages(friendPk, pos, loadSize);
         long getMessagesTime = System.currentTimeMillis();
         logger.trace("loadInitial getMessagesTime::{}", getMessagesTime - getNumTime);
@@ -82,6 +77,7 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
                 logger.error("loadInitial decrypt error::", e);
             }
         }
+        Collections.reverse(messages);
         long endTime = System.currentTimeMillis();
         logger.trace("loadInitial decryptTime Time::{}", endTime - getMessagesTime);
 
@@ -90,7 +86,11 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
         if (messages.isEmpty()) {
             callback.onResult(messages, 0);
         } else {
-            callback.onResult(messages, pos);
+            if (numMessages > loadSize) {
+                callback.onResult(messages, numMessages - loadSize);
+            } else {
+                callback.onResult(messages, 0);
+            }
         }
     }
 
@@ -106,7 +106,10 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
         int numMessages = chatRepo.getNumMessages(friendPk);
         int pos = params.startPosition;
         int loadSize = params.loadSize;
-        if (pos < numMessages && initialDataNum == numMessages) {
+        if (numMessages > pos) {
+            pos = numMessages - loadSize - pos;
+        }
+        if (pos > 0 && pos < numMessages && initialDataNum == numMessages) {
             // 开始位置小于数据总数
             messages = chatRepo.getMessages(friendPk, pos, loadSize);
         } else {
@@ -122,6 +125,7 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
                 logger.error("loadInitial decrypt error::", e);
             }
         }
+        Collections.reverse(messages);
         long endTime = System.currentTimeMillis();
         logger.debug("loadRange friendPk::{},  pos::{}, loadSize::{}, resultSize::{}, numEntries::{}, queryTime::{}",
                 friendPk, pos, loadSize, messages.size(), numMessages, endTime - startTime);

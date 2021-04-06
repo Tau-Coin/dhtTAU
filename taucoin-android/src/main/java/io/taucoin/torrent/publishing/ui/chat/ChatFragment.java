@@ -37,6 +37,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.core.utils.MediaUtil;
@@ -72,6 +73,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     private CompositeDisposable disposables = new CompositeDisposable();
     private Disposable logsDisposable;
     private String friendPK;
+    private User friend;
     private Handler handler = new Handler();
     private MsgLogsDialog msgLogsDialog;
 
@@ -102,6 +104,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     private void initParameter() {
         if(getArguments() != null){
             friendPK = getArguments().getString(IntentExtra.ID);
+            friend = getArguments().getParcelable(IntentExtra.BEAN);
         }
     }
 
@@ -110,6 +113,8 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
      */
     @SuppressLint("ClickableViewAccessibility")
     private void initLayout() {
+        String friendNickName = UsersUtil.getShowName(friend, friend.publicKey);
+        binding.toolbarInclude.tvTitle.setText(friendNickName);
         binding.toolbarInclude.ivBack.setOnClickListener(v -> {
             KeyboardUtils.hideSoftInput(activity);
             activity.goBack();
@@ -160,6 +165,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
         });
 
         adapter = new ChatListAdapter(this, friendPK);
+        adapter.setFriend(friend);
         LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
         binding.msgList.setLayoutManager(layoutManager);
         binding.msgList.setItemAnimator(null);
@@ -201,13 +207,6 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
      * 订阅社区相关的被观察者
      */
     private void subscribeChatViewModel() {
-        chatViewModel.observerChat(friendPK).observe(this, messages -> {
-            adapter.submitList(messages, handleUpdateAdapter);
-            // 关闭当前朋友的消息通知
-            TauNotifier.getInstance().cancelChatMsgNotify(friendPK);
-            userViewModel.clearMsgUnread(friendPK);
-            logger.debug("messages.size::{}", messages.size());
-        });
         disposables.add(userViewModel.observeFriend(friendPK)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -216,9 +215,16 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                             ? View.VISIBLE : View.GONE);
                     binding.llShareQr.setVisibility(friend.status != FriendStatus.CONNECTED.getStatus()
                             ? View.VISIBLE : View.GONE);
-                    String friendNickName = UsersUtil.getShowName(friend.user, friend.friendPK);
-                    binding.toolbarInclude.tvTitle.setText(friendNickName);
                 }));
+
+        chatViewModel.observerChat(friendPK).observe(this, messages -> {
+            adapter.submitList(messages, handleUpdateAdapter);
+            // 关闭当前朋友的消息通知
+            TauNotifier.getInstance().cancelChatMsgNotify(friendPK);
+            userViewModel.clearMsgUnread(friendPK);
+            logger.debug("messages.size::{}", messages.size());
+        });
+
         chatViewModel.getChatResult().observe(this, result -> {
             if (!result.isSuccess()) {
                 ToastUtils.showShortToast(result.getMsg());

@@ -5,6 +5,7 @@ import android.app.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -127,32 +128,40 @@ public class ChatViewModel extends AndroidViewModel {
     void sendBatchDebugMessage(String friendPk, int time, int msgSize) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             InputStream inputStream = null;
+            ByteArrayOutputStream baos = null;
             try {
+                inputStream = getApplication().getAssets().open("HarryPotter1-8.txt");
+                baos = new ByteArrayOutputStream();
+                int nRead;
+                byte[] data = new byte[1024];
+                while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                    baos.write(data, 0, nRead);
+                }
+                inputStream.close();
+                baos.close();
+
+                byte[] buffer = baos.toByteArray();
+                int srcPos = 0;
                 for (int i = 0; i < time; i++) {
                     if (emitter.isCancelled()) {
                         break;
                     }
-                    if (null == inputStream) {
-                        inputStream = getApplication().getAssets().open("HarryPotter1-8.txt");
-                    } else {
-                        int availableSize = inputStream.available();
-                        if (availableSize < msgSize) {
-                            inputStream = getApplication().getAssets().open("HarryPotter1-8.txt");
-                        }
+                    if (srcPos + msgSize > buffer.length) {
+                        srcPos = 0;
                     }
                     byte[] bytes = new byte[msgSize];
-                    int read = inputStream.read(bytes);
-                    if (read > 0) {
-                        String msg = (i + 1) + "、" + new String(bytes, StandardCharsets.UTF_8);
-                        sendMessage(friendPk, msg, MessageType.TEXT.ordinal());
-                    }
-                }
-                if (inputStream != null) {
-                    inputStream.close();
+                    System.arraycopy(buffer, srcPos, bytes, 0, bytes.length);
+                    srcPos += msgSize;
+
+                    String msg = (i + 1) + "、" + new String(bytes, StandardCharsets.UTF_8);
+                    syncSendMessageTask(friendPk, msg, MessageType.TEXT.ordinal());
                 }
             } catch (Exception e) {
                 if (inputStream != null) {
                     inputStream.close();
+                }
+                if (baos != null) {
+                    baos.close();
                 }
             }
             emitter.onNext(true);
