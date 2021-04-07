@@ -535,22 +535,25 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
                 List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
 
-                if (null != messageList && !messageList.isEmpty()) {
-                    for (Message message: messageList) {
-                        byte[] hash = message.getHash();
-                        boolean found = false;
-                        for (byte b : hashPrefixArray) {
-                            if (hash[0] == b) {
-                                found = true;
-                                break;
-                            }
-                        }
+                List<Message> missingMessages = getMissingMessage(messageList, hashPrefixArray);
+                linkedMessageSet.addAll(missingMessages);
 
-                        if (!found) {
-                            linkedMessageSet.add(message);
-                        }
-                    }
-                }
+//                if (null != messageList && null != hashPrefixArray) {
+//                    for (Message message: messageList) {
+//                        byte[] hash = message.getHash();
+//                        boolean found = false;
+//                        for (byte b : hashPrefixArray) {
+//                            if (hash[0] == b) {
+//                                found = true;
+//                                break;
+//                            }
+//                        }
+//
+//                        if (!found) {
+//                            linkedMessageSet.add(message);
+//                        }
+//                    }
+//                }
             }
 
             // 清空数据
@@ -1184,6 +1187,171 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
+     * 获取对方缺失的消息集合
+     * @param messageList 消息列表
+     * @param hashPrefixArray 哈希前缀列表
+     * @return 缺失的消息集合
+     */
+    private List<Message> getMissingMessage(List<Message> messageList, byte[] hashPrefixArray) {
+        List<Message> missingMessage = new ArrayList<>();
+
+        List<byte[]> positiveOrderList = new ArrayList<>();
+        List<byte[]> negativeOrderList = new ArrayList<>();
+
+        int counter = 0;
+
+        if (null != messageList) {
+            int sum = 0;
+            int current = 1;
+
+            int position = 0;
+            int lastPosition = 0;
+
+            if (null != hashPrefixArray) {
+                for (byte prefix : hashPrefixArray) {
+                    // 记录匹配次数
+                    int matchTimes = 0;
+
+                    int size = messageList.size();
+                    for (int i = 0; i < size; i++) {
+                        Message message = messageList.get(i);
+                        byte[] hash = message.getHash();
+                        if (hash[0] == prefix) {
+                            // 匹配次数加一
+                            matchTimes++;
+                            // 记录匹配的位置
+                            position = i;
+                            // 如果超过两次重复，停止查找，弃用该哈希
+                            if (matchTimes > 1) {
+                                break;
+                            }
+                        }
+                    }
+
+                    // 只使用单匹配的哈希
+                    if (1 == matchTimes) {
+                        counter++;
+                        // 和上个元素匹配位置比较，如果比上次的匹配位置大或者相等(说明前后两个用于匹配的哈希前缀一样)，
+                        // 说明是顺序匹配，否则顺序发生了改变，需要调整符号
+                        if (position < lastPosition) {
+                            // 说明顺序发生了切换
+                            current *= -1;
+                        }
+                        if (1 == current) {
+                            positiveOrderList.add(messageList.get(position).getHash());
+                        } else if (-1 == current) {
+                            negativeOrderList.add(messageList.get(position).getHash());
+                        }
+
+                        sum += current;
+
+                        // 记录当次匹配位置
+                        lastPosition = position;
+                    }
+                }
+            }
+
+            logger.error("-----------missing message------sum:{}, counter:{}", sum, counter);
+
+            // 通过比较和的大小，决定选用的数据集合
+            if (sum >= 0) {
+                for (Message message: messageList) {
+                    if (!positiveOrderList.isEmpty() && Arrays.equals(message.getHash(), positiveOrderList.get(0))) {
+                        positiveOrderList.remove(0);
+                    } else {
+                        missingMessage.add(message);
+                    }
+                }
+            } else {
+                for (Message message: messageList) {
+                    if (!negativeOrderList.isEmpty() && Arrays.equals(message.getHash(), negativeOrderList.get(0))) {
+                        negativeOrderList.remove(0);
+                    } else {
+                        missingMessage.add(message);
+                    }
+                }
+            }
+        }
+
+        return missingMessage;
+    }
+
+    /**
+     * 获取confirmation root集合
+     * @param messageList 消息列表
+     * @param hashPrefixArray 哈希前缀列表
+     * @return confirmation root集合
+     */
+    private List<byte[]> getConfirmationRoot(List<Message> messageList, byte[] hashPrefixArray) {
+        List<byte[]> confirmationRootList = new ArrayList<>();
+
+        List<byte[]> positiveOrderList = new ArrayList<>();
+        List<byte[]> negativeOrderList = new ArrayList<>();
+
+        int counter = 0;
+
+        if (null != messageList && null != hashPrefixArray) {
+            int sum = 0;
+            int current = 1;
+
+            int position = 0;
+            int lastPosition = 0;
+            for(byte prefix: hashPrefixArray) {
+                // 记录匹配次数
+                int matchTimes = 0;
+
+                int size = messageList.size();
+                for (int i = 0; i < size; i++) {
+                    Message message = messageList.get(i);
+                    byte[] hash = message.getHash();
+                    if (hash[0] == prefix) {
+                        // 匹配次数加一
+                        matchTimes++;
+                        // 记录匹配的位置
+                        position = i;
+                        // 如果超过两次重复，停止查找，弃用该哈希
+                        if (matchTimes > 1) {
+                            break;
+                        }
+                    }
+                }
+
+                // 只使用单匹配的哈希
+                if (1 == matchTimes) {
+                    counter++;
+                    // 和上个元素匹配位置比较，如果比上次的匹配位置大或者相等(说明前后两个用于匹配的哈希前缀一样)，
+                    // 说明是顺序匹配，否则顺序发生了改变，需要调整符号
+                    if (position < lastPosition) {
+                        // 说明顺序发生了切换
+                        current *= -1;
+                    }
+                    if (1 == current) {
+                        positiveOrderList.add(messageList.get(position).getHash());
+                    } else if (-1 == current) {
+                        negativeOrderList.add(messageList.get(position).getHash());
+                    }
+
+                    sum += current;
+
+                    // 记录当次匹配位置
+                    lastPosition = position;
+                }
+            }
+
+            logger.error("-----------confirmation root------sum:{}, counter:{}", sum, counter);
+
+            // 通过比较和的大小，决定选用的数据集合
+            if (sum >= 0) {
+                return positiveOrderList;
+            } else {
+                return negativeOrderList;
+            }
+        }
+
+        return positiveOrderList;
+    }
+
+    /**
      * 处理收到的mutable data
      * @param mutableDataWrapper 收到的mutable data
      * @param peer gossip发出的peer
@@ -1277,17 +1445,23 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
                             List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
 
-                            if (null != messageList && !messageList.isEmpty()) {
-                                for (Message message: messageList) {
-                                    byte[] hash = message.getHash();
-                                    for (byte b : hashPrefixArray) {
-                                        if (hash[0] == b) {
-                                            this.msgListener.onReadMessageRoot(peer.getData(), message.getHash(), timestamp);
-                                            break;
-                                        }
-                                    }
-                                }
+                            List<byte[]> confirmationList = getConfirmationRoot(messageList, hashPrefixArray);
+
+                            for (byte[] hash: confirmationList) {
+                                this.msgListener.onReadMessageRoot(peer.getData(), hash, timestamp);
                             }
+
+//                            if (null != messageList && null != hashPrefixArray) {
+//                                for (Message message: messageList) {
+//                                    byte[] hash = message.getHash();
+//                                    for (byte b : hashPrefixArray) {
+//                                        if (hash[0] == b) {
+//                                            this.msgListener.onReadMessageRoot(peer.getData(), message.getHash(), timestamp);
+//                                            break;
+//                                        }
+//                                    }
+//                                }
+//                            }
 
                             byte[] chattingFriend = newMsgSignal.getChattingFriend();
                             if (Arrays.equals(pubKey, chattingFriend)) {
