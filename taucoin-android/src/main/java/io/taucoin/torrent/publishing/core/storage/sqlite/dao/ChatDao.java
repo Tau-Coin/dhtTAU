@@ -25,7 +25,7 @@ public interface ChatDao {
             " OR (msg.senderPk = :receiverPk AND msg.receiverPk = :senderPk)) " +
             " AND (msg.contentType = 0 OR (msg.contentType = 1 AND msg.nonce = 0))";
 
-    String QUERY_NUM_MESSAGES = "SELECT count(*) FROM ChatMessages msg" +
+    String QUERY_NUM_MESSAGES = "SELECT count(hash) FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE;
 
     String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +

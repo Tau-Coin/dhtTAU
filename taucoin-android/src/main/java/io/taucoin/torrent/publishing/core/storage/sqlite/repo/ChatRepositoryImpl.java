@@ -1,7 +1,6 @@
 package io.taucoin.torrent.publishing.core.storage.sqlite.repo;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -10,17 +9,16 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
+import io.taucoin.torrent.publishing.core.model.data.DataChanged;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
-import io.taucoin.torrent.publishing.core.utils.StringUtil;
 
 /**
  * FriendRepository接口实现
@@ -30,7 +28,7 @@ public class ChatRepositoryImpl implements ChatRepository{
     private static final int minChangeTime = 500; // 最小改变时间，防止频繁刷新，单位：ms
     private Context appContext;
     private AppDatabase db;
-    private PublishSubject<String> dataSetChangedPublish = PublishSubject.create();
+    private PublishSubject<DataChanged> dataSetChangedPublish = PublishSubject.create();
     private Disposable changeTimer;
     private boolean isNeedRefresh = false;
     private ExecutorService sender = Executors.newSingleThreadExecutor();
@@ -86,7 +84,7 @@ public class ChatRepositoryImpl implements ChatRepository{
     }
 
     @Override
-    public Observable<String> observeDataSetChanged() {
+    public Observable<DataChanged> observeDataSetChanged() {
         return dataSetChangedPublish;
     }
 
@@ -111,12 +109,20 @@ public class ChatRepositoryImpl implements ChatRepository{
     private void submitDataSetChangedDirect(String usersPk) {
         if (changeTimer != null && !changeTimer.isDisposed()) {
             isNeedRefresh = true;
+            submitDataSetChangedDirect(false, usersPk);
             return;
         }
         createChangeTimer(usersPk);
-        String changeResult = usersPk + DateUtil.getDateTime();
+        submitDataSetChangedDirect(true, usersPk);
+    }
+
+    private void submitDataSetChangedDirect(boolean refresh, String usersPk) {
+        String msg = usersPk + DateUtil.getDateTime();
         sender.submit(() -> {
-            dataSetChangedPublish.onNext(changeResult);
+            DataChanged result = new DataChanged();
+            result.setRefresh(refresh);
+            result.setMsg(msg);
+            dataSetChangedPublish.onNext(result);
         });
     }
 
