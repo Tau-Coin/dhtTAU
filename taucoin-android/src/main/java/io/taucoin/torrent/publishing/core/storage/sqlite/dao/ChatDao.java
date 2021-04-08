@@ -6,7 +6,6 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Observable;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
@@ -106,7 +105,7 @@ public interface ChatDao {
      * 添加消息日志
      */
     @Insert()
-    long addChatMsgLog(ChatMsgLog msgLog);
+    void addChatMsgLogs(ChatMsgLog... msgLog);
 
     @Query(QUERY_CHAT_MSG_LOGS)
     Observable<List<ChatMsgLog>> observerMsgLogs(String hash);

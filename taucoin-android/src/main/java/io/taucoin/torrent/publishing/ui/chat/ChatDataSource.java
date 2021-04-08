@@ -3,7 +3,6 @@ package io.taucoin.torrent.publishing.ui.chat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -85,9 +84,11 @@ class ChatDataSource extends PositionalDataSource<ChatMsgAndUser> {
                 logger.error("loadInitial decrypt error::", e);
             }
         }
+        long decryptTime = System.currentTimeMillis();
+        logger.trace("loadInitial decryptTime Time::{}", decryptTime - getMessagesTime);
         Collections.reverse(messages);
         long endTime = System.currentTimeMillis();
-        logger.trace("loadInitial decryptTime Time::{}", endTime - getMessagesTime);
+        logger.trace("loadInitial reverseTime Time::{}", endTime - decryptTime);
 
         logger.debug("loadInitial friendPk::{}, pos::{}, loadSize::{}, resultSize::{}, queryTime::{}",
                 friendPk, pos, loadSize, messages.size(), endTime - startTime);

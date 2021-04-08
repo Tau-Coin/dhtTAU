@@ -99,7 +99,8 @@ public class Sampler {
                     new int[]{Process.myPid()});
             if (memInfo.length > 0) {
                 // TotalPss = dalvikPss + nativePss + otherPss, in KB
-                final int totalPss = memInfo[0].getTotalPss();
+                // getTotalPrivateDirty()就是获得自己进程所独占的内存 in KB
+                final int totalPss = memInfo[0].getTotalPrivateDirty();
                 if (totalPss >= 0) {
                     // Mem in Byte
                     mem = totalPss * 1024;

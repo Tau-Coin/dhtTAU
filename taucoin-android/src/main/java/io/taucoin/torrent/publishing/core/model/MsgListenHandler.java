@@ -160,7 +160,7 @@ class MsgListenHandler extends MsgListener{
                 if (null == msgLog) {
                     msgLog = new ChatMsgLog(hash, ChatMsgStatus.SYNCING.getStatus(),
                             timestamp.longValue());
-                    chatRepo.addChatMsgLog(msgLog);
+                    chatRepo.addChatMsgLogs(msgLog);
                 }
             } catch (SQLiteConstraintException ignore) {
             } catch (Exception e) {
@@ -189,7 +189,7 @@ class MsgListenHandler extends MsgListener{
                 if (null == msgLog) {
                     msgLog = new ChatMsgLog(hash, ChatMsgStatus.SYNC_CONFIRMED.getStatus(),
                             timestamp.longValue());
-                   chatRepo.addChatMsgLog(msgLog);
+                   chatRepo.addChatMsgLogs(msgLog);
                 }
             } catch (SQLiteConstraintException ignore) {
             } catch (Exception e) {

@@ -149,11 +149,11 @@ public class ChatRepositoryImpl implements ChatRepository{
 
     /**
      * 添加消息日志
-     * @param msgLog
+     * @param msgLogs
      */
     @Override
-    public long addChatMsgLog(ChatMsgLog msgLog) {
-        return db.chatDao().addChatMsgLog(msgLog);
+    public void addChatMsgLogs(ChatMsgLog... msgLogs) {
+        db.chatDao().addChatMsgLogs(msgLogs);
     }
 
     /**

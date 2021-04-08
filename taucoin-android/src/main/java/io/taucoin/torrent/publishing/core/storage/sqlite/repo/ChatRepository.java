@@ -70,9 +70,9 @@ public interface ChatRepository {
 
     /**
      * 添加消息日志
-     * @param msgLog
+     * @param msgLogs
      */
-    long addChatMsgLog(ChatMsgLog msgLog);
+    void addChatMsgLogs(ChatMsgLog... msgLogs);
 
     /**
      * 观察消息日志
