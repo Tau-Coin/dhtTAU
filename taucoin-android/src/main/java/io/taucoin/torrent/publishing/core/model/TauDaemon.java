@@ -42,7 +42,6 @@ import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
 import io.taucoin.torrent.publishing.receiver.PowerReceiver;
-import io.taucoin.torrent.publishing.service.Scheduler;
 import io.taucoin.torrent.publishing.service.TauService;
 import io.taucoin.torrent.publishing.ui.setting.TrafficTipsActivity;
 import io.taucoin.types.BlockContainer;
@@ -487,7 +486,7 @@ public class TauDaemon {
         if (!isRunning) {
             return;
         }
-        tauController.restartSessions();
+        tauController.reopenNetworks();
     }
 
     /**
