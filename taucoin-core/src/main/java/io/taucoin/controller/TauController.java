@@ -152,6 +152,13 @@ public class TauController {
     }
 
     /**
+     * Reopen dht network sockets instead of restarting session.
+     */
+    public void reopenNetworks() {
+        dhtEngine.reopenNetworks();
+    }
+
+    /**
      * Increase dht session.
      * @Deprecated
      *
