@@ -58,6 +58,8 @@ public interface ChatRepository {
      */
     void submitDataSetChanged(ChatMsg chat);
 
+    void submitDataSetChangedDirect(String usersPk);
+
     int getNumMessages(String friendPk);
 
     List<ChatMsgAndUser> getMessages(String friendPk, int pos, int loadSize);

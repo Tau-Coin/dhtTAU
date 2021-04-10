@@ -52,9 +52,6 @@ public class ChatRepositoryImpl implements ChatRepository{
     @Override
     public void addChatMessages(ChatMsg... chats) {
         db.chatDao().addChats(chats);
-        if (chats != null && chats.length > 0) {
-            submitDataSetChanged(chats[0]);
-        }
     }
 
     @Override
@@ -106,7 +103,8 @@ public class ChatRepositoryImpl implements ChatRepository{
                 });
     }
 
-    private void submitDataSetChangedDirect(String usersPk) {
+    @Override
+    public void submitDataSetChangedDirect(String usersPk) {
         if (changeTimer != null && !changeTimer.isDisposed()) {
             isNeedRefresh = true;
             submitDataSetChangedDirect(false, usersPk);

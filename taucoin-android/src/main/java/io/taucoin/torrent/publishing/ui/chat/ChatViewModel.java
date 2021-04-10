@@ -223,8 +223,8 @@ public class ChatViewModel extends AndroidViewModel {
      */
     public Result syncSendMessageTask(String friendPkStr, String msg, int type) {
         Result result = new Result();
-            AppDatabase.getInstance(getApplication()).runInTransaction(() -> {
-                try {
+        AppDatabase.getInstance(getApplication()).runInTransaction(() -> {
+            try {
                 List<byte[]> contents;
                 String logicMsgHashStr;
                 if (type == MessageType.PICTURE.ordinal()) {
@@ -285,6 +285,7 @@ public class ChatViewModel extends AndroidViewModel {
                 result.setFailMsg(e.getMessage());
             }
         });
+        chatRepo.submitDataSetChangedDirect(friendPkStr);
         return result;
     }
 
