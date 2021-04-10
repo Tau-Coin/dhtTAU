@@ -3,8 +3,8 @@ package io.taucoin.torrent.publishing.ui.splash;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,10 +94,11 @@ public class SplashActivity extends BaseActivity {
     }
 
     private void requestWriteLogPermissions() {
-        boolean isAndroidQ = Build.VERSION.SDK_INT > Build.VERSION_CODES.P;
         String permission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-        if(!isAndroidQ && !EasyPermissions.hasPermissions(this, permission)){
+        Log.e("LoggerFactory", "requestWriteLogPermissions");
+        if(!EasyPermissions.hasPermissions(this, permission)){
             isAsk = true;
+            Log.e("LoggerFactory", "requestPermissions");
             EasyPermissions.requestPermissions(this,
                     this.getString(R.string.permission_tip_upgrade_denied),
                     permissionCallbacks,
@@ -133,6 +134,7 @@ public class SplashActivity extends BaseActivity {
                 handlePermissionsCallBack();
                 if (grantResults.length > 0) {
                     if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        Log.e("LoggerFactory", "onRequestPermissionsResult");
                         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
                         loggerContext.reset();
                         ContextInitializer ci = new ContextInitializer(loggerContext);
