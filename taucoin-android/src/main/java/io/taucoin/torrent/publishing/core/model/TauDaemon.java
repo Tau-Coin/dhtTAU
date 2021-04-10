@@ -357,6 +357,7 @@ public class TauDaemon {
      */
     private void switchConnectionReceiver() {
         settingsRepo.internetState(systemServiceManager.isHaveNetwork());
+        settingsRepo.setInternetType(systemServiceManager.getInternetType());
         NetworkSetting.clearSpeedList();
         NetworkSetting.setMeteredNetwork(systemServiceManager.isNetworkMetered());
         try {
@@ -374,6 +375,8 @@ public class TauDaemon {
     private void handleSettingsChanged(String key) {
         if (key.equals(appContext.getString(R.string.pref_key_internet_state))) {
             logger.info("SettingsChanged, internet state::{}", settingsRepo.internetState());
+        } else if (key.equals(appContext.getString(R.string.pref_key_internet_type))) {
+            logger.info("SettingsChanged, internet type::{}", settingsRepo.getInternetType());
             rescheduleTAUBySettings(true);
         } else if (key.equals(appContext.getString(R.string.pref_key_charging_state))) {
             logger.info("SettingsChanged, charging state::{}", settingsRepo.chargingState());
@@ -458,9 +461,8 @@ public class TauDaemon {
             // 判断有无网络连接
             if (settingsRepo.internetState()) {
                 if (isRestart) {
-                    restartSessions();
+                    reopenNetworks();
                     resetReadOnly();
-                    logger.info("rescheduleTAUBySettings restartSessions");
                 } else {
                     if (isHaveAvailableData()) {
                         // 重置无可用流量提示对话框的参数
@@ -480,13 +482,14 @@ public class TauDaemon {
     }
 
     /**
-     * Restart dht sessions.
+     * 重新打开网络
      */
-    private void restartSessions() {
+    private void reopenNetworks() {
         if (!isRunning) {
             return;
         }
         tauController.reopenNetworks();
+        logger.debug("reopenNetworks...");
     }
 
     /**
