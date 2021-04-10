@@ -507,6 +507,10 @@ public class TauSession {
         return true;
     }
 
+    public void reopenNetworks() {
+        sessionHandle.reopenNetworkSockets(SessionHandle.REOPEN_MAP_PORTS);
+    }
+
     private String getNodeIds() {
         byte[] state = new SessionHandle(sessionManager.swig())
                 .saveState(SessionHandle.SAVE_DHT_STATE);

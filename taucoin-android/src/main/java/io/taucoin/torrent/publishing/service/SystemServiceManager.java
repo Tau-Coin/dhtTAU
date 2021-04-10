@@ -38,6 +38,20 @@ public class SystemServiceManager {
      * 是否有网络连接
      * @return boolean
      */
+    public int getInternetType() {
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI
+                && networkInfo.isConnected()) {
+            return networkInfo.getType();
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * 是否有网络连接
+     * @return boolean
+     */
     public boolean isHaveNetwork() {
         return isWifiConnected() || isMobileConnected();
     }

@@ -11,6 +11,7 @@ import androidx.room.Update;
 import io.reactivex.Flowable;
 import io.taucoin.torrent.publishing.core.model.data.FriendAndUser;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
 /**
@@ -189,6 +190,5 @@ public interface UserDao {
      * 观察朋友信息变化
      */
     @Query(QUERY_FRIEND_BY_PUBLIC_KEY)
-    @Transaction
-    Flowable<FriendAndUser> observeFriend(String friendPk);
+    Flowable<Friend> observeFriend(String friendPk);
 }

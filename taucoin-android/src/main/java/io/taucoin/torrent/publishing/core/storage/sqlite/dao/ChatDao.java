@@ -6,7 +6,6 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-import androidx.room.Transaction;
 import androidx.room.Update;
 import io.reactivex.Observable;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
@@ -25,13 +24,13 @@ public interface ChatDao {
             " OR (msg.senderPk = :receiverPk AND msg.receiverPk = :senderPk)) " +
             " AND (msg.contentType = 0 OR (msg.contentType = 1 AND msg.nonce = 0))";
 
-    String QUERY_NUM_MESSAGES = "SELECT count(*) FROM ChatMessages msg" +
+    String QUERY_NUM_MESSAGES = "SELECT count(hash) FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE;
 
     String QUERY_MESSAGES_BY_FRIEND_PK = "SELECT msg.*" +
             " FROM ChatMessages msg" +
             QUERY_MESSAGES_WHERE +
-            " ORDER BY msg.timestamp, msg.logicMsgHash COLLATE UNICODE, msg.nonce" +
+            " ORDER BY msg.timestamp DESC, msg.logicMsgHash COLLATE UNICODE DESC, msg.nonce DESC" +
             " LIMIT :loadSize OFFSET :startPosition ";
 
     String QUERY_MESSAGE_LIST = "SELECT msg.*" +
@@ -94,7 +93,6 @@ public interface ChatDao {
      * @return List<Chat>
      */
     @Query(QUERY_MESSAGES_BY_FRIEND_PK)
-    @Transaction
     List<ChatMsgAndUser> getMessages(String senderPk, String receiverPk, int startPosition, int loadSize);
 
     @Query(QUERY_MESSAGE_LIST)
@@ -107,7 +105,7 @@ public interface ChatDao {
      * 添加消息日志
      */
     @Insert()
-    long addChatMsgLog(ChatMsgLog msgLog);
+    void addChatMsgLogs(ChatMsgLog... msgLog);
 
     @Query(QUERY_CHAT_MSG_LOGS)
     Observable<List<ChatMsgLog>> observerMsgLogs(String hash);

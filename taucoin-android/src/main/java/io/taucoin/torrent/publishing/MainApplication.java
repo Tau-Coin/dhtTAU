@@ -82,6 +82,13 @@ public class MainApplication extends MultiDexApplication {
     }
 
     /**
+     * 返回全局参数 当前用户
+     */
+    public User getCurrentUser() {
+        return this.currentUser;
+    }
+
+    /**
      * Activity 生命周期监听，用于监控app前后台状态切换
      */
     ActivityLifecycleCallbacks activityLifecycleCallbacks = new ActivityLifecycleCallbacks() {

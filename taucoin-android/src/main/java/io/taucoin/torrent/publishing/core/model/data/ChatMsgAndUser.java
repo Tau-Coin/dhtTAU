@@ -11,9 +11,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
  */
 public class ChatMsgAndUser extends ChatMsg {
 
-    @Relation(parentColumn = "senderPk",
-            entityColumn = "publicKey")
-    public User sender;              // 发送者的信息
     @Ignore
     public byte[] rawContent;          // 原始数据，未加密
 

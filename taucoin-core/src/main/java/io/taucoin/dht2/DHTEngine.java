@@ -355,6 +355,10 @@ public class DHTEngine {
         return Dropped;
     }
 
+    public void reopenNetworks() {
+        session.reopenNetworks();
+    }
+
     private boolean requestImmutableItemAsync(ImmutableItemRequest req) {
         req.start();
         logger.trace("get immutable item:" + req.toString());

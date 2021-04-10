@@ -1,10 +1,15 @@
 package io.taucoin.torrent.publishing.ui.chat;
 
+import android.app.ActivityManager;
 import android.app.Application;
+import android.content.Context;
+import android.os.Debug;
+import android.os.Process;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +34,7 @@ import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
@@ -37,6 +43,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
+import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.HashUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -128,31 +135,37 @@ public class ChatViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             InputStream inputStream = null;
             try {
+                inputStream = getApplication().getAssets().open("HarryPotter1-8.txt");
+                byte[] bytes = new byte[msgSize];
+                StringBuilder msg = new StringBuilder();
                 for (int i = 0; i < time; i++) {
                     if (emitter.isCancelled()) {
                         break;
                     }
-                    if (null == inputStream) {
-                        inputStream = getApplication().getAssets().open("HarryPotter1-8.txt");
-                    } else {
-                        int availableSize = inputStream.available();
-                        if (availableSize < msgSize) {
-                            inputStream = getApplication().getAssets().open("HarryPotter1-8.txt");
-                        }
+                    logger.debug("sendBatchDebugMessage available::{}", inputStream.available());
+                    if (inputStream.available() < bytes.length) {
+                        inputStream.reset();
+                        logger.debug("sendBatchDebugMessage reset");
                     }
-                    byte[] bytes = new byte[msgSize];
-                    int read = inputStream.read(bytes);
-                    if (read > 0) {
-                        String msg = (i + 1) + "、" + new String(bytes, StandardCharsets.UTF_8);
-                        sendMessage(friendPk, msg, MessageType.TEXT.ordinal());
-                    }
+                    inputStream.read(bytes);
+                    logger.debug("sendBatchDebugMessage read");
+                    msg.append(i + 1);
+                    msg.append("、");
+                    msg.append(new String(bytes, StandardCharsets.UTF_8));
+                    long startTime = System.currentTimeMillis();
+
+                    syncSendMessageTask(friendPk, msg.toString(), MessageType.TEXT.ordinal());
+                    long endTime = System.currentTimeMillis();
+                    logger.debug("sendBatchDebugMessage no::{}, time::{}", i, endTime - startTime);
+                    msg.setLength(0);
                 }
-                if (inputStream != null) {
-                    inputStream.close();
-                }
+                inputStream.close();
             } catch (Exception e) {
                 if (inputStream != null) {
-                    inputStream.close();
+                    try {
+                        inputStream.close();
+                    } catch (IOException ignore) {
+                    }
                 }
             }
             emitter.onNext(true);
@@ -210,66 +223,68 @@ public class ChatViewModel extends AndroidViewModel {
      */
     public Result syncSendMessageTask(String friendPkStr, String msg, int type) {
         Result result = new Result();
-        try {
-            List<byte[]> contents;
-            String logicMsgHashStr;
-            if (type == MessageType.PICTURE.ordinal()) {
-                String progressivePath = MsgSplitUtil.compressAndScansPic(msg);
-                logicMsgHashStr = HashUtil.makeFileSha1HashWithTimeStamp(progressivePath);
-                contents = MsgSplitUtil.splitPicMsg(progressivePath);
-            } else if(type == MessageType.TEXT.ordinal()) {
-                logicMsgHashStr = HashUtil.makeSha1HashWithTimeStamp(msg);
-                contents = MsgSplitUtil.splitTextMsg(msg);
-            } else {
-                throw new Exception("Unknown message type");
-            }
-            byte[] logicMsgHash = ByteUtil.toByte(logicMsgHashStr);
-            User user = userRepo.getCurrentUser();
-            String senderPkStr = user.publicKey;
-            byte[] senderPk = ByteUtil.toByte(senderPkStr);
-            byte[] friendPk = ByteUtil.toByte(friendPkStr);
-            ChatMsg[] messages = new ChatMsg[contents.size()];
-            int contentSize = contents.size();
-            for (int nonce = 0; nonce < contentSize; nonce++) {
-                byte[] content = contents.get(nonce);
-                long millisTime = DateUtil.getMillisTime();
-                long timestamp = millisTime / 1000;
-                Message message;
-                if (type == MessageType.TEXT.ordinal()) {
-                    message = Message.createTextMessage(BigInteger.valueOf(timestamp), senderPk,
-                            friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
+            AppDatabase.getInstance(getApplication()).runInTransaction(() -> {
+                try {
+                List<byte[]> contents;
+                String logicMsgHashStr;
+                if (type == MessageType.PICTURE.ordinal()) {
+                    String progressivePath = MsgSplitUtil.compressAndScansPic(msg);
+                    logicMsgHashStr = HashUtil.makeFileSha1HashWithTimeStamp(progressivePath);
+                    contents = MsgSplitUtil.splitPicMsg(progressivePath);
+                } else if(type == MessageType.TEXT.ordinal()) {
+                    logicMsgHashStr = HashUtil.makeSha1HashWithTimeStamp(msg);
+                    contents = MsgSplitUtil.splitTextMsg(msg);
                 } else {
-                    message = Message.createPictureMessage(BigInteger.valueOf(timestamp), senderPk,
-                            friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
+                    throw new Exception("Unknown message type");
                 }
+                byte[] logicMsgHash = ByteUtil.toByte(logicMsgHashStr);
+                User user = userRepo.getCurrentUser();
+                String senderPkStr = user.publicKey;
+                byte[] senderPk = ByteUtil.toByte(senderPkStr);
+                byte[] friendPk = ByteUtil.toByte(friendPkStr);
+                ChatMsg[] messages = new ChatMsg[contents.size()];
+                ChatMsgLog[] chatMsgLogs = new ChatMsgLog[contents.size()];
+                int contentSize = contents.size();
                 byte[] key = Utils.keyExchange(friendPkStr, user.seed);
-                message.encrypt(key);
-                String hash = ByteUtil.toHexString(message.getHash());
-                byte[] encryptedContent = message.getEncryptedContent();
-                logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, " +
-                                "nonce::{}, rawLength::{}, encryptedLength::{}, " +
-                                "encodedLength::{}, logicMsgHash::{}, millisTime::{}",
-                        hash, type, nonce, content.length,
-                        null == encryptedContent ? 0 : encryptedContent.length,
-                        message.getEncoded().length,
-                        logicMsgHashStr, DateUtil.format(millisTime, DateUtil.pattern9));
+                for (int nonce = 0; nonce < contentSize; nonce++) {
+                    byte[] content = contents.get(nonce);
+                    long millisTime = DateUtil.getMillisTime();
+                    long timestamp = millisTime / 1000;
+                    Message message;
+                    if (type == MessageType.TEXT.ordinal()) {
+                        message = Message.createTextMessage(BigInteger.valueOf(timestamp), senderPk,
+                                friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
+                    } else {
+                        message = Message.createPictureMessage(BigInteger.valueOf(timestamp), senderPk,
+                                friendPk, logicMsgHash, BigInteger.valueOf(nonce), content);
+                    }
+                    message.encrypt(key);
+                    String hash = ByteUtil.toHexString(message.getHash());
+                    byte[] encryptedContent = message.getEncryptedContent();
+                    logger.debug("sendMessageTask newMsgHash::{}, contentType::{}, " +
+                                    "nonce::{}, rawLength::{}, encryptedLength::{}, " +
+                                    "logicMsgHash::{}, millisTime::{}",
+                            hash, type, nonce, content.length,
+                            null == encryptedContent ? 0 : encryptedContent.length,
+                            logicMsgHashStr, DateUtil.format(millisTime, DateUtil.pattern9));
 
-                // 组织Message的结构，并发送到DHT和数据入库
-                ChatMsg chatMsg = new ChatMsg(hash, senderPkStr, friendPkStr, encryptedContent, type,
-                        timestamp, nonce, logicMsgHashStr);
-                messages[nonce] = chatMsg;
+                    // 组织Message的结构，并发送到DHT和数据入库
+                    messages[nonce] = new ChatMsg(hash, senderPkStr, friendPkStr, encryptedContent, type,
+                            timestamp, nonce, logicMsgHashStr);
 
-                // 更新消息日志信息
-                ChatMsgLog chatMsgLog = new ChatMsgLog(chatMsg.hash,
-                        ChatMsgStatus.BUILT.getStatus(), millisTime);
-                chatRepo.addChatMsgLog(chatMsgLog);
+                    // 更新消息日志信息
+                    chatMsgLogs[nonce] = new ChatMsgLog(hash,
+                            ChatMsgStatus.BUILT.getStatus(), millisTime);
+
+                }
+                // 批量添加到数据库
+                chatRepo.addChatMsgLogs(chatMsgLogs);
+                chatRepo.addChatMessages(messages);
+            } catch (Exception e) {
+                logger.error("sendMessageTask error", e);
+                result.setFailMsg(e.getMessage());
             }
-            // 批量添加到数据库
-            chatRepo.addChatMessages(messages);
-        } catch (Exception e) {
-            logger.error("sendMessageTask error", e);
-            result.setFailMsg(e.getMessage());
-        }
+        });
         return result;
     }
 

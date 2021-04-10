@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.reactivex.Observable;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
+import io.taucoin.torrent.publishing.core.model.data.DataChanged;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
 
@@ -50,7 +51,7 @@ public interface ChatRepository {
     /**
      * 观察社区的消息的变化
      */
-    Observable<String> observeDataSetChanged();
+    Observable<DataChanged> observeDataSetChanged();
 
     /**
      * 提交数据变化
@@ -69,9 +70,9 @@ public interface ChatRepository {
 
     /**
      * 添加消息日志
-     * @param msgLog
+     * @param msgLogs
      */
-    long addChatMsgLog(ChatMsgLog msgLog);
+    void addChatMsgLogs(ChatMsgLog... msgLogs);
 
     /**
      * 观察消息日志

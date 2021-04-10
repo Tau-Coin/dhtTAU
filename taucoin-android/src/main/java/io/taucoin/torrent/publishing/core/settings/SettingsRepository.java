@@ -51,6 +51,18 @@ public interface SettingsRepository {
     void internetState(boolean val);
 
     /**
+     * 设置网络状态
+     * @param  type 网络类型
+     */
+    void setInternetType(int type);
+
+    /**
+     * 获取网络状态
+     * @return type 网络类型
+     */
+    int getInternetType();
+
+    /**
      * CPU WakeLock
      * @return 是否持有
      */

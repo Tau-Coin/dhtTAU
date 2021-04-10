@@ -95,10 +95,16 @@ public abstract class AppDatabase extends RoomDatabase {
                     @Override
                     public void onOpen(@NonNull SupportSQLiteDatabase db) {
                         super.onOpen(db);
-                        db.execSQL("PRAGMA cache_size = -51200");  // 缓存大小修改为50MB
+//                        db.execSQL("PRAGMA cache_size = -4000");  // 缓存大小修改为4MB
+//                        db.execSQL("PRAGMA temp_store = 0");      // 临时表和索引存储在文件中
+//                        db.execSQL("PRAGMA synchronous = 1");     // 同步到文件的选项
                         queryPragma(db, "PRAGMA cache_size");
                         queryPragma(db, "PRAGMA cache_spill");
                         queryPragma(db, "PRAGMA page_size");
+                        queryPragma(db, "PRAGMA temp_store");
+                        queryPragma(db, "PRAGMA auto_vacuum");
+                        queryPragma(db, "PRAGMA synchronous");
+                        queryPragma(db, "PRAGMA soft_heap_limit");
                     }
 
                     void queryPragma(SupportSQLiteDatabase db, String query) {

@@ -27,6 +27,7 @@ public class SettingsRepositoryImpl implements SettingsRepository {
         static final boolean bootStart = true;
         static final boolean chargingState = false;
         static final boolean internetState = false;
+        static final int internetType = -1;
         static final boolean wakeLock = false;
         static final boolean isShowBanDialog = false;
     }
@@ -94,6 +95,18 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     public void internetState(boolean val) {
         pref.edit().putBoolean(appContext.getString(R.string.pref_key_internet_state),val)
                 .apply();
+    }
+
+    @Override
+    public void setInternetType(int type) {
+        pref.edit().putInt(appContext.getString(R.string.pref_key_internet_type), type)
+                .apply();
+    }
+
+    @Override
+    public int getInternetType() {
+        return pref.getInt(appContext.getString(R.string.pref_key_internet_type),
+                Default.internetType);
     }
 
     @Override

@@ -50,8 +50,10 @@ public class ConnectionReceiver extends BroadcastReceiver {
                 logger.debug("SSID::{}, BSSID::{}, LinkSpeed::{}", wifiInfo.getSSID(),
                         wifiInfo.getBSSID(), wifiInfo.getLinkSpeed());
                 settingsRepo.internetState(true);
-            }else{
+                settingsRepo.setInternetType(info.getType());
+            } else {
                 settingsRepo.internetState(false);
+                settingsRepo.setInternetType(-1);
             }
         }
     }

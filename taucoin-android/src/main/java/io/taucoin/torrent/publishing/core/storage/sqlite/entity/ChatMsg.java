@@ -12,7 +12,9 @@ import androidx.room.Index;
  * Room: 数据库存储Chat实体类
  */
 @Entity(tableName = "ChatMessages", primaryKeys = "hash",
-        indices = {@Index(value = {"timestamp", "logicMsgHash", "nonce"})})
+        indices = {
+//        @Index(value = {"senderPk", "receiverPk"}),
+        @Index(value = {"timestamp", "logicMsgHash", "nonce"})})
 public class ChatMsg implements Parcelable {
     @NonNull
     public String hash;                    // 消息的Hash
