@@ -52,6 +52,7 @@ public class TauSession {
             AlertType.DHT_MUTABLE_ITEM.swig(),
             AlertType.DHT_PUT.swig(),
             AlertType.DHT_LOG.swig(),
+            AlertType.LOG.swig(),
             AlertType.PORTMAP.swig(),
             AlertType.PORTMAP_ERROR.swig(),
             //AlertType.DHT_PKT.swig(),
@@ -114,6 +115,11 @@ public class TauSession {
             } else if (type == AlertType.DHT_LOG) {
                 if (EnableTorrentLog) {
                     DhtLogAlert a = (DhtLogAlert) alert;
+                    logger.info(a.message());
+                }
+            } else if (type == AlertType.LOG) {
+                if (EnableTorrentLog) {
+                    LogAlert a = (LogAlert) alert;
                     logger.info(a.message());
                 }
             }
