@@ -9,6 +9,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -776,7 +778,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             int size = messageList.size();
             hashPrefixArray = new byte[size];
             for (int i = 0; i < size; i++) {
-                byte[] hash = messageList.get(i).getHash();
+                byte[] hash = messageList.get(i).getSha1Hash();
                 hashPrefixArray[i] = hash[0];
             }
         }
@@ -1206,12 +1208,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         }
 
         // 如果删除操作编辑最少，返回2标识
-        if (delete < swap && delete < insert) {
-            return 2;
-        }
-
-        // 其余情况，选择替换操作
-        return 0;
+        return 2;
     }
 
     /**
@@ -1234,7 +1231,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             byte[] source = hashPrefixArray;
             byte[] target = new byte[size];
             for (int i = 0; i < size; i++) {
-                byte[] hash = messageList.get(i).getHash();
+                byte[] hash = messageList.get(i).getSha1Hash();
                 target[i] = hash[0];
             }
 
@@ -1313,6 +1310,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
+        Collections.reverse(missingMessage);
+
         return missingMessage;
     }
 
@@ -1335,7 +1334,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             byte[] source = hashPrefixArray;
             byte[] target = new byte[size];
             for (int i = 0; i < size; i++) {
-                byte[] hash = messageList.get(i).getHash();
+                byte[] hash = messageList.get(i).getSha1Hash();
                 target[i] = hash[0];
             }
 
