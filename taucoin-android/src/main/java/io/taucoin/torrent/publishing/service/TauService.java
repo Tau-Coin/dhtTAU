@@ -14,7 +14,6 @@ import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.TauDaemonListener;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
@@ -54,7 +53,6 @@ public class TauService extends Service {
         userRepo = RepositoryHelper.getUserRepository(getApplicationContext());
         daemon = TauDaemon.getInstance(getApplicationContext());
         TauNotifier.makeForegroundNotify(this);
-        LibJpegManager.init();
     }
 
     @Override
