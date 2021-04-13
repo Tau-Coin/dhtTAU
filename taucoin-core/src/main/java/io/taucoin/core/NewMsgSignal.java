@@ -3,10 +3,13 @@ package io.taucoin.core;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.taucoin.types.GossipItem;
+import io.taucoin.types.Message;
+import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
@@ -18,6 +21,7 @@ public class NewMsgSignal {
     BigInteger chattingTime; // 正在交谈的时间
     private List<GossipItem> gossipItemList = new CopyOnWriteArrayList<>(); // 打听到的信息
 
+    private byte[] hash;
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
@@ -86,6 +90,14 @@ public class NewMsgSignal {
         return gossipItemList;
     }
 
+    public byte[] getHash() {
+        if (null == this.hash) {
+            this.hash = HashUtil.bencodeHash(getEncoded());
+        }
+
+        return this.hash;
+    }
+
     /**
      * parse rlp encode
      */
@@ -145,6 +157,19 @@ public class NewMsgSignal {
         }
 
         return rlpEncoded;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NewMsgSignal newMsgSignal = (NewMsgSignal) o;
+        return Arrays.equals(getHash(), newMsgSignal.getHash());
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(getHash());
     }
 
     @Override

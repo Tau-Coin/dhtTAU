@@ -164,7 +164,7 @@ public final class DHT {
 
         public MutableItemBatch(byte[] publicKey, byte[] privateKey,
                 List<ByteArrayWrapper> items, byte[] salt) {
-            this(publicKey, privateKey, items, salt, 10 /*(items.size() + 1) / 2*/);
+            this(publicKey, privateKey, items, salt, 16 /*(items.size() + 1) / 2*/);
         }
 
         public MutableItemBatch(byte[] publicKey, byte[] privateKey,

@@ -1405,6 +1405,12 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     i--;
                 }
             }
+
+            // 找到距离为0可能仍然不够，可能有前缀相同的情况，这时dist[i][j]很多为0的情况，
+            // 因此，需要把剩余的加入confirmation root集合即可
+            for(; j > 0; j--) {
+                confirmationRootList.add(messageList.get(j - 1).getHash());
+            }
         }
 
         return confirmationRootList;
