@@ -27,7 +27,6 @@ import io.taucoin.controller.TauController;
 import io.taucoin.core.AccountState;
 import io.taucoin.genesis.GenesisConfig;
 import io.taucoin.repository.AppRepository;
-import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -484,7 +483,7 @@ public class TauDaemon {
     /**
      * 重新打开网络
      */
-    private void reopenNetworks() {
+    void reopenNetworks() {
         if (!isRunning) {
             return;
         }
