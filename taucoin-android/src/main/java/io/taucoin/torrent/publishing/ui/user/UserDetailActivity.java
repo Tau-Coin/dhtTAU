@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.Interval;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
@@ -251,6 +252,7 @@ public class UserDetailActivity extends BaseActivity implements View.OnClickList
         intent.putExtra(IntentExtra.CHAIN_ID, chainID);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra(IntentExtra.TYPE, 1);
+        intent.putExtra(IntentExtra.BEAN, this.user);
         ActivityUtil.startActivity(intent, this, MainActivity.class);
     }
 

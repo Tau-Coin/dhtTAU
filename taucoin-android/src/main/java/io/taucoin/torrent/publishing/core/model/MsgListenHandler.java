@@ -124,12 +124,11 @@ class MsgListenHandler extends MsgListener{
                     if (StringUtil.isNotEquals(senderPk, user.publicKey)) {
                         // 通知栏消息通知
                         User friendUser = userRepo.getUserByPublicKey(senderPk);
-                        String friendName = UsersUtil.getShowName(friendUser);
                         if (msg.contentType == MessageType.TEXT.ordinal()) {
                             String content = Utils.textBytesToString(message.getRawContent());
-                            TauNotifier.getInstance().makeChatMsgNotify(senderPk, friendName, content);
+                            TauNotifier.getInstance().makeChatMsgNotify(friendUser, content);
                         } else if (msg.contentType == MessageType.PICTURE.ordinal()) {
-                            TauNotifier.getInstance().makeChatMsgNotify(senderPk, friendName,
+                            TauNotifier.getInstance().makeChatMsgNotify(friendUser,
                                     R.string.main_pic_messages);
                         }
                     }

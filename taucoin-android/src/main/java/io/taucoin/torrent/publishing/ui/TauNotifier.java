@@ -19,8 +19,10 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
@@ -124,21 +126,21 @@ public class TauNotifier {
 
     /**
      * 创建聊天消息通知
-     * @param friendPk
-     * @param friendName
+     * @param friend
      * @param msgRes
      */
-    public void makeChatMsgNotify(String friendPk, String friendName, int msgRes) {
-        makeChatMsgNotify(friendPk, friendName, appContext.getString(msgRes));
+    public void makeChatMsgNotify(User friend, int msgRes) {
+        makeChatMsgNotify(friend, appContext.getString(msgRes));
     }
 
     /**
      * 创建聊天消息通知
-     * @param friendPk
-     * @param friendName
+     * @param friend
      * @param msg
      */
-    public void makeChatMsgNotify(String friendPk, String friendName, String msg) {
+    public void makeChatMsgNotify(User friend, String msg) {
+        String friendPk = friend.publicKey;
+        String friendName = UsersUtil.getShowName(friend);
         int bgColor = Utils.getGroupColor(friendPk);
         String firstLettersName = StringUtil.getFirstLettersOfName(friendName);
         Bitmap bitmap = BitmapUtil.createLogoBitmap(bgColor, firstLettersName);
@@ -149,6 +151,7 @@ public class TauNotifier {
         intent.putExtra(IntentExtra.CHAIN_ID, friendPk);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra(IntentExtra.TYPE, 1);
+        intent.putExtra(IntentExtra.BEAN, friend);
 //        // 这两句非常重要，使之前的活动不出栈
 //        intent.setAction(Intent.ACTION_MAIN);
 //        intent.addCategory(Intent.CATEGORY_LAUNCHER);

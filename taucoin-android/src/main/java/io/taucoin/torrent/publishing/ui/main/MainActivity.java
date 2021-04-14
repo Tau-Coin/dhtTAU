@@ -138,7 +138,7 @@ public class MainActivity extends ScanTriggerActivity {
         } else if (0 != (Intent.FLAG_ACTIVITY_CLEAR_TOP & intent.getFlags())) {
             String chainID = intent.getStringExtra(IntentExtra.CHAIN_ID);
             int type = intent.getIntExtra(IntentExtra.TYPE, -1);
-            updateMainRightFragment(type, chainID);
+            updateMainRightFragment(type, chainID, intent);
         }
     }
 
@@ -487,10 +487,22 @@ public class MainActivity extends ScanTriggerActivity {
         bean.ID = ID;
         updateMainRightFragment(bean);
     }
+
+    public void updateMainRightFragment(int type, String ID, Intent intent) {
+        CommunityAndFriend bean = new CommunityAndFriend();
+        bean.type = type;
+        bean.ID = ID;
+        updateMainRightFragment(bean, intent);
+    }
+
+    public void updateMainRightFragment(CommunityAndFriend bean) {
+        updateMainRightFragment(bean, getIntent());
+    }
+
     /**
      * 更新主页右面Fragment
      */
-    public void updateMainRightFragment(CommunityAndFriend bean) {
+    private void updateMainRightFragment(CommunityAndFriend bean, Intent intent) {
         // 创建修改实例
         Fragment newFragment = null;
         Bundle bundle = new Bundle();
@@ -498,7 +510,13 @@ public class MainActivity extends ScanTriggerActivity {
             if (bean.type == 0) {
                 newFragment = new CommunityFragment();
             } else if (bean.type == 1) {
-                bundle.putParcelable(IntentExtra.BEAN, bean.friend);
+                User friend = bean.friend;
+                if (null == friend && intent != null) {
+                    friend = intent.getParcelableExtra(IntentExtra.BEAN);
+                }
+                if (friend != null) {
+                    bundle.putParcelable(IntentExtra.BEAN, friend);
+                }
                 newFragment = new ChatFragment();
             }
             bundle.putString(IntentExtra.ID, bean.ID);
