@@ -50,7 +50,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 朋友延迟访问时间，根据dht short time设定
-    private final int DELAY_TIME = 1; // 1 s
+    private final int DELAY_TIME = 1600; // 1000 ms
 
     // 主循环间隔最小时间
     private final int DEFAULT_LOOP_INTERVAL_TIME = 50; // 50 ms
@@ -58,7 +58,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // 数据允许接受的时间： 以当前时间30s之前为界
     private final int ACCEPT_DATA_TIME = 30; // 30 s
 
-    private final int MAX_CACHE_NUMBER = ACCEPT_DATA_TIME / DELAY_TIME;
+    private final int MAX_CACHE_NUMBER = 30;
 
     // 主循环间隔时间
     private int loopIntervalTime = DEFAULT_LOOP_INTERVAL_TIME;
@@ -737,8 +737,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null != peer) {
 //            updateCounter(peer);
 
-            // 如果选中的朋友没在延迟列表的延迟期(1 s)，则访问它
-            long currentTime = System.currentTimeMillis() / 1000;
+            // 如果选中的朋友没在延迟列表的延迟期(1600 ms)，则访问它
+            long currentTime = System.currentTimeMillis();
             BigInteger timestamp = this.friendDelayTime.get(peer);
             if (null == timestamp || currentTime - this.DELAY_TIME >= timestamp.longValue() ) {
                 // 没在延迟列表
@@ -1515,18 +1515,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             for (byte[] hash: confirmationList) {
                                 this.msgListener.onReadMessageRoot(peer.getData(), hash, timestamp);
                             }
-
-//                            if (null != messageList && null != hashPrefixArray) {
-//                                for (Message message: messageList) {
-//                                    byte[] hash = message.getHash();
-//                                    for (byte b : hashPrefixArray) {
-//                                        if (hash[0] == b) {
-//                                            this.msgListener.onReadMessageRoot(peer.getData(), message.getHash(), timestamp);
-//                                            break;
-//                                        }
-//                                    }
-//                                }
-//                            }
 
                             byte[] chattingFriend = newMsgSignal.getChattingFriend();
                             if (Arrays.equals(pubKey, chattingFriend)) {
