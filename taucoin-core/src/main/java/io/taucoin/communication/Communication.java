@@ -10,7 +10,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -50,7 +49,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 朋友延迟访问时间，根据dht short time设定
-    private final int DELAY_TIME = 1600; // 1000 ms
+    private final int DELAY_TIME = 1600; // 1600 ms
 
     // 主循环间隔最小时间
     private final int DEFAULT_LOOP_INTERVAL_TIME = 50; // 50 ms
@@ -86,6 +85,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
     // 待处理的新消息信号集合
     private final Map<ByteArrayWrapper, LinkedHashSet<NewMsgSignal>> newMsgSignalCache = new ConcurrentHashMap<>();
+
+    // 最新的新消息信号集合
+    private final Map<ByteArrayWrapper, NewMsgSignal> latestNewMsgSignal = new ConcurrentHashMap<>();
 
     // 发现的我的朋友跟我聊天的最新时间 <friend, time>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> friendChattingTime = new ConcurrentHashMap<>();
@@ -497,6 +499,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         // 其它7个（若有7个）肯定是对方缺少的消息，这样不会陷入死局，对方会逐渐拿到缺少的数据
         LinkedHashSet<Message> linkedMessageSet = new LinkedHashSet<>();
 
+        BigInteger currentTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
+
         // 新消息信号必发送
         NewMsgSignal myNewMsgSignal = makeNewMsgSignal(peer);
         MutableDataWrapper mutableDataWrapper = new MutableDataWrapper(MutableDataType.NEW_MSG_SIGNAL,
@@ -509,6 +513,13 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null != newMsgSignals) {
             // 倒序访问
             LinkedList<NewMsgSignal> linkedList = new LinkedList<>(newMsgSignals);
+
+            NewMsgSignal latestNewMsgSignal = this.latestNewMsgSignal.get(peer);
+            if (newMsgSignals.isEmpty() && null != latestNewMsgSignal &&
+                    latestNewMsgSignal.getTimestamp().longValue() > currentTime.longValue() - this.ACCEPT_DATA_TIME) {
+                linkedList.add(latestNewMsgSignal);
+            }
+
             Iterator<NewMsgSignal> iterator = linkedList.descendingIterator();
             while (iterator.hasNext()) {
                 NewMsgSignal newMsgSignal = iterator.next();
@@ -539,23 +550,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                 List<Message> missingMessages = getMissingMessage(messageList, hashPrefixArray);
                 linkedMessageSet.addAll(missingMessages);
-
-//                if (null != messageList && null != hashPrefixArray) {
-//                    for (Message message: messageList) {
-//                        byte[] hash = message.getHash();
-//                        boolean found = false;
-//                        for (byte b : hashPrefixArray) {
-//                            if (hash[0] == b) {
-//                                found = true;
-//                                break;
-//                            }
-//                        }
-//
-//                        if (!found) {
-//                            linkedMessageSet.add(message);
-//                        }
-//                    }
-//                }
             }
 
             // 清空数据
@@ -572,7 +566,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
-        BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis() / 1000);
         while (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE && !linkedMessageSet.isEmpty()) {
             List<Message> messages = new ArrayList<>();
             MessageList messageList = new MessageList(messages);
@@ -586,7 +579,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     if (messageList.getEncoded().length + message.getEncoded().length <= ChainParam.MESSAGE_LIST_SAFE_SIZE) {
                         // 如果还能装载，继续填装
                         logger.error("Put message:{}", message.toString());
-                        this.msgListener.onSyncMessage(message, timestamp);
+                        this.msgListener.onSyncMessage(message, currentTime);
                         messages.add(message);
                         messageList = new MessageList(messages);
 
@@ -740,7 +733,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             // 如果选中的朋友没在延迟列表的延迟期(1600 ms)，则访问它
             long currentTime = System.currentTimeMillis();
             BigInteger timestamp = this.friendDelayTime.get(peer);
-            if (null == timestamp || currentTime - this.DELAY_TIME >= timestamp.longValue() ) {
+            if (null == timestamp || currentTime >= timestamp.longValue() ) {
                 // 没在延迟列表
                 requestMutableDataFromPeer(peer);
                 // 加入put列表
@@ -1218,6 +1211,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @return 缺失的消息集合
      */
     private List<Message> getMissingMessage(List<Message> messageList, byte[] hashPrefixArray) {
+        long startTime = System.currentTimeMillis();
         List<Message> missingMessage = new ArrayList<>();
 
         if (null == hashPrefixArray) {
@@ -1311,6 +1305,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         }
 
         Collections.reverse(missingMessage);
+        long endTime = System.currentTimeMillis();
+        logger.error("------------cost time:{}", endTime - startTime);
 
         return missingMessage;
     }
@@ -1480,6 +1476,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             case NEW_MSG_SIGNAL: {
                 NewMsgSignal newMsgSignal = new NewMsgSignal(mutableDataWrapper.getData());
 
+                NewMsgSignal latestNewMsgSignal = this.latestNewMsgSignal.get(peer);
+                if (null == latestNewMsgSignal || latestNewMsgSignal.getTimestamp().longValue() < newMsgSignal.getTimestamp().longValue()) {
+                    this.latestNewMsgSignal.put(peer, newMsgSignal);
+                }
+
                 long currentTime = System.currentTimeMillis() / 1000;
                 // 判断时间戳，以避免处理历史数据
                 if (timestamp.longValue() > currentTime - this.ACCEPT_DATA_TIME) {
@@ -1522,17 +1523,17 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                                 ByteArrayWrapper sender = new ByteArrayWrapper(chattingFriend);
                                 BigInteger latestTimestamp = this.friendChattingTime.get(sender);
                                 // 如果发现更新的推荐，则加入推荐列表
-                                if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getChattingTime()) < 0) {
+                                if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getTimestamp()) < 0) {
                                     // 记录最新的聊天时间
-                                    this.friendChattingTime.put(sender, newMsgSignal.getChattingTime());
+                                    this.friendChattingTime.put(sender, newMsgSignal.getTimestamp());
                                     referToFriend(sender);
                                 }
                             } else {
                                 // 记录下推荐给别人的聊天时间
                                 FriendPair friendPair = new FriendPair(peer.getData(), chattingFriend);
                                 BigInteger latestTimestamp = this.gossipChattingTime.get(friendPair);
-                                if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getChattingTime()) < 0) {
-                                    this.gossipChattingTime.put(friendPair, newMsgSignal.getChattingTime());
+                                if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getTimestamp()) < 0) {
+                                    this.gossipChattingTime.put(friendPair, newMsgSignal.getTimestamp());
                                 }
                             }
 

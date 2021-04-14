@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.taucoin.types.GossipItem;
-import io.taucoin.types.Message;
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -18,7 +17,7 @@ public class NewMsgSignal {
     Bloom friendListBloomFilter = null;
     // TODO：：推荐策略重新考虑
     byte[] chattingFriend; // 当前正在交谈的朋友
-    BigInteger chattingTime; // 正在交谈的时间
+    BigInteger timestamp;
     private List<GossipItem> gossipItemList = new CopyOnWriteArrayList<>(); // 打听到的信息
 
     private byte[] hash;
@@ -26,21 +25,21 @@ public class NewMsgSignal {
     private boolean parsed = false; // 解析标志
 
     public NewMsgSignal(byte[] hashPrefixArray, byte[] chattingFriend,
-                        BigInteger chattingTime, List<GossipItem> gossipItemList) {
+                        BigInteger timestamp, List<GossipItem> gossipItemList) {
         this.hashPrefixArray = hashPrefixArray;
         this.chattingFriend = chattingFriend;
-        this.chattingTime = chattingTime;
+        this.timestamp = timestamp;
         this.gossipItemList = gossipItemList;
 
         this.parsed = true;
     }
 
     public NewMsgSignal(byte[] hashPrefixArray, Bloom friendListBloomFilter,
-                        byte[] chattingFriend, BigInteger chattingTime, List<GossipItem> gossipItemList) {
+                        byte[] chattingFriend, BigInteger timestamp, List<GossipItem> gossipItemList) {
         this.hashPrefixArray = hashPrefixArray;
         this.friendListBloomFilter = friendListBloomFilter;
         this.chattingFriend = chattingFriend;
-        this.chattingTime = chattingTime;
+        this.timestamp = timestamp;
         this.gossipItemList = gossipItemList;
 
         this.parsed = true;
@@ -74,12 +73,12 @@ public class NewMsgSignal {
         return chattingFriend;
     }
 
-    public BigInteger getChattingTime() {
+    public BigInteger getTimestamp() {
         if (!parsed) {
             parseRLP();
         }
 
-        return chattingTime;
+        return timestamp;
     }
 
     public List<GossipItem> getGossipItemList() {
@@ -112,8 +111,8 @@ public class NewMsgSignal {
 
         this.chattingFriend = list.get(2).getRLPData();
 
-        byte[] chattingTimeBytes = list.get(3).getRLPData();
-        this.chattingTime = (null == chattingTimeBytes) ? BigInteger.ZERO: new BigInteger(1, chattingTimeBytes);
+        byte[] timeBytes = list.get(3).getRLPData();
+        this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
         parseGossipList((RLPList) list.get(4));
 
@@ -149,11 +148,11 @@ public class NewMsgSignal {
                 friendListBloomFilter = RLP.encodeElement(this.friendListBloomFilter.getData());
             }
             byte[] chattingFriend = RLP.encodeElement(this.chattingFriend);
-            byte[] chattingTime = RLP.encodeBigInteger(this.chattingTime);
+            byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
             byte[] gossipListEncoded = getGossipListEncoded();
 
             this.rlpEncoded = RLP.encodeList(hashPrefixArray, friendListBloomFilter,
-                    chattingFriend, chattingTime, gossipListEncoded);
+                    chattingFriend, timestamp, gossipListEncoded);
         }
 
         return rlpEncoded;
@@ -176,7 +175,7 @@ public class NewMsgSignal {
     public String toString() {
         byte[] hashPrefixArray = getHashPrefixArray();
         Bloom friendListBloomFilter = getFriendListBloomFilter();
-        BigInteger chattingTime = getChattingTime();
+        BigInteger time = getTimestamp();
         byte[] chattingFriend = getChattingFriend();
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -190,9 +189,9 @@ public class NewMsgSignal {
             stringBuilder.append(", friend list bloom filter=");
             stringBuilder.append(friendListBloomFilter);
         }
-        if (null != chattingTime) {
-            stringBuilder.append(", chatting time=");
-            stringBuilder.append(chattingTime);
+        if (null != time) {
+            stringBuilder.append(", time=");
+            stringBuilder.append(time);
         }
         if (null != chattingFriend) {
             stringBuilder.append(", chatting friend=");
