@@ -7,10 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.util.List;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
-import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.MainApplication;
@@ -29,7 +29,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.FriendRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
-import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
 import io.taucoin.types.Message;
@@ -41,7 +40,6 @@ import io.taucoin.util.ByteUtil;
  */
 class MsgListenHandler extends MsgListener{
     private static final Logger logger = LoggerFactory.getLogger("MsgListenHandler");
-    private CompositeDisposable disposables = new CompositeDisposable();
     private ChatRepository chatRepo;
     private FriendRepository friendRepo;
     private DeviceRepository deviceRepo;
@@ -59,77 +57,79 @@ class MsgListenHandler extends MsgListener{
      * 1、更新朋友状态
      * 2、保存Chat的聊天信息
      * @param friendPk byte[] 朋友公钥
-     * @param message Message
+     * @param messages List<Message>
      */
     @Override
-    public void onNewMessage(byte[] friendPk, Message message) {
+    public void onNewMessage(byte[] friendPk, List<Message> messages) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
-                // 朋友默认为发送者
-                String senderPk = ByteUtil.toHexString(message.getSender());
-                String receiverPk = ByteUtil.toHexString(message.getReceiver());
-                String hash = ByteUtil.toHexString(message.getHash());
-                String logicMsgHash = ByteUtil.toHexString(message.getLogicMsgHash());
+                for (Message message : messages) {
+                    // 朋友默认为发送者
+                    String senderPk = ByteUtil.toHexString(message.getSender());
+                    String receiverPk = ByteUtil.toHexString(message.getReceiver());
+                    String hash = ByteUtil.toHexString(message.getHash());
+                    String logicMsgHash = ByteUtil.toHexString(message.getLogicMsgHash());
 
-                long sentTime = message.getTimestamp().longValue();
-                long receivedTime = DateUtil.getTime();
+                    long sentTime = message.getTimestamp().longValue();
+                    long receivedTime = DateUtil.getTime();
 
-                ChatMsg chatMsg = chatRepo.queryChatMsg(senderPk, hash);
-                logger.debug("TAU messaging onNewMessage senderPk::{}, receiverPk::{}, hash::{}, " +
-                                "SentTime::{}, ReceivedTime::{}, DelayTime::{}s, exist::{}",
-                        senderPk, receiverPk, hash,
-                        DateUtil.formatTime(sentTime, DateUtil.pattern6),
-                        DateUtil.formatTime(receivedTime, DateUtil.pattern6),
-                        receivedTime - sentTime, chatMsg != null);
-                // 上报的Message有可能重复, 如果本地已存在不处理
-                if (null == chatMsg) {
-                    User user = userRepo.getCurrentUser();
-                    // 判断消息的发送者是否是自己
-                    String friendPkStr;
-                    if (StringUtil.isEquals(senderPk, user.publicKey)) {
-                        friendPkStr = receiverPk;
-                    } else {
-                        friendPkStr = senderPk;
-                    }
-                    // 原始数据解密
-                    byte[] cryptoKey = Utils.keyExchange(friendPkStr, user.seed);;
-                    message.decrypt(cryptoKey);
-
-                    // 保存消息数据
-                    byte[] encryptedContent = message.getEncryptedContent();
-                    ChatMsg msg = new ChatMsg(hash, senderPk, receiverPk, encryptedContent,
-                            message.getType().ordinal(), sentTime, message.getNonce().longValue(),
-                            logicMsgHash);
-                    msg.unsent = 1;
-                    chatRepo.addChatMsg(msg);
-
-                    // 标记消息未读, 更新上次交流的时间
-                    Friend friend = friendRepo.queryFriend(user.publicKey, friendPkStr);
-                    boolean isNeedUpdate = false;
-                    if (friend != null) {
-                        if (friend.msgUnread == 0) {
-                            friend.msgUnread = 1;
-                            isNeedUpdate = true;
+                    ChatMsg chatMsg = chatRepo.queryChatMsg(senderPk, hash);
+                    logger.debug("TAU messaging onNewMessage senderPk::{}, receiverPk::{}, hash::{}, " +
+                                    "SentTime::{}, ReceivedTime::{}, DelayTime::{}s, exist::{}",
+                            senderPk, receiverPk, hash,
+                            DateUtil.formatTime(sentTime, DateUtil.pattern6),
+                            DateUtil.formatTime(receivedTime, DateUtil.pattern6),
+                            receivedTime - sentTime, chatMsg != null);
+                    // 上报的Message有可能重复, 如果本地已存在不处理
+                    if (null == chatMsg) {
+                        User user = userRepo.getCurrentUser();
+                        // 判断消息的发送者是否是自己
+                        String friendPkStr;
+                        if (StringUtil.isEquals(senderPk, user.publicKey)) {
+                            friendPkStr = receiverPk;
+                        } else {
+                            friendPkStr = senderPk;
                         }
-                        long lastCommTime = friend.lastCommTime;
-                        if (sentTime > lastCommTime) {
-                            friend.lastCommTime = sentTime;
-                            isNeedUpdate = true;
+                        // 原始数据解密
+                        byte[] cryptoKey = Utils.keyExchange(friendPkStr, user.seed);;
+                        message.decrypt(cryptoKey);
+
+                        // 保存消息数据
+                        byte[] encryptedContent = message.getEncryptedContent();
+                        ChatMsg msg = new ChatMsg(hash, senderPk, receiverPk, encryptedContent,
+                                message.getType().ordinal(), sentTime, message.getNonce().longValue(),
+                                logicMsgHash);
+                        msg.unsent = 1;
+                        chatRepo.addChatMsg(msg);
+
+                        // 标记消息未读, 更新上次交流的时间
+                        Friend friend = friendRepo.queryFriend(user.publicKey, friendPkStr);
+                        boolean isNeedUpdate = false;
+                        if (friend != null) {
+                            if (friend.msgUnread == 0) {
+                                friend.msgUnread = 1;
+                                isNeedUpdate = true;
+                            }
+                            long lastCommTime = friend.lastCommTime;
+                            if (sentTime > lastCommTime) {
+                                friend.lastCommTime = sentTime;
+                                isNeedUpdate = true;
+                            }
+                            if (isNeedUpdate) {
+                                friendRepo.updateFriend(friend);
+                            }
                         }
-                        if (isNeedUpdate) {
-                            friendRepo.updateFriend(friend);
-                        }
-                    }
-                    // 只通知朋友的消息
-                    if (StringUtil.isNotEquals(senderPk, user.publicKey)) {
-                        // 通知栏消息通知
-                        User friendUser = userRepo.getUserByPublicKey(senderPk);
-                        if (msg.contentType == MessageType.TEXT.ordinal()) {
-                            String content = Utils.textBytesToString(message.getRawContent());
-                            TauNotifier.getInstance().makeChatMsgNotify(friendUser, content);
-                        } else if (msg.contentType == MessageType.PICTURE.ordinal()) {
-                            TauNotifier.getInstance().makeChatMsgNotify(friendUser,
-                                    R.string.main_pic_messages);
+                        // 只通知朋友的消息
+                        if (StringUtil.isNotEquals(senderPk, user.publicKey)) {
+                            // 通知栏消息通知
+                            User friendUser = userRepo.getUserByPublicKey(senderPk);
+                            if (msg.contentType == MessageType.TEXT.ordinal()) {
+                                String content = Utils.textBytesToString(message.getRawContent());
+                                TauNotifier.getInstance().makeChatMsgNotify(friendUser, content);
+                            } else if (msg.contentType == MessageType.PICTURE.ordinal()) {
+                                TauNotifier.getInstance().makeChatMsgNotify(friendUser,
+                                        R.string.main_pic_messages);
+                            }
                         }
                     }
                 }
@@ -140,7 +140,6 @@ class MsgListenHandler extends MsgListener{
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .subscribe();
-        disposables.add(disposable);
     }
 
     /**
@@ -169,26 +168,27 @@ class MsgListenHandler extends MsgListener{
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .subscribe();
-        disposables.add(disposable);
     }
 
     /**
      * 消息已被接收
      * @param friendPk byte[] 朋友公钥
-     * @param root 消息root
+     * @param hashList 消息root
      */
     @Override
-    public void onReadMessageRoot(byte[] friendPk, byte[] root, BigInteger timestamp) {
+    public void onReadMessageRoot(byte[] friendPk, List<byte[]> hashList, BigInteger timestamp) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
-                String hash = ByteUtil.toHexString(root);
-                ChatMsgLog msgLog = chatRepo.queryChatMsgLog(hash,
-                        ChatMsgStatus.SYNC_CONFIRMED.getStatus());
-                logger.trace("onReadMessageRoot MessageHash::{}, exist::{}", hash, msgLog != null);
-                if (null == msgLog) {
-                    msgLog = new ChatMsgLog(hash, ChatMsgStatus.SYNC_CONFIRMED.getStatus(),
-                            timestamp.longValue());
-                   chatRepo.addChatMsgLogs(msgLog);
+                for (byte[] root : hashList) {
+                    String hash = ByteUtil.toHexString(root);
+                    ChatMsgLog msgLog = chatRepo.queryChatMsgLog(hash,
+                            ChatMsgStatus.SYNC_CONFIRMED.getStatus());
+                    logger.trace("onReadMessageRoot MessageHash::{}, exist::{}", hash, msgLog != null);
+                    if (null == msgLog) {
+                        msgLog = new ChatMsgLog(hash, ChatMsgStatus.SYNC_CONFIRMED.getStatus(),
+                                timestamp.longValue());
+                       chatRepo.addChatMsgLogs(msgLog);
+                    }
                 }
             } catch (SQLiteConstraintException ignore) {
             } catch (Exception e) {
@@ -198,7 +198,6 @@ class MsgListenHandler extends MsgListener{
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .subscribe();
-        disposables.add(disposable);
     }
 
     /**
@@ -241,7 +240,6 @@ class MsgListenHandler extends MsgListener{
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .subscribe();
-        disposables.add(disposable);
     }
 
     /**
@@ -265,7 +263,6 @@ class MsgListenHandler extends MsgListener{
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .subscribe();
-        disposables.add(disposable);
     }
     /**
      * 多设备的新朋友通知
@@ -319,6 +316,5 @@ class MsgListenHandler extends MsgListener{
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
                 .subscribe();
-        disposables.add(disposable);
     }
 }

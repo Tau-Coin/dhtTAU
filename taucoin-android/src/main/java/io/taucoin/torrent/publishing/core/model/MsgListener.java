@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.core.model;
 
 import java.math.BigInteger;
+import java.util.List;
 
 import io.taucoin.listener.MsgStatus;
 import io.taucoin.types.Message;
@@ -13,7 +14,7 @@ public abstract class MsgListener implements io.taucoin.listener.MsgListener {
      * @param message 消息
      */
     @Override
-    public void onNewMessage(byte[] friend, Message message) {}
+    public void onNewMessage(byte[] friend, List<Message> message) {}
 
     /**
      * 新device ID通知
@@ -43,11 +44,11 @@ public abstract class MsgListener implements io.taucoin.listener.MsgListener {
     /**
      * 已读消息root通知
      * @param friend 发已读消息的朋友
-     * @param hash 已读消息的hash
+     * @param hashList 已读消息的hash
      * @param timestamp 已读消息的时间
      */
     @Override
-    public void onReadMessageRoot(byte[] friend, byte[] hash, BigInteger timestamp) {}
+    public void onReadMessageRoot(byte[] friend, List<byte[]> hashList, BigInteger timestamp) {}
 
     /**
      * 正在同步的消息
