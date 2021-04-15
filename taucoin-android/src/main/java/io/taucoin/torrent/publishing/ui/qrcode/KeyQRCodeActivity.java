@@ -6,8 +6,6 @@ import android.text.SpannableStringBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewTreeObserver;
-
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
@@ -19,7 +17,6 @@ import io.taucoin.torrent.publishing.core.utils.SpanUtils;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
-import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityKeyQrCodeBinding;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.constant.KeyQRContent;
@@ -34,7 +31,6 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
     private ActivityKeyQrCodeBinding binding;
     private UserViewModel userViewModel;
     private Bitmap QRBitmap = null;
-    private ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,29 +86,8 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
                 .create();
         binding.tvKeyCopy.setText(stringBuilder);
         binding.qrCode.tvQrCode.setTag(keyContent.getSeed());
-        binding.qrCode.roundButton.setText(UsersUtil.getQRCodeName(keyContent.getNickName()));
-        binding.qrCode.roundButton.setBgColor(Utils.getGroupColor(keyContent.getPublicKey()));
-
-        onGlobalLayoutListener = () -> {
-            userViewModel.generateQRCode(this, keyContent.getSeed(), binding.qrCode.flLogo,
-                    getResources().getColor(R.color.color_red_dark));
-        };
-        // view重绘时回调
-        binding.qrCode.flLogo.getViewTreeObserver().addOnDrawListener(() -> {
-            if (onGlobalLayoutListener != null) {
-                binding.qrCode.flLogo.getViewTreeObserver().removeOnGlobalLayoutListener(onGlobalLayoutListener);
-            }
-        });
-        // view加载完成时回调
-        binding.qrCode.flLogo.getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (onGlobalLayoutListener != null) {
-            binding.qrCode.flLogo.getViewTreeObserver().removeOnGlobalLayoutListener(onGlobalLayoutListener);
-        }
+        userViewModel.generateQRCode(this, keyContent,
+                getResources().getColor(R.color.color_red_dark));
     }
 
     /**
@@ -130,7 +105,7 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_share) {
-            userViewModel.shareQRCode(this, binding.qrCode.rlQrCode, 240);
+            userViewModel.shareQRCode(this, binding.qrCode.ivQrCode.getDrawable(), 240);
         }
         return true;
     }

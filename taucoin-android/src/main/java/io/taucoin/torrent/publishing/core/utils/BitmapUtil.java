@@ -5,10 +5,12 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
@@ -362,6 +364,26 @@ public class BitmapUtil {
 //        canvas.drawLine(x, 0, x, 2000, textPaint);
 
         canvas.drawBitmap(bitmap, 0, 0, new Paint(Paint.ANTI_ALIAS_FLAG));
+        return bitmap;
+    }
+
+    // Drawable----> Bitmap
+    public static Bitmap drawableToBitmap(Drawable drawable) {
+
+        // 获取 drawable 长宽
+        int width = drawable.getIntrinsicWidth();
+        int height = drawable.getIntrinsicHeight();
+        drawable.setBounds(0, 0, width, height);
+
+        // 获取drawable的颜色格式
+        Bitmap.Config config = drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
+                : Bitmap.Config.RGB_565;
+        // 创建bitmap
+        Bitmap bitmap = Bitmap.createBitmap(width, height, config);
+        // 创建bitmap画布
+        Canvas canvas = new Canvas(bitmap);
+        // 将drawable 内容画到画布中
+        drawable.draw(canvas);
         return bitmap;
     }
 }

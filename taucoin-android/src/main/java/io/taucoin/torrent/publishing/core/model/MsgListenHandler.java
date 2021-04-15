@@ -63,6 +63,7 @@ class MsgListenHandler extends MsgListener{
     public void onNewMessage(byte[] friendPk, List<Message> messages) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
+                logger.trace("onNewMessage messages.size::{}", messages.size());
                 for (Message message : messages) {
                     // 朋友默认为发送者
                     String senderPk = ByteUtil.toHexString(message.getSender());
@@ -91,7 +92,7 @@ class MsgListenHandler extends MsgListener{
                             friendPkStr = senderPk;
                         }
                         // 原始数据解密
-                        byte[] cryptoKey = Utils.keyExchange(friendPkStr, user.seed);;
+                        byte[] cryptoKey = Utils.keyExchange(friendPkStr, user.seed);
                         message.decrypt(cryptoKey);
 
                         // 保存消息数据
@@ -179,6 +180,7 @@ class MsgListenHandler extends MsgListener{
     public void onReadMessageRoot(byte[] friendPk, List<byte[]> hashList, BigInteger timestamp) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
+                logger.trace("onReadMessageRoot hashList.size::{}", hashList.size());
                 for (byte[] root : hashList) {
                     String hash = ByteUtil.toHexString(root);
                     ChatMsgLog msgLog = chatRepo.queryChatMsgLog(hash,
@@ -283,7 +285,7 @@ class MsgListenHandler extends MsgListener{
                 if (null == user) {
                     user = new User(friendPkStr);
                     if (nickname != null && timestamp != null) {
-                        user.nickname = Utils.textBytesToString(nickname);;
+                        user.nickname = Utils.textBytesToString(nickname);
                         user.updateTime = timestamp.longValue();
                     }
                     userRepo.addUser(user);

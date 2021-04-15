@@ -4,11 +4,13 @@ import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
+import com.google.gson.Gson;
 import com.king.zxing.util.CodeUtils;
 
 import org.slf4j.Logger;
@@ -47,6 +49,7 @@ import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
+import io.taucoin.torrent.publishing.core.utils.DrawablesUtil;
 import io.taucoin.torrent.publishing.core.utils.FileUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -633,41 +636,41 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 分享QRCOde
      */
-    public void shareQRCode(AppCompatActivity activity, View view, int size) {
+    public void shareQRCode(AppCompatActivity activity, Drawable drawable, int size) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
             try {
-                view.setDrawingCacheEnabled(true);
-                view.buildDrawingCache();
-                Bitmap bitmap = view.getDrawingCache();
-                logger.debug("shareQRCode bitmap::{}", bitmap);
-                if (bitmap != null) {
-                    Bitmap.createBitmap(bitmap);
-                    int w = bitmap.getWidth();
-                    int h = bitmap.getHeight();
-                    float sx = (float) size / w;
-                    float sy = (float) size / h;
-                    Matrix matrix = new Matrix();
-                    matrix.postScale(sx, sy);
-                    Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0,
-                            w, h, matrix, true);
-                    view.destroyDrawingCache();
+                if (drawable != null) {
+                    Bitmap bitmap = BitmapUtil.drawableToBitmap(drawable);
+                    logger.debug("shareQRCode bitmap::{}", bitmap);
+                    if (bitmap != null) {
+                        Bitmap.createBitmap(bitmap);
+                        int w = bitmap.getWidth();
+                        int h = bitmap.getHeight();
+                        float sx = (float) size / w;
+                        float sy = (float) size / h;
+                        Matrix matrix = new Matrix();
+                        matrix.postScale(sx, sy);
+                        Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0,
+                                w, h, matrix, true);
 
-                    // 清除旧二维码
-                    String filePath = FileUtil.getQRCodeFilePath();
-                    File dir = new File(filePath);
-                    File[] files = dir.listFiles();
-                    for (File file : files) {
-                        file.delete();
+                        // 清除旧二维码
+                        String filePath = FileUtil.getQRCodeFilePath();
+                        File dir = new File(filePath);
+                        File[] files = dir.listFiles();
+                        for (File file : files) {
+                            file.delete();
+                        }
+                        // 添加时间戳，防止数据分享的还是旧数据
+                        String fileName = String.format(QR_CODE_NAME, DateUtil.getDateTime());
+                        filePath += fileName;
+
+                        logger.debug("shareQRCode filePath::{}", filePath);
+
+                        FileUtil.saveFilesDirBitmap(filePath, resizeBmp);
+                        Context context = MainApplication.getInstance();
+                        ActivityUtil.sharePic(activity, filePath, context
+                                .getString(R.string.contacts_share_qr_code));
                     }
-                    // 添加时间戳，防止数据分享的还是旧数据
-                    String fileName = String.format(QR_CODE_NAME, DateUtil.getDateTime());
-                    filePath += fileName;
-
-                    logger.debug("shareQRCode filePath::{}", filePath);
-
-                    FileUtil.saveFilesDirBitmap(filePath, resizeBmp);
-                    ActivityUtil.sharePic(activity, filePath, view.getContext()
-                            .getString(R.string.contacts_share_qr_code));
                 }
             } catch (Exception e) {
                 logger.error("shareQRCode error", e);
@@ -705,29 +708,32 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 生成二维码
      * @param context
-     * @param QRContent 二维码内容
-     * @param logo
+     * @param qrContent 二维码内容
      * @param QRColor 二维码颜色
      */
-    public void generateQRCode(Context context, String QRContent, View logo, int QRColor) {
+    public void generateQRCode(Context context, QRContent qrContent, int QRColor) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Bitmap>) emitter -> {
             try {
-                logo.setDrawingCacheEnabled(true);
-                logo.buildDrawingCache();
-                Bitmap logoBitmap = logo.getDrawingCache();
-                if (logoBitmap != null) {
-                    int heightPix = DimensionsUtil.dip2px(context, 480);
-                    Bitmap bitmap;
-                    if (QRColor == -1) {
-                        bitmap = CodeUtils.createQRCode(QRContent, heightPix, logoBitmap);
-                    } else {
-                        bitmap = CodeUtils.createQRCode(QRContent, heightPix, logoBitmap, QRColor);
-                    }
-                    logger.debug("shareQRCode bitmap::{}", bitmap);
-                    logo.destroyDrawingCache();
-                    if (bitmap != null) {
-                        emitter.onNext(bitmap);
-                    }
+                String content;
+                if (qrContent instanceof KeyQRContent) {
+                    content = ((KeyQRContent) qrContent).getSeed();
+                } else {
+                    content = new Gson().toJson(qrContent);
+                }
+                int bgColor = Utils.getGroupColor(qrContent.getPublicKey());
+                String firstLettersName = UsersUtil.getQRCodeName(qrContent.getNickName());
+                Bitmap logoBitmap = BitmapUtil.createLogoBitmap(bgColor, firstLettersName);
+
+                int heightPix = DimensionsUtil.dip2px(context, 480);
+                Bitmap bitmap;
+                if (QRColor == -1) {
+                    bitmap = CodeUtils.createQRCode(content, heightPix, logoBitmap);
+                } else {
+                    bitmap = CodeUtils.createQRCode(content, heightPix, logoBitmap, QRColor);
+                }
+                logger.debug("shareQRCode bitmap::{}", bitmap);
+                if (bitmap != null) {
+                    emitter.onNext(bitmap);
                 }
             } catch (Exception e) {
                 logger.error("generateTAUIDQRCode error ", e);

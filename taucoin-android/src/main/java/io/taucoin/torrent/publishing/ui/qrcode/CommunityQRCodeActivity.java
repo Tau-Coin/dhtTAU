@@ -2,7 +2,6 @@ package io.taucoin.torrent.publishing.ui.qrcode;
 
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewTreeObserver;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
@@ -15,7 +14,6 @@ import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
-import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.databinding.ActivityCommunityQrCodeBinding;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.community.CommunityViewModel;
@@ -29,7 +27,6 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
     private CompositeDisposable disposables = new CompositeDisposable();
     private ActivityCommunityQrCodeBinding binding;
     private CommunityViewModel communityViewModel;
-    private ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener;
     private String chainID;
 
     @Override
@@ -60,8 +57,6 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
 
         String showName = UsersUtil.getCommunityName(chainID);
         binding.qrCode.tvName.setText(showName);
-        binding.qrCode.roundButton.setText(UsersUtil.getQRCodeName(showName));
-        binding.qrCode.roundButton.setBgColor(Utils.getGroupColor(chainID));
         binding.qrCode.tvQrCode.setVisibility(View.GONE);
         binding.qrCode.ivCopy.setVisibility(View.GONE);
 
@@ -70,31 +65,13 @@ public class CommunityQRCodeActivity extends ScanTriggerActivity implements View
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
                     String communityInviteLink = ChainLinkUtil.encode(chainID, list);
-                    generateCommunityQRCode(communityInviteLink);
+                    communityViewModel.generateQRCode(this, communityInviteLink,
+                            chainID, showName);
                 }));
 
         communityViewModel.getQRBitmap().observe(this, bitmap -> {
             binding.qrCode.ivQrCode.setImageBitmap(bitmap);
         });
-    }
-
-    /**
-     *
-     * @param communityInviteLink
-     */
-    private void generateCommunityQRCode(String communityInviteLink) {
-        onGlobalLayoutListener = () -> {
-            communityViewModel.generateQRCode(this, communityInviteLink,
-                    binding.qrCode.flLogo);
-        };
-        // view重绘时回调
-        binding.qrCode.flLogo.getViewTreeObserver().addOnDrawListener(() -> {
-            if (onGlobalLayoutListener != null) {
-                binding.qrCode.flLogo.getViewTreeObserver().removeOnGlobalLayoutListener(onGlobalLayoutListener);
-            }
-        });
-        // view加载完成时回调
-        binding.qrCode.flLogo.getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
     }
 
     @Override
