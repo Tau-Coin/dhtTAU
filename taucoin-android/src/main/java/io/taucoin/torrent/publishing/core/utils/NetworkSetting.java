@@ -33,7 +33,7 @@ public class NetworkSetting {
     static {
         Context context = MainApplication.getInstance();
         settingsRepo = RepositoryHelper.getSettingsRepository(context);
-        METERED_LIMITED = context.getResources().getIntArray(R.array.metered_limit)[0];
+        METERED_LIMITED = context.getResources().getIntArray(R.array.metered_limit)[1];
         WIFI_LIMITED = context.getResources().getIntArray(R.array.wifi_limit)[0];
     }
 
