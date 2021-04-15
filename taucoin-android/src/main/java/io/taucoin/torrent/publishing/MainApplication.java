@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.multidex.MultiDexApplication;
 import androidx.work.Configuration;
 import androidx.work.WorkManager;
+import io.taucoin.torrent.publishing.core.log.LogConfigurator;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
@@ -31,6 +32,8 @@ public class MainApplication extends MultiDexApplication {
         super.onCreate();
         instance = this;
 
+        // 初始化日志配置
+        LogConfigurator.configure();
         // Crash处理
         CrashHandler crashHandler = CrashHandler.getInstance();
         crashHandler.init(getApplicationContext());

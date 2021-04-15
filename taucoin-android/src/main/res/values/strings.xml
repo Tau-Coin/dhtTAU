@@ -135,7 +135,6 @@
     <string name="setting_community_setting">Community Setting</string>
     <string name="setting_journal">Journal</string>
     <string name="setting_journal_share">Share journal to</string>
-    <string name="setting_journal_uri">/sdcard/Android/data/io.taucoin.torrent.publishing/logs/</string>
     <string name="setting_help">Help</string>
     <string name="setting_community">Community</string>
     <string name="setting_favorites">Favorites</string>
