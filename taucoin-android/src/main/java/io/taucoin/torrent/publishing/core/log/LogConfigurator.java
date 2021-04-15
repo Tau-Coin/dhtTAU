@@ -41,19 +41,19 @@ public class LogConfigurator {
     public static String getLogDir() {
         Context context = MainApplication.getInstance();
         String logDir;
-//        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
-//            || !Environment.isExternalStorageRemovable()) {
-//            //外部存储可用
-//            File file = context.getExternalFilesDir(null);
-//            if (file != null && file.exists()) {
-//                logDir = file.getAbsolutePath();
-//            } else {
-//                logDir = Environment.getExternalStorageDirectory() + File.separator + BuildConfig.APPLICATION_ID;
-//            }
-//        } else {
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
+            || !Environment.isExternalStorageRemovable()) {
+            //外部存储可用
+            File file = context.getExternalFilesDir(null);
+            if (file != null && file.exists()) {
+                logDir = file.getAbsolutePath();
+            } else {
+                logDir = Environment.getExternalStorageDirectory() + File.separator + BuildConfig.APPLICATION_ID;
+            }
+        } else {
             //外部存储不可用
             logDir = context.getFilesDir().getPath() ;
-//        }
+        }
         String prefix = "logs";
         logDir += File.separator + prefix;
         return logDir;
