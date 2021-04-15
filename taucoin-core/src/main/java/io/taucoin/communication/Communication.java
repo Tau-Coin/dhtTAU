@@ -1568,6 +1568,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         // 如果超过限制容量，删掉第一个
                         history.iterator().remove();
                     }
+                } else {
+                    logger.debug("The timestamp from NewMsgSignal is too old. Current time:{}, timestamp:{}", currentTime, timestamp);
                 }
 
                 break;
