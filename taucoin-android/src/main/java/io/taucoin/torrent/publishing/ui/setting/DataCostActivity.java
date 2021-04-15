@@ -78,10 +78,12 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
 
         // 先更新，再显示
         NetworkSetting.updateMeteredSpeedLimit();
-        handleSettingsChanged(getString(R.string.pref_key_metered_speed_limit));
+        handleSettingsChanged(getString(R.string.pref_key_metered_screen_time_average_speed));
+        handleSettingsChanged(getString(R.string.pref_key_metered_background_average_speed));
         handleSettingsChanged(getString(R.string.pref_key_metered_available_data));
         NetworkSetting.updateWiFiSpeedLimit();
-        handleSettingsChanged(getString(R.string.pref_key_wifi_speed_limit));
+        handleSettingsChanged(getString(R.string.pref_key_wifi_screen_time_average_speed));
+        handleSettingsChanged(getString(R.string.pref_key_wifi_background_average_speed));
         handleSettingsChanged(getString(R.string.pref_key_wifi_available_data));
     }
 
@@ -122,18 +124,26 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             boolean meteredNetwork = NetworkSetting.isMeteredNetwork();
             binding.tvMeteredCurrentSpeed.setText(internetState && meteredNetwork ? currentSpeedStr : noSpeedStr);
             binding.tvWifiCurrentSpeed.setText(internetState && !meteredNetwork ? currentSpeedStr : noSpeedStr);
-        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_metered_speed_limit))) {
-            long meteredSpeedLimit = NetworkSetting.getMeteredSpeedLimit();
-            String meteredSpeedLimitStr = Formatter.formatFileSize(this, meteredSpeedLimit).toUpperCase();
-            meteredSpeedLimitStr = getString(R.string.setting_metered_network_limit_speed,
-                        meteredSpeedLimitStr);
-            binding.tvMeteredSpeedLimit.setText(meteredSpeedLimitStr);
-        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_wifi_speed_limit))) {
-            long meteredSpeedLimit = NetworkSetting.getWiFiSpeedLimit();
-            String meteredSpeedLimitStr = Formatter.formatFileSize(this, meteredSpeedLimit).toUpperCase();
-            meteredSpeedLimitStr = getString(R.string.setting_metered_network_limit_speed,
-                    meteredSpeedLimitStr);
-            binding.tvWifiSpeedLimit.setText(meteredSpeedLimitStr);
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_metered_screen_time_average_speed))) {
+            long averageSpeed = NetworkSetting.getMeteredScreenTimeAverageSpeed();
+            String averageSpeedStr = Formatter.formatFileSize(this, averageSpeed).toUpperCase();
+            averageSpeedStr = getString(R.string.setting_metered_network_limit_speed, averageSpeedStr);
+            binding.tvMeteredAverageSpeedScreenTime.setText(averageSpeedStr);
+        }  else if(StringUtil.isEquals(key, getString(R.string.pref_key_metered_background_average_speed))) {
+            long averageSpeed = NetworkSetting.getMeteredBackgroundAverageSpeed();
+            String averageSpeedStr = Formatter.formatFileSize(this, averageSpeed).toUpperCase();
+            averageSpeedStr = getString(R.string.setting_metered_network_limit_speed, averageSpeedStr);
+            binding.tvMeteredAverageSpeedBackground.setText(averageSpeedStr);
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_wifi_screen_time_average_speed))) {
+            long averageSpeed = NetworkSetting.getWiFiScreenTimeAverageSpeed();
+            String averageSpeedStr = Formatter.formatFileSize(this, averageSpeed).toUpperCase();
+            averageSpeedStr = getString(R.string.setting_metered_network_limit_speed, averageSpeedStr);
+            binding.tvWifiAverageSpeedScreenTime.setText(averageSpeedStr);
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_wifi_background_average_speed))) {
+            long averageSpeed = NetworkSetting.getWifiBackgroundAverageSpeed();
+            String averageSpeedStr = Formatter.formatFileSize(this, averageSpeed).toUpperCase();
+            averageSpeedStr = getString(R.string.setting_metered_network_limit_speed, averageSpeedStr);
+            binding.tvWifiAverageSpeedBackground.setText(averageSpeedStr);
         } else if (key.equals(getString(R.string.pref_key_is_metered_network))) {
             boolean internetState = settingsRepo.internetState();
             boolean meteredNetwork = NetworkSetting.isMeteredNetwork();

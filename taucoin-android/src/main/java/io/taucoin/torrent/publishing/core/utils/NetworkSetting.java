@@ -192,29 +192,37 @@ public class NetworkSetting {
         Context context = MainApplication.getInstance();
         long usage = TrafficUtil.getMeteredTrafficTotal();
         long limit =  getMeteredLimit();
-        long speedLimit = 0;
+        long screenTimeAverageSpeed = 0;
+        long backgroundAverageSpeed = 0;
         long availableData = 0;
 
         BigInteger bigUnit = new BigInteger("1024");
         BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
         BigInteger bigUsage = BigInteger.valueOf(usage);
 
+        long today24HLastSeconds = DateUtil.getTodayLastSeconds(); // 今天剩余的秒数(24h)
         long todayLastSeconds = 0; // 今天剩余的秒数
         // 根据APP在前后台而不同
         if (isForegroundRunning()) {
             todayLastSeconds = getScreenTimeLimitSecond(true) - getForegroundRunningTime();
         }
-        if (todayLastSeconds <= 0) {
-            todayLastSeconds = DateUtil.getTodayLastSeconds();
+        if (todayLastSeconds <= 0 || today24HLastSeconds <= 0) {
+            todayLastSeconds = today24HLastSeconds;
         }
         if (bigLimit.compareTo(bigUsage) > 0) {
             availableData = bigLimit.subtract(bigUsage).longValue();
             if (todayLastSeconds > 0) {
-                speedLimit = availableData / todayLastSeconds;
+                screenTimeAverageSpeed = availableData / todayLastSeconds;
+            }
+            if (today24HLastSeconds > 0) {
+                backgroundAverageSpeed = availableData / today24HLastSeconds;
             }
         }
         settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_available_data), availableData);
-        settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_speed_limit), speedLimit);
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_screen_time_average_speed),
+                screenTimeAverageSpeed);
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_metered_background_average_speed),
+                backgroundAverageSpeed);
     }
 
     /**
@@ -267,12 +275,37 @@ public class NetworkSetting {
     }
 
     /**
-     * 获取计费网络网速限制值
+     * 获取计费网络在前台平均网速
      */
-    public static long getMeteredSpeedLimit() {
+    public static long getMeteredScreenTimeAverageSpeed() {
         Context context = MainApplication.getInstance();
-        return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_speed_limit));
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_screen_time_average_speed));
     }
+
+    /**
+     * 获取计费网络在后台平均网速
+     */
+    public static long getMeteredBackgroundAverageSpeed() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_metered_background_average_speed));
+    }
+
+    /**
+     * 获取WiFi网络在前台平均网速
+     */
+    public static long getWiFiScreenTimeAverageSpeed() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_wifi_screen_time_average_speed));
+    }
+
+    /**
+     * 获取计费网络在后台平均网速
+     */
+    public static long getWifiBackgroundAverageSpeed() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_wifi_background_average_speed));
+    }
+
 
     /**
      * 更新WiFi网络网速限制值
@@ -284,7 +317,8 @@ public class NetworkSetting {
         logger.trace("updateWiFiSpeedLimit total::{}, MeteredTotal::{}, wifiUsage::{}", total,
                 TrafficUtil.getMeteredTrafficTotal(), usage);
         long limit = getWiFiLimit();
-        long speedLimit = 0;
+        long screenTimeAverageSpeed = 0;
+        long backgroundAverageSpeed = 0;
         long availableData = 0;
 
         BigInteger bigUnit = new BigInteger("1024");
@@ -295,32 +329,30 @@ public class NetworkSetting {
                 bigUsage.longValue(),
                 bigLimit.compareTo(bigUsage));
 
+        long today24HLastSeconds = DateUtil.getTodayLastSeconds(); // 今天剩余的秒数(24h)
         long todayLastSeconds = 0; // 今天剩余的秒数
         // 根据APP在前后台而不同
         if (isForegroundRunning()) {
             todayLastSeconds = getScreenTimeLimitSecond(false) - getForegroundRunningTime();
         }
-        if (todayLastSeconds <= 0) {
+        if (todayLastSeconds <= 0 || today24HLastSeconds <= 0) {
             todayLastSeconds = DateUtil.getTodayLastSeconds();
         }
         if (bigLimit.compareTo(bigUsage) > 0) {
             availableData = bigLimit.subtract(bigUsage).longValue();
             if (todayLastSeconds > 0) {
-                speedLimit = availableData / todayLastSeconds;
+                screenTimeAverageSpeed = availableData / todayLastSeconds;
+            }
+            if (today24HLastSeconds > 0) {
+                backgroundAverageSpeed = availableData / today24HLastSeconds;
             }
         }
         settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_available_data), availableData);
-        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_speed_limit), speedLimit);
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_screen_time_average_speed),
+                screenTimeAverageSpeed);
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_background_average_speed),
+                backgroundAverageSpeed);
     }
-
-    /**
-     * 获取WiFi网络网速限制值
-     */
-    public static long getWiFiSpeedLimit() {
-        Context context = MainApplication.getInstance();
-        return settingsRepo.getLongValue(context.getString(R.string.pref_key_wifi_speed_limit));
-    }
-
     /**
      * 获取WiFi网络可用数据
      */
@@ -355,7 +387,8 @@ public class NetworkSetting {
         Interval mainLoopMin;
         Interval mainLoopMax;
         // 时间间隔的大小，根据APP在前后台而不同
-        if (isForegroundRunning()) {
+        boolean isForegroundRunning = isForegroundRunning();
+        if (isForegroundRunning) {
             mainLoopMin = Interval.FORE_MAIN_LOOP_MIN;
             mainLoopMax = Interval.FORE_MAIN_LOOP_MAX;
         } else {
@@ -368,10 +401,10 @@ public class NetworkSetting {
             long speedLimit;
             if (isMeteredNetwork()) {
                 // 当前网络为计费网络
-                speedLimit = NetworkSetting.getMeteredSpeedLimit();
+                speedLimit = NetworkSetting.getMeteredScreenTimeAverageSpeed();
             } else {
                 // 当前网络为非计费网络
-                speedLimit = NetworkSetting.getWiFiSpeedLimit();
+                speedLimit = NetworkSetting.getWiFiScreenTimeAverageSpeed();
             }
             long currentSpeed = NetworkSetting.getCurrentSpeed();
             if (speedLimit > 0) {
