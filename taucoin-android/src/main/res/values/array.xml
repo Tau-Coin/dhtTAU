@@ -17,6 +17,14 @@
         <item>1024</item>
     </integer-array>
 
+    <integer-array name="metered_screen_time">
+        <item>1</item>
+        <item>2</item>
+        <item>4</item>
+        <item>6</item>
+        <item>8</item>
+    </integer-array>
+
     <integer-array name="wifi_limit">
         <item>100</item>
         <item>300</item>
@@ -25,7 +33,7 @@
         <item>10240</item>
     </integer-array>
 
-    <integer-array name="screen_time">
+    <integer-array name="wifi_screen_time">
         <item>2</item>
         <item>4</item>
         <item>6</item>
