@@ -55,7 +55,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private final int DEFAULT_LOOP_INTERVAL_TIME = 50; // 50 ms
 
     // 数据允许接受的时间： 以当前时间30s之前为界
-    private final int ACCEPT_DATA_TIME = 30; // 30 s
+    private final int ACCEPT_DATA_TIME = 300; // 30 s
 
     private final int MAX_CACHE_NUMBER = 30;
 
