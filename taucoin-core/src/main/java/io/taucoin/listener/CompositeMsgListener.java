@@ -20,12 +20,12 @@ public class CompositeMsgListener implements MsgListener {
     /**
      * 新消息通知
      * @param friend 发消息的朋友
-     * @param message 消息
+     * @param messageList 消息列表
      */
     @Override
-    public void onNewMessage(byte[] friend, Message message) {
+    public void onNewMessage(byte[] friend, List<Message> messageList) {
         for (MsgListener listener : listeners) {
-            listener.onNewMessage(friend, message);
+            listener.onNewMessage(friend, messageList);
         }
     }
 
@@ -84,13 +84,13 @@ public class CompositeMsgListener implements MsgListener {
      * 已读消息root通知
      *
      * @param friend 发已读消息的朋友
-     * @param hash   已读消息的root
+     * @param confirmationRootList   已读消息的root list
      * @param timestamp 对方收到消息的时间
      */
     @Override
-    public void onReadMessageRoot(byte[] friend, byte[] hash, BigInteger timestamp) {
+    public void onReadMessageRoot(byte[] friend, List<byte[]> confirmationRootList, BigInteger timestamp) {
         for (MsgListener listener : listeners) {
-            listener.onReadMessageRoot(friend, hash, timestamp);
+            listener.onReadMessageRoot(friend, confirmationRootList, timestamp);
         }
     }
 

@@ -1439,11 +1439,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 MessageList messageList = new MessageList(mutableDataWrapper.getData());
                 List<Message> messages = messageList.getMessageList();
                 if (null != messages) {
-                    for (Message message: messages) {
-                        logger.debug("MESSAGE: Got message :{}", message.toString());
-
-                        this.msgListener.onNewMessage(peer.getData(), message);
-                    }
+                    logger.debug("Got message list, size:{}", messages.size());
+                    this.msgListener.onNewMessage(peer.getData(), messages);
                 }
 
                 break;
@@ -1482,6 +1479,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 }
 
                 long currentTime = System.currentTimeMillis() / 1000;
+                logger.error("------------Time diff:{}", currentTime - timestamp.longValue());
                 // 判断时间戳，以避免处理历史数据
                 if (timestamp.longValue() > currentTime - this.ACCEPT_DATA_TIME) {
                     logger.debug("Accepted online signal:{} from peer:{}", newMsgSignal.toString(), peer.toString());
@@ -1513,9 +1511,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
                             List<byte[]> confirmationList = getConfirmationRoot(messageList, hashPrefixArray);
 
-                            for (byte[] hash: confirmationList) {
-                                this.msgListener.onReadMessageRoot(peer.getData(), hash, timestamp);
-                            }
+                            this.msgListener.onReadMessageRoot(peer.getData(), confirmationList, timestamp);
+
 
                             byte[] chattingFriend = newMsgSignal.getChattingFriend();
                             if (Arrays.equals(pubKey, chattingFriend)) {
@@ -1569,7 +1566,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         history.iterator().remove();
                     }
                 } else {
-                    logger.debug("The timestamp from NewMsgSignal is too old. Current time:{}, timestamp:{}", currentTime, timestamp);
+                    logger.debug("The timestamp from NewMsgSignal is too old. Current time:{}, timestamp:{}, diff:{}", currentTime, timestamp, currentTime - timestamp.longValue());
                 }
 
                 break;
