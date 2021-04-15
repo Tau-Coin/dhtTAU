@@ -59,7 +59,6 @@ import io.taucoin.torrent.publishing.core.utils.ViewUtils;
 import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
-import io.taucoin.torrent.publishing.databinding.ViewDialogBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
@@ -70,7 +69,6 @@ import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.constant.QRContent;
 import io.taucoin.torrent.publishing.ui.customviews.CommonDialog;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
-import io.taucoin.torrent.publishing.ui.setting.DataCostActivity;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
 
@@ -701,33 +699,7 @@ public class UserViewModel extends AndroidViewModel {
             if (StringUtil.isEquals(showName, defaultName)) {
                 showEditNameDialog(activity, user.publicKey);
             }
-            promptUserSelectDailyDataLimit(activity);
         }
-    }
-
-    /**
-     * 提示用户设置每日流量限制
-     * @param activity
-     */
-    private void promptUserSelectDailyDataLimit(AppCompatActivity activity) {
-        if (dailyDataLimitDialog != null && dailyDataLimitDialog.isShowing()) {
-            return;
-        }
-        ViewDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
-                R.layout.view_dialog, null, false);
-        binding.tvMsg.setText(R.string.main_daily_data_limit_prompt);
-        binding.tvMsg.setTextColor(activity.getResources().getColor(R.color.color_black));
-        dailyDataLimitDialog = new CommonDialog.Builder(activity)
-                .setContentView(binding.getRoot())
-                .setHorizontal()
-                .setPositiveButton(R.string.common_set, (dialog, which) -> {
-                    dialog.dismiss();
-                    ActivityUtil.startActivity(activity, DataCostActivity.class);
-                })
-                .setNegativeButton(R.string.common_minimum, (dialog, which) -> dialog.dismiss())
-                .setCanceledOnTouchOutside(false)
-                .create();
-        dailyDataLimitDialog.show();
     }
 
     /**
