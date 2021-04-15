@@ -178,11 +178,38 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:includeFontPadding="false"
-                            android:text="@string/setting_network_speed_limit"
+                            android:text="@string/setting_average_speed_screen_time"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <TextView
-                            android:id="@+id/tv_metered_speed_limit"
+                            android:id="@+id/tv_metered_average_speed_screen_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/gray_dark"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                    </LinearLayout>
+
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="20dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_average_speed_background"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_metered_average_speed_background"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
@@ -326,11 +353,38 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:includeFontPadding="false"
-                            android:text="@string/setting_network_speed_limit"
+                            android:text="@string/setting_average_speed_screen_time"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <TextView
-                            android:id="@+id/tv_wifi_speed_limit"
+                            android:id="@+id/tv_wifi_average_speed_screen_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/gray_dark"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                    </LinearLayout>
+
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="20dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_average_speed_background"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_wifi_average_speed_background"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
