@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.log.LogConfigurator;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.FileUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -51,7 +52,7 @@ public class JournalActivity extends BaseActivity implements View.OnClickListene
         binding.toolbarInclude.toolbar.setTitle(R.string.setting_journal);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        String path = getString(R.string.setting_journal_uri);
+        String path = LogConfigurator.getLogDir() + File.separator;
         fileObserver = new JournalFileObserver(path);
         binding.tvJournalDirectory.setText(path);
         binding.tvShareAll.setVisibility(View.GONE);

@@ -13,14 +13,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.util.ContextInitializer;
-import ch.qos.logback.core.joran.spi.JoranException;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.log.LogConfigurator;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.PermissionUtils;
@@ -135,14 +133,7 @@ public class SplashActivity extends BaseActivity {
                 if (grantResults.length > 0) {
                     if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                         Log.e("LoggerFactory", "onRequestPermissionsResult");
-                        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-                        loggerContext.reset();
-                        ContextInitializer ci = new ContextInitializer(loggerContext);
-                        try {
-                            ci.autoConfig();
-                        } catch (JoranException e) {
-                            e.printStackTrace();
-                        }
+                        LogConfigurator.configure();
                     }
                 }
                 break;

@@ -238,18 +238,20 @@ public class NetworkSetting {
     private static int getScreenTimeLimitHours(boolean isMeteredNetwork) {
         Context context = MainApplication.getInstance();
         int selectIndex;
+        int[] screenTimes;
         if (isMeteredNetwork) {
             int selectLimit = NetworkSetting.getMeteredLimit();
             int[] meteredLimits = context.getResources().getIntArray(R.array.metered_limit);
             List<Integer> meteredList = Ints.asList(meteredLimits);
             selectIndex = meteredList.indexOf(selectLimit);
+            screenTimes = context.getResources().getIntArray(R.array.metered_screen_time);
         } else {
             int selectLimit = NetworkSetting.getWiFiLimit();
             int[] wifiLimits = context.getResources().getIntArray(R.array.wifi_limit);
             List<Integer> wifiList = Ints.asList(wifiLimits);
             selectIndex = wifiList.indexOf(selectLimit);
+            screenTimes = context.getResources().getIntArray(R.array.wifi_screen_time);
         }
-        int[] screenTimes = context.getResources().getIntArray(R.array.screen_time);
         if (selectIndex >= screenTimes.length) {
             selectIndex = 0;
         }

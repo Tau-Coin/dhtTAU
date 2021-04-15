@@ -22,9 +22,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="exit">Exit</string>
-    <string name="common_set">Set</string>
     <string name="common_default">Default</string>
-    <string name="common_minimum">Minimum</string>
     <string name="common_share">Share</string>
     <string name="common_later">Later</string>
     <string name="common_debug_digit1">1-100</string>
@@ -43,7 +41,6 @@
     <string name="main_balance_power">Balance %1$s, Power %2$s</string>
     <string name="main_read_only">READ\nONLY</string>
     <string name="main_open_link">Open the link?</string>
-    <string name="main_daily_data_limit_prompt">Choose Daily Data Limits</string>
 
     <string name="main_publish_video">Publish Video</string>
     <string name="main_new_community">New Community</string>
@@ -135,7 +132,6 @@
     <string name="setting_community_setting">Community Setting</string>
     <string name="setting_journal">Journal</string>
     <string name="setting_journal_share">Share journal to</string>
-    <string name="setting_journal_uri">/sdcard/Android/data/io.taucoin.torrent.publishing/logs/</string>
     <string name="setting_help">Help</string>
     <string name="setting_community">Community</string>
     <string name="setting_favorites">Favorites</string>
