@@ -358,9 +358,7 @@ public class LevenshteinDistance {
 
         @Test
     public void test1() {
-            byte[] hash = null;
-            System.out.println("------------:" + hash.length);
-            String[] data = {"547", "1254721"};
+            String[] data = {"A123", "AA123"};
             System.out.println("CADENA RESULTADO: " + bestSolution(data));
         }
 
