@@ -549,13 +549,13 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
                 List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
 
-                Info info = getInfo(messageList, hashPrefixArray);
+                SolutionInfo solutionInfo = findBestSolution(messageList, hashPrefixArray);
 
-                if (!info.confirmationRootList.isEmpty()) {
-                    this.msgListener.onReadMessageRoot(peer.getData(), info.confirmationRootList, timestamp);
+                if (!solutionInfo.confirmationRootList.isEmpty()) {
+                    this.msgListener.onReadMessageRoot(peer.getData(), solutionInfo.confirmationRootList, timestamp);
                 }
 
-                linkedMessageSet.addAll(info.missingMessageList);
+                linkedMessageSet.addAll(solutionInfo.missingMessageList);
 
                 byte[] chattingFriend = newMsgSignal.getChattingFriend();
                 if (Arrays.equals(pubKey, chattingFriend)) {
@@ -1255,18 +1255,28 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         return 2;
     }
 
-    private class Info {
+    /**
+     * 求取LevenshteinDistance的解，得到的信息
+     */
+    private class SolutionInfo {
         List<Message> missingMessageList = new ArrayList<>();
         List<byte[]> confirmationRootList = new ArrayList<>();
     }
 
-    private Info getInfo(List<Message> messageList, byte[] hashPrefixArray) {
+    /**
+     * 使用LevenshteinDistance算法寻找最佳匹配，并提取相应解需要的中间信息，
+     * 作为missing message和confirmation root信息来源
+     * @param messageList 本地消息列表
+     * @param hashPrefixArray 远端哈希前缀列表
+     * @return 获取的中间解信息
+     */
+    private SolutionInfo findBestSolution(List<Message> messageList, byte[] hashPrefixArray) {
         long startTime = System.currentTimeMillis();
-        Info info = new Info();
+        SolutionInfo solutionInfo = new SolutionInfo();
 
         if (null == hashPrefixArray) {
-            info.missingMessageList.addAll(messageList);
-            return info;
+            solutionInfo.missingMessageList.addAll(messageList);
+            return solutionInfo;
         }
 
         if (null != messageList && !messageList.isEmpty()) {
@@ -1284,8 +1294,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
             // 如果源长度为零，则全插入
             if (sourceLength == 0) {
-                info.missingMessageList.addAll(messageList);
-                return info;
+                solutionInfo.missingMessageList.addAll(messageList);
+                return solutionInfo;
             }
 
             // 状态转移矩阵
@@ -1335,15 +1345,15 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 if (0 == operations[i][j]) {
                     // 如果是替换操作，则将target对应的替换消息加入列表
                     if (source[i-1] != target[j-1]) {
-                        info.missingMessageList.add(messageList.get(j - 1));
+                        solutionInfo.missingMessageList.add(messageList.get(j - 1));
                     } else {
-                        info.confirmationRootList.add(messageList.get(j - 1).getHash());
+                        solutionInfo.confirmationRootList.add(messageList.get(j - 1).getHash());
                     }
                     i--;
                     j--;
                 } else if (1 == operations[i][j]) {
                     // 如果是插入操作，则将target对应的插入消息加入列表
-                    info.missingMessageList.add(messageList.get(j-1));
+                    solutionInfo.missingMessageList.add(messageList.get(j-1));
                     j--;
                 } else if (2 == operations[i][j]) {
                     // 如果是删除操作，可能是对方新消息，忽略
@@ -1354,223 +1364,15 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             // 找到距离为0可能仍然不够，可能有前缀相同的情况，这时dist[i][j]很多为0的情况，
             // 因此，需要把剩余的加入confirmation root集合即可
             for(; j > 0; j--) {
-                info.confirmationRootList.add(messageList.get(j - 1).getHash());
+                solutionInfo.confirmationRootList.add(messageList.get(j - 1).getHash());
             }
         }
 
-        Collections.reverse(info.missingMessageList);
+        Collections.reverse(solutionInfo.missingMessageList);
         long endTime = System.currentTimeMillis();
         logger.error("Cost time:{}", endTime - startTime);
 
-        return info;
-    }
-
-    /**
-     * 获取对方缺失的消息集合
-     * @param messageList 消息列表
-     * @param hashPrefixArray 哈希前缀列表
-     * @return 缺失的消息集合
-     */
-    private List<Message> getMissingMessage(List<Message> messageList, byte[] hashPrefixArray) {
-        long startTime = System.currentTimeMillis();
-        List<Message> missingMessage = new ArrayList<>();
-
-        if (null == hashPrefixArray) {
-            missingMessage.addAll(messageList);
-            return missingMessage;
-        }
-
-        if (null != messageList && !messageList.isEmpty()) {
-            int size = messageList.size();
-
-            byte[] source = hashPrefixArray;
-            byte[] target = new byte[size];
-            for (int i = 0; i < size; i++) {
-                byte[] hash = messageList.get(i).getSha1Hash();
-                target[i] = hash[0];
-            }
-
-            int sourceLength = source.length;
-            int targetLength = target.length;
-
-            // 如果源长度为零，则全插入
-            if (sourceLength == 0) {
-                missingMessage.addAll(messageList);
-                return missingMessage;
-            }
-            // 如果目标长度为零，则全删除，没有要提供的消息
-            if (targetLength == 0) {
-                return missingMessage;
-            }
-
-            // 状态转移矩阵
-            int[][] dist = new int[sourceLength + 1][targetLength + 1];
-            // 操作矩阵
-            int[][] operations = new int[sourceLength + 1][targetLength + 1];
-
-            // 初始化，[i, 0]转换到空，需要编辑的距离，也即删除的数量
-            for (int i = 0; i < sourceLength + 1; i++) {
-                dist[i][0] = i;
-                if (i > 0) {
-                    operations[i][0] = 2;
-                }
-            }
-
-            // 初始化，空转换到[0, j]，需要编辑的距离，也即增加的数量
-            for (int j = 0; j < targetLength + 1; j++) {
-                dist[0][j] = j;
-                if (j > 0) {
-                    operations[0][j] = 1;
-                }
-            }
-
-            // 开始填充状态转移矩阵，第0位为空，所以从1开始有数据，[i, j]为当前子串最小编辑操作
-            for (int i = 1; i < sourceLength + 1; i++) {
-                for (int j = 1; j < targetLength + 1; j++) {
-                    // 第i个数据，实际的index需要i-1，替换的代价，相同无需替换，代价为0，不同代价为1
-                    int cost = source[i - 1] == target[j - 1] ? 0 : 1;
-                    // [i, j]在[i, j-1]的基础上，最小的编辑操作为增加1
-                    int insert = dist[i][j - 1] + 1;
-                    // [i, j]在[i-1, j]的基础上，最小的编辑操作为删除1
-                    int delete = dist[i - 1][j] + 1;
-                    // [i, j]在[i-1, j-1]的基础上，最大的编辑操作为1次替换
-                    int swap = dist[i - 1][j - 1] + cost;
-
-                    // 在[i-1, j]， [i, j-1]， [i-1, j-1]三种转换到[i, j]的最小操作中，取最小值
-                    dist[i][j] = Math.min(Math.min(insert, delete), swap);
-
-                    // 选择一种最少编辑的操作
-                    operations[i][j] = optCode(swap, insert, delete);
-                }
-            }
-
-            int i = sourceLength;
-            int j = targetLength;
-            while (0 != dist[i][j]) {
-                if (0 == operations[i][j]) {
-                    // 如果是替换操作，则将target对应的替换消息加入列表
-                    if (source[i-1] != target[j-1]) {
-                        missingMessage.add(messageList.get(j - 1));
-                    }
-                    i--;
-                    j--;
-                } else if (1 == operations[i][j]) {
-                    // 如果是插入操作，则将target对应的插入消息加入列表
-                    missingMessage.add(messageList.get(j-1));
-                    j--;
-                } else if (2 == operations[i][j]) {
-                    // 如果是删除操作，可能是对方新消息，忽略
-                    i--;
-                }
-            }
-        }
-
-        Collections.reverse(missingMessage);
-        long endTime = System.currentTimeMillis();
-        logger.error("Cost time:{}", endTime - startTime);
-
-        return missingMessage;
-    }
-
-    /**
-     * 获取confirmation root集合
-     * @param messageList 消息列表
-     * @param hashPrefixArray 哈希前缀列表
-     * @return confirmation root集合
-     */
-    private List<byte[]> getConfirmationRoot(List<Message> messageList, byte[] hashPrefixArray) {
-        List<byte[]> confirmationRootList = new ArrayList<>();
-
-        if (null == hashPrefixArray) {
-            return confirmationRootList;
-        }
-
-        if (null != messageList && !messageList.isEmpty()) {
-            int size = messageList.size();
-
-            byte[] source = hashPrefixArray;
-            byte[] target = new byte[size];
-            for (int i = 0; i < size; i++) {
-                byte[] hash = messageList.get(i).getSha1Hash();
-                target[i] = hash[0];
-            }
-
-            int sourceLength = source.length;
-            int targetLength = target.length;
-
-            // 如果源长度为零，则全插入
-            if (sourceLength == 0) {
-                return confirmationRootList;
-            }
-
-            // 状态转移矩阵
-            int[][] dist = new int[sourceLength + 1][targetLength + 1];
-            // 操作矩阵
-            int[][] operations = new int[sourceLength + 1][targetLength + 1];
-
-            // 初始化，[i, 0]转换到空，需要编辑的距离，也即删除的数量
-            for (int i = 0; i < sourceLength + 1; i++) {
-                dist[i][0] = i;
-                if (i > 0) {
-                    operations[i][0] = 2;
-                }
-            }
-
-            // 初始化，空转换到[0, j]，需要编辑的距离，也即增加的数量
-            for (int j = 0; j < targetLength + 1; j++) {
-                dist[0][j] = j;
-                if (j > 0) {
-                    operations[0][j] = 1;
-                }
-            }
-
-            // 开始填充状态转移矩阵，第0位为空，所以从1开始有数据，[i, j]为当前子串最小编辑操作
-            for (int i = 1; i < sourceLength + 1; i++) {
-                for (int j = 1; j < targetLength + 1; j++) {
-                    // 第i个数据，实际的index需要i-1，替换的代价，相同无需替换，代价为0，不同代价为1
-                    int cost = source[i - 1] == target[j - 1] ? 0 : 1;
-                    // [i, j]在[i, j-1]的基础上，最小的编辑操作为增加1
-                    int insert = dist[i][j - 1] + 1;
-                    // [i, j]在[i-1, j]的基础上，最小的编辑操作为删除1
-                    int delete = dist[i - 1][j] + 1;
-                    // [i, j]在[i-1, j-1]的基础上，最大的编辑操作为1次替换
-                    int swap = dist[i - 1][j - 1] + cost;
-
-                    // 在[i-1, j]， [i, j-1]， [i-1, j-1]三种转换到[i, j]的最小操作中，取最小值
-                    dist[i][j] = Math.min(Math.min(insert, delete), swap);
-
-                    // 选择一种最少编辑的操作
-                    operations[i][j] = optCode(swap, insert, delete);
-                }
-            }
-
-            int i = sourceLength;
-            int j = targetLength;
-            while (0 != dist[i][j]) {
-                if (0 == operations[i][j]) {
-                    // 如果是替换操作，则将target对应的替换消息加入列表
-                    if (source[i-1] == target[j-1]) {
-                        confirmationRootList.add(messageList.get(j - 1).getHash());
-                    }
-                    i--;
-                    j--;
-                } else if (1 == operations[i][j]) {
-                    // 如果是插入操作，无
-                    j--;
-                } else if (2 == operations[i][j]) {
-                    // 如果是删除操作，无
-                    i--;
-                }
-            }
-
-            // 找到距离为0可能仍然不够，可能有前缀相同的情况，这时dist[i][j]很多为0的情况，
-            // 因此，需要把剩余的加入confirmation root集合即可
-            for(; j > 0; j--) {
-                confirmationRootList.add(messageList.get(j - 1).getHash());
-            }
-        }
-
-        return confirmationRootList;
+        return solutionInfo;
     }
 
     /**
