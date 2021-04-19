@@ -166,4 +166,8 @@ dependencies {
 
     // 数据库调试
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
+
+    // 内存检测工具，2.X无需在Application中添加代码
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.3'
+//    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:2.3'
 }

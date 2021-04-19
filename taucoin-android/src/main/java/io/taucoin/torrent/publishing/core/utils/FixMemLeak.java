@@ -47,7 +47,7 @@ public class FixMemLeak {
                 Object systemService = context.getSystemService(Class.forName("com.samsung.android.content.clipboard.SemClipboardManager"));
                 Field mContext = systemService.getClass().getDeclaredField("mContext");
                 mContext.setAccessible(true);
-                mContext.set(systemService, null);
+                mContext.set(systemService, context.getApplicationContext());
             }
         } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException | NullPointerException ignored) {
         }

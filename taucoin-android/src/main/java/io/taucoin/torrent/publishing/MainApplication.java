@@ -14,6 +14,7 @@ import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.CrashHandler;
+import io.taucoin.torrent.publishing.core.utils.FixMemLeak;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
 
 public class MainApplication extends MultiDexApplication {
@@ -134,6 +135,7 @@ public class MainApplication extends MultiDexApplication {
 
         @Override
         public void onActivityDestroyed(Activity activity) {
+            FixMemLeak.fixSamSungLeak(activity);
         }
     };
 }
