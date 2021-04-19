@@ -4,12 +4,16 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.IPackageStatsObserver;
 import android.content.pm.PackageStats;
+import android.os.Build;
 import android.os.Debug;
 import android.os.IBinder;
 import android.os.IInterface;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.Process;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.RandomAccessFile;
 import java.util.Date;
@@ -19,6 +23,7 @@ import io.reactivex.FlowableEmitter;
 import io.taucoin.torrent.publishing.MainApplication;
 
 public class Sampler {
+    private static final Logger logger = LoggerFactory.getLogger("Sampler");
     private volatile static Sampler instance = null;
     private ActivityManager activityManager;
     private Long lastCpuTime;
@@ -95,16 +100,30 @@ public class Sampler {
         long mem = 0;
         try {
             // 统计进程的内存信息 totalPss
-            final Debug.MemoryInfo[] memInfo = activityManager.getProcessMemoryInfo(
-                    new int[]{Process.myPid()});
-            if (memInfo.length > 0) {
-                // TotalPss = dalvikPss + nativePss + otherPss, in KB
-                // getTotalPrivateDirty()就是获得自己进程所独占的内存 in KB
-                final int totalPss = memInfo[0].getTotalPrivateDirty();
-                if (totalPss >= 0) {
-                    // Mem in Byte
-                    mem = totalPss * 1024;
-                }
+            Debug.MemoryInfo dbm;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                dbm = new Debug.MemoryInfo();
+                Debug.getMemoryInfo(dbm);
+            } else {
+                Debug.MemoryInfo[] memInfo = activityManager.getProcessMemoryInfo(
+                        new int[]{Process.myPid()});
+                dbm = memInfo[0];
+            }
+
+            // TotalPss = dalvikPss + nativePss + otherPss, in KB
+            // getTotalPrivateDirty()就是获得自己进程所独占的内存 in KB
+            final int totalPss = dbm.getTotalPrivateDirty();
+            Context context = MainApplication.getInstance();
+            logger.trace("sampleMemory dalvikPrivateDirty::{}, nativePrivateDirty::{}, " +
+                    "otherPrivateDirty::{}, totalPrivateDirty::{}",
+                    Formatter.formatFileSize(context, dbm.dalvikPrivateDirty * 1024),
+                    Formatter.formatFileSize(context, dbm.nativePrivateDirty * 1024),
+                    Formatter.formatFileSize(context, dbm.otherPrivateDirty * 1024),
+                    Formatter.formatFileSize(context, dbm.getTotalPrivateDirty() * 1024));
+
+            if (totalPss >= 0) {
+                // Mem in Byte
+                mem = totalPss * 1024;
             }
         } catch (Exception e) {
             e.printStackTrace();
