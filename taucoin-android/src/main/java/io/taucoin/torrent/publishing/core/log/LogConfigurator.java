@@ -25,12 +25,12 @@ import io.taucoin.torrent.publishing.core.utils.LogbackSizeBasedTriggeringPolicy
  * 是否是测试版本，日志存储的大小不同，等级不同
  */
 public class LogConfigurator {
-    private static final int DEBUG_MAX_INDEX = 20;                // 测试版本最大编号
+    private static final int DEBUG_MAX_INDEX = 10;                // 测试版本最大编号
     private static final String DEBUG_MAX_FILE_SIZE = "50MB";     // 测试最大文件大小
     private static final Level DEBUG_LOG_LEVEL = Level.TRACE;     // 测试日志等级
 
-    private static final int RELEASE_MAX_INDEX = 10;              // 发布版本最大编号
-    private static final String RELEASE_MAX_FILE_SIZE = "50MB";   // 发布版最大文件大小
+    private static final int RELEASE_MAX_INDEX = 5;               // 发布版本最大编号
+    private static final String RELEASE_MAX_FILE_SIZE = "20MB";   // 发布版最大文件大小
     private static final Level RELEASE_LOG_LEVEL = Level.INFO;    // 发布版日志等级
 
     public static void configure() {
