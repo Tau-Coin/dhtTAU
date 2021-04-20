@@ -13,6 +13,7 @@ import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 public class NewMsgSignal {
+    private byte[] deviceID;
     byte[] hashPrefixArray;
     Bloom friendListBloomFilter = null;
     // TODO：：推荐策略重新考虑
@@ -34,8 +35,9 @@ public class NewMsgSignal {
         this.parsed = true;
     }
 
-    public NewMsgSignal(byte[] hashPrefixArray, Bloom friendListBloomFilter,
+    public NewMsgSignal(byte[] deviceID, byte[] hashPrefixArray, Bloom friendListBloomFilter,
                         byte[] chattingFriend, BigInteger timestamp, List<GossipItem> gossipItemList) {
+        this.deviceID = deviceID;
         this.hashPrefixArray = hashPrefixArray;
         this.friendListBloomFilter = friendListBloomFilter;
         this.chattingFriend = chattingFriend;
@@ -47,6 +49,14 @@ public class NewMsgSignal {
 
     public NewMsgSignal(byte[] rlpEncoded) {
         this.rlpEncoded = rlpEncoded;
+    }
+
+    public byte[] getDeviceID() {
+        if (!parsed) {
+            parseRLP();
+        }
+
+        return deviceID;
     }
 
     public byte[] getHashPrefixArray() {
@@ -104,17 +114,19 @@ public class NewMsgSignal {
         RLPList params = RLP.decode2(this.rlpEncoded);
         RLPList list = (RLPList) params.get(0);
 
-        this.hashPrefixArray = list.get(0).getRLPData();
+        this.deviceID = list.get(0).getRLPData();
 
-        byte[] friendBloomBytes = list.get(1).getRLPData();
+        this.hashPrefixArray = list.get(1).getRLPData();
+
+        byte[] friendBloomBytes = list.get(2).getRLPData();
         this.friendListBloomFilter = (null == friendBloomBytes) ? new Bloom(): new Bloom(friendBloomBytes);
 
-        this.chattingFriend = list.get(2).getRLPData();
+        this.chattingFriend = list.get(3).getRLPData();
 
-        byte[] timeBytes = list.get(3).getRLPData();
+        byte[] timeBytes = list.get(4).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
-        parseGossipList((RLPList) list.get(4));
+        parseGossipList((RLPList) list.get(5));
 
         this.parsed = true;
     }
@@ -142,6 +154,7 @@ public class NewMsgSignal {
      */
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
+            byte[] deviceID = RLP.encodeElement(this.deviceID);
             byte[] hashPrefixArray = RLP.encodeElement(this.hashPrefixArray);
             byte[] friendListBloomFilter = RLP.encodeElement(null);
             if (null != this.friendListBloomFilter) {
@@ -151,7 +164,7 @@ public class NewMsgSignal {
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
             byte[] gossipListEncoded = getGossipListEncoded();
 
-            this.rlpEncoded = RLP.encodeList(hashPrefixArray, friendListBloomFilter,
+            this.rlpEncoded = RLP.encodeList(deviceID, hashPrefixArray, friendListBloomFilter,
                     chattingFriend, timestamp, gossipListEncoded);
         }
 
@@ -173,6 +186,7 @@ public class NewMsgSignal {
 
     @Override
     public String toString() {
+        byte[] deviceID = getDeviceID();
         byte[] hashPrefixArray = getHashPrefixArray();
         Bloom friendListBloomFilter = getFriendListBloomFilter();
         BigInteger time = getTimestamp();
@@ -181,8 +195,13 @@ public class NewMsgSignal {
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("OnlineSignal{");
+        if (null != deviceID) {
+            stringBuilder.append("device id=");
+            stringBuilder.append(Hex.toHexString(deviceID));
+        }
+
         if (null != hashPrefixArray) {
-            stringBuilder.append("hash prefix array=");
+            stringBuilder.append(", hash prefix array=");
             stringBuilder.append(Hex.toHexString(hashPrefixArray));
         }
         if (null != friendListBloomFilter) {

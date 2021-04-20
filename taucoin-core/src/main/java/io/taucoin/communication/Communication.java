@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -49,15 +50,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private static final Logger logger = LoggerFactory.getLogger("Communication");
 
     // 朋友延迟访问时间，根据dht short time设定
-    private final int DELAY_TIME = 1600; // 1600 ms
+    private final int DELAY_TIME = 1000; // 1000 ms
 
     // 主循环间隔最小时间
     private final int DEFAULT_LOOP_INTERVAL_TIME = 50; // 50 ms
 
-    // 数据允许接受的时间： 以当前时间30s之前为界
-    private final int ACCEPT_DATA_TIME = 300; // 30 s
+    // 数据允许接受的时间： 以当前时间6h之前为界
+    private final int ACCEPT_DATA_TIME = 6 * 60 * 60; // 6 h
 
-    private final int MAX_CACHE_NUMBER = 30;
+    // 最大可容纳的多设备数量
+    private final int MAX_DEVICE_NUMBER = 256;
 
     // 主循环间隔时间
     private int loopIntervalTime = DEFAULT_LOOP_INTERVAL_TIME;
@@ -80,14 +82,14 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // 我的朋友的最新消息的时间戳 <friend, timestamp>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> lastSeen = new ConcurrentHashMap<>();
 
-    // 用于记录新消息信号的处理历史，避免历史数据重复处理，目前设计保留30个
-    private final Map<ByteArrayWrapper, LinkedHashSet<NewMsgSignal>> newMsgSignalHistory = new ConcurrentHashMap<>();
+    // 发现的最新信号时间(区分多设备)<friend, <device id, time> >
+    private final Map<ByteArrayWrapper, HashMap<ByteArrayWrapper, BigInteger>> latestSignalTime = new ConcurrentHashMap<>();
 
     // 待处理的新消息信号集合
     private final Map<ByteArrayWrapper, LinkedHashSet<NewMsgSignal>> newMsgSignalCache = new ConcurrentHashMap<>();
 
     // 最新的新消息信号集合
-    private final Map<ByteArrayWrapper, NewMsgSignal> latestNewMsgSignal = new ConcurrentHashMap<>();
+//    private final Map<ByteArrayWrapper, NewMsgSignal> latestNewMsgSignal = new ConcurrentHashMap<>();
 
     // 发现的我的朋友跟我聊天的最新时间 <friend, time>（完整公钥）
     private final Map<ByteArrayWrapper, BigInteger> friendChattingTime = new ConcurrentHashMap<>();
@@ -507,104 +509,111 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 myNewMsgSignal.getEncoded());
         dataSet.add(new ByteArrayWrapper(mutableDataWrapper.getEncoded()));
 
-        // 取出所有30s以内的新消息信号，用来构建本次put的消息集合
+        // 取出待处理的新消息信号，用来构建本次put的消息集合
         LinkedHashSet<NewMsgSignal> newMsgSignals = this.newMsgSignalCache.get(peer);
 
         if (null != newMsgSignals) {
             // 倒序访问
             LinkedList<NewMsgSignal> linkedList = new LinkedList<>(newMsgSignals);
 
-            NewMsgSignal latestNewMsgSignal = this.latestNewMsgSignal.get(peer);
-            if (newMsgSignals.isEmpty() && null != latestNewMsgSignal &&
-                    latestNewMsgSignal.getTimestamp().longValue() > currentTime.longValue() - this.ACCEPT_DATA_TIME) {
-                linkedList.add(latestNewMsgSignal);
-            }
+//            NewMsgSignal latestNewMsgSignal = this.latestNewMsgSignal.get(peer);
+//            if (newMsgSignals.isEmpty() && null != latestNewMsgSignal &&
+//                    latestNewMsgSignal.getTimestamp().longValue() > currentTime.longValue() - this.ACCEPT_DATA_TIME) {
+//                linkedList.add(latestNewMsgSignal);
+//            }
 
             Iterator<NewMsgSignal> iterator = linkedList.descendingIterator();
+            byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
             while (iterator.hasNext()) {
                 NewMsgSignal newMsgSignal = iterator.next();
-                byte[] hashPrefixArray = newMsgSignal.getHashPrefixArray();
-                Bloom friendListBloomFilter = newMsgSignal.getFriendListBloomFilter();
-                BigInteger timestamp = newMsgSignal.getTimestamp();
+                try {
+                    byte[] hashPrefixArray = newMsgSignal.getHashPrefixArray();
+                    Bloom friendListBloomFilter = newMsgSignal.getFriendListBloomFilter();
+                    BigInteger timestamp = newMsgSignal.getTimestamp();
 
-                byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
-                if (Arrays.equals(pubKey, peer.getData()) && null != friendListBloomFilter) {
-                    // 是另外一台设备
-                    for (ByteArrayWrapper friend : this.friends) {
-                        Bloom bloom = Bloom.create(HashUtil.sha1hash(friend.getData()));
-                        if (!friendListBloomFilter.matches(bloom)) {
-                            // 发现不在对方朋友列表
-                            FriendInfo friendInfo = this.repository.getFriendInfo(friend.getData());
-                            if (null != friendInfo) {
-                                friendInfoSet.add(friendInfo);
+                    if (Arrays.equals(pubKey, peer.getData()) && null != friendListBloomFilter) {
+                        // 是另外一台设备
+                        for (ByteArrayWrapper friend : this.friends) {
+                            Bloom bloom = Bloom.create(HashUtil.sha1hash(friend.getData()));
+                            if (!friendListBloomFilter.matches(bloom)) {
+                                // 发现不在对方朋友列表
+                                FriendInfo friendInfo = this.repository.getFriendInfo(friend.getData());
+                                if (null != friendInfo) {
+                                    friendInfoSet.add(friendInfo);
 
-                                if (friendInfoSet.size() >= ChainParam.MAX_FRIEND_LIST_SIZE) {
-                                    break;
+                                    if (friendInfoSet.size() >= ChainParam.MAX_FRIEND_LIST_SIZE) {
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
-                List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
+                    // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
+                    List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
 
-                SolutionInfo solutionInfo = findBestSolution(messageList, hashPrefixArray);
+                    SolutionInfo solutionInfo = findBestSolution(messageList, hashPrefixArray);
 
-                if (!solutionInfo.confirmationRootList.isEmpty()) {
-                    this.msgListener.onReadMessageRoot(peer.getData(), solutionInfo.confirmationRootList, timestamp);
-                }
-
-                linkedMessageSet.addAll(solutionInfo.missingMessageList);
-
-                byte[] chattingFriend = newMsgSignal.getChattingFriend();
-                if (Arrays.equals(pubKey, chattingFriend)) {
-                    // 如果是正在跟我聊天，判断一下上次标记聊天时间戳是否最新
-                    ByteArrayWrapper sender = new ByteArrayWrapper(chattingFriend);
-                    BigInteger latestTimestamp = this.friendChattingTime.get(sender);
-                    // 如果发现更新的推荐，则加入推荐列表
-                    if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getTimestamp()) < 0) {
-                        // 记录最新的聊天时间
-                        this.friendChattingTime.put(sender, newMsgSignal.getTimestamp());
-                        referToFriend(sender);
+                    if (!solutionInfo.confirmationRootList.isEmpty()) {
+                        this.msgListener.onReadMessageRoot(peer.getData(), solutionInfo.confirmationRootList, timestamp);
                     }
-                } else {
-                    // 记录下推荐给别人的聊天时间
-                    FriendPair friendPair = new FriendPair(peer.getData(), chattingFriend);
-                    BigInteger latestTimestamp = this.gossipChattingTime.get(friendPair);
-                    if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getTimestamp()) < 0) {
-                        this.gossipChattingTime.put(friendPair, newMsgSignal.getTimestamp());
-                    }
-                }
 
+                    linkedMessageSet.addAll(solutionInfo.missingMessageList);
 
-                if (null != newMsgSignal.getGossipItemList()) {
-
-                    // 信任发送方自己给的gossip信息
-                    for (GossipItem gossipItem : newMsgSignal.getGossipItemList()) {
-                        logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
-
-                        ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
-
-                        // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
-                        if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
-                            logger.trace("Sender[{}] is me.", sender.toString());
-                            continue;
-                        }
-
+                    byte[] chattingFriend = newMsgSignal.getChattingFriend();
+                    if (Arrays.equals(pubKey, chattingFriend)) {
+                        // 如果是正在跟我聊天，判断一下上次标记聊天时间戳是否最新
+                        ByteArrayWrapper sender = new ByteArrayWrapper(chattingFriend);
                         BigInteger latestTimestamp = this.friendChattingTime.get(sender);
                         // 如果发现更新的推荐，则加入推荐列表
-                        if (null == latestTimestamp || latestTimestamp.compareTo(gossipItem.getTimestamp()) < 0) {
+                        if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getTimestamp()) < 0) {
                             // 记录最新的聊天时间
-                            this.friendChattingTime.put(sender, gossipItem.getTimestamp());
+                            this.friendChattingTime.put(sender, newMsgSignal.getTimestamp());
                             referToFriend(sender);
                         }
+                    } else {
+                        // 记录下推荐给别人的聊天时间
+                        FriendPair friendPair = new FriendPair(peer.getData(), chattingFriend);
+                        BigInteger latestTimestamp = this.gossipChattingTime.get(friendPair);
+                        if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getTimestamp()) < 0) {
+                            this.gossipChattingTime.put(friendPair, newMsgSignal.getTimestamp());
+                        }
                     }
+
+
+                    if (null != newMsgSignal.getGossipItemList()) {
+
+                        // 信任发送方自己给的gossip信息
+                        for (GossipItem gossipItem : newMsgSignal.getGossipItemList()) {
+                            logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
+
+                            ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
+
+                            // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
+                            if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
+                                logger.trace("Sender[{}] is me.", sender.toString());
+                                continue;
+                            }
+
+                            BigInteger latestTimestamp = this.friendChattingTime.get(sender);
+                            // 如果发现更新的推荐，则加入推荐列表
+                            if (null == latestTimestamp || latestTimestamp.compareTo(gossipItem.getTimestamp()) < 0) {
+                                // 记录最新的聊天时间
+                                this.friendChattingTime.put(sender, gossipItem.getTimestamp());
+                                referToFriend(sender);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
                 }
+
+//                iterator.remove();
+                newMsgSignals.remove(newMsgSignal);
             }
 
             // 清空数据
-            newMsgSignals.clear();
+//            newMsgSignals.clear();
         }
 
         if (!friendInfoSet.isEmpty()) {
@@ -854,7 +863,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
-        return new NewMsgSignal(hashPrefixArray, friendListBloomFilter,
+        return new NewMsgSignal(this.deviceID, hashPrefixArray, friendListBloomFilter,
                 chattingFriend, chattingTime, gossipItemList);
     }
 
@@ -1418,7 +1427,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     // 如果来自不同的设备
                     byte[] deviceID = friendInfoList.getDeviceID();
                     if (!Arrays.equals(this.deviceID, deviceID)) {
-                        this.msgListener.onNewDeviceID(deviceID);
+//                        this.msgListener.onNewDeviceID(deviceID);
 
                         List<FriendInfo> list = friendInfoList.getFriendInfoList();
                         if (null != list) {
@@ -1437,10 +1446,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             case NEW_MSG_SIGNAL: {
                 NewMsgSignal newMsgSignal = new NewMsgSignal(mutableDataWrapper.getData());
 
-                NewMsgSignal latestNewMsgSignal = this.latestNewMsgSignal.get(peer);
-                if (null == latestNewMsgSignal || latestNewMsgSignal.getTimestamp().longValue() < newMsgSignal.getTimestamp().longValue()) {
-                    this.latestNewMsgSignal.put(peer, newMsgSignal);
-                }
+//                NewMsgSignal latestNewMsgSignal = this.latestNewMsgSignal.get(peer);
+//                if (null == latestNewMsgSignal || latestNewMsgSignal.getTimestamp().longValue() < newMsgSignal.getTimestamp().longValue()) {
+//                    this.latestNewMsgSignal.put(peer, newMsgSignal);
+//                }
 
                 if (!Arrays.equals(peer.getData(), AccountManager.getInstance().getKeyPair().first)) {
                     logger.debug("------------Signal Time diff:{}", currentTime - timestamp.longValue());
@@ -1449,14 +1458,25 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 if (timestamp.longValue() > currentTime - this.ACCEPT_DATA_TIME) {
                     logger.debug("Accepted online signal:{} from peer:{}", newMsgSignal.toString(), peer.toString());
 
-                    LinkedHashSet<NewMsgSignal> history = this.newMsgSignalHistory.get(peer);
-                    if (null == history) {
-                        history = new LinkedHashSet<>();
-                        this.newMsgSignalHistory.put(peer, history);
+                    HashMap<ByteArrayWrapper, BigInteger> hashMap = this.latestSignalTime.get(peer);
+                    if (null == hashMap) {
+                        hashMap = new HashMap<>();
+                        this.latestSignalTime.put(peer, hashMap);
                     }
 
-                    if (history.add(newMsgSignal)) {
-                        // 加入成功，说明没在里面，大概率没有处理过
+                    byte[] deviceID = newMsgSignal.getDeviceID();
+                    ByteArrayWrapper deviceIDKey = new ByteArrayWrapper(deviceID);
+                    BigInteger latestSignalTime = hashMap.get(deviceIDKey);
+
+                    // 第一次发现，则通知新设备id
+                    if (null == latestSignalTime && !Arrays.equals(this.deviceID, deviceID)) {
+                        this.msgListener.onNewDeviceID(deviceID);
+                    }
+
+                    // 只处理最新时间戳的信号
+                    if (null == latestSignalTime || latestSignalTime.compareTo(newMsgSignal.getTimestamp()) < 0) {
+                        // 记录改设备最新信号时间
+                        hashMap.put(deviceIDKey, newMsgSignal.getTimestamp());
 
                         // 添加到缓存，等待处理
                         LinkedHashSet<NewMsgSignal> linkedList = this.newMsgSignalCache.get(peer);
@@ -1467,9 +1487,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         linkedList.add(newMsgSignal);
                     }
 
-                    if (history.size() > MAX_CACHE_NUMBER) {
-                        // 如果超过限制容量，删掉第一个
-                        history.iterator().remove();
+                    // 如果设备太多，则删除一个时间最老的
+                    if (hashMap.size() > MAX_DEVICE_NUMBER) {
+                        ByteArrayWrapper oldestTimeKey = null;
+                        BigInteger oldestTime = BigInteger.ZERO;
+                        for (Map.Entry<ByteArrayWrapper, BigInteger> entry: hashMap.entrySet()) {
+                            if (entry.getValue().compareTo(oldestTime) < 0) {
+                                oldestTimeKey = entry.getKey();
+                            }
+                        }
+                        hashMap.remove(oldestTimeKey);
                     }
                 } else {
                     logger.debug("The timestamp from NewMsgSignal is too old. Current time:{}, timestamp:{}, diff:{}", currentTime, timestamp, currentTime - timestamp.longValue());
