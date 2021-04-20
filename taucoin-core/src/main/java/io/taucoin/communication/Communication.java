@@ -1363,6 +1363,14 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 } else if (1 == operations[i][j]) {
                     // 如果是插入操作，则将target对应的插入消息加入列表
                     solutionInfo.missingMessageList.add(messageList.get(j-1));
+
+                    // 如果是插入操作，则将邻近哈希前缀一样的消息也当作缺失的消息
+                    int k = j - 1;
+                    while (k + 1 < targetLength && target[k] == target[k + 1]) {
+                        solutionInfo.missingMessageList.add(messageList.get(k + 1));
+                        k++;
+                    }
+
                     j--;
                 } else if (2 == operations[i][j]) {
                     // 如果是删除操作，可能是对方新消息，忽略

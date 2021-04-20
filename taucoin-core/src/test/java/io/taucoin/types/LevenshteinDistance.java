@@ -251,6 +251,10 @@ public class LevenshteinDistance {
             }
         }
 
+        for(; j > 0; j--) {
+            result = "s" + source.charAt(j-1) + target.charAt(j-1) + result;
+        }
+
         /*int i = source.length()-1;
         int j = target.length()-1;
 
@@ -358,7 +362,7 @@ public class LevenshteinDistance {
 
         @Test
     public void test1() {
-            String[] data = {"A123", "AA123"};
+            String[] data = {"12AA123", "12AAA123"};
             System.out.println("CADENA RESULTADO: " + bestSolution(data));
         }
 
