@@ -75,7 +75,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private final Set<ByteArrayWrapper> friends = new CopyOnWriteArraySet<>();
 
     // 朋友被延迟访问的时间
-    private final Map<ByteArrayWrapper, BigInteger> friendDelayTime = new ConcurrentHashMap<>();
+//    private final Map<ByteArrayWrapper, BigInteger> friendDelayTime = new ConcurrentHashMap<>();
 
     // TODO:: 1. 对方上次给我发信息的时间； 2. 对方在新时间
     // TODO:: 对方在线可能是个隐私问题，需要从YY中获得
@@ -791,16 +791,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //            updateCounter(peer);
 
             // 如果选中的朋友没在延迟列表的延迟期(1600 ms)，则访问它
-            long currentTime = System.currentTimeMillis();
-            BigInteger timestamp = this.friendDelayTime.get(peer);
-            if (null == timestamp || currentTime >= timestamp.longValue() ) {
+//            long currentTime = System.currentTimeMillis();
+//            BigInteger timestamp = this.friendDelayTime.get(peer);
+//            if (null == timestamp || currentTime >= timestamp.longValue() ) {
                 // 没在延迟列表
                 requestMutableDataFromPeer(peer);
                 // 加入put列表
                 this.publishFriends.add(peer);
                 // 更新延迟时间
-                this.friendDelayTime.put(peer, BigInteger.valueOf(currentTime + this.DELAY_TIME));
-            }
+//                this.friendDelayTime.put(peer, BigInteger.valueOf(currentTime + this.DELAY_TIME));
+//            }
         }
     }
 
@@ -1203,7 +1203,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     private void clearPeerCache(ByteArrayWrapper peer) {
         this.friends.remove(peer);
-        this.friendDelayTime.remove(peer);
+//        this.friendDelayTime.remove(peer);
         this.lastSeen.remove(peer);
 //        this.latestNewMsgSignalTime.remove(peer);
 //        this.latestNewMsgSignals.remove(peer);
@@ -1225,7 +1225,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     private void clearAllCache() {
         this.friends.clear();
-        this.friendDelayTime.clear();
+//        this.friendDelayTime.clear();
         this.lastSeen.clear();
 //        this.latestNewMsgSignalTime.clear();
 //        this.latestNewMsgSignals.clear();
