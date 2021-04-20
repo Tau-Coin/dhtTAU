@@ -20,7 +20,7 @@ public class Constants {
     // 社区简介长度限制
     public static final int LENGTH_LIMIT = 200;
     // APP分享URL
-    public static final String APP_SHARE_URL = "https://play.google.com/store";
+    public static final String APP_SHARE_URL = "https://taucoin.io/androidwallet.html";
 
     // Chain link中bs默认数
     public static final int CHAIN_LINK_BS_LIMIT = 10;
