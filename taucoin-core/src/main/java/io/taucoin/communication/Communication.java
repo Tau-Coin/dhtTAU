@@ -708,8 +708,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         Random random = new Random(System.currentTimeMillis());
         int index = random.nextInt(10);
 
-        // 90%的概率选中正在聊天的朋友
-        if (null != chattingFriend && index < 9) {
+        // 80%的概率选中正在聊天的朋友
+        if (null != chattingFriend && index < 8) {
             peer = new ByteArrayWrapper(chattingFriend);
         } else {
             Iterator<ByteArrayWrapper> it = this.referredFriends.iterator();
