@@ -10,22 +10,21 @@
         android:id="@+id/iv_logo"
         android:layout_width="160dp"
         android:layout_height="220dp"
-        android:paddingBottom="60dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:contentDescription="@null"
         android:src="@mipmap/icon_logo_orange" />
 
     <TextView
-        android:visibility="gone"
+        android:visibility="visible"
         android:id="@+id/app_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:textSize="@dimen/splash_size"
-        android:textColor="@color/color_white"
+        android:textSize="@dimen/splash_size_alpha"
+        android:textStyle="bold"
+        android:textColor="@color/primary_dark"
         android:textAppearance="@style/TextAppearanceBody1"
-        android:text="@string/app_name" />
+        android:text="@string/app_name_alpha" />
 </RelativeLayout>

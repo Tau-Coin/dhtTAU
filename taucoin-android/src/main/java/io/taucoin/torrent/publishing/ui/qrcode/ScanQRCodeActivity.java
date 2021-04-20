@@ -99,6 +99,7 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
         ivGallery = findViewById(R.id.iv_gallery);
         tvNoQrCode = findViewById(R.id.tv_no_qr_code);
         tvContinue = findViewById(R.id.tv_continue);
+        ivGallery.setVisibility(View.INVISIBLE);
     }
 
     /**
@@ -280,7 +281,8 @@ public class ScanQRCodeActivity extends CaptureActivity implements View.OnClickL
             tvContinue.setVisibility(View.GONE);
         }
         ivQrCode.setVisibility(isError ? View.INVISIBLE : View.VISIBLE);
-        ivGallery.setVisibility(isError ? View.INVISIBLE : View.VISIBLE);
+//        ivGallery.setVisibility(isError ? View.INVISIBLE : View.VISIBLE);
+        ivGallery.setVisibility(View.INVISIBLE);
     }
 
     /**

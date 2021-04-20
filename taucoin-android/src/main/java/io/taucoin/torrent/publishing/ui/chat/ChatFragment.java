@@ -266,9 +266,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(aLong -> {
-                    if (BuildConfig.DEBUG) {
-                        binding.chatAdd.setVisibility(isShow ? View.VISIBLE : View.GONE);
-                    }
+                    binding.chatAdd.setVisibility(isShow ? View.VISIBLE : View.GONE);
                     handler.post(handleUpdateAdapter);
                 }));
     }

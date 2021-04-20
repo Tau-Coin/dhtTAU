@@ -49,7 +49,6 @@ import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
-import io.taucoin.torrent.publishing.core.utils.DrawablesUtil;
 import io.taucoin.torrent.publishing.core.utils.FileUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -98,7 +97,6 @@ public class UserViewModel extends AndroidViewModel {
     private MutableLiveData<Bitmap> qrBlurBitmap = new MutableLiveData<>();
     private CommonDialog commonDialog;
     private CommonDialog editNameDialog;
-    private CommonDialog dailyDataLimitDialog;
     private TauDaemon daemon;
     private UserSourceFactory sourceFactory;
     private ChatViewModel chatViewModel;
@@ -125,17 +123,13 @@ public class UserViewModel extends AndroidViewModel {
     protected void onCleared() {
         super.onCleared();
         disposables.clear();
-        if(commonDialog != null && commonDialog.isShowing()){
-            commonDialog.dismiss();
+        if(commonDialog != null){
+            commonDialog.closeDialog();
             commonDialog = null;
         }
-        if(editNameDialog != null && editNameDialog.isShowing()){
-            editNameDialog.dismiss();
+        if(editNameDialog != null){
+            editNameDialog.closeDialog();
             editNameDialog = null;
-        }
-        if(dailyDataLimitDialog != null && dailyDataLimitDialog.isShowing()){
-            dailyDataLimitDialog.dismiss();
-            dailyDataLimitDialog = null;
         }
     }
 
@@ -594,6 +588,7 @@ public class UserViewModel extends AndroidViewModel {
         });
         editNameDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
+                .setCanceledOnTouchOutside(false)
                 .setButtonWidth(240)
                 .create();
         editNameDialog.show();
@@ -781,7 +776,7 @@ public class UserViewModel extends AndroidViewModel {
             try {
                 String userPk = MainApplication.getInstance().getPublicKey();
                 Friend friend = friendRepo.queryFriend(userPk, friendPK);
-                if (friend.msgUnread > 0) {
+                if (friend != null && friend.msgUnread > 0) {
                     friend.msgUnread = 0;
                     friendRepo.updateFriend(friend);
                 }
