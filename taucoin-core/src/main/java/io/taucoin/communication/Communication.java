@@ -963,6 +963,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private void mainLoop() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                long startTime = System.currentTimeMillis();
+
                 checkFriends();
 
                 // 合并来自多设备的朋友
@@ -987,6 +989,14 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     this.loopIntervalTime = this.repository.getMainLoopInterval();
                     if (this.loopIntervalTime < this.DEFAULT_LOOP_INTERVAL_TIME) {
                         this.loopIntervalTime = this.DEFAULT_LOOP_INTERVAL_TIME;
+                    }
+
+                    long costTime = System.currentTimeMillis() - startTime;
+
+                    if (this.loopIntervalTime > costTime) {
+                        this.loopIntervalTime = this.loopIntervalTime - (int)costTime;
+                    } else {
+                        this.loopIntervalTime = 0;
                     }
 
                     Thread.sleep(this.loopIntervalTime);
@@ -1267,7 +1277,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     /**
      * 求取LevenshteinDistance的解，得到的信息
      */
-    private class SolutionInfo {
+    private static class SolutionInfo {
         List<Message> missingMessageList = new ArrayList<>();
         List<byte[]> confirmationRootList = new ArrayList<>();
     }
