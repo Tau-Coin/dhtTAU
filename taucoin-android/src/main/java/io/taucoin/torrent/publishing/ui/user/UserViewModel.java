@@ -294,12 +294,10 @@ public class UserViewModel extends AndroidViewModel {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<QRContent>) emitter -> {
             try {
                 User user = userRepo.getCurrentUser();
-                List<String> friendPks = friendRepo.queryConnectedFriends(user.publicKey, 10);
                 String showName = UsersUtil.getShowName(user);
                 QRContent content = new QRContent();
                 content.setPublicKey(user.publicKey);
                 content.setNickName(showName);
-                content.setFriendPks(friendPks);
                 emitter.onNext(content);
             } catch (Exception e) {
                 logger.error("queryCurrentUserAndFriends error ", e);
