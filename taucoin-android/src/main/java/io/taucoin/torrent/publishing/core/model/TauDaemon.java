@@ -554,7 +554,9 @@ public class TauDaemon {
      */
     public void resetWakeLock(boolean enable) {
         // 启动/禁止设备启动广播接收器
-        Utils.enableBootReceiver(appContext, enable);
+        if (enable) {
+            Utils.enableBootReceiver(appContext, true);
+        }
         // 启动CPU WakeLock
         keepCPUWakeLock(enable);
         // 启动Wifi WakeLock
