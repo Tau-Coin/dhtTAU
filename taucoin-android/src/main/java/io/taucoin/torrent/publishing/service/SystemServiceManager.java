@@ -53,17 +53,8 @@ public class SystemServiceManager {
      * @return boolean
      */
     public boolean isHaveNetwork() {
-        return isWifiConnected() || isMobileConnected();
-    }
-
-    /**
-     * 是否是WIFI连接
-     * @return boolean
-     */
-    public boolean isWifiConnected() {
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI
-                && networkInfo.isConnected();
+        return networkInfo != null && networkInfo.isConnected();
     }
 
     /**
@@ -73,13 +64,6 @@ public class SystemServiceManager {
     public boolean isNetworkMetered() {
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         return networkInfo != null && connectivityManager.isActiveNetworkMetered();
-    }
-
-    public boolean isMobileConnected() {
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-
-        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_MOBILE
-                && networkInfo.isConnected();
     }
 
     /**

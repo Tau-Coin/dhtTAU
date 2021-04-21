@@ -42,12 +42,10 @@ public class ConnectionReceiver extends BroadcastReceiver {
                 NetworkSetting.clearSpeedList();
             }
             NetworkSetting.setMeteredNetwork(info != null && connectivityManager.isActiveNetworkMetered());
-            if (info != null && (info.getType() == ConnectivityManager.TYPE_WIFI ||
-                    info.getType() == ConnectivityManager.TYPE_MOBILE)
-                    && info.isConnected()) {
+            if (info != null && info.isConnected()) {
                 WifiManager wifiManager = (WifiManager) appContext.getSystemService(Context.WIFI_SERVICE);
                 WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                logger.debug("SSID::{}, BSSID::{}, LinkSpeed::{}", wifiInfo.getSSID(),
+                logger.debug("TYPE::{}, SSID::{}, BSSID::{}, LinkSpeed::{}", info.getType(), wifiInfo.getSSID(),
                         wifiInfo.getBSSID(), wifiInfo.getLinkSpeed());
                 settingsRepo.internetState(true);
                 settingsRepo.setInternetType(info.getType());
