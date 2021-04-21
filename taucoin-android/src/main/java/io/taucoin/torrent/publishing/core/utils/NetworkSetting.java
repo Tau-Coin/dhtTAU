@@ -26,8 +26,6 @@ public class NetworkSetting {
     private static final int METERED_LIMITED;                  // 单位MB
     private static final int WIFI_LIMITED;                     // 单位MB
     public static final long CURRENT_SPEED_SAMPLE = 10;        // 单位s
-    private static final float MIN_THRESHOLD = 1.0f / 4;       // 比率最小阀值
-    private static final float MAX_THRESHOLD = 3.0f / 4;       // 比率最大阀值
 
     private static SettingsRepository settingsRepo;
     static {
@@ -384,17 +382,8 @@ public class NetworkSetting {
      * @return 返回计算的时间间隔
      */
     public static void calculateMainLoopInterval() {
-        Interval mainLoopMin;
-        Interval mainLoopMax;
-        // 时间间隔的大小，根据APP在前后台而不同
-        boolean isForegroundRunning = isForegroundRunning();
-        if (isForegroundRunning) {
-            mainLoopMin = Interval.FORE_MAIN_LOOP_MIN;
-            mainLoopMax = Interval.FORE_MAIN_LOOP_MAX;
-        } else {
-            mainLoopMin = Interval.BACK_MAIN_LOOP_MIN;
-            mainLoopMax = Interval.BACK_MAIN_LOOP_MAX;
-        }
+        Interval mainLoopMin = Interval.MAIN_LOOP_MIN;
+        Interval mainLoopMax = Interval.MAIN_LOOP_MAX;
         int timeInterval = mainLoopMax.getInterval();
         // 无网络，返回0；不更新链端时间间隔
         if (settingsRepo.internetState()) {
@@ -412,6 +401,8 @@ public class NetworkSetting {
                 timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax);
                 logger.trace("calculateMainLoopInterval currentSpeed::{}, speedLimit::{}, rate::{}," +
                                 " timeInterval::{}", currentSpeed, speedLimit, rate, timeInterval);
+            } else {
+                timeInterval = Interval.MAIN_LOOP_NO_AVERAGE_SPEED.getInterval();
             }
         }
         FrequencyUtil.updateMainLoopInterval(timeInterval);
@@ -425,17 +416,8 @@ public class NetworkSetting {
      * @return 返回计算的时间间隔
      */
     private static int calculateTimeInterval(float rate, Interval min, Interval max) {
-        int timeInterval;
-        // 比率大于等于最大阀值限制，使用最大时间间隔
-        if (rate >= MAX_THRESHOLD) {
-            timeInterval = max.getInterval();
-        } else if (rate <= MIN_THRESHOLD) {
-            timeInterval = min.getInterval();
-        } else {
-            timeInterval = min.getInterval();
-            timeInterval += (int)((rate - MIN_THRESHOLD) / (MAX_THRESHOLD - MIN_THRESHOLD)
-                    * (max.getInterval() - min.getInterval()));
-        }
+        int timeInterval = min.getInterval();
+        timeInterval += (int)((rate / 6) * (max.getInterval() - min.getInterval()));
         return timeInterval;
     }
 }
