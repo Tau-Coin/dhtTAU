@@ -10,7 +10,11 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.CopyManager;
+import io.taucoin.torrent.publishing.core.utils.DrawablesUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
+import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityQrCodeBinding;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
@@ -80,6 +84,9 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
                 .append(midHideName)
                 .create();
         binding.qrCode.tvName.setText(stringBuilder);
+        binding.qrCode.tvName.setTag(content.getPublicKey());
+        DrawablesUtil.setEndDrawable(binding.qrCode.tvName, R.mipmap.icon_copy_text,
+                16);
         userViewModel.generateQRCode(UserQRCodeActivity.this, content, -1);
     }
 
@@ -110,6 +117,10 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
     public void onClick(View v) {
         if (v.getId() == R.id.ll_scan_qr_code) {
             openScanQRActivity();
+        } else if (v.getId() == R.id.tv_name) {
+            String publicKey = StringUtil.getTag(binding.qrCode.tvName);
+            CopyManager.copyText(publicKey);
+            ToastUtils.showShortToast(R.string.copy_public_key);
         }
     }
 }

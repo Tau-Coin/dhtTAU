@@ -198,6 +198,7 @@
     <string name="user_community_name">C/%1$s</string>
     <string name="user_new_name_hint">Nick Name</string>
     <string name="user_invalid_new_name">Invalid Nickname</string>
+    <string name="user_invalid_friend_pk">Invalid Friend\'s Public Key</string>
     <string name="user_new_name_too_long">Nickname too long</string>
     <string name="user_no_messages_from">No messages from</string>
     <string name="user_until_removed">until removed from the ban list.</string>
@@ -267,6 +268,7 @@
 
     <!-- Strings used for connected peers -->
     <string name="contacts_exchange_qr">Exchange QR code to add friends</string>
+    <string name="contacts_import_friend_pk">Import friend\'s PK to add friend</string>
     <string name="contacts_have_added">I have added you as a friend.</string>
     <string name="contacts_yourself">&#160;-&#160;yourself</string>
     <string name="contacts_discovered">Discovered</string>

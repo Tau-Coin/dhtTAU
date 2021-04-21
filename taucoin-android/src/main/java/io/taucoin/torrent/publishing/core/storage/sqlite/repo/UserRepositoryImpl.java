@@ -184,13 +184,13 @@ public class UserRepositoryImpl implements UserRepository{
         if (null == list) {
             list = new ArrayList<>();
         }
-        if (StringUtil.isNotEmpty(friendPk)) {
+        String mySelf = MainApplication.getInstance().getPublicKey();
+        if (StringUtil.isNotEmpty(friendPk) && StringUtil.isNotEquals(friendPk, mySelf)) {
             UserAndFriend userAndFriend = getFriend(friendPk);
             if (userAndFriend != null) {
                 list.add(0, userAndFriend);
             }
         }
-        String mySelf = MainApplication.getInstance().getPublicKey();
         UserAndFriend self = getFriend(mySelf);
         if (mySelf != null) {
             list.add(0, self);

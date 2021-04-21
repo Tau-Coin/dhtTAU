@@ -38,6 +38,7 @@ import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
+import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
@@ -58,6 +59,7 @@ import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.UsersUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.core.utils.ViewUtils;
+import io.taucoin.torrent.publishing.databinding.AddFriendDialogBinding;
 import io.taucoin.torrent.publishing.databinding.BanDialogBinding;
 import io.taucoin.torrent.publishing.databinding.ContactsDialogBinding;
 import io.taucoin.torrent.publishing.databinding.SeedDialogBinding;
@@ -88,7 +90,7 @@ public class UserViewModel extends AndroidViewModel {
     private MsgRepository msgRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<String> changeResult = new MutableLiveData<>();
-    private MutableLiveData<Boolean> addFriendResult = new MutableLiveData<>();
+    private MutableLiveData<Result> addFriendResult = new MutableLiveData<>();
     private MutableLiveData<Boolean> editNameResult = new MutableLiveData<>();
     private MutableLiveData<List<User>> blackList = new MutableLiveData<>();
     private MutableLiveData<UserAndFriend> userDetail = new MutableLiveData<>();
@@ -351,7 +353,7 @@ public class UserViewModel extends AndroidViewModel {
     /**
      * 获取添加联系人的结果
      */
-    public MutableLiveData<Boolean> getAddFriendResult() {
+    public MutableLiveData<Result> getAddFriendResult() {
         return addFriendResult;
     }
 
@@ -497,7 +499,9 @@ public class UserViewModel extends AndroidViewModel {
      * @param nickname
      */
     public void addFriend(String publicKey, String nickname) {
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<Boolean>) emitter -> {
+        Disposable disposable = Flowable.create((FlowableOnSubscribe<Result>) emitter -> {
+            Result result = new Result();
+            result.setMsg(publicKey);
             User user = userRepo.getUserByPublicKey(publicKey);
             if(null == user){
                 user = new User(publicKey);
@@ -526,7 +530,8 @@ public class UserViewModel extends AndroidViewModel {
                 String msg = getApplication().getString(R.string.contacts_have_added);
                 chatViewModel.syncSendMessageTask(publicKey, msg, MessageType.TEXT.ordinal());
             }
-            emitter.onNext(isExist);
+            result.setSuccess(isExist);
+            emitter.onNext(result);
             emitter.onComplete();
         }, BackpressureStrategy.LATEST)
                 .subscribeOn(Schedulers.io())
@@ -590,6 +595,44 @@ public class UserViewModel extends AndroidViewModel {
                 .setButtonWidth(240)
                 .create();
         editNameDialog.show();
+    }
+
+    /**
+     * 显示添加朋友的对话框
+     */
+    public void showAddFriendDialog(AppCompatActivity activity) {
+        AddFriendDialogBinding binding = DataBindingUtil.inflate(LayoutInflater.from(activity),
+                R.layout.add_friend_dialog, null, false);
+        binding.ivClose.setOnClickListener(v -> {
+            if (commonDialog != null) {
+                commonDialog.closeDialog();
+            }
+        });
+        binding.tvSubmit.setOnClickListener(v -> {
+            String publicKey = StringUtil.getText(binding.etPublicKey);
+            try {
+                if (StringUtil.isNotEmpty(publicKey) &&
+                        ByteUtil.toByte(publicKey).length == Ed25519.PUBLIC_KEY_SIZE) {
+                    String nickName = StringUtil.getText(binding.etNickname);
+                    if (StringUtil.isNotEmpty(nickName)) {
+                        int nicknameLength = Utils.textStringToBytes(nickName).length;
+                        if (nicknameLength > Constants.NICKNAME_LENGTH) {
+                            ToastUtils.showShortToast(R.string.user_new_name_too_long);
+                            return;
+                        }
+                    }
+                    addFriend(publicKey, nickName);
+                    return;
+                }
+            } catch (Exception ignore) { }
+            ToastUtils.showShortToast(R.string.user_invalid_friend_pk);
+        });
+        commonDialog = new CommonDialog.Builder(activity)
+                .setContentView(binding.getRoot())
+                .setCanceledOnTouchOutside(false)
+                .setButtonWidth(240)
+                .create();
+        commonDialog.show();
     }
 
     /**
@@ -787,5 +830,11 @@ public class UserViewModel extends AndroidViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe();
         disposables.add(disposable);
+    }
+
+    public void closeDialog() {
+        if (commonDialog != null) {
+            commonDialog.closeDialog();
+        }
     }
 }

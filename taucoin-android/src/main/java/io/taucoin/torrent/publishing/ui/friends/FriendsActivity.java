@@ -21,6 +21,7 @@ import io.taucoin.torrent.publishing.core.Constants;
 import io.taucoin.torrent.publishing.core.model.data.UserAndFriend;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
+import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
@@ -39,7 +40,8 @@ import io.taucoin.torrent.publishing.ui.user.UserViewModel;
 /**
  * 连接的对等点
  */
-public class FriendsActivity extends BaseActivity implements FriendsListAdapter.ClickListener {
+public class FriendsActivity extends BaseActivity implements FriendsListAdapter.ClickListener,
+        View.OnClickListener {
     public static final int PAGE_FRIENDS_LIST = 0;
     public static final int PAGE_SELECT_CONTACT = 1;
     public static final int PAGE_ADD_MEMBERS = 2;
@@ -63,6 +65,7 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_friends);
+        binding.setListener(this);
         ViewModelProvider provider = new ViewModelProvider(this);
         userViewModel = provider.get(UserViewModel.class);
         txViewModel = provider.get(TxViewModel.class);
@@ -70,7 +73,6 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         communityViewModel = provider.get(CommunityViewModel.class);
         initParameter(getIntent());
         initView();
-        initFabSpeedDial();
         getMedianFee();
     }
 
@@ -121,15 +123,6 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         }
     }
 
-    /**
-     * 初始化右下角悬浮按钮组件
-     */
-    private void initFabSpeedDial() {
-        binding.llInviteFriends.setOnClickListener(v -> {
-            ActivityUtil.startActivity(this, ExchangeActivity.class);
-        });
-    }
-
     private void subscribeUserList() {
         if (pagedListLiveData != null && !pagedListLiveData.hasObservers()) {
             pagedListLiveData.removeObservers(this);
@@ -146,6 +139,19 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
         super.onStart();
         subscribeUserList();
         chatViewModel.startVisitFriend(friendPk);
+
+        userViewModel.getAddFriendResult().observe(this, result -> {
+            if (result.isSuccess()) {
+                ToastUtils.showShortToast(R.string.contacts_friend_already_exists);
+            } else {
+                userViewModel.closeDialog();
+                chatViewModel.startVisitFriend(friendPk);
+                friendPk = result.getMsg();
+                adapter = new FriendsListAdapter(this, page, order, friendPk);
+                binding.recyclerList.setAdapter(adapter);
+                subscribeUserList();
+            }
+        });
     }
 
     @Override
@@ -256,5 +262,14 @@ public class FriendsActivity extends BaseActivity implements FriendsListAdapter.
                     ActivityUtil.shareText(this, getString(R.string.contacts_share_link_via),
                             communityInviteLink);
                 }));
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.ll_exchange_qr) {
+            ActivityUtil.startActivity(this, ExchangeActivity.class);
+        } else if (v.getId() == R.id.ll_add_friend) {
+            userViewModel.showAddFriendDialog(this);
+        }
     }
 }

@@ -37,12 +37,12 @@
 
             <ImageView
                 android:id="@+id/iv_copy"
-                android:layout_width="22dp"
+                android:layout_width="match_parent"
                 android:layout_height="22dp"
-                android:padding="5dp"
-                android:onClick="@{listener::onClick}"
                 android:contentDescription="@null"
-                android:src="@mipmap/icon_copy_text"/>
+                android:onClick="@{listener::onClick}"
+                android:padding="5dp"
+                android:src="@mipmap/icon_copy_text" />
 
         </LinearLayout>
 

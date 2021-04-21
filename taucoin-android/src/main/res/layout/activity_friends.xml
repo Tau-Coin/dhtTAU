@@ -2,6 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -19,19 +25,19 @@
             android:layout_height="match_parent">
 
             <LinearLayout
-                android:id="@+id/ll_invite_friends"
+                android:id="@+id/ll_exchange_qr"
                 android:orientation="horizontal"
-                android:layout_marginBottom="7dp"
                 android:gravity="center_vertical"
                 android:background="@color/color_white"
                 android:paddingStart="20dp"
                 android:paddingEnd="0dp"
                 android:layout_width="match_parent"
-                android:layout_height="50dp">
+                android:layout_height="44dp"
+                android:onClick="@{listener::onClick}">
 
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:contentDescription="@null"
                     android:src="@mipmap/icon_qr_code"/>
 
@@ -43,11 +49,45 @@
                     android:textAppearance="@style/TextAppearanceBody1"/>
             </LinearLayout>
 
+            <include
+                android:id="@+id/view_line"
+                android:layout_below="@+id/ll_exchange_qr"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                layout="@layout/view_line"/>
+
+            <LinearLayout
+                android:layout_below="@+id/view_line"
+                android:id="@+id/ll_add_friend"
+                android:orientation="horizontal"
+                android:layout_marginBottom="7dp"
+                android:gravity="center_vertical"
+                android:background="@color/color_white"
+                android:paddingStart="20dp"
+                android:paddingEnd="0dp"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:onClick="@{listener::onClick}">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:src="@mipmap/icon_invite_friends"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15dp"
+                    android:text="@string/contacts_import_friend_pk"
+                    android:textAppearance="@style/TextAppearanceBody1"/>
+            </LinearLayout>
+
             <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
                 android:layout_above="@+id/ll_total_pay"
                 android:background="@color/color_white"
                 android:id="@+id/recycler_list"
-                android:layout_below="@+id/ll_invite_friends"
+                android:layout_below="@+id/ll_add_friend"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
