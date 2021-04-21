@@ -17,7 +17,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.databinding.FragmentMainBinding;
@@ -36,6 +39,7 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
     private MainListAdapter adapter;
     private FragmentMainBinding binding;
     private MainViewModel viewModel;
+    private TauInfoProvider infoProvider;
     private CompositeDisposable disposables = new CompositeDisposable();
 
     @Nullable
@@ -53,6 +57,7 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
         activity = (MainActivity) getActivity();
         ViewModelProvider provider = new ViewModelProvider(activity);
         viewModel = provider.get(MainViewModel.class);
+        infoProvider = TauInfoProvider.getInstance(MainApplication.getInstance());
         initView();
     }
 
@@ -80,6 +85,12 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
         disposables.add(viewModel.observeCommunitiesAndFriends()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::showCommunityList));
+
+        disposables.add(infoProvider.observeSessionStats()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(nodes -> binding.llConnecting.setVisibility(nodes > 0 ?
+                        View.GONE : View.VISIBLE)));
     }
 
     private void showCommunityList(List<CommunityAndFriend> communities) {

@@ -49,6 +49,7 @@
     <string name="main_other_transaction">Other Transaction</string>
     <string name="main_no_messages">[No messages]</string>
     <string name="main_pic_messages">[Picture]</string>
+    <string name="main_connecting">Connecting...</string>
 
     <!-- Strings used for main drawer content -->
     <string name="drawer_new_community">New Community</string>
