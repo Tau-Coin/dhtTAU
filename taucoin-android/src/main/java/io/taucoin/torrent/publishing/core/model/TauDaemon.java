@@ -492,6 +492,17 @@ public class TauDaemon {
     }
 
     /**
+     * 重新启动Sessions
+     */
+    void restartSessions() {
+        if (!isRunning) {
+            return;
+        }
+        tauController.restartSessions();
+        logger.debug("restartSessions...");
+    }
+
+    /**
      * 显示没有剩余流量提示对话框
      * 必须同时满足需要提示、触发次数大于等于网速采样数、APP在前台、目前没有打开的流量提示Activity
      */

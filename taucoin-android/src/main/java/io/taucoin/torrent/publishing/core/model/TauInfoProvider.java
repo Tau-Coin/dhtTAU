@@ -85,9 +85,9 @@ public class TauInfoProvider {
                     } else {
                         noNodesCount += 1;
                         if (noNodesCount > REOPEN_NETWORKS_THRESHOLD) {
-                            logger.trace("No nodes more than {}s, reopenNetworks...",
+                            logger.trace("No nodes more than {}s, restartSessions...",
                                     REOPEN_NETWORKS_THRESHOLD);
-                            daemon.reopenNetworks();
+                            daemon.restartSessions();
                             noNodesCount = 0;
                         }
                     }
