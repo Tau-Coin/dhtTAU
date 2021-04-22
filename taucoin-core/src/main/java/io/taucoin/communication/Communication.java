@@ -1470,11 +1470,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //                }
 
                 if (!Arrays.equals(peer.getData(), AccountManager.getInstance().getKeyPair().first)) {
-                    logger.debug("------------Signal Time diff:{}", currentTime - timestamp.longValue());
+                    logger.info("------------Signal Time diff:{}", currentTime - timestamp.longValue());
                 }
                 // 判断时间戳，以避免处理历史数据
                 if (timestamp.longValue() > currentTime - this.ACCEPT_DATA_TIME) {
-                    logger.debug("Accepted online signal:{} from peer:{}", newMsgSignal.toString(), peer.toString());
+                    logger.info("Accepted online signal:{} from peer:{}", newMsgSignal.toString(), peer.toString());
 
                     HashMap<ByteArrayWrapper, BigInteger> hashMap = this.latestSignalTime.get(peer);
                     if (null == hashMap) {
@@ -1517,7 +1517,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         hashMap.remove(oldestTimeKey);
                     }
                 } else {
-                    logger.debug("The timestamp from NewMsgSignal is too old. Current time:{}, timestamp:{}, diff:{}", currentTime, timestamp, currentTime - timestamp.longValue());
+                    logger.warn("The timestamp from NewMsgSignal is too old. Current time:{}, timestamp:{}, diff:{}", currentTime, timestamp, currentTime - timestamp.longValue());
                 }
 
                 break;
