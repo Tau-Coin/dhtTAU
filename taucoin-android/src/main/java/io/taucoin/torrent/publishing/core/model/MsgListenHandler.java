@@ -13,7 +13,6 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
 import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
@@ -213,7 +212,8 @@ class MsgListenHandler extends MsgListener{
             logger.debug("onDiscoveryFriend friendPk::{}",
                     ByteUtil.toHexString(friendPk));
             try {
-                String userPk = MainApplication.getInstance().getPublicKey();
+                User user = userRepo.getCurrentUser();
+                String userPk = user.publicKey;
                 String friendPkStr = ByteUtil.toHexString(friendPk);
                 Friend friend = friendRepo.queryFriend(userPk, friendPkStr);
                 long lastSeenTime = timestamp.longValue();
@@ -252,7 +252,8 @@ class MsgListenHandler extends MsgListener{
     public void onNewDeviceID(byte[] deviceID) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
-                String userPk = MainApplication.getInstance().getPublicKey();
+                User user = userRepo.getCurrentUser();
+                String userPk = user.publicKey;
                 String deviceIDStr = new String(deviceID);
                 logger.debug("onNewDeviceID userPk::{}, deviceID::{}",
                         userPk, deviceIDStr);
@@ -276,7 +277,8 @@ class MsgListenHandler extends MsgListener{
     public void onNewFriendFromMultiDevice(byte[] friendPk, byte[] nickname, BigInteger timestamp) {
         Disposable disposable = Flowable.create(emitter -> {
             try {
-                String userPk = MainApplication.getInstance().getPublicKey();
+                User currentUser = userRepo.getCurrentUser();
+                String userPk = currentUser.publicKey;
                 String friendPkStr = ByteUtil.toHexString(friendPk);
                 logger.debug("onNewFriend userPk::{}, friendPk::{}",
                         userPk, friendPkStr);
