@@ -291,7 +291,7 @@ public class NetworkSetting {
     /**
      * 获取WiFi网络在前台平均网速
      */
-    public static long getWiFiScreenTimeAverageSpeed() {
+    public static long getWifiScreenTimeAverageSpeed() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getLongValue(context.getString(R.string.pref_key_wifi_screen_time_average_speed));
     }
@@ -378,34 +378,95 @@ public class NetworkSetting {
     }
 
     /**
+     * 设置是否启动后台数据模式
+     */
+    public static void enableBackgroundMode(boolean enable) {
+        Context context = MainApplication.getInstance();
+        settingsRepo.setBooleanValue(context.getString(R.string.pref_key_bg_data_mode), enable);
+    }
+
+    /**
+     * 获取是否启动后台数据模式
+     */
+    public static boolean backgroundMode() {
+        Context context = MainApplication.getInstance();
+        return settingsRepo.getBooleanValue(context.getString(R.string.pref_key_bg_data_mode),
+                false);
+    }
+
+    /**
+     * 当前网络是否还有剩余可用流量
+     */
+    public static boolean isHaveAvailableData() {
+        boolean isHaveAvailableData;
+        if (NetworkSetting.isMeteredNetwork()) {
+            isHaveAvailableData = getMeteredAvailableData() > 0;
+        } else {
+            isHaveAvailableData = getWiFiAvailableData() > 0;
+        }
+        return isHaveAvailableData;
+    }
+
+    /**
      * 计算主循环时间间隔
      * @return 返回计算的时间间隔
      */
     public static void calculateMainLoopInterval() {
-        Interval mainLoopMin = Interval.MAIN_LOOP_MIN;
-        Interval mainLoopMax = Interval.MAIN_LOOP_MAX;
+        Interval mainLoopMin;
+        Interval mainLoopMax;
+
+        boolean enableBackgroundMode = backgroundMode();
+        // 前台运行，并且没有启动后台数据模式
+        boolean foregroundRunning = isForegroundRunning() && !enableBackgroundMode;
+        if (foregroundRunning) {
+            mainLoopMin = Interval.FORE_MAIN_LOOP_MIN;
+            mainLoopMax = Interval.FORE_MAIN_LOOP_MAX;
+        } else {
+            mainLoopMin = Interval.BACK_MAIN_LOOP_MIN;
+            mainLoopMax = Interval.BACK_MAIN_LOOP_MAX;
+        }
         int timeInterval = mainLoopMax.getInterval();
-        // 无网络，返回0；不更新链端时间间隔
-        if (settingsRepo.internetState()) {
-            long speedLimit;
-            if (isMeteredNetwork()) {
-                // 当前网络为计费网络
-                speedLimit = NetworkSetting.getMeteredScreenTimeAverageSpeed();
+        boolean isUpdate = true;
+        // 无可用剩余流量直接取最大时间间隔
+        if (isHaveAvailableData()) {
+            // 无网络；不更新链端时间间隔
+            if (settingsRepo.internetState()) {
+                long averageSpeed;
+                if (isMeteredNetwork()) {
+                    // 当前网络为计费网络
+                    // 是否启动后台数据模式
+                    if (enableBackgroundMode) {
+                        averageSpeed = NetworkSetting.getMeteredBackgroundAverageSpeed();
+                    } else {
+                        averageSpeed = NetworkSetting.getMeteredScreenTimeAverageSpeed();
+                    }
+                } else {
+                    // 当前网络为非计费网络
+                    // 是否启动后台数据模式
+                    if (enableBackgroundMode) {
+                        averageSpeed = NetworkSetting.getWifiBackgroundAverageSpeed();
+                    } else {
+                        averageSpeed = NetworkSetting.getWifiScreenTimeAverageSpeed();
+                    }
+                }
+                long currentSpeed = NetworkSetting.getCurrentSpeed();
+                if (averageSpeed > 0) {
+                    double rate = currentSpeed * 1.0f / averageSpeed;
+                    timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax);
+                    logger.debug("calculateMainLoopInterval currentSpeed::{}, averageSpeed::{}, " +
+                                    "rate::{}, timeInterval::{}, mainLoopMin::{}, mainLoopMax::{}",
+                            currentSpeed, averageSpeed, rate, timeInterval, mainLoopMin.getInterval(),
+                            mainLoopMax.getInterval());
+                } else {
+                    timeInterval = Interval.MAIN_LOOP_NO_AVERAGE_SPEED.getInterval();
+                }
             } else {
-                // 当前网络为非计费网络
-                speedLimit = NetworkSetting.getWiFiScreenTimeAverageSpeed();
-            }
-            long currentSpeed = NetworkSetting.getCurrentSpeed();
-            if (speedLimit > 0) {
-                float rate = currentSpeed * 1.0f / speedLimit;
-                timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax);
-                logger.trace("calculateMainLoopInterval currentSpeed::{}, speedLimit::{}, rate::{}," +
-                                " timeInterval::{}", currentSpeed, speedLimit, rate, timeInterval);
-            } else {
-                timeInterval = Interval.MAIN_LOOP_NO_AVERAGE_SPEED.getInterval();
+                isUpdate = false;
             }
         }
-        FrequencyUtil.updateMainLoopInterval(timeInterval);
+        if (isUpdate) {
+            FrequencyUtil.updateMainLoopInterval(timeInterval);
+        }
     }
 
     /**
@@ -415,9 +476,10 @@ public class NetworkSetting {
      * @param max 最大值
      * @return 返回计算的时间间隔
      */
-    private static int calculateTimeInterval(float rate, Interval min, Interval max) {
-        int timeInterval = min.getInterval();
-        timeInterval += (int)((rate / 6) * (max.getInterval() - min.getInterval()));
+    private static int calculateTimeInterval(double rate, Interval min, Interval max) {
+        int lastTimeInterval = FrequencyUtil.getMainLoopInterval();
+        int timeInterval = Math.max(min.getInterval(), (int)(lastTimeInterval * rate));
+        timeInterval = Math.min(timeInterval, max.getInterval());
         return timeInterval;
     }
 }
