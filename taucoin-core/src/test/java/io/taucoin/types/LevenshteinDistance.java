@@ -367,30 +367,37 @@ public class LevenshteinDistance {
         }
 
 //    private void testLWTDistance() {
-//        int loop = 50000;
+//        int loop = 5000;
 //        int cap = 200;
+//        int diffNum = 10;
 //        int falsePositive = 0;
 //        int falseNegative = 0;
 //
-//        for (int k = 2; k < loop + 2; k++) {
+//        boolean first = false;
+//
+//        for (int k = diffNum + 1; k < loop + diffNum + 1; k++) {
 //            // 构造哈希列表
 //            byte[] target = new byte[cap];
 //            byte[] source = new byte[cap];
 //
-//            byte[] bytes = ByteUtil.intToBytes(k - 1);
-//            byte[] hash = HashUtil.sha1hash(bytes);
-//            target[0] = hash[0];
+//            for(int i = 0; i < diffNum; i++) {
+//                byte[] bytes = ByteUtil.intToBytes(i + k - diffNum);
+//                byte[] hash = HashUtil.sha1hash(bytes);
+//                target[i] = hash[0];
+//            }
 //
-//            for (int i = 0; i < cap - 1; i++) {
-//                bytes = ByteUtil.intToBytes(i + k);
-//                hash = HashUtil.sha1hash(bytes);
-//                target[i + 1] = hash[0];
+//            for (int i = 0; i < cap - diffNum; i++) {
+//                byte[] bytes = ByteUtil.intToBytes(i + k);
+//                byte[] hash = HashUtil.sha1hash(bytes);
+//                target[i + diffNum] = hash[0];
 //                source[i] = hash[0];
 //            }
 //
-//            bytes = ByteUtil.intToBytes(cap - 1 + k);
-//            hash = HashUtil.sha1hash(bytes);
-//            source[cap - 1] = hash[0];
+//            for (int i = cap - diffNum; i < cap; i++) {
+//                byte[] bytes = ByteUtil.intToBytes(i + k);
+//                byte[] hash = HashUtil.sha1hash(bytes);
+//                source[i] = hash[0];
+//            }
 //
 //            int sourceLength = source.length;
 //            int targetLength = target.length;
@@ -436,48 +443,203 @@ public class LevenshteinDistance {
 //                }
 //            }
 //
+//            if (!first) {
+//                logger.error("Diff Num:{}, Min dist:{}", diffNum, dist[sourceLength][targetLength]);
+//                first = true;
+//            }
+//
 //            Set<Integer> missingSet = new HashSet<>();
 //            Set<Integer> confirmationSet = new HashSet<>();
 //
-//            int i = sourceLength;
-//            int j = targetLength;
-//            while (0 != dist[i][j]) {
-//                if (0 == operations[i][j]) {
-//                    // 如果是替换操作，则将target对应的替换消息加入列表
-//                    if (source[i-1] != target[j-1]) {
+//            {
+//                int i = sourceLength;
+//                int j = targetLength;
+//                while (0 != dist[i][j]) {
+//                    if (0 == operations[i][j]) {
+//                        // 如果是替换操作，则将target对应的替换消息加入列表
+//                        if (source[i - 1] != target[j - 1]) {
 ////                        missingMessage.add(messageList.get(j - 1));
-//                        missingSet.add(j - 1);
-//                    } else {
-//                        confirmationSet.add(j - 1);
-//                    }
-//                    i--;
-//                    j--;
-//                } else if (1 == operations[i][j]) {
-//                    // 如果是插入操作，则将target对应的插入消息加入列表
+//                            missingSet.add(j - 1);
+//                        } else {
+//                            confirmationSet.add(j - 1);
+//                        }
+//                        i--;
+//                        j--;
+//                    } else if (1 == operations[i][j]) {
+//                        // 如果是插入操作，则将target对应的插入消息加入列表
 ////                    missingMessage.add(messageList.get(j-1));
-//                    missingSet.add(j - 1);
-//                    j--;
-//                } else if (2 == operations[i][j]) {
-//                    // 如果是删除操作，可能是对方新消息，忽略
-//                    i--;
+//                        missingSet.add(j - 1);
+//                        j--;
+//                    } else if (2 == operations[i][j]) {
+//                        // 如果是删除操作，可能是对方新消息，忽略
+//                        i--;
+//                    }
+//                }
+//
+//                for (; j > 0; j--) {
+//                    confirmationSet.add(j - 1);
 //                }
 //            }
 //
-//            if (!missingSet.contains(0)) {
-//                falsePositive++;
+//            for (int i = 0; i < diffNum; i++) {
+//                if (!missingSet.contains(i)) {
+//                    falsePositive++;
+//                }
 //            }
-//            for (int index = 1; index < cap - 1; index++) {
-//                if (missingSet.contains(index)) {
+//
+//            for (int i = diffNum; i < cap; i++) {
+//                if (missingSet.contains(i)) {
 //                    falseNegative++;
 //                }
-//                if (!confirmationSet.contains(index)) {
-//                    falseNegative++;
-//                }
+////                if (!confirmationSet.contains(i)) {
+////                    falseNegative++;
+////                }
 //            }
 //        }
 //
-//        int total = loop * cap;
-//        logger.error("-------------------False positive:{}, rate:{}, false negative:{}, rate:{}", falsePositive, falsePositive * 1.0 / total, falseNegative, falseNegative * 1.0 / total);
+////        int total = loop * cap;
+//        logger.error("-------------------False positive:{}, rate:{}, false negative:{}, rate:{}", falsePositive, falsePositive * 1.0 / (loop * diffNum), falseNegative, falseNegative * 1.0 / (loop * (cap - diffNum)));
+//    }
+
+//    private void testLWTDistance1() {
+//        int loop = 50000;
+//        int cap = 200;
+//        int diffNum = 3;
+//        int falsePositive = 0;
+//        int falseNegative = 0;
+//
+//        boolean first = false;
+//
+//        for (int k = diffNum + 1; k < loop + diffNum + 1; k++) {
+//            // 构造哈希列表
+//            byte[] target = new byte[cap];
+//            byte[] source = new byte[cap];
+//
+//            for(int i = 0; i < diffNum; i++) {
+//                byte[] bytes = ByteUtil.intToBytes(i + k - diffNum);
+//                byte[] hash = HashUtil.sha1hash(bytes);
+//                target[i] = hash[0];
+//            }
+//
+//            for(int i = 0; i < diffNum; i++) {
+//                byte[] bytes = ByteUtil.intToBytes(i + 200 * k - diffNum);
+//                byte[] hash = HashUtil.sha1hash(bytes);
+//                source[i] = hash[0];
+//            }
+//
+//            for (int i = 0; i < cap - diffNum; i++) {
+//                byte[] bytes = ByteUtil.intToBytes(i + k);
+//                byte[] hash = HashUtil.sha1hash(bytes);
+//                target[i + diffNum] = hash[0];
+//                source[i + diffNum] = hash[0];
+//            }
+//
+////            for (int i = cap - diffNum; i < cap; i++) {
+////                byte[] bytes = ByteUtil.intToBytes(i + k);
+////                byte[] hash = HashUtil.sha1hash(bytes);
+////                source[i] = hash[0];
+////            }
+//
+//            int sourceLength = source.length;
+//            int targetLength = target.length;
+//
+//            // 状态转移矩阵
+//            int[][] dist = new int[sourceLength + 1][targetLength + 1];
+//            // 操作矩阵
+//            int[][] operations = new int[sourceLength + 1][targetLength + 1];
+//
+//            // 初始化，[i, 0]转换到空，需要编辑的距离，也即删除的数量
+//            for (int i = 0; i < sourceLength + 1; i++) {
+//                dist[i][0] = i;
+//                if (i > 0) {
+//                    operations[i][0] = 2;
+//                }
+//            }
+//
+//            // 初始化，空转换到[0, j]，需要编辑的距离，也即增加的数量
+//            for (int j = 0; j < targetLength + 1; j++) {
+//                dist[0][j] = j;
+//                if (j > 0) {
+//                    operations[0][j] = 1;
+//                }
+//            }
+//
+//            // 开始填充状态转移矩阵，第0位为空，所以从1开始有数据，[i, j]为当前子串最小编辑操作
+//            for (int i = 1; i < sourceLength + 1; i++) {
+//                for (int j = 1; j < targetLength + 1; j++) {
+//                    // 第i个数据，实际的index需要i-1，替换的代价，相同无需替换，代价为0，不同代价为1
+//                    int cost = source[i - 1] == target[j - 1] ? 0 : 1;
+//                    // [i, j]在[i, j-1]的基础上，最小的编辑操作为增加1
+//                    int insert = dist[i][j - 1] + 1;
+//                    // [i, j]在[i-1, j]的基础上，最小的编辑操作为删除1
+//                    int delete = dist[i - 1][j] + 1;
+//                    // [i, j]在[i-1, j-1]的基础上，最大的编辑操作为1次替换
+//                    int swap = dist[i - 1][j - 1] + cost;
+//
+//                    // 在[i-1, j]， [i, j-1]， [i-1, j-1]三种转换到[i, j]的最小操作中，取最小值
+//                    dist[i][j] = Math.min(Math.min(insert, delete), swap);
+//
+//                    // 选择一种最少编辑的操作
+//                    operations[i][j] = optCode(swap, insert, delete);
+//                }
+//            }
+//
+//            if (!first) {
+//                logger.error("Diff Num:{}, Min dist:{}", diffNum, dist[sourceLength][targetLength]);
+//                first = true;
+//            }
+//
+//            Set<Integer> missingSet = new HashSet<>();
+//            Set<Integer> confirmationSet = new HashSet<>();
+//
+//            {
+//                int i = sourceLength;
+//                int j = targetLength;
+//                while (0 != dist[i][j]) {
+//                    if (0 == operations[i][j]) {
+//                        // 如果是替换操作，则将target对应的替换消息加入列表
+//                        if (source[i - 1] != target[j - 1]) {
+////                        missingMessage.add(messageList.get(j - 1));
+//                            missingSet.add(j - 1);
+//                        } else {
+//                            confirmationSet.add(j - 1);
+//                        }
+//                        i--;
+//                        j--;
+//                    } else if (1 == operations[i][j]) {
+//                        // 如果是插入操作，则将target对应的插入消息加入列表
+////                    missingMessage.add(messageList.get(j-1));
+//                        missingSet.add(j - 1);
+//                        j--;
+//                    } else if (2 == operations[i][j]) {
+//                        // 如果是删除操作，可能是对方新消息，忽略
+//                        i--;
+//                    }
+//                }
+//
+//                for (; j > 0; j--) {
+//                    confirmationSet.add(j - 1);
+//                }
+//            }
+//
+//            for (int i = 0; i < diffNum; i++) {
+//                if (!missingSet.contains(i)) {
+//                    falsePositive++;
+//                }
+//            }
+//
+//            for (int i = diffNum; i < cap; i++) {
+//                if (missingSet.contains(i)) {
+//                    falseNegative++;
+//                }
+////                if (!confirmationSet.contains(i)) {
+////                    falseNegative++;
+////                }
+//            }
+//        }
+//
+////        int total = loop * cap;
+//        logger.error("-------------------False positive:{}, rate:{}, false negative:{}, rate:{}", falsePositive, falsePositive * 1.0 / (loop * diffNum), falseNegative, falseNegative * 1.0 / (loop * (cap - diffNum)));
 //    }
 
 }
