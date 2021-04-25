@@ -1317,6 +1317,13 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 return solutionInfo;
             }
 
+            if (Arrays.equals(source, target)) {
+                for (Message message: messageList) {
+                    solutionInfo.confirmationRootList.add(message.getHash());
+                }
+                return solutionInfo;
+            }
+
             // 状态转移矩阵
             int[][] dist = new int[sourceLength + 1][targetLength + 1];
             // 操作矩阵

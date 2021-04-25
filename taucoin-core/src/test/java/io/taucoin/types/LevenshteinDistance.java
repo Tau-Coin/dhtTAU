@@ -501,8 +501,8 @@ public class LevenshteinDistance {
 //        logger.error("-------------------False positive:{}, rate:{}, false negative:{}, rate:{}", falsePositive, falsePositive * 1.0 / (loop * diffNum), falseNegative, falseNegative * 1.0 / (loop * (cap - diffNum)));
 //    }
 
-//    private void testLWTDistance1() {
-//        int loop = 50000;
+//    private void testTwoSender() {
+//        int loop = 5000;
 //        int cap = 200;
 //        int diffNum = 3;
 //        int falsePositive = 0;
@@ -515,17 +515,24 @@ public class LevenshteinDistance {
 //            byte[] target = new byte[cap];
 //            byte[] source = new byte[cap];
 //
-//            for(int i = 0; i < diffNum; i++) {
-//                byte[] bytes = ByteUtil.intToBytes(i + k - diffNum);
+//            for (int i = 0; i < diffNum; i++) {
+//                byte[] bytes = ByteUtil.intToBytes((int)System.currentTimeMillis() + i);
 //                byte[] hash = HashUtil.sha1hash(bytes);
 //                target[i] = hash[0];
+//                source[i] = hash[19];
 //            }
 //
-//            for(int i = 0; i < diffNum; i++) {
-//                byte[] bytes = ByteUtil.intToBytes(i + 200 * k - diffNum);
-//                byte[] hash = HashUtil.sha1hash(bytes);
-//                source[i] = hash[0];
-//            }
+////            for(int i = 0; i < diffNum; i++) {
+////                byte[] bytes = ByteUtil.intToBytes(i + k - diffNum);
+////                byte[] hash = HashUtil.sha1hash(bytes);
+////                target[i] = hash[0];
+////            }
+////
+////            for(int i = 0; i < diffNum; i++) {
+////                byte[] bytes = ByteUtil.intToBytes(i + 200 * k - diffNum);
+////                byte[] hash = HashUtil.sha1hash(bytes);
+////                source[i] = hash[0];
+////            }
 //
 //            for (int i = 0; i < cap - diffNum; i++) {
 //                byte[] bytes = ByteUtil.intToBytes(i + k);
@@ -624,6 +631,7 @@ public class LevenshteinDistance {
 //
 //            for (int i = 0; i < diffNum; i++) {
 //                if (!missingSet.contains(i)) {
+////                    logger.error("----False positive index:{}, target:{}, source:{}", i, Hex.toHexString(target), Hex.toHexString(source));
 //                    falsePositive++;
 //                }
 //            }
