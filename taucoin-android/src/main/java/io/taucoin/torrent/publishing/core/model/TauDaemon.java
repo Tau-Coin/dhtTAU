@@ -118,7 +118,7 @@ public class TauDaemon {
         settingsRepo.setNATPMPMapped(false);
         // 初始化主循环频率
         FrequencyUtil.clearMainLoopIntervalList();
-        FrequencyUtil.updateMainLoopInterval(Interval.MAIN_LOOP_MIN.getInterval());
+        FrequencyUtil.updateMainLoopInterval(Interval.FORE_MAIN_LOOP_MIN.getInterval());
     }
 
     /**
@@ -416,7 +416,8 @@ public class TauDaemon {
                 .subscribeOn(Schedulers.io())
                 .subscribe(time -> {
                     // 当前有网络连接, 并且还有剩余可用流量，网速为0，重新启动Session
-                    boolean isRestart = settingsRepo.internetState() && isHaveAvailableData()
+                    boolean isHaveAvailableData = NetworkSetting.isHaveAvailableData();
+                    boolean isRestart = settingsRepo.internetState() && isHaveAvailableData
                             && NetworkSetting.getCurrentSpeed() == 0;
                     logger.info("restartSessionTimer isRestart::{}", isRestart);
                     if (isRestart) {
@@ -426,19 +427,6 @@ public class TauDaemon {
 
                 });
         disposables.add(restartSessionTimer);
-    }
-
-    /**
-     * 当前网络是否还有剩余可用流量
-     */
-    private boolean isHaveAvailableData() {
-        boolean isHaveAvailableData;
-        if (NetworkSetting.isMeteredNetwork()) {
-            isHaveAvailableData = NetworkSetting.getMeteredAvailableData() > 0;
-        } else {
-            isHaveAvailableData = NetworkSetting.getWiFiAvailableData() > 0;
-        }
-        return isHaveAvailableData;
     }
 
     /**
@@ -463,7 +451,7 @@ public class TauDaemon {
                     reopenNetworks();
                     resetReadOnly();
                 } else {
-                    if (isHaveAvailableData()) {
+                    if (NetworkSetting.isHaveAvailableData()) {
                         // 重置无可用流量提示对话框的参数
                         trafficTips = true;
                         noRemainingDataTimes = 0;

@@ -18,7 +18,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
  */
 public class FrequencyUtil {
     private static final Logger logger = LoggerFactory.getLogger("FrequencyUtil");
-    private static final long internal_sample = 10;            // 主循环采样大小，单位s
+    private static final long internal_sample = 100;            // 主循环采样大小，单位s
 
     private static SettingsRepository settingsRepo;
     static {

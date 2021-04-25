@@ -71,6 +71,11 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         List<Integer> wifiList = Ints.asList(wifiLimits);
         adapterWiFi.submitList(wifiList);
 
+        boolean enableBgDataMode = NetworkSetting.backgroundMode();
+        binding.switchBackground.setChecked(enableBgDataMode);
+        binding.switchBackground.setOnCheckedChangeListener((buttonView, isChecked) ->
+                NetworkSetting.enableBackgroundMode(isChecked));
+
         handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
         handleSettingsChanged(getString(R.string.pref_key_current_speed_list));
         handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
@@ -135,7 +140,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             averageSpeedStr = getString(R.string.setting_metered_network_limit_speed, averageSpeedStr);
             binding.tvMeteredAverageSpeedBackground.setText(averageSpeedStr);
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_wifi_screen_time_average_speed))) {
-            long averageSpeed = NetworkSetting.getWiFiScreenTimeAverageSpeed();
+            long averageSpeed = NetworkSetting.getWifiScreenTimeAverageSpeed();
             String averageSpeedStr = Formatter.formatFileSize(this, averageSpeed).toUpperCase();
             averageSpeedStr = getString(R.string.setting_metered_network_limit_speed, averageSpeedStr);
             binding.tvWifiAverageSpeedScreenTime.setText(averageSpeedStr);

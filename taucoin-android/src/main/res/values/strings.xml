@@ -145,6 +145,7 @@
     <string name="setting_wifi_network_title">WiFi - likely free internet</string>
     <string name="setting_metered_network_title">Metered - likely paid internet</string>
     <string name="setting_work_frequency">Walking Frequency</string>
+    <string name="setting_bg_mode">Background Mode</string>
     <string name="setting_work_frequency_in_screen_time">Target screen time is daily %1$d hours, in which you spent %2$s hour now.</string>
     <string name="setting_work_frequency_not_in_screen_time">Target screen time is daily %1$d hours, and now you are over %2$d hours.
         Please increase data limit to add screen time.</string>
