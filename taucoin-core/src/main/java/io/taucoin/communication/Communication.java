@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -489,7 +490,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private void publishFriendMutableData(ByteArrayWrapper peer) {
         List<ByteArrayWrapper> dataSet = new ArrayList<>();
         LinkedHashSet<FriendInfo> friendInfoSet = new LinkedHashSet<>();
-        // 关于此处使用的发现对方缺少的消息集合，使用linked hash set，而不是set或者list的原因:
+        // 关于此处的missing message集合，使用linked hash set，而不是set或者list的原因:
         // 1. 不使用list的原因，是因为每个消息是前后两个相结合生成的bloom filter，因此，每个消息会被使用两次，
         // 因而也就有可能被添加进集合两次，list不具有去重作用
         // 2. 不使用set的原因，是识别对方缺少消息机制存在假阴性问题（也就是不缺该消息，却会被判定为缺少该消息），
@@ -499,7 +500,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         // 3. 使用linked hash set这种既有顺序，又有唯一性保证的集合，能实现按顺序put，只要按顺序put，
         // 消息之间是相邻的，那么最多只有右边界的消息是假阴性的，这样dht put的8个一个item中最多只有一个是假阴性的，
         // 其它7个（若有7个）肯定是对方缺少的消息，这样不会陷入死局，对方会逐渐拿到缺少的数据
-        LinkedHashSet<Message> linkedMessageSet = new LinkedHashSet<>();
+
+        Set<Message> missingMessageSet = new HashSet<>();
 
         BigInteger currentTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
 
@@ -514,7 +516,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
         if (null != newMsgSignals) {
             // 倒序访问
-            LinkedList<NewMsgSignal> linkedList = new LinkedList<>(newMsgSignals);
+//            LinkedList<NewMsgSignal> linkedList = new LinkedList<>(newMsgSignals);
 
 //            NewMsgSignal latestNewMsgSignal = this.latestNewMsgSignal.get(peer);
 //            if (newMsgSignals.isEmpty() && null != latestNewMsgSignal &&
@@ -522,7 +524,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //                linkedList.add(latestNewMsgSignal);
 //            }
 
-            Iterator<NewMsgSignal> iterator = linkedList.descendingIterator();
+            Iterator<NewMsgSignal> iterator = newMsgSignals.iterator();
             byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
             while (iterator.hasNext()) {
                 NewMsgSignal newMsgSignal = iterator.next();
@@ -558,7 +560,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         this.msgListener.onReadMessageRoot(peer.getData(), solutionInfo.confirmationRootList, timestamp);
                     }
 
-                    linkedMessageSet.addAll(solutionInfo.missingMessageList);
+                    missingMessageSet.addAll(solutionInfo.missingMessageList);
 
                     byte[] chattingFriend = newMsgSignal.getChattingFriend();
                     if (Arrays.equals(pubKey, chattingFriend)) {
@@ -608,8 +610,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     logger.error(e.getMessage(), e);
                 }
 
-//                iterator.remove();
-                newMsgSignals.remove(newMsgSignal);
+                iterator.remove();
+//                newMsgSignals.remove(newMsgSignal);
             }
 
             // 清空数据
@@ -626,11 +628,32 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
-        while (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE && !linkedMessageSet.isEmpty()) {
+        // 随机排列missing messages
+        List<Message> missingMessageList = new ArrayList<>();
+        int index = 0;
+        while (!missingMessageSet.isEmpty()) {
+            // 随机数种子采用时间+last index方式，避免一样
+            Random random = new Random(System.currentTimeMillis() + index);
+            index = random.nextInt(missingMessageSet.size());
+            Iterator<Message> iterator = missingMessageSet.iterator();
+
+            int i = 0;
+            while (iterator.hasNext()) {
+                Message message = iterator.next();
+                if (i == index) {
+                    missingMessageList.add(message);
+                    iterator.remove();
+                    break;
+                }
+                i++;
+            }
+        }
+
+        while (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE && !missingMessageList.isEmpty()) {
             List<Message> messages = new ArrayList<>();
             MessageList messageList = new MessageList(messages);
 
-            Iterator<Message> iterator = linkedMessageSet.iterator();
+            Iterator<Message> iterator = missingMessageList.iterator();
             // 构造一个尺寸安全的消息列表
             while (iterator.hasNext()) {
                 Message message= iterator.next();
@@ -1406,7 +1429,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
-        Collections.reverse(solutionInfo.missingMessageList);
+//        Collections.reverse(solutionInfo.missingMessageList);
         long endTime = System.currentTimeMillis();
         logger.error("Cost time:{}", endTime - startTime);
 
