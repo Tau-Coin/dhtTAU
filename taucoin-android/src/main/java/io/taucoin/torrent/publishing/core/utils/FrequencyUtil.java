@@ -18,7 +18,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
  */
 public class FrequencyUtil {
     private static final Logger logger = LoggerFactory.getLogger("FrequencyUtil");
-    private static final long internal_sample = 100;            // 主循环采样大小，单位s
+    private static final long internal_sample = 50;            // 主循环采样大小，单位s
 
     private static SettingsRepository settingsRepo;
     static {
@@ -27,9 +27,9 @@ public class FrequencyUtil {
     }
 
     /**
-     * 获取当前主循环时间间隔
+     * 获取当前主循环平均时间间隔
      */
-    public static int getMainLoopInterval() {
+    public static int getMainLoopAverageInterval() {
         Context context = MainApplication.getInstance();
         List<Integer> list = settingsRepo.getListData(context.getString(R.string.pref_key_main_loop_interval_list),
                 Integer.class);
@@ -42,6 +42,21 @@ public class FrequencyUtil {
             return 0;
         }
         return totalSpeed / list.size();
+    }
+
+    /**
+     * 获取当前主循环时间间隔
+     */
+    public static int getMainLoopInterval() {
+        Context context = MainApplication.getInstance();
+        List<Integer> list = settingsRepo.getListData(context.getString(R.string.pref_key_main_loop_interval_list),
+                Integer.class);
+        int size = list.size();
+        if (size > 0) {
+            return list.get(size - 1);
+        } else {
+            return 0;
+        }
     }
 
     /**

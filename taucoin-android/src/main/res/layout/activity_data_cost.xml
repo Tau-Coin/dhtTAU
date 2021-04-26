@@ -205,6 +205,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:includeFontPadding="false"
+                            android:layout_marginEnd="10dp"
                             android:text="@string/setting_average_speed_screen_time"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
@@ -381,6 +382,7 @@
                             android:layout_weight="1"
                             android:includeFontPadding="false"
                             android:text="@string/setting_average_speed_screen_time"
+                            android:layout_marginEnd="10dp"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <TextView

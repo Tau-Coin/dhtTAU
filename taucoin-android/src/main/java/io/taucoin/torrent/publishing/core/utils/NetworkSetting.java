@@ -453,9 +453,10 @@ public class NetworkSetting {
                 if (averageSpeed > 0) {
                     double rate = currentSpeed * 1.0f / averageSpeed;
                     timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax);
+                    int lastTimeInterval = FrequencyUtil.getMainLoopAverageInterval();
                     logger.debug("calculateMainLoopInterval currentSpeed::{}, averageSpeed::{}, " +
-                                    "rate::{}, timeInterval::{}, mainLoopMin::{}, mainLoopMax::{}",
-                            currentSpeed, averageSpeed, rate, timeInterval, mainLoopMin.getInterval(),
+                                    "rate::{}, timeInterval::{}, lastTimeInterval::{}, mainLoopMax::{}",
+                            currentSpeed, averageSpeed, rate, timeInterval, lastTimeInterval,
                             mainLoopMax.getInterval());
                 } else {
                     timeInterval = Interval.MAIN_LOOP_NO_AVERAGE_SPEED.getInterval();
@@ -477,7 +478,7 @@ public class NetworkSetting {
      * @return 返回计算的时间间隔
      */
     private static int calculateTimeInterval(double rate, Interval min, Interval max) {
-        int lastTimeInterval = FrequencyUtil.getMainLoopInterval();
+        int lastTimeInterval = FrequencyUtil.getMainLoopAverageInterval();
         int timeInterval = Math.max(min.getInterval(), (int)(lastTimeInterval * rate));
         timeInterval = Math.min(timeInterval, max.getInterval());
         return timeInterval;

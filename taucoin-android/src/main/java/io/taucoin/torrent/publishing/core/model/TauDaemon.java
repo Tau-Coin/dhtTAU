@@ -120,7 +120,6 @@ public class TauDaemon {
         settingsRepo.setNATPMPMapped(false);
         // 初始化主循环频率
         FrequencyUtil.clearMainLoopIntervalList();
-        FrequencyUtil.updateMainLoopInterval(Interval.FORE_MAIN_LOOP_MIN.getInterval());
     }
 
     /**
