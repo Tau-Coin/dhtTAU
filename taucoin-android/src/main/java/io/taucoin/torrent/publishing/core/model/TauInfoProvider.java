@@ -30,7 +30,6 @@ public class TauInfoProvider {
     private static final String TAG = TauInfoProvider.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
     private static final int STATISTICS_PERIOD = 1000;
-    private static final int REOPEN_NETWORKS_THRESHOLD = 15; // 单位s
 
     private static volatile TauInfoProvider INSTANCE;
     private TauDaemon daemon;
@@ -76,21 +75,8 @@ public class TauInfoProvider {
     private Flowable<Long> makeSessionStatsFlowable() {
         return Flowable.create((emitter) -> {
             try {
-                // 无节点计数, nodes查询频率为1s
-                int noNodesCount = 0;
                 while (!emitter.isCancelled()) {
                     long sessionNodes = daemon.getSessionNodes();
-                    if (sessionNodes > 0) {
-                        noNodesCount = 0;
-                    } else {
-                        noNodesCount += 1;
-                        if (noNodesCount > REOPEN_NETWORKS_THRESHOLD) {
-                            logger.trace("No nodes more than {}s, restartSessions...",
-                                    REOPEN_NETWORKS_THRESHOLD);
-                            daemon.restartSessions();
-                            noNodesCount = 0;
-                        }
-                    }
                     emitter.onNext(sessionNodes);
                     if (!emitter.isCancelled()) {
                         Thread.sleep(STATISTICS_PERIOD);

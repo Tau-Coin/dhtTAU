@@ -53,6 +53,7 @@ import io.taucoin.util.ByteUtil;
 public class TauDaemon {
     private static final String TAG = TauDaemon.class.getSimpleName();
     private static final Logger logger = LoggerFactory.getLogger(TAG);
+    private static final int REOPEN_NETWORKS_THRESHOLD = 15; // 单位s
 
     private Context appContext;
     private SettingsRepository settingsRepo;
@@ -72,6 +73,7 @@ public class TauDaemon {
     private volatile boolean trafficTips = true; // 剩余流量用完提示
     private volatile String seed;
     private long noRemainingDataTimes = 0; // 触发无剩余流量的次数
+    private int noNodesCount = 0; // 无节点计数, nodes查询频率为1s
 
     private static volatile TauDaemon instance;
 
@@ -297,6 +299,21 @@ public class TauDaemon {
         disposables.add(tauInfoProvider.observeTrafficStatistics()
                 .subscribeOn(Schedulers.newThread())
                 .subscribe());
+        disposables.add(tauInfoProvider.observeSessionStats()
+                .subscribeOn(Schedulers.newThread())
+                .subscribe(nodes -> {
+                    if (nodes > 0) {
+                        noNodesCount = 0;
+                    } else {
+                        noNodesCount += 1;
+                        if (noNodesCount > REOPEN_NETWORKS_THRESHOLD) {
+                            logger.trace("No nodes more than {}s, restartSessions...",
+                                    REOPEN_NETWORKS_THRESHOLD);
+                            restartSessions();
+                            noNodesCount = 0;
+                        }
+                    }
+                }));
 
         rescheduleTAUBySettings();
         tauController.start();
