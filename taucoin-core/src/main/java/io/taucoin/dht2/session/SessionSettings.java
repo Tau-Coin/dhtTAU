@@ -114,6 +114,8 @@ public final class SessionSettings {
         ds.setMax_torrents(0);
         ds.setMax_peers(0);
         ds.setMax_torrent_search_reply(0);
+        // just for test
+        ds.setSearch_branching(1);
 
         if (this.privateNetwork) {
             // For private network, unrestrict dht entries to one per IP.
