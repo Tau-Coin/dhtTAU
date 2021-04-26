@@ -72,8 +72,8 @@ public class ChainParam {
 
     public static final int INDEX_HASH_LIMIT_SIZE1 = 46;
 
-    // bloom filter在选3个点，256*8的位长，放200个元素的情况下，假阳性概率为0.01637
-    public static final int BLOOM_FILTER_MESSAGE_SIZE = 200;
+    // 同步消息列表的最大数量
+    public static final int MAX_MESSAGE_LIST_SIZE = 200;
 
     public static final int MAX_FRIEND_LIST_SIZE = 16;
 

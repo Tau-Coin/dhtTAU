@@ -9,7 +9,6 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -516,7 +515,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
         if (null != newMsgSignals) {
             // 倒序访问
-//            LinkedList<NewMsgSignal> linkedList = new LinkedList<>(newMsgSignals);
+            LinkedList<NewMsgSignal> linkedList = new LinkedList<>(newMsgSignals);
 
 //            NewMsgSignal latestNewMsgSignal = this.latestNewMsgSignal.get(peer);
 //            if (newMsgSignals.isEmpty() && null != latestNewMsgSignal &&
@@ -524,7 +523,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //                linkedList.add(latestNewMsgSignal);
 //            }
 
-            Iterator<NewMsgSignal> iterator = newMsgSignals.iterator();
+            Iterator<NewMsgSignal> iterator = linkedList.iterator();
             byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
             while (iterator.hasNext()) {
                 NewMsgSignal newMsgSignal = iterator.next();
@@ -552,7 +551,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     }
 
                     // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
-                    List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
+                    List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.MAX_MESSAGE_LIST_SIZE);
 
                     SolutionInfo solutionInfo = findBestSolution(messageList, hashPrefixArray);
 
@@ -610,8 +609,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     logger.error(e.getMessage(), e);
                 }
 
-                iterator.remove();
-//                newMsgSignals.remove(newMsgSignal);
+//                iterator.remove();
+                newMsgSignals.remove(newMsgSignal);
             }
 
             // 清空数据
@@ -849,7 +848,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         BigInteger chattingTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
         List<GossipItem> gossipItemList = new ArrayList<>();
 
-        List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.BLOOM_FILTER_MESSAGE_SIZE);
+        List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.MAX_MESSAGE_LIST_SIZE);
         if (null != messageList && !messageList.isEmpty()) {
             int size = messageList.size();
             hashPrefixArray = new byte[size];
@@ -1403,8 +1402,8 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 } else if (1 == operations[i][j]) {
                     // 如果是插入操作，则将target对应的插入消息加入列表
                     // 如果缺最后一个，并且此时双方满载，则判定为被挤出去的
-                    if (targetLength != j || targetLength != ChainParam.BLOOM_FILTER_MESSAGE_SIZE ||
-                            sourceLength != ChainParam.BLOOM_FILTER_MESSAGE_SIZE) {
+                    if (targetLength != j || targetLength != ChainParam.MAX_MESSAGE_LIST_SIZE ||
+                            sourceLength != ChainParam.MAX_MESSAGE_LIST_SIZE) {
                         solutionInfo.missingMessageList.add(messageList.get(j-1));
 
                         // 如果是插入操作，则将邻近哈希前缀一样的消息也当作缺失的消息

@@ -4,18 +4,13 @@ import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.taucoin.core.Bloom;
-import io.taucoin.core.NewMsgSignal;
 import io.taucoin.param.ChainParam;
 import io.taucoin.util.ByteArrayWrapper;
-import io.taucoin.util.ByteUtil;
 
 public class NewMsgSignalTest {
     Map<ByteArrayWrapper, LinkedList<BigInteger>> linkedListMap = new ConcurrentHashMap<>();
@@ -97,7 +92,7 @@ public class NewMsgSignalTest {
         // 更新成功
         if (updated) {
             // 如果更新了消息列表，则判断是否列表长度过长，过长则删掉旧数据，然后停止循环
-            if (linkedList.size() > ChainParam.BLOOM_FILTER_MESSAGE_SIZE) {
+            if (linkedList.size() > ChainParam.MAX_MESSAGE_LIST_SIZE) {
                 linkedList.removeFirst();
             }
 
