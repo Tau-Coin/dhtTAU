@@ -59,7 +59,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private final int ACCEPT_DATA_TIME = 6 * 60 * 60; // 6 h
 
     // 最大可容纳的多设备数量
-    private final int MAX_DEVICE_NUMBER = 256;
+    private final int MAX_DEVICE_NUMBER = 32;
 
     // 主循环间隔时间
     private int loopIntervalTime = DEFAULT_LOOP_INTERVAL_TIME;
@@ -1505,8 +1505,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 if (!Arrays.equals(peer.getData(), AccountManager.getInstance().getKeyPair().first)) {
                     logger.info("------------Signal Time diff:{}", currentTime - timestamp.longValue());
                 }
+
                 // 判断时间戳，以避免处理历史数据
-                if (timestamp.longValue() > currentTime - this.ACCEPT_DATA_TIME) {
+                if (timestamp.longValue() > currentTime - this.ACCEPT_DATA_TIME && timestamp.longValue() < currentTime + this.ACCEPT_DATA_TIME) {
                     logger.info("Accepted online signal:{} from peer:{}", newMsgSignal.toString(), peer.toString());
 
                     HashMap<ByteArrayWrapper, BigInteger> hashMap = this.latestSignalTime.get(peer);
