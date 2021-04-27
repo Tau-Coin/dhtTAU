@@ -194,6 +194,42 @@ public class DHTEngine {
     }
 
     /**
+     * Get session total download.
+     *
+     * @return long, unit: byte
+     */
+    public long getSessionTotalDownload() {
+        return session.dhtTotalDownload();
+    }
+
+    /**
+     * Get session total upload.
+     *
+     * @return long, unit: byte
+     */
+    public long getSessionTotalUpload() {
+        return session.dhtTotalUpload();
+    }
+
+    /**
+     * Get session download rate
+     *
+     * @return long, unit: byte
+     */
+    public long getSessionDownloadRate() {
+        return session.dhtDownloadRate();
+    }
+
+    /**
+     * Get session upload rate
+     *
+     * @return long, unit: byte
+     */
+    public long getSessionUploadRate() {
+        return session.dhtUploadRate();
+    }
+
+    /**
      * Set read only mode for all sessions.
      *
      * @param value

@@ -336,6 +336,41 @@ public class TauSession {
     }
 
     /**
+     * Get total download traffic
+     *
+     * @return long, unit: byte 
+     */
+    public long dhtTotalDownload() {
+        return sessionManager.totalDownload();
+    }
+
+    /**
+     * Get total upload traffic
+     *
+     * @return long, unit: byte
+     */
+    public long dhtTotalUpload() {
+        return sessionManager.totalUpload();
+    }
+
+    /**
+     * Get download rate
+     *
+     * @return long, unit: byte
+     */
+    public long dhtDownloadRate() {
+        return sessionManager.downloadRate();
+    }
+
+    /**
+     * Get upload rate
+     *
+     * @return long, unit: byte
+     */
+    public long dhtUploadRate() {
+        return sessionManager.uploadRate();
+    }
+    /**
      * Set read only mode for this session.
      *
      * When set, the other nodes won't keep this node in their routing
