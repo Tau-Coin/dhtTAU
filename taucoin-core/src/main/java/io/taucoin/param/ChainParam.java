@@ -75,7 +75,7 @@ public class ChainParam {
     // 同步消息列表的最大数量
     public static final int MAX_MESSAGE_LIST_SIZE = 200;
 
-    public static final int MAX_FRIEND_LIST_SIZE = 16;
+    public static final int MAX_FRIEND_LIST_SIZE = 8;
 
     // transaction pool
     public static final int SLIM_DOWN_SIZE = WARNING_RANGE;
