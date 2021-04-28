@@ -5,6 +5,7 @@ import io.taucoin.listener.TauListener;
 
 import com.frostwire.jlibtorrent.*;
 import com.frostwire.jlibtorrent.alerts.*;
+import com.frostwire.jlibtorrent.swig.dht_settings;
 import com.frostwire.jlibtorrent.swig.entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -384,10 +385,10 @@ public class TauSession {
      * @param value
      */
     public void setReadOnly(boolean value) {
-        DhtSettings ds = new DhtSettings();
-        ds.readOnly(value);
+        dht_settings ds = sessionManager.swig().get_dht_settings();
+        ds.setRead_only(value);
 
-        sessionManager.swig().set_dht_settings(ds.swig());
+        sessionManager.swig().set_dht_settings(ds);
     }
 
     /**
@@ -398,10 +399,10 @@ public class TauSession {
      * @param value
      */
     public void setSearchBranching(int value) {
-        DhtSettings ds = new DhtSettings();
-        ds.setSearchBranching(value);
+        dht_settings ds = sessionManager.swig().get_dht_settings();
+        ds.setSearch_branching(value);
 
-        sessionManager.swig().set_dht_settings(ds.swig());
+        sessionManager.swig().set_dht_settings(ds);
     }
 
     /**

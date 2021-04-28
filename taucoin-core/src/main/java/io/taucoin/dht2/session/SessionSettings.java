@@ -92,6 +92,8 @@ public final class SessionSettings {
                     dhtBootstrapNodes());
             sp.set_str(settings_pack.string_types.listen_interfaces.swigValue(),
                     networkInterfaces);
+
+            // NOTE: we don't depend on the platform to detect ip change.
             sp.set_bool(settings_pack.bool_types.enable_ip_notifier.swigValue(), false);
             //sp.set_int(settings_pack.int_types.upload_rate_limit.swigValue(), 512);
             //sp.set_int(settings_pack.int_types.download_rate_limit.swigValue(), 512);
