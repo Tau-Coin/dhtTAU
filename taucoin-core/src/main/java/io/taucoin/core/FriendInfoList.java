@@ -10,7 +10,6 @@ import io.taucoin.util.RLPList;
 // TODO::考虑加密
 public class FriendInfoList {
     private byte[] deviceID;
-    // TODO:: 可以放29个朋友的公钥? 需要重新测试
     private List<FriendInfo> friendInfoList = new CopyOnWriteArrayList<>();
 
     private byte[] rlpEncoded; // 编码数据
