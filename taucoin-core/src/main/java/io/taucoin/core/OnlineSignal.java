@@ -12,9 +12,10 @@ import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
-public class NewMsgSignal {
+public class OnlineSignal {
     private byte[] deviceID;
     byte[] hashPrefixArray;
+    FriendInfo friendInfo = null;
     byte[] chattingFriend; // 当前正在交谈的朋友
     BigInteger timestamp;
     private List<GossipItem> gossipItemList = new CopyOnWriteArrayList<>(); // 打听到的信息
@@ -23,7 +24,7 @@ public class NewMsgSignal {
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
-    public NewMsgSignal(byte[] hashPrefixArray, byte[] chattingFriend,
+    public OnlineSignal(byte[] hashPrefixArray, byte[] chattingFriend,
                         BigInteger timestamp, List<GossipItem> gossipItemList) {
         this.hashPrefixArray = hashPrefixArray;
         this.chattingFriend = chattingFriend;
@@ -33,10 +34,11 @@ public class NewMsgSignal {
         this.parsed = true;
     }
 
-    public NewMsgSignal(byte[] deviceID, byte[] hashPrefixArray, byte[] chattingFriend,
-                        BigInteger timestamp, List<GossipItem> gossipItemList) {
+    public OnlineSignal(byte[] deviceID, byte[] hashPrefixArray, FriendInfo friendInfo,
+                        byte[] chattingFriend, BigInteger timestamp, List<GossipItem> gossipItemList) {
         this.deviceID = deviceID;
         this.hashPrefixArray = hashPrefixArray;
+        this.friendInfo = friendInfo;
         this.chattingFriend = chattingFriend;
         this.timestamp = timestamp;
         this.gossipItemList = gossipItemList;
@@ -44,7 +46,7 @@ public class NewMsgSignal {
         this.parsed = true;
     }
 
-    public NewMsgSignal(byte[] rlpEncoded) {
+    public OnlineSignal(byte[] rlpEncoded) {
         this.rlpEncoded = rlpEncoded;
     }
 
@@ -62,6 +64,14 @@ public class NewMsgSignal {
         }
 
         return hashPrefixArray;
+    }
+
+    public FriendInfo getFriendInfo() {
+        if (!parsed) {
+            parseRLP();
+        }
+
+        return friendInfo;
     }
 
     public byte[] getChattingFriend() {
@@ -107,12 +117,17 @@ public class NewMsgSignal {
 
         this.hashPrefixArray = list.get(1).getRLPData();
 
-        this.chattingFriend = list.get(2).getRLPData();
+        byte[] friendInfoBytes = list.get(2).getRLPData();
+        if (null != friendInfoBytes) {
+            this.friendInfo = new FriendInfo(friendInfoBytes);
+        }
 
-        byte[] timeBytes = list.get(3).getRLPData();
+        this.chattingFriend = list.get(3).getRLPData();
+
+        byte[] timeBytes = list.get(4).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
-        parseGossipList((RLPList) list.get(4));
+        parseGossipList((RLPList) list.get(5));
 
         this.parsed = true;
     }
@@ -142,11 +157,15 @@ public class NewMsgSignal {
         if (null == rlpEncoded) {
             byte[] deviceID = RLP.encodeElement(this.deviceID);
             byte[] hashPrefixArray = RLP.encodeElement(this.hashPrefixArray);
+            byte[] friendInfo = RLP.encodeElement(null);
+            if (null != this.friendInfo) {
+                friendInfo = RLP.encodeElement(this.friendInfo.getEncoded());
+            }
             byte[] chattingFriend = RLP.encodeElement(this.chattingFriend);
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
             byte[] gossipListEncoded = getGossipListEncoded();
 
-            this.rlpEncoded = RLP.encodeList(deviceID, hashPrefixArray,
+            this.rlpEncoded = RLP.encodeList(deviceID, hashPrefixArray, friendInfo,
                     chattingFriend, timestamp, gossipListEncoded);
         }
 
@@ -157,8 +176,8 @@ public class NewMsgSignal {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        NewMsgSignal newMsgSignal = (NewMsgSignal) o;
-        return Arrays.equals(getHash(), newMsgSignal.getHash());
+        OnlineSignal onlineSignal = (OnlineSignal) o;
+        return Arrays.equals(getHash(), onlineSignal.getHash());
     }
 
     @Override
@@ -170,6 +189,7 @@ public class NewMsgSignal {
     public String toString() {
         byte[] deviceID = getDeviceID();
         byte[] hashPrefixArray = getHashPrefixArray();
+        FriendInfo friendInfo = getFriendInfo();
         BigInteger time = getTimestamp();
         byte[] chattingFriend = getChattingFriend();
 
@@ -184,6 +204,10 @@ public class NewMsgSignal {
         if (null != hashPrefixArray) {
             stringBuilder.append(", hash prefix array=");
             stringBuilder.append(Hex.toHexString(hashPrefixArray));
+        }
+        if (null != friendInfo) {
+            stringBuilder.append(", friend info=");
+            stringBuilder.append(friendInfo.toString());
         }
         if (null != time) {
             stringBuilder.append(", time=");
