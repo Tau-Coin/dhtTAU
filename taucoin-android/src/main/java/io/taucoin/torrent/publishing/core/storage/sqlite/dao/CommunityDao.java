@@ -64,7 +64,8 @@ public interface CommunityDao {
             " LEFT JOIN " + QUERY_NEWEST_MSG + " AS cm" +
             " ON (f.userPK = cm.senderPk AND f.friendPK = cm.receiverPk)" +
             " OR (f.userPK = cm.receiverPk AND f.friendPK = cm.senderPk)" +
-            " WHERE f.userPk = " + QUERY_GET_CURRENT_USER_PK;
+            " WHERE f.userPk = " + QUERY_GET_CURRENT_USER_PK +
+            " AND f.friendPK NOT IN " + QUERY_GET_BANNED_USER_PK;
 
     String QUERY_COMMUNITIES_AND_FRIENDS = "SELECT * FROM (" + QUERY_FRIENDS +
             " UNION ALL " + QUERY_COMMUNITIES + ")" +

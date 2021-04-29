@@ -116,7 +116,7 @@ public class FriendsListAdapter extends PagedListAdapter<UserAndFriend, FriendsL
                 stateProgress = 0;
                 showNameBuilder.append(" ")
                     .append(context.getString(R.string.contacts_discovered))
-                    .setForegroundColor(context.getResources().getColor(R.color.color_red))
+                    .setForegroundColor(context.getResources().getColor(R.color.color_blue))
                     .setFontSize(12, true);
             } else if (user.isAdded()) {
                 stateProgress = 50;
