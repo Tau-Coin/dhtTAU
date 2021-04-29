@@ -752,6 +752,15 @@ public class UserViewModel extends AndroidViewModel {
      * 生成二维码
      * @param context
      * @param qrContent 二维码内容
+     */
+    public void generateQRCode(Context context, QRContent qrContent) {
+        generateQRCode(context, qrContent, -1);
+    }
+
+    /**
+     * 生成二维码
+     * @param context
+     * @param qrContent 二维码内容
      * @param QRColor 二维码颜色
      */
     public void generateQRCode(Context context, QRContent qrContent, int QRColor) {

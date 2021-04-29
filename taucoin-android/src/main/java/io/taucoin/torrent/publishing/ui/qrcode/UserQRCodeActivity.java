@@ -87,7 +87,7 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
         binding.qrCode.tvName.setTag(content.getPublicKey());
         DrawablesUtil.setEndDrawable(binding.qrCode.tvName, R.mipmap.icon_copy_text,
                 16);
-        userViewModel.generateQRCode(UserQRCodeActivity.this, content, -1);
+        userViewModel.generateQRCode(UserQRCodeActivity.this, content);
     }
 
     /**
