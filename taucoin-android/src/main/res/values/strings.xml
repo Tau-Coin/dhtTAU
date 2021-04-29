@@ -49,7 +49,7 @@
     <string name="main_other_transaction">Other Transaction</string>
     <string name="main_no_messages">[No messages]</string>
     <string name="main_pic_messages">[Picture]</string>
-    <string name="main_connecting">Connecting...</string>
+    <string name="main_connecting">Joining phone swarm &#8230;</string>
 
     <!-- Strings used for main drawer content -->
     <string name="drawer_new_community">New Community</string>
@@ -128,7 +128,8 @@
 
     <string name="setting_title">Settings</string>
     <string name="setting_account">My Public Key</string>
-    <string name="setting_import_seed">Tap to import key</string>
+    <string name="setting_nickname">Nickname</string>
+    <string name="setting_import_seed">Tap to import secret key</string>
     <string name="setting_username_app">Nickname in app</string>
     <string name="setting_privacy_security">Privacy and Security</string>
     <string name="setting_community_setting">Community Setting</string>
@@ -146,15 +147,15 @@
     <string name="setting_metered_network_title">Metered - likely paid internet</string>
     <string name="setting_work_frequency">Walking Frequency</string>
     <string name="setting_bg_mode">Background Mode</string>
-    <string name="setting_work_frequency_in_screen_time">Target screen time is daily %1$d hours, in which you spent %2$s hour now.</string>
-    <string name="setting_work_frequency_not_in_screen_time">Target screen time is daily %1$d hours, and now you are over %2$d hours.
-        Please increase data limit to add screen time.</string>
+    <string name="setting_work_frequency_in_screen_time">Foreground time: %1$d hours daily, now spent %2$s hours.</string>
+    <string name="setting_work_frequency_not_in_screen_time">Foreground time: %1$d hours daily, now over %2$s hours.
+        Please increase data limit to add foreground time.</string>
     <string name="setting_daily_quota">Daily Data Limit</string>
     <string name="setting_daily_quota_unit_m">%1$dM</string>
     <string name="setting_daily_quota_unit_g">%1$dG</string>
     <string name="setting_network_current_speed">Current Speed</string>
-    <string name="setting_average_speed_screen_time">Average Speed in Target Screen Time</string>
-    <string name="setting_average_speed_background">Background Average Speed</string>
+    <string name="setting_average_speed_screen_time">Foreground Target Speed</string>
+    <string name="setting_average_speed_background">Background Target Speed</string>
     <string name="setting_network_average_speed">Average Speed</string>
     <string name="setting_network_available_data">Today Remaining Data</string>
     <string name="setting_metered_network_limit_speed">%1$s/s</string>
@@ -166,7 +167,7 @@
     <string name="setting_nat_pmp">NAT-PMP</string>
     <string name="setting_main_loop_interval">Main Loop Interval(ms)</string>
     <string name="setting_gossip_interval">Gossip Interval(s)</string>
-    <string name="setting_daily_traffic_limit_used_up">Daily data limit is used, proceed to use 30% more data?</string>
+    <string name="setting_daily_traffic_limit_used_up">Data limit used, proceed to use more data?</string>
     <string name="setting_metered_limit_select_tips">Using telecom data may incur additional fees.\n
         How much traffic do you want to use per day?</string>
 
@@ -184,8 +185,8 @@
     <string name="user_import_seed">Import Key</string>
     <string name="user_export_seed">Export Key</string>
     <string name="user_seeds_history">History</string>
-    <string name="user_nickname">Nickname(optional)</string>
-    <string name="user_seed_import_hint">Paste Key(required)</string>
+    <string name="user_nickname">Nickname (optional)</string>
+    <string name="user_seed_import_hint">Secrete Key (required)</string>
     <string name="user_seed_import">Import</string>
     <string name="user_seed_generate">Generate New Key</string>
     <string name="user_seed_empty">Key cannot be empty!</string>
@@ -302,7 +303,7 @@
     <string name="qr_code_step_one">Share QR code to friends</string>
     <string name="qr_code_step_two">Scan friend’s QR code</string>
     <string name="qr_code_scan_friend_qr">Scan Friend\'s QR Code</string>
-    <string name="qr_code_scan_key_qr">Scan Key QR Code</string>
+    <string name="qr_code_scan_key_qr">Scan secrete key QR code</string>
     <string name="qr_code_scan_qr">Scan QR</string>
     <string name="qr_code_scan_cancelled">Cancelled</string>
     <string name="qr_code_not_found">No QR code found</string>

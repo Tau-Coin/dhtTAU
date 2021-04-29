@@ -66,6 +66,26 @@
                         android:text="@string/setting_import_seed"
                         android:textAppearance="@style/TextAppearanceBody2"/>
 
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/color_white"
+                    android:layout_marginTop="10dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="5dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/primary"
+                        android:text="@string/setting_nickname"
+                        android:textAppearance="@style/TextAppearanceBody1"/>
+
                     <TextView
                         android:id="@+id/tv_username"
                         android:layout_width="match_parent"

@@ -86,8 +86,7 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
                 .create();
         binding.tvKeyCopy.setText(stringBuilder);
         binding.qrCode.tvQrCode.setTag(keyContent.getSeed());
-        userViewModel.generateQRCode(this, keyContent,
-                getResources().getColor(R.color.color_red_dark));
+        userViewModel.generateQRCode(this, keyContent);
     }
 
     /**

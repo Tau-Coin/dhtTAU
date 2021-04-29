@@ -160,6 +160,13 @@ public class UserViewModel extends AndroidViewModel {
         });
         binding.tvSubmit.setOnClickListener(v -> {
             String name = ViewUtils.getText(binding.etName);
+            if (StringUtil.isNotEmpty(name)) {
+                int nicknameLength = Utils.textStringToBytes(name).length;
+                if (nicknameLength > Constants.NICKNAME_LENGTH) {
+                    ToastUtils.showShortToast(R.string.user_new_name_too_long);
+                    return;
+                }
+            }
             if(generate){
                 if(commonDialog != null){
                     commonDialog.closeDialog();
@@ -739,6 +746,15 @@ public class UserViewModel extends AndroidViewModel {
                 showEditNameDialog(activity, user.publicKey);
             }
         }
+    }
+
+    /**
+     * 生成二维码
+     * @param context
+     * @param qrContent 二维码内容
+     */
+    public void generateQRCode(Context context, QRContent qrContent) {
+        generateQRCode(context, qrContent, -1);
     }
 
     /**
