@@ -464,7 +464,7 @@ public class TauDaemon {
             // 判断有无网络连接
             if (settingsRepo.internetState()) {
                 if (isRestart) {
-                    reopenNetworks();
+//                    reopenNetworks();
                     resetReadOnly();
                 } else {
                     if (NetworkSetting.isHaveAvailableData()) {
