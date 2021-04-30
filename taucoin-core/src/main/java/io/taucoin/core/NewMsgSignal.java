@@ -23,16 +23,6 @@ public class NewMsgSignal {
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
-    public NewMsgSignal(byte[] hashPrefixArray, byte[] chattingFriend,
-                        BigInteger timestamp, List<GossipItem> gossipItemList) {
-        this.hashPrefixArray = hashPrefixArray;
-        this.chattingFriend = chattingFriend;
-        this.timestamp = timestamp;
-        this.gossipItemList = gossipItemList;
-
-        this.parsed = true;
-    }
-
     public NewMsgSignal(byte[] deviceID, byte[] hashPrefixArray, byte[] chattingFriend,
                         BigInteger timestamp, List<GossipItem> gossipItemList) {
         this.deviceID = deviceID;

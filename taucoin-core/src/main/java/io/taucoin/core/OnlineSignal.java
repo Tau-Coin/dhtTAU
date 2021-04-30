@@ -4,10 +4,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import io.taucoin.types.GossipItem;
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
@@ -16,32 +13,17 @@ public class OnlineSignal {
     private byte[] deviceID;
     byte[] hashPrefixArray;
     FriendInfo friendInfo = null;
-    byte[] chattingFriend; // 当前正在交谈的朋友
     BigInteger timestamp;
-    private List<GossipItem> gossipItemList = new CopyOnWriteArrayList<>(); // 打听到的信息
 
     private byte[] hash;
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
-    public OnlineSignal(byte[] hashPrefixArray, byte[] chattingFriend,
-                        BigInteger timestamp, List<GossipItem> gossipItemList) {
-        this.hashPrefixArray = hashPrefixArray;
-        this.chattingFriend = chattingFriend;
-        this.timestamp = timestamp;
-        this.gossipItemList = gossipItemList;
-
-        this.parsed = true;
-    }
-
-    public OnlineSignal(byte[] deviceID, byte[] hashPrefixArray, FriendInfo friendInfo,
-                        byte[] chattingFriend, BigInteger timestamp, List<GossipItem> gossipItemList) {
+    public OnlineSignal(byte[] deviceID, byte[] hashPrefixArray, FriendInfo friendInfo, BigInteger timestamp) {
         this.deviceID = deviceID;
         this.hashPrefixArray = hashPrefixArray;
         this.friendInfo = friendInfo;
-        this.chattingFriend = chattingFriend;
         this.timestamp = timestamp;
-        this.gossipItemList = gossipItemList;
 
         this.parsed = true;
     }
@@ -74,28 +56,12 @@ public class OnlineSignal {
         return friendInfo;
     }
 
-    public byte[] getChattingFriend() {
-        if (!parsed) {
-            parseRLP();
-        }
-
-        return chattingFriend;
-    }
-
     public BigInteger getTimestamp() {
         if (!parsed) {
             parseRLP();
         }
 
         return timestamp;
-    }
-
-    public List<GossipItem> getGossipItemList() {
-        if (!parsed) {
-            parseRLP();
-        }
-
-        return gossipItemList;
     }
 
     public byte[] getHash() {
@@ -122,31 +88,10 @@ public class OnlineSignal {
             this.friendInfo = new FriendInfo(friendInfoBytes);
         }
 
-        this.chattingFriend = list.get(3).getRLPData();
-
-        byte[] timeBytes = list.get(4).getRLPData();
+        byte[] timeBytes = list.get(3).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
-        parseGossipList((RLPList) list.get(5));
-
         this.parsed = true;
-    }
-
-    private void parseGossipList(RLPList list) {
-        for (int i = 0; i < list.size(); i++) {
-            byte[] encode = list.get(i).getRLPData();
-            this.gossipItemList.add(new GossipItem(encode));
-        }
-    }
-
-    public byte[] getGossipListEncoded() {
-        byte[][] gossipListEncoded = new byte[this.gossipItemList.size()][];
-        int i = 0;
-        for (GossipItem gossipItem : this.gossipItemList) {
-            gossipListEncoded[i] = gossipItem.getEncoded();
-            ++i;
-        }
-        return RLP.encodeList(gossipListEncoded);
     }
 
     /**
@@ -161,12 +106,9 @@ public class OnlineSignal {
             if (null != this.friendInfo) {
                 friendInfo = RLP.encodeElement(this.friendInfo.getEncoded());
             }
-            byte[] chattingFriend = RLP.encodeElement(this.chattingFriend);
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
-            byte[] gossipListEncoded = getGossipListEncoded();
 
-            this.rlpEncoded = RLP.encodeList(deviceID, hashPrefixArray, friendInfo,
-                    chattingFriend, timestamp, gossipListEncoded);
+            this.rlpEncoded = RLP.encodeList(deviceID, hashPrefixArray, friendInfo, timestamp);
         }
 
         return rlpEncoded;
@@ -191,7 +133,6 @@ public class OnlineSignal {
         byte[] hashPrefixArray = getHashPrefixArray();
         FriendInfo friendInfo = getFriendInfo();
         BigInteger time = getTimestamp();
-        byte[] chattingFriend = getChattingFriend();
 
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -212,10 +153,6 @@ public class OnlineSignal {
         if (null != time) {
             stringBuilder.append(", time=");
             stringBuilder.append(time);
-        }
-        if (null != chattingFriend) {
-            stringBuilder.append(", chatting friend=");
-            stringBuilder.append(Hex.toHexString(chattingFriend));
         }
 
         stringBuilder.append("}");

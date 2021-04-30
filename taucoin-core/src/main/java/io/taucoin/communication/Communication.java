@@ -801,9 +801,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         byte[] peer = AccountManager.getInstance().getKeyPair().first;
 
         byte[] hashPrefixArray = null;
-        byte[] chattingFriend = this.repository.getChattingFriend();
-        BigInteger chattingTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
-        List<GossipItem> gossipItemList = new ArrayList<>();
+        BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis() / 1000);
 
         List<Message> messageList = this.repository.getLatestMessageList(peer, ChainParam.MAX_MESSAGE_LIST_SIZE);
         if (null != messageList && !messageList.isEmpty()) {
@@ -818,26 +816,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         byte[] friend = getFriendRandomly();
         FriendInfo friendInfo = this.repository.getFriendInfo(friend);
 
-        // TODO:: 测量极限容量
-        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.gossipChattingTime.entrySet().iterator();
-        int i = 1;
-        while (it.hasNext()) {
-            Map.Entry<FriendPair, BigInteger> entry = it.next();
-            // 查找接收者是peer的
-            if (Arrays.equals(entry.getKey().receiver, peer)) {
-                gossipItemList.add(new GossipItem(entry.getKey().sender, entry.getValue()));
-
-                i--;
-                it.remove();
-            }
-
-            if (i <= 0) {
-                break;
-            }
-        }
-
-        return new OnlineSignal(this.deviceID, hashPrefixArray, friendInfo,
-                chattingFriend, chattingTime, gossipItemList);
+        return new OnlineSignal(this.deviceID, hashPrefixArray, friendInfo, timestamp);
     }
 
     /**
@@ -1585,51 +1564,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             this.hashPrefixArrayCache.put(peer, linkedList);
                         }
                         linkedList.add(new HashPrefixArrayInfo(onlineSignal.getHashPrefixArray(), onlineSignal.getTimestamp()));
-
-                        // 处理gossip相关信息
-                        byte[] chattingFriend = onlineSignal.getChattingFriend();
-                        if (Arrays.equals(pubKey, chattingFriend)) {
-                            // 如果是正在跟我聊天，判断一下上次标记聊天时间戳是否最新
-                            ByteArrayWrapper sender = new ByteArrayWrapper(chattingFriend);
-                            BigInteger latestTimestamp = this.friendChattingTime.get(sender);
-                            // 如果发现更新的推荐，则加入推荐列表
-                            if (null == latestTimestamp || latestTimestamp.compareTo(onlineSignal.getTimestamp()) < 0) {
-                                // 记录最新的聊天时间
-                                this.friendChattingTime.put(sender, onlineSignal.getTimestamp());
-                                referToFriend(sender);
-                            }
-                        } else {
-                            // 记录下推荐给别人的聊天时间
-                            FriendPair friendPair = new FriendPair(peer.getData(), chattingFriend);
-                            BigInteger latestTimestamp = this.gossipChattingTime.get(friendPair);
-                            if (null == latestTimestamp || latestTimestamp.compareTo(onlineSignal.getTimestamp()) < 0) {
-                                this.gossipChattingTime.put(friendPair, onlineSignal.getTimestamp());
-                            }
-                        }
-
-                        if (null != onlineSignal.getGossipItemList()) {
-
-                            // 信任发送方自己给的gossip信息
-                            for (GossipItem gossipItem : onlineSignal.getGossipItemList()) {
-                                logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
-
-                                ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
-
-                                // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
-                                if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
-                                    logger.trace("Sender[{}] is me.", sender.toString());
-                                    continue;
-                                }
-
-                                BigInteger latestTimestamp = this.friendChattingTime.get(sender);
-                                // 如果发现更新的推荐，则加入推荐列表
-                                if (null == latestTimestamp || latestTimestamp.compareTo(gossipItem.getTimestamp()) < 0) {
-                                    // 记录最新的聊天时间
-                                    this.friendChattingTime.put(sender, gossipItem.getTimestamp());
-                                    referToFriend(sender);
-                                }
-                            }
-                        }
                     }
 
                     // 如果设备太多，则删除一个时间最老的
