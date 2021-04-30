@@ -1097,6 +1097,43 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     }
 
     /**
+     * 随机获取一个peer相关的gossip
+     * @param peer 相关peer
+     * @return GossipItem
+     */
+    private GossipItem getGossipItemRandomly(byte[] peer) {
+        GossipItem gossipItem = null;
+        Map<FriendPair, BigInteger> gossipChattingTime = new HashMap<>();
+
+        for (Map.Entry<FriendPair, BigInteger> entry : this.gossipChattingTime.entrySet()) {
+            // 查找接收者是peer的
+            if (Arrays.equals(entry.getKey().receiver, peer)) {
+                gossipChattingTime.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        int size = gossipChattingTime.size();
+        if (size > 0) {
+            Iterator<Map.Entry<FriendPair, BigInteger>> it = gossipChattingTime.entrySet().iterator();
+            Random random = new Random(System.currentTimeMillis());
+            int index = random.nextInt(size) + 1;
+
+            int i = 0;
+            while (it.hasNext()) {
+                Map.Entry<FriendPair, BigInteger> entry = it.next();
+                if (i == index) {
+                    gossipItem = new GossipItem(entry.getKey().sender, entry.getValue());
+                    break;
+                }
+
+                i++;
+            }
+        }
+
+        return gossipItem;
+    }
+
+    /**
      * 添加新朋友
      * @param friend public key
      */
