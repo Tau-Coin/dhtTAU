@@ -20,6 +20,7 @@ public class TrafficUtil {
     private static final String TRAFFIC_VALUE_OLD = "pref_key_traffic_old_";
     private static final String TRAFFIC_VALUE = "pref_key_traffic_";
     private static final String TRAFFIC_TIME = "pref_key_traffic_time";
+    private static final int TRAFFIC_UPDATE_TIME = 4; // 流量统计更新时间为每天凌晨4点
 
     private static SettingsRepository settingsRepo;
     static {
@@ -31,11 +32,11 @@ public class TrafficUtil {
      * 保存当前流量总量（统计入口）
      * @param statistics 当前网络数据总量
      */
-    public static void saveTrafficTotal(@NonNull NetworkStatistics statistics) {
-        saveTrafficTotal(TRAFFIC_DOWN, statistics.getRxBytes());
-        saveTrafficTotal(TRAFFIC_UP, statistics.getTxBytes());
+    public static void saveTrafficTotal(@NonNull SessionStatistics statistics) {
+        saveTrafficTotal(TRAFFIC_DOWN, statistics.getTotalDownload());
+        saveTrafficTotal(TRAFFIC_UP, statistics.getTotalUpload());
         // 如果是计费网络，统计当天计费网络使用总量
-        long total = statistics.getRxBytes() + statistics.getTxBytes();
+        long total = statistics.getTotalDownload() + statistics.getTotalUpload();
         if (NetworkSetting.isMeteredNetwork()) {
             saveTrafficTotal(TRAFFIC_METERED, total);
         } else {
@@ -80,7 +81,7 @@ public class TrafficUtil {
     /**
      * 重置上一次本地流量统计信息
      */
-    private static void resetTrafficTotalOld() {
+    public static void resetTrafficTotalOld() {
         settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_DOWN, -1);
         settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_UP, -1);
         settingsRepo.setLongValue(TRAFFIC_VALUE_OLD + TRAFFIC_METERED, -1);
@@ -92,7 +93,9 @@ public class TrafficUtil {
     private synchronized static void resetTrafficInfo() {
         long currentTrafficTime = new Date().getTime();
         long oldTrafficTime = settingsRepo.getLongValue(TRAFFIC_TIME);
-        if (oldTrafficTime == 0 || DateUtil.compareDay(oldTrafficTime, currentTrafficTime) > 0) {
+        // 如果旧的流量记录时间为0，或者当前记录时间比旧的流量记录大于一天同时为凌晨4点更新流量统计
+        if (oldTrafficTime == 0 || (DateUtil.compareDay(oldTrafficTime, currentTrafficTime) > 0 &&
+                DateUtil.getHourOfDay() == TRAFFIC_UPDATE_TIME)) {
             settingsRepo.setLongValue(TRAFFIC_TIME, currentTrafficTime);
             settingsRepo.setLongValue(TRAFFIC_VALUE + TRAFFIC_DOWN, 0);
             settingsRepo.setLongValue(TRAFFIC_VALUE + TRAFFIC_UP, 0);

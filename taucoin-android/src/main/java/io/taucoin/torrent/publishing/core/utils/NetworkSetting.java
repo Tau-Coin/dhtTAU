@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -25,7 +24,6 @@ public class NetworkSetting {
     private static final Logger logger = LoggerFactory.getLogger("NetworkSetting");
     private static final int METERED_LIMITED;                  // 单位MB
     private static final int WIFI_LIMITED;                     // 单位MB
-    public static final long CURRENT_SPEED_SAMPLE = 10;        // 单位s
 
     private static SettingsRepository settingsRepo;
     static {
@@ -89,28 +87,13 @@ public class NetworkSetting {
     }
 
     /**
-     * 更新网络速度采样值
+     * 更新网络速度
      */
-    public synchronized static void updateSpeedSample(@NonNull NetworkStatistics statistics) {
+
+    public synchronized static void updateNetworkSpeed(@NonNull SessionStatistics statistics) {
         Context context = MainApplication.getInstance();
-        long total = statistics.getRxBytes() + statistics.getTxBytes();
-        long size;
-        if (!isMeteredNetwork()) {
-            long upTotalSize = TrafficUtil.calculateIncrementalSize(TrafficUtil.getUpType(),
-                    statistics.getTxBytes());
-            long downTotalSize = TrafficUtil.calculateIncrementalSize(TrafficUtil.getDownType(),
-                    statistics.getRxBytes());
-            size = upTotalSize + downTotalSize;
-        } else {
-            size = TrafficUtil.calculateIncrementalSize(TrafficUtil.getMeteredType(), total);
-        }
-        List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
-                Long.class);
-        if (list.size() >= CURRENT_SPEED_SAMPLE) {
-            list.remove(0);
-        }
-        list.add(size);
-        settingsRepo.setListData(context.getString(R.string.pref_key_current_speed_list), list);
+        long currentSpeed = statistics.getDownloadRate() + statistics.getUploadRate();
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_current_speed), currentSpeed);
 
         // 更新APP在前台的时间前台
         updateForegroundRunningTime();
@@ -157,30 +140,12 @@ public class NetworkSetting {
     }
 
     /**
-     * 清除网络速度采样值列表
-     */
-    public static void clearSpeedList() {
-        Context context = MainApplication.getInstance();
-        settingsRepo.setListData(context.getString(R.string.pref_key_current_speed_list),
-                new ArrayList<>());
-    }
-
-    /**
      * 获取当前网络网速
      */
     public static long getCurrentSpeed() {
         Context context = MainApplication.getInstance();
-        List<Long> list = settingsRepo.getListData(context.getString(R.string.pref_key_current_speed_list),
-                Long.class);
-        long totalSpeed = 0;
-        int listSize = list.size();
-        for (int i = listSize - 1; i >= 0; i--) {
-            totalSpeed += list.get(i);
-        }
-        if (list.size() == 0) {
-            return 0;
-        }
-        return totalSpeed / list.size();
+        return settingsRepo.getLongValue(context.getString(R.string.pref_key_current_speed),
+                0);
     }
 
     /**

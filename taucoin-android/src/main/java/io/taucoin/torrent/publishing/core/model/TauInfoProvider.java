@@ -1,7 +1,6 @@
 package io.taucoin.torrent.publishing.core.model;
 
 import android.content.Context;
-import android.os.Build;
 
 import io.taucoin.dht.SessionStats;
 
@@ -13,13 +12,11 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposables;
 import io.taucoin.torrent.publishing.MainApplication;
-import io.taucoin.torrent.publishing.core.utils.EmulatorUtil;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.NetworkStatistics;
-import io.taucoin.torrent.publishing.core.utils.NetworkStatsUtil;
 import io.taucoin.torrent.publishing.core.utils.Sampler;
-import io.taucoin.torrent.publishing.core.utils.TrafficInfo;
+import io.taucoin.torrent.publishing.core.utils.SessionStatistics;
 import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
 
@@ -104,43 +101,34 @@ public class TauInfoProvider {
     private Flowable<SessionStats> makeTrafficStatisticsFlowable() {
         return Flowable.create((emitter) -> {
             try {
-                boolean isEmulator = EmulatorUtil.isEmulator();
-                while (!emitter.isCancelled()){
-
+                while (!emitter.isCancelled()) {
                     logger.debug("ConnectionReceiver isHaveNetwork::{}, isNetworkMetered::{}",
                             SystemServiceManager.getInstance().isHaveNetwork(),
                             SystemServiceManager.getInstance().isNetworkMetered());
 
                     Context context = MainApplication.getInstance();
-                    NetworkStatistics statistics = null;
-                    if (!isEmulator && Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-                        statistics = NetworkStatsUtil.getSummaryTotal(context);
-                    }
-                    logger.debug("Network statistical methods:: {}", null == statistics ?
-                            "TrafficInfo" : "NetworkStatsUtil");
-                    if (null == statistics) {
-                        statistics = TrafficInfo.getTrafficUsed(context);
-                    }
+                    SessionStatistics statistics = daemon.getSessionStatistics();
                     if (statistics != null) {
-                        // 更新网速采样数据
-                        NetworkSetting.updateSpeedSample(statistics);
                         // 保存流量统计
                         TrafficUtil.saveTrafficTotal(statistics);
+                        // 更新网速采样数据
+                        NetworkSetting.updateNetworkSpeed(statistics);
                         // 更新UI展示链端主循环时间间隔
                         NetworkSetting.calculateMainLoopInterval();
                         // 重新调度TAU工作通过设置
                         daemon.rescheduleTAUBySettings();
-                        logger.debug("Network statistical result:: rxBytes::{}({}), txBytes::{}({})",
-                                Formatter.formatFileSize(context, statistics.getRxBytes()),
-                                statistics.getRxBytes(),
-                                Formatter.formatFileSize(context, statistics.getTxBytes()),
-                                statistics.getTxBytes());
-
-                        Thread.sleep(STATISTICS_PERIOD);
+                        logger.debug("Network statistical:: totalDownload::{}({}), totalUpload::{}({})" +
+                                        ", downloadRate::{}/s, uploadRate::{}/s",
+                                Formatter.formatFileSize(context, statistics.getTotalDownload()),
+                                statistics.getTotalDownload(),
+                                Formatter.formatFileSize(context, statistics.getTotalUpload()),
+                                statistics.getTotalUpload(),
+                                Formatter.formatFileSize(context, statistics.getDownloadRate()),
+                                Formatter.formatFileSize(context, statistics.getUploadRate()));
                     } else {
-                        logger.warn("Network statistical: Unable to get traffic data");
-                        break;
+                        logger.warn("Network statistical: Unable to get network statistics");
                     }
+                    Thread.sleep(STATISTICS_PERIOD);
                 }
             } catch (InterruptedException ignore) {
             } catch (Exception e) {

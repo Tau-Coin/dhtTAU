@@ -77,7 +77,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
                 NetworkSetting.enableBackgroundMode(isChecked));
 
         handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
-        handleSettingsChanged(getString(R.string.pref_key_current_speed_list));
+        handleSettingsChanged(getString(R.string.pref_key_current_speed));
         handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
         handleSettingsChanged(getString(R.string.pref_key_foreground_running_time));
 
@@ -119,7 +119,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
      * @param key
      */
     private void handleSettingsChanged(String key) {
-        if(StringUtil.isEquals(key, getString(R.string.pref_key_current_speed_list))) {
+        if(StringUtil.isEquals(key, getString(R.string.pref_key_current_speed))) {
             long currentSpeed = NetworkSetting.getCurrentSpeed();
             String currentSpeedStr = getString(R.string.setting_metered_network_limit_speed,
                     Formatter.formatFileSize(this, currentSpeed).toUpperCase());

@@ -356,4 +356,13 @@ public class DateUtil {
         }
         return date.getTime() / 1000;
     }
+
+    /**
+     * 获取当天的小时
+     * @return 小时
+     */
+    public static int getHourOfDay() {
+        Calendar now = Calendar.getInstance();
+        return now.get(Calendar.HOUR_OF_DAY);
+    }
 }

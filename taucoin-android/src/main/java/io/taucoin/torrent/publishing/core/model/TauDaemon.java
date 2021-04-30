@@ -36,7 +36,9 @@ import io.taucoin.torrent.publishing.core.utils.ChainLinkUtil;
 import io.taucoin.torrent.publishing.core.utils.DeviceUtils;
 import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
+import io.taucoin.torrent.publishing.core.utils.SessionStatistics;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
 import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.ConnectionReceiver;
 import io.taucoin.torrent.publishing.service.SystemServiceManager;
@@ -373,7 +375,6 @@ public class TauDaemon {
     private void switchConnectionReceiver() {
         settingsRepo.internetState(systemServiceManager.isHaveNetwork());
         settingsRepo.setInternetType(systemServiceManager.getInternetType());
-        NetworkSetting.clearSpeedList();
         NetworkSetting.setMeteredNetwork(systemServiceManager.isNetworkMetered());
         try {
             appContext.unregisterReceiver(connectionReceiver);
@@ -396,8 +397,8 @@ public class TauDaemon {
         } else if (key.equals(appContext.getString(R.string.pref_key_charging_state))) {
             logger.info("SettingsChanged, charging state::{}", settingsRepo.chargingState());
         } else if (key.equals(appContext.getString(R.string.pref_key_is_metered_network))) {
-            logger.info("clearSpeedList, isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
-        } else if (key.equals(appContext.getString(R.string.pref_key_current_speed_list))) {
+            logger.info("isMeteredNetwork::{}", NetworkSetting.isMeteredNetwork());
+        } else if (key.equals(appContext.getString(R.string.pref_key_current_speed))) {
             if (restartSessionTimer != null && !restartSessionTimer.isDisposed()
                     && NetworkSetting.getCurrentSpeed() > 0) {
                 restartSessionTimer.dispose();
@@ -427,7 +428,7 @@ public class TauDaemon {
             return;
         }
         logger.info("restartSessionTimer start");
-        restartSessionTimer = Observable.timer(NetworkSetting.CURRENT_SPEED_SAMPLE, TimeUnit.SECONDS)
+        restartSessionTimer = Observable.timer(10, TimeUnit.SECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(time -> {
@@ -437,7 +438,6 @@ public class TauDaemon {
                             && NetworkSetting.getCurrentSpeed() == 0;
                     logger.info("restartSessionTimer isRestart::{}", isRestart);
                     if (isRestart) {
-                        NetworkSetting.clearSpeedList();
                         rescheduleTAUBySettings(true);
                     }
 
@@ -503,6 +503,7 @@ public class TauDaemon {
             return;
         }
         tauController.restartSessions();
+        TrafficUtil.resetTrafficTotalOld();
         logger.debug("restartSessions...");
     }
 
@@ -512,7 +513,7 @@ public class TauDaemon {
      */
     private void showNoRemainingDataTipsDialog() {
         if (trafficTips) {
-            if (noRemainingDataTimes < NetworkSetting.CURRENT_SPEED_SAMPLE) {
+            if (noRemainingDataTimes < 10) {
                 noRemainingDataTimes += 1;
                 return;
             }
@@ -726,5 +727,20 @@ public class TauDaemon {
             return 0;
         }
         return tauController.getDHTEngine().getSessionNodes();
+    }
+
+    /**
+     * 获取Sessions的流量统计
+     */
+    SessionStatistics getSessionStatistics() {
+        if (!isRunning) {
+            return null;
+        }
+        SessionStatistics statistics = new SessionStatistics();
+        statistics.setTotalUpload(tauController.getDHTEngine().getSessionTotalUpload());
+        statistics.setTotalDownload(tauController.getDHTEngine().getSessionTotalDownload());
+        statistics.setUploadRate(tauController.getDHTEngine().getSessionDownloadRate());
+        statistics.setDownloadRate(tauController.getDHTEngine().getSessionUploadRate());
+        return statistics;
     }
 }
