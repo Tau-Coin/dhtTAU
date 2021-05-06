@@ -91,16 +91,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //    private final Map<ByteArrayWrapper, NewMsgSignal> latestNewMsgSignal = new ConcurrentHashMap<>();
 
     // 发现的我的朋友跟我聊天的最新时间 <friend, time>（完整公钥）
-    private final Map<ByteArrayWrapper, BigInteger> friendChattingTime = new ConcurrentHashMap<>();
+//    private final Map<ByteArrayWrapper, BigInteger> friendChattingTime = new ConcurrentHashMap<>();
 
     // 通过gossip推荐机制发现的有新消息的朋友集合（完整公钥）
-    private final Set<ByteArrayWrapper> referredFriends = new CopyOnWriteArraySet<>();
+//    private final Set<ByteArrayWrapper> referredFriends = new CopyOnWriteArraySet<>();
 
     // 等待发布数据的peer
     private final Set<ByteArrayWrapper> publishFriends = new CopyOnWriteArraySet<>();
 
     // 通过gossip机制打听到的跟朋友聊天的time <FriendPair, Timestamp>（完整公钥）
-    private final Map<FriendPair, BigInteger> gossipChattingTime = new ConcurrentHashMap<>();
+//    private final Map<FriendPair, BigInteger> gossipChattingTime = new ConcurrentHashMap<>();
 
     // Communication thread.
     private Thread communicationThread;
@@ -605,10 +605,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * 将打听到的朋友加入推荐列表，并从禁止列表删除
      * @param friend 推荐的朋友
      */
-    private void referToFriend(ByteArrayWrapper friend) {
-        this.referredFriends.add(friend);
-//        this.friendBannedTime.remove(friend);
-    }
+//    private void referToFriend(ByteArrayWrapper friend) {
+//        this.referredFriends.add(friend);
+////        this.friendBannedTime.remove(friend);
+//    }
 
 //    /**
 //     * 更新访问计数器，在达到一定的访问次数时，进行一次put
@@ -649,18 +649,18 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null != chattingFriend && index < 8) {
             peer = new ByteArrayWrapper(chattingFriend);
         } else {
-            Iterator<ByteArrayWrapper> it = this.referredFriends.iterator();
-
-            // 防止产生随机数的种子一样，以时间和上次随机数之和作为种子
-            random = new Random(System.currentTimeMillis() + index);
-            index = random.nextInt(10);
-
-            // 如果有推荐的peer，则50%的概率挑选一个peer访问
-            if (it.hasNext() && index < 5) {
-                peer = it.next();
-
-                this.referredFriends.remove(peer);
-            } else {
+//            Iterator<ByteArrayWrapper> it = this.referredFriends.iterator();
+//
+//            // 防止产生随机数的种子一样，以时间和上次随机数之和作为种子
+//            random = new Random(System.currentTimeMillis() + index);
+//            index = random.nextInt(10);
+//
+//            // 如果有推荐的peer，则50%的概率挑选一个peer访问
+//            if (it.hasNext() && index < 5) {
+//                peer = it.next();
+//
+//                this.referredFriends.remove(peer);
+//            } else {
                 List<byte[]> activeFriends = this.repository.getActiveFriends();
 
                 random = new Random(System.currentTimeMillis() + index);
@@ -721,7 +721,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         }
                     }
                 }
-            }
+//            }
         }
 
         if (null != peer) {
@@ -758,9 +758,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      */
     private NewMsgSignal makeNewMsgSignal(ByteArrayWrapper peer) {
         byte[] hashPrefixArray = null;
-        byte[] chattingFriend = this.repository.getChattingFriend();
         BigInteger chattingTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
-        List<GossipItem> gossipItemList = new ArrayList<>();
 
         List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.MAX_MESSAGE_LIST_SIZE);
         if (null != messageList && !messageList.isEmpty()) {
@@ -772,25 +770,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
-        // TODO:: 测量极限容量
-        Iterator<Map.Entry<FriendPair, BigInteger>> it = this.gossipChattingTime.entrySet().iterator();
-        int i = 1;
-        while (it.hasNext()) {
-            Map.Entry<FriendPair, BigInteger> entry = it.next();
-            // 查找接收者是peer的
-            if (Arrays.equals(entry.getKey().receiver, peer.getData())) {
-                gossipItemList.add(new GossipItem(entry.getKey().sender, entry.getValue()));
-
-                i--;
-                it.remove();
-            }
-
-            if (i <= 0) {
-                break;
-            }
-        }
-
-        return new NewMsgSignal(this.deviceID, hashPrefixArray, chattingFriend, chattingTime, gossipItemList);
+        return new NewMsgSignal(this.deviceID, hashPrefixArray, chattingTime);
     }
 
     /**
@@ -1101,37 +1081,37 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
      * @param peer 相关peer
      * @return GossipItem
      */
-    private GossipItem getGossipItemRandomly(byte[] peer) {
-        GossipItem gossipItem = null;
-        Map<FriendPair, BigInteger> gossipChattingTime = new HashMap<>();
-
-        for (Map.Entry<FriendPair, BigInteger> entry : this.gossipChattingTime.entrySet()) {
-            // 查找接收者是peer的
-            if (Arrays.equals(entry.getKey().receiver, peer)) {
-                gossipChattingTime.put(entry.getKey(), entry.getValue());
-            }
-        }
-
-        int size = gossipChattingTime.size();
-        if (size > 0) {
-            Iterator<Map.Entry<FriendPair, BigInteger>> it = gossipChattingTime.entrySet().iterator();
-            Random random = new Random(System.currentTimeMillis());
-            int index = random.nextInt(size) + 1;
-
-            int i = 0;
-            while (it.hasNext()) {
-                Map.Entry<FriendPair, BigInteger> entry = it.next();
-                if (i == index) {
-                    gossipItem = new GossipItem(entry.getKey().sender, entry.getValue());
-                    break;
-                }
-
-                i++;
-            }
-        }
-
-        return gossipItem;
-    }
+//    private GossipItem getGossipItemRandomly(byte[] peer) {
+//        GossipItem gossipItem = null;
+//        Map<FriendPair, BigInteger> gossipChattingTime = new HashMap<>();
+//
+//        for (Map.Entry<FriendPair, BigInteger> entry : this.gossipChattingTime.entrySet()) {
+//            // 查找接收者是peer的
+//            if (Arrays.equals(entry.getKey().receiver, peer)) {
+//                gossipChattingTime.put(entry.getKey(), entry.getValue());
+//            }
+//        }
+//
+//        int size = gossipChattingTime.size();
+//        if (size > 0) {
+//            Iterator<Map.Entry<FriendPair, BigInteger>> it = gossipChattingTime.entrySet().iterator();
+//            Random random = new Random(System.currentTimeMillis());
+//            int index = random.nextInt(size) + 1;
+//
+//            int i = 0;
+//            while (it.hasNext()) {
+//                Map.Entry<FriendPair, BigInteger> entry = it.next();
+//                if (i == index) {
+//                    gossipItem = new GossipItem(entry.getKey().sender, entry.getValue());
+//                    break;
+//                }
+//
+//                i++;
+//            }
+//        }
+//
+//        return gossipItem;
+//    }
 
     /**
      * 添加新朋友
@@ -1207,16 +1187,16 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //        this.latestNewMsgSignalTime.remove(peer);
 //        this.latestNewMsgSignals.remove(peer);
 //        this.newMsgPeers.remove(peer);
-        this.friendChattingTime.remove(peer);
-        this.referredFriends.remove(peer);
+//        this.friendChattingTime.remove(peer);
+//        this.referredFriends.remove(peer);
         this.publishFriends.remove(peer);
 
-        for (Map.Entry<FriendPair, BigInteger> entry: this.gossipChattingTime.entrySet()) {
-            FriendPair friendPair = entry.getKey();
-            if (Arrays.equals(peer.getData(), friendPair.getReceiver())) {
-                this.gossipChattingTime.remove(entry.getKey());
-            }
-        }
+//        for (Map.Entry<FriendPair, BigInteger> entry: this.gossipChattingTime.entrySet()) {
+//            FriendPair friendPair = entry.getKey();
+//            if (Arrays.equals(peer.getData(), friendPair.getReceiver())) {
+//                this.gossipChattingTime.remove(entry.getKey());
+//            }
+//        }
     }
 
     /**
@@ -1229,10 +1209,10 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 //        this.latestNewMsgSignalTime.clear();
 //        this.latestNewMsgSignals.clear();
 //        this.newMsgPeers.clear();
-        this.friendChattingTime.clear();
-        this.referredFriends.clear();
+//        this.friendChattingTime.clear();
+//        this.referredFriends.clear();
         this.publishFriends.clear();
-        this.gossipChattingTime.clear();
+//        this.gossipChattingTime.clear();
     }
 
     @Override
@@ -1483,51 +1463,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                             this.hashPrefixArrayCache.put(peer, linkedList);
                         }
                         linkedList.add(new HashPrefixArrayInfo(newMsgSignal.getHashPrefixArray(), newMsgSignal.getTimestamp()));
-
-                        // 处理gossip相关信息
-                        byte[] chattingFriend = newMsgSignal.getChattingFriend();
-                        if (Arrays.equals(pubKey, chattingFriend)) {
-                            // 如果是正在跟我聊天，判断一下上次标记聊天时间戳是否最新
-                            ByteArrayWrapper sender = new ByteArrayWrapper(chattingFriend);
-                            BigInteger latestTimestamp = this.friendChattingTime.get(sender);
-                            // 如果发现更新的推荐，则加入推荐列表
-                            if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getTimestamp()) < 0) {
-                                // 记录最新的聊天时间
-                                this.friendChattingTime.put(sender, newMsgSignal.getTimestamp());
-                                referToFriend(sender);
-                            }
-                        } else {
-                            // 记录下推荐给别人的聊天时间
-                            FriendPair friendPair = new FriendPair(peer.getData(), chattingFriend);
-                            BigInteger latestTimestamp = this.gossipChattingTime.get(friendPair);
-                            if (null == latestTimestamp || latestTimestamp.compareTo(newMsgSignal.getTimestamp()) < 0) {
-                                this.gossipChattingTime.put(friendPair, newMsgSignal.getTimestamp());
-                            }
-                        }
-
-                        if (null != newMsgSignal.getGossipItemList()) {
-
-                            // 信任发送方自己给的gossip信息
-                            for (GossipItem gossipItem : newMsgSignal.getGossipItemList()) {
-                                logger.trace("Got gossip: {} from peer[{}]", gossipItem.toString(), peer.toString());
-
-                                ByteArrayWrapper sender = new ByteArrayWrapper(gossipItem.getSender());
-
-                                // 发送者是我自己的gossip信息直接忽略，因为我自己的信息不需要依赖gossip
-                                if (ByteUtil.startsWith(pubKey, gossipItem.getSender())) {
-                                    logger.trace("Sender[{}] is me.", sender.toString());
-                                    continue;
-                                }
-
-                                BigInteger latestTimestamp = this.friendChattingTime.get(sender);
-                                // 如果发现更新的推荐，则加入推荐列表
-                                if (null == latestTimestamp || latestTimestamp.compareTo(gossipItem.getTimestamp()) < 0) {
-                                    // 记录最新的聊天时间
-                                    this.friendChattingTime.put(sender, gossipItem.getTimestamp());
-                                    referToFriend(sender);
-                                }
-                            }
-                        }
                     }
 
                     // 如果设备太多，则删除一个时间最老的
