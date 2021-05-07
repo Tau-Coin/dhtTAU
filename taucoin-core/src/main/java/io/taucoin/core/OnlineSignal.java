@@ -11,7 +11,8 @@ import io.taucoin.util.RLPList;
 
 public class OnlineSignal {
     private byte[] deviceID;
-    byte[] hashPrefixArray;
+    byte[] confirmationHash = null;
+    byte[] hashPrefixArray = null;
     FriendInfo friendInfo = null;
     BigInteger timestamp;
 
@@ -19,8 +20,9 @@ public class OnlineSignal {
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
-    public OnlineSignal(byte[] deviceID, byte[] hashPrefixArray, FriendInfo friendInfo, BigInteger timestamp) {
+    public OnlineSignal(byte[] deviceID, byte[] confirmationHash, byte[] hashPrefixArray, FriendInfo friendInfo, BigInteger timestamp) {
         this.deviceID = deviceID;
+        this.confirmationHash = confirmationHash;
         this.hashPrefixArray = hashPrefixArray;
         this.friendInfo = friendInfo;
         this.timestamp = timestamp;
@@ -38,6 +40,14 @@ public class OnlineSignal {
         }
 
         return deviceID;
+    }
+
+    public byte[] getConfirmationHash() {
+        if (!parsed) {
+            parseRLP();
+        }
+
+        return confirmationHash;
     }
 
     public byte[] getHashPrefixArray() {
@@ -81,14 +91,16 @@ public class OnlineSignal {
 
         this.deviceID = list.get(0).getRLPData();
 
-        this.hashPrefixArray = list.get(1).getRLPData();
+        this.confirmationHash = list.get(1).getRLPData();
 
-        byte[] friendInfoBytes = list.get(2).getRLPData();
+        this.hashPrefixArray = list.get(2).getRLPData();
+
+        byte[] friendInfoBytes = list.get(3).getRLPData();
         if (null != friendInfoBytes) {
             this.friendInfo = new FriendInfo(friendInfoBytes);
         }
 
-        byte[] timeBytes = list.get(3).getRLPData();
+        byte[] timeBytes = list.get(4).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
         this.parsed = true;
@@ -101,6 +113,7 @@ public class OnlineSignal {
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
             byte[] deviceID = RLP.encodeElement(this.deviceID);
+            byte[] confirmationHash = RLP.encodeElement(this.confirmationHash);
             byte[] hashPrefixArray = RLP.encodeElement(this.hashPrefixArray);
             byte[] friendInfo = RLP.encodeElement(null);
             if (null != this.friendInfo) {
@@ -108,7 +121,7 @@ public class OnlineSignal {
             }
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
 
-            this.rlpEncoded = RLP.encodeList(deviceID, hashPrefixArray, friendInfo, timestamp);
+            this.rlpEncoded = RLP.encodeList(deviceID, confirmationHash, hashPrefixArray, friendInfo, timestamp);
         }
 
         return rlpEncoded;
@@ -130,6 +143,7 @@ public class OnlineSignal {
     @Override
     public String toString() {
         byte[] deviceID = getDeviceID();
+        byte[] confirmationHash = getConfirmationHash();
         byte[] hashPrefixArray = getHashPrefixArray();
         FriendInfo friendInfo = getFriendInfo();
         BigInteger time = getTimestamp();
@@ -142,6 +156,10 @@ public class OnlineSignal {
             stringBuilder.append(Hex.toHexString(deviceID));
         }
 
+        if (null != confirmationHash) {
+            stringBuilder.append(", confirmation hash=");
+            stringBuilder.append(Hex.toHexString(confirmationHash));
+        }
         if (null != hashPrefixArray) {
             stringBuilder.append(", hash prefix array=");
             stringBuilder.append(Hex.toHexString(hashPrefixArray));

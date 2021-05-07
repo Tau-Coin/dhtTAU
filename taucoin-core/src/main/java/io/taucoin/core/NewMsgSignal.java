@@ -4,25 +4,24 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import io.taucoin.types.GossipItem;
 import io.taucoin.util.HashUtil;
 import io.taucoin.util.RLP;
 import io.taucoin.util.RLPList;
 
 public class NewMsgSignal {
     private byte[] deviceID;
-    byte[] hashPrefixArray;
+    byte[] confirmationHash = null;
+    byte[] hashPrefixArray = null;
     BigInteger timestamp;
 
     private byte[] hash;
     private byte[] rlpEncoded; // 编码数据
     private boolean parsed = false; // 解析标志
 
-    public NewMsgSignal(byte[] deviceID, byte[] hashPrefixArray, BigInteger timestamp) {
+    public NewMsgSignal(byte[] deviceID, byte[] confirmationHash, byte[] hashPrefixArray, BigInteger timestamp) {
         this.deviceID = deviceID;
+        this.confirmationHash = confirmationHash;
         this.hashPrefixArray = hashPrefixArray;
         this.timestamp = timestamp;
 
@@ -39,6 +38,14 @@ public class NewMsgSignal {
         }
 
         return deviceID;
+    }
+
+    public byte[] getConfirmationHash() {
+        if (!parsed) {
+            parseRLP();
+        }
+
+        return confirmationHash;
     }
 
     public byte[] getHashPrefixArray() {
@@ -74,9 +81,11 @@ public class NewMsgSignal {
 
         this.deviceID = list.get(0).getRLPData();
 
-        this.hashPrefixArray = list.get(1).getRLPData();
+        this.confirmationHash = list.get(1).getRLPData();
 
-        byte[] timeBytes = list.get(2).getRLPData();
+        this.hashPrefixArray = list.get(2).getRLPData();
+
+        byte[] timeBytes = list.get(3).getRLPData();
         this.timestamp = (null == timeBytes) ? BigInteger.ZERO: new BigInteger(1, timeBytes);
 
 //        parseGossipList((RLPList) list.get(3));
@@ -108,11 +117,12 @@ public class NewMsgSignal {
     public byte[] getEncoded(){
         if (null == rlpEncoded) {
             byte[] deviceID = RLP.encodeElement(this.deviceID);
+            byte[] confirmationHash = RLP.encodeElement(this.confirmationHash);
             byte[] hashPrefixArray = RLP.encodeElement(this.hashPrefixArray);
             byte[] timestamp = RLP.encodeBigInteger(this.timestamp);
 //            byte[] gossipListEncoded = getGossipListEncoded();
 
-            this.rlpEncoded = RLP.encodeList(deviceID, hashPrefixArray, timestamp);
+            this.rlpEncoded = RLP.encodeList(deviceID, confirmationHash, hashPrefixArray, timestamp);
         }
 
         return rlpEncoded;
@@ -134,6 +144,7 @@ public class NewMsgSignal {
     @Override
     public String toString() {
         byte[] deviceID = getDeviceID();
+        byte[] confirmationHash = getConfirmationHash();
         byte[] hashPrefixArray = getHashPrefixArray();
         BigInteger time = getTimestamp();
 
@@ -145,6 +156,10 @@ public class NewMsgSignal {
             stringBuilder.append(Hex.toHexString(deviceID));
         }
 
+        if (null != confirmationHash) {
+            stringBuilder.append(", confirmation hash=");
+            stringBuilder.append(Hex.toHexString(confirmationHash));
+        }
         if (null != hashPrefixArray) {
             stringBuilder.append(", hash prefix array=");
             stringBuilder.append(Hex.toHexString(hashPrefixArray));
