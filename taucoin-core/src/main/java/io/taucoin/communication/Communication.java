@@ -110,9 +110,28 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private Thread communicationThread;
 
     public Communication(byte[] deviceID, MsgListener msgListener, AppRepository repository) {
-        this.deviceID = deviceID;
+        this.deviceID = adjustDeviceID(deviceID);
         this.msgListener = msgListener;
         this.repository = repository;
+    }
+
+    /**
+     * 调整device id长度，使之不超过长度限制
+     * @param deviceID device id
+     * @return adjusted device id
+     */
+    private byte[] adjustDeviceID(byte[] deviceID) {
+        if (null == deviceID) {
+            return new byte[1];
+        }
+
+        if (deviceID.length <= ChainParam.DEVICE_ID_LIMIT_SIZE) {
+            return deviceID;
+        }
+
+        byte[] shortDeviceID = new byte[ChainParam.DEVICE_ID_LIMIT_SIZE];
+        System.arraycopy(deviceID, 0, shortDeviceID, 0, ChainParam.DEVICE_ID_LIMIT_SIZE);
+        return shortDeviceID;
     }
 
     /**
@@ -774,6 +793,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
+        // 是否发送Levenshtein数组，只有我收到更新的信号，并且信号携带的confirmation hash不匹配，才会发送
         boolean publishArray = false;
         if (null != hashPrefixArray) {
             byte[] confirmationHash = HashUtil.sha1hash(hashPrefixArray);
@@ -789,6 +809,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
+        // 发送confirmation hash
         byte[] confirmationHash = null;
         LinkedHashSet<HashPrefixArrayInfo> linkedHashSet = this.hashPrefixArrayCache.get(peer);
         if (null != linkedHashSet) {

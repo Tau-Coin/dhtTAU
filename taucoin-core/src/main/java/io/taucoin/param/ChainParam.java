@@ -60,7 +60,7 @@ public class ChainParam {
     public static final int SHORT_ADDRESS_LENGTH = 4;
 
     // device id限制长度
-    public static final int DEVICE_ID_LIMIT_SIZE = 32;
+    public static final int DEVICE_ID_LIMIT_SIZE = 4;
 
     public static final int MAX_HASH_NUMBER = 47;
 
