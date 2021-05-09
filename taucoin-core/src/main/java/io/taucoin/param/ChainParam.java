@@ -73,7 +73,7 @@ public class ChainParam {
     public static final int INDEX_HASH_LIMIT_SIZE1 = 46;
 
     // 同步消息列表的最大数量
-    public static final int MAX_MESSAGE_LIST_SIZE = 200;
+    public static final int MAX_MESSAGE_LIST_SIZE = 50;
 
     public static final int MAX_FRIEND_LIST_SIZE = 8;
 

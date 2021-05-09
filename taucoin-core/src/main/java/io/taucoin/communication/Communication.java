@@ -85,9 +85,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     // 发现的最新信号时间(区分多设备)<friend, <device id, time> >
     private final Map<ByteArrayWrapper, HashMap<ByteArrayWrapper, BigInteger>> latestSignalTime = new ConcurrentHashMap<>();
 
-    // 发现的最新Confirmation Hash(区分多设备)<friend, <device id, confirmation hash> >
-    private final Map<ByteArrayWrapper, HashMap<ByteArrayWrapper, byte[]>> latestConfirmationHash = new ConcurrentHashMap<>();
-
     // 待处理的消息哈希前缀数组集合
     private final Map<ByteArrayWrapper, LinkedHashSet<HashPrefixArrayInfo>> hashPrefixArrayCache = new ConcurrentHashMap<>();
 
@@ -793,38 +790,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
-        // 是否发送Levenshtein数组，只有我收到更新的信号，并且信号携带的confirmation hash不匹配，才会发送
-        boolean publishArray = false;
-        if (null != hashPrefixArray) {
-            byte[] confirmationHash = HashUtil.sha1hash(hashPrefixArray);
-            HashMap<ByteArrayWrapper, byte[]> hashMap = this.latestConfirmationHash.get(peer);
-            if (null != hashMap) {
-                for (Map.Entry<ByteArrayWrapper, byte[]> entry: hashMap.entrySet()) {
-                    if (!Arrays.equals(confirmationHash, entry.getValue())) {
-                        publishArray = true;
-                        break;
-                    }
-                }
-                hashMap.clear();
-            }
-        }
-
-        // 发送confirmation hash
-        byte[] confirmationHash = null;
-        LinkedHashSet<HashPrefixArrayInfo> linkedHashSet = this.hashPrefixArrayCache.get(peer);
-        if (null != linkedHashSet) {
-            Iterator<HashPrefixArrayInfo> it = linkedHashSet.iterator();
-            if (it.hasNext()) {
-                HashPrefixArrayInfo hashPrefixArrayInfo = it.next();
-                confirmationHash = HashUtil.sha1hash(hashPrefixArrayInfo.getHashPrefixArray());
-            }
-        }
-
-        if (publishArray) {
-            return new NewMsgSignal(this.deviceID, confirmationHash, hashPrefixArray, chattingTime);
-        } else {
-            return new NewMsgSignal(this.deviceID, confirmationHash, null, chattingTime);
-        }
+        return new NewMsgSignal(this.deviceID, hashPrefixArray, chattingTime);
     }
 
     /**
@@ -850,36 +816,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         byte[] friend = getFriendRandomly();
         FriendInfo friendInfo = this.repository.getFriendInfo(friend);
 
-        boolean publishArray = false;
-        if (null != hashPrefixArray) {
-            byte[] confirmationHash = HashUtil.sha1hash(hashPrefixArray);
-            HashMap<ByteArrayWrapper, byte[]> hashMap = this.latestConfirmationHash.get(peer);
-            if (null != hashMap) {
-                for (Map.Entry<ByteArrayWrapper, byte[]> entry: hashMap.entrySet()) {
-                    if (!Arrays.equals(confirmationHash, entry.getValue())) {
-                        publishArray = true;
-                        break;
-                    }
-                }
-                hashMap.clear();
-            }
-        }
-
-        byte[] confirmationHash = null;
-        LinkedHashSet<HashPrefixArrayInfo> linkedHashSet = this.hashPrefixArrayCache.get(peer);
-        if (null != linkedHashSet) {
-            Iterator<HashPrefixArrayInfo> it = linkedHashSet.iterator();
-            if (it.hasNext()) {
-                HashPrefixArrayInfo hashPrefixArrayInfo = it.next();
-                confirmationHash = HashUtil.sha1hash(hashPrefixArrayInfo.getHashPrefixArray());
-            }
-        }
-
-        if (publishArray) {
-            return new OnlineSignal(this.deviceID, confirmationHash, hashPrefixArray, friendInfo, timestamp);
-        } else {
-            return new OnlineSignal(this.deviceID, confirmationHash, null, friendInfo, timestamp);
-        }
+        return new OnlineSignal(this.deviceID, hashPrefixArray, friendInfo, timestamp);
     }
 
     /**
@@ -1539,13 +1476,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         // 记录改设备最新信号时间
                         hashMap.put(deviceIDKey, newMsgSignal.getTimestamp());
 
-                        HashMap<ByteArrayWrapper, byte[]> confirmationHashMap = this.latestConfirmationHash.get(peer);
-                        if (null == confirmationHashMap) {
-                            confirmationHashMap = new HashMap<>();
-                            this.latestConfirmationHash.put(peer, confirmationHashMap);
-                        }
-                        confirmationHashMap.put(deviceIDKey, newMsgSignal.getConfirmationHash());
-
                         if (null != newMsgSignal.getHashPrefixArray()) {
                             // 添加到缓存，等待处理
                             LinkedHashSet<HashPrefixArrayInfo> linkedList = this.hashPrefixArrayCache.get(peer);
@@ -1620,13 +1550,6 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     if (null == latestSignalTime || latestSignalTime.compareTo(onlineSignal.getTimestamp()) < 0) {
                         // 记录改设备最新信号时间
                         hashMap.put(deviceIDKey, onlineSignal.getTimestamp());
-
-                        HashMap<ByteArrayWrapper, byte[]> confirmationHashMap = this.latestConfirmationHash.get(peer);
-                        if (null == confirmationHashMap) {
-                            confirmationHashMap = new HashMap<>();
-                            this.latestConfirmationHash.put(peer, confirmationHashMap);
-                        }
-                        confirmationHashMap.put(deviceIDKey, onlineSignal.getConfirmationHash());
 
                         if (null != onlineSignal.getHashPrefixArray()) {
                             // 添加到缓存，等待处理
