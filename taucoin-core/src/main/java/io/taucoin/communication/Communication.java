@@ -260,7 +260,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 if (validateMessage(message)) {
                     if (messageList.getEncoded().length + message.getEncoded().length <= ChainParam.MESSAGE_LIST_SAFE_SIZE) {
                         // 如果还能装载，继续填装
-                        logger.error("Put message:{}", message.toString());
+                        logger.info("Put message:{}", message.toString());
                         this.msgListener.onSyncMessage(message, currentTime);
                         messages.add(message);
                         messageList = new MessageList(messages);
@@ -806,7 +806,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
 
 //        Collections.reverse(solutionInfo.missingMessageList);
         long endTime = System.currentTimeMillis();
-        logger.error("Cost time:{}", endTime - startTime);
+        logger.info("Cost time:{}", endTime - startTime);
 
         return solutionInfo;
     }
