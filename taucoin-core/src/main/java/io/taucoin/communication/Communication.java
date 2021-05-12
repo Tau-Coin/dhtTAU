@@ -188,6 +188,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         BigInteger currentTime = BigInteger.valueOf(System.currentTimeMillis() / 1000);
 
         // 新消息信号必发送
+        // 判断是XY频道还是XX频道
         byte[] pubKey = AccountManager.getInstance().getKeyPair().first;
         if (Arrays.equals(pubKey, peer.getData())) {
             OnlineSignal onlineSignal = makeOnlineSignal();
@@ -210,15 +211,17 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     byte[] hashPrefixArray = hashPrefixArrayInfo.getHashPrefixArray();
                     BigInteger timestamp = hashPrefixArrayInfo.getTimestamp();
 
-                    // 比较双方我发的消息的bloom filter，如果不同，则发出一个对方没有的数据
+                    // 寻找对方缺失的消息和确认收到的消息
                     List<Message> messageList = this.repository.getLatestMessageList(peer.getData(), ChainParam.MAX_MESSAGE_LIST_SIZE);
 
                     SolutionInfo solutionInfo = findBestSolution(messageList, hashPrefixArray);
 
+                    // 将发现的确认消息通知UI
                     if (!solutionInfo.confirmationRootList.isEmpty()) {
                         this.msgListener.onReadMessageRoot(peer.getData(), solutionInfo.confirmationRootList, timestamp);
                     }
 
+                    // 将发现的缺失消息加入集合，等待组合put出去
                     missingMessageSet.addAll(solutionInfo.missingMessageList);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
@@ -227,11 +230,11 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
-        // 随机排列missing messages
+        // 随机排列missing messages，实现随机发送消息的效果
         List<Message> missingMessageList = new ArrayList<>();
         int index = 0;
         while (!missingMessageSet.isEmpty()) {
-            // 随机数种子采用时间+last index方式，避免一样
+            // 随机数种子采用时间+last index方式，避免产生一样的随机数
             Random random = new Random(System.currentTimeMillis() + index);
             index = random.nextInt(missingMessageSet.size());
             Iterator<Message> iterator = missingMessageSet.iterator();
@@ -248,6 +251,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             }
         }
 
+        // 构建put数据集合
         while (dataSet.size() < ChainParam.MAX_DHT_PUT_ITEM_SIZE && !missingMessageList.isEmpty()) {
             List<Message> messages = new ArrayList<>();
             MessageList messageList = new MessageList(messages);
@@ -257,6 +261,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
             while (iterator.hasNext()) {
                 Message message= iterator.next();
 
+                // 合法性判断
                 if (validateMessage(message)) {
                     if (messageList.getEncoded().length + message.getEncoded().length <= ChainParam.MESSAGE_LIST_SAFE_SIZE) {
                         // 如果还能装载，继续填装
@@ -292,6 +297,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
     private void visitReferredFriends() {
         ByteArrayWrapper peer = null;
 
+        // 首先看是否有正在聊天的朋友
         byte[] chattingFriend = this.repository.getChattingFriend();
 
         Random random = new Random(System.currentTimeMillis());
@@ -301,6 +307,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null != chattingFriend && index < 8) {
             peer = new ByteArrayWrapper(chattingFriend);
         } else {
+            // 其次，从近期有聊天的朋友里挑选
             List<byte[]> activeFriends = this.repository.getActiveFriends();
 
             random = new Random(System.currentTimeMillis() + index);
@@ -325,7 +332,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                         i++;
                     }
                 } else {
-                    // 剩下的在其它朋友里面挑选
+                    // 最后，在剩下的其它朋友里面挑选
                     List<byte[]> otherFriends = new ArrayList<>();
 
                     for (ByteArrayWrapper friend: this.friends) {
@@ -480,11 +487,13 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 publishFriendMutableData();
 
                 try {
+                    // 获取间隔时间
                     this.loopIntervalTime = this.repository.getMainLoopInterval();
                     if (this.loopIntervalTime < this.DEFAULT_LOOP_INTERVAL_TIME) {
                         this.loopIntervalTime = this.DEFAULT_LOOP_INTERVAL_TIME;
                     }
 
+                    // 计算已经花费的时间，算出实际应该sleep的时间
                     long costTime = System.currentTimeMillis() - startTime;
 
                     if (this.loopIntervalTime > costTime) {
@@ -691,6 +700,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         long startTime = System.currentTimeMillis();
         SolutionInfo solutionInfo = new SolutionInfo();
 
+        // 如果对方没有信息，则本地消息全为缺失消息
         if (null == hashPrefixArray) {
             solutionInfo.missingMessageList.addAll(messageList);
             return solutionInfo;
@@ -699,7 +709,9 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
         if (null != messageList && !messageList.isEmpty()) {
             int size = messageList.size();
 
+            // 对方数组为source
             byte[] source = hashPrefixArray;
+            // 本地消息数组为target
             byte[] target = new byte[size];
             for (int i = 0; i < size; i++) {
                 byte[] hash = messageList.get(i).getSha1Hash();
@@ -715,6 +727,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 return solutionInfo;
             }
 
+            // 如果source和target一样，则直接跳过Levenshtein数组匹配计算
             if (Arrays.equals(source, target)) {
                 for (Message message: messageList) {
                     solutionInfo.confirmationRootList.add(message.getHash());
@@ -763,6 +776,7 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                 }
             }
 
+            // 回溯编辑路径，统计中间信息
             int i = sourceLength;
             int j = targetLength;
             while (0 != dist[i][j]) {
@@ -861,11 +875,13 @@ public class Communication implements DHT.GetMutableItemCallback, KeyChangedList
                     logger.info("Accepted new message signal:{} from peer:{}", newMsgSignal.toString(), peer.toString());
 
                     HashMap<ByteArrayWrapper, BigInteger> hashMap = this.latestSignalTime.get(peer);
+                    // 如果map为空，填充新对象
                     if (null == hashMap) {
                         hashMap = new HashMap<>();
                         this.latestSignalTime.put(peer, hashMap);
                     }
 
+                    // 查找对应peer对应设备的最新信号时间
                     byte[] deviceID = newMsgSignal.getDeviceID();
                     ByteArrayWrapper deviceIDKey = new ByteArrayWrapper(deviceID);
                     BigInteger latestSignalTime = hashMap.get(deviceIDKey);
