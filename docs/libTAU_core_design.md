@@ -1,4 +1,4 @@
-# Libtau应用端功能需求分析
+# libTAU核心设计
 
 ## Session功能相关
 
@@ -32,42 +32,33 @@
 	void set_branch_factor(int branch_factor);
 ```
 
-## libtau业务相关
+## libTAU业务相关
 ### communication
-- 主循环间隔
+- 应用端设置
 ```
-	void set_main_loop_interval(int loop_time_interval);
-```
-- 添加朋友
-```
-	void add_friend(node_id id);
-```
-- 删除朋友
-```
-	void remove_friend(node_id id);
-```
-- 设置正在聊天的朋友
-```
-	void set_chatting_friend(node_id id);
-```
-- 设置活跃朋友
-```
-	void set_active_friend(node_id id);
-```
-- 发送新消息
-```
-	void send_new_message(node_id id, string message);
+	void set_main_loop_interval(int loop_time_interval);  //设置主循环频率
+	void add_friend(node_id id);     //添加朋友
+	void remove_friend(node_id id);          //删除朋友
+    void set_friend_info(FriendInfo fi);     //更新朋友信息
+	void set_chatting_friend(node_id id);    //设置正在聊天的朋友
+	void set_active_friend(node_id id);     //设置活跃的朋友
+	void send_new_message(node_id id, string message);    //发送新消息
 ```
 
-接口操作，影响的是应用层采用的db实例，这个实例定义了如下接口，传入libtau，communication可以操作
+应用端设置操作，影响的是应用层采用的db实例，这个实例定义了相关操作接口，传入libtau;
+
+- libTAU中communication操作
 ```
-	int get_main_loop_interval();
-    std::set<node_id> get_all_friend();
-    node_id get_chatting_friend();
-    std::list<node_id> get_active_friends();
-    FriendInfo get_friend_info(node_id friend);
-    std::list<message> get_latest_message_list(node_id friend, int num);
+	int get_main_loop_interval();     //获取主循环频率
+    std::list<node_id> get_all_friend(); //获取目前所有朋友
+    node_id get_chatting_friend();   //获取正在聊天的朋友
+    std::list<node_id> get_active_friends();    //获取活跃朋友
+    FriendInfo get_friend_info(node_id friend);  //获取朋友信息(昵称)
+    std::list<message> get_latest_message_list(node_id friend, int num); //获取自己和朋友的最新消息列表
 ```
+
+### chain
+
 ## Alert业务相关
 ### 网络相关
 - 网络设置相关
