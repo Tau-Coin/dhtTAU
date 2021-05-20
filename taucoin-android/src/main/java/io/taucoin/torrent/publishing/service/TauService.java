@@ -57,6 +57,7 @@ public class TauService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        logger.warn("Process.myPid::{}", android.os.Process.myPid());
         String action = null;
         if (intent != null){
             action = intent.getAction();
@@ -122,6 +123,7 @@ public class TauService extends Service {
 
         isAlreadyRunning.set(false);
         TauNotifier.getInstance().cancelAllNotify();
+        WorkloadManager.stopWakeUpWorker(getApplicationContext());
         stopForeground(true);
         stopSelf();
         AppUtil.appSafeExit();
