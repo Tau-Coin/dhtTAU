@@ -58,6 +58,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.databinding.ExternalLinkDialogBinding;
 import io.taucoin.torrent.publishing.databinding.UserDialogBinding;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
+import io.taucoin.torrent.publishing.service.WorkloadManager;
 import io.taucoin.torrent.publishing.ui.ScanTriggerActivity;
 import io.taucoin.torrent.publishing.ui.chat.ChatFragment;
 import io.taucoin.torrent.publishing.ui.community.CommunityFragment;
@@ -115,6 +116,7 @@ public class MainActivity extends ScanTriggerActivity {
         checkCurrentUser();
         initExitApp();
         subscribeAddCommunity();
+        WorkloadManager.startWakeUpWorker(getApplicationContext());
     }
 
     @Override
@@ -215,7 +217,9 @@ public class MainActivity extends ScanTriggerActivity {
         disposables.add(mainViewModel.observeNeedStartEngine()
                 .subscribeOn(Schedulers.io())
                 .filter((needStart) -> needStart)
-                .subscribe((needStart) -> mainViewModel.startDaemon()));
+                .subscribe((needStart) -> {
+                    mainViewModel.startDaemon();
+                }));
     }
 
     /**
