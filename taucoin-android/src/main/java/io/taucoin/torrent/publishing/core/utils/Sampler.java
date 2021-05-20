@@ -112,14 +112,14 @@ public class Sampler {
 
             // TotalPss = dalvikPss + nativePss + otherPss, in KB
             // getTotalPrivateDirty()就是获得自己进程所独占的内存 in KB
-            final int totalPss = dbm.getTotalPrivateDirty();
+            final int totalPss = dbm.getTotalPss();
             Context context = MainApplication.getInstance();
             logger.trace("sampleMemory dalvikPrivateDirty::{}, nativePrivateDirty::{}, " +
                     "otherPrivateDirty::{}, totalPrivateDirty::{}",
-                    Formatter.formatFileSize(context, dbm.dalvikPrivateDirty * 1024),
-                    Formatter.formatFileSize(context, dbm.nativePrivateDirty * 1024),
-                    Formatter.formatFileSize(context, dbm.otherPrivateDirty * 1024),
-                    Formatter.formatFileSize(context, dbm.getTotalPrivateDirty() * 1024));
+                    Formatter.formatFileSize(context, dbm.dalvikPss * 1024),
+                    Formatter.formatFileSize(context, dbm.nativePss * 1024),
+                    Formatter.formatFileSize(context, dbm.otherPss * 1024),
+                    Formatter.formatFileSize(context, dbm.getTotalPss() * 1024));
 
             if (totalPss >= 0) {
                 // Mem in Byte
