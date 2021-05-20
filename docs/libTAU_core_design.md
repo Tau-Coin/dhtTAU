@@ -37,24 +37,24 @@
 - 应用端设置
 ```
 	void set_main_loop_interval(int loop_time_interval);  //设置主循环频率
-	void add_friend(node_id id);     //添加朋友
-	void remove_friend(node_id id);          //删除朋友
-    void set_friend_info(FriendInfo fi);     //更新朋友信息
-	void set_chatting_friend(node_id id);    //设置正在聊天的朋友
-	void set_active_friend(node_id id);     //设置活跃的朋友
-	void send_new_message(node_id id, string message);    //发送新消息
+	void add_node(node_id id);             //添加节点
+	void remove_node(node_id id);          //删除节点
+    void set_node_info(char* node_info);   //更新节点信息
+	void set_chatting_node(node_id id);    //设置正在聊天的节点
+	void set_active_node(node_id id);      //设置活跃的节点
+	void send_payload(node_id id, char* payload);    //发送数据
 ```
 
 应用端设置操作，影响的是应用层采用的db实例，这个实例定义了相关操作接口，传入libtau;
 
 - libTAU中communication操作
 ```
-	int get_main_loop_interval();     //获取主循环频率
-    std::list<node_id> get_all_friend(); //获取目前所有朋友
-    node_id get_chatting_friend();   //获取正在聊天的朋友
-    std::list<node_id> get_active_friends();    //获取活跃朋友
-    FriendInfo get_friend_info(node_id friend);  //获取朋友信息(昵称)
-    std::list<message> get_latest_message_list(node_id friend, int num); //获取自己和朋友的最新消息列表
+	int get_main_loop_interval();       //获取主循环频率
+    std::list<node_id> get_all_nodes(); //获取目前所有节点
+    node_id get_chatting_node();        //获取正在聊天的节点
+    std::list<node_id> get_active_nodes();    //获取活跃节点
+    char* get_node_info(node_id node);  //获取节点信息
+    std::list<char *> get_latest_payload(node_id node, int num); //获取自己和节点的最新数据列表
 ```
 
 ### chain
@@ -82,8 +82,8 @@ AlertType.TAU_MESSAGE_NEW        //新消息通知
 AlertType.TAU_MESSAGE_ROOT       //已读消息root通知
 AlertType.TAU_MESSAGE_SYNC       //正在同步的消息
 ```
-- 朋友
+- 节点
 ```
-AlertType.TAU_FRIEND_DISCOVERY   //发现朋友通知
-AlertType.TAU_FRIEND_FROM_DEVICE   //发现多设备新朋友通知
+AlertType.TAU_FRIEND_DISCOVERY   //发现节点通知
+AlertType.TAU_FRIEND_FROM_DEVICE   //发现多设备新节点通知
 ```
