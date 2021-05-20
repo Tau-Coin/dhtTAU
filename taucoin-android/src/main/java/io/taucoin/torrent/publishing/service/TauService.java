@@ -21,6 +21,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
+import io.taucoin.torrent.publishing.core.utils.Utils;
 import io.taucoin.torrent.publishing.receiver.NotificationReceiver;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
 
@@ -53,6 +54,7 @@ public class TauService extends Service {
         userRepo = RepositoryHelper.getUserRepository(getApplicationContext());
         daemon = TauDaemon.getInstance(getApplicationContext());
         TauNotifier.makeForegroundNotify(this);
+        Utils.enableBootReceiver(getApplicationContext(), true);
     }
 
     @Override
@@ -106,8 +108,6 @@ public class TauService extends Service {
 
         TauNotifier.makeForegroundNotify(this);
 
-        daemon.resetWakeLock(true);
-
         daemon.doStart();
         daemon.registerListener(daemonListener);
     }
@@ -119,14 +119,12 @@ public class TauService extends Service {
         logger.info("stopService");
         disposables.clear();
         daemon.unregisterListener(daemonListener);
-        daemon.resetWakeLock(false);
 
         isAlreadyRunning.set(false);
         TauNotifier.getInstance().cancelAllNotify();
         WorkloadManager.stopWakeUpWorker(getApplicationContext());
         stopForeground(true);
         stopSelf();
-        AppUtil.appSafeExit();
     }
 
     /**

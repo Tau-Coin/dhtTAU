@@ -1,6 +1,5 @@
 package io.taucoin.torrent.publishing.core.model;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
@@ -552,71 +551,6 @@ public class TauDaemon {
         }
         boolean isReadOnly = NetworkSetting.isMeteredNetwork() || isForced;
         tauController.getDHTEngine().setReadOnly(isReadOnly);
-    }
-
-    /**
-     * 重置唤醒锁
-     */
-    public void resetWakeLock(boolean enable) {
-        // 启动/禁止设备启动广播接收器
-        if (enable) {
-            Utils.enableBootReceiver(appContext, true);
-        }
-        // 启动CPU WakeLock
-        keepCPUWakeLock(enable);
-        // 启动Wifi WakeLock
-        keepWifiWakeLock(enable);
-    }
-
-    /**
-     * 保持CPU唤醒锁定
-     */
-    @SuppressLint("WakelockTimeout")
-    private void keepCPUWakeLock(boolean enable) {
-        logger.info("keepCPUWakeLock::{}", enable);
-        if (enable) {
-            if (wakeLock == null) {
-                PowerManager pm = (PowerManager) appContext.getSystemService(Context.POWER_SERVICE);
-                // 保持CPU 运转，屏幕和键盘灯有可能是关闭的。
-                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
-            }
-            if (!wakeLock.isHeld()){
-                wakeLock.acquire();
-            }
-        } else {
-            if (wakeLock == null){
-                return;
-            }
-            if (wakeLock.isHeld()){
-                wakeLock.release();
-            }
-        }
-    }
-
-    /**
-     * 保持Wifi唤醒锁定
-     */
-    private void keepWifiWakeLock(boolean enable) {
-        logger.info("keepWifiWakeLock::{}", enable);
-        if (enable) {
-            if (wifiLock == null) {
-
-                WifiManager wifiManager = (WifiManager) appContext.getApplicationContext()
-                        .getSystemService(Context.WIFI_SERVICE);
-                // 扫描，自动的尝试去连接一个曾经配置过的点，保持最佳性能
-                wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, TAG);
-            }
-            if (!wifiLock.isHeld()){
-                wifiLock.acquire();
-            }
-        } else {
-            if (wifiLock == null){
-                return;
-            }
-            if (wifiLock.isHeld()){
-                wifiLock.release();
-            }
-        }
     }
 
     /**
