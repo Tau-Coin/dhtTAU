@@ -106,8 +106,6 @@ public class TauService extends Service {
 
         TauNotifier.makeForegroundNotify(this);
 
-        daemon.resetWakeLock(true);
-
         daemon.doStart();
         daemon.registerListener(daemonListener);
     }
@@ -119,7 +117,6 @@ public class TauService extends Service {
         logger.info("stopService");
         disposables.clear();
         daemon.unregisterListener(daemonListener);
-        daemon.resetWakeLock(false);
 
         isAlreadyRunning.set(false);
         TauNotifier.getInstance().cancelAllNotify();
