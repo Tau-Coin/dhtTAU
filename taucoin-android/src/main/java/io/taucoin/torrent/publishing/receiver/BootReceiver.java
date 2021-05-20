@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.service.WorkloadManager;
 
 /**
@@ -32,7 +31,6 @@ public class BootReceiver extends BroadcastReceiver {
      * @param context
      */
     private void startDaemonAndWakeUpWorker(Context context) {
-        ToastUtils.showShortToast("startDaemonAndWakeUpWorker");
         Context appContext = context.getApplicationContext();
         TauDaemon.getInstance(appContext).start();
         WorkloadManager.startWakeUpWorker(appContext);
