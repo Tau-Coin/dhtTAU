@@ -47,6 +47,7 @@ import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
+import io.taucoin.torrent.publishing.core.utils.RootUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.utils.ToastUtils;
 import io.taucoin.torrent.publishing.core.utils.TrafficUtil;
@@ -117,6 +118,7 @@ public class MainActivity extends ScanTriggerActivity {
         initExitApp();
         subscribeAddCommunity();
         WorkloadManager.startWakeUpWorker(getApplicationContext());
+        RootUtil.checkRoot();
     }
 
     @Override
