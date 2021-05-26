@@ -2,8 +2,6 @@ package io.taucoin.torrent.publishing.core.model;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.wifi.WifiManager;
-import android.os.PowerManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +60,6 @@ public class TauDaemon {
     private PowerReceiver powerReceiver = new PowerReceiver();
     private ConnectionReceiver connectionReceiver = new ConnectionReceiver();
     private TauController tauController;
-    private PowerManager.WakeLock wakeLock;
-    private WifiManager.WifiLock wifiLock;
     private SystemServiceManager systemServiceManager;
     private ExecutorService exec = Executors.newSingleThreadExecutor();
     private TauListenHandler tauListenHandler;

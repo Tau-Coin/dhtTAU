@@ -429,4 +429,37 @@
         <item name="android:taskToBackExitAnimation">@null</item>
     </style>
 
+    <declare-styleable name="ViewfinderView">
+        <attr format="color" name="maskColor"/>
+        <attr format="color" name="frameColor"/>
+        <attr format="color" name="cornerColor"/>
+        <attr format="color" name="laserColor"/>
+        <attr format="color" name="resultPointColor"/>
+        <attr format="string" name="labelText"/>
+        <attr format="color" name="labelTextColor"/>
+        <attr format="dimension" name="labelTextSize"/>
+        <attr format="dimension" name="labelTextPadding"/>
+        <attr format="enum" name="labelTextLocation">
+            <enum name="top" value="0"/>
+            <enum name="bottom" value="1"/>
+        </attr>
+        <attr format="boolean" name="showResultPoint"/>
+        <attr format="dimension" name="frameWidth"/>
+        <attr format="dimension" name="frameHeight"/>
+        <attr format="integer" name="gridColumn"/>
+        <attr format="dimension" name="gridHeight"/>
+        <attr format="enum" name="laserStyle">
+            <enum name="none" value="0"/>
+            <enum name="line" value="1"/>
+            <enum name="grid" value="2"/>
+        </attr>
+        <attr format="dimension" name="cornerRectWidth"/>
+        <attr format="dimension" name="cornerRectHeight"/>
+        <attr format="dimension" name="scannerLineMoveDistance"/>
+        <attr format="dimension" name="scannerLineHeight"/>
+        <attr format="dimension" name="frameLineWidth"/>
+        <attr format="integer" name="scannerAnimationDelay"/>
+        <attr format="float" name="frameRatio"/>
+    </declare-styleable>
+
 </resources>

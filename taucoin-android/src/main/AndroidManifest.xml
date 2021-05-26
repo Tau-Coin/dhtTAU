@@ -24,6 +24,10 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
+    <!--使用特性, 华为扫码-->
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
     <application
         android:name=".MainApplication"
         android:allowBackup="false"
@@ -174,8 +178,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
-            android:name=".ui.qrcode.ScanQRCodeActivity"
-            android:theme="@style/CaptureTheme"/>
+            android:name=".ui.qrcode.ScanQRCodeActivity" />
 
         <activity
             android:name=".ui.user.UserDetailActivity"

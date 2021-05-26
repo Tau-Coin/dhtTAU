@@ -12,12 +12,10 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import com.king.zxing.util.CodeUtils;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.huawei.hms.hmsscankit.ScanUtil;
+import com.huawei.hms.hmsscankit.WriterException;
+import com.huawei.hms.ml.scan.HmsBuildBitmapOption;
+import com.huawei.hms.ml.scan.HmsScan;
 
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.data.DrawBean;
@@ -297,15 +295,17 @@ public class BitmapUtil {
      * @return
      */
     public static Bitmap createQRCode(String content, int heightPix, Bitmap logo,
-                                      int codeColor) {
-        //配置参数
-        Map<EncodeHintType, Object> hints = new HashMap<>();
-        hints.put( EncodeHintType.CHARACTER_SET, "utf-8");
-        //容错级别
-        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
-        //设置空白边距的宽度
-        hints.put(EncodeHintType.MARGIN, 0); //default is 0
-        return CodeUtils.createQRCode(content,heightPix,logo, 0.2f, hints,codeColor);
+                                      int codeColor) throws WriterException {
+        //Generate the barcode.
+        HmsBuildBitmapOption.Creator creator = new HmsBuildBitmapOption.Creator()
+                .setBitmapMargin(1)
+                .setBitmapColor(codeColor)
+                .setQRLogoBitmap(logo)
+                .setBitmapBackgroundColor(Color.WHITE);
+        creator.setBitmapColor(codeColor);
+        HmsBuildBitmapOption options = creator.create();
+        return ScanUtil.buildBitmap(content, HmsScan.QRCODE_SCAN_TYPE,
+                heightPix, heightPix, options);
     }
 
     /**
@@ -331,7 +331,7 @@ public class BitmapUtil {
         Context context = MainApplication.getInstance();
         int width = DimensionsUtil.dip2px(context, 50);
         int height = width;
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = createBitmap(width, height, Color.WHITE);
 
         Canvas canvas = new Canvas(bitmap);
         final Paint paint = new Paint();
@@ -345,7 +345,7 @@ public class BitmapUtil {
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
 
         final Paint textPaint = new Paint();
-        textPaint.setTextSize(DimensionsUtil.dip2px(context, 16));
+        textPaint.setTextSize(DimensionsUtil.dip2px(context, 14));
         textPaint.setColor(Color.WHITE);
         textPaint.setFakeBoldText(true);
         textPaint.setTextAlign(Paint.Align.CENTER);

@@ -9,100 +9,100 @@
 
     </data>
 
-    <FrameLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <SurfaceView
-            android:id="@+id/surfaceView"
-            android:onClick="onClick"
+        <FrameLayout
+            android:id="@+id/rim"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
-        <com.king.zxing.ViewfinderView
-            android:id="@+id/viewfinderView"
+        <io.taucoin.torrent.publishing.ui.customviews.ViewfinderView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            app:frameWidth="240dp"
+            app:frameHeight="240dp"/>
 
-        <ImageView
-            android:visibility="invisible"
-            android:id="@+id/ivTorch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:contentDescription="@null"
-            android:src="@drawable/zxl_torch_selector"
-            android:layout_marginTop="@dimen/torchMarginTop" />
-
-        <ImageView
-            android:id="@+id/iv_qr_code"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:padding="10dp"
-            android:onClick="onClick"
-            android:layout_gravity="start|bottom"
-            android:layout_marginStart="20dp"
-            android:layout_marginBottom="100dp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:src="@mipmap/icon_pkqr"
-            android:background="@drawable/circle_black"
-            android:contentDescription="@null"/>
-
-        <ImageView
-            android:id="@+id/iv_gallery"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:padding="10dp"
-            android:layout_gravity="end|bottom"
-            android:onClick="onClick"
-            android:layout_marginEnd="20dp"
-            android:layout_marginBottom="100dp"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:background="@drawable/circle_black"
-            android:src="@mipmap/icon_album"
-            android:contentDescription="@null"/>
-
-        <LinearLayout
-            android:orientation="vertical"
-            android:background="@color/color_black"
-            android:layout_gravity="bottom"
-            android:gravity="center_horizontal|center"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp">
-            <TextView
-                android:id="@+id/tv_no_qr_code"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/color_white"
-                android:gravity="center_horizontal|center"
-                android:text="@string/qr_code_scan_qr"
-                android:textAppearance="@style/TextAppearanceBody1"/>
+            android:layout_height="match_parent">
 
-            <TextView
-                android:visibility="gone"
-                android:id="@+id/tv_continue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_secondary"
-                android:gravity="center_horizontal|center"
-                android:layout_marginTop="5dp"
-                android:text="@string/qr_code_not_found_continue"
-                android:textAppearance="@style/TextAppearanceBody3"/>
-        </LinearLayout>
+            <ImageView
+                android:id="@+id/iv_qr_code"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="10dp"
+                android:onClick="onClick"
+                android:layout_gravity="start|bottom"
+                android:layout_marginStart="20dp"
+                android:layout_marginBottom="50dp"
+                android:layout_above="@+id/ll_bottom"
+                android:src="@mipmap/icon_pkqr"
+                android:background="@drawable/circle_black"
+                android:contentDescription="@null"/>
 
-        <ImageView
-            android:id="@+id/iv_back"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="25dp"
-            android:padding="2dp"
-            android:onClick="onClick"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:src="@mipmap/icon_back_circle"
-            android:contentDescription="@null"/>
-    </FrameLayout>
+            <ImageView
+                android:id="@+id/iv_gallery"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="10dp"
+                android:layout_gravity="end|bottom"
+                android:onClick="onClick"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="50dp"
+                android:layout_alignParentEnd="true"
+                android:layout_above="@+id/ll_bottom"
+                android:background="@drawable/circle_black"
+                android:src="@mipmap/icon_album"
+                android:contentDescription="@null"/>
+
+            <LinearLayout
+                android:id="@+id/ll_bottom"
+                android:layout_alignParentBottom="true"
+                android:orientation="vertical"
+                android:background="@color/color_black"
+                android:layout_gravity="bottom"
+                android:gravity="center_horizontal|center"
+                android:layout_width="match_parent"
+                android:layout_height="60dp">
+
+                <TextView
+                    android:id="@+id/tv_no_qr_code"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:textColor="@color/color_white"
+                    android:gravity="center_horizontal|center"
+                    android:text="@string/qr_code_scan_qr"
+                    android:textAppearance="@style/TextAppearanceBody1"/>
+
+                <TextView
+                    android:visibility="gone"
+                    android:id="@+id/tv_continue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center_horizontal|center"
+                    android:layout_marginTop="5dp"
+                    android:text="@string/qr_code_not_found_continue"
+                    android:textAppearance="@style/TextAppearanceBody3"/>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/iv_back"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="25dp"
+                android:padding="2dp"
+                android:onClick="onClick"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:src="@mipmap/icon_back_circle"
+                android:contentDescription="@null"/>
+        </RelativeLayout>
+
+    </RelativeLayout>
 </layout>

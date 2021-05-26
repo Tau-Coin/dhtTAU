@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.ui.user;
 import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
@@ -11,7 +12,9 @@ import android.view.View;
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
 import com.google.gson.Gson;
-import com.king.zxing.util.CodeUtils;
+import com.huawei.hms.hmsscankit.ScanUtil;
+import com.huawei.hms.ml.scan.HmsBuildBitmapOption;
+import com.huawei.hms.ml.scan.HmsScan;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -777,12 +780,19 @@ public class UserViewModel extends AndroidViewModel {
                 Bitmap logoBitmap = BitmapUtil.createLogoBitmap(bgColor, firstLettersName);
 
                 int heightPix = DimensionsUtil.dip2px(context, 480);
-                Bitmap bitmap;
+                //Generate the barcode.
+                HmsBuildBitmapOption.Creator creator = new HmsBuildBitmapOption.Creator()
+                        .setBitmapMargin(1)
+                        .setQRLogoBitmap(logoBitmap)
+                        .setBitmapBackgroundColor(Color.WHITE);
                 if (QRColor == -1) {
-                    bitmap = CodeUtils.createQRCode(content, heightPix, logoBitmap);
+                    creator.setBitmapColor(Color.BLACK);
                 } else {
-                    bitmap = CodeUtils.createQRCode(content, heightPix, logoBitmap, QRColor);
+                    creator.setBitmapColor(QRColor);
                 }
+                HmsBuildBitmapOption options = creator.create();
+                Bitmap bitmap = ScanUtil.buildBitmap(content, HmsScan.QRCODE_SCAN_TYPE,
+                        heightPix, heightPix, options);
                 logger.debug("shareQRCode bitmap::{}", bitmap);
                 if (bitmap != null) {
                     emitter.onNext(bitmap);

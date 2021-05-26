@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+//need to config dependencies:lasspath 'com.huawei.agconnect:agcp:1.2.0.300' in global build.gradle
+apply plugin: 'com.huawei.agconnect'
+
 repositories {
     mavenCentral()
     maven { url 'https://dl.bintray.com/stojan/android' }
@@ -138,9 +141,6 @@ dependencies {
     }
     implementation "org.slf4j:slf4j-api:1.7.25"
 
-    /* ZXing */
-    implementation 'com.king.zxing:zxing-lite:1.1.9-androidx'
-
     /* PictureSelector */
     implementation 'com.github.LuckSiege.PictureSelector:picture_library:v2.4.6'
 
@@ -168,6 +168,9 @@ dependencies {
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
 
     // 内存检测工具，2.X无需在Application中添加代码
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.3'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
 //    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:2.3'
+
+    // 华为scan kit
+    implementation 'com.huawei.hms:scanplus:1.3.2.300'
 }
