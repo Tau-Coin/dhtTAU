@@ -29,12 +29,11 @@
                     android:textStyle="bold"
                     android:gravity="center_vertical|center"
                     android:textAppearance="@style/TextAppearanceHeadline6"
-                    app:borderColor="@color/primary_light"
-                    app:borderWidth="0dp"
-                    app:radius="35dp"
-                    app:isRadiusAutoHalf="true"
-                    app:bgColor="@color/primary_dark"
-                    app:textColorForPressed="@color/color_white" />
+                    app:btnStrokeColor="@color/primary_light"
+                    app:btnStrokeWidth="0dp"
+                    app:btnSolidColor="@color/primary_dark"
+                    app:btnCornerRadius="35dp"
+                    app:btnPressedRatio="1.5" />
 
                 <TextView
                     android:layout_toEndOf="@+id/round_button"

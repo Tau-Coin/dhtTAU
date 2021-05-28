@@ -28,12 +28,11 @@
             android:textAllCaps="true"
             android:textColor="@color/color_white"
             android:textAppearance="@style/TextAppearanceHeadline6"
-            app:borderColor="@color/primary_light"
-            app:borderWidth="0dp"
-            app:radius="10dp"
-            app:isRadiusAutoHalf="true"
-            app:bgColor="@color/primary_light"
-            app:textColorForPressed="@color/color_white" />
+            app:btnStrokeColor="@color/primary_light"
+            app:btnStrokeWidth="0dp"
+            app:btnCornerRadius="10dp"
+            app:btnSolidColor="@color/primary_light"
+            app:btnPressedRatio="1.5" />
 
         <LinearLayout
             android:id="@+id/middle_view"

@@ -34,12 +34,11 @@
                     android:textColor="@color/color_white"
                     android:layout_centerHorizontal="true"
                     android:textAppearance="@style/TextAppearanceBody1"
-                    app:borderColor="@color/primary_light"
-                    app:borderWidth="0dp"
-                    app:radius="10dp"
-                    app:isRadiusAutoHalf="true"
-                    app:bgColor="@color/primary_light"
-                    app:textColorForPressed="@color/color_white" />
+                    app:btnStrokeColor="@color/primary_light"
+                    app:btnStrokeWidth="0dp"
+                    app:btnCornerRadius="10dp"
+                    app:btnSolidColor="@color/primary_light"
+                    app:btnPressedRatio="1.5" />
 
             </RelativeLayout>
 

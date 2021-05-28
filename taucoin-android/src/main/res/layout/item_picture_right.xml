@@ -65,12 +65,11 @@
                 android:gravity="center_vertical|center"
                 android:textColor="@color/color_white"
                 android:textAppearance="@style/TextAppearanceHeadline6"
-                app:borderColor="@color/primary_light"
-                app:borderWidth="0dp"
-                app:radius="7dp"
-                app:isRadiusAutoHalf="true"
-                app:bgColor="@color/primary_light"
-                app:textColorForPressed="@color/color_white" />
+                app:btnStrokeColor="@color/primary_light"
+                app:btnStrokeWidth="0dp"
+                app:btnCornerRadius="7dp"
+                app:btnSolidColor="@color/primary_light"
+                app:btnPressedRatio="1.5" />
 
         </LinearLayout>
 

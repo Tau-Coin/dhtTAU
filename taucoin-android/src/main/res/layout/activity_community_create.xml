@@ -30,12 +30,11 @@
                 android:textSize="@dimen/font_big_size"
                 android:textAllCaps="true"
                 android:textColor="@color/color_white"
-                app:borderColor="@color/primary_light"
-                app:borderWidth="0dp"
-                app:radius="10dp"
-                app:isRadiusAutoHalf="true"
-                app:bgColor="@color/primary_light"
-                app:textColorForPressed="@color/color_white" />
+                app:btnStrokeColor="@color/primary_light"
+                app:btnStrokeWidth="0dp"
+                app:btnCornerRadius="10dp"
+                app:btnSolidColor="@color/primary_light"
+                app:btnPressedRatio="1.5" />
 
             <EditText
                 android:layout_toEndOf="@+id/round_button"

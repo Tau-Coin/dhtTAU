@@ -24,12 +24,11 @@
             android:textAllCaps="true"
             android:textColor="@color/color_white"
             android:textStyle="bold"
-            app:borderColor="@color/primary_light"
-            app:borderWidth="0dp"
-            app:radius="30dp"
-            app:isRadiusAutoHalf="true"
-            app:bgColor="@color/primary_light"
-            app:textColorForPressed="@color/color_white" />
+            app:btnStrokeColor="@color/primary_light"
+            app:btnStrokeWidth="0dp"
+            app:btnCornerRadius="30dp"
+            app:btnSolidColor="@color/primary_light"
+            app:btnPressedRatio="1.5" />
 
         <TextView
             android:layout_toEndOf="@+id/left_view"
