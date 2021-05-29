@@ -23,6 +23,7 @@ import android.view.LayoutInflater;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -101,7 +102,7 @@ public class ToastUtils {
         }
     }
 
-    private static Toast sToast = null;
+    private static WeakReference<Toast> mToast = null;
 
     private static class ShowRunnable implements Runnable {
         private CharSequence message;
@@ -116,7 +117,8 @@ public class ToastUtils {
         }
 
         private void show() {
-            sToast = new Toast(MainApplication.getInstance());
+            Toast sToast = new Toast(MainApplication.getInstance());
+            mToast = new WeakReference<>(sToast);
 
             sToast = Toast.makeText(MainApplication.getInstance(), "", duration);
 
@@ -144,37 +146,44 @@ public class ToastUtils {
             Method getServiceMethod = Toast.class.getDeclaredMethod("getService");
             getServiceMethod.setAccessible(true);
             // hook INotificationManager
-            if(iNotificationManagerObj == null){
-                iNotificationManagerObj = getServiceMethod.invoke(null);
+            if (mToast != null && mToast.get() != null) {
+                Toast sToast = mToast.get();
+                if(iNotificationManagerObj == null){
+                    iNotificationManagerObj = getServiceMethod.invoke(null);
 
-                @SuppressLint("PrivateApi")
-                Class iNotificationManagerCls = Class.forName("android.app.INotificationManager");
-                Object iNotificationManagerProxy = Proxy.newProxyInstance(sToast.getClass().getClassLoader(), new Class[]{iNotificationManagerCls}, new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        // Mandatory use of system Toast
-                        // hua wei p20 pro enqueueToastEx
-                        if("enqueueToast".equals(method.getName())
-                                || "enqueueToastEx".equals(method.getName())){
-                            args[0] = "android";
+                    @SuppressLint("PrivateApi")
+                    Class iNotificationManagerCls = Class.forName("android.app.INotificationManager");
+                    Object iNotificationManagerProxy = Proxy.newProxyInstance(sToast.getClass().getClassLoader(), new Class[]{iNotificationManagerCls}, new InvocationHandler() {
+                        @Override
+                        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                            // Mandatory use of system Toast
+                            // hua wei p20 pro enqueueToastEx
+                            if("enqueueToast".equals(method.getName())
+                                    || "enqueueToastEx".equals(method.getName())){
+                                args[0] = "android";
+                            }
+                            return method.invoke(iNotificationManagerObj, args);
                         }
-                        return method.invoke(iNotificationManagerObj, args);
-                    }
-                });
-                Field sServiceFiled = Toast.class.getDeclaredField("sService");
-                sServiceFiled.setAccessible(true);
-                sServiceFiled.set(null, iNotificationManagerProxy);
+                    });
+                    Field sServiceFiled = Toast.class.getDeclaredField("sService");
+                    sServiceFiled.setAccessible(true);
+                    sServiceFiled.set(null, iNotificationManagerProxy);
+                }
+                sToast.show();
             }
-            sToast.show();
         }catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private static void cancel() {
-        if (sToast != null) {
-            sToast.cancel();
-            sToast = null;
+        if (mToast != null && mToast.get() != null) {
+            Toast sToast = mToast.get();
+            if (sToast != null) {
+                sToast.cancel();
+                mToast.clear();
+                mToast = null;
+            }
         }
     }
 
