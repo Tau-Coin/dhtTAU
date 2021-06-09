@@ -15,6 +15,7 @@
  */
 package io.taucoin.torrent.publishing.core.utils;
 
+import android.content.Context;
 import android.widget.Chronometer;
 
 import java.text.ParseException;
@@ -23,6 +24,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.R;
 
 /**
  * Description: Date tools
@@ -332,6 +336,43 @@ public class DateUtil {
         return 0;
     }
 
+    /**
+     * 得到今天剩余秒数
+     * @return
+     */
+    public static int getTomorrowLastSeconds(int tomorrowHours){
+        Calendar calendar = Calendar.getInstance();
+        int hours = calendar.get(Calendar.HOUR_OF_DAY);
+        if (hours >= tomorrowHours) {
+            // tomorrow
+            calendar.add(Calendar.DATE, 1);
+        }
+        format.applyPattern(pattern4);
+        TimeZone timeZone = TimeZone.getDefault();
+        format.setTimeZone(timeZone);
+
+        String tomorrow = format.format(calendar.getTime());
+        // 得到明天的具体几点的最后时间
+        String tomorrowHoursStr;
+        tomorrowHours = tomorrowHours - 1;
+        if (tomorrowHours < 10) {
+            tomorrowHoursStr = "0" + tomorrowHours;
+        } else {
+            tomorrowHoursStr = "" + tomorrowHours;
+        }
+        String last = tomorrow + " " + tomorrowHoursStr + ":59:59";
+        format.applyPattern(pattern6);
+        try {
+            // 转换为今天
+            Date latDate = format.parse(last);
+            // 得到的毫秒 除以1000转换 为秒
+            return (int)(latDate.getTime() - System.currentTimeMillis()) / 1000;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public static int getSeconds(long time1, long time2){
         return (int)(time2 - time1);
     }
@@ -364,5 +405,28 @@ public class DateUtil {
     public static int getHourOfDay() {
         Calendar now = Calendar.getInstance();
         return now.get(Calendar.HOUR_OF_DAY);
+    }
+
+    /**
+     * 格式化时间显示
+     * @param timeSeconds 秒数
+     * @return 显示小时、分钟、秒
+     */
+    public static String getFormatTime(long timeSeconds) {
+        Context context = MainApplication.getInstance();
+        int unitResId;
+        double time;
+        if (timeSeconds < 60 ) {
+            unitResId = R.string.setting_running_time_seconds;
+            time = timeSeconds;
+        } else if (timeSeconds < 60 * 60 ) {
+            unitResId = R.string.setting_running_time_minutes;
+            time = timeSeconds * 1.0 / 60;
+        } else {
+            unitResId = R.string.setting_running_time_hours;
+            time = timeSeconds * 1.0 / 3600;
+        }
+        String timeStr = FmtMicrometer.formatTwoDecimal(time);
+        return context.getString(unitResId, timeStr);
     }
 }

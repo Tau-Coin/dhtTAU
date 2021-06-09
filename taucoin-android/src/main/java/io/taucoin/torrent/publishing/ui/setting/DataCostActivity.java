@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing.ui.setting;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.CompoundButton;
 
 import com.google.common.primitives.Ints;
 
@@ -13,9 +14,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.BuildConfig;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
+import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.FrequencyUtil;
@@ -27,7 +30,8 @@ import io.taucoin.torrent.publishing.ui.BaseActivity;
 /**
  * 仪表板页面
  */
-public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.OnCheckedChangeListener {
+public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.OnCheckedChangeListener,
+        CompoundButton.OnCheckedChangeListener {
 
     private ActivityDataCostBinding binding;
     private SettingsRepository settingsRepo;
@@ -71,15 +75,17 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         List<Integer> wifiList = Ints.asList(wifiLimits);
         adapterWiFi.submitList(wifiList);
 
-        boolean enableBgDataMode = NetworkSetting.backgroundMode();
-        binding.switchBackground.setChecked(enableBgDataMode);
-        binding.switchBackground.setOnCheckedChangeListener((buttonView, isChecked) ->
-                NetworkSetting.enableBackgroundMode(isChecked));
+        if (!BuildConfig.DEBUG) {
+            binding.switchBackground.setVisibility(View.GONE);
+        }
+        binding.switchBackground.setChecked(NetworkSetting.isEnableBackgroundMode());
+        binding.switchBackground.setOnCheckedChangeListener(this);
 
         handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
         handleSettingsChanged(getString(R.string.pref_key_current_speed));
         handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
-        handleSettingsChanged(getString(R.string.pref_key_foreground_running_time));
+        handleSettingsChanged(getString(R.string.pref_key_metered_foreground_running_time));
+        handleSettingsChanged(getString(R.string.pref_key_background_running_time));
 
         // 先更新，再显示
         NetworkSetting.updateMeteredSpeedLimit();
@@ -92,6 +98,10 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         handleSettingsChanged(getString(R.string.pref_key_wifi_available_data));
     }
 
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        NetworkSetting.enableBackgroundMode(isChecked);
+    }
 
     @Override
     public void onCheckedChanged(int type, int limit) {
@@ -102,7 +112,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
             NetworkSetting.setWiFiLimit(limit);
             NetworkSetting.updateWiFiSpeedLimit();
         }
-        handleSettingsChanged(getString(R.string.pref_key_foreground_running_time));
+        handleSettingsChanged(getString(R.string.pref_key_metered_foreground_running_time));
     }
 
     @Override
@@ -179,20 +189,25 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_main_loop_interval_list))) {
             double frequency = FrequencyUtil.getMainLoopFrequency();
             binding.tvWorkingFrequency.setText(FmtMicrometer.formatTwoDecimal(frequency));
-        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_foreground_running_time))) {
-            int screenTime = settingsRepo.getIntValue(key);
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_metered_foreground_running_time)) ||
+                StringUtil.isEquals(key, getString(R.string.pref_key_wifi_foreground_running_time))) {
+            int screenTime = NetworkSetting.getForegroundModeTime();
             String model;
             int limitHours = NetworkSetting.getScreenTimeLimitHours();
             int screenTimeLimit = limitHours * 60 * 60;
             if (screenTime < screenTimeLimit) {
-                String hours = FmtMicrometer.formatTwoDecimal(screenTime * 1.0f / 3600);
+                String times = DateUtil.getFormatTime(screenTime);
                 model = getString(R.string.setting_work_frequency_in_screen_time,
-                        limitHours, hours);
+                        limitHours, times);
             } else {
                 model = getString(R.string.setting_work_frequency_not_in_screen_time,
                         limitHours, limitHours);
             }
             binding.tvWorkFrequencyModel.setText(model);
+        }  else if(StringUtil.isEquals(key, getString(R.string.pref_key_background_running_time))) {
+            int backgroundTime = settingsRepo.getIntValue(key);
+            String backgroundTimeStr = DateUtil.getFormatTime(backgroundTime);
+            binding.tvBackgroundTime.setText(getString(R.string.setting_running_time, backgroundTimeStr));
         }
     }
 

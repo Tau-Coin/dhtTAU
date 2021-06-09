@@ -11,9 +11,11 @@ import java.math.BigInteger;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import io.taucoin.torrent.publishing.BuildConfig;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.Interval;
+import io.taucoin.torrent.publishing.core.model.data.DataMode;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 
@@ -24,13 +26,14 @@ public class NetworkSetting {
     private static final Logger logger = LoggerFactory.getLogger("NetworkSetting");
     private static final int METERED_LIMITED;                  // 单位MB
     private static final int WIFI_LIMITED;                     // 单位MB
+    private static final int SURVIVAL_SPEED_LIMIT = 10;        // 单位B
 
     private static SettingsRepository settingsRepo;
     static {
         Context context = MainApplication.getInstance();
         settingsRepo = RepositoryHelper.getSettingsRepository(context);
         METERED_LIMITED = context.getResources().getIntArray(R.array.metered_limit)[1];
-        WIFI_LIMITED = context.getResources().getIntArray(R.array.wifi_limit)[0];
+        WIFI_LIMITED = context.getResources().getIntArray(R.array.wifi_limit)[1];
     }
 
     /**
@@ -95,8 +98,8 @@ public class NetworkSetting {
         long currentSpeed = statistics.getDownloadRate() + statistics.getUploadRate();
         settingsRepo.setLongValue(context.getString(R.string.pref_key_current_speed), currentSpeed);
 
-        // 更新APP在前台的时间前台
-        updateForegroundRunningTime();
+        // 更新Mode运行时间
+        updateModeRunningTime();
         updateMeteredSpeedLimit();
         updateWiFiSpeedLimit();
         logger.trace("updateSpeed, CurrentSpeed::{}s", getCurrentSpeed());
@@ -112,31 +115,136 @@ public class NetworkSetting {
     }
 
     /**
-     * 更新APP前台运行时间
+     * 根据APP前后台和流量使用情况，调节运行模式
      */
-    private static void updateForegroundRunningTime() {
-        if (!isForegroundRunning()) {
-            return;
+    private static DataMode regulateRunningMode() {
+        DataMode mode;
+        boolean enableBgMode = isEnableBackgroundMode();
+        // 如何在Debug下启动后台模式，则无论前台和后台直接为后台模式
+        if (BuildConfig.DEBUG && enableBgMode) {
+            mode = DataMode.BACKGROUND;
+        } else {
+            // 前台运行，同时每天的前台模式的限制时间没有用完
+            long foregroundModeTime = getForegroundModeTime();
+            long foregroundModeTimeLimit = getScreenTimeLimitHours() * 60 * 60;
+            boolean isOverForegroundModeLimit = foregroundModeTime + 1 > foregroundModeTimeLimit;
+            if (isForegroundRunning() && !isOverForegroundModeLimit) {
+                mode = DataMode.FOREGROUND;
+            } else {
+                mode = DataMode.BACKGROUND;
+            }
         }
-        updateForegroundRunningTime(getForegroundRunningTime() + 1);
+        return mode;
     }
 
     /**
-     * 更新APP前台运行时间
+     * 更新Mode运行时间
      */
-    public static void updateForegroundRunningTime(int foregroundRunningTime) {
-        Context appContext = MainApplication.getInstance();
-        String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_foreground_running_time);
-        settingsRepo.setIntValue(foregroundRunningTimeKey, foregroundRunningTime);
+    private static void updateModeRunningTime() {
+        DataMode mode = regulateRunningMode();
+        updateRunningMode(mode);
+        if (mode == DataMode.FOREGROUND) {
+            int foregroundRunningTime = getForegroundModeTime() + 1;
+            updateForegroundModeTime(foregroundRunningTime);
+        } else {
+            int backgroundRunningTime = getBackgroundModeTime() + 1;
+            updateBackgroundModeTime(backgroundRunningTime);
+        }
     }
 
     /**
      * 获取APP前台运行时间
      */
-    private static int getForegroundRunningTime() {
+    public static int getRunningMode() {
         Context appContext = MainApplication.getInstance();
-        String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_foreground_running_time);
+        String runningModeKey = appContext.getString(R.string.pref_key_running_mode);
+        return settingsRepo.getIntValue(runningModeKey, 0);
+    }
+
+    /**
+     * 更新APP前台模式时间
+     */
+    private static void updateRunningMode(DataMode mode) {
+        int dataMode = mode.getMode();
+        Context appContext = MainApplication.getInstance();
+        String runningModeKey = appContext.getString(R.string.pref_key_running_mode);
+        settingsRepo.setIntValue(runningModeKey, dataMode);
+    }
+
+    /**
+     * 获取APP前台运行时间
+     */
+    public static int getForegroundModeTime() {
+        if (isMeteredNetwork()) {
+            return getMeteredForegroundModeTime();
+        } else {
+            return getWifiForegroundModeTime();
+        }
+    }
+
+    /**
+     * 更新APP前台模式时间
+     */
+    private static void updateForegroundModeTime(int foregroundRunningTime) {
+        if (isMeteredNetwork()) {
+            updateMeteredForegroundModeTime(foregroundRunningTime);
+        } else {
+            updateWifiForegroundModeTime(foregroundRunningTime);
+        }
+    }
+
+    /**
+     * 获取APP计费网络前台运行时间
+     */
+    private static int getMeteredForegroundModeTime() {
+        Context appContext = MainApplication.getInstance();
+        String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_metered_foreground_running_time);
         return settingsRepo.getIntValue(foregroundRunningTimeKey, 0);
+    }
+
+    /**
+     * 更新APP计费网络前台模式时间
+     */
+    static void updateMeteredForegroundModeTime(int foregroundRunningTime) {
+        Context appContext = MainApplication.getInstance();
+        String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_metered_foreground_running_time);
+        settingsRepo.setIntValue(foregroundRunningTimeKey, foregroundRunningTime);
+    }
+
+    /**
+     * 获取APP Wifi网络前台运行时间
+     */
+    private static int getWifiForegroundModeTime() {
+        Context appContext = MainApplication.getInstance();
+        String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_wifi_foreground_running_time);
+        return settingsRepo.getIntValue(foregroundRunningTimeKey, 0);
+    }
+
+    /**
+     * 更新APP Wifi网络前台模式时间
+     */
+    static void updateWifiForegroundModeTime(int foregroundRunningTime) {
+        Context appContext = MainApplication.getInstance();
+        String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_wifi_foreground_running_time);
+        settingsRepo.setIntValue(foregroundRunningTimeKey, foregroundRunningTime);
+    }
+
+    /**
+     * 获取APP后台模式时间
+     */
+    private static int getBackgroundModeTime() {
+        Context appContext = MainApplication.getInstance();
+        String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_background_running_time);
+        return settingsRepo.getIntValue(backgroundRunningTimeKey, 0);
+    }
+
+    /**
+     * 更新APP后台模式时间
+     */
+    public static void updateBackgroundModeTime(int backgroundRunningTime) {
+        Context appContext = MainApplication.getInstance();
+        String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_background_running_time);
+        settingsRepo.setIntValue(backgroundRunningTimeKey, backgroundRunningTime);
     }
 
     /**
@@ -163,13 +271,13 @@ public class NetworkSetting {
         BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
         BigInteger bigUsage = BigInteger.valueOf(usage);
 
-        long today24HLastSeconds = DateUtil.getTodayLastSeconds(); // 今天剩余的秒数(24h)
-        long todayLastSeconds = 0; // 今天剩余的秒数
-        // 根据APP在前后台而不同
-        if (isForegroundRunning()) {
-            todayLastSeconds = getScreenTimeLimitSecond(true) - getForegroundRunningTime();
-        }
-        if (todayLastSeconds <= 0 || today24HLastSeconds <= 0) {
+        // 今天剩余的秒数(24h),到第二天凌晨4点
+        long today24HLastSeconds = DateUtil.getTomorrowLastSeconds(TrafficUtil.TRAFFIC_UPDATE_TIME);
+        // 今天剩余的秒数
+        long todayLastSeconds = getScreenTimeLimitSecond(true) - getMeteredForegroundModeTime();
+        // 前台时间比后台时间大，直接使用后台时间，防止前台网速比后台小
+        todayLastSeconds = Math.min(todayLastSeconds, today24HLastSeconds);
+        if (todayLastSeconds <= 0) {
             todayLastSeconds = today24HLastSeconds;
         }
         if (bigLimit.compareTo(bigUsage) > 0) {
@@ -188,6 +296,54 @@ public class NetworkSetting {
                 backgroundAverageSpeed);
     }
 
+
+    /**
+     * 更新WiFi网络网速限制值
+     */
+    public static void updateWiFiSpeedLimit() {
+        Context context = MainApplication.getInstance();
+        long total = TrafficUtil.getTrafficUploadTotal() + TrafficUtil.getTrafficDownloadTotal();
+        long usage = total - TrafficUtil.getMeteredTrafficTotal();
+        logger.trace("updateWiFiSpeedLimit total::{}, MeteredTotal::{}, wifiUsage::{}", total,
+                TrafficUtil.getMeteredTrafficTotal(), usage);
+        long limit = getWiFiLimit();
+        long screenTimeAverageSpeed = 0;
+        long backgroundAverageSpeed = 0;
+        long availableData = 0;
+
+        BigInteger bigUnit = new BigInteger("1024");
+        BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
+        BigInteger bigUsage = BigInteger.valueOf(usage);
+        logger.trace("updateWiFiSpeedLimit bigLimit::{}, bigUsage::{}, compareTo::{}",
+                bigLimit.longValue(),
+                bigUsage.longValue(),
+                bigLimit.compareTo(bigUsage));
+
+        // 今天剩余的秒数(24h),到第二天凌晨4点
+        long today24HLastSeconds = DateUtil.getTomorrowLastSeconds(TrafficUtil.TRAFFIC_UPDATE_TIME);
+        // 今天剩余的秒数
+        long todayLastSeconds = getScreenTimeLimitSecond(false) - getWifiForegroundModeTime();
+        // 前台时间比后台时间大，直接使用后台时间，防止前台网速比后台小
+        todayLastSeconds = Math.min(todayLastSeconds, today24HLastSeconds);
+        if (todayLastSeconds <= 0) {
+            todayLastSeconds = today24HLastSeconds;
+        }
+        if (bigLimit.compareTo(bigUsage) > 0) {
+            availableData = bigLimit.subtract(bigUsage).longValue();
+            if (todayLastSeconds > 0) {
+                screenTimeAverageSpeed = availableData / todayLastSeconds;
+            }
+            if (today24HLastSeconds > 0) {
+                backgroundAverageSpeed = availableData / today24HLastSeconds;
+            }
+        }
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_available_data), availableData);
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_screen_time_average_speed),
+                screenTimeAverageSpeed);
+        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_background_average_speed),
+                backgroundAverageSpeed);
+    }
+
     /**
      * 获取每天APP高速前台时间限制 单位h
      */
@@ -196,7 +352,7 @@ public class NetworkSetting {
     }
 
     /**
-     * 获取每天APP高速前台时间限制 单位s
+     * 获取每天APP高速前台时间限制 单位H
      */
     public static int getScreenTimeLimitHours() {
         boolean isMeteredNetwork = NetworkSetting.isMeteredNetwork();
@@ -204,7 +360,7 @@ public class NetworkSetting {
     }
 
     /**
-     * 获取每天APP高速前台时间限制 单位s
+     * 获取每天APP高速前台时间限制 单位H
      */
     private static int getScreenTimeLimitHours(boolean isMeteredNetwork) {
         Context context = MainApplication.getInstance();
@@ -269,53 +425,6 @@ public class NetworkSetting {
         return settingsRepo.getLongValue(context.getString(R.string.pref_key_wifi_background_average_speed));
     }
 
-
-    /**
-     * 更新WiFi网络网速限制值
-     */
-    public static void updateWiFiSpeedLimit() {
-        Context context = MainApplication.getInstance();
-        long total = TrafficUtil.getTrafficUploadTotal() + TrafficUtil.getTrafficDownloadTotal();
-        long usage = total - TrafficUtil.getMeteredTrafficTotal();
-        logger.trace("updateWiFiSpeedLimit total::{}, MeteredTotal::{}, wifiUsage::{}", total,
-                TrafficUtil.getMeteredTrafficTotal(), usage);
-        long limit = getWiFiLimit();
-        long screenTimeAverageSpeed = 0;
-        long backgroundAverageSpeed = 0;
-        long availableData = 0;
-
-        BigInteger bigUnit = new BigInteger("1024");
-        BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
-        BigInteger bigUsage = BigInteger.valueOf(usage);
-        logger.trace("updateWiFiSpeedLimit bigLimit::{}, bigUsage::{}, compareTo::{}",
-                bigLimit.longValue(),
-                bigUsage.longValue(),
-                bigLimit.compareTo(bigUsage));
-
-        long today24HLastSeconds = DateUtil.getTodayLastSeconds(); // 今天剩余的秒数(24h)
-        long todayLastSeconds = 0; // 今天剩余的秒数
-        // 根据APP在前后台而不同
-        if (isForegroundRunning()) {
-            todayLastSeconds = getScreenTimeLimitSecond(false) - getForegroundRunningTime();
-        }
-        if (todayLastSeconds <= 0 || today24HLastSeconds <= 0) {
-            todayLastSeconds = DateUtil.getTodayLastSeconds();
-        }
-        if (bigLimit.compareTo(bigUsage) > 0) {
-            availableData = bigLimit.subtract(bigUsage).longValue();
-            if (todayLastSeconds > 0) {
-                screenTimeAverageSpeed = availableData / todayLastSeconds;
-            }
-            if (today24HLastSeconds > 0) {
-                backgroundAverageSpeed = availableData / today24HLastSeconds;
-            }
-        }
-        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_available_data), availableData);
-        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_screen_time_average_speed),
-                screenTimeAverageSpeed);
-        settingsRepo.setLongValue(context.getString(R.string.pref_key_wifi_background_average_speed),
-                backgroundAverageSpeed);
-    }
     /**
      * 获取WiFi网络可用数据
      */
@@ -353,7 +462,7 @@ public class NetworkSetting {
     /**
      * 获取是否启动后台数据模式
      */
-    public static boolean backgroundMode() {
+    public static boolean isEnableBackgroundMode() {
         Context context = MainApplication.getInstance();
         return settingsRepo.getBooleanValue(context.getString(R.string.pref_key_bg_data_mode),
                 false);
@@ -380,57 +489,55 @@ public class NetworkSetting {
         Interval mainLoopMin;
         Interval mainLoopMax;
 
-        boolean enableBackgroundMode = backgroundMode();
-        // 前台运行，并且没有启动后台数据模式
-        boolean foregroundRunning = isForegroundRunning() && !enableBackgroundMode;
-        if (foregroundRunning) {
+        int runningMode = getRunningMode();
+        boolean foregroundMode = runningMode == DataMode.FOREGROUND.getMode();
+        if (foregroundMode) {
             mainLoopMin = Interval.FORE_MAIN_LOOP_MIN;
             mainLoopMax = Interval.FORE_MAIN_LOOP_MAX;
         } else {
             mainLoopMin = Interval.BACK_MAIN_LOOP_MIN;
             mainLoopMax = Interval.BACK_MAIN_LOOP_MAX;
         }
-        int timeInterval = mainLoopMax.getInterval();
-        boolean isUpdate = true;
-        // 无可用剩余流量直接取最大时间间隔
-        if (isHaveAvailableData()) {
-            // 无网络；不更新链端时间间隔
-            if (settingsRepo.internetState()) {
-                long averageSpeed;
-                if (isMeteredNetwork()) {
-                    // 当前网络为计费网络
-                    // 是否启动后台数据模式
-                    if (enableBackgroundMode) {
-                        averageSpeed = NetworkSetting.getMeteredBackgroundAverageSpeed();
-                    } else {
-                        averageSpeed = NetworkSetting.getMeteredScreenTimeAverageSpeed();
-                    }
-                } else {
-                    // 当前网络为非计费网络
-                    // 是否启动后台数据模式
-                    if (enableBackgroundMode) {
-                        averageSpeed = NetworkSetting.getWifiBackgroundAverageSpeed();
-                    } else {
-                        averageSpeed = NetworkSetting.getWifiScreenTimeAverageSpeed();
-                    }
-                }
-                long currentSpeed = NetworkSetting.getCurrentSpeed();
-                if (averageSpeed > 0) {
-                    double rate = currentSpeed * 1.0f / averageSpeed;
-                    timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax);
-                    int lastTimeInterval = FrequencyUtil.getMainLoopAverageInterval();
-                    logger.debug("calculateMainLoopInterval currentSpeed::{}, averageSpeed::{}, " +
-                                    "rate::{}, timeInterval::{}, lastTimeInterval::{}, mainLoopMax::{}",
-                            currentSpeed, averageSpeed, rate, timeInterval, lastTimeInterval,
-                            mainLoopMax.getInterval());
-                } else {
-                    timeInterval = Interval.MAIN_LOOP_NO_AVERAGE_SPEED.getInterval();
-                }
+        if (!isHaveAvailableData()) {
+            int timeInterval = mainLoopMax.getInterval();
+            logger.trace("calculateMainLoopInterval timeInterval::{}, isHaveAvailableData::false",
+                    timeInterval);
+            FrequencyUtil.updateMainLoopInterval(timeInterval);
+            return;
+        } else if (getCurrentSpeed() < SURVIVAL_SPEED_LIMIT) {
+            int timeInterval = (mainLoopMin.getInterval() + mainLoopMax.getInterval()) / 2;
+            logger.trace("calculateMainLoopInterval timeInterval::{}, currentSpeed::{}",
+                    timeInterval, getCurrentSpeed());
+            FrequencyUtil.updateMainLoopInterval(timeInterval);
+            return;
+        }
+        long averageSpeed;
+        if (isMeteredNetwork()) {
+            // 当前网络为计费网络
+            // 是否启动后台数据模式
+            if (foregroundMode) {
+                averageSpeed = NetworkSetting.getMeteredScreenTimeAverageSpeed();
             } else {
-                isUpdate = false;
+                averageSpeed = NetworkSetting.getMeteredBackgroundAverageSpeed();
+            }
+        } else {
+            // 当前网络为非计费网络
+            // 是否启动后台数据模式
+            if (foregroundMode) {
+                averageSpeed = NetworkSetting.getWifiScreenTimeAverageSpeed();
+            } else {
+                averageSpeed = NetworkSetting.getWifiBackgroundAverageSpeed();;
             }
         }
-        if (isUpdate) {
+        long currentSpeed = NetworkSetting.getCurrentSpeed();
+        if (averageSpeed > 0) {
+            double rate = currentSpeed * 1.0f / averageSpeed;
+            int timeInterval = calculateTimeInterval(rate, mainLoopMin, mainLoopMax);
+            int lastTimeInterval = FrequencyUtil.getMainLoopAverageInterval();
+            logger.debug("calculateMainLoopInterval currentSpeed::{}, averageSpeed::{}, " +
+                            "rate::{}, timeInterval::{}, lastTimeInterval::{}, mainLoopMax::{}",
+                    currentSpeed, averageSpeed, rate, timeInterval, lastTimeInterval,
+                    mainLoopMax.getInterval());
             FrequencyUtil.updateMainLoopInterval(timeInterval);
         }
     }
@@ -443,9 +550,14 @@ public class NetworkSetting {
      * @return 返回计算的时间间隔
      */
     private static int calculateTimeInterval(double rate, Interval min, Interval max) {
-        int lastTimeInterval = FrequencyUtil.getMainLoopAverageInterval();
-        int timeInterval = Math.max(min.getInterval(), (int)(lastTimeInterval * rate));
-        timeInterval = Math.min(timeInterval, max.getInterval());
+        int timeInterval;
+        if (getCurrentSpeed() < SURVIVAL_SPEED_LIMIT) {
+            timeInterval = (min.getInterval() + max.getInterval()) / 2;
+        } else {
+            int lastTimeInterval = FrequencyUtil.getMainLoopAverageInterval();
+            timeInterval = Math.max(min.getInterval(), (int)(lastTimeInterval * rate));
+            timeInterval = Math.min(timeInterval, max.getInterval());
+        }
         return timeInterval;
     }
 }

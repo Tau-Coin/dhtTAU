@@ -146,9 +146,15 @@
     <string name="setting_wifi_network_title">WiFi - likely free internet</string>
     <string name="setting_metered_network_title">Metered - likely paid internet</string>
     <string name="setting_work_frequency">Walking Frequency</string>
+    <string name="setting_fore_mode">Foreground Mode</string>
     <string name="setting_bg_mode">Background Mode</string>
-    <string name="setting_work_frequency_in_screen_time">Foreground time: %1$d hours daily, now spent %2$s hours.</string>
-    <string name="setting_work_frequency_not_in_screen_time">Foreground time: %1$d hours daily, now over %2$s hours.
+    <string name="setting_survival_mode">Survival Mode</string>
+    <string name="setting_running_time">Running time: %1$s</string>
+    <string name="setting_running_time_hours">%1$s hours</string>
+    <string name="setting_running_time_minutes">%1$s minutes</string>
+    <string name="setting_running_time_seconds">%1$s seconds</string>
+    <string name="setting_work_frequency_in_screen_time">%1$d hours daily, now spent %2$s.</string>
+    <string name="setting_work_frequency_not_in_screen_time">%1$d hours daily, now over %2$d hours.
         Please increase data limit to add foreground time.</string>
     <string name="setting_daily_quota">Daily Data Limit</string>
     <string name="setting_daily_quota_unit_m">%1$dM</string>
