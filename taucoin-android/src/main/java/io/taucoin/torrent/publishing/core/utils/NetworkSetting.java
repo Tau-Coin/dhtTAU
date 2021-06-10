@@ -102,7 +102,8 @@ public class NetworkSetting {
         updateModeRunningTime();
         updateMeteredSpeedLimit();
         updateWiFiSpeedLimit();
-        logger.trace("updateSpeed, CurrentSpeed::{}s", getCurrentSpeed());
+        logger.trace("updateSpeed, CurrentSpeed::{}/s",
+                Formatter.formatFileSize(context, currentSpeed).toUpperCase());
     }
 
     /**

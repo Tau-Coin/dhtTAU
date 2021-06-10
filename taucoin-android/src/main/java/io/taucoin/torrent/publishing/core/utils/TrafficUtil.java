@@ -95,7 +95,7 @@ public class TrafficUtil {
         long oldTrafficTime = settingsRepo.getLongValue(TRAFFIC_TIME);
         // 如果旧的流量记录时间为0，或者当前记录时间比旧的流量记录大于一天同时为凌晨4点更新流量统计
         if (oldTrafficTime == 0 || (DateUtil.compareDay(oldTrafficTime, currentTrafficTime) > 0 &&
-                DateUtil.getHourOfDay() == TRAFFIC_UPDATE_TIME)) {
+                DateUtil.getHourOfDay() >= TRAFFIC_UPDATE_TIME)) {
             settingsRepo.setLongValue(TRAFFIC_TIME, currentTrafficTime);
             settingsRepo.setLongValue(TRAFFIC_VALUE + TRAFFIC_DOWN, 0);
             settingsRepo.setLongValue(TRAFFIC_VALUE + TRAFFIC_UP, 0);
