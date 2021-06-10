@@ -57,7 +57,7 @@
     <string name="drawer_setting">Settings</string>
     <string name="drawer_data_cost">Data Cost</string>
     <string name="drawer_share">Share</string>
-    <string name="drawer_frequency">Walking frequency/%1$s</string>
+    <string name="drawer_frequency">Working Frequency/%1$s</string>
     <string name="drawer_dht_nodes">Peers/%1$d</string>
     <string name="drawer_daily_data">%1$s</string>
     <string name="drawer_cpu_usage">CPU/%1$s</string>
@@ -127,6 +127,7 @@
     <string name="community_added_members">+ Add Members Now</string>
 
     <string name="setting_title">Settings</string>
+    <string name="setting_key_explain">Secret key is your private ID to be kept confidential, public key is your open ID for friends.</string>
     <string name="setting_account">My Public Key</string>
     <string name="setting_nickname">Nickname</string>
     <string name="setting_import_seed">Tap to import secret key</string>
@@ -275,8 +276,8 @@
     <string name="foreground_notification">Foreground notification</string>
 
     <!-- Strings used for connected peers -->
-    <string name="contacts_exchange_qr">Exchange QR code to add friends</string>
-    <string name="contacts_import_friend_pk">Import friend\'s PK to add friend</string>
+    <string name="contacts_exchange_qr">Exchange QR code to add friend</string>
+    <string name="contacts_import_friend_pk">Import Public Key to add friend</string>
     <string name="contacts_have_added">I have added you as a friend.</string>
     <string name="contacts_yourself">&#160;-&#160;yourself</string>
     <string name="contacts_discovered">Discovered</string>

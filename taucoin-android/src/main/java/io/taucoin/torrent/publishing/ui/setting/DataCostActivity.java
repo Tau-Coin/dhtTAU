@@ -81,11 +81,11 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         binding.switchBackground.setChecked(NetworkSetting.isEnableBackgroundMode());
         binding.switchBackground.setOnCheckedChangeListener(this);
 
+
         handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
         handleSettingsChanged(getString(R.string.pref_key_current_speed));
         handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
         handleSettingsChanged(getString(R.string.pref_key_metered_foreground_running_time));
-        handleSettingsChanged(getString(R.string.pref_key_background_running_time));
 
         // 先更新，再显示
         NetworkSetting.updateMeteredSpeedLimit();
@@ -118,6 +118,8 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
     @Override
     public void onStart() {
         super.onStart();
+        // 处理从后台切换到前台的情况下，后台时间不更新的问题
+        handleSettingsChanged(getString(R.string.pref_key_background_running_time));
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -204,7 +206,8 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
                         limitHours, limitHours);
             }
             binding.tvWorkFrequencyModel.setText(model);
-        }  else if(StringUtil.isEquals(key, getString(R.string.pref_key_background_running_time))) {
+        }  else if(StringUtil.isEquals(key, getString(R.string.pref_key_background_running_time)) ||
+                StringUtil.isEquals(key, getString(R.string.pref_key_foreground_running))) {
             int backgroundTime = settingsRepo.getIntValue(key);
             String backgroundTimeStr = DateUtil.getFormatTime(backgroundTime);
             binding.tvBackgroundTime.setText(getString(R.string.setting_running_time, backgroundTimeStr));
