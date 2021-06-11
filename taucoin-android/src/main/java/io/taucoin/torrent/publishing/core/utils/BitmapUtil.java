@@ -12,10 +12,10 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 
-import com.huawei.hms.hmsscankit.ScanUtil;
-import com.huawei.hms.hmsscankit.WriterException;
-import com.huawei.hms.ml.scan.HmsBuildBitmapOption;
-import com.huawei.hms.ml.scan.HmsScan;
+//import com.huawei.hms.hmsscankit.ScanUtil;
+//import com.huawei.hms.hmsscankit.WriterException;
+//import com.huawei.hms.ml.scan.HmsBuildBitmapOption;
+//import com.huawei.hms.ml.scan.HmsScan;
 
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.data.DrawBean;
@@ -294,19 +294,19 @@ public class BitmapUtil {
      * @param codeColor 二维码的颜色
      * @return
      */
-    public static Bitmap createQRCode(String content, int heightPix, Bitmap logo,
-                                      int codeColor) throws WriterException {
-        //Generate the barcode.
-        HmsBuildBitmapOption.Creator creator = new HmsBuildBitmapOption.Creator()
-                .setBitmapMargin(1)
-                .setBitmapColor(codeColor)
-                .setQRLogoBitmap(logo)
-                .setBitmapBackgroundColor(Color.WHITE);
-        creator.setBitmapColor(codeColor);
-        HmsBuildBitmapOption options = creator.create();
-        return ScanUtil.buildBitmap(content, HmsScan.QRCODE_SCAN_TYPE,
-                heightPix, heightPix, options);
-    }
+//    public static Bitmap createQRCode(String content, int heightPix, Bitmap logo,
+//                                      int codeColor) throws WriterException {
+//        //Generate the barcode.
+//        HmsBuildBitmapOption.Creator creator = new HmsBuildBitmapOption.Creator()
+//                .setBitmapMargin(1)
+//                .setBitmapColor(codeColor)
+//                .setQRLogoBitmap(logo)
+//                .setBitmapBackgroundColor(Color.WHITE);
+//        creator.setBitmapColor(codeColor);
+//        HmsBuildBitmapOption options = creator.create();
+//        return ScanUtil.buildBitmap(content, HmsScan.QRCODE_SCAN_TYPE,
+//                heightPix, heightPix, options);
+//    }
 
     /**
      * 创建指定宽高纯色的Bitmap

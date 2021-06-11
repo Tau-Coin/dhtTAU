@@ -15,10 +15,10 @@ import android.widget.TextView;
 
 import com.frostwire.jlibtorrent.Ed25519;
 import com.google.gson.Gson;
-import com.huawei.hms.hmsscankit.RemoteView;
-import com.huawei.hms.hmsscankit.ScanUtil;
-import com.huawei.hms.ml.scan.HmsScan;
-import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions;
+//import com.huawei.hms.hmsscankit.RemoteView;
+//import com.huawei.hms.hmsscankit.ScanUtil;
+//import com.huawei.hms.ml.scan.HmsScan;
+//import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions;
 import com.luck.picture.lib.PictureSelector;
 import com.luck.picture.lib.config.PictureConfig;
 import com.luck.picture.lib.config.PictureMimeType;
@@ -67,7 +67,7 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
     private UserViewModel userViewModel;
     private String friendPk; // 识别的朋友公钥
     private boolean scanKeyOnly; // 只识别的Key(Seed)
-    private RemoteView remoteView;
+//    private RemoteView remoteView;
     private FrameLayout frameLayout;
     //The width and height of scan_view_finder is both 240 dp.
     private static final int SCAN_FRAME_SIZE = 240;
@@ -113,28 +113,28 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
         //初始化RemoteView，并通过如下方法设置参数:setContext()（必选）传入context、setBoundingBox()
         // 设置扫描区域、setFormat()设置识别码制式，设置完毕调用build()方法完成创建。
         // 通过setContinuouslyScan（可选）方法设置非连续扫码模式。
-        remoteView = new RemoteView.Builder()
-                .setContext(this)
-                .setBoundingBox(rect)
-                .setContinuouslyScan(true)
-                .setFormat(HmsScan.QRCODE_SCAN_TYPE)
-                .build();
-        //将自定义view加载到activity
-        remoteView.onCreate(savedInstanceState);
-        //识别结果回调事件订阅
-        remoteView.setOnResultCallback(result -> {
-            //获取到扫码结果HmsScan
-            // Check the result.
-            if (result != null && result.length > 0 && result[0] != null
-                    && !TextUtils.isEmpty(result[0].getOriginalValue())) {
-                remoteView.pauseContinuouslyScan();
-                handleScanResult(result[0].getOriginalValue());
-            }
-        });
-
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        frameLayout.addView(remoteView, params);
+//        remoteView = new RemoteView.Builder()
+//                .setContext(this)
+//                .setBoundingBox(rect)
+//                .setContinuouslyScan(true)
+//                .setFormat(HmsScan.QRCODE_SCAN_TYPE)
+//                .build();
+//        //将自定义view加载到activity
+//        remoteView.onCreate(savedInstanceState);
+//        //识别结果回调事件订阅
+//        remoteView.setOnResultCallback(result -> {
+//            //获取到扫码结果HmsScan
+//            // Check the result.
+//            if (result != null && result.length > 0 && result[0] != null
+//                    && !TextUtils.isEmpty(result[0].getOriginalValue())) {
+//                remoteView.pauseContinuouslyScan();
+//                handleScanResult(result[0].getOriginalValue());
+//            }
+//        });
+//
+//        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+//                LinearLayout.LayoutParams.MATCH_PARENT);
+//        frameLayout.addView(remoteView, params);
     }
 
     /**
@@ -171,7 +171,7 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
                 }
             }
         } catch (Exception ignore){ }
-        remoteView.resumeContinuouslyScan();
+//        remoteView.resumeContinuouslyScan();
         resumeTextTip();
     }
 
@@ -188,50 +188,50 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
                     tvNoQrCode.setText(R.string.qr_code_scan_qr);
                 });
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        //侦听activity的onStart
-        remoteView.onStart();
-        subscribeAddCommunity();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //侦听activity的onResume
-        remoteView.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        //侦听activity的onPause
-        remoteView.onPause();
-    }
+//
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        //侦听activity的onStart
+//        remoteView.onStart();
+//        subscribeAddCommunity();
+//    }
+//
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        //侦听activity的onResume
+//        remoteView.onResume();
+//    }
+//
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        //侦听activity的onPause
+//        remoteView.onPause();
+//    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         //侦听activity的onDestroy
-        frameLayout.clearAnimation();
-        frameLayout.removeAllViews();
-        remoteView.setOnResultCallback(null);
-        remoteView.onDestroy();
-        remoteView = null;
+//        frameLayout.clearAnimation();
+//        frameLayout.removeAllViews();
+//        remoteView.setOnResultCallback(null);
+//        remoteView.onDestroy();
+//        remoteView = null;
         disposables.clear();
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
     }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        //侦听activity的onStop
-        remoteView.onStop();
-    }
+//
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        //侦听activity的onStop
+//        remoteView.onStop();
+//    }
 
     private void subscribeAddCommunity(){
         communityViewModel.getAddCommunityState().observe(this, result -> {
@@ -321,28 +321,28 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
      * @param imgPath
      * */
     private void handleSelectedImage(String imgPath) {
-        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
-            String scanResult = "";
-            Bitmap bitmap = BitmapFactory.decodeFile(imgPath);
-            HmsScan[] hmsScans = ScanUtil.decodeWithBitmap(getApplicationContext(), bitmap,
-                    new HmsScanAnalyzerOptions.Creator().setPhotoMode(true).create());
-            if (hmsScans != null && hmsScans.length > 0 && hmsScans[0] != null &&
-                    !TextUtils.isEmpty(hmsScans[0].getOriginalValue())) {
-                scanResult = hmsScans[0].getOriginalValue();
-            }
-            emitter.onNext(scanResult);
-            emitter.onComplete();
-        }, BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(result -> {
-                    if (StringUtil.isEmpty(result)) {
-                        resumeTextTip();
-                    } else {
-                        handleScanResult(result);
-                    }
-                });
-        disposables.add(disposable);
+//        Disposable disposable = Flowable.create((FlowableOnSubscribe<String>) emitter -> {
+//            String scanResult = "";
+//            Bitmap bitmap = BitmapFactory.decodeFile(imgPath);
+//            HmsScan[] hmsScans = ScanUtil.decodeWithBitmap(getApplicationContext(), bitmap,
+//                    new HmsScanAnalyzerOptions.Creator().setPhotoMode(true).create());
+//            if (hmsScans != null && hmsScans.length > 0 && hmsScans[0] != null &&
+//                    !TextUtils.isEmpty(hmsScans[0].getOriginalValue())) {
+//                scanResult = hmsScans[0].getOriginalValue();
+//            }
+//            emitter.onNext(scanResult);
+//            emitter.onComplete();
+//        }, BackpressureStrategy.LATEST)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(result -> {
+//                    if (StringUtil.isEmpty(result)) {
+//                        resumeTextTip();
+//                    } else {
+//                        handleScanResult(result);
+//                    }
+//                });
+//        disposables.add(disposable);
     }
 
     @Override

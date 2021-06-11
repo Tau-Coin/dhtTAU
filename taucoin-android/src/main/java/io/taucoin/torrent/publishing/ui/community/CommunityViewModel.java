@@ -435,29 +435,29 @@ public class CommunityViewModel extends AndroidViewModel {
     public void generateQRCode(Context context, String QRContent, String chainID, String showName) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Bitmap>) emitter -> {
             try {
-                String qrName = UsersUtil.getQRCodeName(showName);
-                int bgColor = Utils.getGroupColor(chainID);
-                Bitmap logoBitmap = BitmapUtil.createLogoBitmap(bgColor, qrName);
-
-                int heightPix = DimensionsUtil.dip2px(context, 480);
-                Bitmap bitmap = BitmapUtil.createQRCode(QRContent, heightPix, logoBitmap,
-                        context.getResources().getColor(R.color.color_transparent));
-                logger.debug("shareQRCode bitmap::{}", bitmap);
-
-                // 二维码背景样式
-                Bitmap bgBitmap = BitmapFactory.decodeResource(context.getResources(),
-                        R.mipmap.icon_community_qr_bg);
-                bgBitmap.getWidth();
-                DrawBean bean = new DrawBean();
-                bean.setSize(DimensionsUtil.dip2px(context, 210));
-                bean.setX(DimensionsUtil.dip2px(context, 60));
-                bean.setY(DimensionsUtil.dip2px(context, 60));
-                // 二维码背景
-                Bitmap qrbgBitmap = BitmapUtil.createBitmap(bitmap.getWidth(),
-                        bgBitmap.getHeight(), Color.BLACK);
-                Bitmap lastBitmap = BitmapUtil.drawStyleQRcode(bgBitmap,
-                        qrbgBitmap, bitmap, bean);
-                emitter.onNext(lastBitmap);
+//                String qrName = UsersUtil.getQRCodeName(showName);
+//                int bgColor = Utils.getGroupColor(chainID);
+//                Bitmap logoBitmap = BitmapUtil.createLogoBitmap(bgColor, qrName);
+//
+//                int heightPix = DimensionsUtil.dip2px(context, 480);
+//                Bitmap bitmap = BitmapUtil.createQRCode(QRContent, heightPix, logoBitmap,
+//                        context.getResources().getColor(R.color.color_transparent));
+//                logger.debug("shareQRCode bitmap::{}", bitmap);
+//
+//                // 二维码背景样式
+//                Bitmap bgBitmap = BitmapFactory.decodeResource(context.getResources(),
+//                        R.mipmap.icon_community_qr_bg);
+//                bgBitmap.getWidth();
+//                DrawBean bean = new DrawBean();
+//                bean.setSize(DimensionsUtil.dip2px(context, 210));
+//                bean.setX(DimensionsUtil.dip2px(context, 60));
+//                bean.setY(DimensionsUtil.dip2px(context, 60));
+//                // 二维码背景
+//                Bitmap qrbgBitmap = BitmapUtil.createBitmap(bitmap.getWidth(),
+//                        bgBitmap.getHeight(), Color.BLACK);
+//                Bitmap lastBitmap = BitmapUtil.drawStyleQRcode(bgBitmap,
+//                        qrbgBitmap, bitmap, bean);
+//                emitter.onNext(lastBitmap);
             } catch (Exception e) {
                 logger.error("generateTAUIDQRCode error ", e);
             }
