@@ -294,4 +294,26 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     public String getChattingFriend() {
         return pref.getString(appContext.getString(R.string.pref_key_chatting_friend), null);
     }
+
+    @Override
+    public void setCpuUsage(String usage) {
+        pref.edit().putString(appContext.getString(R.string.pref_key_cpu_usage), usage)
+                .apply();
+    }
+
+    @Override
+    public String getCpuUsage() {
+        return pref.getString(appContext.getString(R.string.pref_key_cpu_usage), "0%");
+    }
+
+    @Override
+    public void setMemoryUsage(long usage) {
+        pref.edit().putLong(appContext.getString(R.string.pref_key_memory_usage), usage)
+                .apply();
+    }
+
+    @Override
+    public long getMemoryUsage() {
+        return pref.getLong(appContext.getString(R.string.pref_key_memory_usage), 0);
+    }
 }

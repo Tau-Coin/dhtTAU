@@ -38,4 +38,7 @@
     <string name="pref_key_nat_pmp_mapped" translatable="false">pref_key_nat_pmp_mapped</string>
 
     <string name="pref_key_chatting_friend" translatable="false">pref_key_chatting_friend</string>
+
+    <string name="pref_key_cpu_usage" translatable="false">pref_key_cpu_usage</string>
+    <string name="pref_key_memory_usage" translatable="false">pref_key_memory_usage</string>
 </resources>

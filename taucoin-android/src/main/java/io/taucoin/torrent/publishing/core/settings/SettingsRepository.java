@@ -148,6 +148,28 @@ public interface SettingsRepository {
      */
     String getChattingFriend();
 
+    /**
+     * 设置CPU使用率
+     * @param usage 使用率
+     */
+    void setCpuUsage(String usage);
+
+    /**
+     * 获取CPU使用率
+     */
+    String getCpuUsage();
+
+    /**
+     * 设置内存使用大小
+     * @param usage 使用率
+     */
+    void setMemoryUsage(long usage);
+
+    /**
+     * 获取内使用大小
+     */
+    long getMemoryUsage();
+
     long getLongValue(String key);
 
     long getLongValue(String key, long defValue);

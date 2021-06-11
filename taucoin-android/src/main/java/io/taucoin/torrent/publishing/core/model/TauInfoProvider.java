@@ -12,6 +12,8 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposables;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.core.utils.NetworkStatistics;
@@ -31,6 +33,7 @@ public class TauInfoProvider {
     private static volatile TauInfoProvider INSTANCE;
     private TauDaemon daemon;
     private Sampler sampler;
+    private SettingsRepository settingsRepo;
 
     public static TauInfoProvider getInstance(@NonNull Context appContext) {
         if (INSTANCE == null) {
@@ -55,6 +58,7 @@ public class TauInfoProvider {
     private TauInfoProvider(TauDaemon daemon) {
         this.daemon = daemon;
         this.sampler = Sampler.getInstance();
+        settingsRepo = RepositoryHelper.getSettingsRepository(MainApplication.getInstance());
     }
 
     /**
@@ -170,6 +174,8 @@ public class TauInfoProvider {
                     statistics.cpuUsageRate = cpuInfo;
                     statistics.totalMemory = totalMemory;
 
+                    settingsRepo.setCpuUsage(statistics.cpuUsageRate);
+                    settingsRepo.setMemoryUsage(statistics.totalMemory);
                     logger.debug("cpuUsageRate::{}, cpuUsageRate::{}, maxMemory::{}", cpuUsageRate,
                             statistics.cpuUsageRate,
                             Formatter.formatFileSize(context, statistics.totalMemory));

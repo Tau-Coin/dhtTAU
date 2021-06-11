@@ -295,6 +295,9 @@ public class TauDaemon {
         disposables.add(tauInfoProvider.observeTrafficStatistics()
                 .subscribeOn(Schedulers.newThread())
                 .subscribe());
+        disposables.add(tauInfoProvider.observeCPUAndMemStatistics()
+                .subscribeOn(Schedulers.newThread())
+                .subscribe());
         disposables.add(tauInfoProvider.observeSessionStats()
                 .subscribeOn(Schedulers.newThread())
                 .subscribe(nodes -> {

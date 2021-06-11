@@ -258,23 +258,13 @@ public class MainActivity extends ScanTriggerActivity {
     public void onStart() {
         super.onStart();
         subscribeCurrentUser();
-        subscribeCPUAndMemStatistics();
+        subscribeSessionStats();
         subscribeNeedStartDaemon();
         subscribeSettingsChanged();
 //        downloadViewModel.checkAppVersion(this);
     }
 
-    private void subscribeCPUAndMemStatistics() {
-        disposables.add(infoProvider.observeCPUAndMemStatistics()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(statistics -> {
-                    binding.drawer.itemCpuUsage.setRightText(getString(R.string.drawer_cpu_usage,
-                            statistics.cpuUsageRate + ""));
-                    binding.drawer.itemMemSize.setRightText(getString(R.string.drawer_mem_data,
-                            Formatter.formatFileSize(this, statistics.totalMemory)));
-                    updateDHTStats();
-                }));
+    private void subscribeSessionStats() {
         disposables.add(infoProvider.observeSessionStats()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -309,6 +299,14 @@ public class MainActivity extends ScanTriggerActivity {
             String tvFrequency = getString(R.string.drawer_frequency);
             tvFrequency = String.format(tvFrequency, FmtMicrometer.formatTwoDecimal(frequency));
             binding.drawer.itemFrequency.setRightText(Html.fromHtml(tvFrequency));
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_cpu_usage))) {
+            binding.drawer.itemCpuUsage.setRightText(getString(R.string.drawer_cpu_usage,
+                    settingsRepo.getCpuUsage()));
+            updateDHTStats();
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_memory_usage))) {
+            binding.drawer.itemMemSize.setRightText(getString(R.string.drawer_mem_data,
+                    Formatter.formatFileSize(this, settingsRepo.getMemoryUsage())));
+            updateDHTStats();
         }
     }
 
