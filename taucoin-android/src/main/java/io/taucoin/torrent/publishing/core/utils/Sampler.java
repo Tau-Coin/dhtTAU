@@ -114,8 +114,9 @@ public class Sampler {
             // getTotalPrivateDirty()就是获得自己进程所独占的内存 in KB
             final int totalPss = dbm.getTotalPss();
             Context context = MainApplication.getInstance();
-            logger.trace("sampleMemory dalvikPss::{}, nativePss::{}, " +
+            logger.trace("sampleMemory maxMemory::{}MB, dalvikPss::{}, nativePss::{}, " +
                     "otherPss::{}, totalPss::{}",
+                    activityManager.getMemoryClass(),
                     Formatter.formatFileSize(context, dbm.dalvikPss * 1024),
                     Formatter.formatFileSize(context, dbm.nativePss * 1024),
                     Formatter.formatFileSize(context, dbm.otherPss * 1024),
