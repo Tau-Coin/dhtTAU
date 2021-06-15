@@ -232,7 +232,6 @@ public class TauDaemon {
                 logger.debug("Tau start successfully");
                 isRunning = true;
                 handleSettingsChanged(appContext.getString(R.string.pref_key_foreground_running));
-                resetReadOnly();
             } else {
                 logger.error("Tau failed to start::{}", errMsg);
             }
@@ -463,15 +462,12 @@ public class TauDaemon {
             if (settingsRepo.internetState()) {
                 if (isRestart) {
 //                    reopenNetworks();
-                    resetReadOnly();
                 } else {
                     if (NetworkSetting.isHaveAvailableData()) {
                         // 重置无可用流量提示对话框的参数
                         trafficTips = true;
                         noRemainingDataTimes = 0;
-                        resetReadOnly(false);
                     } else {
-                        resetReadOnly(true);
                         showNoRemainingDataTipsDialog();
                     }
                 }
@@ -530,26 +526,6 @@ public class TauDaemon {
      */
     public void handleUserSelected(boolean updateDailyDataLimit) {
         trafficTips = updateDailyDataLimit;
-        resetReadOnly(!updateDailyDataLimit);
-    }
-
-    /**
-     * 计费网络下设置DHTEngine为read only模式
-     */
-    private void resetReadOnly() {
-        resetReadOnly(false);
-    }
-
-    /**
-     * 计费网络下设置DHTEngine为read only模式
-     *  或者没有剩余流量时，强迫为read only模式
-     */
-    private void resetReadOnly(boolean isForced) {
-        if (!isRunning) {
-            return;
-        }
-        boolean isReadOnly = NetworkSetting.isMeteredNetwork() || isForced;
-        tauController.getDHTEngine().setReadOnly(isReadOnly);
     }
 
     /**

@@ -23,6 +23,7 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.databinding.FragmentMainBinding;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
@@ -89,8 +90,14 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
         disposables.add(infoProvider.observeSessionStats()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(nodes -> binding.llConnecting.setVisibility(nodes > 0 ?
-                        View.GONE : View.VISIBLE)));
+                .subscribe(nodes -> {
+                    boolean isVisibility = nodes <= 0 || !NetworkSetting.isHaveAvailableData();
+                    binding.llWarning.setVisibility(isVisibility ? View.VISIBLE : View.GONE);
+                    if (isVisibility) {
+                        binding.tvWarning.setText(nodes <= 0 ? getText(R.string.main_connecting) :
+                                getText(R.string.main_data_used_up));
+                    }
+                }));
     }
 
     private void showCommunityList(List<CommunityAndFriend> communities) {
