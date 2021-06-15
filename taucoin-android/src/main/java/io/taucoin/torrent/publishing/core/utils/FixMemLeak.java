@@ -49,13 +49,17 @@ public class FixMemLeak {
                 mContext.setAccessible(true);
                 mContext.set(systemService, context.getApplicationContext());
 
-                Object cocktailService = context.getSystemService(Class.forName("com.samsung.android.cocktailbar.CocktailBarManager"));
-                Field mCocktailContext = systemService.getClass().getDeclaredField("mContext");
+                Field mCocktailBarManager = systemService.getClass().getDeclaredField("mCocktailBarManager");
+                mCocktailBarManager.setAccessible(true);
+                Object cocktailService = mCocktailBarManager.get(systemService);
+
+                Field mCocktailContext = cocktailService.getClass().getDeclaredField("mContext");
                 mCocktailContext.setAccessible(true);
-                mCocktailContext.set(cocktailService, null);
+                mCocktailContext.set(cocktailService, context.getApplicationContext());
 
             }
         } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException | NullPointerException ignored) {
+        } catch (Exception ignored) {
         }
     }
 }
