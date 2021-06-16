@@ -254,8 +254,6 @@ public class CommonDialog extends Dialog {
     }
 
     public void closeDialog(){
-        if(isShowing()){
-            dismiss();
-        }
+        dismiss();
     }
 }

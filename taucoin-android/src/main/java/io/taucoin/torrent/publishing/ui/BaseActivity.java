@@ -63,4 +63,14 @@ public abstract class BaseActivity extends AppCompatActivity {
             progressManager.closeProgressDialog();
         }
     }
+
+    /**
+     * Activity或Fragment视图被销毁回调
+     * APP分屏操作，Activity重新加载，释放资源
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        getViewModelStore().clear();
+    }
 }

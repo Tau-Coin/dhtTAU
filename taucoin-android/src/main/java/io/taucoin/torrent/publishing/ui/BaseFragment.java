@@ -38,4 +38,10 @@ public abstract class BaseFragment extends Fragment implements
             baseActivity.closeProgressDialog();
         }
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getViewModelStore().clear();
+    }
 }
