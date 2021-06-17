@@ -117,10 +117,8 @@ public class ToastUtils {
         }
 
         private void show() {
-            Toast sToast = new Toast(MainApplication.getInstance());
+            Toast sToast = Toast.makeText(MainApplication.getInstance(), "", duration);
             mToast = new WeakReference<>(sToast);
-
-            sToast = Toast.makeText(MainApplication.getInstance(), "", duration);
 
             TextView tv = (TextView) LayoutInflater.from(MainApplication.getInstance()).inflate(R.layout.toast_layout, null);
             tv.setText(message);
@@ -134,45 +132,46 @@ public class ToastUtils {
             sToast.setDuration(duration);
             if(PermissionUtils.isNotificationEnabled()){
                 sToast.show();
-            }else {
+            } else {
                 showSystemToast();
             }
         }
-    }
 
-    private static void showSystemToast(){
-        try{
-            @SuppressLint("PrivateApi")
-            Method getServiceMethod = Toast.class.getDeclaredMethod("getService");
-            getServiceMethod.setAccessible(true);
-            // hook INotificationManager
-            if (mToast != null && mToast.get() != null) {
-                Toast sToast = mToast.get();
-                if(iNotificationManagerObj == null){
-                    iNotificationManagerObj = getServiceMethod.invoke(null);
+        private void showSystemToast(){
+            try{
+                @SuppressLint("PrivateApi")
+                Method getServiceMethod = Toast.class.getDeclaredMethod("getService");
+                getServiceMethod.setAccessible(true);
+                // hook INotificationManager
+                if (mToast != null && mToast.get() != null) {
+                    Toast sToast = mToast.get();
+                    if(iNotificationManagerObj == null){
+                        iNotificationManagerObj = getServiceMethod.invoke(null);
 
-                    @SuppressLint("PrivateApi")
-                    Class iNotificationManagerCls = Class.forName("android.app.INotificationManager");
-                    Object iNotificationManagerProxy = Proxy.newProxyInstance(sToast.getClass().getClassLoader(), new Class[]{iNotificationManagerCls}, new InvocationHandler() {
-                        @Override
-                        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                            // Mandatory use of system Toast
-                            // hua wei p20 pro enqueueToastEx
-                            if("enqueueToast".equals(method.getName())
-                                    || "enqueueToastEx".equals(method.getName())){
-                                args[0] = "android";
+                        @SuppressLint("PrivateApi")
+                        Class iNotificationManagerCls = Class.forName("android.app.INotificationManager");
+                        Object iNotificationManagerProxy = Proxy.newProxyInstance(sToast.getClass().getClassLoader(),
+                                new Class[]{iNotificationManagerCls}, new InvocationHandler() {
+                            @Override
+                            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                                // Mandatory use of system Toast
+                                // hua wei p20 pro enqueueToastEx
+                                if("enqueueToast".equals(method.getName())
+                                        || "enqueueToastEx".equals(method.getName())){
+                                    args[0] = "android";
+                                }
+                                return method.invoke(iNotificationManagerObj, args);
                             }
-                            return method.invoke(iNotificationManagerObj, args);
-                        }
-                    });
-                    Field sServiceFiled = Toast.class.getDeclaredField("sService");
-                    sServiceFiled.setAccessible(true);
-                    sServiceFiled.set(null, iNotificationManagerProxy);
+                        });
+                        Field sServiceFiled = Toast.class.getDeclaredField("sService");
+                        sServiceFiled.setAccessible(true);
+                        sServiceFiled.set(null, iNotificationManagerProxy);
+                    }
+                    sToast.show();
                 }
-                sToast.show();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
