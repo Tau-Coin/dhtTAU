@@ -2,6 +2,7 @@ package io.taucoin.torrent.publishing;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
 
 import java.util.concurrent.Executors;
 
@@ -27,12 +28,14 @@ public class MainApplication extends MultiDexApplication {
     private User currentUser; // 当前用户
     private int activityNumber = 0; // 当前Activity个数
     private SettingsRepository settingsRepo;
+    public Handler applicationHandler;
 
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
 
+        applicationHandler = new Handler(this.getApplicationContext().getMainLooper());
         // 初始化日志配置
         LogConfigurator.configure();
         // Crash处理

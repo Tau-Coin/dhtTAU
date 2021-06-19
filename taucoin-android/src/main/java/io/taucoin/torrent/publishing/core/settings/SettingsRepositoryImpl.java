@@ -285,6 +285,17 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     }
 
     @Override
+    public String getStringValue(String key, String defValue) {
+        return pref.getString(key, defValue);
+    }
+
+    @Override
+    public void setStringValue(String key, String value) {
+        pref.edit().putString(key, value)
+                .apply();
+    }
+
+    @Override
     public void setChattingFriend(String friend) {
         pref.edit().putString(appContext.getString(R.string.pref_key_chatting_friend), friend)
                 .apply();

@@ -12,14 +12,16 @@ import android.view.View;
 import com.frostwire.jlibtorrent.Ed25519;
 import com.frostwire.jlibtorrent.Pair;
 import com.google.gson.Gson;
-//import com.huawei.hms.hmsscankit.ScanUtil;
-//import com.huawei.hms.ml.scan.HmsBuildBitmapOption;
-//import com.huawei.hms.ml.scan.HmsScan;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -757,46 +759,31 @@ public class UserViewModel extends AndroidViewModel {
      * @param qrContent 二维码内容
      */
     public void generateQRCode(Context context, QRContent qrContent) {
-        generateQRCode(context, qrContent, -1);
-    }
-
-    /**
-     * 生成二维码
-     * @param context
-     * @param qrContent 二维码内容
-     * @param QRColor 二维码颜色
-     */
-    public void generateQRCode(Context context, QRContent qrContent, int QRColor) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Bitmap>) emitter -> {
             try {
-//                String content;
-//                if (qrContent instanceof KeyQRContent) {
-//                    content = ((KeyQRContent) qrContent).getSeed();
-//                } else {
-//                    content = new Gson().toJson(qrContent);
-//                }
-//                int bgColor = Utils.getGroupColor(qrContent.getPublicKey());
-//                String firstLettersName = UsersUtil.getQRCodeName(qrContent.getNickName());
-//                Bitmap logoBitmap = BitmapUtil.createLogoBitmap(bgColor, firstLettersName);
-//
-//                int heightPix = DimensionsUtil.dip2px(context, 480);
-//                //Generate the barcode.
-//                HmsBuildBitmapOption.Creator creator = new HmsBuildBitmapOption.Creator()
-//                        .setBitmapMargin(1)
-//                        .setQRLogoBitmap(logoBitmap)
-//                        .setBitmapBackgroundColor(Color.WHITE);
-//                if (QRColor == -1) {
-//                    creator.setBitmapColor(Color.BLACK);
-//                } else {
-//                    creator.setBitmapColor(QRColor);
-//                }
-//                HmsBuildBitmapOption options = creator.create();
-//                Bitmap bitmap = ScanUtil.buildBitmap(content, HmsScan.QRCODE_SCAN_TYPE,
-//                        heightPix, heightPix, options);
-//                logger.debug("shareQRCode bitmap::{}", bitmap);
-//                if (bitmap != null) {
-//                    emitter.onNext(bitmap);
-//                }
+                String content;
+                if (qrContent instanceof KeyQRContent) {
+                    content = ((KeyQRContent) qrContent).getSeed();
+                } else {
+                    content = new Gson().toJson(qrContent);
+                }
+                int bgColor = Utils.getGroupColor(qrContent.getPublicKey());
+                String firstLettersName = UsersUtil.getQRCodeName(qrContent.getNickName());
+                Bitmap logoBitmap = BitmapUtil.createLogoBitmap(bgColor, firstLettersName);
+
+                int heightPix = DimensionsUtil.dip2px(context, 480);
+                int widthPix = heightPix;
+                //Generate the QR Code.
+                HashMap<EncodeHintType, Object> hints = new HashMap<>();
+                hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+                hints.put(EncodeHintType.MARGIN, 0);
+                QRCodeWriter writer = new QRCodeWriter();
+                Bitmap bitmap = writer.encode(content, BarcodeFormat.QR_CODE, widthPix, heightPix,
+                        hints, logoBitmap, context);
+                logger.debug("shareQRCode bitmap::{}", bitmap);
+                if (bitmap != null) {
+                    emitter.onNext(bitmap);
+                }
             } catch (Exception e) {
                 logger.error("generateTAUIDQRCode error ", e);
             }

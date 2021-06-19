@@ -192,4 +192,8 @@ public interface SettingsRepository {
     <T> void setListData(String key, List<T> list);
 
     <T> List<T> getListData(String key, Class<T> cls);
+
+    String getStringValue(String key, String defValue);
+
+    void setStringValue(String key, String value);
 }
