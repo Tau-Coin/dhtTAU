@@ -19,8 +19,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
-import android.os.Handler;
-import android.os.ResultReceiver;
 import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.WindowManager;
@@ -90,7 +88,6 @@ public final class KeyboardUtils {
         View view = activity.getCurrentFocus();
         if (view == null) view = new View(activity);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        FixMemLeak.fixLeak(activity);
     }
 
     /**
@@ -208,13 +205,16 @@ public final class KeyboardUtils {
                     declaredField.setAccessible(true);
                 }
                 Object obj = declaredField.get(imm);
-                if (obj == null || !(obj instanceof View)) continue;
-                View view = (View) obj;
-                if (view.getContext() == context) {
+                if (obj != null) {
                     declaredField.set(imm, null);
-                } else {
-                    return;
                 }
+//                if (obj == null || !(obj instanceof View)) continue;
+//                View view = (View) obj;
+//                if (view.getContext() == context) {
+//                    declaredField.set(imm, null);
+//                } else {
+//                    return;
+//                }
             } catch (Throwable th) {
                 th.printStackTrace();
             }

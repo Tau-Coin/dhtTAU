@@ -5,6 +5,7 @@ import android.os.Build;
 import android.view.inputmethod.InputMethodManager;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public class FixMemLeak {
     private static Field field;
@@ -41,25 +42,47 @@ public class FixMemLeak {
             }
         }
     }
-    public static void fixSamSungLeak(Context context) {
+
+    private static void fixSamSungLeak(Context context) {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.MANUFACTURER.equals("samsung")) {
-                Object systemService = context.getSystemService(Class.forName("com.samsung.android.content.clipboard.SemClipboardManager"));
-                Field mContext = systemService.getClass().getDeclaredField("mContext");
+            if (Build.MANUFACTURER.equals("samsung") && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+                Object clipboardManager = context.getSystemService(Class.forName("com.samsung.android.content.clipboard.SemClipboardManager"));
+                Field mContext = clipboardManager.getClass().getDeclaredField("mContext");
                 mContext.setAccessible(true);
-                mContext.set(systemService, context.getApplicationContext());
+                mContext.set(clipboardManager, null);
 
-                Field mCocktailBarManager = systemService.getClass().getDeclaredField("mCocktailBarManager");
+                Field mCocktailBarManager = clipboardManager.getClass().getDeclaredField("mCocktailBarManager");
                 mCocktailBarManager.setAccessible(true);
-                Object cocktailService = mCocktailBarManager.get(systemService);
+                mCocktailBarManager.set(clipboardManager, null);
 
-                Field mCocktailContext = cocktailService.getClass().getDeclaredField("mContext");
-                mCocktailContext.setAccessible(true);
-                mCocktailContext.set(cocktailService, context.getApplicationContext());
+                Field mPasteListener = clipboardManager.getClass().getDeclaredField("mPasteListener");
+                mPasteListener.setAccessible(true);
+                mPasteListener.set(clipboardManager, null);
 
+                Field mPersonaManager = clipboardManager.getClass().getDeclaredField("mPersonaManager");
+                mPersonaManager.setAccessible(true);
+                mPersonaManager.set(clipboardManager, null);
             }
-        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException | NullPointerException ignored) {
-        } catch (Exception ignored) {
+        } catch (Exception ignore) {
+        }
+    }
+
+    /**
+     * 修复三星手机紧急模式内训泄漏
+     * 修复思路：SemEmergencyManager为单例，在Application.onCreate()中用ApplicationContext先初始化，
+     * 防止挟持Activity对象不能释放
+     * @param context ApplicationContext
+     */
+    public static void fixSamSungEmergencyModeLeak(Context context) {
+        try {
+            if (Build.MANUFACTURER.equals("samsung") && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT &&
+                    Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+                Class<?> semEmergencyManager = Class.forName("com.samsung.android.emergencymode.SemEmergencyManager");
+                Method method = semEmergencyManager.getMethod("getInstance", Context.class);
+                method.invoke(null, context.getApplicationContext());
+            }
+        } catch (Exception ignore) {
         }
     }
 }

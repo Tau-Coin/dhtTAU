@@ -16,6 +16,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 import io.taucoin.torrent.publishing.core.utils.CrashHandler;
 import io.taucoin.torrent.publishing.core.utils.FixMemLeak;
+import io.taucoin.torrent.publishing.core.utils.KeyboardUtils;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
 
 public class MainApplication extends MultiDexApplication {
@@ -52,6 +53,8 @@ public class MainApplication extends MultiDexApplication {
                 .setExecutor(Executors.newFixedThreadPool(4))
                 .build();
         WorkManager.initialize(this, configuration);
+
+        FixMemLeak.fixSamSungEmergencyModeLeak(getApplicationContext());
     }
 
     public static MainApplication getInstance(){
@@ -138,7 +141,8 @@ public class MainApplication extends MultiDexApplication {
 
         @Override
         public void onActivityDestroyed(Activity activity) {
-            FixMemLeak.fixSamSungLeak(activity);
+            FixMemLeak.fixLeak(activity);
+            KeyboardUtils.fixSoftInputLeaks(activity);
         }
     };
 }
