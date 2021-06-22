@@ -168,7 +168,8 @@ public class TauDaemon {
                     if (emitter.isCancelled() || isRunning){
                         return;
                     }
-                    emitter.onNext(true);
+                    emitter.onNext(false);
+//                    emitter.onNext(true);
                 }
             };
 
@@ -314,7 +315,7 @@ public class TauDaemon {
                 }));
 
         rescheduleTAUBySettings();
-        tauController.start();
+//        tauController.start();
     }
 
     /**
@@ -642,14 +643,13 @@ public class TauDaemon {
      * 获取Sessions的流量统计
      */
     SessionStatistics getSessionStatistics() {
-        if (!isRunning) {
-            return null;
-        }
         SessionStatistics statistics = new SessionStatistics();
-        statistics.setTotalUpload(tauController.getDHTEngine().getSessionTotalUpload());
-        statistics.setTotalDownload(tauController.getDHTEngine().getSessionTotalDownload());
-        statistics.setUploadRate(tauController.getDHTEngine().getSessionDownloadRate());
-        statistics.setDownloadRate(tauController.getDHTEngine().getSessionUploadRate());
+        if (isRunning) {
+            statistics.setTotalUpload(tauController.getDHTEngine().getSessionTotalUpload());
+            statistics.setTotalDownload(tauController.getDHTEngine().getSessionTotalDownload());
+            statistics.setUploadRate(tauController.getDHTEngine().getSessionDownloadRate());
+            statistics.setDownloadRate(tauController.getDHTEngine().getSessionUploadRate());
+        }
         return statistics;
     }
 }

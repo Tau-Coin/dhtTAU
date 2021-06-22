@@ -143,9 +143,11 @@ public class TauService extends Service {
      */
     private void shutdown() {
         logger.info("shutdown");
-        disposables.add(Completable.fromRunnable(() -> daemon.doStop())
-                .subscribeOn(Schedulers.computation())
-                .subscribe());
+        daemon.doStop();
+        stopService();
+//        disposables.add(Completable.fromRunnable(() -> daemon.doStop())
+//                .subscribeOn(Schedulers.computation())
+//                .subscribe());
     }
 
     @Override
