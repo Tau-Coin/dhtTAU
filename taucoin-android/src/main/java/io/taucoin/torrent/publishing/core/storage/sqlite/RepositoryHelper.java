@@ -22,6 +22,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.MsgRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.NotificationRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.NotificationRepositoryImpl;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.StatisticRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.repo.StatisticRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.TxRepositoryImpl;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
@@ -43,6 +45,7 @@ public class RepositoryHelper {
     private static ChatRepositoryImpl chatRepo;
     private static DeviceRepositoryImpl deviceRepo;
     private static AppRepositoryImpl appRepo;
+    private static StatisticRepositoryImpl statisticRepo;
 
     /**
      * 获取CommunityRepository单例
@@ -198,4 +201,16 @@ public class RepositoryHelper {
         return appRepo;
     }
 
+    /**
+     * 获取StatisticRepository单例
+     * @param appContext 上下文
+     * @return DeviceRepository
+     */
+    public synchronized static StatisticRepository getStatisticRepository(@NonNull Context appContext) {
+        if (statisticRepo == null)
+            statisticRepo = new StatisticRepositoryImpl(appContext,
+                    AppDatabase.getInstance(appContext));
+
+        return statisticRepo;
+    }
 }

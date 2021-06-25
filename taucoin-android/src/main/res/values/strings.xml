@@ -143,6 +143,8 @@
 
     <!-- Strings used for Dashboard -->
     <string name="setting_storage">Storage</string>
+    <string name="setting_data_statistics">24h Data Statistics</string>
+    <string name="setting_memory_statistics">24h Memory Statistics</string>
     <string name="setting_journal_path">Journal storage path</string>
     <string name="setting_share_journal">Share All Journal</string>
     <string name="setting_wifi_network_title">WiFi - likely free internet</string>

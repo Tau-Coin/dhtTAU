@@ -103,6 +103,19 @@ public class JournalActivity extends BaseActivity implements View.OnClickListene
         if (v.getId() == R.id.tv_share_all) {
             ActivityUtil.shareFiles(this, adapter.getCurrentList(), getString(R.string.setting_journal_share));
         }
+        switch (v.getId()) {
+            case R.id.tv_share_all:
+                ActivityUtil.shareFiles(this, adapter.getCurrentList(), getString(R.string.setting_journal_share));
+                break;
+            case R.id.ll_data_statistics:
+                ActivityUtil.startActivity(this, DataStatisticsActivity.class);
+                break;
+            case R.id.ll_memory_statistics:
+                ActivityUtil.startActivity(this, MemoryStatisticsActivity.class);
+                break;
+            default:
+                break;
+        }
     }
 
     @Override

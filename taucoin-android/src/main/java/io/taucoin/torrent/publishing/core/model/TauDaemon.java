@@ -292,10 +292,7 @@ public class TauDaemon {
             return;
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribe(this::handleSettingsChanged));
-        disposables.add(tauInfoProvider.observeTrafficStatistics()
-                .subscribeOn(Schedulers.newThread())
-                .subscribe());
-        disposables.add(tauInfoProvider.observeCPUAndMemStatistics()
+        disposables.add(tauInfoProvider.observeAppStatistics()
                 .subscribeOn(Schedulers.newThread())
                 .subscribe());
         disposables.add(tauInfoProvider.observeSessionStats()
@@ -644,12 +641,19 @@ public class TauDaemon {
      */
     SessionStatistics getSessionStatistics() {
         SessionStatistics statistics = new SessionStatistics();
+        getSessionStatistics(statistics);
+        return statistics;
+    }
+
+    /**
+     * 获取Sessions的流量统计
+     */
+    void getSessionStatistics(@NonNull SessionStatistics statistics) {
         if (isRunning) {
             statistics.setTotalUpload(tauController.getDHTEngine().getSessionTotalUpload());
             statistics.setTotalDownload(tauController.getDHTEngine().getSessionTotalDownload());
             statistics.setUploadRate(tauController.getDHTEngine().getSessionDownloadRate());
             statistics.setDownloadRate(tauController.getDHTEngine().getSessionUploadRate());
         }
-        return statistics;
     }
 }

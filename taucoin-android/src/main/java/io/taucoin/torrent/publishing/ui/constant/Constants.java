@@ -6,4 +6,7 @@ package io.taucoin.torrent.publishing.ui.constant;
 public class Constants {
     // 昵称长度限制 单位：byte
     public static final int NICKNAME_LENGTH = 24;
+
+    // 统计老数据多久清理一次，单位：秒
+    public static final int STATISTICS_CLEANING_PERIOD = 10 * 60;
 }

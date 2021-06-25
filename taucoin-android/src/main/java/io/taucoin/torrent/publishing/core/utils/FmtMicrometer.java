@@ -87,7 +87,7 @@ public class FmtMicrometer {
         return fmtDecimal(String.valueOf(value));
     }
 
-    private static DecimalFormat getDecimalFormatInstance() {
+    static DecimalFormat getDecimalFormatInstance() {
         DecimalFormat df;
         try{
             df = (DecimalFormat)NumberFormat.getInstance(Locale.CHINA);

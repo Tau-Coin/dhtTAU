@@ -11,4 +11,6 @@
     <item name="member_add" type="id" />
 
     <item name="median_fee" type="id" />
+
+    <item name="tvContent" type="id" />
 </resources>

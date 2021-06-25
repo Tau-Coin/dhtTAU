@@ -19,6 +19,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.dao.FriendDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.MemberDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.MessageDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.NotificationDao;
+import io.taucoin.torrent.publishing.core.storage.sqlite.dao.StatisticDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.TxDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.dao.UserDao;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
@@ -30,6 +31,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Friend;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Message;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Notification;
+import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Statistic;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Tx;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
 
@@ -43,7 +45,8 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
         Friend.class,
         ChatMsg.class,
         ChatMsgLog.class,
-        Device.class
+        Device.class,
+        Statistic.class
     }, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static final Logger logger = LoggerFactory.getLogger("AppDatabase");
@@ -61,6 +64,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract FriendDao friendDao();
     public abstract ChatDao chatDao();
     public abstract DeviceDao deviceDao();
+    public abstract StatisticDao statisticDao();
 
     /**
      * 获取数据库实例

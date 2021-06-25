@@ -250,6 +250,14 @@
             android:name=".ui.setting.DevicesActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
+        <activity
+            android:name=".ui.setting.DataStatisticsActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <activity
+            android:name=".ui.setting.MemoryStatisticsActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
     </application>
 
 </manifest>

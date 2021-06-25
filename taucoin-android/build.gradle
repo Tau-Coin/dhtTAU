@@ -175,4 +175,7 @@ dependencies {
 
     // 华为scan kit
 //    implementation 'com.huawei.hms:scanplus:1.3.2.300'
+
+    // 图表
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 }

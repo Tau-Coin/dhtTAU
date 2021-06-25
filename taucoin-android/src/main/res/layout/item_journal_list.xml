@@ -21,7 +21,7 @@
             android:singleLine="true"
             android:ellipsize="middle"
             android:layout_toStartOf="@+id/iv_share"
-            android:textAppearance="@style/TextAppearanceHeadline6" />
+            android:textAppearance="@style/TextAppearanceBody1" />
 
         <TextView
             android:id="@+id/tv_file_size"
