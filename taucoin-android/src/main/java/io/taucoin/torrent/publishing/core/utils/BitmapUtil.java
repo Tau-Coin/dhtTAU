@@ -10,7 +10,14 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
+import android.view.View;
+import android.widget.ImageView;
 
 //import com.huawei.hms.hmsscankit.ScanUtil;
 //import com.huawei.hms.hmsscankit.WriterException;
@@ -234,6 +241,52 @@ public class BitmapUtil {
         return (bitmap);
     }
 
+    public static Bitmap blurBitmap(Bitmap bitmap, boolean isRecycle){
+
+        // 计算图片缩小后的长宽
+        int width = Math.round(bitmap.getWidth() * 0.3f);
+        int height = Math.round(bitmap.getHeight() * 0.3f);
+        // 将缩小后的图片做为预渲染的图片
+        Bitmap inputBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
+
+        //Let's create an empty bitmap with the same size of the bitmap we want to blur
+        Bitmap outBitmap = Bitmap.createBitmap(inputBitmap);
+
+        //Instantiate a new Renderscript
+        Context context = MainApplication.getInstance();
+        RenderScript rs = RenderScript.create(context.getApplicationContext());
+
+        //Create an Intrinsic Blur Script using the Renderscript
+        ScriptIntrinsicBlur blurScript = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
+
+        //Create the Allocations (in/out) with the Renderscript and the in/out bitmaps
+        Allocation allIn = Allocation.createFromBitmap(rs, inputBitmap);
+        Allocation allOut = Allocation.createFromBitmap(rs, outBitmap);
+
+        //Set the radius of the blur
+        blurScript.setRadius(25.f);
+
+        //Perform the Renderscript
+        blurScript.setInput(allIn);
+        blurScript.forEach(allOut);
+
+        //Copy the final bitmap created by the out Allocation to the outBitmap
+        allOut.copyTo(outBitmap);
+
+        //recycle the original bitmap
+        if (isRecycle) {
+            bitmap.recycle();
+        }
+        inputBitmap.recycle();
+
+        //After finishing everything, we destroy the Renderscript.
+        rs.destroy();
+        allIn.destroy();
+        allOut.destroy();
+
+        return outBitmap;
+    }
+
     /**
      * @param bgBitmap 背景图片
      * @param qrbgBitmap  二维码背景
@@ -385,5 +438,24 @@ public class BitmapUtil {
         // 将drawable 内容画到画布中
         drawable.draw(canvas);
         return bitmap;
+    }
+
+    /**
+     * 回收ImageView内存
+     * @param view
+     */
+    public static void recycleImageView(View view) {
+        if (view == null) return;
+        if (view instanceof ImageView) {
+            Drawable drawable = ((ImageView) view).getDrawable();
+            if (drawable instanceof BitmapDrawable) {
+                Bitmap bmp = ((BitmapDrawable) drawable).getBitmap();
+                if (bmp != null && !bmp.isRecycled()) {
+                    ((ImageView) view).setImageBitmap(null);
+                    bmp.recycle();
+                    bmp = null;
+                }
+            }
+        }
     }
 }

@@ -10,6 +10,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.DrawablesUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
@@ -121,6 +122,15 @@ public class UserQRCodeActivity extends ScanTriggerActivity implements View.OnCl
             String publicKey = StringUtil.getTag(binding.qrCode.tvName);
             CopyManager.copyText(publicKey);
             ToastUtils.showShortToast(R.string.copy_public_key);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (binding != null) {
+            BitmapUtil.recycleImageView(binding.qrCode.ivQrCode);
+            System.gc();
         }
     }
 }

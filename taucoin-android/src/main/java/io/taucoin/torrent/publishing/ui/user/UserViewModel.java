@@ -771,7 +771,7 @@ public class UserViewModel extends AndroidViewModel {
                 String firstLettersName = UsersUtil.getQRCodeName(qrContent.getNickName());
                 Bitmap logoBitmap = BitmapUtil.createLogoBitmap(bgColor, firstLettersName);
 
-                int heightPix = DimensionsUtil.dip2px(context, 480);
+                int heightPix = DimensionsUtil.dip2px(context, 300);
                 int widthPix = heightPix;
                 //Generate the QR Code.
                 HashMap<EncodeHintType, Object> hints = new HashMap<>();
@@ -802,7 +802,8 @@ public class UserViewModel extends AndroidViewModel {
     public void generateBlurQRCode(Bitmap bitmap) {
         Disposable disposable = Flowable.create((FlowableOnSubscribe<Bitmap>) emitter -> {
             try {
-                Bitmap blurBitmap = BitmapUtil.blurBitmap(bitmap, 80, false);
+//                Bitmap blurBitmap = BitmapUtil.blurBitmap(bitmap, 80, false);
+                Bitmap blurBitmap = BitmapUtil.blurBitmap(bitmap, false);
                 emitter.onNext(blurBitmap);
             } catch (Exception e) {
                 logger.error("queryCurrentUserAndFriends error ", e);

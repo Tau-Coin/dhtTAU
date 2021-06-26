@@ -11,6 +11,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
 import io.taucoin.torrent.publishing.core.utils.CopyManager;
 import io.taucoin.torrent.publishing.core.utils.DrawablesUtil;
 import io.taucoin.torrent.publishing.core.utils.SpanUtils;
@@ -67,8 +68,10 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
             userViewModel.generateBlurQRCode(bitmap);
         });
         userViewModel.getQRBlurBitmap().observe(this, bitmap -> {
-            binding.qrCode.ivQrCode.setImageBitmap(bitmap);
-            binding.tvKeptSecret.setVisibility(View.VISIBLE);
+            if (bitmap != null) {
+                binding.qrCode.ivQrCode.setImageBitmap(bitmap);
+                binding.tvKeptSecret.setVisibility(View.VISIBLE);
+            }
         });
     }
 
@@ -120,9 +123,27 @@ public class KeyQRCodeActivity extends ScanTriggerActivity implements View.OnCli
             ToastUtils.showShortToast(R.string.copy_seed);
         } else if (v.getId() == R.id.tv_kept_secret) {
             if (QRBitmap != null) {
+                BitmapUtil.recycleImageView(binding.qrCode.ivQrCode);
+                Bitmap bitmap = userViewModel.getQRBlurBitmap().getValue();
+                if (bitmap != null && !bitmap.isRecycled()) {
+                    bitmap.recycle();
+                    userViewModel.getQRBlurBitmap().postValue(null);
+                }
+                System.gc();
                 binding.tvKeptSecret.setVisibility(View.GONE);
                 binding.qrCode.ivQrCode.setImageBitmap(QRBitmap);
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        BitmapUtil.recycleImageView(binding.qrCode.ivQrCode);
+        if (QRBitmap != null && !QRBitmap.isRecycled()) {
+            QRBitmap.recycle();
+            QRBitmap = null;
+        }
+        System.gc();
     }
 }
