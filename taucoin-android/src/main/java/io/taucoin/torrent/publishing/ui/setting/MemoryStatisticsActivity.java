@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.setting;
 
 import android.os.Bundle;
+import android.widget.LinearLayout;
 
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -28,7 +29,9 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.MemoryStatistics;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.StatisticRepository;
+import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
+import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.LargeValueFormatter;
 import io.taucoin.torrent.publishing.databinding.ActivityDataStatisticsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -46,6 +49,7 @@ public class MemoryStatisticsActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ActivityUtil.setRequestedOrientation(this);
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_data_statistics);
         repository = RepositoryHelper.getStatisticRepository(getApplicationContext());
@@ -59,6 +63,20 @@ public class MemoryStatisticsActivity extends BaseActivity {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
         binding.toolbarInclude.toolbar.setTitle(R.string.setting_memory_statistics);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
+
+        binding.lineChart.setRotation(90);
+        binding.lineChart.post(() -> {
+            int mScreenWidth = binding.lineChart.getWidth();
+            int mScreenHeight = binding.lineChart.getHeight();
+            int paddingSize = DimensionsUtil.dp2px(MemoryStatisticsActivity.this, 15);
+            LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) binding.lineChart.getLayoutParams();
+            layoutParams.width = mScreenHeight - paddingSize;
+            layoutParams.height = mScreenWidth - paddingSize;
+            binding.lineChart.setLayoutParams(layoutParams);
+
+            float offsetY = mScreenHeight - mScreenWidth;
+            binding.lineChart.setTranslationY((offsetY + paddingSize) * 1f / 2);
+        });
     }
 
     @Override
