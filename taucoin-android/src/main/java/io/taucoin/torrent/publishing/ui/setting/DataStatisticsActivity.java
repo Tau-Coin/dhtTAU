@@ -35,6 +35,7 @@ import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.LargeValueFormatter;
 import io.taucoin.torrent.publishing.databinding.ActivityDataStatisticsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
+import io.taucoin.torrent.publishing.ui.constant.Constants;
 import io.taucoin.torrent.publishing.ui.customviews.MyMarkerView;
 
 /**
@@ -145,7 +146,7 @@ public class DataStatisticsActivity extends BaseActivity {
         }
         DataStatistics statistic = statistics.get(0);
         for (long j = initSupplySize; j > 0; j--) {
-            long timestamp = statistic.getTimestamp() - j * 10 * 60;
+            long timestamp = statistic.getTimestamp() - j * Constants.STATISTICS_DISPLAY_PERIOD;
             xValues.add(DateUtil.formatTime(timestamp, DateUtil.pattern0));
             yValues.add(new Entry(yValues.size(), 0));
         }
@@ -158,7 +159,7 @@ public class DataStatisticsActivity extends BaseActivity {
                 long supplySize = statistic.getTimeKey() - lastStatistic.getTimeKey();
                 if (supplySize > 1) {
                     for (long j = 1; j < supplySize; j++) {
-                        long timestamp = lastStatistic.getTimestamp() + j * 10 * 60;
+                        long timestamp = lastStatistic.getTimestamp() + j * Constants.STATISTICS_DISPLAY_PERIOD;
                         xValues.add(DateUtil.formatTime(timestamp, DateUtil.pattern0));
                         yValues.add(new Entry(yValues.size(), 0));
                     }

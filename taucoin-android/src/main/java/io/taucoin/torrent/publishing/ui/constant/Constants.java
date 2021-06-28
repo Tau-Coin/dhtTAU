@@ -9,4 +9,7 @@ public class Constants {
 
     // 统计老数据多久清理一次，单位：秒
     public static final int STATISTICS_CLEANING_PERIOD = 10 * 60;
+
+    // 统计显示周期，单位：秒
+    public static final int STATISTICS_DISPLAY_PERIOD = 60;
 }

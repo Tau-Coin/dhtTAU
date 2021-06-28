@@ -37,12 +37,12 @@ public class StatisticRepositoryImpl implements StatisticRepository {
 
     @Override
     public Single<List<DataStatistics>> getDataStatistics() {
-        return db.statisticDao().getDataStatistics(Constants.STATISTICS_CLEANING_PERIOD);
+        return db.statisticDao().getDataStatistics(Constants.STATISTICS_DISPLAY_PERIOD);
     }
 
     @Override
     public Single<List<MemoryStatistics>> getMemoryStatistics() {
-        return db.statisticDao().getMemoryStatistics(Constants.STATISTICS_CLEANING_PERIOD);
+        return db.statisticDao().getMemoryStatistics(Constants.STATISTICS_DISPLAY_PERIOD);
     }
 
     @Override
