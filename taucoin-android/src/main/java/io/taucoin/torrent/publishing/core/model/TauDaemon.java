@@ -168,8 +168,7 @@ public class TauDaemon {
                     if (emitter.isCancelled() || isRunning){
                         return;
                     }
-                    emitter.onNext(false);
-//                    emitter.onNext(true);
+                    emitter.onNext(true);
                 }
             };
 
@@ -312,7 +311,7 @@ public class TauDaemon {
                 }));
 
         rescheduleTAUBySettings();
-//        tauController.start();
+        tauController.start();
     }
 
     /**

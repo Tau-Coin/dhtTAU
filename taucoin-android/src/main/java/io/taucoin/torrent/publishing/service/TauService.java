@@ -38,7 +38,6 @@ public class TauService extends Service {
     // 是不是已经在运行
     private AtomicBoolean isAlreadyRunning = new AtomicBoolean(false);
     private TauDaemon daemon;
-    private SettingsRepository settingsRepo;
     private UserRepository userRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
 
@@ -50,7 +49,6 @@ public class TauService extends Service {
 
     @Override
     public void onCreate() {
-        settingsRepo = RepositoryHelper.getSettingsRepository(getApplicationContext());
         userRepo = RepositoryHelper.getUserRepository(getApplicationContext());
         daemon = TauDaemon.getInstance(getApplicationContext());
         TauNotifier.makeForegroundNotify(this);
@@ -143,11 +141,9 @@ public class TauService extends Service {
      */
     private void shutdown() {
         logger.info("shutdown");
-        daemon.doStop();
-        stopService();
-//        disposables.add(Completable.fromRunnable(() -> daemon.doStop())
-//                .subscribeOn(Schedulers.computation())
-//                .subscribe());
+        disposables.add(Completable.fromRunnable(() -> daemon.doStop())
+                .subscribeOn(Schedulers.computation())
+                .subscribe());
     }
 
     @Override
