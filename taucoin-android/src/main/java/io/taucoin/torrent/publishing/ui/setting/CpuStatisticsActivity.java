@@ -26,7 +26,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.model.data.MemoryStatistics;
+import io.taucoin.torrent.publishing.core.model.data.CpuStatistics;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.StatisticRepository;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
@@ -39,11 +39,11 @@ import io.taucoin.torrent.publishing.ui.constant.Constants;
 import io.taucoin.torrent.publishing.ui.customviews.MyMarkerView;
 
 /**
- * 内存统计页面页面
+ * CPU统计页面
  */
-public class MemoryStatisticsActivity extends BaseActivity {
+public class CpuStatisticsActivity extends BaseActivity {
 
-    private static final Logger logger = LoggerFactory.getLogger("MemoryStatisticsActivity");
+    private static final Logger logger = LoggerFactory.getLogger("CpuStatisticsActivity");
     private ActivityDataStatisticsBinding binding;
     private CompositeDisposable disposables = new CompositeDisposable();
     private StatisticRepository repository;
@@ -62,14 +62,14 @@ public class MemoryStatisticsActivity extends BaseActivity {
      */
     private void initView() {
         binding.toolbarInclude.toolbar.setNavigationIcon(R.mipmap.icon_back);
-        binding.toolbarInclude.toolbar.setTitle(R.string.setting_memory_statistics);
+        binding.toolbarInclude.toolbar.setTitle(R.string.setting_cpu_statistics);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         binding.lineChart.setRotation(90);
         binding.lineChart.post(() -> {
             int mScreenWidth = binding.lineChart.getWidth();
             int mScreenHeight = binding.lineChart.getHeight();
-            int paddingSize = DimensionsUtil.dp2px(MemoryStatisticsActivity.this, 15);
+            int paddingSize = DimensionsUtil.dp2px(CpuStatisticsActivity.this, 15);
             LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) binding.lineChart.getLayoutParams();
             layoutParams.width = mScreenHeight - paddingSize;
             layoutParams.height = mScreenWidth - paddingSize;
@@ -83,7 +83,7 @@ public class MemoryStatisticsActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        Disposable subscribe = repository.getMemoryStatistics()
+        Disposable subscribe = repository.getCpuStatistics()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(statistics -> {
@@ -110,7 +110,7 @@ public class MemoryStatisticsActivity extends BaseActivity {
         binding.lineChart.clear();
     }
 
-    private void initLineChart(List<MemoryStatistics> statistics) {
+    private void initLineChart(List<CpuStatistics> statistics) {
         binding.lineChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
@@ -144,7 +144,7 @@ public class MemoryStatisticsActivity extends BaseActivity {
         if (statistics.size() > initSupplySize) {
             initSupplySize = 2;
         }
-        MemoryStatistics statistic = statistics.get(0);
+        CpuStatistics statistic = statistics.get(0);
         for (long j = initSupplySize; j > 0; j--) {
             long timestamp = statistic.getTimestamp() - j * Constants.STATISTICS_DISPLAY_PERIOD;
             xValues.add(DateUtil.formatTime(timestamp, DateUtil.pattern0));
@@ -155,7 +155,7 @@ public class MemoryStatisticsActivity extends BaseActivity {
             statistic = statistics.get(i);
             logger.debug("statistics.timestamp::{}", DateUtil.formatTime(statistic.getTimestamp(), DateUtil.pattern0));
             if (i > 0) {
-                MemoryStatistics lastStatistic = statistics.get(i - 1);
+                CpuStatistics lastStatistic = statistics.get(i - 1);
                 long supplySize = statistic.getTimeKey() - lastStatistic.getTimeKey();
                 if (supplySize > 1) {
                     for (long j = 1; j < supplySize; j++) {
@@ -166,7 +166,8 @@ public class MemoryStatisticsActivity extends BaseActivity {
                 }
             }
             xValues.add(DateUtil.formatTime(statistic.getTimestamp(), DateUtil.pattern0));
-            yValues.add(new Entry(yValues.size(), statistic.getMemoryAvg()));
+            float cpuUsageRateAvg = Float.parseFloat(String.valueOf(statistic.getCpuUsageRateAvg()));
+            yValues.add(new Entry(yValues.size(), cpuUsageRateAvg));
         }
 
         // X轴
@@ -187,6 +188,7 @@ public class MemoryStatisticsActivity extends BaseActivity {
 
         // Y轴
         LargeValueFormatter yAxisFormatter = new LargeValueFormatter();
+        yAxisFormatter.setSuffix(new String[]{"%", "%", "%", "%", "%"});
         YAxis leftAxis = binding.lineChart.getAxisLeft();
 
         leftAxis.setLabelCount(8, false);
@@ -198,7 +200,7 @@ public class MemoryStatisticsActivity extends BaseActivity {
 
         //这里，每重新new一个LineDataSet，相当于重新画一组折线
         //每一个LineDataSet相当于一组折线。比如:这里有两个LineDataSet：setComp1，setComp2。
-        LineDataSet setComp = new LineDataSet(yValues, getString(R.string.setting_memory_statistics));
+        LineDataSet setComp = new LineDataSet(yValues, getString(R.string.setting_cpu_statistics));
         setComp.setAxisDependency(YAxis.AxisDependency.LEFT);
         setComp.setColor(getResources().getColor(R.color.colorPrimary));
         setComp.setDrawFilled(true);

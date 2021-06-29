@@ -133,12 +133,6 @@ public class DataStatisticsActivity extends BaseActivity {
         List<String> xValues = new ArrayList<>();
         List<Entry> yValues = new ArrayList<>();
 
-        //自定义的MarkerView对象
-        MyMarkerView mv = new MyMarkerView(this, R.layout.custom_marker_view);
-        mv.setChartView(binding.lineChart);
-        mv.setXValues(xValues);
-        binding.lineChart.setMarker(mv);
-
         // 统计数据较少时，补充数据
         long initSupplySize = 7;
         if (statistics.size() > initSupplySize) {
@@ -211,6 +205,13 @@ public class DataStatisticsActivity extends BaseActivity {
         dataSets.add(setComp);
 
         LineData lineData = new LineData(dataSets);
+
+        //自定义的MarkerView对象
+        MyMarkerView mv = new MyMarkerView(this, R.layout.custom_marker_view);
+        mv.setChartView(binding.lineChart);
+        mv.setValueFormatter(yAxisFormatter);
+        mv.setXValues(xValues);
+        binding.lineChart.setMarker(mv);
 
         binding.lineChart.setData(lineData);
         binding.lineChart.invalidate();

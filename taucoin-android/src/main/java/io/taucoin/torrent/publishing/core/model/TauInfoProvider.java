@@ -131,7 +131,8 @@ public class TauInfoProvider {
 
                     statistic.timestamp = timestamp;
                     statistic.dataSize = trafficSize;
-                    statistic.memorySize = samplerStatistics.totalMemory;;
+                    statistic.memorySize = samplerStatistics.totalMemory;
+                    statistic.cpuUsageRate = samplerStatistics.cpuUsage;
                     statisticRepo.addStatistic(statistic);
                     if (seconds > Constants.STATISTICS_CLEANING_PERIOD) {
                         statisticRepo.deleteOldStatistics();
@@ -195,6 +196,7 @@ public class TauInfoProvider {
         }
         cpuInfo += "%";
         statistics.cpuUsageRate = cpuInfo;
+        statistics.cpuUsage = cpuUsageRate;
         statistics.totalMemory = totalMemory;
 
         settingsRepo.setCpuUsage(statistics.cpuUsageRate);

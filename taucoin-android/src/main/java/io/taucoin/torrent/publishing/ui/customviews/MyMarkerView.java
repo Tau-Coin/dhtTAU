@@ -31,7 +31,6 @@ public class MyMarkerView extends MarkerView {
     public MyMarkerView(Context context, int layoutResource) {
         super(context, layoutResource);
         tvContent = findViewById(R.id.tvContent);
-        formatter = new LargeValueFormatter();
     }
 
     @Override
@@ -40,7 +39,7 @@ public class MyMarkerView extends MarkerView {
             CandleEntry ce = (CandleEntry) e;
             tvContent.setText(Utils.formatNumber(ce.getHigh(), 2, false));
         } else {
-            String value = formatter.getFormattedValue(e.getY());
+            String value = getValueFormatter().getFormattedValue(e.getY());
             if (xValues != null && e.getX() < xValues.size()) {
                 value =xValues.get((int) e.getX()) + ", " + value;
             }
@@ -59,5 +58,16 @@ public class MyMarkerView extends MarkerView {
 
     public void setXValues(List<String> xValues) {
         this.xValues = xValues;
+    }
+
+    private LargeValueFormatter getValueFormatter() {
+        if (null == formatter) {
+            formatter = new LargeValueFormatter();
+        }
+        return formatter;
+    }
+
+    public void setValueFormatter(LargeValueFormatter formatter) {
+        this.formatter = formatter;
     }
 }

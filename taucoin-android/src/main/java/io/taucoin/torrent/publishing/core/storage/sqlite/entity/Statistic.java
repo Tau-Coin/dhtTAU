@@ -14,21 +14,24 @@ public class Statistic implements Parcelable {
     public long timestamp;
     public long dataSize;
     public long memorySize;
+    public double cpuUsageRate;
 
     public Statistic(){
     }
 
     @Ignore
-    public Statistic(long timestamp, long dataSize, long memorySize){
+    public Statistic(long timestamp, long dataSize, long memorySize, double cpuUsageRate){
         this.timestamp = timestamp;
         this.dataSize = dataSize;
         this.memorySize = memorySize;
+        this.cpuUsageRate = cpuUsageRate;
     }
 
     protected Statistic(Parcel in) {
         timestamp = in.readLong();
         dataSize = in.readLong();
         memorySize = in.readLong();
+        cpuUsageRate = in.readDouble();
     }
 
     @Override
@@ -36,6 +39,7 @@ public class Statistic implements Parcelable {
         dest.writeLong(timestamp);
         dest.writeLong(dataSize);
         dest.writeLong(memorySize);
+        dest.writeDouble(cpuUsageRate);
     }
 
     @Override

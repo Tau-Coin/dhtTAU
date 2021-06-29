@@ -258,6 +258,10 @@
             android:name=".ui.setting.MemoryStatisticsActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
+        <activity
+            android:name=".ui.setting.CpuStatisticsActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
     </application>
 
 </manifest>

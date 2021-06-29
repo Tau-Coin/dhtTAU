@@ -7,6 +7,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import io.reactivex.Single;
+import io.taucoin.torrent.publishing.core.model.data.CpuStatistics;
 import io.taucoin.torrent.publishing.core.model.data.DataStatistics;
 import io.taucoin.torrent.publishing.core.model.data.MemoryStatistics;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Statistic;
@@ -17,7 +18,7 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Statistic;
 @Dao
 public interface StatisticDao {
 
-    // 查询统计数据
+    // 查询流量统计数据
     String QUERY_DATA_STATISTICS = "SELECT round(timestamp/(:seconds), 0) AS timeKey, max(timestamp) AS timestamp," +
             " avg(dataSize) AS dataAvg" +
             " FROM  Statistics WHERE" +
@@ -25,9 +26,18 @@ public interface StatisticDao {
             " GROUP BY timeKey" +
             " ORDER BY timeKey";
 
-    // 查询统计数据
+    // 查询内存统计数据
     String QUERY_MEMORY_STATISTICS = "SELECT round(timestamp/(:seconds), 0) AS timeKey, max(timestamp) AS timestamp," +
             " avg(memorySize) AS memoryAvg" +
+            " FROM  Statistics WHERE" +
+            " datetime(timestamp, 'unixepoch', 'localtime') > datetime('now','-24 hour','localtime')" +
+            " GROUP BY timeKey" +
+            " ORDER BY timeKey";
+
+
+    // 查询CPU统计数据
+    String QUERY_CPU_STATISTICS = "SELECT round(timestamp/(:seconds), 0) AS timeKey, max(timestamp) AS timestamp," +
+            " avg(cpuUsageRate) AS cpuUsageRateAvg" +
             " FROM  Statistics WHERE" +
             " datetime(timestamp, 'unixepoch', 'localtime') > datetime('now','-24 hour','localtime')" +
             " GROUP BY timeKey" +
@@ -51,6 +61,9 @@ public interface StatisticDao {
 
     @Query(QUERY_MEMORY_STATISTICS)
     Single<List<MemoryStatistics>> getMemoryStatistics(int seconds);
+
+    @Query(QUERY_CPU_STATISTICS)
+    Single<List<CpuStatistics>> getCpuStatistics(int seconds);
 
     /**
      * 删除旧数据

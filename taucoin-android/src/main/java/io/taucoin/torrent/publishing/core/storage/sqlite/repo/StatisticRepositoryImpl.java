@@ -6,6 +6,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import io.reactivex.Single;
+import io.taucoin.torrent.publishing.core.model.data.CpuStatistics;
 import io.taucoin.torrent.publishing.core.model.data.DataStatistics;
 import io.taucoin.torrent.publishing.core.model.data.MemoryStatistics;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
@@ -43,6 +44,11 @@ public class StatisticRepositoryImpl implements StatisticRepository {
     @Override
     public Single<List<MemoryStatistics>> getMemoryStatistics() {
         return db.statisticDao().getMemoryStatistics(Constants.STATISTICS_DISPLAY_PERIOD);
+    }
+
+    @Override
+    public Single<List<CpuStatistics>> getCpuStatistics() {
+        return db.statisticDao().getCpuStatistics(Constants.STATISTICS_DISPLAY_PERIOD);
     }
 
     @Override

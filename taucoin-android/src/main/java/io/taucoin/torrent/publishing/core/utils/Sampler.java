@@ -136,6 +136,7 @@ public class Sampler {
         public long totalMemory;
         public long storageSize;
         public String cpuUsageRate;
+        public double cpuUsage;
 
         public Statistics() {
 
@@ -143,6 +144,7 @@ public class Sampler {
         Statistics(Parcel in) {
             totalMemory = in.readLong();
             cpuUsageRate = in.readString();
+            cpuUsage = in.readDouble();
         }
 
         public final Creator<Statistics> CREATOR = new Creator<Statistics>() {
@@ -166,6 +168,7 @@ public class Sampler {
         public void writeToParcel(Parcel dest, int flags) {
             dest.writeLong(totalMemory);
             dest.writeString(cpuUsageRate);
+            dest.writeDouble(cpuUsage);
         }
     }
 

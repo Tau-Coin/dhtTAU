@@ -113,6 +113,9 @@ public class JournalActivity extends BaseActivity implements View.OnClickListene
             case R.id.ll_memory_statistics:
                 ActivityUtil.startActivity(this, MemoryStatisticsActivity.class);
                 break;
+            case R.id.ll_cpu_statistics:
+                ActivityUtil.startActivity(this, CpuStatisticsActivity.class);
+                break;
             default:
                 break;
         }

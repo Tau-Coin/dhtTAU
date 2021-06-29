@@ -76,6 +76,35 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/ll_cpu_statistics"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:onClick="@{listener::onClick}"
+            android:gravity="center_vertical"
+            android:background="@color/color_white">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:text="@string/setting_cpu_statistics"
+                android:textAppearance="@style/TextAppearanceBody1" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@mipmap/icon_arrow"
+                android:contentDescription="@null"
+                android:textColor="@color/primary_light" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
