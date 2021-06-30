@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.core.utils;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
@@ -47,6 +48,9 @@ public class FixMemLeak {
         }
     }
 
+    /**
+     * 修复三星手机SemClipboardManager中变量内存泄漏
+     */
     private static void fixSamSungLeak(Context context) {
         try {
             if (Build.MANUFACTURER.equals("samsung") && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
@@ -73,7 +77,7 @@ public class FixMemLeak {
     }
 
     /**
-     * 修复三星手机紧急模式内训泄漏
+     * 修复三星手机紧急模式内存泄漏
      * 修复思路：SemEmergencyManager为单例，在Application.onCreate()中用ApplicationContext先初始化，
      * 防止挟持Activity对象不能释放
      * @param context ApplicationContext
@@ -91,29 +95,60 @@ public class FixMemLeak {
     }
 
     /**
-     * 修复三星输入法相关内存泄漏
+     * 修复三星分屏中相关内存泄漏
+     * 1、低版本
      * 修复问题，PhoneWindow中多个成员存在内存泄漏，无法一一通过反射清除
      * 解决思路：直接设置PhoneWindow为null, 会产生Crash, 所以采用创建一个新的PhoneWindow对象替换原对象的方案
+     * 2、高版本
+     * 修复三星Android9及更高版本分屏中的内存泄漏
+     * 由于Android9及更高版本, 对@hide注释的类和方法做了反射限制，
+     * @see HookUtils 所以在这里通过两次反射，代理Class.getDeclaredMethod方法来绕过此限制
      */
     private static void fixSamSungMultiWindowLeak(Activity activity) {
         try {
-            if (Build.MANUFACTURER.equals("samsung") && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT &&
-                    Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
-                View view = activity.getWindow().getDecorView();
-                Field field = view.getClass().getDeclaredField("mMultiWindowDecorSupportBridge");
-                field.setAccessible(true);
-                Object mMultiWindowDecorSupportBridge = field.get(view);
+            if (Build.MANUFACTURER.equals("samsung")) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT &&
+                        Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                    View view = activity.getWindow().getDecorView();
+                    Field field = view.getClass().getDeclaredField("mMultiWindowDecorSupportBridge");
+                    field.setAccessible(true);
+                    Object mMultiWindowDecorSupportBridge = field.get(view);
 
-                Field IBridge = mMultiWindowDecorSupportBridge.getClass().getDeclaredField("IBridge");
-                IBridge.setAccessible(true);
-                Object IBridgeObj = IBridge.get(mMultiWindowDecorSupportBridge);
+                    Field IBridge = mMultiWindowDecorSupportBridge.getClass().getDeclaredField("IBridge");
+                    IBridge.setAccessible(true);
+                    Object IBridgeObj = IBridge.get(mMultiWindowDecorSupportBridge);
 
-                Field mWindow = IBridgeObj.getClass().getDeclaredField("mWindow");
-                mWindow.setAccessible(true);
+                    Field mWindow = IBridgeObj.getClass().getDeclaredField("mWindow");
+                    mWindow.setAccessible(true);
 
-                Class phoneWindow = Class.forName("com.android.internal.policy.PhoneWindow");
-                Constructor constructor = phoneWindow.getDeclaredConstructor(Context.class);
-                mWindow.set(IBridgeObj, constructor.newInstance(activity.getApplicationContext()));
+                    // 创建一个新的PhoneWindow对象替换原对象
+                    Class phoneWindow = Class.forName("com.android.internal.policy.PhoneWindow");
+                    Constructor constructor = phoneWindow.getDeclaredConstructor(Context.class);
+                    mWindow.set(IBridgeObj, constructor.newInstance(activity.getApplicationContext()));
+                } else {
+                    Object viewRootImpl = activity.getWindow().getDecorView().getParent();
+                    // 两次反射，绕过@hide反射限制
+                    Field mInsetsController = HookUtils.getDeclaredField(viewRootImpl.getClass(), "mInsetsController");
+                    Object mInsetsControllerObj = HookUtils.fieldGetValue(mInsetsController, viewRootImpl);
+
+                    if (mInsetsControllerObj != null) {
+                        Field mSourceConsumers = HookUtils.getDeclaredField(mInsetsControllerObj.getClass(), "mSourceConsumers");
+                        Object mSourceConsumersObj = HookUtils.fieldGetValue(mSourceConsumers, mInsetsControllerObj);
+                        if (mSourceConsumersObj instanceof SparseArray) {
+                            SparseArray<?> sparseArray = (SparseArray<?>) mSourceConsumersObj;
+                            for (int i = sparseArray.size() - 1; i >= 0; i--) {
+                                int key = sparseArray.keyAt(i);
+                                Object object = sparseArray.get(key);
+                                // 删除三星的com.samsung.android.view.ClipBoardInsetsSourceConsumer对象
+                                String samsungConsumer = "com.samsung.android.view.ClipBoardInsetsSourceConsumer";
+                                if (object != null && StringUtil.isEquals(samsungConsumer, object.getClass().getName())) {
+                                    sparseArray.delete(key);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         } catch (Exception ignore) {
         }
