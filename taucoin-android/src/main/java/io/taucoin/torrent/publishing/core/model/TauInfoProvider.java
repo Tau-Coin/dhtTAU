@@ -120,7 +120,7 @@ public class TauInfoProvider {
                 Statistic statistic = new Statistic();
                 int seconds = 0;
                 while (!emitter.isCancelled()) {
-                    long timestamp = DateUtil.getTime();
+                    long startTimestamp = DateUtil.getMillisTime();
                     handlerTrafficStatistics(sessionStatistics);
                     long trafficTotal = sessionStatistics.getTotalDownload() + sessionStatistics.getTotalUpload();
                     trafficSize = trafficTotal - oldTrafficTotal;
@@ -129,7 +129,7 @@ public class TauInfoProvider {
 
                     handlerCPUAndMemoryStatistics(samplerStatistics);
 
-                    statistic.timestamp = timestamp;
+                    statistic.timestamp = startTimestamp / 1000;
                     statistic.dataSize = trafficSize;
                     statistic.memorySize = samplerStatistics.totalMemory;
                     statistic.cpuUsageRate = samplerStatistics.cpuUsage;
@@ -139,7 +139,13 @@ public class TauInfoProvider {
                         seconds = 0;
                     }
                     seconds ++;
-                    Thread.sleep(STATISTICS_PERIOD);
+                    // 处理代码执行时间
+                    long endTimestamp = DateUtil.getMillisTime();
+                    long consumeTime = endTimestamp - startTimestamp;
+                    long sleepTime = STATISTICS_PERIOD - consumeTime;
+                    if (sleepTime > 0) {
+                        Thread.sleep(STATISTICS_PERIOD);
+                    }
                 }
             } catch (InterruptedException ignore) {
             } catch (Exception e) {

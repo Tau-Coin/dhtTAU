@@ -29,6 +29,7 @@ public class NetworkSetting {
     private static final int SURVIVAL_SPEED_LIMIT = 10;        // 单位B
 
     private static SettingsRepository settingsRepo;
+    private static long lastStatisticsTime = 0;
     static {
         Context context = MainApplication.getInstance();
         settingsRepo = RepositoryHelper.getSettingsRepository(context);
@@ -142,6 +143,7 @@ public class NetworkSetting {
      * 更新Mode运行时间
      */
     private static void updateModeRunningTime() {
+        long currentTime = DateUtil.getMillisTime();
         DataMode mode = regulateRunningMode();
         updateRunningMode(mode);
         if (mode == DataMode.FOREGROUND) {
@@ -150,7 +152,14 @@ public class NetworkSetting {
         } else {
             int backgroundRunningTime = getBackgroundModeTime() + 1;
             updateBackgroundModeTime(backgroundRunningTime);
+
+            int dozeTime = (int) ((currentTime - lastStatisticsTime) / 1000 - 1);
+            if (lastStatisticsTime > 0 && dozeTime > 0 && !isForegroundRunning()) {
+                dozeTime += getDozeModeTime();
+                updateDozeModeTime(dozeTime);
+            }
         }
+        lastStatisticsTime = currentTime;
     }
 
     /**
@@ -249,6 +258,24 @@ public class NetworkSetting {
     }
 
     /**
+     * 获取APP后台模式时间
+     */
+    private static int getDozeModeTime() {
+        Context appContext = MainApplication.getInstance();
+        String dozeRunningTimeKey = appContext.getString(R.string.pref_key_doze_running_time);
+        return settingsRepo.getIntValue(dozeRunningTimeKey, 0);
+    }
+
+    /**
+     * 更新APP后台模式时间
+     */
+    public static void updateDozeModeTime(int dozeTime) {
+        Context appContext = MainApplication.getInstance();
+        String dozeRunningTimeKey = appContext.getString(R.string.pref_key_doze_running_time);
+        settingsRepo.setIntValue(dozeRunningTimeKey, dozeTime);
+    }
+
+    /**
      * 获取当前网络网速
      */
     public static long getCurrentSpeed() {
@@ -274,6 +301,7 @@ public class NetworkSetting {
 
         // 今天剩余的秒数(24h),到第二天凌晨4点
         long today24HLastSeconds = DateUtil.getTomorrowLastSeconds(TrafficUtil.TRAFFIC_UPDATE_TIME);
+        today24HLastSeconds += getDozeModeTime();
         // 今天剩余的秒数
         long todayLastSeconds = getScreenTimeLimitSecond(true) - getMeteredForegroundModeTime();
         // 前台时间比后台时间大，直接使用后台时间，防止前台网速比后台小
@@ -322,6 +350,7 @@ public class NetworkSetting {
 
         // 今天剩余的秒数(24h),到第二天凌晨4点
         long today24HLastSeconds = DateUtil.getTomorrowLastSeconds(TrafficUtil.TRAFFIC_UPDATE_TIME);
+        today24HLastSeconds += getDozeModeTime();
         // 今天剩余的秒数
         long todayLastSeconds = getScreenTimeLimitSecond(false) - getWifiForegroundModeTime();
         // 前台时间比后台时间大，直接使用后台时间，防止前台网速比后台小

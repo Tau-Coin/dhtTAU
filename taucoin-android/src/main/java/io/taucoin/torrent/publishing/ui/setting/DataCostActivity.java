@@ -120,6 +120,7 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
         super.onStart();
         // 处理从后台切换到前台的情况下，后台时间不更新的问题
         handleSettingsChanged(getString(R.string.pref_key_background_running_time));
+        handleSettingsChanged(getString(R.string.pref_key_doze_running_time));
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -206,11 +207,16 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
                         limitHours, limitHours);
             }
             binding.tvWorkFrequencyModel.setText(model);
-        }  else if(StringUtil.isEquals(key, getString(R.string.pref_key_background_running_time)) ||
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_background_running_time)) ||
                 StringUtil.isEquals(key, getString(R.string.pref_key_foreground_running))) {
             int backgroundTime = settingsRepo.getIntValue(key);
             String backgroundTimeStr = DateUtil.getFormatTime(backgroundTime);
             binding.tvBackgroundTime.setText(getString(R.string.setting_running_time, backgroundTimeStr));
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_doze_running_time)) ||
+                StringUtil.isEquals(key, getString(R.string.pref_key_foreground_running))) {
+            int dozeTime = settingsRepo.getIntValue(key);
+            String dozeTimeStr = DateUtil.getFormatTime(dozeTime);
+            binding.tvDozeTime.setText(getString(R.string.setting_doze_time, dozeTimeStr));
         }
     }
 

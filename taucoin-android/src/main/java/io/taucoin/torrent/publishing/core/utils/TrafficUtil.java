@@ -105,6 +105,7 @@ public class TrafficUtil {
             NetworkSetting.updateMeteredForegroundModeTime(0);
             NetworkSetting.updateWifiForegroundModeTime(0);
             NetworkSetting.updateBackgroundModeTime(0);
+            NetworkSetting.updateDozeModeTime(0);
         }
     }
 

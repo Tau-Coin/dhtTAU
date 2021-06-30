@@ -29,6 +29,7 @@
     <string name="pref_key_metered_foreground_running_time" translatable="false">pref_key_metered_foreground_running_time</string>
     <string name="pref_key_wifi_foreground_running_time" translatable="false">pref_key_wifi_foreground_running_time</string>
     <string name="pref_key_background_running_time" translatable="false">pref_key_background_running_time</string>
+    <string name="pref_key_doze_running_time" translatable="false">pref_key_doze_running_time</string>
 
     <string name="pref_key_first_start" translatable="false">pref_key_first_start</string>
 
