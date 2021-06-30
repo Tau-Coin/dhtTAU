@@ -133,6 +133,7 @@ public class TauInfoProvider {
                     statistic.dataSize = trafficSize;
                     statistic.memorySize = samplerStatistics.totalMemory;
                     statistic.cpuUsageRate = samplerStatistics.cpuUsage;
+                    statistic.isMetered = NetworkSetting.isMeteredNetwork() ? 1 : 0;
                     statisticRepo.addStatistic(statistic);
                     if (seconds > Constants.STATISTICS_CLEANING_PERIOD) {
                         statisticRepo.deleteOldStatistics();

@@ -11,10 +11,11 @@ import androidx.room.Ignore;
  */
 @Entity(tableName = "Statistics", primaryKeys = {"timestamp"})
 public class Statistic implements Parcelable {
-    public long timestamp;
-    public long dataSize;
-    public long memorySize;
-    public double cpuUsageRate;
+    public long timestamp;        // 时间戳
+    public long dataSize;         // 流量大小
+    public int isMetered;         // 区分流量类型  0: 非计费, 1: 计费
+    public long memorySize;       // 内存大小
+    public double cpuUsageRate;   // CPU使用率
 
     public Statistic(){
     }
@@ -32,6 +33,7 @@ public class Statistic implements Parcelable {
         dataSize = in.readLong();
         memorySize = in.readLong();
         cpuUsageRate = in.readDouble();
+        isMetered = in.readInt();
     }
 
     @Override
@@ -40,6 +42,7 @@ public class Statistic implements Parcelable {
         dest.writeLong(dataSize);
         dest.writeLong(memorySize);
         dest.writeDouble(cpuUsageRate);
+        dest.writeInt(isMetered);
     }
 
     @Override

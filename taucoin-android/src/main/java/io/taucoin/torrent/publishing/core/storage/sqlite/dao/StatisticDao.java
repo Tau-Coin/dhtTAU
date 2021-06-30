@@ -19,18 +19,34 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Statistic;
 public interface StatisticDao {
 
     // 查询流量统计数据
-    String QUERY_DATA_STATISTICS = "SELECT round(timestamp/(:seconds), 0) AS timeKey, max(timestamp) AS timestamp," +
-            " avg(dataSize) AS dataAvg" +
-            " FROM  Statistics WHERE" +
-            " datetime(timestamp, 'unixepoch', 'localtime') > datetime('now','-24 hour','localtime')" +
-            " GROUP BY timeKey" +
-            " ORDER BY timeKey";
+//    String QUERY_DATA_STATISTICS = "SELECT round(timestamp/(:seconds), 0) AS timeKey, max(timestamp) AS timestamp," +
+//            " avg(dataSize) AS dataAvg" +
+//            " FROM  Statistics WHERE isMetered = :isMetered AND" +
+//            " datetime(timestamp, 'unixepoch', 'localtime') > datetime('now','-24 hour','localtime')" +
+//            " GROUP BY timeKey" +
+//            " ORDER BY timeKey";
+
+    String QUERY_WHERE_24HOURS = " datetime(timestamp, 'unixepoch', 'localtime') > datetime('now','-24 hour','localtime')";
+
+    String QUERY_DATA_STATISTICS = "SELECT a.timeKey, a.timestamp, b.meteredDataAvg, c.unMeteredDataAvg" +
+            " From (SELECT round(timestamp/(:seconds), 0) AS timeKey, max(timestamp) AS timestamp" +
+            " FROM  Statistics WHERE " + QUERY_WHERE_24HOURS + " GROUP BY timeKey ORDER BY timeKey) AS a" +
+
+            " LEFT JOIN (SELECT round(timestamp/(:seconds), 0) AS timeKey, avg(dataSize) AS meteredDataAvg" +
+            " FROM  Statistics WHERE isMetered = 1 AND " + QUERY_WHERE_24HOURS + " GROUP BY timeKey ORDER BY timeKey) AS b" +
+            " ON a.timeKey = b.timeKey" +
+
+            " LEFT JOIN (SELECT round(timestamp/(:seconds), 0) AS timeKey, avg(dataSize) AS unMeteredDataAvg" +
+            " FROM  Statistics WHERE isMetered = 0 AND " + QUERY_WHERE_24HOURS + " GROUP BY timeKey ORDER BY timeKey) AS c" +
+            " ON a.timeKey = c.timeKey";
+
+
 
     // 查询内存统计数据
     String QUERY_MEMORY_STATISTICS = "SELECT round(timestamp/(:seconds), 0) AS timeKey, max(timestamp) AS timestamp," +
             " avg(memorySize) AS memoryAvg" +
             " FROM  Statistics WHERE" +
-            " datetime(timestamp, 'unixepoch', 'localtime') > datetime('now','-24 hour','localtime')" +
+            QUERY_WHERE_24HOURS +
             " GROUP BY timeKey" +
             " ORDER BY timeKey";
 
@@ -39,7 +55,7 @@ public interface StatisticDao {
     String QUERY_CPU_STATISTICS = "SELECT round(timestamp/(:seconds), 0) AS timeKey, max(timestamp) AS timestamp," +
             " avg(cpuUsageRate) AS cpuUsageRateAvg" +
             " FROM  Statistics WHERE" +
-            " datetime(timestamp, 'unixepoch', 'localtime') > datetime('now','-24 hour','localtime')" +
+            QUERY_WHERE_24HOURS +
             " GROUP BY timeKey" +
             " ORDER BY timeKey";
 

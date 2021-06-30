@@ -3,7 +3,8 @@ package io.taucoin.torrent.publishing.core.model.data;
 public class DataStatistics {
     private long timeKey;
     private long timestamp;
-    private long dataAvg;
+    private long meteredDataAvg;
+    private long unMeteredDataAvg;
 
     public long getTimeKey() {
         return timeKey;
@@ -21,11 +22,19 @@ public class DataStatistics {
         this.timestamp = timestamp;
     }
 
-    public long getDataAvg() {
-        return dataAvg;
+    public long getMeteredDataAvg() {
+        return meteredDataAvg;
     }
 
-    public void setDataAvg(long dataAvg) {
-        this.dataAvg = dataAvg;
+    public void setMeteredDataAvg(long meteredDataAvg) {
+        this.meteredDataAvg = meteredDataAvg;
+    }
+
+    public long getUnMeteredDataAvg() {
+        return unMeteredDataAvg;
+    }
+
+    public void setUnMeteredDataAvg(long unMeteredDataAvg) {
+        this.unMeteredDataAvg = unMeteredDataAvg;
     }
 }

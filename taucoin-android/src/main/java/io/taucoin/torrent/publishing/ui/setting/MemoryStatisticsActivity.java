@@ -144,9 +144,16 @@ public class MemoryStatisticsActivity extends BaseActivity {
         if (statistics.size() > initSupplySize) {
             initSupplySize = 2;
         }
-        MemoryStatistics statistic = statistics.get(0);
+        MemoryStatistics statistic;
+        long firstTimestamp;
+        if (statistics.size() > 0) {
+            statistic = statistics.get(0);
+            firstTimestamp = statistic.getTimestamp();
+        } else {
+            firstTimestamp = DateUtil.getTime();
+        }
         for (long j = initSupplySize; j > 0; j--) {
-            long timestamp = statistic.getTimestamp() - j * Constants.STATISTICS_DISPLAY_PERIOD;
+            long timestamp = firstTimestamp - j * Constants.STATISTICS_DISPLAY_PERIOD;
             xValues.add(DateUtil.formatTime(timestamp, DateUtil.pattern0));
             yValues.add(new Entry(yValues.size(), 0));
         }

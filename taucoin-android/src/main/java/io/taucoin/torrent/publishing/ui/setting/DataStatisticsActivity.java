@@ -131,20 +131,28 @@ public class DataStatisticsActivity extends BaseActivity {
 
         // 组织数据
         List<String> xValues = new ArrayList<>();
-        List<Entry> yValues = new ArrayList<>();
+        List<Entry> yMeteredValues = new ArrayList<>();
+        List<Entry> yUnMeteredValues = new ArrayList<>();
 
         // 统计数据较少时，补充数据
         long initSupplySize = 7;
         if (statistics.size() > initSupplySize) {
             initSupplySize = 2;
         }
-        DataStatistics statistic = statistics.get(0);
-        for (long j = initSupplySize; j > 0; j--) {
-            long timestamp = statistic.getTimestamp() - j * Constants.STATISTICS_DISPLAY_PERIOD;
-            xValues.add(DateUtil.formatTime(timestamp, DateUtil.pattern0));
-            yValues.add(new Entry(yValues.size(), 0));
+        DataStatistics statistic;
+        long firstTimestamp;
+        if (statistics.size() > 0) {
+            statistic = statistics.get(0);
+            firstTimestamp = statistic.getTimestamp();
+        } else {
+            firstTimestamp = DateUtil.getTime();
         }
-
+        for (long j = initSupplySize; j > 0; j--) {
+            long timestamp = firstTimestamp - j * Constants.STATISTICS_DISPLAY_PERIOD;
+            xValues.add(DateUtil.formatTime(timestamp, DateUtil.pattern0));
+            yMeteredValues.add(new Entry(yMeteredValues.size(), 0));
+            yUnMeteredValues.add(new Entry(yUnMeteredValues.size(), 0));
+        }
         for (int i = 0; i < statistics.size(); i++) {
             statistic = statistics.get(i);
             logger.debug("statistics.timestamp::{}", DateUtil.formatTime(statistic.getTimestamp(), DateUtil.pattern0));
@@ -155,12 +163,14 @@ public class DataStatisticsActivity extends BaseActivity {
                     for (long j = 1; j < supplySize; j++) {
                         long timestamp = lastStatistic.getTimestamp() + j * Constants.STATISTICS_DISPLAY_PERIOD;
                         xValues.add(DateUtil.formatTime(timestamp, DateUtil.pattern0));
-                        yValues.add(new Entry(yValues.size(), 0));
+                        yMeteredValues.add(new Entry(yMeteredValues.size(), 0));
+                        yUnMeteredValues.add(new Entry(yUnMeteredValues.size(), 0));
                     }
                 }
             }
             xValues.add(DateUtil.formatTime(statistic.getTimestamp(), DateUtil.pattern0));
-            yValues.add(new Entry(yValues.size(), statistic.getDataAvg()));
+            yMeteredValues.add(new Entry(yMeteredValues.size(), statistic.getMeteredDataAvg()));
+            yUnMeteredValues.add(new Entry(yUnMeteredValues.size(), statistic.getUnMeteredDataAvg()));
         }
 
         // X轴
@@ -192,17 +202,27 @@ public class DataStatisticsActivity extends BaseActivity {
 
         //这里，每重新new一个LineDataSet，相当于重新画一组折线
         //每一个LineDataSet相当于一组折线。比如:这里有两个LineDataSet：setComp1，setComp2。
-        LineDataSet setComp = new LineDataSet(yValues, getString(R.string.setting_data_statistics));
-        setComp.setAxisDependency(YAxis.AxisDependency.LEFT);
-        setComp.setColor(getResources().getColor(R.color.colorPrimary));
-        setComp.setDrawFilled(true);
-        setComp.setDrawValues(false);
-        setComp.setDrawCircles(false);
-        setComp.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);
-        setComp.setLineWidth(1f);// 设置线宽
+        LineDataSet meteredDataSet = new LineDataSet(yMeteredValues, getString(R.string.setting_metered_statistics));
+        meteredDataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
+        meteredDataSet.setColor(getResources().getColor(R.color.color_red));
+        meteredDataSet.setDrawFilled(true);
+        meteredDataSet.setDrawValues(false);
+        meteredDataSet.setDrawCircles(false);
+        meteredDataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);
+        meteredDataSet.setLineWidth(1f);// 设置线宽
+
+        LineDataSet unMeteredDataSet = new LineDataSet(yUnMeteredValues, getString(R.string.setting_wifi_statistics));
+        unMeteredDataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
+        unMeteredDataSet.setColor(getResources().getColor(R.color.colorPrimary));
+        unMeteredDataSet.setDrawFilled(true);
+        unMeteredDataSet.setDrawValues(false);
+        unMeteredDataSet.setDrawCircles(false);
+        unMeteredDataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);
+        unMeteredDataSet.setLineWidth(1f);// 设置线宽
 
         List<ILineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(setComp);
+        dataSets.add(meteredDataSet);
+        dataSets.add(unMeteredDataSet);
 
         LineData lineData = new LineData(dataSets);
 
