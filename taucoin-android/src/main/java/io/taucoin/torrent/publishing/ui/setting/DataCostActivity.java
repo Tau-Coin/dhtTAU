@@ -119,7 +119,8 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
     public void onStart() {
         super.onStart();
         // 处理从后台切换到前台的情况下，后台时间不更新的问题
-        handleSettingsChanged(getString(R.string.pref_key_background_running_time));
+        handleSettingsChanged(getString(R.string.pref_key_wifi_background_running_time));
+        handleSettingsChanged(getString(R.string.pref_key_metered_background_running_time));
         handleSettingsChanged(getString(R.string.pref_key_doze_running_time));
         disposables.add(settingsRepo.observeSettingsChanged()
                 .subscribeOn(Schedulers.newThread())
@@ -175,6 +176,9 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
                 binding.llRoot.removeView(binding.llWifi);
                 binding.llRoot.addView(binding.llWifi, 1);
             }
+            // 网络变化更新运行时间
+            handleSettingsChanged(getString(R.string.pref_key_metered_foreground_running_time));
+            handleSettingsChanged(getString(R.string.pref_key_metered_background_running_time));
         } else if (key.equals(getString(R.string.pref_key_internet_state))) {
             handleSettingsChanged(getString(R.string.pref_key_is_metered_network));
         } else if (key.equals(getString(R.string.pref_key_metered_available_data))) {
@@ -207,14 +211,15 @@ public class DataCostActivity extends BaseActivity implements DailyQuotaAdapter.
                         limitHours, limitHours);
             }
             binding.tvWorkFrequencyModel.setText(model);
-        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_background_running_time)) ||
+        } else if(StringUtil.isEquals(key, getString(R.string.pref_key_wifi_background_running_time)) ||
+                StringUtil.isEquals(key, getString(R.string.pref_key_metered_background_running_time)) ||
                 StringUtil.isEquals(key, getString(R.string.pref_key_foreground_running))) {
-            int backgroundTime = settingsRepo.getIntValue(key);
+            int backgroundTime = NetworkSetting.getBackgroundModeTime();
             String backgroundTimeStr = DateUtil.getFormatTime(backgroundTime);
             binding.tvBackgroundTime.setText(getString(R.string.setting_running_time, backgroundTimeStr));
         } else if(StringUtil.isEquals(key, getString(R.string.pref_key_doze_running_time)) ||
                 StringUtil.isEquals(key, getString(R.string.pref_key_foreground_running))) {
-            int dozeTime = settingsRepo.getIntValue(key);
+            int dozeTime = NetworkSetting.getDozeModeTime();
             String dozeTimeStr = DateUtil.getFormatTime(dozeTime);
             binding.tvDozeTime.setText(getString(R.string.setting_doze_time, dozeTimeStr));
         }

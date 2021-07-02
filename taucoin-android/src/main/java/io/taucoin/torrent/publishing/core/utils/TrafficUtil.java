@@ -104,7 +104,8 @@ public class TrafficUtil {
             // 同时重置前台运行时间
             NetworkSetting.updateMeteredForegroundModeTime(0);
             NetworkSetting.updateWifiForegroundModeTime(0);
-            NetworkSetting.updateBackgroundModeTime(0);
+            NetworkSetting.updateMeteredBackgroundModeTime(0);
+            NetworkSetting.updateWifiBackgroundModeTime(0);
             NetworkSetting.updateDozeModeTime(0);
         }
     }

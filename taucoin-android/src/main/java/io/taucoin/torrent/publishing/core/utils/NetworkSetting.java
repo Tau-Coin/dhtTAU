@@ -242,25 +242,65 @@ public class NetworkSetting {
     /**
      * 获取APP后台模式时间
      */
-    private static int getBackgroundModeTime() {
-        Context appContext = MainApplication.getInstance();
-        String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_background_running_time);
-        return settingsRepo.getIntValue(backgroundRunningTimeKey, 0);
+    public static int getBackgroundModeTime() {
+        if (isMeteredNetwork()) {
+            return getMeteredBackgroundModeTime();
+        } else {
+            return getWifiBackgroundModeTime();
+        }
     }
 
     /**
      * 更新APP后台模式时间
      */
-    public static void updateBackgroundModeTime(int backgroundRunningTime) {
+    private static void updateBackgroundModeTime(int backgroundRunningTime) {
+        if (isMeteredNetwork()) {
+            updateMeteredBackgroundModeTime(backgroundRunningTime);
+        } else {
+            updateWifiBackgroundModeTime(backgroundRunningTime);
+        }
+    }
+
+    /**
+     * 获取APP非计费网络后台模式时间
+     */
+    private static int getWifiBackgroundModeTime() {
         Context appContext = MainApplication.getInstance();
-        String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_background_running_time);
+        String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_wifi_background_running_time);
+        return settingsRepo.getIntValue(backgroundRunningTimeKey, 0);
+    }
+
+    /**
+     * 更新APP非计费网络后台模式时间
+     */
+    public static void updateWifiBackgroundModeTime(int backgroundRunningTime) {
+        Context appContext = MainApplication.getInstance();
+        String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_wifi_background_running_time);
+        settingsRepo.setIntValue(backgroundRunningTimeKey, backgroundRunningTime);
+    }
+
+    /**
+     * 获取APP计费网络后台模式时间
+     */
+    private static int getMeteredBackgroundModeTime() {
+        Context appContext = MainApplication.getInstance();
+        String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_metered_background_running_time);
+        return settingsRepo.getIntValue(backgroundRunningTimeKey, 0);
+    }
+
+    /**
+     * 更新APP计费网络后台模式时间
+     */
+    public static void updateMeteredBackgroundModeTime(int backgroundRunningTime) {
+        Context appContext = MainApplication.getInstance();
+        String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_metered_background_running_time);
         settingsRepo.setIntValue(backgroundRunningTimeKey, backgroundRunningTime);
     }
 
     /**
      * 获取APP后台模式时间
      */
-    private static int getDozeModeTime() {
+    public static int getDozeModeTime() {
         Context appContext = MainApplication.getInstance();
         String dozeRunningTimeKey = appContext.getString(R.string.pref_key_doze_running_time);
         return settingsRepo.getIntValue(dozeRunningTimeKey, 0);
@@ -299,11 +339,13 @@ public class NetworkSetting {
         BigInteger bigLimit = BigInteger.valueOf(limit).multiply(bigUnit).multiply(bigUnit);
         BigInteger bigUsage = BigInteger.valueOf(usage);
 
-        // 今天剩余的秒数(24h),到第二天凌晨4点
-        long today24HLastSeconds = DateUtil.getTomorrowLastSeconds(TrafficUtil.TRAFFIC_UPDATE_TIME);
-        today24HLastSeconds += getDozeModeTime();
+        // 今天剩余的秒数 = 24h - 前台时间 - 后台时间
+        int foregroundModeTime = getMeteredForegroundModeTime();
+        int backgroundModeTime = getMeteredBackgroundModeTime();
+        long today24HLastSeconds = 24 * 60 * 60 - foregroundModeTime - backgroundModeTime;
+
         // 今天剩余的秒数
-        long todayLastSeconds = getScreenTimeLimitSecond(true) - getMeteredForegroundModeTime();
+        long todayLastSeconds = getScreenTimeLimitSecond(true) - foregroundModeTime;
         // 前台时间比后台时间大，直接使用后台时间，防止前台网速比后台小
         todayLastSeconds = Math.min(todayLastSeconds, today24HLastSeconds);
         if (todayLastSeconds <= 0) {
@@ -348,11 +390,12 @@ public class NetworkSetting {
                 bigUsage.longValue(),
                 bigLimit.compareTo(bigUsage));
 
-        // 今天剩余的秒数(24h),到第二天凌晨4点
-        long today24HLastSeconds = DateUtil.getTomorrowLastSeconds(TrafficUtil.TRAFFIC_UPDATE_TIME);
-        today24HLastSeconds += getDozeModeTime();
+        // 今天剩余的秒数 = 24h - 前台时间 - 后台时间
+        int foregroundModeTime = getWifiForegroundModeTime();
+        int backgroundModeTime = getWifiBackgroundModeTime();
+        long today24HLastSeconds = 24 * 60 * 60 - foregroundModeTime - backgroundModeTime;
         // 今天剩余的秒数
-        long todayLastSeconds = getScreenTimeLimitSecond(false) - getWifiForegroundModeTime();
+        long todayLastSeconds = getScreenTimeLimitSecond(false) - foregroundModeTime;
         // 前台时间比后台时间大，直接使用后台时间，防止前台网速比后台小
         todayLastSeconds = Math.min(todayLastSeconds, today24HLastSeconds);
         if (todayLastSeconds <= 0) {
