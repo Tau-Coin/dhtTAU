@@ -81,6 +81,7 @@
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <TextView
+                            android:id="@+id/tv_reset_time"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
@@ -93,77 +94,20 @@
                     <include layout="@layout/view_line"/>
 
                     <LinearLayout
-                        android:orientation="vertical"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:includeFontPadding="false"
-                            android:paddingTop="10dp"
-                            android:paddingBottom="0dp"
-                            android:text="@string/setting_fore_mode"
-                            android:layout_marginEnd="5dp"
-                            android:textAppearance="@style/TextAppearanceBody1"/>
-
-                        <TextView
-                            android:id="@+id/tv_work_frequency_model"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingBottom="10dp"
-                            android:includeFontPadding="false"
-                            android:layout_marginEnd="5dp"
-                            android:textColor="@color/gray_dark"
-                            android:text="@string/setting_work_frequency_in_screen_time"
-                            android:textAppearance="@style/TextAppearanceBody2"/>
-
-                    </LinearLayout>
-
-                    <include layout="@layout/view_line"/>
-
-                    <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="44dp"
                         android:gravity="center_vertical">
 
-                        <LinearLayout
-                            android:orientation="vertical"
+                        <TextView
                             android:layout_width="0dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center_vertical"
-                                android:includeFontPadding="false"
-                                android:paddingTop="10dp"
-                                android:paddingBottom="0dp"
-                                android:text="@string/setting_bg_mode"
-                                android:layout_marginEnd="5dp"
-                                android:textAppearance="@style/TextAppearanceBody1"/>
-
-                            <TextView
-                                android:id="@+id/tv_background_time"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textColor="@color/gray_dark"
-                                android:text="@string/setting_running_time"
-                                android:textAppearance="@style/TextAppearanceBody2"/>
-
-                            <TextView
-                                android:id="@+id/tv_doze_time"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:paddingBottom="10dp"
-                                android:textColor="@color/gray_dark"
-                                android:text="@string/setting_doze_time"
-                                android:textAppearance="@style/TextAppearanceBody2"/>
-
-                        </LinearLayout>
+                            android:gravity="center_vertical"
+                            android:includeFontPadding="false"
+                            android:text="@string/setting_bg_mode"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <Switch
                             android:id="@+id/switch_background"
@@ -342,6 +286,75 @@
 
                     </LinearLayout>
 
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:includeFontPadding="false"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="0dp"
+                            android:text="@string/setting_fore_mode"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_metered_screen_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingBottom="10dp"
+                            android:includeFontPadding="false"
+                            android:layout_marginEnd="5dp"
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/setting_work_frequency_in_screen_time"
+                            android:textAppearance="@style/TextAppearanceBody2"/>
+
+                    </LinearLayout>
+
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:includeFontPadding="false"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="0dp"
+                            android:text="@string/setting_bg_mode"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_metered_background_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/setting_running_time"
+                            android:textAppearance="@style/TextAppearanceBody2"/>
+
+                        <TextView
+                            android:id="@+id/tv_metered_doze_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingBottom="10dp"
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/setting_doze_time"
+                            android:textAppearance="@style/TextAppearanceBody2"/>
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -515,6 +528,75 @@
                             android:textColor="@color/gray_dark"
                             android:layout_marginEnd="5dp"
                             android:textAppearance="@style/TextAppearanceBody1"/>
+
+                    </LinearLayout>
+
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:includeFontPadding="false"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="0dp"
+                            android:text="@string/setting_fore_mode"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_wifi_screen_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingBottom="10dp"
+                            android:includeFontPadding="false"
+                            android:layout_marginEnd="5dp"
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/setting_work_frequency_in_screen_time"
+                            android:textAppearance="@style/TextAppearanceBody2"/>
+
+                    </LinearLayout>
+
+                    <include layout="@layout/view_line"/>
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:includeFontPadding="false"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="0dp"
+                            android:text="@string/setting_bg_mode"
+                            android:layout_marginEnd="5dp"
+                            android:textAppearance="@style/TextAppearanceBody1"/>
+
+                        <TextView
+                            android:id="@+id/tv_wifi_background_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/setting_running_time"
+                            android:textAppearance="@style/TextAppearanceBody2"/>
+
+                        <TextView
+                            android:id="@+id/tv_wifi_doze_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingBottom="10dp"
+                            android:textColor="@color/gray_dark"
+                            android:text="@string/setting_doze_time"
+                            android:textAppearance="@style/TextAppearanceBody2"/>
 
                     </LinearLayout>
 

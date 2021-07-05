@@ -153,7 +153,7 @@
     <string name="setting_wifi_network_title">WiFi - likely free internet</string>
     <string name="setting_metered_network_title">Metered - likely paid internet</string>
     <string name="setting_data_reset_time">Data Daily Reset Time</string>
-    <string name="setting_data_reset_time_value">4 am</string>
+    <string name="setting_data_reset_time_value">%d am</string>
     <string name="setting_work_frequency">Working Frequency</string>
     <string name="setting_fore_mode">Foreground Mode</string>
     <string name="setting_bg_mode">Background Mode</string>

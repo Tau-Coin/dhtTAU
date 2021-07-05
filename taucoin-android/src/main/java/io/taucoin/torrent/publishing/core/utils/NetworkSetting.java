@@ -155,8 +155,13 @@ public class NetworkSetting {
 
             int dozeTime = (int) ((currentTime - lastStatisticsTime) / 1000 - 1);
             if (lastStatisticsTime > 0 && dozeTime > 0 && !isForegroundRunning()) {
-                dozeTime += getDozeModeTime();
-                updateDozeModeTime(dozeTime);
+                if (isMeteredNetwork()) {
+                    dozeTime += getMeteredDozeModeTime();
+                    updateMeteredDozeModeTime(dozeTime);
+                } else {
+                    dozeTime += getWifiDozeModeTime();
+                    updateWifiDozeModeTime(dozeTime);
+                }
             }
         }
         lastStatisticsTime = currentTime;
@@ -206,7 +211,7 @@ public class NetworkSetting {
     /**
      * 获取APP计费网络前台运行时间
      */
-    private static int getMeteredForegroundModeTime() {
+    public static int getMeteredForegroundModeTime() {
         Context appContext = MainApplication.getInstance();
         String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_metered_foreground_running_time);
         return settingsRepo.getIntValue(foregroundRunningTimeKey, 0);
@@ -224,7 +229,7 @@ public class NetworkSetting {
     /**
      * 获取APP Wifi网络前台运行时间
      */
-    private static int getWifiForegroundModeTime() {
+    public static int getWifiForegroundModeTime() {
         Context appContext = MainApplication.getInstance();
         String foregroundRunningTimeKey = appContext.getString(R.string.pref_key_wifi_foreground_running_time);
         return settingsRepo.getIntValue(foregroundRunningTimeKey, 0);
@@ -264,7 +269,7 @@ public class NetworkSetting {
     /**
      * 获取APP非计费网络后台模式时间
      */
-    private static int getWifiBackgroundModeTime() {
+    public static int getWifiBackgroundModeTime() {
         Context appContext = MainApplication.getInstance();
         String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_wifi_background_running_time);
         return settingsRepo.getIntValue(backgroundRunningTimeKey, 0);
@@ -282,7 +287,7 @@ public class NetworkSetting {
     /**
      * 获取APP计费网络后台模式时间
      */
-    private static int getMeteredBackgroundModeTime() {
+    public static int getMeteredBackgroundModeTime() {
         Context appContext = MainApplication.getInstance();
         String backgroundRunningTimeKey = appContext.getString(R.string.pref_key_metered_background_running_time);
         return settingsRepo.getIntValue(backgroundRunningTimeKey, 0);
@@ -298,20 +303,38 @@ public class NetworkSetting {
     }
 
     /**
-     * 获取APP后台模式时间
+     * 获取APP Metered后台Doze时间
      */
-    public static int getDozeModeTime() {
+    public static int getMeteredDozeModeTime() {
         Context appContext = MainApplication.getInstance();
-        String dozeRunningTimeKey = appContext.getString(R.string.pref_key_doze_running_time);
+        String dozeRunningTimeKey = appContext.getString(R.string.pref_key_metered_doze_running_time);
         return settingsRepo.getIntValue(dozeRunningTimeKey, 0);
     }
 
     /**
-     * 更新APP后台模式时间
+     * 获取APP Wifi后台Doze时间
      */
-    public static void updateDozeModeTime(int dozeTime) {
+    public static int getWifiDozeModeTime() {
         Context appContext = MainApplication.getInstance();
-        String dozeRunningTimeKey = appContext.getString(R.string.pref_key_doze_running_time);
+        String dozeRunningTimeKey = appContext.getString(R.string.pref_key_wifi_doze_running_time);
+        return settingsRepo.getIntValue(dozeRunningTimeKey, 0);
+    }
+
+    /**
+     * 更新APP后台Doze时间
+     */
+    public static void updateMeteredDozeModeTime(int dozeTime) {
+        Context appContext = MainApplication.getInstance();
+        String dozeRunningTimeKey = appContext.getString(R.string.pref_key_metered_doze_running_time);
+        settingsRepo.setIntValue(dozeRunningTimeKey, dozeTime);
+    }
+
+    /**
+     * 更新APP后台Doze时间
+     */
+    public static void updateWifiDozeModeTime(int dozeTime) {
+        Context appContext = MainApplication.getInstance();
+        String dozeRunningTimeKey = appContext.getString(R.string.pref_key_wifi_doze_running_time);
         settingsRepo.setIntValue(dozeRunningTimeKey, dozeTime);
     }
 
@@ -435,7 +458,7 @@ public class NetworkSetting {
     /**
      * 获取每天APP高速前台时间限制 单位H
      */
-    private static int getScreenTimeLimitHours(boolean isMeteredNetwork) {
+    public static int getScreenTimeLimitHours(boolean isMeteredNetwork) {
         Context context = MainApplication.getInstance();
         int selectIndex;
         int[] screenTimes;
