@@ -51,6 +51,7 @@
     <string name="main_pic_messages">[Picture]</string>
     <string name="main_connecting">Joining phone swarm &#8230;</string>
     <string name="main_data_used_up">Daily Data Limit Used Up</string>
+    <string name="main_insufficient_device_space">Insufficient device space</string>
 
     <!-- Strings used for main drawer content -->
     <string name="drawer_new_community">New Community</string>

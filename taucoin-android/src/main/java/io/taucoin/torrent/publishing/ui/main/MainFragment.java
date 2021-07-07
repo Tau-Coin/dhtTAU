@@ -23,9 +23,9 @@ import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauInfoProvider;
 import io.taucoin.torrent.publishing.core.model.data.CommunityAndFriend;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
+import io.taucoin.torrent.publishing.core.utils.DeviceUtils;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.databinding.FragmentMainBinding;
-import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.community.CommunityCreateActivity;
 import io.taucoin.torrent.publishing.ui.friends.ExchangeActivity;
@@ -91,11 +91,15 @@ public class MainFragment extends BaseFragment implements MainListAdapter.ClickL
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(nodes -> {
-                    boolean isVisibility = nodes <= 0 || !NetworkSetting.isHaveAvailableData();
-                    binding.llWarning.setVisibility(isVisibility ? View.VISIBLE : View.GONE);
-                    if (isVisibility) {
-                        binding.tvWarning.setText(nodes <= 0 ? getText(R.string.main_connecting) :
-                                getText(R.string.main_data_used_up));
+                    binding.llWarning.setVisibility(View.VISIBLE);
+                    if (nodes <= 0) {
+                        binding.tvWarning.setText(getString(R.string.main_connecting));
+                    } else if (!NetworkSetting.isHaveAvailableData()) {
+                        binding.tvWarning.setText(getString(R.string.main_data_used_up));
+                    } else if (DeviceUtils.isSpaceInsufficient()) {
+                        binding.tvWarning.setText(getString(R.string.main_insufficient_device_space));
+                    } else {
+                        binding.llWarning.setVisibility(View.GONE);
                     }
                 }));
     }
