@@ -164,7 +164,7 @@ public class TauNotifier {
                 .setContentText(msg)
                 .setWhen(System.currentTimeMillis())
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setDefaults(Notification.DEFAULT_ALL)
+                .setDefaults(Notification.FLAG_ONLY_ALERT_ONCE)
                 // 悬浮框
                 .setTicker(friendName)
                 .setPriority(Notification.PRIORITY_HIGH)
