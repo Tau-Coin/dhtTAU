@@ -1,10 +1,6 @@
 package io.taucoin.torrent.publishing.ui.chat;
 
-import android.app.ActivityManager;
 import android.app.Application;
-import android.content.Context;
-import android.os.Debug;
-import android.os.Process;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,25 +9,28 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.paging.LivePagedListBuilder;
-import androidx.paging.PagedList;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.Observable;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.model.data.ChatMsgStatus;
+import io.taucoin.torrent.publishing.core.model.data.DataChanged;
 import io.taucoin.torrent.publishing.core.model.data.Result;
 import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.AppDatabase;
@@ -43,7 +42,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.repo.ChatRepository;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.UserRepository;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
 import io.taucoin.torrent.publishing.core.utils.FmtMicrometer;
-import io.taucoin.torrent.publishing.core.utils.Formatter;
 import io.taucoin.torrent.publishing.core.utils.HashUtil;
 import io.taucoin.torrent.publishing.core.utils.MsgSplitUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
@@ -52,6 +50,7 @@ import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.types.Message;
 import io.taucoin.types.MessageType;
 import io.taucoin.util.ByteUtil;
+import io.taucoin.util.CryptoUtil;
 
 /**
  * 聊天相关的ViewModel
@@ -64,15 +63,14 @@ public class ChatViewModel extends AndroidViewModel {
     private SettingsRepository settingsRepo;
     private CompositeDisposable disposables = new CompositeDisposable();
     private MutableLiveData<Result> chatResult = new MutableLiveData<>();
+    private MutableLiveData<List<ChatMsgAndUser>> chatMessages = new MutableLiveData<>();
     private TauDaemon daemon;
-    private ChatSourceFactory sourceFactory;
     public ChatViewModel(@NonNull Application application) {
         super(application);
         chatRepo = RepositoryHelper.getChatRepository(getApplication());
         userRepo = RepositoryHelper.getUserRepository(getApplication());
         settingsRepo = RepositoryHelper.getSettingsRepository(getApplication());
         daemon = TauDaemon.getInstance(application);
-        sourceFactory = new ChatSourceFactory(chatRepo);
     }
 
     public MutableLiveData<Result> getChatResult() {
@@ -90,22 +88,20 @@ public class ChatViewModel extends AndroidViewModel {
     protected void onCleared() {
         super.onCleared();
         disposables.clear();
-        if (sourceFactory != null) {
-            sourceFactory.onCleared();
-            sourceFactory = null;
-        }
     }
 
     /**
-     * 观察和朋友聊天
-     * @param friendPK 朋友公钥
-     * @return LiveData
+     * 观察查询的聊天信息
      */
-    LiveData<PagedList<ChatMsgAndUser>> observerChat(String friendPK) {
-        sourceFactory.setFriendPk(friendPK);
-        return new LivePagedListBuilder<>(sourceFactory, Page.getPageListConfig())
-                .setInitialLoadKey(Page.PAGE_SIZE)
-                .build();
+    LiveData<List<ChatMsgAndUser>> observerChatMessages() {
+        return chatMessages;
+    }
+
+    /**
+     * 观察社区的消息的变化
+     */
+    Observable<DataChanged> observeDataSetChanged() {
+        return chatRepo.observeDataSetChanged();
     }
 
     /**
@@ -312,5 +308,44 @@ public class ChatViewModel extends AndroidViewModel {
      */
     public void stopVisitFriend() {
         settingsRepo.setChattingFriend(null);
+    }
+
+    public void loadMessagesData(String friendPk, int pos) {
+        Disposable disposable = Observable.create((ObservableOnSubscribe<List<ChatMsgAndUser>>) emitter -> {
+            List<ChatMsgAndUser> messages = new ArrayList<>();
+            try {
+                long startTime = System.currentTimeMillis();
+                int pageSize = pos == 0 ? Page.PAGE_SIZE * 2 : Page.PAGE_SIZE;
+                messages = chatRepo.getMessages(friendPk, pos, pageSize);
+                long getMessagesTime = System.currentTimeMillis();
+                logger.trace("loadMessagesData pos::{}, pageSize::{}, messages.size::{}",
+                        pos, pageSize, messages.size());
+                logger.trace("loadMessagesData getMessagesTime::{}", getMessagesTime - startTime);
+                byte[] friendCryptoKey = Utils.keyExchange(friendPk, MainApplication.getInstance().getSeed());
+                for (ChatMsgAndUser msg : messages) {
+                    byte[] encryptedContent = msg.content;
+                    try {
+                        msg.rawContent = CryptoUtil.decrypt(encryptedContent, friendCryptoKey);
+                        msg.content = null;
+                    } catch (Exception e) {
+                        logger.error("loadMessagesData decrypt error::", e);
+                    }
+                }
+                long decryptTime = System.currentTimeMillis();
+                logger.trace("loadMessagesData decryptTime Time::{}", decryptTime - getMessagesTime);
+                Collections.reverse(messages);
+                long endTime = System.currentTimeMillis();
+                logger.trace("loadMessagesData reverseTime Time::{}", endTime - decryptTime);
+            } catch (Exception e) {
+                logger.error("loadMessagesData error::", e);
+            }
+            emitter.onNext(messages);
+            emitter.onComplete();
+        }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(messages -> {
+                chatMessages.postValue(messages);
+            });
+        disposables.add(disposable);
     }
 }

@@ -19,17 +19,24 @@
             android:id="@+id/toolbar_include"
             layout="@layout/toolbar_main_right" />
 
-        <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
-            android:id="@+id/msg_list"
-            android:layout_width="match_parent"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/refresh_layout"
             android:layout_weight="1"
             android:layout_height="0dp"
-            android:paddingBottom="10dp"
-            android:clipToPadding="false"
-            android:onClick="@{listener::onClick}"
-            android:scrollbars="none"
-            android:focusable="true"
-            android:scrollbarStyle="outsideOverlay" />
+            android:layout_width="match_parent">
+
+            <io.taucoin.torrent.publishing.ui.customviews.EmptyRecyclerView
+                android:id="@+id/msg_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingBottom="10dp"
+                android:clipToPadding="false"
+                android:onClick="@{listener::onClick}"
+                android:scrollbars="none"
+                android:focusable="true"
+                android:scrollbarStyle="outsideOverlay" />
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <include
             android:id="@+id/top_line"

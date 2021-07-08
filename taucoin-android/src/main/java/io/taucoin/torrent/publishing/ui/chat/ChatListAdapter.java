@@ -10,8 +10,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
-import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
@@ -34,7 +34,7 @@ import io.taucoin.types.MessageType;
 /**
  * 聊天消息的Adapter
  */
-public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAdapter.ViewHolder> {
+public class ChatListAdapter extends ListAdapter<ChatMsgAndUser, ChatListAdapter.ViewHolder> {
 
     enum ViewType {
         LEFT_TEXT,
@@ -84,6 +84,11 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
                     false);
         }
         return new ViewHolder(binding, listener, friend, cryptoKey);
+    }
+
+    @Override
+    public int getItemCount() {
+        return getCurrentList().size();
     }
 
     @Override
@@ -261,7 +266,6 @@ public class ChatListAdapter extends PagedListAdapter<ChatMsgAndUser, ChatListAd
     public interface ClickListener {
         void onMsgLogsClicked(ChatMsg msg);
         void onUserClicked(ChatMsg msg);
-//        void onItemLongClicked(View view, MsgAndReply tx);
     }
 
     private static final DiffUtil.ItemCallback<ChatMsgAndUser> diffCallback = new DiffUtil.ItemCallback<ChatMsgAndUser>() {

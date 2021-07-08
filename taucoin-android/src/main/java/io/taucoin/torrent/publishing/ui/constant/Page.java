@@ -16,6 +16,7 @@ public class Page {
         return new PagedList.Config.Builder()
                 .setPageSize(Page.PAGE_SIZE)
                 .setInitialLoadSizeHint(Page.PAGE_SIZE)
+//                .setPrefetchDistance(1)
                 .setEnablePlaceholders(Page.ENABLE_PLACEHOLDERS)
                 .build();
     }

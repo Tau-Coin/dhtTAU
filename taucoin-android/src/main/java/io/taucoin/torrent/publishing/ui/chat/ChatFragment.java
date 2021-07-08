@@ -19,6 +19,7 @@ import com.luck.picture.lib.entity.LocalMedia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -32,8 +33,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import io.taucoin.torrent.publishing.BuildConfig;
 import io.taucoin.torrent.publishing.R;
+import io.taucoin.torrent.publishing.core.model.data.ChatMsgAndUser;
 import io.taucoin.torrent.publishing.core.model.data.FriendStatus;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsg;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.ChatMsgLog;
@@ -49,6 +50,7 @@ import io.taucoin.torrent.publishing.databinding.FragmentChatBinding;
 import io.taucoin.torrent.publishing.ui.BaseFragment;
 import io.taucoin.torrent.publishing.ui.TauNotifier;
 import io.taucoin.torrent.publishing.ui.constant.IntentExtra;
+import io.taucoin.torrent.publishing.ui.constant.Page;
 import io.taucoin.torrent.publishing.ui.customviews.MsgLogsDialog;
 import io.taucoin.torrent.publishing.ui.main.MainActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
@@ -76,6 +78,8 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     private User friend;
     private Handler handler = new Handler();
     private MsgLogsDialog msgLogsDialog;
+
+    private int currentPos = 0;
 
     @Nullable
     @Override
@@ -164,6 +168,8 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
             }
         });
 
+        binding.refreshLayout.setOnRefreshListener(this);
+
         adapter = new ChatListAdapter(this, friendPK);
         adapter.setFriend(friend);
         LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
@@ -176,6 +182,7 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
             }
             return false;
         });
+        loadData(0);
 
     }
 
@@ -194,12 +201,21 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
     }
 
     private final Runnable handleUpdateAdapter = () -> {
-        int bottomPosition = adapter.getItemCount() - 1;
-        logger.debug("handleUpdateAdapter scrollToPosition::{}", bottomPosition);
         LinearLayoutManager layoutManager = (LinearLayoutManager) binding.msgList.getLayoutManager();
         if (layoutManager != null) {
+            int bottomPosition = adapter.getItemCount() - 1;
             // 滚动到底部
+            logger.debug("handleUpdateAdapter scrollToPosition::{}", bottomPosition);
             layoutManager.scrollToPositionWithOffset(bottomPosition, 0);
+        }
+    };
+
+    private final Runnable handlePullAdapter = () -> {
+        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.msgList.getLayoutManager();
+        if (layoutManager != null) {
+            int bottomPosition = adapter.getItemCount() - 1;
+            int position = bottomPosition - currentPos;
+            layoutManager.scrollToPositionWithOffset(position, 0);
         }
     };
 
@@ -217,8 +233,35 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                             ? View.VISIBLE : View.GONE);
                 }));
 
-        chatViewModel.observerChat(friendPK).observe(this, messages -> {
-            adapter.submitList(messages, handleUpdateAdapter);
+        disposables.add(chatViewModel.observeDataSetChanged()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> {
+                    // 跟当前用户有关系的才触发刷新
+                    if (result != null && StringUtil.isNotEmpty(result.getMsg())
+                            && result.getMsg().contains(friendPK)) {
+                        // 立即执行刷新
+                        if (result.isRefresh()) {
+                            loadData(0);
+                        } else {
+                            // 结束数据加载
+                            binding.refreshLayout.setRefreshing(false);
+                            binding.refreshLayout.setEnabled(false);
+                        }
+                    }
+                }));
+
+        chatViewModel.observerChatMessages().observe(this, messages -> {
+            List<ChatMsgAndUser> currentList = new ArrayList<>(messages);
+            if (currentPos == 0) {
+                adapter.submitList(currentList, handleUpdateAdapter);
+            } else {
+                currentList.addAll(adapter.getCurrentList());
+                adapter.submitList(currentList, handlePullAdapter);
+            }
+            binding.refreshLayout.setRefreshing(false);
+            binding.refreshLayout.setEnabled(messages.size() != 0 && messages.size() % Page.PAGE_SIZE == 0);
+
             // 关闭当前朋友的消息通知
             TauNotifier.getInstance().cancelChatMsgNotify(friendPK);
             userViewModel.clearMsgUnread(friendPK);
@@ -352,5 +395,15 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                     break;
             }
         }
+    }
+
+    @Override
+    public void onRefresh() {
+        loadData(adapter.getItemCount());
+    }
+
+    private void loadData(int pos) {
+        currentPos = pos;
+        chatViewModel.loadMessagesData(friendPK, pos);
     }
 }
