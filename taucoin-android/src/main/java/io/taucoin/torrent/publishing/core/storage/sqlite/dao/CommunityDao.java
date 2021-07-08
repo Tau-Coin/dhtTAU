@@ -22,18 +22,32 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Member;
 public interface CommunityDao {
     String QUERY_GET_CURRENT_USER_PK = " (SELECT publicKey FROM Users WHERE isCurrentUser = 1 limit 1) ";
     String QUERY_GET_BANNED_USER_PK = " (SELECT publicKey FROM Users WHERE isBanned == 1 and isCurrentUser != 1) ";
-    String QUERY_NEWEST_MSG = " (SELECT * FROM (SELECT * FROM (" +
+    String QUERY_NEWEST_MSG_DESC = " (SELECT * FROM (SELECT * FROM (" +
             " SELECT timestamp, content, contentType, logicMsgHash, senderPk, receiverPk, receiverPk AS receiverPkTemp" +
-            " FROM (SELECT * FROM ChatMessages" +
+            " FROM (SELECT rowid, * FROM ChatMessages" +
             " WHERE senderPk = " + QUERY_GET_CURRENT_USER_PK +
-            " ORDER BY timestamp, logicMsgHash, nonce) GROUP BY receiverPk" +
+            " ORDER BY timestamp DESC, logicMsgHash COLLATE UNICODE DESC, nonce DESC) GROUP BY receiverPk" +
             " UNION ALL" +
             " SELECT timestamp, content, contentType, logicMsgHash, senderPk, receiverPk, senderPk AS receiverPkTemp" +
-            " FROM (SELECT * FROM ChatMessages" +
+            " FROM (SELECT rowid, * FROM ChatMessages" +
             " WHERE receiverPk = "+ QUERY_GET_CURRENT_USER_PK +
-            " ORDER BY timestamp, logicMsgHash, nonce) GROUP BY senderPk)" +
+            " ORDER BY timestamp DESC, logicMsgHash COLLATE UNICODE DESC, nonce DESC) GROUP BY senderPk)" +
 
-            " ORDER BY timestamp, logicMsgHash)" +
+            " ORDER BY timestamp DESC, logicMsgHash COLLATE UNICODE DESC)" +
+            " GROUP BY receiverPkTemp)";
+
+    String QUERY_NEWEST_MSG_ASC = " (SELECT * FROM (SELECT * FROM (" +
+            " SELECT timestamp, content, contentType, logicMsgHash, senderPk, receiverPk, receiverPk AS receiverPkTemp" +
+            " FROM (SELECT rowid, * FROM ChatMessages" +
+            " WHERE senderPk = " + QUERY_GET_CURRENT_USER_PK +
+            " ORDER BY timestamp, logicMsgHash COLLATE UNICODE, nonce) GROUP BY receiverPk" +
+            " UNION ALL" +
+            " SELECT timestamp, content, contentType, logicMsgHash, senderPk, receiverPk, senderPk AS receiverPkTemp" +
+            " FROM (SELECT rowid, * FROM ChatMessages" +
+            " WHERE receiverPk = "+ QUERY_GET_CURRENT_USER_PK +
+            " ORDER BY timestamp, logicMsgHash COLLATE UNICODE, nonce) GROUP BY senderPk)" +
+
+            " ORDER BY timestamp, logicMsgHash COLLATE UNICODE)" +
             " GROUP BY receiverPkTemp)";
 
     String QUERY_COMMUNITIES = "SELECT a.chainID AS ID, b.balance AS balance, b.power AS power," +
@@ -55,19 +69,35 @@ public interface CommunityDao {
             " ORDER BY timestamp) GROUP BY chainID) AS d" +
             " ON a.chainID = d.chainID";
 
-    String QUERY_FRIENDS = "SELECT f.friendPK AS ID, 0 AS balance, 0 AS power," +
+    String QUERY_FRIENDS_ASC = "SELECT f.friendPK AS ID, 0 AS balance, 0 AS power," +
             " 1 AS type, cm.contentType AS msgType," +
             " cm.senderPk AS senderPk, cm.receiverPk AS receiverPk," +
             " f.msgUnread AS msgUnread," +
             " cm.content AS msg, '' AS memo, cm.timestamp AS timestamp" +
             " FROM Friends f" +
-            " LEFT JOIN " + QUERY_NEWEST_MSG + " AS cm" +
+            " LEFT JOIN " + QUERY_NEWEST_MSG_ASC + " AS cm" +
             " ON (f.userPK = cm.senderPk AND f.friendPK = cm.receiverPk)" +
             " OR (f.userPK = cm.receiverPk AND f.friendPK = cm.senderPk)" +
             " WHERE f.userPk = " + QUERY_GET_CURRENT_USER_PK +
             " AND f.friendPK NOT IN " + QUERY_GET_BANNED_USER_PK;
 
-    String QUERY_COMMUNITIES_AND_FRIENDS = "SELECT * FROM (" + QUERY_FRIENDS +
+    String QUERY_FRIENDS_DESC = "SELECT f.friendPK AS ID, 0 AS balance, 0 AS power," +
+            " 1 AS type, cm.contentType AS msgType," +
+            " cm.senderPk AS senderPk, cm.receiverPk AS receiverPk," +
+            " f.msgUnread AS msgUnread," +
+            " cm.content AS msg, '' AS memo, cm.timestamp AS timestamp" +
+            " FROM Friends f" +
+            " LEFT JOIN " + QUERY_NEWEST_MSG_DESC + " AS cm" +
+            " ON (f.userPK = cm.senderPk AND f.friendPK = cm.receiverPk)" +
+            " OR (f.userPK = cm.receiverPk AND f.friendPK = cm.senderPk)" +
+            " WHERE f.userPk = " + QUERY_GET_CURRENT_USER_PK +
+            " AND f.friendPK NOT IN " + QUERY_GET_BANNED_USER_PK;
+
+    String QUERY_COMMUNITIES_AND_FRIENDS_DESC = "SELECT * FROM (" + QUERY_FRIENDS_DESC +
+            " UNION ALL " + QUERY_COMMUNITIES + ")" +
+            " ORDER BY timestamp DESC";
+
+    String QUERY_COMMUNITIES_AND_FRIENDS_ASC = "SELECT * FROM (" + QUERY_FRIENDS_ASC +
             " UNION ALL " + QUERY_COMMUNITIES + ")" +
             " ORDER BY timestamp DESC";
 
@@ -99,11 +129,18 @@ public interface CommunityDao {
     Community getCommunityBychainID(String chainID);
 
     /**
-     * 查询不在黑名单中的社区列表
+     * 查询不在黑名单中的社区列表（逆序）
      */
-    @Query(QUERY_COMMUNITIES_AND_FRIENDS)
+    @Query(QUERY_COMMUNITIES_AND_FRIENDS_DESC)
     @Transaction
-    Flowable<List<CommunityAndFriend>> observeCommunitiesAndFriends();
+    Flowable<List<CommunityAndFriend>> observeCommunitiesAndFriendsDESC();
+
+    /**
+     * 查询不在黑名单中的社区列表（正序）
+     */
+    @Query(QUERY_COMMUNITIES_AND_FRIENDS_ASC)
+    @Transaction
+    Flowable<List<CommunityAndFriend>> observeCommunitiesAndFriendsASC();
 
     /**
      * 获取在黑名单的社区列表
