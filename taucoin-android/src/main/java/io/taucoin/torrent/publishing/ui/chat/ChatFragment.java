@@ -240,13 +240,13 @@ public class ChatFragment extends BaseFragment implements View.OnClickListener,
                     // 跟当前用户有关系的才触发刷新
                     if (result != null && StringUtil.isNotEmpty(result.getMsg())
                             && result.getMsg().contains(friendPK)) {
+
+                        binding.refreshLayout.setRefreshing(false);
+                        binding.refreshLayout.setEnabled(false);
+
                         // 立即执行刷新
                         if (result.isRefresh()) {
                             loadData(0);
-                        } else {
-                            // 结束数据加载
-                            binding.refreshLayout.setRefreshing(false);
-                            binding.refreshLayout.setEnabled(false);
                         }
                     }
                 }));
