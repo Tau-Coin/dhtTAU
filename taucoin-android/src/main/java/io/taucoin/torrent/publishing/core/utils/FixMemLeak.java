@@ -5,11 +5,15 @@ import android.content.Context;
 import android.os.Build;
 import android.util.SparseArray;
 import android.view.View;
+import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import androidx.fragment.app.Fragment;
 
 public class FixMemLeak {
     private static Field field;
@@ -145,6 +149,50 @@ public class FixMemLeak {
                                     sparseArray.delete(key);
                                     break;
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+    }
+
+    /**
+     * 修复OPPO手机中Fragment中AppCompatEditText内存泄漏
+     */
+    public static void fixOPPOLeak(Fragment fragment) {
+        try {
+            if (Build.MANUFACTURER.equals("OPPO") && Build.VERSION.SDK_INT >=
+                Build.VERSION_CODES.KITKAT && Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                if (fragment != null && fragment.getActivity() != null) {
+                    Window window = fragment.getActivity().getWindow();
+
+                    Field mDecor = HookUtils.getDeclaredField(window.getClass(), "mDecor");
+                    Object mDecorObj = HookUtils.fieldGetValue(mDecor, window);
+
+                    Class clz = Class.forName("android.view.View");
+                    Field mAttachInfo = HookUtils.getDeclaredField(clz, "mAttachInfo");
+                    Object mAttachInfoObj = HookUtils.fieldGetValue(mAttachInfo, mDecorObj);
+
+                    Field mTreeObserver = mAttachInfoObj.getClass().getDeclaredField("mTreeObserver");
+                    mTreeObserver.setAccessible(true);
+                    Object mTreeObserverObj = mTreeObserver.get(mAttachInfoObj);
+
+                    Field mOnTouchModeChangeListeners = mTreeObserverObj.getClass().getDeclaredField("mOnTouchModeChangeListeners");
+                    mOnTouchModeChangeListeners.setAccessible(true);
+                    Object mOnTouchModeChangeListenerObj = mOnTouchModeChangeListeners.get(mTreeObserverObj);
+
+                    if (mOnTouchModeChangeListenerObj != null) {
+                        CopyOnWriteArrayList<?> list = (CopyOnWriteArrayList<?>) mOnTouchModeChangeListenerObj;
+
+                        for (int i = 0; i < list.size(); i++) {
+                            Object object = list.get(i);
+                            // 删除Oppo的android.widget.OppoCursorController对象
+                            String oppoController = "android.widget.OppoCursorController$InsertionPointCursorController";
+                            if (object != null && StringUtil.isEquals(oppoController, object.getClass().getName())) {
+                                list.remove(i);
+                                break;
                             }
                         }
                     }

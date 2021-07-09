@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import io.taucoin.torrent.publishing.core.utils.FixMemLeak;
 
 public abstract class BaseFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener {
@@ -43,5 +44,6 @@ public abstract class BaseFragment extends Fragment implements
     public void onDestroy() {
         super.onDestroy();
         getViewModelStore().clear();
+        FixMemLeak.fixOPPOLeak(this);
     }
 }
