@@ -10,6 +10,8 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
+import io.taucoin.torrent.publishing.R;
+
 /**
  * Circle progress
  */
@@ -83,7 +85,7 @@ public class CircleProgress extends View {
     }
 
     private void init(){
-        circleWidth = dp2px(getContext(), 8);
+        circleWidth = getContext().getResources().getDimension(R.dimen.widget_size_8);
         sweepGradient = new SweepGradient(0, 0, doughnutColors, null);
     }
 
@@ -148,11 +150,6 @@ public class CircleProgress extends View {
 //            canvas.drawCircle(radius * doughnutRadiusPercent, 0, doughnutWidth / 2, paint);
             canvas.drawCircle(radius - circleWidth / 2, 0, circleWidth / 2, paint);
 //        }
-    }
-
-    public static int dp2px(Context content, float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
-                content.getResources().getDisplayMetrics());
     }
 
     @Override

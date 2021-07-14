@@ -3,6 +3,8 @@ package io.taucoin.torrent.publishing.ui.main;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -21,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.graphics.drawable.DrawerArrowDrawable;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
@@ -165,6 +169,16 @@ public class MainActivity extends ScanTriggerActivity {
                 binding.toolbarInclude.toolbar,
                 R.string.open_navigation_drawer,
                 R.string.close_navigation_drawer);
+
+        toggle.getDrawerArrowDrawable();
+
+        DrawerArrowDrawable drawable = toggle.getDrawerArrowDrawable();
+        int barLength = getResources().getDimensionPixelSize(R.dimen.widget_size_20);
+        drawable.setBarLength(barLength);
+        int gapSize = getResources().getDimensionPixelSize(R.dimen.widget_size_5);
+        drawable.setGapSize(gapSize);
+        toggle.setDrawerArrowDrawable(drawable);
+
         binding.drawerLayout.addDrawerListener(toggle);
 
         updateDHTStats();

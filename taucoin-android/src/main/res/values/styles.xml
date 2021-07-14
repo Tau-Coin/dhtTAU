@@ -246,7 +246,7 @@
     <style name="BaseTheme.TabLayout.Dark" parent="Widget.MaterialComponents.TabLayout">
         <item name="android:background">?attr/toolbarColor</item>
         <item name="tabIndicatorFullWidth">true</item>
-        <item name="tabMaxWidth">0dp</item>
+        <item name="tabMaxWidth">@dimen/widget_size_0</item>
         <item name="tabGravity">fill</item>
     </style>
 
@@ -268,12 +268,12 @@
     </style>
 
     <style name="TextCaption" parent="@style/TextAppearance.MaterialComponents.Caption">
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">@dimen/font_size_14</item>
     </style>
 
     <style name="TitleText" parent="@style/TextAppearance.MaterialComponents.Button">
         <item name="android:textColor">?attr/colorSecondary</item>
-        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_marginBottom">@dimen/widget_size_8</item>
     </style>
 
     <style name="EmptyView" parent="@style/TextAppearance.MaterialComponents.Headline4">
@@ -291,9 +291,9 @@
 
     <style name="SwitchBar">
         <item name="android:paddingLeft">@dimen/preference_icon_space</item>
-        <item name="android:paddingRight">16dp</item>
-        <item name="android:paddingBottom">16dp</item>
-        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingRight">@dimen/widget_size_16</item>
+        <item name="android:paddingBottom">@dimen/widget_size_16</item>
+        <item name="android:paddingTop">@dimen/widget_size_16</item>
         <item name="colorSwitchThumbNormal">@color/text_primary</item>
         <item name="colorControlActivated">@color/text_primary</item>
         <item name="android:textStyle">bold</item>
@@ -336,7 +336,7 @@
     </style>
 
     <style name="TabLayout" parent="@android:style/TextAppearance.Widget.TabWidget">
-        <item name="android:textSize">@dimen/font_small_size</item>
+        <item name="android:textSize">@dimen/font_size_14</item>
     </style>
 
 
@@ -344,7 +344,7 @@
         <!-- Roboto Medium was added in this api level -->
         <item name="fontFamily">sans-serif-medium</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">18dp</item>
+        <item name="android:textSize">@dimen/font_size_18</item>
         <item name="android:textStyle">normal</item>
     </style>
 
@@ -352,7 +352,7 @@
         <!-- Roboto Medium was added in this api level -->
         <item name="fontFamily">sans-serif-medium</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">16dp</item>
+        <item name="android:textSize">@dimen/font_size_16</item>
         <item name="android:textStyle">normal</item>
     </style>
 
@@ -361,8 +361,7 @@
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:textSize">16dp</item>
-        <item name="android:letterSpacing">0.03125</item>
+        <item name="android:textSize">@dimen/font_size_16</item>
     </style>
 
     <style name="TextAppearanceBody2" parent="TextAppearance.AppCompat.Body1">
@@ -370,8 +369,7 @@
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:textSize">14dp</item>
-        <item name="android:letterSpacing">0.0178571429</item>
+        <item name="android:textSize">@dimen/font_size_14</item>
     </style>
 
     <style name="TextAppearanceBody3" parent="TextAppearance.AppCompat.Body1">
@@ -379,8 +377,7 @@
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:textSize">12dp</item>
-        <item name="android:letterSpacing">0.0178571429</item>
+        <item name="android:textSize">@dimen/font_size_12</item>
     </style>
 
     <style name="TextAppearanceBody4" parent="TextAppearance.AppCompat.Body1">
@@ -388,12 +385,11 @@
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:textSize">10dp</item>
-        <item name="android:letterSpacing">0.0178571429</item>
+        <item name="android:textSize">@dimen/font_size_10</item>
     </style>
 
     <style name="Toolbar.TitleText" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
-        <item name="android:textSize">18dp</item>
+        <item name="android:textSize">@dimen/toolbar_title_text_size</item>
     </style>
 
     <style name="dialog_translucent" parent="@android:style/Theme.Translucent.NoTitleBar">

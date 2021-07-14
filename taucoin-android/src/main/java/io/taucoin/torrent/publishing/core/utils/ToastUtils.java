@@ -125,7 +125,7 @@ public class ToastUtils {
             tv.setGravity(mMsgGravity);
             sToast.setView(tv);
             if(mGravity == Gravity.BOTTOM){
-                sToast.setGravity(mGravity, 0, DimensionsUtil.dip2px(MainApplication.getInstance(), 80));
+                sToast.setGravity(mGravity, 0, MainApplication.getInstance().getResources().getDimensionPixelSize(R.dimen.widget_size_80));
             }else{
                 sToast.setGravity(mGravity, 0, 0);
             }

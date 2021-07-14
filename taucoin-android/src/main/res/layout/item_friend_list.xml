@@ -8,22 +8,22 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:paddingStart="10dp">
+        android:layout_height="@dimen/widget_size_60"
+        android:paddingStart="@dimen/widget_size_10">
 
         <CheckBox
             android:visibility="gone"
             android:id="@+id/cb_select"
             android:layout_centerVertical="true"
-            android:layout_width="37dp"
+            android:layout_width="@dimen/widget_size_37"
             android:layout_height="wrap_content"/>
 
         <io.taucoin.torrent.publishing.ui.customviews.RoundButton
             android:layout_toEndOf="@+id/cb_select"
             android:id="@+id/left_view"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:layout_marginEnd="7dp"
+            android:layout_width="@dimen/widget_size_45"
+            android:layout_height="@dimen/widget_size_45"
+            android:layout_marginEnd="@dimen/widget_size_7"
             android:layout_centerVertical="true"
             android:gravity="center"
             android:textAllCaps="true"
@@ -31,7 +31,7 @@
             android:textAppearance="@style/TextAppearanceHeadline6"
             app:btnStrokeColor="@color/primary_light"
             app:btnStrokeWidth="0dp"
-            app:btnCornerRadius="10dp"
+            app:btnCornerRadius="@dimen/widget_size_10"
             app:btnSolidColor="@color/primary_light"
             app:btnPressedRatio="1.5" />
 
@@ -87,10 +87,10 @@
             <ImageView
                 android:visibility="gone"
                 android:id="@+id/iv_share"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginStart="20dp"
+                android:layout_width="@dimen/widget_size_22"
+                android:layout_height="@dimen/widget_size_22"
+                android:layout_marginEnd="@dimen/widget_size_10"
+                android:layout_marginStart="@dimen/widget_size_20"
                 android:layout_centerVertical="true"
                 android:src="@mipmap/icon_share"
                 android:contentDescription="@null"/>
@@ -98,23 +98,23 @@
             <io.taucoin.torrent.publishing.ui.customviews.CompletedView
                 android:visibility="gone"
                 android:id="@+id/state_progress"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
+                android:layout_width="@dimen/widget_size_45"
+                android:layout_height="@dimen/widget_size_45"
                 android:layout_centerVertical="true"
-                android:layout_marginEnd="10dp"
-                android:layout_marginStart="10dp"
+                android:layout_marginEnd="@dimen/widget_size_10"
+                android:layout_marginStart="@dimen/widget_size_10"
                 app:circleColor="@color/color_white"
-                app:radius="18dip"
+                app:radius="@dimen/widget_size_18"
                 app:ringBgColor="@color/divider"
                 app:ringColor="@color/color_yellow"
-                app:ringTextSize="12dp"
-                app:strokeWidth="3dip"/>
+                app:ringTextSize="@dimen/font_size_12"
+                app:strokeWidth="@dimen/widget_size_3"/>
 
         </RelativeLayout>
 
         <include
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="@dimen/widget_size_1"
             android:layout_toEndOf="@+id/left_view"
             android:layout_toStartOf="@+id/rl_right"
             android:layout_centerVertical="true"

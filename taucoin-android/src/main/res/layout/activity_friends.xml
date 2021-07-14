@@ -29,22 +29,22 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@color/color_white"
-                android:paddingStart="20dp"
-                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/widget_size_20"
+                android:paddingEnd="@dimen/widget_size_0"
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="@dimen/widget_size_44"
                 android:onClick="@{listener::onClick}">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/widget_size_20"
+                    android:layout_height="@dimen/widget_size_20"
                     android:contentDescription="@null"
                     android:src="@mipmap/icon_qr_code"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
+                    android:layout_marginStart="@dimen/widget_size_15"
                     android:text="@string/contacts_exchange_qr"
                     android:textAppearance="@style/TextAppearanceBody1"/>
             </LinearLayout>
@@ -53,32 +53,32 @@
                 android:id="@+id/view_line"
                 android:layout_below="@+id/ll_exchange_qr"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/widget_size_1"
                 layout="@layout/view_line"/>
 
             <LinearLayout
                 android:layout_below="@+id/view_line"
                 android:id="@+id/ll_add_friend"
                 android:orientation="horizontal"
-                android:layout_marginBottom="7dp"
+                android:layout_marginBottom="@dimen/widget_size_7"
                 android:gravity="center_vertical"
                 android:background="@color/color_white"
-                android:paddingStart="20dp"
-                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/widget_size_20"
+                android:paddingEnd="@dimen/widget_size_0"
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="@dimen/widget_size_44"
                 android:onClick="@{listener::onClick}">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/widget_size_20"
+                    android:layout_height="@dimen/widget_size_20"
                     android:contentDescription="@null"
                     android:src="@mipmap/icon_invite_friends"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
+                    android:layout_marginStart="@dimen/widget_size_15"
                     android:text="@string/contacts_import_friend_pk"
                     android:textAppearance="@style/TextAppearanceBody1"/>
             </LinearLayout>
@@ -110,12 +110,12 @@
                     android:id="@+id/tv_total_pay"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="44dp"
+                    android:minHeight="@dimen/widget_size_44"
                     android:gravity="center_vertical"
                     android:layout_gravity="center_vertical"
                     android:textAppearance="@style/TextAppearanceBody2"
-                    android:layout_marginEnd="10dp"
-                    android:layout_marginStart="10dp"/>
+                    android:layout_marginEnd="@dimen/widget_size_10"
+                    android:layout_marginStart="@dimen/widget_size_10"/>
 
             </LinearLayout>
         </RelativeLayout>

@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:singleLine="true"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="@dimen/widget_size_5"
             android:ellipsize="end"
             android:textAppearance="@style/TextAppearanceHeadline6" />
 
@@ -28,7 +28,7 @@
             android:id="@+id/tv_seed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="7dp"
+            android:layout_marginEnd="@dimen/widget_size_7"
             android:textColor="@color/gray_dark"
             android:singleLine="true"
             android:ellipsize="end"
@@ -36,8 +36,8 @@
 
         <include
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="5dp"
+            android:layout_height="@dimen/widget_size_1"
+            android:layout_marginTop="@dimen/widget_size_5"
             layout="@layout/view_line"/>
     </LinearLayout>
 </layout>

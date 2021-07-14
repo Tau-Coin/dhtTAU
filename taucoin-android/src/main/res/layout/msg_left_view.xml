@@ -10,25 +10,25 @@
         android:layout_width="wrap_content"
         android:gravity="center_horizontal"
         android:layout_height="wrap_content"
-        android:layout_marginStart="15dp"
-        android:layout_marginEnd="5dp">
+        android:layout_marginStart="@dimen/widget_size_15"
+        android:layout_marginEnd="@dimen/widget_size_5">
 
         <TextView
             android:id="@+id/tv_edit_name"
-            android:layout_width="50dp"
+            android:layout_width="@dimen/widget_size_50"
             android:layout_height="wrap_content"
             android:textColor="@color/color_yellow"
             android:gravity="center_horizontal"
             android:singleLine="true"
             android:ellipsize="end"
-            android:paddingBottom="1dp"
+            android:paddingBottom="@dimen/widget_size_1"
             android:textAllCaps="true"
             android:includeFontPadding="false"
             android:textAppearance="@style/TextAppearanceBody4" />
 
         <FrameLayout
-            android:layout_width="50dp"
-            android:layout_height="50dp">
+            android:layout_width="@dimen/widget_size_50"
+            android:layout_height="@dimen/widget_size_50">
 
             <io.taucoin.torrent.publishing.ui.customviews.RoundButton
                 android:id="@+id/round_button"
@@ -39,24 +39,24 @@
                 android:textAppearance="@style/TextAppearanceHeadline6"
                 app:btnStrokeColor="@color/primary_light"
                 app:btnStrokeWidth="0dp"
-                app:btnCornerRadius="7dp"
+                app:btnCornerRadius="@dimen/widget_size_7"
                 app:btnSolidColor="@color/primary_light"
                 app:btnPressedRatio="1.5" />
 
             <TextView
                 android:id="@+id/tv_name"
                 android:layout_width="match_parent"
-                android:layout_height="20dp"
-                android:layout_marginEnd="5dp"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="3dp"
+                android:layout_height="@dimen/widget_size_20"
+                android:layout_marginEnd="@dimen/widget_size_5"
+                android:layout_marginStart="@dimen/widget_size_5"
+                android:layout_marginTop="@dimen/widget_size_3"
                 android:gravity="start|top"
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 app:autoSizeTextType="uniform"
-                app:autoSizeMaxTextSize="18dp"
-                app:autoSizeMinTextSize="2dp"
-                app:autoSizeStepGranularity="0.5dp"
+                app:autoSizeMaxTextSize="@dimen/font_size_18"
+                app:autoSizeMinTextSize="@dimen/font_size_2"
+                app:autoSizeStepGranularity="@dimen/font_size_0_5"
                 android:textColor="@color/color_white"
                 android:textAppearance="@style/TextAppearanceHeadline5" />
 
@@ -64,34 +64,34 @@
                 android:id="@+id/tv_middle_name"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginEnd="5dp"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="3dp"
+                android:layout_marginEnd="@dimen/widget_size_5"
+                android:layout_marginStart="@dimen/widget_size_5"
+                android:layout_marginTop="@dimen/widget_size_3"
                 android:gravity="center_vertical|center"
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 app:autoSizeTextType="uniform"
-                app:autoSizeMaxTextSize="18dp"
-                app:autoSizeMinTextSize="2dp"
-                app:autoSizeStepGranularity="0.5dp"
+                app:autoSizeMaxTextSize="@dimen/font_size_18"
+                app:autoSizeMinTextSize="@dimen/font_size_2"
+                app:autoSizeStepGranularity="@dimen/font_size_0_5"
                 android:textColor="@color/color_white"
                 android:textAppearance="@style/TextAppearanceHeadline5" />
 
             <TextView
                 android:id="@+id/tv_balance"
                 android:layout_width="match_parent"
-                android:layout_height="20dp"
-                android:layout_marginEnd="5dp"
-                android:layout_marginStart="5dp"
-                android:layout_marginBottom="3dp"
+                android:layout_height="@dimen/widget_size_20"
+                android:layout_marginEnd="@dimen/widget_size_5"
+                android:layout_marginStart="@dimen/widget_size_5"
+                android:layout_marginBottom="@dimen/widget_size_3"
                 android:layout_gravity="bottom"
                 android:includeFontPadding="false"
                 android:gravity="end|bottom"
                 android:maxLines="1"
                 app:autoSizeTextType="uniform"
-                app:autoSizeMaxTextSize="14dp"
-                app:autoSizeMinTextSize="2dp"
-                app:autoSizeStepGranularity="0.5dp"
+                app:autoSizeMaxTextSize="@dimen/font_size_14"
+                app:autoSizeMinTextSize="@dimen/font_size_2"
+                app:autoSizeStepGranularity="@dimen/font_size_0_5"
                 android:textColor="@color/color_white"
                 android:textAppearance="@style/TextAppearanceBody2"/>
 
@@ -104,9 +104,9 @@
             android:text="@string/user_ban"
             android:textColor="@color/color_red"
             android:textAllCaps="true"
-            android:paddingStart="3dp"
-            android:paddingEnd="3dp"
-            android:paddingTop="1dp"
+            android:paddingStart="@dimen/widget_size_3"
+            android:paddingEnd="@dimen/widget_size_3"
+            android:paddingTop="@dimen/widget_size_1"
             android:includeFontPadding="false"
             android:textAppearance="@style/TextAppearanceBody4" />
 

@@ -90,7 +90,7 @@ public final class SpanUtils {
     private int bulletRadius;
     private int bulletGapWidth;
     private int fontSize;
-    private float paddingSize;
+    private int paddingSize;
     private boolean fontAlignCenter;
     private boolean fontSizeIsDp;
     private float proportion;
@@ -333,7 +333,7 @@ public final class SpanUtils {
         return this;
     }
 
-    public SpanUtils setCenterFontSize(boolean fontAlignCenter, float paddingSize) {
+    public SpanUtils setCenterFontSize(boolean fontAlignCenter, int paddingSize) {
         this.fontAlignCenter = fontAlignCenter;
         this.paddingSize = paddingSize;
         return this;
@@ -1362,7 +1362,7 @@ public final class SpanUtils {
     }
     public class CustomVerticalCenterSpan extends ReplacementSpan {
         private int fontSizeSp;
-        private float paddingSizeSp;
+        private int paddingSizeSp;
         private boolean isSp;
         private int foregroundColor;
 
@@ -1375,7 +1375,7 @@ public final class SpanUtils {
             this.isSp = isSp;
         }
 
-        public CustomVerticalCenterSpan(int fontSize, boolean fontSizeIsDp, int foregroundColor, float padding) {
+        public CustomVerticalCenterSpan(int fontSize, boolean fontSizeIsDp, int foregroundColor, int padding) {
             this.fontSizeSp = fontSize;
             this.paddingSizeSp = padding;
             this.isSp = fontSizeIsDp;
@@ -1397,7 +1397,7 @@ public final class SpanUtils {
             if (foregroundColor != COLOR_DEFAULT) {
                 p.setColor(foregroundColor);
             }
-            int paddingSize = DimensionsUtil.dip2px(MainApplication.getInstance(), paddingSizeSp);
+            int paddingSize = MainApplication.getInstance().getResources().getDimensionPixelSize(paddingSizeSp);
             canvas.drawText(text.toString(), x, y - ((y + fm.descent + y + fm.ascent) / 2 - (bottom + top) / 2 - paddingSize), p);
         }
 
@@ -1405,7 +1405,7 @@ public final class SpanUtils {
             TextPaint paint = new TextPaint(srcPaint);
             int textSize = fontSizeSp;
             if(isSp){
-                textSize = DimensionsUtil.dip2px(MainApplication.getInstance(), fontSizeSp);
+                textSize = MainApplication.getInstance().getResources().getDimensionPixelSize(fontSizeSp);;
             }
             paint.setColor(srcPaint.getColor());
             paint.setTextSize(textSize);

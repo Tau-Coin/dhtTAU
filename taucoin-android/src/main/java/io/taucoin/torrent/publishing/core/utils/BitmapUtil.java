@@ -25,6 +25,7 @@ import android.widget.ImageView;
 //import com.huawei.hms.ml.scan.HmsScan;
 
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.data.DrawBean;
 
 /**
@@ -382,7 +383,7 @@ public class BitmapUtil {
      */
     public static Bitmap createLogoBitmap(int bgColor, String text) {
         Context context = MainApplication.getInstance();
-        int width = DimensionsUtil.dip2px(context, 50);
+        int width = context.getResources().getDimensionPixelSize(R.dimen.widget_size_50);
         int height = width;
         Bitmap bitmap = createBitmap(width, height, Color.WHITE);
 
@@ -390,7 +391,7 @@ public class BitmapUtil {
         final Paint paint = new Paint();
         final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
         final RectF rectF = new RectF(rect);
-        final float roundPx = DimensionsUtil.dip2px(context, 7);
+        final float roundPx = context.getResources().getDimension(R.dimen.widget_size_7);
         paint.setAntiAlias(true);
         canvas.drawARGB(0, 0, 0, 0);
         paint.setColor(bgColor);
@@ -398,7 +399,7 @@ public class BitmapUtil {
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
 
         final Paint textPaint = new Paint();
-        textPaint.setTextSize(DimensionsUtil.dip2px(context, 14));
+        textPaint.setTextSize(context.getResources().getDimension(R.dimen.widget_size_14));
         textPaint.setColor(Color.WHITE);
         textPaint.setFakeBoldText(true);
         textPaint.setTextAlign(Paint.Align.CENTER);

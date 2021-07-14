@@ -34,6 +34,7 @@ import java.util.concurrent.CountDownLatch;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.R;
 
 @SuppressLint("NewApi")
 public class CameraView extends FrameLayout implements TextureView.SurfaceTextureListener {
@@ -85,10 +86,10 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
         textureView = new TextureView(context);
         textureView.setSurfaceTextureListener(this);
         addView(textureView);
-        focusAreaSize = AndroidUtilities.dp(96);
+        focusAreaSize = AndroidUtilities.dimen(R.dimen.widget_size_96);
         outerPaint.setColor(0xffffffff);
         outerPaint.setStyle(Paint.Style.STROKE);
-        outerPaint.setStrokeWidth(AndroidUtilities.dp(2));
+        outerPaint.setStrokeWidth(AndroidUtilities.dimen(R.dimen.widget_size_2));
         innerPaint.setColor(0x7fffffff);
     }
 
@@ -397,7 +398,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
     protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
         boolean result = super.drawChild(canvas, child, drawingTime);
         if (focusProgress != 1.0f || innerAlpha != 0.0f || outerAlpha != 0.0f) {
-            int baseRad = AndroidUtilities.dp(30);
+            int baseRad = AndroidUtilities.dimen(R.dimen.widget_size_30);
             long newTime = System.currentTimeMillis();
             long dt = newTime - lastDrawTime;
             if (dt < 0 || dt > 17) {

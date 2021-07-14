@@ -21,10 +21,10 @@
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:paddingTop="10dp"
+            android:layout_height="@dimen/widget_size_60"
+            android:paddingStart="@dimen/widget_size_20"
+            android:paddingEnd="@dimen/widget_size_20"
+            android:paddingTop="@dimen/widget_size_10"
             android:background="@color/color_white"
             android:onClick="@{listener::onClick}"
             android:gravity="center_vertical">
@@ -47,9 +47,9 @@
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="10dp"
+            android:layout_height="@dimen/widget_size_50"
+            android:paddingStart="@dimen/widget_size_20"
+            android:paddingEnd="@dimen/widget_size_10"
             android:background="@color/color_white"
             android:onClick="@{listener::onClick}"
             android:gravity="center_vertical">
@@ -72,9 +72,9 @@
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="10dp"
+            android:layout_height="@dimen/widget_size_50"
+            android:paddingStart="@dimen/widget_size_20"
+            android:paddingEnd="@dimen/widget_size_10"
             android:background="@color/color_white"
             android:onClick="@{listener::onClick}"
             android:gravity="center_vertical">
@@ -97,10 +97,10 @@
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="10dp"
+            android:layout_height="@dimen/widget_size_60"
+            android:paddingStart="@dimen/widget_size_20"
+            android:paddingEnd="@dimen/widget_size_10"
+            android:paddingBottom="@dimen/widget_size_10"
             android:background="@color/color_white"
             android:onClick="@{listener::onClick}"
             android:gravity="center_vertical">

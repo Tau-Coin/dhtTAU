@@ -6,22 +6,21 @@
 
     <ImageView
         android:id="@+id/iv_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_width="@dimen/widget_size_24"
+        android:layout_height="@dimen/widget_size_24"
         android:layout_centerInParent="true"
         android:contentDescription="@null"
-        android:src="@mipmap/menu_notifications"
-        android:scaleType="center" />
+        android:src="@mipmap/menu_notifications" />
 
     <TextView
         android:id="@+id/tv_badge"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
+        android:layout_width="@dimen/widget_size_16"
+        android:layout_height="@dimen/widget_size_16"
         android:layout_alignParentEnd="true"
         android:background="@drawable/circle_red"
         android:gravity="center|center_vertical"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginTop="@dimen/widget_size_12"
+        android:layout_marginEnd="@dimen/widget_size_12"
         android:includeFontPadding="false"
         android:textAppearance="@style/TextAppearanceBody3"
         android:textColor="@android:color/white" />

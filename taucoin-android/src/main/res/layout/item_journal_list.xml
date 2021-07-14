@@ -8,7 +8,7 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="@dimen/widget_size_50"
         android:background="@color/color_white">
 
         <TextView
@@ -16,8 +16,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginTop="@dimen/widget_size_5"
             android:singleLine="true"
             android:ellipsize="middle"
             android:layout_toStartOf="@+id/iv_share"
@@ -29,8 +29,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginTop="@dimen/widget_size_5"
             android:singleLine="true"
             android:ellipsize="middle"
             android:textColor="@color/gray_dark"
@@ -39,9 +39,9 @@
 
         <ImageView
             android:id="@+id/iv_share"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginEnd="20dp"
+            android:layout_width="@dimen/widget_size_20"
+            android:layout_height="@dimen/widget_size_20"
+            android:layout_marginEnd="@dimen/widget_size_20"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:contentDescription="@null"
@@ -49,7 +49,7 @@
 
         <include
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="@dimen/widget_size_1"
             android:layout_alignParentBottom="true"
             layout="@layout/view_line"/>
     </RelativeLayout>

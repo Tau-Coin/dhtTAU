@@ -25,6 +25,7 @@ import android.view.WindowManager;
 import java.lang.reflect.Method;
 
 import io.taucoin.torrent.publishing.MainApplication;
+import io.taucoin.torrent.publishing.R;
 
 public class AndroidUtilities {
 
@@ -33,6 +34,9 @@ public class AndroidUtilities {
     public static Integer photoSize = null;
     public static DisplayMetrics displayMetrics = new DisplayMetrics();
 
+    public static int dimen(int reid) {
+        return MainApplication.getInstance().getResources().getDimensionPixelSize(reid);
+    }
 
     public static int dp(float value) {
         if (value == 0) {
@@ -116,16 +120,16 @@ public class AndroidUtilities {
         if (!isSmallTablet()) {
             int smallSide = Math.min(displaySize.x, displaySize.y);
             int leftSide = smallSide * 35 / 100;
-            if (leftSide < dp(320)) {
-                leftSide = dp(320);
+            if (leftSide < dimen(R.dimen.widget_size_320)) {
+                leftSide = dimen(R.dimen.widget_size_320);
             }
             return smallSide - leftSide;
         } else {
             int smallSide = Math.min(displaySize.x, displaySize.y);
             int maxSide = Math.max(displaySize.x, displaySize.y);
             int leftSide = maxSide * 35 / 100;
-            if (leftSide < dp(320)) {
-                leftSide = dp(320);
+            if (leftSide < dimen(R.dimen.widget_size_320)) {
+                leftSide = dimen(R.dimen.widget_size_320);
             }
             return Math.min(smallSide, maxSide - leftSide);
         }

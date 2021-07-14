@@ -6,10 +6,10 @@
     </data>
 
     <RelativeLayout
-        android:paddingStart="20dp"
-        android:paddingEnd="10dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
+        android:paddingStart="@dimen/widget_size_20"
+        android:paddingEnd="@dimen/widget_size_10"
+        android:paddingTop="@dimen/widget_size_10"
+        android:paddingBottom="@dimen/widget_size_10"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -37,8 +37,8 @@
 
         <ImageView
             android:id="@+id/iv_arrow"
-            android:layout_width="14dp"
-            android:layout_height="14dp"
+            android:layout_width="@dimen/widget_size_14"
+            android:layout_height="@dimen/widget_size_14"
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:contentDescription="@null"

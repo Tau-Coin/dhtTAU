@@ -21,11 +21,11 @@
         <EditText
             android:id="@+id/et_old_name"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:singleLine="true"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginEnd="@dimen/widget_size_20"
+            android:layout_marginTop="@dimen/widget_size_20"
             android:enabled="false"
             android:textColor="@color/color_black"
             android:inputType="text"
@@ -34,11 +34,11 @@
         <EditText
             android:id="@+id/et_name"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:singleLine="true"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginEnd="@dimen/widget_size_20"
+            android:layout_marginTop="@dimen/widget_size_10"
             android:hint="@string/tx_new_name"
             android:inputType="text"
             android:textAppearance="@style/TextAppearanceBody1"
@@ -47,11 +47,11 @@
         <EditText
             android:id="@+id/et_personal_profile"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:singleLine="true"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginEnd="@dimen/widget_size_20"
+            android:layout_marginTop="@dimen/widget_size_10"
             android:hint="@string/tx_personal_profile"
             android:inputType="text"
             android:textAppearance="@style/TextAppearanceBody1"
@@ -59,11 +59,11 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:orientation="horizontal"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="@dimen/widget_size_20"
             android:gravity="center_vertical"
-            android:layout_marginEnd="10dp">
+            android:layout_marginEnd="@dimen/widget_size_10">
 
             <TextView
                 android:id="@+id/tv_contact_platform"
@@ -75,10 +75,10 @@
 
             <ImageView
                 android:id="@+id/iv_contact_platform"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="@dimen/widget_size_40"
+                android:layout_height="@dimen/widget_size_40"
                 android:onClick="@{listener::onClick}"
-                android:padding="12dp"
+                android:padding="@dimen/widget_size_12"
                 android:contentDescription="@null"
                 android:src="@mipmap/icon_arrow"/>
 
@@ -86,11 +86,11 @@
         <EditText
             android:id="@+id/et_contact_id"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:singleLine="true"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginEnd="@dimen/widget_size_20"
+            android:layout_marginTop="@dimen/widget_size_10"
             android:hint="@string/tx_contact_id"
             android:inputType="text"
             android:textAppearance="@style/TextAppearanceBody1"
@@ -103,8 +103,8 @@
             android:text="@string/tx_median_fee"
             android:layout_gravity="end"
             android:onClick="@{listener::onClick}"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginEnd="@dimen/widget_size_20"
             android:textAppearance="@style/TextAppearanceBody2"/>
 
     </LinearLayout>

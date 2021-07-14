@@ -15,7 +15,6 @@ import android.util.AttributeSet;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 
 @SuppressLint("AppCompatCustomView")
 public class RoundImageView extends ImageView {

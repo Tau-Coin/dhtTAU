@@ -28,35 +28,35 @@
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_import_seed"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="@dimen/widget_size_50"
                 android:onClick="@{listener::onClick}"
                 app:leftImage="@mipmap/icon_import"
                 app:rightText="@string/user_import_seed"/>
 
             <include
-                android:layout_marginStart="65dp"
+                android:layout_marginStart="@dimen/widget_size_65"
                 layout="@layout/view_line"
                 android:layout_width="match_parent"
-                android:layout_height="1dp" />
+                android:layout_height="@dimen/widget_size_1" />
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_export_seed"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="@dimen/widget_size_50"
                 android:onClick="@{listener::onClick}"
                 app:leftImage="@mipmap/icon_export"
                 app:rightText="@string/user_export_seed"/>
 
             <include
-                android:layout_marginStart="65dp"
+                android:layout_marginStart="@dimen/widget_size_65"
                 layout="@layout/view_line"
                 android:layout_width="match_parent"
-                android:layout_height="1dp" />
+                android:layout_height="@dimen/widget_size_1" />
 
             <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                 android:id="@+id/item_generate_seed"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="@dimen/widget_size_50"
                 android:onClick="@{listener::onClick}"
                 app:leftImage="@mipmap/icon_generate"
                 app:rightText="@string/user_generate_seed"/>
@@ -68,11 +68,11 @@
             android:background="@color/color_white"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:paddingTop="15dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="0dp"
-            android:paddingBottom="0dp">
+            android:layout_marginTop="@dimen/widget_size_10"
+            android:paddingTop="@dimen/widget_size_15"
+            android:paddingStart="@dimen/widget_size_20"
+            android:paddingEnd="@dimen/widget_size_0"
+            android:paddingBottom="@dimen/widget_size_0">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -80,7 +80,7 @@
                 android:text="@string/user_seeds_history"
                 android:textAppearance="@style/TextAppearanceBody1"
                 android:textColor="@color/primary"
-                android:paddingBottom="10dp"
+                android:paddingBottom="@dimen/widget_size_10"
                 android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView

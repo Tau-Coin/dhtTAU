@@ -23,9 +23,9 @@
             android:layout_below="@+id/toolbar_include"
             android:background="@color/gray_light"
             android:layout_width="match_parent"
-            android:layout_height="35dp"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
+            android:layout_height="@dimen/widget_size_35"
+            android:paddingStart="@dimen/widget_size_10"
+            android:paddingEnd="@dimen/widget_size_10"
             android:gravity="center_vertical">
 
             <TextView
@@ -40,8 +40,8 @@
             <ImageView
                 android:visibility="gone"
                 android:id="@+id/iv_community_state_close"
-                android:layout_width="30dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/widget_size_30"
+                android:layout_height="@dimen/widget_size_20"
                 android:onClick="@{listener::onClick}"
                 android:contentDescription="@null"
                 android:src="@mipmap/icon_back"/>
@@ -50,14 +50,14 @@
         <com.google.android.material.tabs.TabLayout
             android:layout_below="@+id/ll_community_state"
             android:id="@+id/tab_layout"
-            android:layout_height="40dp"
+            android:layout_height="@dimen/widget_size_40"
             android:layout_width="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            app:tabMinWidth="65dp"
+            android:layout_marginStart="@dimen/widget_size_10"
+            android:layout_marginEnd="@dimen/widget_size_10"
+            app:tabMinWidth="@dimen/widget_size_65"
             app:tabMode="scrollable"
             app:tabTextAppearance="@style/TabLayout"
-            app:tabIndicatorHeight="3dp"
+            app:tabIndicatorHeight="@dimen/widget_size_3"
             app:tabIndicatorColor="@color/primary"
             app:tabSelectedTextColor="@color/primary"
             app:tabTextColor="@color/gray_dark"
@@ -68,7 +68,7 @@
             android:id="@+id/tab_layout_line"
             android:layout_below="@+id/tab_layout"
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="@dimen/widget_size_1"
             android:background="@color/divider"/>
 
         <androidx.viewpager.widget.ViewPager

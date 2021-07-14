@@ -1,6 +1,7 @@
 package io.taucoin.torrent.publishing.ui.setting;
 
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.View;
 
 import org.slf4j.Logger;
@@ -146,6 +147,14 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
                 ActivityUtil.startActivity(this, JournalActivity.class);
                 break;
             case R.id.item_help:
+                DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();
+                int screenWidth = dm.widthPixels;
+                int screenHeight = dm.heightPixels;
+                logger.debug("DisplayMetrics screenWidth::{}", screenWidth);
+                logger.debug("DisplayMetrics screenHeight::{}", screenHeight);
+                logger.debug("DisplayMetrics density::{}", dm.density);
+                logger.debug("DisplayMetrics dpi::{}", dm.density * 160);
+                logger.debug("DisplayMetrics density::{}", dm.scaledDensity);
                 break;
             case R.id.tv_public_key:
             case R.id.tv_import_new_key:

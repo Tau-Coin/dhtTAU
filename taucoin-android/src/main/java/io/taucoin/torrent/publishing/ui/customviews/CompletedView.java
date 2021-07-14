@@ -9,7 +9,6 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 
 /**
  * Created by Administrator on 2017/8/5.
@@ -64,12 +63,12 @@ public class CompletedView extends View {
     private void initAttrs(Context context, AttributeSet attrs) {
         TypedArray typeArray = context.getTheme().obtainStyledAttributes(attrs,
                 R.styleable.CompletedView, 0, 0);
-        mRadius = typeArray.getDimension(R.styleable.CompletedView_radius, 20);
-        mStrokeWidth = typeArray.getDimension(R.styleable.CompletedView_strokeWidth, 4);
+        mRadius = typeArray.getDimension(R.styleable.CompletedView_radius, R.dimen.widget_size_20);
+        mStrokeWidth = typeArray.getDimension(R.styleable.CompletedView_strokeWidth, R.dimen.widget_size_4);
         mCircleColor = typeArray.getColor(R.styleable.CompletedView_circleColor, 0xFFFFFFFF);
         mRingColor = typeArray.getColor(R.styleable.CompletedView_ringColor, 0xFFFFFFFF);
         mRingBgColor = typeArray.getColor(R.styleable.CompletedView_ringBgColor, 0xFFFFFFFF);
-        mTxtSize = typeArray.getDimension(R.styleable.CompletedView_ringTextSize, 14);
+        mTxtSize = typeArray.getDimension(R.styleable.CompletedView_ringTextSize, R.dimen.font_size_14);
 
         mRingRadius = mRadius + mStrokeWidth / 2;
     }

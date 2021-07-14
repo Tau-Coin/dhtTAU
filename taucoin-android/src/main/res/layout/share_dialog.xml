@@ -10,16 +10,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
-        android:paddingBottom="25dp"
+        android:paddingBottom="@dimen/widget_size_25"
         android:background="@drawable/grey_rect_top_round_border">
 
         <TextView
             android:visibility="visible"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="25dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginTop="@dimen/widget_size_25"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginBottom="@dimen/widget_size_20"
             android:text="@string/contacts_share_link_via"
             android:textAppearance="@style/TextAppearanceBody1"/>
 

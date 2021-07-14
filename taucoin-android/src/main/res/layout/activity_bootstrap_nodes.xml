@@ -20,10 +20,10 @@
         <EditText
             android:id="@+id/et_input"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="35dp"
+            android:layout_height="@dimen/widget_size_50"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginEnd="@dimen/widget_size_20"
+            android:layout_marginTop="@dimen/widget_size_35"
             android:hint="@string/tx_bootstrap_node"
             android:inputType="text"
             android:textAppearance="@style/TextAppearanceBody1"
@@ -36,8 +36,8 @@
             android:text="@string/tx_median_fee"
             android:layout_gravity="end"
             android:onClick="@{listener::onClick}"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginEnd="@dimen/widget_size_20"
             android:textAppearance="@style/TextAppearanceBody2"/>
 
     </LinearLayout>

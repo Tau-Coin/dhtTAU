@@ -7,4 +7,4 @@
     android:textColor="@color/color_white"
     android:textAppearance="@style/TextAppearanceBody1"
     android:gravity="center"
-    android:padding="6dp" />
+    android:padding="@dimen/widget_size_6" />

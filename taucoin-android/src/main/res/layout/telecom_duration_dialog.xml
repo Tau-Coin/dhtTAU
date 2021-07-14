@@ -9,8 +9,8 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginStart="@dimen/widget_size_20"
+        android:layout_marginEnd="@dimen/widget_size_20"
         android:gravity="center_horizontal"
         android:background="@color/color_white">
 

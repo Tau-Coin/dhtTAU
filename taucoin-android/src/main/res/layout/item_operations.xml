@@ -13,13 +13,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingStart="0dp"
-        android:paddingEnd="30dp"
-        android:layout_marginEnd="10dp">
+        android:paddingEnd="@dimen/widget_size_30"
+        android:layout_marginEnd="@dimen/widget_size_10">
 
         <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
             android:id="@+id/replay"
             android:layout_width="wrap_content"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:onClick="@{listener::onClick}"
             app:leftImage="@mipmap/icon_reply"
             app:rightText="@string/tx_operation_reply"/>
@@ -27,7 +27,7 @@
         <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
             android:id="@+id/copy"
             android:layout_width="wrap_content"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:onClick="@{listener::onClick}"
             app:leftImage="@mipmap/icon_copy"
             app:rightText="@string/tx_operation_copy"/>
@@ -35,7 +35,7 @@
         <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
             android:id="@+id/copy_link"
             android:layout_width="wrap_content"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:onClick="@{listener::onClick}"
             app:leftImage="@mipmap/icon_copy_link"
             app:rightText="@string/tx_operation_copy_link"/>
@@ -43,7 +43,7 @@
         <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
             android:id="@+id/blacklist"
             android:layout_width="wrap_content"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:onClick="@{listener::onClick}"
             app:leftImage="@mipmap/icon_blacklist"
             app:rightText="@string/tx_operation_blacklist"/>
@@ -51,7 +51,7 @@
         <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
             android:id="@+id/favourite"
             android:layout_width="wrap_content"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:onClick="@{listener::onClick}"
             app:leftImage="@mipmap/icon_favourite"
             app:rightText="@string/tx_operation_favorite"/>
@@ -59,7 +59,7 @@
         <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
             android:id="@+id/msg_hash"
             android:layout_width="wrap_content"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:onClick="@{listener::onClick}"
             app:leftImage="@mipmap/icon_msg_hash"
             app:rightText="@string/tx_operation_msg_hash"/>

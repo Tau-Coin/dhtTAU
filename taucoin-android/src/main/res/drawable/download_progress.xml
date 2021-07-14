@@ -2,7 +2,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@android:id/background">
         <shape android:shape="rectangle">
-            <corners android:radius="5dp"/>
+            <corners android:radius="@dimen/widget_size_5"/>
             <gradient android:startColor="@color/divider"
                 android:endColor="@color/divider"/>
         </shape>
@@ -10,7 +10,7 @@
     <item android:id="@android:id/progress">
         <clip>
             <shape android:shape="rectangle">
-                <corners android:radius="5dp"/>
+                <corners android:radius="@dimen/widget_size_5"/>
                 <gradient android:angle="45"
                     android:startColor="@color/color_yellow"
                     android:endColor="@color/color_yellow"/>

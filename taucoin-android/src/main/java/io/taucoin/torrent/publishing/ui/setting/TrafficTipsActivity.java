@@ -12,7 +12,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.model.TauDaemon;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.NetworkSetting;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
 
@@ -106,7 +105,7 @@ public class TrafficTipsActivity extends BaseActivity {
             Field mMessage = mAlertController.getClass().getDeclaredField("mMessageView");
             mMessage.setAccessible(true);
             TextView mMessageView = (TextView) mMessage.get(mAlertController);
-            mMessageView.setLineSpacing(DimensionsUtil.dip2px(this, 5), 1);
+            mMessageView.setLineSpacing(getResources().getDimensionPixelSize(R.dimen.widget_size_5), 1);
         } catch (Exception e) {
             e.printStackTrace();
         }

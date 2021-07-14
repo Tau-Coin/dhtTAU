@@ -10,8 +10,8 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp">
+        android:layout_marginStart="@dimen/widget_size_10"
+        android:layout_marginEnd="@dimen/widget_size_10">
 
         <TextView
             android:visibility="gone"
@@ -19,7 +19,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="@dimen/widget_size_5"
             android:textColor="@color/gray_dark"
             android:textAppearance="@style/TextAppearanceBody3" />
 
@@ -28,16 +28,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="@dimen/widget_size_5"
             android:gravity="top">
 
             <ImageView
                 android:id="@+id/iv_stats"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/widget_size_20"
+                android:layout_height="@dimen/widget_size_20"
                 android:gravity="center_vertical"
                 android:includeFontPadding="false"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="@dimen/widget_size_5"
                 android:layout_gravity="center_vertical"
                 android:contentDescription="@null"
                 android:src="@mipmap/icon_sent"/>
@@ -45,9 +45,9 @@
             <ProgressBar
                 android:id="@+id/tv_progress"
                 style="?android:attr/progressBarStyleSmall"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginEnd="5dp"
+                android:layout_width="@dimen/widget_size_20"
+                android:layout_height="@dimen/widget_size_20"
+                android:layout_marginEnd="@dimen/widget_size_5"
                 android:indeterminateDrawable="@drawable/progressbar_round"
                 android:layout_gravity="center_vertical"/>
 
@@ -55,19 +55,19 @@
                 android:id="@+id/tv_image"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
+                android:layout_marginEnd="@dimen/widget_size_10"
                 android:textAppearance="@style/TextAppearanceBody2" />
 
             <io.taucoin.torrent.publishing.ui.customviews.RoundButton
                 android:id="@+id/round_button"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="@dimen/widget_size_40"
+                android:layout_height="@dimen/widget_size_40"
                 android:gravity="center_vertical|center"
                 android:textColor="@color/color_white"
                 android:textAppearance="@style/TextAppearanceHeadline6"
                 app:btnStrokeColor="@color/primary_light"
-                app:btnStrokeWidth="0dp"
-                app:btnCornerRadius="7dp"
+                app:btnStrokeWidth="@dimen/widget_size_0"
+                app:btnCornerRadius="@dimen/widget_size_7"
                 app:btnSolidColor="@color/primary_light"
                 app:btnPressedRatio="1.5" />
 

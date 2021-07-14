@@ -30,7 +30,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import io.taucoin.torrent.publishing.R;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 
 public class CommonDialog extends Dialog {
@@ -85,7 +84,7 @@ public class CommonDialog extends Dialog {
         }
 
         public Builder setButtonWidth(int dpWidth) {
-            this.btnWidth = dpWidth;
+            this.btnWidth = context.getResources().getDimensionPixelSize(dpWidth);
             return this;
         }
 
@@ -216,8 +215,8 @@ public class CommonDialog extends Dialog {
             }
 
             if(btnWidth > 0){
-                viewHolder.negativeButton.setWidth(DimensionsUtil.dip2px(context, btnWidth));
-                viewHolder.positiveButton.setWidth(DimensionsUtil.dip2px(context, btnWidth));
+                viewHolder.negativeButton.setWidth(btnWidth);
+                viewHolder.positiveButton.setWidth(btnWidth);
             }
             dialog.setCanceledOnTouchOutside(isCanCancel);
             return dialog;
@@ -229,7 +228,7 @@ public class CommonDialog extends Dialog {
             Display display = windowManager.getDefaultDisplay();
 
             if(enableWarpWidth){
-                int padding = DimensionsUtil.dip2px(layout.getContext(), 10);
+                int padding = layout.getContext().getResources().getDimensionPixelSize(R.dimen.widget_size_10);
                 layout.setPadding(padding, padding, padding, padding);
                 Window dialogWindow = dialog.getWindow();
                 if(dialogWindow != null){

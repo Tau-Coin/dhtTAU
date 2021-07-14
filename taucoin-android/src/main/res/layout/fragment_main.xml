@@ -21,16 +21,16 @@
                 android:visibility="gone"
                 android:id="@+id/ll_warning"
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="@dimen/widget_size_44"
                 android:background="@color/color_red_bg"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
+                android:paddingStart="@dimen/widget_size_10"
+                android:paddingEnd="@dimen/widget_size_10"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/widget_size_20"
+                    android:layout_height="@dimen/widget_size_20"
                     android:src="@mipmap/icon_warning"
                     android:contentDescription="@null"/>
 
@@ -41,7 +41,7 @@
                     android:gravity="center_vertical"
                     android:text="@string/main_connecting"
                     android:textColor="@color/gray_dark"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="@dimen/widget_size_10"
                     android:textAppearance="@style/TextAppearanceBody1"/>
 
 
@@ -74,8 +74,8 @@
 
                     <TextView
                         android:id="@+id/tv_add_friends"
-                        android:layout_width="220dp"
-                        android:layout_height="44dp"
+                        android:layout_width="@dimen/widget_size_220"
+                        android:layout_height="@dimen/widget_size_44"
                         android:text="@string/main_empty_add_friends"
                         android:background="@drawable/primary_rect_round_bg"
                         android:gravity="center_vertical|center"
@@ -85,10 +85,10 @@
 
                     <TextView
                         android:id="@+id/tv_create_communities"
-                        android:layout_width="220dp"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="25dp"
-                        android:lineSpacingExtra="5dp"
+                        android:layout_width="@dimen/widget_size_220"
+                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_marginTop="@dimen/widget_size_25"
+                        android:lineSpacingExtra="@dimen/widget_size_5"
                         android:background="@drawable/black_rect_round_bg"
                         android:gravity="center_vertical|center"
                         android:textColor="@color/color_white"

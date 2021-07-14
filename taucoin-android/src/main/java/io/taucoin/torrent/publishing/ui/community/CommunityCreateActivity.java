@@ -119,7 +119,7 @@ public class CommunityCreateActivity extends BaseActivity {
         binding.tvMsg.setTextColor(getResources().getColor(R.color.color_black));
         successDialog = new CommonDialog.Builder(this)
                 .setContentView(binding.getRoot())
-                .setButtonWidth(240)
+                .setButtonWidth(R.dimen.widget_size_240)
                 .setPositiveButton(R.string.community_added_members, (dialog, which) -> {
                     dialog.cancel();
                     onBackPressed();

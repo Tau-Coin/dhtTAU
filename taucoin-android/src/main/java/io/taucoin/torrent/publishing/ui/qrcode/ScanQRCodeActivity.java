@@ -116,7 +116,11 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
     }
 
     private void initCameraView() {
-        CameraController.getInstance().initCamera(() -> cameraView.initCamera());
+        CameraController.getInstance().initCamera(() -> {
+            if (cameraView != null) {
+                cameraView.initCamera();
+            }
+        });
 
         qrReader = new QRCodeReader();
 
@@ -125,11 +129,11 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
         paint.setColor(0x7f000000);
         cornerPaint.setColor(0xffffffff);
         cornerPaint.setStyle(Paint.Style.STROKE);
-        cornerPaint.setStrokeWidth(AndroidUtilities.dp(4));
+        cornerPaint.setStrokeWidth(AndroidUtilities.dimen(R.dimen.widget_size_4));
         cornerPaint.setStrokeJoin(Paint.Join.ROUND);
 
-        scannerLineHeight = AndroidUtilities.dp(5);
-        scannerLineMoveDistance = AndroidUtilities.dp(2);
+        scannerLineHeight = AndroidUtilities.dimen(R.dimen.widget_size_5);
+        scannerLineMoveDistance = AndroidUtilities.dimen(R.dimen.widget_size_2);
         laserColor = getResources().getColor(R.color.color_blue_light);
         laserPaint.setColor(laserColor);
 
@@ -174,27 +178,27 @@ public class ScanQRCodeActivity extends BaseActivity implements View.OnClickList
                     drawLaserScanner(canvas, frame);
 
                     path.reset();
-                    path.moveTo(x, y + AndroidUtilities.dp(20));
+                    path.moveTo(x, y + AndroidUtilities.dimen(R.dimen.widget_size_20));
                     path.lineTo(x, y);
-                    path.lineTo(x + AndroidUtilities.dp(20), y);
+                    path.lineTo(x + AndroidUtilities.dimen(R.dimen.widget_size_20), y);
                     canvas.drawPath(path, cornerPaint);
 
                     path.reset();
-                    path.moveTo(x + size, y + AndroidUtilities.dp(20));
+                    path.moveTo(x + size, y + AndroidUtilities.dimen(R.dimen.widget_size_20));
                     path.lineTo(x + size, y);
-                    path.lineTo(x + size - AndroidUtilities.dp(20), y);
+                    path.lineTo(x + size - AndroidUtilities.dimen(R.dimen.widget_size_20), y);
                     canvas.drawPath(path, cornerPaint);
 
                     path.reset();
-                    path.moveTo(x, y + size - AndroidUtilities.dp(20));
+                    path.moveTo(x, y + size - AndroidUtilities.dimen(R.dimen.widget_size_20));
                     path.lineTo(x, y + size);
-                    path.lineTo(x + AndroidUtilities.dp(20), y + size);
+                    path.lineTo(x + AndroidUtilities.dimen(R.dimen.widget_size_20), y + size);
                     canvas.drawPath(path, cornerPaint);
 
                     path.reset();
-                    path.moveTo(x + size, y + size - AndroidUtilities.dp(20));
+                    path.moveTo(x + size, y + size - AndroidUtilities.dimen(R.dimen.widget_size_20));
                     path.lineTo(x + size, y + size);
-                    path.lineTo(x + size - AndroidUtilities.dp(20), y + size);
+                    path.lineTo(x + size - AndroidUtilities.dimen(R.dimen.widget_size_20), y + size);
                     canvas.drawPath(path, cornerPaint);
 
                     postInvalidateDelayed(scannerAnimationDelay,

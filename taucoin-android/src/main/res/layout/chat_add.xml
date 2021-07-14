@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
-        android:paddingBottom="10dp">
+        android:paddingBottom="@dimen/widget_size_10">
 
         <include
             android:id="@+id/top_line"
@@ -22,6 +22,6 @@
             android:layout_height="wrap_content"
             android:overScrollMode="never"
             android:scrollbars="none"
-            android:layout_marginTop="30dp"/>
+            android:layout_marginTop="@dimen/widget_size_30"/>
     </LinearLayout>
 </layout>

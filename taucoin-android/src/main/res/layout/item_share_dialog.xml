@@ -8,14 +8,14 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
+        android:layout_marginStart="@dimen/widget_size_10"
+        android:layout_marginEnd="@dimen/widget_size_10"
         android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/iv_share_type"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="@dimen/widget_size_50"
+            android:layout_height="@dimen/widget_size_50"
             android:layout_gravity="center_horizontal"
             android:contentDescription="@null"/>
 

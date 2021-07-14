@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="@dimen/widget_size_30"
             android:orientation="horizontal"
             android:visibility="visible">
 
@@ -26,17 +26,17 @@
                 style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                 android:layout_width="match_parent"
                 android:layout_centerVertical="true"
-                android:layout_height="5dp"
+                android:layout_height="@dimen/widget_size_5"
                 android:progress="0"
-                android:layout_marginStart="20dp"
+                android:layout_marginStart="@dimen/widget_size_20"
                 android:progressDrawable="@drawable/download_progress" />
 
             <TextView
                 android:id="@+id/tv_progress"
-                android:layout_width="50dp"
+                android:layout_width="@dimen/widget_size_50"
                 android:gravity="center_horizontal"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
+                android:layout_marginEnd="@dimen/widget_size_10"
                 android:layout_centerVertical="true"
                 android:layout_alignParentEnd="true"
                 android:textAppearance="@style/TextAppearanceBody1"
@@ -49,9 +49,9 @@
             android:id="@+id/tv_fail_msg"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginRight="20dp"
+            android:layout_marginLeft="@dimen/widget_size_20"
+            android:layout_marginTop="@dimen/widget_size_5"
+            android:layout_marginRight="@dimen/widget_size_20"
             android:textColor="@color/color_red"
             android:textAppearance="@style/TextAppearanceBody1"
             android:text="@string/app_upgrade_fail" />

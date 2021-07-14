@@ -34,10 +34,10 @@
             android:id="@+id/ll_bottom_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
+            android:paddingStart="@dimen/widget_size_10"
+            android:paddingEnd="@dimen/widget_size_10"
+            android:paddingTop="@dimen/widget_size_5"
+            android:paddingBottom="@dimen/widget_size_5"
             android:background="@color/color_white"
             android:gravity="center_vertical"
             android:orientation="horizontal">
@@ -46,12 +46,12 @@
                 android:id="@+id/et_message"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:minHeight="44dp"
+                android:minHeight="@dimen/widget_size_44"
                 android:layout_weight="1"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
+                android:paddingStart="@dimen/widget_size_10"
+                android:paddingEnd="@dimen/widget_size_10"
+                android:paddingTop="@dimen/widget_size_5"
+                android:paddingBottom="@dimen/widget_size_5"
                 android:hint="@string/community_input_hint"
                 android:maxLines="5"
                 android:inputType="textMultiLine"
@@ -61,9 +61,9 @@
             <TextView
                 android:visibility="gone"
                 android:id="@+id/tv_send"
-                android:layout_width="65dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="10dp"
+                android:layout_width="@dimen/widget_size_65"
+                android:layout_height="@dimen/widget_size_40"
+                android:layout_marginStart="@dimen/widget_size_10"
                 android:textAllCaps="false"
                 android:onClick="@{listener::onClick}"
                 android:gravity="center_vertical|center"
@@ -74,9 +74,9 @@
 
             <ImageView
                 android:id="@+id/iv_add"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_marginStart="10dp"
+                android:layout_width="@dimen/widget_size_28"
+                android:layout_height="@dimen/widget_size_28"
+                android:layout_marginStart="@dimen/widget_size_10"
                 android:src="@mipmap/icon_add"
                 android:onClick="@{listener::onClick}"
                 android:contentDescription="@null"/>
@@ -85,6 +85,6 @@
         <io.taucoin.torrent.publishing.ui.customviews.ChatAddView
             android:id="@+id/chat_add"
             android:layout_width="match_parent"
-            android:layout_height="280dp" />
+            android:layout_height="@dimen/widget_size_280" />
     </LinearLayout>
 </layout>

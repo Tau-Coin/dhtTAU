@@ -15,7 +15,7 @@
             android:layout_centerVertical="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="@dimen/widget_size_20"
             android:textColor="@color/gray_dark"
             android:lineSpacingExtra="0dp"
             android:lineSpacingMultiplier="0.7"
@@ -23,10 +23,10 @@
 
         <ImageView
             android:id="@+id/iv_left"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
+            android:layout_width="@dimen/widget_size_22"
+            android:layout_height="@dimen/widget_size_22"
             android:layout_centerVertical="true"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="@dimen/widget_size_20"
             android:contentDescription="@null" />
 
         <TextView
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="@dimen/widget_size_10"
             android:textAppearance="@style/TextAppearanceBody1"
             android:layout_toEndOf="@+id/iv_left" />
     </RelativeLayout>

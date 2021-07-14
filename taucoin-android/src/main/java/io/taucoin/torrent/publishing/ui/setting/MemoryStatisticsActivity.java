@@ -31,7 +31,6 @@ import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.storage.sqlite.repo.StatisticRepository;
 import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.LargeValueFormatter;
 import io.taucoin.torrent.publishing.databinding.ActivityDataStatisticsBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -65,11 +64,14 @@ public class MemoryStatisticsActivity extends BaseActivity {
         binding.toolbarInclude.toolbar.setTitle(R.string.setting_memory_statistics);
         binding.toolbarInclude.toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        binding.lineChart.setRotation(90);
         binding.lineChart.post(() -> {
             int mScreenWidth = binding.lineChart.getWidth();
             int mScreenHeight = binding.lineChart.getHeight();
-            int paddingSize = DimensionsUtil.dp2px(MemoryStatisticsActivity.this, 15);
+            if (mScreenWidth >= mScreenHeight) {
+                return;
+            }
+            binding.lineChart.setRotation(90);
+            int paddingSize = getResources().getDimensionPixelSize(R.dimen.widget_size_15);
             LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) binding.lineChart.getLayoutParams();
             layoutParams.width = mScreenHeight - paddingSize;
             layoutParams.height = mScreenWidth - paddingSize;

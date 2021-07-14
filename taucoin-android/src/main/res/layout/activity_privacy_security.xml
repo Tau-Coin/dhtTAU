@@ -23,8 +23,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/color_white"
-            android:paddingTop="20dp"
-            android:paddingStart="20dp"
+            android:paddingTop="@dimen/widget_size_20"
+            android:paddingStart="@dimen/widget_size_20"
             android:paddingEnd="0dp">
 
             <TextView
@@ -39,10 +39,10 @@
             <TextView
                 android:id="@+id/tv_blacklist_users"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="@dimen/widget_size_50"
                 android:includeFontPadding="false"
                 android:onClick="@{listener::onClick}"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="@dimen/widget_size_10"
                 android:gravity="center_vertical"
                 android:text="@string/setting_blacklist_users"
                 android:textAppearance="@style/TextAppearanceBody1"/>
@@ -56,7 +56,7 @@
                 android:visibility="gone"
                 android:id="@+id/tv_blacklist_communities"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="@dimen/widget_size_50"
                 android:includeFontPadding="false"
                 android:onClick="@{listener::onClick}"
                 android:gravity="center_vertical"
@@ -69,12 +69,12 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="@dimen/widget_size_15"
             android:background="@color/color_white"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:paddingTop="20dp"
-            android:paddingBottom="5dp">
+            android:paddingStart="@dimen/widget_size_20"
+            android:paddingEnd="@dimen/widget_size_20"
+            android:paddingTop="@dimen/widget_size_20"
+            android:paddingBottom="@dimen/widget_size_5">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -89,9 +89,9 @@
                 android:id="@+id/ll_seeds"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="@dimen/widget_size_50"
                 android:onClick="@{listener::onClick}"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="@dimen/widget_size_5"
                 android:gravity="center_vertical">
 
                 <TextView
@@ -103,8 +103,8 @@
                     android:textAppearance="@style/TextAppearanceBody1"/>
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="@dimen/widget_size_16"
+                    android:layout_height="@dimen/widget_size_16"
                     android:contentDescription="@null"
                     android:src="@mipmap/icon_arrow"/>
 
@@ -116,9 +116,9 @@
                 android:id="@+id/ll_devices"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="@dimen/widget_size_50"
                 android:onClick="@{listener::onClick}"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="@dimen/widget_size_5"
                 android:gravity="center_vertical">
 
                 <TextView
@@ -130,8 +130,8 @@
                     android:textAppearance="@style/TextAppearanceBody1"/>
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="@dimen/widget_size_16"
+                    android:layout_height="@dimen/widget_size_16"
                     android:contentDescription="@null"
                     android:src="@mipmap/icon_arrow"/>
 

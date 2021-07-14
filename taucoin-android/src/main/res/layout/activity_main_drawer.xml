@@ -39,7 +39,7 @@
 
                     <View
                         android:layout_below="@+id/toolbar_include"
-                        android:layout_width="1dp"
+                        android:layout_width="@dimen/widget_size_1"
                         android:layout_height="match_parent"
                         android:layout_alignParentEnd="true"
                         android:background="@color/divider"/>
@@ -57,7 +57,7 @@
 
             <com.google.android.material.navigation.NavigationView
                 android:id="@+id/navigation_view"
-                android:layout_width="wrap_content"
+                android:layout_width="@dimen/widget_size_290"
                 android:layout_height="match_parent"
                 android:layout_gravity="start"
                 android:background="?attr/backgroundDialog"

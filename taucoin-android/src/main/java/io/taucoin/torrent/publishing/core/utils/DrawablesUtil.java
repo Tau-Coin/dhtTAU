@@ -58,8 +58,6 @@ public class DrawablesUtil {
 
     private static Drawable getDrawable(TextView view, int drawable, float width, float height) {
         Drawable mDrawable = ContextCompat.getDrawable(view.getContext(), drawable);
-        width = DimensionsUtil.dp2px(view.getContext(), width);
-        height = DimensionsUtil.dp2px(view.getContext(), height);
         int top = (int) width;
         int bottom = (int) height;
         mDrawable.setBounds(0, 0, top, bottom);
@@ -67,8 +65,6 @@ public class DrawablesUtil {
     }
     public static Drawable getDrawable(Context context, int drawable, float width, float height) {
         Drawable mDrawable = ContextCompat.getDrawable(context, drawable);
-        width = DimensionsUtil.dp2px(context, width);
-        height = DimensionsUtil.dp2px(context, height);
         int top = (int) width;
         int bottom = (int) height;
         mDrawable.setBounds(0, 0, top, bottom);
@@ -94,11 +90,9 @@ public class DrawablesUtil {
     }
 
     public static Drawable textToDrawable(Context context, String text, int size, int textSizeDp) {
-        size = DimensionsUtil.dp2px(context, size);
         Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         Paint paint = new Paint();
-        textSizeDp = DimensionsUtil.dp2px(context, textSizeDp);
         paint.setTextSize(textSizeDp);
         paint.setTextAlign(Paint.Align.CENTER);
         paint.setColor(Color.WHITE);

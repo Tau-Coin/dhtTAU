@@ -36,7 +36,7 @@ public class BadgeActionProvider extends ActionProvider {
     public View onCreateActionView() {
         @SuppressLint("PrivateResource")
         int size = getContext().getResources().getDimensionPixelSize(
-                R.dimen.abc_action_bar_default_height_material);
+                R.dimen.toolbar_height);
 
         ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(size, size);
         View view = LayoutInflater.from(getContext())

@@ -29,7 +29,7 @@
             android:visibility="gone"
             android:id="@+id/rl_reply"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="@dimen/widget_size_50"
             android:background="@color/color_white"
             android:gravity="center_vertical"
             android:orientation="horizontal">
@@ -40,15 +40,15 @@
                 android:layout_alignParentBottom="true"
                 layout="@layout/view_line"
                 android:layout_width="match_parent"
-                android:layout_height="1dp" />
+                android:layout_height="@dimen/widget_size_1" />
 
             <ImageView
                 android:visibility="gone"
                 android:id="@+id/iv_replay"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="@dimen/widget_size_22"
+                android:layout_height="@dimen/widget_size_22"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="15dp"
+                android:layout_marginStart="@dimen/widget_size_15"
                 android:contentDescription="@null"
                 android:src="@mipmap/icon_reply"/>
 
@@ -59,8 +59,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_marginEnd="10dp"
-                android:layout_marginStart="15dp">
+                android:layout_marginEnd="@dimen/widget_size_10"
+                android:layout_marginStart="@dimen/widget_size_15">
 
                 <TextView
                     android:id="@+id/tv_reply_name"
@@ -87,11 +87,11 @@
 
             <ImageView
                 android:id="@+id/iv_replay_close"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/widget_size_20"
+                android:layout_height="@dimen/widget_size_20"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:layout_marginEnd="15dp"
+                android:layout_marginEnd="@dimen/widget_size_15"
                 android:onClick="@{listener::onClick}"
                 android:contentDescription="@null"
                 android:src="@mipmap/icon_close"/>
@@ -105,10 +105,10 @@
             android:id="@+id/ll_bottom_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
+            android:paddingStart="@dimen/widget_size_10"
+            android:paddingEnd="@dimen/widget_size_10"
+            android:paddingTop="@dimen/widget_size_5"
+            android:paddingBottom="@dimen/widget_size_5"
             android:background="@color/color_chat_pop"
             android:gravity="center_vertical"
             android:orientation="horizontal">
@@ -117,12 +117,12 @@
                 android:id="@+id/et_message"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:minHeight="44dp"
+                android:minHeight="@dimen/widget_size_44"
                 android:layout_weight="1"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
+                android:paddingStart="@dimen/widget_size_10"
+                android:paddingEnd="@dimen/widget_size_10"
+                android:paddingTop="@dimen/widget_size_5"
+                android:paddingBottom="@dimen/widget_size_5"
                 android:hint="@string/community_input_hint"
                 android:maxLines="5"
                 android:inputType="textMultiLine"
@@ -132,9 +132,9 @@
             <TextView
                 android:visibility="gone"
                 android:id="@+id/tv_send"
-                android:layout_width="65dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="10dp"
+                android:layout_width="@dimen/widget_size_65"
+                android:layout_height="@dimen/widget_size_40"
+                android:layout_marginStart="@dimen/widget_size_10"
                 android:textAllCaps="false"
                 android:onClick="@{listener::onClick}"
                 android:gravity="center_vertical|center"

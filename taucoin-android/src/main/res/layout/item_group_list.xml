@@ -8,14 +8,14 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="65dp"
-        android:layout_marginStart="7dp">
+        android:layout_height="@dimen/widget_size_65"
+        android:layout_marginStart="@dimen/widget_size_7">
 
         <io.taucoin.torrent.publishing.ui.customviews.RoundButton
             android:id="@+id/left_view"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginEnd="7dp"
+            android:layout_width="@dimen/widget_size_50"
+            android:layout_height="@dimen/widget_size_50"
+            android:layout_marginEnd="@dimen/widget_size_7"
             android:layout_centerVertical="true"
             android:gravity="center"
             android:textAllCaps="true"
@@ -23,7 +23,7 @@
             android:textAppearance="@style/TextAppearanceHeadline6"
             app:btnStrokeColor="@color/primary_light"
             app:btnStrokeWidth="0dp"
-            app:btnCornerRadius="7dp"
+            app:btnCornerRadius="@dimen/widget_size_7"
             app:btnSolidColor="@color/primary_light"
             app:btnPressedRatio="1.5" />
 
@@ -48,13 +48,13 @@
             <TextView
                 android:id="@+id/tv_balance_power"
                 android:layout_width="match_parent"
-                android:layout_height="15dp"
+                android:layout_height="@dimen/widget_size_15"
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 app:autoSizeTextType="uniform"
-                app:autoSizeMaxTextSize="14dp"
-                app:autoSizeMinTextSize="2dp"
-                app:autoSizeStepGranularity="0.5dp"
+                app:autoSizeMaxTextSize="@dimen/font_size_14"
+                app:autoSizeMinTextSize="@dimen/font_size_2"
+                app:autoSizeStepGranularity="@dimen/font_size_0_5"
                 android:textAppearance="@style/TextAppearanceBody2" />
 
             <TextView
@@ -76,16 +76,16 @@
             android:layout_alignParentEnd="true"
             android:gravity="center_vertical|end"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="15dp"
-            android:paddingBottom="2dp"
-            android:minWidth="50dp"
+            android:layout_marginEnd="@dimen/widget_size_15"
+            android:paddingBottom="@dimen/widget_size_2"
+            android:minWidth="@dimen/widget_size_50"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tv_msg_last_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:minWidth="32dp"
+                android:minWidth="@dimen/widget_size_32"
                 android:singleLine="true"
                 android:includeFontPadding="false"
                 android:ellipsize="end"
@@ -95,9 +95,9 @@
 
             <io.taucoin.torrent.publishing.ui.customviews.RoundButton
                 android:id="@+id/read_only"
-                android:layout_width="32dp"
-                android:layout_height="24dp"
-                android:layout_marginTop="10dp"
+                android:layout_width="@dimen/widget_size_32"
+                android:layout_height="@dimen/widget_size_24"
+                android:layout_marginTop="@dimen/widget_size_10"
                 android:gravity="center"
                 android:textAllCaps="true"
                 android:text="@string/main_read_only"
@@ -108,7 +108,7 @@
                 android:lineSpacingExtra="0dp"
                 app:btnStrokeColor="@color/primary_light"
                 app:btnStrokeWidth="0dp"
-                app:btnCornerRadius="5dp"
+                app:btnCornerRadius="@dimen/widget_size_5"
                 app:btnSolidColor="@color/primary_light"
                 app:btnPressedRatio="1.5" />
 
@@ -116,7 +116,7 @@
 
         <include
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="@dimen/widget_size_1"
             android:layout_toEndOf="@+id/left_view"
             android:layout_centerVertical="true"
             android:layout_alignParentBottom="true"

@@ -22,7 +22,7 @@
                 android:id="@+id/recycler_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingTop="10dp"
+                android:paddingTop="@dimen/widget_size_10"
                 android:paddingBottom="@{@dimen/fab_size + @dimen/fab_margin}"
                 android:clipToPadding="false"
                 android:scrollbars="vertical"
@@ -48,8 +48,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
-                    android:layout_marginTop="10dp"
-                    android:lineSpacingExtra="5dp"
+                    android:layout_marginTop="@dimen/widget_size_10"
+                    android:lineSpacingExtra="@dimen/widget_size_5"
                     style="@style/TextAppearanceBody1" />
 
             </LinearLayout>

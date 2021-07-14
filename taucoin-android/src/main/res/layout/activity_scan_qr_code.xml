@@ -24,13 +24,13 @@
 
             <ImageView
                 android:id="@+id/iv_qr_code"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:padding="10dp"
+                android:layout_width="@dimen/widget_size_40"
+                android:layout_height="@dimen/widget_size_40"
+                android:padding="@dimen/widget_size_10"
                 android:onClick="onClick"
                 android:layout_gravity="start|bottom"
-                android:layout_marginStart="20dp"
-                android:layout_marginBottom="50dp"
+                android:layout_marginStart="@dimen/widget_size_20"
+                android:layout_marginBottom="@dimen/widget_size_50"
                 android:layout_above="@+id/ll_bottom"
                 android:src="@mipmap/icon_pkqr"
                 android:background="@drawable/circle_black"
@@ -38,13 +38,13 @@
 
             <ImageView
                 android:id="@+id/iv_gallery"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:padding="10dp"
+                android:layout_width="@dimen/widget_size_40"
+                android:layout_height="@dimen/widget_size_40"
+                android:padding="@dimen/widget_size_10"
                 android:layout_gravity="end|bottom"
                 android:onClick="onClick"
-                android:layout_marginEnd="20dp"
-                android:layout_marginBottom="50dp"
+                android:layout_marginEnd="@dimen/widget_size_20"
+                android:layout_marginBottom="@dimen/widget_size_50"
                 android:layout_alignParentEnd="true"
                 android:layout_above="@+id/ll_bottom"
                 android:background="@drawable/circle_black"
@@ -59,14 +59,14 @@
                 android:layout_gravity="bottom"
                 android:gravity="center_horizontal|center"
                 android:layout_width="match_parent"
-                android:layout_height="60dp">
+                android:layout_height="@dimen/widget_size_60">
 
                 <TextView
                     android:id="@+id/tv_no_qr_code"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
+                    android:layout_marginStart="@dimen/widget_size_20"
+                    android:layout_marginEnd="@dimen/widget_size_20"
                     android:textColor="@color/color_white"
                     android:gravity="center_horizontal|center"
                     android:text="@string/qr_code_scan_qr"
@@ -79,18 +79,18 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/text_secondary"
                     android:gravity="center_horizontal|center"
-                    android:layout_marginTop="5dp"
+                    android:layout_marginTop="@dimen/widget_size_5"
                     android:text="@string/qr_code_not_found_continue"
                     android:textAppearance="@style/TextAppearanceBody3"/>
             </LinearLayout>
 
             <ImageView
                 android:id="@+id/iv_back"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginStart="12dp"
-                android:layout_marginTop="25dp"
-                android:padding="2dp"
+                android:layout_width="@dimen/widget_size_30"
+                android:layout_height="@dimen/widget_size_30"
+                android:layout_marginStart="@dimen/widget_size_12"
+                android:layout_marginTop="@dimen/widget_size_25"
+                android:padding="@dimen/widget_size_2"
                 android:onClick="onClick"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"

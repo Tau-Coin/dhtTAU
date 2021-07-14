@@ -11,18 +11,18 @@
     <LinearLayout
         android:orientation="vertical"
         android:background="@color/color_white"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="40dp"
-        android:layout_width="300dp"
-        android:padding="15dp"
+        android:layout_marginStart="@dimen/widget_size_40"
+        android:layout_marginEnd="@dimen/widget_size_40"
+        android:layout_width="@dimen/widget_size_300"
+        android:padding="@dimen/widget_size_15"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp"
+            android:layout_marginStart="@dimen/widget_size_5"
+            android:layout_marginEnd="@dimen/widget_size_5"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -31,17 +31,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:includeFontPadding="false"
-                android:drawablePadding="2dp"
+                android:drawablePadding="@dimen/widget_size_2"
                 android:onClick="@{listener::onClick}"
                 android:textAppearance="@style/TextAppearanceBody1" />
 
             <ImageView
                 android:id="@+id/iv_copy"
                 android:layout_width="match_parent"
-                android:layout_height="22dp"
+                android:layout_height="@dimen/widget_size_22"
                 android:contentDescription="@null"
                 android:onClick="@{listener::onClick}"
-                android:padding="5dp"
+                android:padding="@dimen/widget_size_5"
                 android:src="@mipmap/icon_copy_text" />
 
         </LinearLayout>
@@ -50,9 +50,9 @@
             android:id="@+id/tv_qr_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp"
+            android:layout_marginTop="@dimen/widget_size_5"
+            android:layout_marginStart="@dimen/widget_size_5"
+            android:layout_marginEnd="@dimen/widget_size_5"
             android:includeFontPadding="false"
             android:maxLines="4"
             android:ellipsize="end"
@@ -63,13 +63,13 @@
             android:id="@+id/rl_qr_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp">
+            android:layout_marginTop="@dimen/widget_size_5">
 
             <io.taucoin.torrent.publishing.ui.customviews.SquareImageView
                 android:background="@color/color_white"
                 android:id="@+id/iv_qr_code"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_height="@dimen/widget_size_0"
                 android:contentDescription="@null"/>
         </RelativeLayout>
     </LinearLayout>

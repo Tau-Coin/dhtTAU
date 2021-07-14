@@ -24,16 +24,16 @@
             android:focusableInTouchMode="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="15dp"
-            android:paddingBottom="15dp"
+            android:paddingTop="@dimen/widget_size_15"
+            android:paddingBottom="@dimen/widget_size_15"
             android:background="@color/color_white">
 
             <io.taucoin.torrent.publishing.ui.customviews.RoundButton
                 android:id="@+id/left_view"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginEnd="7dp"
+                android:layout_width="@dimen/widget_size_50"
+                android:layout_height="@dimen/widget_size_50"
+                android:layout_marginStart="@dimen/widget_size_15"
+                android:layout_marginEnd="@dimen/widget_size_7"
                 android:layout_centerVertical="true"
                 android:gravity="center"
                 android:textAllCaps="true"
@@ -41,7 +41,7 @@
                 android:textAppearance="@style/TextAppearanceHeadline6"
                 app:btnStrokeColor="@color/primary_light"
                 app:btnStrokeWidth="0dp"
-                app:btnCornerRadius="10dp"
+                app:btnCornerRadius="@dimen/widget_size_10"
                 app:btnSolidColor="@color/primary_light"
                 app:btnPressedRatio="1.5" />
 
@@ -49,8 +49,8 @@
                 android:layout_toEndOf="@+id/left_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingEnd="15dp"
-                android:paddingStart="5dp"
+                android:paddingEnd="@dimen/widget_size_15"
+                android:paddingStart="@dimen/widget_size_5"
                 android:layout_centerVertical="true"
                 android:orientation="vertical">
 
@@ -66,7 +66,7 @@
                 <LinearLayout
                     android:orientation="horizontal"
                     android:id="@+id/ll_public_key"
-                    android:paddingEnd="30dp"
+                    android:paddingEnd="@dimen/widget_size_30"
                     android:paddingStart="0dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
@@ -76,7 +76,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:includeFontPadding="false"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="@dimen/widget_size_2"
                         android:singleLine="true"
                         android:onClick="@{listener::onClick}"
                         android:ellipsize="end"
@@ -84,12 +84,12 @@
 
                     <ImageView
                         android:id="@+id/iv_public_key_copy"
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:padding="5dp"
+                        android:layout_width="@dimen/widget_size_25"
+                        android:layout_height="@dimen/widget_size_25"
+                        android:padding="@dimen/widget_size_5"
                         android:onClick="@{listener::onClick}"
                         android:contentDescription="@null"
-                        android:layout_marginStart="5dp"
+                        android:layout_marginStart="@dimen/widget_size_5"
                         android:src="@mipmap/icon_copy"/>
 
                 </LinearLayout>
@@ -97,7 +97,7 @@
         </RelativeLayout>
 
         <androidx.core.widget.NestedScrollView
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="@dimen/widget_size_5"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
             <LinearLayout
@@ -118,9 +118,9 @@
                         android:layout_height="wrap_content"
                         android:includeFontPadding="false"
                         android:text="@string/user_mutual_communities"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="15dp"
-                        android:layout_marginBottom="10dp"
+                        android:layout_marginStart="@dimen/widget_size_20"
+                        android:layout_marginTop="@dimen/widget_size_15"
+                        android:layout_marginBottom="@dimen/widget_size_10"
                         android:singleLine="true"
                         android:ellipsize="end"
                         android:gravity="center_vertical"
@@ -143,10 +143,10 @@
                     android:visibility="gone"
                     android:id="@+id/tv_add_to_contact"
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
+                    android:layout_height="@dimen/widget_size_44"
                     android:onClick="@{listener::onClick}"
                     android:background="@color/color_white"
-                    android:layout_marginTop="5dp"
+                    android:layout_marginTop="@dimen/widget_size_5"
                     android:textAppearance="@style/TextAppearanceBody1"
                     android:textColor="@color/color_yellow"
                     android:gravity="center_horizontal|center"
@@ -156,10 +156,10 @@
                     android:visibility="gone"
                     android:id="@+id/tv_share_qr"
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
+                    android:layout_height="@dimen/widget_size_44"
                     android:onClick="@{listener::onClick}"
                     android:background="@color/color_white"
-                    android:layout_marginTop="5dp"
+                    android:layout_marginTop="@dimen/widget_size_5"
                     android:textAppearance="@style/TextAppearanceBody1"
                     android:textColor="@color/color_yellow"
                     android:gravity="center_horizontal|center"
@@ -169,10 +169,10 @@
                     android:visibility="gone"
                     android:id="@+id/tv_start_chat"
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
+                    android:layout_height="@dimen/widget_size_44"
                     android:onClick="@{listener::onClick}"
                     android:background="@color/color_white"
-                    android:layout_marginTop="5dp"
+                    android:layout_marginTop="@dimen/widget_size_5"
                     android:textAppearance="@style/TextAppearanceBody1"
                     android:textColor="@color/color_yellow"
                     android:gravity="center_horizontal|center"
@@ -182,10 +182,10 @@
                     android:visibility="gone"
                     android:id="@+id/tv_ban"
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
+                    android:layout_height="@dimen/widget_size_44"
                     android:onClick="@{listener::onClick}"
                     android:background="@color/color_white"
-                    android:layout_marginTop="5dp"
+                    android:layout_marginTop="@dimen/widget_size_5"
                     android:textAppearance="@style/TextAppearanceBody1"
                     android:textColor="@color/color_red"
                     android:gravity="center_horizontal|center"

@@ -9,8 +9,8 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="15dp"
-        android:paddingEnd="15dp"
+        android:paddingStart="@dimen/widget_size_15"
+        android:paddingEnd="@dimen/widget_size_15"
         android:gravity="center_horizontal">
 
         <TextView
@@ -23,8 +23,8 @@
         <EditText
             android:id="@+id/et_fee"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="20dp"
+            android:layout_height="@dimen/widget_size_50"
+            android:layout_marginTop="@dimen/widget_size_20"
             android:singleLine="true"
             android:gravity="center_horizontal|center"
             android:hint="@string/tx_fee_hint"
@@ -42,7 +42,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="@dimen/widget_size_20"
             android:text="@string/tx_fee_tips"
             android:textColor="@color/gray_light"
             android:textAppearance="@style/TextAppearanceBody2"/>

@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import io.taucoin.torrent.publishing.R;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.Community;
 import io.taucoin.torrent.publishing.core.storage.sqlite.entity.User;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.databinding.ActivityBlacklistBinding;
 import io.taucoin.torrent.publishing.ui.BaseActivity;
@@ -85,7 +84,7 @@ public class BlacklistActivity extends BaseActivity {
                     .setText(R.string.setting_Unblock)
                     .setTextColor(BlacklistActivity.this.getResources().getColor(R.color.color_white))
                     .setHeight(ViewGroup.LayoutParams.MATCH_PARENT)//设置高，这里使用match_parent，就是与item的高相同
-                    .setWidth(DimensionsUtil.dip2px(BlacklistActivity.this, 70));//设置宽
+                    .setWidth(getResources().getDimensionPixelSize(R.dimen.widget_size_70));//设置宽
             swipeRightMenu.addMenuItem(deleteItem);//设置右边的侧滑
         });
         // 设置侧滑菜单的点击事件

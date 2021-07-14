@@ -34,10 +34,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginEnd="15dp"
-                    android:layout_marginTop="7dp"
-                    android:layout_marginBottom="7dp"
+                    android:layout_marginStart="@dimen/widget_size_15"
+                    android:layout_marginEnd="@dimen/widget_size_15"
+                    android:layout_marginTop="@dimen/widget_size_7"
+                    android:layout_marginBottom="@dimen/widget_size_7"
                     android:includeFontPadding="false"
                     android:text="@string/setting_key_explain"
                     android:textColor="@color/gray_dark"
@@ -48,10 +48,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/color_white"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="5dp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp">
+                    android:paddingTop="@dimen/widget_size_10"
+                    android:paddingBottom="@dimen/widget_size_5"
+                    android:paddingStart="@dimen/widget_size_20"
+                    android:paddingEnd="@dimen/widget_size_20">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -64,7 +64,7 @@
                         android:id="@+id/tv_public_key"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="5dp"
+                        android:layout_marginTop="@dimen/widget_size_5"
                         android:onClick="onClick"
                         android:textAppearance="@style/TextAppearanceBody1"/>
 
@@ -72,7 +72,7 @@
                         android:id="@+id/tv_import_new_key"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="0dp"
+                        android:layout_marginTop="@dimen/widget_size_0"
                         android:textColor="@color/gray_dark"
                         android:onClick="onClick"
                         android:text="@string/setting_import_seed"
@@ -85,11 +85,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/color_white"
-                    android:layout_marginTop="10dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="5dp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp">
+                    android:layout_marginTop="@dimen/widget_size_10"
+                    android:paddingTop="@dimen/widget_size_10"
+                    android:paddingBottom="@dimen/widget_size_5"
+                    android:paddingStart="@dimen/widget_size_20"
+                    android:paddingEnd="@dimen/widget_size_20">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -103,7 +103,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@null"
-                        android:layout_marginTop="5dp"
+                        android:layout_marginTop="@dimen/widget_size_5"
                         android:singleLine="true"
                         android:onClick="onClick"
                         android:ellipsize="end"
@@ -113,7 +113,7 @@
                         android:id="@+id/tv_username_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="0dp"
+                        android:layout_marginTop="@dimen/widget_size_0"
                         android:textColor="@color/gray_dark"
                         android:text="@string/setting_username_app"
                         android:textAppearance="@style/TextAppearanceBody2"/>
@@ -124,12 +124,12 @@
                     android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/widget_size_10"
                     android:background="@color/color_white"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="5dp">
+                    android:paddingStart="@dimen/widget_size_20"
+                    android:paddingEnd="@dimen/widget_size_20"
+                    android:paddingTop="@dimen/widget_size_10"
+                    android:paddingBottom="@dimen/widget_size_5">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -144,9 +144,9 @@
                         android:id="@+id/ll_favorites"
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="40dp"
+                        android:layout_height="@dimen/widget_size_40"
                         android:onClick="onClick"
-                        android:layout_marginTop="5dp"
+                        android:layout_marginTop="@dimen/widget_size_5"
                         android:gravity="center_vertical">
 
                         <TextView
@@ -158,8 +158,8 @@
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                         <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
+                            android:layout_width="@dimen/widget_size_16"
+                            android:layout_height="@dimen/widget_size_16"
                             android:contentDescription="@null"
                             android:src="@mipmap/icon_arrow"/>
 
@@ -171,9 +171,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/color_white"
-                    android:layout_marginTop="15dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp">
+                    android:layout_marginTop="@dimen/widget_size_15"
+                    android:paddingTop="@dimen/widget_size_10"
+                    android:paddingBottom="@dimen/widget_size_10">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -181,44 +181,44 @@
                         android:text="@string/setting_title"
                         android:textAppearance="@style/TextAppearanceBody1"
                         android:textColor="@color/primary_light"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="0dp"
+                        android:layout_marginStart="@dimen/widget_size_20"
+                        android:layout_marginTop="@dimen/widget_size_0"
                         android:includeFontPadding="false"
                         android:textStyle="bold" />
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_privacy_security"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="10dp"
+                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_marginTop="@dimen/widget_size_10"
                         android:onClick="onClick"
                         app:leftImage="@mipmap/icon_privacy_security"
                         app:rightText="@string/setting_privacy_security"/>
 
                     <include
-                        android:layout_marginStart="65dp"
+                        android:layout_marginStart="@dimen/widget_size_65"
                         layout="@layout/view_line"
                         android:layout_width="match_parent"
-                        android:layout_height="1dp" />
+                        android:layout_height="@dimen/widget_size_1" />
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_journal"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
+                        android:layout_height="@dimen/widget_size_44"
                         android:onClick="onClick"
                         app:leftImage="@mipmap/icon_journal"
                         app:rightText="@string/setting_journal"/>
 
                     <include
-                        android:layout_marginStart="65dp"
+                        android:layout_marginStart="@dimen/widget_size_65"
                         layout="@layout/view_line"
                         android:layout_width="match_parent"
-                        android:layout_height="1dp" />
+                        android:layout_height="@dimen/widget_size_1" />
 
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_help"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
+                        android:layout_height="@dimen/widget_size_44"
                         android:onClick="onClick"
                         app:leftImage="@mipmap/icon_help"
                         app:rightText="@string/setting_help"/>
@@ -230,16 +230,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/color_white"
-                    android:layout_marginTop="10dp"
-                    android:paddingTop="5dp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="0dp">
+                    android:layout_marginTop="@dimen/widget_size_10"
+                    android:paddingTop="@dimen/widget_size_5"
+                    android:paddingStart="@dimen/widget_size_20"
+                    android:paddingEnd="@dimen/widget_size_0">
 
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
+                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 
                         <TextView
@@ -256,7 +256,7 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
                             android:text="@string/common_on"
-                            android:layout_marginEnd="5dp"
+                            android:layout_marginEnd="@dimen/widget_size_5"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                     </LinearLayout>
@@ -266,8 +266,8 @@
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
+                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 
                         <TextView
@@ -284,7 +284,7 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
                             android:text="@string/common_on"
-                            android:layout_marginEnd="5dp"
+                            android:layout_marginEnd="@dimen/widget_size_5"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                     </LinearLayout>
@@ -294,8 +294,8 @@
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
+                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 
                         <TextView
@@ -312,7 +312,7 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
                             android:text="@string/common_on"
-                            android:layout_marginEnd="5dp"
+                            android:layout_marginEnd="@dimen/widget_size_5"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                     </LinearLayout>
@@ -322,8 +322,8 @@
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
+                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 
                         <TextView
@@ -340,7 +340,7 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
                             android:text="@string/common_on"
-                            android:layout_marginEnd="5dp"
+                            android:layout_marginEnd="@dimen/widget_size_5"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                     </LinearLayout>
@@ -350,8 +350,8 @@
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="20dp"
+                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 
                         <TextView
@@ -368,7 +368,7 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/gray_dark"
                             android:text="@string/common_numerical_value"
-                            android:layout_marginEnd="5dp"
+                            android:layout_marginEnd="@dimen/widget_size_5"
                             android:textAppearance="@style/TextAppearanceBody1"/>
 
                     </LinearLayout>

@@ -12,19 +12,19 @@
 
         <ImageView
             android:id="@+id/iv_close"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="@dimen/widget_size_18"
+            android:layout_height="@dimen/widget_size_18"
             android:layout_alignParentEnd="true"
-            android:layout_marginEnd="10dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginEnd="@dimen/widget_size_10"
+            android:layout_marginBottom="@dimen/widget_size_20"
             android:contentDescription="@null"
             android:src="@mipmap/icon_close" />
 
         <LinearLayout
             android:layout_below="@+id/iv_close"
             android:orientation="vertical"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
+            android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginEnd="@dimen/widget_size_20"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -38,24 +38,24 @@
                 android:id="@+id/tv_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="@dimen/widget_size_5"
                 android:textColor="@color/color_yellow"
                 android:textAppearance="@style/TextAppearanceHeadline5"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="@dimen/widget_size_5"
                 android:text="@string/user_until_removed"
                 android:textAppearance="@style/TextAppearanceBody2"/>
 
             <TextView
                 android:id="@+id/tv_submit"
-                android:minWidth="240dp"
+                android:minWidth="@dimen/widget_size_240"
                 android:layout_width="wrap_content"
-                android:layout_height="50dp"
+                android:layout_height="@dimen/widget_size_50"
                 android:text="@string/common_submit"
-                android:layout_marginTop="35dp"
+                android:layout_marginTop="@dimen/widget_size_35"
                 android:layout_gravity="center_horizontal"
                 android:textAllCaps="true"
                 android:gravity="center_horizontal|center"
@@ -68,7 +68,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="30dp"
+                android:layout_marginTop="@dimen/widget_size_30"
                 android:textColor="@color/gray_dark"
                 android:text="@string/common_do_not_show"
                 android:textAppearance="@style/TextAppearanceBody2"/>

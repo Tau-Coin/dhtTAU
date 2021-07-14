@@ -54,7 +54,6 @@ import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
 import io.taucoin.torrent.publishing.core.utils.AppUtil;
 import io.taucoin.torrent.publishing.core.utils.BitmapUtil;
 import io.taucoin.torrent.publishing.core.utils.DateUtil;
-import io.taucoin.torrent.publishing.core.utils.DimensionsUtil;
 import io.taucoin.torrent.publishing.core.utils.FileUtil;
 import io.taucoin.torrent.publishing.core.utils.StringUtil;
 import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
@@ -604,7 +603,7 @@ public class UserViewModel extends AndroidViewModel {
         editNameDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
                 .setCanceledOnTouchOutside(false)
-                .setButtonWidth(240)
+                .setButtonWidth(R.dimen.widget_size_240)
                 .create();
         editNameDialog.show();
     }
@@ -642,7 +641,7 @@ public class UserViewModel extends AndroidViewModel {
         commonDialog = new CommonDialog.Builder(activity)
                 .setContentView(binding.getRoot())
                 .setCanceledOnTouchOutside(false)
-                .setButtonWidth(240)
+                .setButtonWidth(R.dimen.widget_size_240)
                 .create();
         commonDialog.show();
     }
@@ -771,7 +770,7 @@ public class UserViewModel extends AndroidViewModel {
                 String firstLettersName = UsersUtil.getQRCodeName(qrContent.getNickName());
                 Bitmap logoBitmap = BitmapUtil.createLogoBitmap(bgColor, firstLettersName);
 
-                int heightPix = DimensionsUtil.dip2px(context, 300);
+                int heightPix = context.getApplicationContext().getResources().getDimensionPixelSize(R.dimen.widget_size_300);
                 int widthPix = heightPix;
                 //Generate the QR Code.
                 HashMap<EncodeHintType, Object> hints = new HashMap<>();

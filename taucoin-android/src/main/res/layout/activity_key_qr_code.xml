@@ -23,7 +23,7 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="30dp">
+            android:layout_marginTop="@dimen/widget_size_30">
 
             <FrameLayout
                 android:layout_width="wrap_content"
@@ -36,9 +36,9 @@
 
                 <io.taucoin.torrent.publishing.ui.customviews.SquareTextView
                     android:id="@+id/tv_kept_secret"
-                    android:layout_marginStart="40dp"
-                    android:layout_marginEnd="40dp"
-                    android:layout_width="300dp"
+                    android:layout_marginStart="@dimen/widget_size_40"
+                    android:layout_marginEnd="@dimen/widget_size_40"
+                    android:layout_width="@dimen/widget_size_300"
                     android:layout_height="0dp"
                     android:onClick="@{listener::onClick}"
                     android:gravity="center_horizontal|center"
@@ -51,21 +51,21 @@
                 android:id="@+id/ll_key_copy"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="@dimen/widget_size_40"
                 android:background="@drawable/white_rect_round_bg_big_radius"
                 android:layout_gravity="center_horizontal"
                 android:gravity="center_vertical"
                 android:onClick="@{listener::onClick}"
-                android:layout_marginTop="40dp"
-                android:paddingStart="15dp"
-                android:paddingEnd="15dp">
+                android:layout_marginTop="@dimen/widget_size_40"
+                android:paddingStart="@dimen/widget_size_15"
+                android:paddingEnd="@dimen/widget_size_15">
 
                 <TextView
                     android:id="@+id/tv_key_copy"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:drawablePadding="3dp"
+                    android:layout_marginStart="@dimen/widget_size_10"
+                    android:drawablePadding="@dimen/widget_size_3"
                     android:textAppearance="@style/TextAppearanceBody1"/>
 
             </LinearLayout>

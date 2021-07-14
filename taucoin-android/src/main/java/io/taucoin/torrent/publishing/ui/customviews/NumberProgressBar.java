@@ -166,10 +166,10 @@ public class NumberProgressBar extends View {
     public NumberProgressBar(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        default_reached_bar_height = dp2px(1.5f);
-        default_unreached_bar_height = dp2px(1.0f);
-        default_text_size = sp2px(10);
-        default_progress_text_offset = dp2px(3.0f);
+        default_reached_bar_height = getResources().getDimension(R.dimen.widget_size_1);
+        default_unreached_bar_height = getResources().getDimension(R.dimen.widget_size_1);
+        default_text_size = getResources().getDimension(R.dimen.font_size_16);
+        default_progress_text_offset = getResources().getDimension(R.dimen.widget_size_3);
 
         //load styled attributes.
         final TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.NumberProgressBar,
@@ -474,16 +474,6 @@ public class NumberProgressBar extends View {
             return;
         }
         super.onRestoreInstanceState(state);
-    }
-
-    public float dp2px(float dp) {
-        final float scale = getResources().getDisplayMetrics().density;
-        return dp * scale + 0.5f;
-    }
-
-    public float sp2px(float sp) {
-        final float scale = getResources().getDisplayMetrics().scaledDensity;
-        return sp * scale;
     }
 
     public void setProgressTextVisibility(ProgressTextVisibility visibility) {

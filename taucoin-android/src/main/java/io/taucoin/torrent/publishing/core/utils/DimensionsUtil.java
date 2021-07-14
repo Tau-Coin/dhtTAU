@@ -3,6 +3,7 @@ package io.taucoin.torrent.publishing.core.utils;
 import android.content.Context;
 import android.util.TypedValue;
 
+@Deprecated
 public class DimensionsUtil {
     /**
      * dp to px
