@@ -8,7 +8,7 @@
         android:title="@string/menu_scan" />
 
     <item android:id="@+id/menu_alert"
-        android:visible="true"
+        android:visible="false"
         app:showAsAction="always"
         app:actionProviderClass="io.taucoin.torrent.publishing.ui.customviews.BadgeActionProvider"
         android:title="@string/menu_alert" />
