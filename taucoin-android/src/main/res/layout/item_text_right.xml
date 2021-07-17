@@ -88,6 +88,7 @@
                 android:gravity="center_vertical|center"
                 android:textColor="@color/color_white"
                 android:textAppearance="@style/TextAppearanceHeadline6"
+                android:includeFontPadding="false"
                 app:btnStrokeColor="@color/primary_light"
                 app:btnStrokeWidth="0dp"
                 app:btnCornerRadius="@dimen/widget_size_7"

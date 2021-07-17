@@ -1,5 +1,6 @@
 package io.taucoin.torrent.publishing.ui.setting;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -7,6 +8,7 @@ import android.view.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -47,6 +49,14 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
         binding.setListener(this);
         settingsRepo = RepositoryHelper.getSettingsRepository(getApplicationContext());
         initView();
+    }
+
+    @Override
+    protected void refreshAllView() {
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_setting);
+        binding.setListener(this);
+        initView();
+        setResult(RESULT_OK);
     }
 
     /**
@@ -146,8 +156,12 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
             case R.id.item_journal:
                 ActivityUtil.startActivity(this, JournalActivity.class);
                 break;
+            case R.id.item_font_size:
+                ActivityUtil.startActivityForResult(this, FontSizeActivity.class,
+                        FontSizeActivity.REQUEST_CODE_FONT_SIZE);
+                break;
             case R.id.item_help:
-                DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();
+                DisplayMetrics dm = getResources().getDisplayMetrics();
                 int screenWidth = dm.widthPixels;
                 int screenHeight = dm.heightPixels;
                 logger.debug("DisplayMetrics screenWidth::{}", screenWidth);
@@ -165,6 +179,14 @@ public class SettingActivity extends ScanTriggerActivity implements View.OnClick
                 String publicKey = MainApplication.getInstance().getPublicKey();
                 viewModel.showEditNameDialog(this, publicKey);
                 break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == FontSizeActivity.REQUEST_CODE_FONT_SIZE) {
+            refreshAllView();
         }
     }
 }

@@ -18,10 +18,11 @@
             android:layout_height="match_parent">
 
             <LinearLayout
-                android:visibility="gone"
+                android:visibility="visible"
                 android:id="@+id/ll_warning"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/widget_size_44"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/widget_size_44"
                 android:background="@color/color_red_bg"
                 android:paddingStart="@dimen/widget_size_10"
                 android:paddingEnd="@dimen/widget_size_10"
@@ -43,8 +44,6 @@
                     android:textColor="@color/gray_dark"
                     android:layout_marginStart="@dimen/widget_size_10"
                     android:textAppearance="@style/TextAppearanceBody1"/>
-
-
             </LinearLayout>
 
             <RelativeLayout
@@ -75,7 +74,8 @@
                     <TextView
                         android:id="@+id/tv_add_friends"
                         android:layout_width="@dimen/widget_size_220"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:minHeight="@dimen/widget_size_44"
                         android:text="@string/main_empty_add_friends"
                         android:background="@drawable/primary_rect_round_bg"
                         android:gravity="center_vertical|center"
@@ -86,7 +86,8 @@
                     <TextView
                         android:id="@+id/tv_create_communities"
                         android:layout_width="@dimen/widget_size_220"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:minHeight="@dimen/widget_size_44"
                         android:layout_marginTop="@dimen/widget_size_25"
                         android:lineSpacingExtra="@dimen/widget_size_5"
                         android:background="@drawable/black_rect_round_bg"

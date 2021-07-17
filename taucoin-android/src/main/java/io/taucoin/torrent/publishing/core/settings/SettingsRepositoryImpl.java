@@ -296,6 +296,17 @@ public class SettingsRepositoryImpl implements SettingsRepository {
     }
 
     @Override
+    public float getFloatValue(String key, float defValue) {
+        return pref.getFloat(key, defValue);
+    }
+
+    @Override
+    public void setFloatValue(String key, float value) {
+        pref.edit().putFloat(key, value)
+                .apply();
+    }
+
+    @Override
     public void setChattingFriend(String friend) {
         pref.edit().putString(appContext.getString(R.string.pref_key_chatting_friend), friend)
                 .apply();

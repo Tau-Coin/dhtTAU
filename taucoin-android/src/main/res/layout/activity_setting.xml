@@ -144,7 +144,10 @@
                         android:id="@+id/ll_favorites"
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/widget_size_40"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:minHeight="@dimen/widget_size_44"
                         android:onClick="onClick"
                         android:layout_marginTop="@dimen/widget_size_5"
                         android:gravity="center_vertical">
@@ -189,14 +192,36 @@
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_privacy_security"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/widget_size_44"
                         android:layout_marginTop="@dimen/widget_size_10"
                         android:onClick="onClick"
                         app:leftImage="@mipmap/icon_privacy_security"
                         app:rightText="@string/setting_privacy_security"/>
 
                     <include
-                        android:layout_marginStart="@dimen/widget_size_65"
+                        android:layout_marginStart="@dimen/widget_size_55"
+                        layout="@layout/view_line"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/widget_size_1" />
+
+                    <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                        android:id="@+id/item_font_size"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/widget_size_44"
+                        android:onClick="onClick"
+                        app:leftImage="@mipmap/icon_font_size"
+                        app:rightText="@string/setting_font_size"/>
+
+                    <include
+                        android:layout_marginStart="@dimen/widget_size_55"
                         layout="@layout/view_line"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/widget_size_1" />
@@ -204,13 +229,17 @@
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_journal"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/widget_size_44"
                         android:onClick="onClick"
                         app:leftImage="@mipmap/icon_journal"
                         app:rightText="@string/setting_journal"/>
 
                     <include
-                        android:layout_marginStart="@dimen/widget_size_65"
+                        android:layout_marginStart="@dimen/widget_size_55"
                         layout="@layout/view_line"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/widget_size_1" />
@@ -218,7 +247,11 @@
                     <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
                         android:id="@+id/item_help"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/widget_size_44"
                         android:onClick="onClick"
                         app:leftImage="@mipmap/icon_help"
                         app:rightText="@string/setting_help"/>
@@ -238,7 +271,10 @@
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:minHeight="@dimen/widget_size_44"
                         android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 
@@ -266,7 +302,10 @@
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:minHeight="@dimen/widget_size_44"
                         android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 
@@ -294,7 +333,10 @@
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:minHeight="@dimen/widget_size_44"
                         android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 
@@ -322,7 +364,10 @@
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:minHeight="@dimen/widget_size_44"
                         android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 
@@ -350,7 +395,10 @@
                     <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/widget_size_44"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/widget_size_7"
+                        android:paddingBottom="@dimen/widget_size_7"
+                        android:minHeight="@dimen/widget_size_44"
                         android:layout_marginEnd="@dimen/widget_size_20"
                         android:gravity="center_vertical">
 

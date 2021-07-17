@@ -23,27 +23,35 @@
             android:contentDescription="@null"
             android:src="@mipmap/icon_close" />
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/ll_public_key_hint"
             android:layout_below="@+id/iv_close"
-            android:id="@+id/tx_public_key_hint"
+            android:orientation="horizontal"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/tx_public_key_hint"
-            android:textAppearance="@style/TextAppearanceBody2"/>
+            android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/iv_public_key_copy"
-            android:layout_below="@+id/iv_close"
-            android:layout_toEndOf="@+id/tx_public_key_hint"
-            android:layout_width="@dimen/widget_size_14"
-            android:layout_height="@dimen/widget_size_14"
-            android:layout_marginTop="@dimen/widget_size_3"
-            android:contentDescription="@null"
-            android:layout_marginStart="@dimen/widget_size_5"
-            android:src="@mipmap/icon_copy_text"/>
+            <TextView
+                android:id="@+id/tx_public_key_hint"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="@string/tx_public_key_hint"
+                android:textAppearance="@style/TextAppearanceBody2"/>
+
+            <ImageView
+                android:id="@+id/iv_public_key_copy"
+                android:layout_width="@dimen/widget_size_14"
+                android:layout_height="@dimen/widget_size_14"
+                android:layout_marginTop="@dimen/widget_size_3"
+                android:contentDescription="@null"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/widget_size_5"
+                android:src="@mipmap/icon_copy_text"/>
+
+        </LinearLayout>
 
         <TextView
-            android:layout_below="@+id/tx_public_key_hint"
+            android:layout_below="@+id/ll_public_key_hint"
             android:id="@+id/tv_public_key"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -63,6 +71,7 @@
                 android:layout_width="@dimen/widget_size_18"
                 android:layout_height="@dimen/widget_size_18"
                 android:layout_marginTop="@dimen/widget_size_3"
+                android:layout_gravity="center_vertical"
                 android:contentDescription="@null"
                 android:src="@mipmap/icon_export"/>
 

@@ -8,7 +8,8 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/widget_size_50"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/widget_size_50"
         android:background="@color/color_white"
         android:paddingStart="@dimen/widget_size_7"
         android:paddingEnd="@dimen/widget_size_0">
@@ -58,8 +59,8 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/widget_size_1"
             android:layout_toEndOf="@+id/left_view"
-            android:layout_centerVertical="true"
             android:layout_alignParentBottom="true"
+            android:layout_marginTop="@dimen/widget_size_10"
             layout="@layout/view_line"/>
     </RelativeLayout>
 </layout>

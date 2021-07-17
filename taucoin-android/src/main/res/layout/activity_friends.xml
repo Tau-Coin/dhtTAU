@@ -31,8 +31,11 @@
                 android:background="@color/color_white"
                 android:paddingStart="@dimen/widget_size_20"
                 android:paddingEnd="@dimen/widget_size_0"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/widget_size_44"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/widget_size_44"
                 android:onClick="@{listener::onClick}">
 
                 <ImageView
@@ -65,8 +68,11 @@
                 android:background="@color/color_white"
                 android:paddingStart="@dimen/widget_size_20"
                 android:paddingEnd="@dimen/widget_size_0"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/widget_size_44"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/widget_size_44"
                 android:onClick="@{listener::onClick}">
 
                 <ImageView

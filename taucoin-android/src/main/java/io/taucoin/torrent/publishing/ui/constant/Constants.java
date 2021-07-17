@@ -12,4 +12,7 @@ public class Constants {
 
     // 统计显示周期，单位：秒
     public static final int STATISTICS_DISPLAY_PERIOD = 60;
+
+    // 保存的字体大小缩放比例
+    public static final String PREF_KEY_FONT_SCALE_SIZE = "pref_key_font_scale_size";
 }

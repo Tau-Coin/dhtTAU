@@ -196,4 +196,8 @@ public interface SettingsRepository {
     String getStringValue(String key, String defValue);
 
     void setStringValue(String key, String value);
+
+    float getFloatValue(String key, float defValue);
+
+    void setFloatValue(String key, float value);
 }

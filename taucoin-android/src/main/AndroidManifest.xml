@@ -262,6 +262,10 @@
             android:name=".ui.setting.CpuStatisticsActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
+        <activity
+            android:name=".ui.setting.FontSizeActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
     </application>
 
 </manifest>

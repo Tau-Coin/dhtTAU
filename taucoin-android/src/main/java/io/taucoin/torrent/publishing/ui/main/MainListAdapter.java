@@ -133,7 +133,6 @@ public class MainListAdapter extends ListAdapter<CommunityAndFriend, MainListAda
                 } else {
                     binding.tvMsgLastTime.setText(null);
                 }
-                binding.readOnly.setVisibility(View.INVISIBLE);
                 binding.msgUnread.setVisibility(bean.msgUnread > 0 ? View.VISIBLE : View.GONE);
             }
             holder.binding.getRoot().setOnClickListener(v -> {

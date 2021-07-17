@@ -46,18 +46,21 @@
                 android:id="@+id/ll_scan_qr_code"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/widget_size_40"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/widget_size_44"
                 android:background="@drawable/white_rect_round_bg_big_radius"
                 android:layout_gravity="center_horizontal"
                 android:gravity="center_vertical"
                 android:onClick="@{listener::onClick}"
+                android:layout_marginStart="@dimen/widget_size_30"
+                android:layout_marginEnd="@dimen/widget_size_30"
                 android:layout_marginTop="@dimen/widget_size_40"
                 android:paddingStart="@dimen/widget_size_15"
                 android:paddingEnd="@dimen/widget_size_15">
 
                 <ImageView
-                    android:layout_width="@dimen/widget_size_22"
-                    android:layout_height="@dimen/widget_size_22"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:contentDescription="@null"
                     android:src="@mipmap/icon_scan_orange"/>
 
@@ -65,7 +68,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/primary_light"
-                    android:layout_marginStart="@dimen/widget_size_10"
+                    android:layout_marginStart="@dimen/widget_size_20"
+                    android:layout_marginEnd="@dimen/widget_size_20"
                     android:text="@string/qr_code_scan_friend_qr"
                     android:textAppearance="@style/TextAppearanceBody1"/>
 

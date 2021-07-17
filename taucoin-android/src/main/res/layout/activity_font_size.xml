@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+        <variable
+            name="listener"
+            type="android.view.View.OnClickListener" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        android:background="@color/color_bg"
+        android:orientation="vertical">
+
+        <include
+            android:id="@+id/toolbar_include"
+            layout="@layout/toolbar" />
+
+        <ScrollView
+            android:fillViewport="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/widget_size_220"
+                    android:layout_marginStart="@dimen/widget_size_20"
+                    android:layout_marginEnd="@dimen/widget_size_20"
+                    android:layout_marginTop="@dimen/widget_size_20"
+                    android:gravity="center_horizontal|center"
+                    android:background="@drawable/white_rect_round_bg_no_border">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/setting_font_size"
+                        android:layout_gravity="center_vertical|center"
+                        android:layout_marginStart="@dimen/widget_size_20"
+                        android:layout_marginEnd="@dimen/widget_size_20"
+                        android:includeFontPadding="false"
+                        android:textAppearance="@style/TextAppearanceBody1"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/setting_font_size"
+                        android:layout_gravity="center_vertical|center"
+                        android:layout_marginStart="@dimen/widget_size_20"
+                        android:layout_marginEnd="@dimen/widget_size_20"
+                        android:layout_marginTop="@dimen/widget_size_15"
+                        android:includeFontPadding="false"
+                        android:textAppearance="@style/TextAppearanceBody2"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/setting_font_size"
+                        android:layout_gravity="center_vertical|center"
+                        android:layout_marginStart="@dimen/widget_size_20"
+                        android:layout_marginEnd="@dimen/widget_size_20"
+                        android:layout_marginTop="@dimen/widget_size_15"
+                        android:includeFontPadding="false"
+                        android:textAppearance="@style/TextAppearanceBody3"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/setting_font_size"
+                        android:layout_gravity="center_vertical|center"
+                        android:layout_marginStart="@dimen/widget_size_20"
+                        android:layout_marginEnd="@dimen/widget_size_20"
+                        android:layout_marginTop="@dimen/widget_size_15"
+                        android:includeFontPadding="false"
+                        android:textAppearance="@style/TextAppearanceBody4"/>
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/widget_size_20"
+                    android:layout_marginStart="@dimen/widget_size_20"
+                    android:layout_marginEnd="@dimen/widget_size_20"
+                    android:layout_marginBottom="@dimen/widget_size_20"
+                    android:background="@drawable/white_rect_round_bg_no_border">
+
+                    <io.taucoin.torrent.publishing.ui.customviews.RaeSeekBar
+                        android:id="@+id/seek_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:layout_margin="@dimen/widget_size_20"
+                        android:progressDrawable="@android:color/transparent"
+                        android:theme="@style/Widget.AppCompat.SeekBar"
+                        android:thumb="@drawable/seek_bar_thumb_font_setting" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </ScrollView>
+    </LinearLayout>
+</layout>

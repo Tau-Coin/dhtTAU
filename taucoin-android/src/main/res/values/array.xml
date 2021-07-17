@@ -38,4 +38,20 @@
         <item>4</item>
         <item>20</item>
     </integer-array>
+
+    <string-array name="font_scale_size">
+        <item>0.9</item>
+        <item>1.0</item>
+        <item>1.1</item>
+        <item>1.2</item>
+        <item>1.3</item>
+    </string-array>
+
+    <string-array name="font_scale_title">
+        <item>A</item>
+        <item>Default</item>
+        <item> </item>
+        <item> </item>
+        <item>A</item>
+    </string-array>
 </resources>

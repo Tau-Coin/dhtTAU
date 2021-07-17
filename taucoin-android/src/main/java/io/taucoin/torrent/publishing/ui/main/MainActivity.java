@@ -3,8 +3,6 @@ package io.taucoin.torrent.publishing.ui.main;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -24,7 +22,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.graphics.drawable.DrawerArrowDrawable;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
@@ -77,6 +74,7 @@ import io.taucoin.torrent.publishing.ui.notify.NotificationViewModel;
 import io.taucoin.torrent.publishing.ui.friends.FriendsActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.KeyQRCodeActivity;
 import io.taucoin.torrent.publishing.ui.setting.DataCostActivity;
+import io.taucoin.torrent.publishing.ui.setting.FontSizeActivity;
 import io.taucoin.torrent.publishing.ui.setting.SettingActivity;
 import io.taucoin.torrent.publishing.ui.user.UserDetailActivity;
 import io.taucoin.torrent.publishing.ui.qrcode.UserQRCodeActivity;
@@ -150,6 +148,16 @@ public class MainActivity extends ScanTriggerActivity {
         }
     }
 
+    @Override
+    protected void refreshAllView() {
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main_drawer);
+        loadFragmentView(R.id.main_left_fragment, new MainFragment());
+        currentFragment = new EmptyFragment();
+        loadFragmentView(R.id.main_right_fragment, currentFragment);
+        initLayout();
+        checkCurrentUser();
+    }
+
     /**
      * 检查当前用户
      */
@@ -184,7 +192,7 @@ public class MainActivity extends ScanTriggerActivity {
         updateDHTStats();
         handleSettingsChanged(getString(R.string.pref_key_main_loop_interval_list));
 
-        if (Utils.isTablet()) {
+        if (Utils.isTablet(this)) {
             updateViewChanged();
         } else {
             updateViewWeight(binding.mainRightFragment, 0);
@@ -381,7 +389,8 @@ public class MainActivity extends ScanTriggerActivity {
                 ActivityUtil.startActivity(this, FriendsActivity.class);
                 break;
             case R.id.item_setting:
-                ActivityUtil.startActivity(this, SettingActivity.class);
+                ActivityUtil.startActivityForResult(this, SettingActivity.class,
+                        FontSizeActivity.REQUEST_CODE_FONT_SIZE);
                 break;
             case R.id.item_share:
                 ActivityUtil.shareText(this, getString(R.string.app_share), Constants.APP_SHARE_URL);
@@ -390,7 +399,6 @@ public class MainActivity extends ScanTriggerActivity {
                 ActivityUtil.startActivity(this, DataCostActivity.class);
                 break;
         }
-        binding.drawerLayout.closeDrawer(GravityCompat.START);
     }
 
     /**
@@ -466,21 +474,39 @@ public class MainActivity extends ScanTriggerActivity {
     }
 
     private void updateViewChanged() {
-        if (Utils.isTablet()) {
+        if (Utils.isTablet(this)) {
             if (Utils.isLandscape()) {
-                updateViewWeight(binding.rlMainLeft, 3.5F);
-                updateViewWeight(binding.mainRightFragment, 6.5F);
+                float leftWeight = calculateLeftWeight();
+                updateViewWeight(binding.rlMainLeft, leftWeight);
+                updateViewWeight(binding.mainRightFragment, 10 - leftWeight);
             } else {
                 if (isEmptyView()) {
                     nextAndBackChange(true);
                 } else {
                     updateViewWeight(binding.rlMainLeft, 0F);
-                    updateViewWeight(binding.mainRightFragment, 6.5F);
+                    updateViewWeight(binding.mainRightFragment, 1.0F);
                 }
             }
         } else {
             nextAndBackChange(isEmptyView());
         }
+    }
+
+    /**
+     * 计算Tablet分版左侧的占比权重
+     */
+    private float calculateLeftWeight() {
+        float defaultLeftWeight = 3.5f;
+        int minLeftWidth = getResources().getDimensionPixelSize(R.dimen.widget_size_240);
+        int widthPixels = getResources().getDisplayMetrics().widthPixels;
+        logger.debug("calculateLeftWeight::{}, minLeftWidth::{}, defaultLeftWeight::{}",
+                widthPixels, minLeftWidth, defaultLeftWeight);
+        if (widthPixels > minLeftWidth && widthPixels * defaultLeftWeight / 10 < minLeftWidth) {
+            defaultLeftWeight = minLeftWidth * 10f / widthPixels;
+        }
+        logger.debug("calculateLeftWeight::{}, minLeftWidth::{}, defaultLeftWeight::{}",
+                widthPixels, minLeftWidth, defaultLeftWeight);
+        return defaultLeftWeight;
     }
 
     private void updateViewWeight(View view, float weight) {
@@ -544,15 +570,23 @@ public class MainActivity extends ScanTriggerActivity {
             newFragment = new EmptyFragment();
         }
         newFragment.setArguments(bundle);
+        loadFragmentView(R.id.main_right_fragment, newFragment);
+        updateViewChanged();
+    }
+
+    /**
+     * 加载Fragment视图
+     */
+    private void loadFragmentView(int containerViewId, Fragment fragment) {
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction transaction = fm.beginTransaction();
         // Replace whatever is in the fragment container view with this fragment,
         // and add the transaction to the back stack
-        transaction.replace(R.id.main_right_fragment, newFragment);
+        transaction.replace(containerViewId, fragment);
         // 执行此方法后，fragment的onDestroy()方法和ViewModel的onCleared()方法都不执行
         // transaction.addToBackStack(null);
         transaction.commitAllowingStateLoss();
-        updateViewChanged();
+
     }
 
     /**
@@ -637,6 +671,8 @@ public class MainActivity extends ScanTriggerActivity {
            if (!isEmptyView()) {
                currentFragment.onActivityResult(requestCode, resultCode, data);
            }
+        }else if (resultCode == RESULT_OK && requestCode == FontSizeActivity.REQUEST_CODE_FONT_SIZE) {
+            refreshAllView();
         }
     }
 }

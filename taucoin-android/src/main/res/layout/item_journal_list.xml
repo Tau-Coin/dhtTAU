@@ -8,7 +8,8 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/widget_size_50"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/widget_size_50"
         android:background="@color/color_white">
 
         <TextView
@@ -30,6 +31,7 @@
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
             android:layout_marginStart="@dimen/widget_size_20"
+            android:layout_marginBottom="10dp"
             android:layout_marginTop="@dimen/widget_size_5"
             android:singleLine="true"
             android:ellipsize="middle"

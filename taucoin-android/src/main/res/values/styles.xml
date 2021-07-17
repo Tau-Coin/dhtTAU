@@ -389,7 +389,7 @@
     </style>
 
     <style name="Toolbar.TitleText" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
-        <item name="android:textSize">@dimen/toolbar_title_text_size</item>
+        <item name="android:textSize">@dimen/font_size_18</item>
     </style>
 
     <style name="dialog_translucent" parent="@android:style/Theme.Translucent.NoTitleBar">

@@ -1,14 +1,15 @@
 package io.taucoin.torrent.publishing.ui;
 
 import android.content.res.Configuration;
-import android.os.Build;
+import android.content.res.Resources;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import io.taucoin.torrent.publishing.core.utils.ActivityUtil;
-import io.taucoin.torrent.publishing.core.utils.ToastUtils;
+import io.taucoin.torrent.publishing.core.settings.SettingsRepository;
+import io.taucoin.torrent.publishing.core.storage.sqlite.RepositoryHelper;
 import io.taucoin.torrent.publishing.core.utils.Utils;
+import io.taucoin.torrent.publishing.ui.constant.Constants;
 import io.taucoin.torrent.publishing.ui.customviews.ProgressManager;
 
 public abstract class BaseActivity extends AppCompatActivity {
@@ -72,5 +73,30 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         getViewModelStore().clear();
+    }
+
+    /**
+     * 实现用户自己定义字体大小
+     */
+    @Override
+    public Resources getResources() {
+        Resources resources = super.getResources();
+        DisplayMetrics dm = resources.getDisplayMetrics();
+        SettingsRepository settingsRepo = RepositoryHelper.getSettingsRepository(this);
+        float fontScaleSize = settingsRepo.getFloatValue(Constants.PREF_KEY_FONT_SCALE_SIZE, 1.0f);
+        Configuration configuration = resources.getConfiguration();
+        if (fontScaleSize > 0) {
+            configuration.fontScale = fontScaleSize;
+        } else {
+            configuration.fontScale = 1.0f;
+        }
+        resources.updateConfiguration(configuration, dm);
+        return resources;
+    }
+
+    /**
+     * 刷新所有视图， 保证字体大小修改成功
+     */
+    protected void refreshAllView() {
     }
 }

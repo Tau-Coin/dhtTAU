@@ -51,12 +51,15 @@
                 android:id="@+id/ll_key_copy"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/widget_size_40"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/widget_size_44"
                 android:background="@drawable/white_rect_round_bg_big_radius"
                 android:layout_gravity="center_horizontal"
                 android:gravity="center_vertical"
                 android:onClick="@{listener::onClick}"
                 android:layout_marginTop="@dimen/widget_size_40"
+                android:layout_marginStart="@dimen/widget_size_30"
+                android:layout_marginEnd="@dimen/widget_size_30"
                 android:paddingStart="@dimen/widget_size_15"
                 android:paddingEnd="@dimen/widget_size_15">
 

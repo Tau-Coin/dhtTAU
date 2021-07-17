@@ -11,7 +11,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
         android:background="@color/color_bg"
         android:orientation="vertical">
 
@@ -19,49 +18,62 @@
             android:id="@+id/toolbar_include"
             layout="@layout/toolbar" />
 
-        <LinearLayout
-            android:orientation="vertical"
-            android:background="@color/color_white"
+        <ScrollView
+            android:fillViewport="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_import_seed"
+            <LinearLayout
+                android:orientation="vertical"
+                android:background="@color/color_white"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/widget_size_50"
-                android:onClick="@{listener::onClick}"
-                app:leftImage="@mipmap/icon_import"
-                app:rightText="@string/user_import_seed"/>
+                android:layout_height="wrap_content">
 
-            <include
-                android:layout_marginStart="@dimen/widget_size_65"
-                layout="@layout/view_line"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/widget_size_1" />
+                <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                    android:id="@+id/item_import_seed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/widget_size_50"
+                    android:gravity="center_vertical"
+                    android:onClick="@{listener::onClick}"
+                    app:leftImage="@mipmap/icon_import"
+                    app:rightText="@string/user_import_seed"/>
 
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_export_seed"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/widget_size_50"
-                android:onClick="@{listener::onClick}"
-                app:leftImage="@mipmap/icon_export"
-                app:rightText="@string/user_export_seed"/>
+                <include
+                    android:layout_marginStart="@dimen/widget_size_55"
+                    layout="@layout/view_line"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/widget_size_1" />
 
-            <include
-                android:layout_marginStart="@dimen/widget_size_65"
-                layout="@layout/view_line"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/widget_size_1" />
+                <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                    android:id="@+id/item_export_seed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/widget_size_50"
+                    android:gravity="center_vertical"
+                    android:onClick="@{listener::onClick}"
+                    app:leftImage="@mipmap/icon_export"
+                    app:rightText="@string/user_export_seed"/>
 
-            <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
-                android:id="@+id/item_generate_seed"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/widget_size_50"
-                android:onClick="@{listener::onClick}"
-                app:leftImage="@mipmap/icon_generate"
-                app:rightText="@string/user_generate_seed"/>
+                <include
+                    android:layout_marginStart="@dimen/widget_size_55"
+                    layout="@layout/view_line"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/widget_size_1" />
 
-        </LinearLayout>
+                <io.taucoin.torrent.publishing.ui.customviews.ItemLineView
+                    android:id="@+id/item_generate_seed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/widget_size_50"
+                    android:gravity="center_vertical"
+                    android:onClick="@{listener::onClick}"
+                    app:leftImage="@mipmap/icon_generate"
+                    app:rightText="@string/user_generate_seed"/>
+
+            </LinearLayout>
+
+        </ScrollView>
 
         <LinearLayout
             android:orientation="vertical"

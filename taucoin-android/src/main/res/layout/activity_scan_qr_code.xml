@@ -58,8 +58,11 @@
                 android:background="@color/color_black"
                 android:layout_gravity="bottom"
                 android:gravity="center_horizontal|center"
+                android:minHeight="@dimen/widget_size_60"
+                android:paddingTop="@dimen/widget_size_5"
+                android:paddingBottom="@dimen/widget_size_5"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/widget_size_60">
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/tv_no_qr_code"

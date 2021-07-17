@@ -8,19 +8,18 @@
     <dimen name="dialog_padding">24dp</dimen>
     <dimen name="toolbar_elevation">4dp</dimen>
     <dimen name="toolbar_height">50dp</dimen>
-    <dimen name="toolbar_title_text_size">18dp</dimen>
     <dimen name="preference_icon_space">72dp</dimen>
     <dimen name="splash_size">40dp</dimen>
     <dimen name="splash_size_alpha">25dp</dimen>
 
     <!--   ********************Font******************** -->
-    <dimen name="font_size_18">18dp</dimen>
-    <dimen name="font_size_16">16dp</dimen>
-    <dimen name="font_size_14">14dp</dimen>
-    <dimen name="font_size_12">12dp</dimen>
-    <dimen name="font_size_10">10dp</dimen>
-    <dimen name="font_size_2">2dp</dimen>
-    <dimen name="font_size_0_5">0.5dp</dimen>
+    <dimen name="font_size_18">18sp</dimen>
+    <dimen name="font_size_16">16sp</dimen>
+    <dimen name="font_size_14">14sp</dimen>
+    <dimen name="font_size_12">12sp</dimen>
+    <dimen name="font_size_10">10sp</dimen>
+    <dimen name="font_size_2">2sp</dimen>
+    <dimen name="font_size_0_5">0.5sp</dimen>
 
     <!--   ********************Widget******************** -->
     <dimen name="widget_size_0">0dp</dimen>

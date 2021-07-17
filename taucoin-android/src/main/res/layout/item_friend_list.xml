@@ -8,7 +8,10 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/widget_size_60"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/widget_size_60"
+        android:paddingTop="@dimen/widget_size_7"
+        android:paddingEnd="@dimen/widget_size_0"
         android:paddingStart="@dimen/widget_size_10">
 
         <CheckBox
@@ -27,6 +30,7 @@
             android:layout_centerVertical="true"
             android:gravity="center"
             android:textAllCaps="true"
+            android:includeFontPadding="false"
             android:textColor="@color/color_white"
             android:textAppearance="@style/TextAppearanceHeadline6"
             app:btnStrokeColor="@color/primary_light"
@@ -107,7 +111,7 @@
                 app:radius="@dimen/widget_size_18"
                 app:ringBgColor="@color/divider"
                 app:ringColor="@color/color_yellow"
-                app:ringTextSize="@dimen/font_size_12"
+                app:ringTextSize="@dimen/widget_size_12"
                 app:strokeWidth="@dimen/widget_size_3"/>
 
         </RelativeLayout>
@@ -117,7 +121,7 @@
             android:layout_height="@dimen/widget_size_1"
             android:layout_toEndOf="@+id/left_view"
             android:layout_toStartOf="@+id/rl_right"
-            android:layout_centerVertical="true"
+            android:layout_marginTop="@dimen/widget_size_7"
             android:layout_alignParentBottom="true"
             layout="@layout/view_line"/>
     </RelativeLayout>

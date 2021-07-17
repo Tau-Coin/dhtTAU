@@ -17,6 +17,7 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Patterns;
 import android.util.TypedValue;
@@ -26,6 +27,7 @@ import com.frostwire.jlibtorrent.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
 import io.taucoin.param.ChainParam;
 import io.taucoin.torrent.publishing.MainApplication;
 import io.taucoin.torrent.publishing.R;
@@ -526,10 +528,20 @@ public class Utils {
         }
     }
 
-    public static boolean isTablet() {
-        Context context = MainApplication.getInstance();
-        return (context.getResources().getConfiguration().screenLayout &
+    public static boolean isTablet(FragmentActivity activity) {
+        return (activity.getResources().getConfiguration().screenLayout &
                 Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+    }
+
+    /**
+     * 类似chrome book大屏, 也得判断尺寸大小是否为原尺寸的1/2
+     * @param activity
+     * @return
+     */
+    private static boolean isPad(FragmentActivity activity) {
+        DisplayMetrics dm = activity.getResources().getDisplayMetrics();
+        DisplayMetrics dm1 = activity.getApplicationContext().getResources().getDisplayMetrics();
+        return dm.widthPixels >= dm1.widthPixels / 2;
     }
 
     public static boolean isLandscape() {
